@@ -295,7 +295,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Initiate password reset process by email. A password reset link will be sent to the user's email address. Requires CAPTCHA verification.",
+				"description": "Initiate password reset process by email. A password reset link will be sent to the user's email address. Requires a solved captcha challenge (X-Captcha-Token).",
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ForgotPasswordRequest"}}}
@@ -745,7 +745,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Authenticate with email and password. Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification.",
+				"description": "Authenticate with email and password. Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification. Requires a solved captcha challenge (X-Captcha-Token).",
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/LoginRequest"}}}
@@ -1380,7 +1380,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Create a new user account with email and password. Requires CAPTCHA verification. User account is created but must verify email before logging in.",
+				"description": "Create a new user account with email and password. Requires a solved captcha challenge (X-Captcha-Token). User account is created but must verify email before logging in.",
 				"requestBody": {
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/RegisterRequest"}}}
@@ -4683,7 +4683,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires CAPTCHA verification.",
+				"description": "Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires a solved captcha challenge (X-Captcha-Token).",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -10238,7 +10238,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a new bot-backed OAuth2 application (client). Requires CAPTCHA verification. Returns client credentials including ID and secret. Application can be used for authorization flows and API access.",
+				"description": "Creates a new bot-backed OAuth2 application (client). Requires a solved captcha challenge (X-Captcha-Token). Returns client credentials including ID and secret. Application can be used for authorization flows and API access.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -13674,7 +13674,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a new private channel (direct message) between the current user and one or more recipients. Group DM creation requires CAPTCHA verification. Returns the newly created channel object.",
+				"description": "Creates a new private channel (direct message) between the current user and one or more recipients. Group DM creation requires a solved captcha challenge (X-Captcha-Token). Returns the newly created channel object.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -18392,7 +18392,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel=\"sms\" to request SMS (only honoured for SMS-allowlisted destinations) or channel=\"inbound_challenge\" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge.",
+				"description": "Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel=\"sms\" to request SMS (only honoured for SMS-allowlisted destinations) or channel=\"inbound_challenge\" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge. Requires a solved captcha challenge (X-Captcha-Token) when the phone verification service asks for one.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -27939,10 +27939,7 @@
 					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50},
 					"assignments": {
 						"type": "object",
-						"properties": {
-							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
-							"altcha_captcha": {"$ref": "#/components/schemas/AltchaCaptchaAssignmentResponse"}
-						},
+						"properties": {"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"}},
 						"additionalProperties": false
 					}
 				},
@@ -29905,16 +29902,11 @@
 				"type": "object",
 				"properties": {
 					"provider": {
-						"description": "Captcha provider name (hcaptcha, turnstile, none)",
+						"description": "Captcha provider (altcha or none)",
 						"$ref": "#/components/schemas/InstanceCaptchaProviderSchema"
-					},
-					"hcaptcha_site_key": {"description": "hCaptcha site key if using hCaptcha", "type": ["string", "null"]},
-					"turnstile_site_key": {
-						"description": "Cloudflare Turnstile site key if using Turnstile",
-						"type": ["string", "null"]
 					}
 				},
-				"required": ["provider", "hcaptcha_site_key", "turnstile_site_key"],
+				"required": ["provider"],
 				"additionalProperties": false,
 				"description": "Captcha configuration"
 			},
@@ -29949,7 +29941,7 @@
 				"additionalProperties": false,
 				"description": "Endpoint URLs for various services"
 			},
-			"InstanceCaptchaProviderSchema": {"type": "string", "enum": ["hcaptcha", "turnstile", "none"]},
+			"InstanceCaptchaProviderSchema": {"type": "string", "enum": ["altcha", "none"]},
 			"InstanceRegistrationModeSchema": {
 				"description": "Registration mode",
 				"x-enumNames": ["open", "approval", "closed"],
@@ -31640,12 +31632,6 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
-			"AltchaCaptchaAssignmentResponse": {
-				"type": "object",
-				"properties": {"enabled": {"type": "boolean"}},
-				"required": ["enabled"],
-				"additionalProperties": false
-			},
 			"DomainMigrationAssignmentResponse": {
 				"type": "object",
 				"properties": {"enabled": {"type": "boolean"}},

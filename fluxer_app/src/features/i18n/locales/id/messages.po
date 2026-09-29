@@ -2395,11 +2395,6 @@ msgstr "60 detik"
 msgid "7 days"
 msgstr "7 hari"
 
-#. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
-msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
-msgstr "Pemeriksaan browser diperlukan sebelum verifikasi telepon. Coba lagi dari halaman masuk atau hubungi dukungan."
-
 #. Hint shown beside in:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:77
 msgid "a channel"
@@ -2928,7 +2923,7 @@ msgid "Add a friend to get started."
 msgstr "Tambahkan teman untuk memulai."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:973
+#: src/features/app/components/setup/SetupWizardSteps.tsx:966
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Tambahkan kunci API Klipy untuk mengaktifkan pencarian GIF saat runtime."
 
@@ -2965,7 +2960,7 @@ msgid "Add a working email"
 msgstr "Tambahkan email yang aktif"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:981
+#: src/features/app/components/setup/SetupWizardSteps.tsx:974
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Tambahkan kunci API Data YouTube untuk memperkaya tautan YouTube."
 
@@ -3011,7 +3006,7 @@ msgid "Add another reaction"
 msgstr "Tambahkan reaksi lain"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
+#: src/features/app/components/setup/SetupWizardSteps.tsx:990
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Tambahkan metadata klien OAuth Bluesky dan kunci penandatanganan."
 
@@ -3161,7 +3156,7 @@ msgid "Add shortcut"
 msgstr "Tambahkan pintasan"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:997
+#: src/features/app/components/setup/SetupWizardSteps.tsx:982
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "Tambahkan kredensial SMTP agar instance dapat mengirim email verifikasi dan notifikasi."
 
@@ -3188,7 +3183,7 @@ msgid "Add stream"
 msgstr "Tambahkan streaming"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:965
+#: src/features/app/components/setup/SetupWizardSteps.tsx:958
 msgid "Add the credentials during setup."
 msgstr "Tambahkan kredensial selama penyiapan."
 
@@ -3954,7 +3949,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "Status yang diberikan tidak valid. Sekarang kamu bisa menutup tab ini dan kembali ke aplikasi."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:13
+#: src/features/auth/hooks/useAuthForm.ts:12
 msgid "An unexpected error occurred"
 msgstr "Terjadi kesalahan tak terduga"
 
@@ -4262,7 +4257,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Siapa pun dapat meminta akun, tetapi administrator harus menyetujuinya."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
+#: src/features/app/components/setup/SetupWizardSteps.tsx:994
 msgid "API key"
 msgstr "Kunci API"
 
@@ -4958,7 +4953,7 @@ msgid "Authorized apps"
 msgstr "Aplikasi yang diotorisasi"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:38
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:37
 msgid "Authorized IPs cleared. New logins will require email verification."
 msgstr "IP yang diotorisasi telah dihapus. Login baru akan memerlukan verifikasi email."
 
@@ -5730,7 +5725,7 @@ msgid "Bluesky connections"
 msgstr "Koneksi Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
+#: src/features/app/components/setup/SetupWizardSteps.tsx:986
 msgid "Bluesky OAuth"
 msgstr "OAuth Bluesky"
 
@@ -5896,11 +5891,6 @@ msgstr "Izin bot tidak boleh negatif."
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:64
 msgid "Bot profile"
 msgstr "Profil bot"
-
-#. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:985
-msgid "Bot protection"
-msgstr "Perlindungan bot"
 
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:20
@@ -6553,11 +6543,6 @@ msgstr "Tidak bisa diedit"
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx:12
 msgid "Cannot delete account"
 msgstr "Tidak bisa menghapus akun"
-
-#. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:15
-msgid "Captcha verification failed. Try again."
-msgstr "Verifikasi Captcha gagal. Coba lagi."
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:50
@@ -7398,10 +7383,6 @@ msgstr "Memeriksa akses..."
 msgid "Checking screen recording permission..."
 msgstr "Memeriksa izin perekaman layar..."
 
-#: src/features/auth/components/AltchaVerification.tsx:62
-msgid "Checking your browser. This takes a few seconds."
-msgstr "Memeriksa browser Anda. Ini akan memakan waktu beberapa detik."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -7570,11 +7551,6 @@ msgstr "Pilih Arsip, lalu Tambah ke Dock."
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
 msgid "Choose friends to message."
 msgstr "Pilih teman untuk dikirimi pesan."
-
-#. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:989
-msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
-msgstr "Pilih hCaptcha atau Cloudflare Turnstile untuk tantangan pendaftaran."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
@@ -7982,17 +7958,17 @@ msgid "Clear selection"
 msgstr "Hapus pilihan"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:88
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:87
 msgid "Clear trust all setting"
 msgstr "Hapus pengaturan \"percaya semua\""
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:63
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:62
 msgid "Clear trusted domains"
 msgstr "Hapus domain tepercaya"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:96
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:95
 msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "Hapus domain tepercaya ({trustedDomainsCount})"
 
@@ -8002,7 +7978,7 @@ msgid "Clearer text"
 msgstr "Teks lebih jelas"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:107
 msgid "Clearing trusted domains..."
 msgstr "Menghapus domain tepercaya..."
 
@@ -8100,7 +8076,7 @@ msgid "Client"
 msgstr "Klien"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1057
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1031
 msgid "Client name"
 msgstr "Nama klien"
 
@@ -8117,7 +8093,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Rahasia klien dibuat ulang. Perbarui kode apa pun yang menggunakan rahasia lama."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
 msgid "Client URL"
 msgstr "URL klien"
 
@@ -8268,11 +8244,6 @@ msgstr "DM yang ditutup"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
 msgid "Cloud upload"
 msgstr "Unggah ke cloud"
-
-#. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1014
-msgid "Cloudflare Turnstile"
-msgstr "Cloudflare Turnstile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:58
@@ -8669,7 +8640,7 @@ msgstr "Nama komunitas"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "Nama panggilan komunitas"
@@ -8722,7 +8693,7 @@ msgid "Community profile"
 msgstr "Profil komunitas"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
 msgid "Community profile updated"
 msgstr "Profil komunitas diperbarui"
 
@@ -8880,7 +8851,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "Konfigurasi pintasan keyboard"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:961
+#: src/features/app/components/setup/SetupWizardSteps.tsx:954
 msgid "Configure now"
 msgstr "Konfigurasi sekarang"
 
@@ -12341,7 +12312,7 @@ msgstr "Putuskan sambungan dari {channel}"
 msgid "Disconnect from voice"
 msgstr "Putuskan sambungan suara"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:261
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:243
 msgid "Disconnect socket"
 msgstr "Putuskan sambungan soket"
 
@@ -12479,7 +12450,7 @@ msgstr "Mode tampilan"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "Nama tampilan"
@@ -12625,7 +12596,7 @@ msgstr "Apakah Anda ingin bergabung dengan {communityName}?"
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Dok, saya dari masa depan. Saya datang ke sini dengan mesin waktu yang kamu ciptakan. Sekarang, saya butuh bantuanmu untuk kembali ke tahun 1985."
 
@@ -13262,7 +13233,7 @@ msgid "Edit your messages above or below"
 msgstr "Edit pesan Anda di atas atau di bawah"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
 msgid "Edit your profile appearance and see a live preview"
 msgstr "Edit tampilan profilmu dan lihat pratinjau langsung"
 
@@ -13330,7 +13301,7 @@ msgid "Email changed"
 msgstr "Email berhasil diubah"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:993
+#: src/features/app/components/setup/SetupWizardSteps.tsx:978
 msgid "Email delivery"
 msgstr "Pengiriman email"
 
@@ -13635,7 +13606,7 @@ msgid "Enable beta feature"
 msgstr "Aktifkan fitur beta"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1053
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1027
 msgid "Enable Bluesky OAuth"
 msgstr "Aktifkan OAuth Bluesky"
 
@@ -13668,7 +13639,7 @@ msgid "Enable developer mode"
 msgstr "Aktifkan mode pengembang"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
+#: src/features/app/components/setup/SetupWizardSteps.tsx:995
 msgid "Enable email delivery"
 msgstr "Aktifkan pengiriman email"
 
@@ -14705,7 +14676,7 @@ msgid "Failed to ban member. Try again."
 msgstr "Gagal memblokir anggota. Coba lagi."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:59
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:58
 msgid "Failed to clear trusted domains."
 msgstr "Gagal menghapus domain tepercaya."
 
@@ -14762,7 +14733,7 @@ msgid "Failed to enable camera."
 msgstr "Gagal mengaktifkan kamera."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:42
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:41
 msgid "Failed to forget authorized IPs. Try again."
 msgstr "Gagal melupakan IP yang diotorisasi. Coba lagi."
 
@@ -14907,7 +14878,7 @@ msgid "Failed to resend verification code. Try again later."
 msgstr "Gagal mengirim ulang kode verifikasi. Coba lagi nanti."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:75
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:74
 msgid "Failed to reset premium state."
 msgstr "Gagal mengatur ulang status premium."
 
@@ -15581,7 +15552,7 @@ msgstr "Paksa kerangka pemuatan"
 msgid "Force mature media"
 msgstr "Paksa media dewasa"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:276
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:258
 msgid "Force move to AFK channel"
 msgstr "Paksa pindah ke saluran AFK"
 
@@ -15640,7 +15611,7 @@ msgid "Forced off"
 msgstr "Dipaksa nonaktif"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:46
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:45
 msgid "Forget authorized IPs"
 msgstr "Lupakan IP yang diotorisasi"
 
@@ -15650,7 +15621,7 @@ msgid "Forget subscriptions"
 msgstr "Lupakan langganan"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:104
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:103
 msgid "Forgetting authorized IPs..."
 msgstr "Melupakan IP yang diotorisasi..."
 
@@ -15907,12 +15878,12 @@ msgid "from <0>{0}</0>"
 msgstr "dari <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
+#: src/features/app/components/setup/SetupWizardSteps.tsx:999
 msgid "From email"
 msgstr "Email pengirim"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1003
 msgid "From name"
 msgstr "Nama pengirim"
 
@@ -16204,7 +16175,7 @@ msgid "GIF preview"
 msgstr "Pratinjau GIF"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:969
+#: src/features/app/components/setup/SetupWizardSteps.tsx:962
 msgid "GIF search"
 msgstr "Pencarian GIF"
 
@@ -16853,20 +16824,11 @@ msgstr "Punya kode hadiah? Tukarkan untuk membuka {PREMIUM_PRODUCT_NAME}."
 msgid "Having fun?"
 msgstr "Lagi seru-seruan?"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:175
-msgid "Having issues? Try hCaptcha instead"
-msgstr "Ada masalah? Coba pakai hCaptcha saja"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:63
 msgctxt "us-state"
 msgid "Hawaii"
 msgstr "Hawaii"
-
-#. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
-msgid "hCaptcha"
-msgstr "hCaptcha"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:238
@@ -19768,7 +19730,7 @@ msgid "Logo"
 msgstr "Logo"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1039
 msgid "Logo URL"
 msgstr "URL logo"
 
@@ -22941,7 +22903,7 @@ msgid "No tokens match \"{searchQuery}\"."
 msgstr "Tidak ada token yang cocok dengan \"{searchQuery}\"."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:92
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:91
 msgid "No trusted domains"
 msgstr "Tidak ada domain tepercaya"
 
@@ -23696,10 +23658,6 @@ msgstr "Buka pemilih browser"
 msgid "Open call view"
 msgstr "Buka tampilan panggilan"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:288
-msgid "Open captcha modal"
-msgstr "Buka modal captcha"
-
 #. Accessible label for the channel header title button in a community channel.
 #: src/features/channel/components/channel_header/shared.ts:14
 msgid "Open channel details for {channelName}"
@@ -23712,7 +23670,7 @@ msgstr "Buka detail saluran untuk {channelName}"
 msgid "Open chat"
 msgstr "Buka obrolan"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:314
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:290
 msgid "Open claim account modal"
 msgstr "Buka modal klaim akun"
 
@@ -23944,11 +23902,11 @@ msgstr "Buka stiker di browser"
 msgid "Open streaming privacy settings"
 msgstr "Buka pengaturan privasi streaming"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:327
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:303
 msgid "Open sudo verification modal"
 msgstr "Buka modal verifikasi sudo"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:342
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:318
 msgid "Open system DM"
 msgstr "Buka DM sistem"
 
@@ -24430,7 +24388,7 @@ msgstr "Passkey memerlukan bundel macOS yang ditandatangani dengan ID aplikasi y
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1010
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -25212,7 +25170,7 @@ msgid "Popup"
 msgstr "Pop-up"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1008
 msgid "Port"
 msgstr "Port"
 
@@ -25338,7 +25296,7 @@ msgid "Premium since date"
 msgstr "Premium sejak tanggal"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:71
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:70
 msgid "Premium state reset on the backend."
 msgstr "Status premium di-reset di backend."
 
@@ -25608,7 +25566,7 @@ msgid "Privacy settings"
 msgstr "Pengaturan privasi"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1047
 msgid "Privacy URL"
 msgstr "URL privasi"
 
@@ -25633,7 +25591,7 @@ msgid "Private details"
 msgstr "Detail pribadi"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1055
 msgid "Private key"
 msgstr "Kunci pribadi"
 
@@ -25699,18 +25657,18 @@ msgstr "Warna profil"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "Kustomisasi profil"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
 msgid "Profile customization for {selectedGuildName}"
 msgstr "Kustomisasi profil untuk {selectedGuildName}"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
 msgid "Profile customization form"
 msgstr "Formulir kustomisasi profil"
 
@@ -25775,7 +25733,7 @@ msgid "Profile type"
 msgstr "Jenis profil"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
 msgid "Profile updated"
 msgstr "Profil diperbarui"
 
@@ -25812,7 +25770,7 @@ msgstr "Tanya saat ada perangkat audio baru"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -25841,11 +25799,6 @@ msgstr "Berikan ID pengguna atau nama pengguna orang yang kamu laporkan."
 #: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Provide your full legal name for the declaration."
 msgstr "Berikan nama lengkap sesuai identitas resmimu untuk deklarasi ini."
-
-#. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
-msgid "Provider"
-msgstr "Penyedia"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27626,7 +27579,7 @@ msgid "Reset password"
 msgstr "Setel ulang kata sandi"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:79
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:78
 msgid "Reset premium state"
 msgstr "Setel ulang status premium"
 
@@ -27635,7 +27588,7 @@ msgstr "Setel ulang status premium"
 msgid "Reset slider to default value"
 msgstr "Setel ulang penggeser ke nilai default"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:247
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:229
 msgid "Reset socket"
 msgstr "Setel ulang soket"
 
@@ -27684,7 +27637,7 @@ msgid "Reset zoom"
 msgstr "Setel ulang zoom"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:112
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:111
 msgid "Resetting premium state..."
 msgstr "Menyetel ulang status premium..."
 
@@ -28315,7 +28268,7 @@ msgid "Run the instance as one community instead of many. This can only be enabl
 msgstr "Jalankan instance sebagai satu komunitas, bukan banyak. Ini hanya dapat diaktifkan sekarang, selama penyiapan."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:100
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:99
 msgid "Runtime utilities"
 msgstr "Utilitas runtime"
 
@@ -29102,11 +29055,6 @@ msgstr "Tombol sekunder diklik."
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:136
 msgid "Secret"
 msgstr "Rahasia"
-
-#. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
-msgid "Secret key"
-msgstr "Kunci rahasia"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the secrets section. Keep it concise. Keep the tone plain and specific.
@@ -29925,7 +29873,7 @@ msgid "Set up authenticator app"
 msgstr "Siapkan aplikasi autentikator"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:953
+#: src/features/app/components/setup/SetupWizardSteps.tsx:946
 msgid "Set up later"
 msgstr "Siapkan nanti"
 
@@ -30427,7 +30375,7 @@ msgstr "Tampilkan daftar DM sebaris"
 msgid "Show just the typing indicator without avatars"
 msgstr "Tampilkan hanya indikator mengetik tanpa avatar"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:308
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:284
 msgid "Show keyboard mode intro"
 msgstr "Tampilkan intro mode keyboard"
 
@@ -30538,7 +30486,7 @@ msgstr "Tampilkan Neko"
 msgid "Show new device alerts"
 msgstr "Tampilkan peringatan perangkat baru"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:282
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:264
 msgid "Show new device modal"
 msgstr "Tampilkan modal perangkat baru"
 
@@ -30820,7 +30768,7 @@ msgid "Signed-in devices"
 msgstr "Perangkat yang sudah masuk"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1051
 msgid "Signing key ID"
 msgstr "ID kunci penandatanganan"
 
@@ -30910,11 +30858,6 @@ msgstr "Satu baris"
 msgid "Single user (all statuses)"
 msgstr "Satu pengguna (semua status)"
 
-#. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
-msgid "Site key"
-msgstr "Kunci situs"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
@@ -30964,7 +30907,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "Lewati pesan sistem saat keluar, tidak ada yang akan diberi tahu."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:957
+#: src/features/app/components/setup/SetupWizardSteps.tsx:950
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Lewati ini sekarang dan konfigurasikan dari panel admin."
 
@@ -31212,17 +31155,17 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "Verifikasi SMS tidak tersedia saat ini. Coba lagi nanti atau hubungi dukungan."
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1045
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
 msgid "SMTP connection verified."
 msgstr "Koneksi SMTP terverifikasi."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1007
 msgid "SMTP host"
 msgstr "Host SMTP"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1049
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1023
 msgid "SMTP validation failed."
 msgstr "Validasi SMTP gagal."
 
@@ -31402,7 +31345,7 @@ msgstr "Terjadi kesalahan. Coba lagi nanti."
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "Terjadi kesalahan. Coba lagi."
@@ -32098,6 +32041,11 @@ msgstr "Masih mengindeks, coba lagi sebentar lagi"
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Still Neko"
 msgstr "Neko diam"
+
+#. Small toast shown only when an automatic background check before sign-in, sign-up or a similar request takes more than a couple of seconds. No user action needed. Keep it short and calm.
+#: src/features/auth/altcha/CaptchaInterceptor.ts:13
+msgid "Still working on it…"
+msgstr "Masih dikerjakan…"
 
 #. Stop-recording button label in the desktop voice message composer.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:65
@@ -33013,7 +32961,7 @@ msgid "Terms of service"
 msgstr "Ketentuan layanan"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1043
 msgid "Terms URL"
 msgstr "URL ketentuan"
 
@@ -33023,7 +32971,7 @@ msgid "Terrorism or violent extremism"
 msgstr "Terorisme atau ekstremisme kekerasan"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1041
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1015
 msgid "Test SMTP"
 msgstr "Uji SMTP"
 
@@ -33800,7 +33748,7 @@ msgid "This clears quick CSS, imported themes, uploaded assets, and local file r
 msgstr "Ini akan menghapus CSS cepat, tema yang diimpor, aset yang diunggah, dan referensi file lokal di perangkat ini."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:83
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:82
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "Ini akan menghapus seluruh status premium backend kamu, termasuk jenis premium, metadata penagihan, dan tanda penggantian."
 
@@ -34200,7 +34148,7 @@ msgid "This message no longer exists."
 msgstr "Pesan ini sudah tidak ada."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
 msgid "This nickname will only be visible in this community"
 msgstr "Nama panggilan ini hanya akan terlihat di komunitas ini"
 
@@ -34277,12 +34225,12 @@ msgid "This removes all custom CSS overrides. Theme files in your library are no
 msgstr "Ini akan menghapus semua penggantian CSS kustom. File tema di pustakamu tidak akan terpengaruh."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:50
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:49
 msgid "This removes all previously authorized IP addresses on your account. The next login from any IP will require email verification."
 msgstr "Ini akan menghapus semua alamat IP yang sebelumnya diotorisasi di akunmu. Login berikutnya dari IP mana pun akan memerlukan verifikasi email."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:67
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:66
 msgid "This removes all trusted domains. You will see the external link warning for all domains again."
 msgstr "Ini akan menghapus semua domain tepercaya. Kamu akan melihat peringatan tautan eksternal untuk semua domain lagi."
 
@@ -34949,7 +34897,7 @@ msgstr "Perubahan ikon baki hanya berlaku setelah memulai ulang di Linux karena 
 msgid "Trending GIFs"
 msgstr "GIF populer"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:383
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "Picu crash React"
 
@@ -35008,7 +34956,7 @@ msgid "Trusted domains"
 msgstr "Domain tepercaya"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:55
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:54
 msgid "Trusted domains cleared."
 msgstr "Domain tepercaya sudah dihapus."
 
@@ -35054,7 +35002,6 @@ msgid "Try a different variable name or clear the search."
 msgstr "Coba nama variabel lain atau hapus pencarian."
 
 #. Generic action label for retrying a failed or interrupted operation.
-#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35131,10 +35078,6 @@ msgstr "Coba kunci keamanan/passkey saja"
 #: src/features/messaging/components/alerts/MessageSendFailedModal.tsx:17
 msgid "Try sending your message again."
 msgstr "Coba kirim pesanmu lagi."
-
-#: src/features/auth/components/modals/CaptchaModal.tsx:177
-msgid "Try Turnstile instead"
-msgstr "Coba Turnstile saja"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
@@ -36890,7 +36833,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "Gunakan ini saat memecahkan masalah klien atau mengumpulkan log. Ini mungkin menambahkan pesan rinci ke konsol browser untuk klien saat ini."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1011
 msgid "Use TLS"
 msgstr "Gunakan TLS"
 
@@ -37056,7 +36999,7 @@ msgstr "Volume pengguna"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -37337,11 +37280,6 @@ msgstr "Verifikasi nomor telepon"
 msgid "Verify phone number form"
 msgstr "Formulir verifikasi nomor telepon"
 
-#. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:17
-msgid "Verify you're human"
-msgstr "Verifikasi bahwa kamu manusia"
-
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:40
@@ -37369,22 +37307,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "Verifikasi emailmu sebelum menambahkan aplikasi autentikator."
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "Verifikasi emailmu sebelum mengubah nama panggilan komunitas, avatar, banner, bio, kata ganti, atau warna aksenmu."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
 msgstr "Verifikasi emailmu sebelum mengubah nama pengguna, nama tampilan, avatar, banner, bio, kata ganti, zona waktu, atau privasi lencana {premiumProductName} milikmu."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "Verifikasi emailmu sebelum mengedit profil komunitas ini. Kamu masih bisa melihat pratinjaunya di sini."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "Verifikasi emailmu sebelum mengedit profil. Kamu masih bisa melihat pratinjaunya di sini."
 
@@ -37416,12 +37354,12 @@ msgid "Verify your email to continue using {productName}."
 msgstr "Verifikasi emailmu untuk terus menggunakan {productName}."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
 msgid "Verify your email to edit this community profile"
 msgstr "Verifikasi emailmu untuk mengedit profil komunitas ini"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
 msgid "Verify your email to edit your profile"
 msgstr "Verifikasi emailmu untuk mengedit profil"
 
@@ -38398,10 +38336,6 @@ msgstr "Kami menurunkan harga {premiumProductName} di Brasil. Harganya kini {mon
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "Kami memerlukan satu langkah verifikasi sebelum kamu melanjutkan. Ini membantu melindungi akun dan menjaga {productName} bebas dari spam."
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:128
-msgid "We need to make sure you're not a bot. Complete the verification below."
-msgstr "Kami perlu memastikan kamu bukan bot. Selesaikan verifikasi di bawah."
-
 #. Required-action modal intro text when both email and phone verification are required.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:216
 msgid "We need two verification steps before you continue. We will show one step at a time."
@@ -39256,7 +39190,7 @@ msgid "You can't befriend yourself"
 msgstr "Kamu tidak bisa berteman dengan diri sendiri"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
 msgid "You can't change your nickname here"
 msgstr "Kamu tidak dapat mengubah nama panggilan di sini"
 
@@ -39506,7 +39440,7 @@ msgid "You have unsaved changes."
 msgstr "Ada perubahan yang belum disimpan."
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "Ada perubahan yang belum disimpan. Simpan atau setel ulang sebelum keluar."
 
@@ -40031,10 +39965,6 @@ msgstr "Tindakanmu tidak dapat diselesaikan karena ditandai oleh sistem keamanan
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Pengajuanmu sedang ditinjau. Kamu masih bisa memperbarui detail pendaftaranmu atau menarik pengajuannya."
 
-#: src/features/auth/components/AltchaVerification.tsx:50
-msgid "Your browser couldn't finish the check."
-msgstr "Peramban Anda tidak dapat menyelesaikan pemeriksaan."
-
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -40386,7 +40316,7 @@ msgid "YouTube enrichment"
 msgstr "Pengayaan YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:977
+#: src/features/app/components/setup/SetupWizardSteps.tsx:970
 msgid "YouTube previews"
 msgstr "Pratinjau YouTube"
 

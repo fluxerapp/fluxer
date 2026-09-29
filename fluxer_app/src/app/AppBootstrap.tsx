@@ -154,7 +154,7 @@ async function bootstrapApp(): Promise<void> {
 	] = await Promise.all([
 		loadLazyModule(() => import('@app/app/App')),
 		loadLazyModule(() => import('@app/app/SetupHttp')),
-		loadLazyModule(() => import('@app/features/auth/components/CaptchaInterceptor')),
+		loadLazyModule(() => import('@app/features/auth/altcha/CaptchaInterceptor')),
 		loadLazyModule(() => import('@app/features/messaging/utils/markdown/EmojiProviderSetup')),
 		loadLazyModule(() => import('@app/features/platform/service_worker/Register')),
 		loadLazyModule(() => import('@app/features/auth/state/AccountManager')),

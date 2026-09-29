@@ -156,12 +156,6 @@ const DEFAULT_INTEGRATION_DRAFT: ServiceIntegrationDraft = {
 	klipyApiKey: '',
 	youtubeMode: 'later',
 	youtubeApiKey: '',
-	captchaMode: 'later',
-	captchaProvider: 'hcaptcha',
-	hcaptchaSiteKey: '',
-	hcaptchaSecretKey: '',
-	turnstileSiteKey: '',
-	turnstileSecretKey: '',
 	emailMode: 'later',
 	emailEnabled: true,
 	emailFromEmail: '',
@@ -200,8 +194,6 @@ function wizardStepToIntegrationKind(step: WizardStep): IntegrationStepKind | nu
 			return 'gif';
 		case 'integration_youtube':
 			return 'youtube';
-		case 'integration_captcha':
-			return 'captcha';
 		case 'integration_email':
 			return 'email';
 		case 'integration_bluesky':
@@ -278,11 +270,6 @@ function isIntegrationStepValid(kind: IntegrationStepKind, draft: ServiceIntegra
 			return draft.klipyApiKey.trim().length > 0;
 		case 'youtube':
 			return draft.youtubeMode === 'later' || draft.youtubeApiKey.trim().length > 0;
-		case 'captcha':
-			if (draft.captchaMode === 'later') return true;
-			return draft.captchaProvider === 'hcaptcha'
-				? draft.hcaptchaSiteKey.trim().length > 0 && draft.hcaptchaSecretKey.trim().length > 0
-				: draft.turnstileSiteKey.trim().length > 0 && draft.turnstileSecretKey.trim().length > 0;
 		case 'email':
 			if (draft.emailMode === 'later' || !draft.emailEnabled) return true;
 			return (
@@ -313,13 +300,6 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
 		youtube?: {
 			api_key: string;
 		};
-		captcha?: {
-			provider: 'hcaptcha' | 'turnstile';
-			hcaptcha_site_key?: string;
-			hcaptcha_secret_key?: string;
-			turnstile_site_key?: string;
-			turnstile_secret_key?: string;
-		};
 		email?: {
 			enabled: boolean;
 			provider: 'smtp';
@@ -348,20 +328,6 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
 	}
 	if (draft.youtubeMode === 'configure') {
 		integrations.youtube = {api_key: draft.youtubeApiKey.trim()};
-	}
-	if (draft.captchaMode === 'configure') {
-		integrations.captcha =
-			draft.captchaProvider === 'hcaptcha'
-				? {
-						provider: 'hcaptcha',
-						hcaptcha_site_key: draft.hcaptchaSiteKey.trim(),
-						hcaptcha_secret_key: draft.hcaptchaSecretKey.trim(),
-					}
-				: {
-						provider: 'turnstile',
-						turnstile_site_key: draft.turnstileSiteKey.trim(),
-						turnstile_secret_key: draft.turnstileSecretKey.trim(),
-					};
 	}
 	if (draft.emailMode === 'configure') {
 		integrations.email = {
@@ -580,7 +546,6 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		});
 		setIntegrationDraft((current) => ({
 			...current,
-			captchaProvider: next.integrations.captcha.effective_provider === 'turnstile' ? 'turnstile' : 'hcaptcha',
 			emailEnabled: next.integrations.email.effective_enabled || next.integrations.email.enabled !== false,
 			emailFromEmail: next.integrations.email.from_email ?? current.emailFromEmail,
 			emailFromName: next.integrations.email.from_name ?? current.emailFromName,

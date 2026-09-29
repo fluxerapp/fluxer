@@ -15,9 +15,6 @@
         "msgid": "Bluesky OAuth"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -51,9 +48,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -81,9 +75,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -129,9 +120,6 @@
       },
       {
         "msgid": "deleted-role"
-      },
-      {
-        "msgid": "hCaptcha"
       },
       {
         "msgid": "macOS"
@@ -191,9 +179,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -331,9 +316,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -453,9 +435,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Codec"
@@ -764,9 +743,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "link"
       },
       {
@@ -932,9 +908,6 @@
       },
       {
         "msgid": "Client"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Code"
@@ -1153,9 +1126,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -1257,9 +1227,6 @@
         "msgid": "Cisco"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -1336,9 +1303,6 @@
       },
       {
         "msgid": "deleted-role"
-      },
-      {
-        "msgid": "hCaptcha"
       },
       {
         "msgid": "macOS"
@@ -1742,9 +1706,6 @@
       },
       {
         "msgid": "Changed the voice region from {oldRegion} to {newRegion}."
-      },
-      {
-        "msgid": "Checking your browser. This takes a few seconds."
       },
       {
         "msgid": "Checkout is blocked for this account."
@@ -2968,6 +2929,9 @@
         "msgid": "Still Neko"
       },
       {
+        "msgid": "Still working on it…"
+      },
+      {
         "msgid": "Stop Neko from chasing your cursor while keeping it draggable and interactive."
       },
       {
@@ -3380,9 +3344,6 @@
       },
       {
         "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
-      },
-      {
-        "msgid": "Your browser couldn't finish the check."
       },
       {
         "msgid": "Your capture device is sending {deliveredResolution} instead of {resolution}."
@@ -4138,9 +4099,6 @@
         "msgid": "Cisco"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Color"
       },
       {
@@ -4309,9 +4267,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -4427,9 +4382,6 @@
         "msgid": "Cisco"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Color"
       },
       {
@@ -4535,9 +4487,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -4613,9 +4562,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -4706,9 +4652,6 @@
       },
       {
         "msgid": "emoji {emojiName}"
-      },
-      {
-        "msgid": "hCaptcha"
       },
       {
         "msgid": "macOS"
@@ -4827,9 +4770,6 @@
       },
       {
         "msgid": "Client"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Code"
@@ -5132,9 +5072,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "image"
       },
       {
@@ -5255,9 +5192,6 @@
         "msgid": "Alt"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -5310,9 +5244,6 @@
       },
       {
         "msgid": "deleted-role"
-      },
-      {
-        "msgid": "hCaptcha"
       },
       {
         "msgid": "macOS"
@@ -5389,9 +5320,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -5452,9 +5380,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -5565,9 +5490,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -5631,9 +5553,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -5735,9 +5654,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "link"
       },
       {
@@ -5837,9 +5753,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Codec"
@@ -6043,9 +5956,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -6173,9 +6083,6 @@
       },
       {
         "msgid": "Client"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Codec"
@@ -6391,9 +6298,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "link"
       },
       {
@@ -6495,9 +6399,6 @@
         "msgid": "Cisco"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -6567,9 +6468,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -6620,9 +6518,6 @@
         "msgid": "Bluesky OAuth"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -6657,9 +6552,6 @@
       },
       {
         "msgid": "deleted-role"
-      },
-      {
-        "msgid": "hCaptcha"
       },
       {
         "msgid": "macOS"
@@ -6829,9 +6721,6 @@
       },
       {
         "msgid": "Client"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Code"
@@ -7197,9 +7086,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "link"
       },
       {
@@ -7342,9 +7228,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -7560,9 +7443,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -7612,9 +7492,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -7758,9 +7635,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -7825,9 +7699,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Codec"
@@ -8010,9 +7881,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "link"
       },
       {
@@ -8143,9 +8011,6 @@
       },
       {
         "msgid": "Client"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Codec"
@@ -8373,9 +8238,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "link"
       },
       {
@@ -8470,9 +8332,6 @@
         "msgid": "Cisco"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -8516,9 +8375,6 @@
       },
       {
         "msgid": "deleted-role"
-      },
-      {
-        "msgid": "hCaptcha"
       },
       {
         "msgid": "macOS"
@@ -8587,9 +8443,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Codec"
@@ -8778,9 +8631,6 @@
         "msgid": "emoji {emojiName}"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -8871,9 +8721,6 @@
         "msgid": "Cisco"
       },
       {
-        "msgid": "Cloudflare Turnstile"
-      },
-      {
         "msgid": "Ctrl"
       },
       {
@@ -8923,9 +8770,6 @@
       },
       {
         "msgid": "deleted-role"
-      },
-      {
-        "msgid": "hCaptcha"
       },
       {
         "msgid": "macOS"
@@ -8982,9 +8826,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -9086,9 +8927,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -9139,9 +8977,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -9201,9 +9036,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -9255,9 +9087,6 @@
       },
       {
         "msgid": "Cisco"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Croatia"
@@ -9380,9 +9209,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -9426,9 +9252,6 @@
       },
       {
         "msgid": "Bluesky OAuth"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -9485,9 +9308,6 @@
         "msgid": "deleted-role"
       },
       {
-        "msgid": "hCaptcha"
-      },
-      {
         "msgid": "macOS"
       },
       {
@@ -9530,9 +9350,6 @@
       },
       {
         "msgid": "Bluesky OAuth"
-      },
-      {
-        "msgid": "Cloudflare Turnstile"
       },
       {
         "msgid": "Ctrl"
@@ -9590,9 +9407,6 @@
       },
       {
         "msgid": "deleted-role"
-      },
-      {
-        "msgid": "hCaptcha"
       },
       {
         "msgid": "macOS"

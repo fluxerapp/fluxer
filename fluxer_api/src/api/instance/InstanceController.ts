@@ -8,7 +8,6 @@ import {
 	isDiscoveryNotModified,
 	nextDiscoveryValidators,
 } from '@app/api/instance/DiscoveryValidators';
-import type {InstanceCaptchaEffectiveConfig} from '@app/api/instance/InstanceConfigRepository';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
@@ -17,6 +16,7 @@ import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
 import {buildDiscoveryResponse, type DiscoveryStaticInput} from '@fluxer/instance_bootstrap/src/BuildDiscovery';
 import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
+import type {CaptchaConfig} from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
 import {toDomainMigrationDiscovery} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {WellKnownFluxerResponse} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import type {Hono} from 'hono';
@@ -27,7 +27,7 @@ function buildDiscoveryStaticInput(
 	gifService: GifService | undefined,
 	appPublic: InstanceAppPublic,
 	runtime: {
-		captcha: InstanceCaptchaEffectiveConfig;
+		captcha: CaptchaConfig;
 		emailEnabled: boolean;
 	},
 ): DiscoveryStaticInput {
@@ -61,9 +61,7 @@ function buildDiscoveryStaticInput(
 			webapp: Config.endpoints.webApp,
 		},
 		captcha: {
-			provider: runtime.captcha.provider,
-			hcaptcha_site_key: runtime.captcha.provider === 'hcaptcha' ? runtime.captcha.hcaptcha_site_key : null,
-			turnstile_site_key: runtime.captcha.provider === 'turnstile' ? runtime.captcha.turnstile_site_key : null,
+			provider: runtime.captcha.enabled ? 'altcha' : 'none',
 		},
 		features: {
 			voice_enabled: Config.voice.enabled,
@@ -111,7 +109,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				instanceConfigRepository.getInstanceCommunityPublicConfig(),
 				instanceConfigRepository.getResolvedServicesConfig(),
 				instanceConfigRepository.getAppPublicConfig(),
-				instanceConfigRepository.getEffectiveCaptchaConfig(),
+				instanceConfigRepository.getCaptchaConfig(),
 				instanceConfigRepository.getEffectiveEmailConfig(),
 				instanceConfigRepository.getDomainMigrationConfig(),
 			]);

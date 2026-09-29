@@ -422,19 +422,11 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "anonymous_rollout_basis_points": 100,
             "standalone_forwarding": true
         },
-        "altcha_captcha": {
+        "captcha": {
             "enabled": true,
-            "config_version": 3,
-            "rollout_basis_points": 500,
-            "rollout_salt": "altcha-captcha-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": ["1500000000000000003"],
-            "anonymous_enabled": true,
             "cost": 5000,
-            "max_counter": 10000,
-            "included_guild_ids": ["1500000000000000005"],
-            "include_premium_users": true,
-            "future_altcha_knob": "argon2id"
+            "max_counter": 1000,
+            "future_captcha_knob": 1
         },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
@@ -486,15 +478,6 @@ fn deserialize_instance_config_response_with_unknown_keys() {
         "integrations": {
             "gif": {"klipy_api_key_set": true, "effective_available": true},
             "youtube": {"api_key_set": true, "effective_available": true},
-            "captcha": {
-                "provider": "hcaptcha",
-                "effective_provider": "hcaptcha",
-                "hcaptcha_site_key": "site",
-                "hcaptcha_secret_key_set": true,
-                "turnstile_site_key": "",
-                "turnstile_secret_key_set": false,
-                "effective_enabled": true
-            },
             "email": {
                 "enabled": true,
                 "effective_enabled": true,
@@ -595,13 +578,8 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
     assert!(resp.domain_migration.standalone_forwarding);
     assert!(resp.push_relay.relay_consent_accepted);
-    assert!(resp.altcha_captcha.enabled);
-    assert_eq!(resp.altcha_captcha.config_version, 3);
-    assert!(resp.altcha_captcha.anonymous_enabled);
-    assert_eq!(resp.altcha_captcha.excluded_user_ids.len(), 1);
-    assert_eq!(resp.altcha_captcha.max_counter, 10000);
-    assert_eq!(resp.altcha_captcha.included_guild_ids.len(), 1);
-    assert!(resp.altcha_captcha.include_premium_users);
+    assert!(resp.captcha.enabled);
+    assert_eq!(resp.captcha.max_counter, 1000);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));

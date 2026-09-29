@@ -35,7 +35,6 @@ import {
 	PendingRegistrationActionRequest,
 	RegistrationUrlIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {AltchaCaptchaConfigSchema} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
 import {DomainMigrationConfigSchema} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import type {PushRelayConfig, PushRelayConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
@@ -67,7 +66,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		gatewayRollout,
 		pushRelay,
 		domainMigration,
-		altchaCaptcha,
+		captcha,
 		experimentDelivery,
 		registrationConfig,
 		registrationUrls,
@@ -77,7 +76,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getGatewayRolloutConfig(),
 		instanceConfigRepository.getPushRelayConfig(),
 		instanceConfigRepository.getDomainMigrationConfig(),
-		instanceConfigRepository.getAltchaCaptchaConfig(),
+		instanceConfigRepository.getCaptchaConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
@@ -111,7 +110,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		gateway_rollout: gatewayRollout,
 		push_relay: pushRelay,
 		domain_migration: domainMigration,
-		altcha_captcha: altchaCaptcha,
+		captcha,
 		experiment_delivery: experimentDelivery,
 		registration: {
 			...registrationConfig,
@@ -388,16 +387,10 @@ export function InstanceConfigAdminController(app: HonoApp) {
 					);
 				}
 			}
-			if (data.altcha_captcha) {
-				const patch = omitUndefinedFields(data.altcha_captcha);
+			if (data.captcha) {
+				const patch = omitUndefinedFields(data.captcha);
 				if (Object.keys(patch).length > 0) {
-					await instanceConfigRepository.updateAltchaCaptchaConfig((current) =>
-						AltchaCaptchaConfigSchema.parse({
-							...current,
-							...patch,
-							config_version: current.config_version + 1,
-						}),
-					);
+					await instanceConfigRepository.updateCaptchaConfig(patch);
 				}
 			}
 			if (data.experiment_delivery) {
@@ -496,15 +489,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 					youtube: data.integrations.youtube
 						? omitUndefinedFields({
 								api_key: readOptionalField(data.integrations.youtube, 'api_key'),
-							})
-						: undefined,
-					captcha: data.integrations.captcha
-						? omitUndefinedFields({
-								provider: readOptionalField(data.integrations.captcha, 'provider'),
-								hcaptcha_site_key: readOptionalField(data.integrations.captcha, 'hcaptcha_site_key'),
-								hcaptcha_secret_key: readOptionalField(data.integrations.captcha, 'hcaptcha_secret_key'),
-								turnstile_site_key: readOptionalField(data.integrations.captcha, 'turnstile_site_key'),
-								turnstile_secret_key: readOptionalField(data.integrations.captcha, 'turnstile_secret_key'),
 							})
 						: undefined,
 					email: data.integrations.email

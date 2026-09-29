@@ -313,7 +313,7 @@ const BOOTSTRAP_ENDPOINT = 'https://primary.test/api';
 			webapp: 'https://app.primary.test',
 			upload_relay: 'https://upload.primary.test',
 		},
-		captcha: {provider: 'none', hcaptcha_site_key: null, turnstile_site_key: null},
+		captcha: {provider: 'none'},
 		features: {
 			voice_enabled: false,
 			stripe_enabled: false,

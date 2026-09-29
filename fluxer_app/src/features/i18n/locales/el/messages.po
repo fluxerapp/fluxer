@@ -2395,11 +2395,6 @@ msgstr "60 δευτερόλεπτα"
 msgid "7 days"
 msgstr "7 ημέρες"
 
-#. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
-msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
-msgstr "Απαιτείται έλεγχος προγράμματος περιήγησης πριν από την επαλήθευση τηλεφώνου. Δοκιμάστε ξανά από τη σελίδα σύνδεσης ή επικοινωνήστε με την υποστήριξη."
-
 #. Hint shown beside in:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:77
 msgid "a channel"
@@ -2928,7 +2923,7 @@ msgid "Add a friend to get started."
 msgstr "Πρόσθεσε έναν φίλο για να ξεκινήσεις."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:973
+#: src/features/app/components/setup/SetupWizardSteps.tsx:966
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Προσθέστε ένα κλειδί API του Klipy για να ενεργοποιήσετε την αναζήτηση GIF κατά την εκτέλεση."
 
@@ -2965,7 +2960,7 @@ msgid "Add a working email"
 msgstr "Προσθέστε ένα email που λειτουργεί"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:981
+#: src/features/app/components/setup/SetupWizardSteps.tsx:974
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Προσθέστε ένα κλειδί API YouTube Data για να εμπλουτίσετε τους συνδέσμους του YouTube."
 
@@ -3011,7 +3006,7 @@ msgid "Add another reaction"
 msgstr "Προσθήκη άλλης αντίδρασης"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
+#: src/features/app/components/setup/SetupWizardSteps.tsx:990
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Προσθέστε μεταδεδομένα πελάτη OAuth και ένα κλειδί υπογραφής για το Bluesky."
 
@@ -3161,7 +3156,7 @@ msgid "Add shortcut"
 msgstr "Προσθήκη συντόμευσης"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:997
+#: src/features/app/components/setup/SetupWizardSteps.tsx:982
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "Προσθέστε διαπιστευτήρια SMTP, ώστε η παρουσία να μπορεί να στέλνει email επαλήθευσης και ειδοποιήσεων."
 
@@ -3188,7 +3183,7 @@ msgid "Add stream"
 msgstr "Προσθήκη ροής"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:965
+#: src/features/app/components/setup/SetupWizardSteps.tsx:958
 msgid "Add the credentials during setup."
 msgstr "Προσθέστε τα διαπιστευτήρια κατά τη ρύθμιση."
 
@@ -3954,7 +3949,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "Δόθηκε μη έγκυρη κατάσταση. Μπορείτε τώρα να κλείσετε αυτήν την καρτέλα και να επιστρέψετε στην εφαρμογή."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:13
+#: src/features/auth/hooks/useAuthForm.ts:12
 msgid "An unexpected error occurred"
 msgstr "Παρουσιάστηκε μη αναμενόμενο σφάλμα"
 
@@ -4262,7 +4257,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Οποιοσδήποτε μπορεί να ζητήσει λογαριασμό, αλλά ένας διαχειριστής πρέπει να τον εγκρίνει."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
+#: src/features/app/components/setup/SetupWizardSteps.tsx:994
 msgid "API key"
 msgstr "Κλειδί API"
 
@@ -4958,7 +4953,7 @@ msgid "Authorized apps"
 msgstr "Εξουσιοδοτημένες εφαρμογές"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:38
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:37
 msgid "Authorized IPs cleared. New logins will require email verification."
 msgstr "Οι εξουσιοδοτημένες IP διαγράφηκαν. Οι νέες συνδέσεις θα απαιτούν επαλήθευση μέσω email."
 
@@ -5730,7 +5725,7 @@ msgid "Bluesky connections"
 msgstr "Συνδέσεις Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
+#: src/features/app/components/setup/SetupWizardSteps.tsx:986
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -5896,11 +5891,6 @@ msgstr "Τα δικαιώματα bot δεν μπορούν να είναι αρ
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:64
 msgid "Bot profile"
 msgstr "Προφίλ bot"
-
-#. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:985
-msgid "Bot protection"
-msgstr "Προστασία από bot"
 
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:20
@@ -6553,11 +6543,6 @@ msgstr "Δεν είναι δυνατή η επεξεργασία"
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx:12
 msgid "Cannot delete account"
 msgstr "Δεν είναι δυνατή η διαγραφή λογαριασμού"
-
-#. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:15
-msgid "Captcha verification failed. Try again."
-msgstr "Η επαλήθευση Captcha απέτυχε. Δοκιμάστε ξανά."
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:50
@@ -7398,10 +7383,6 @@ msgstr "Έλεγχος πρόσβασης..."
 msgid "Checking screen recording permission..."
 msgstr "Έλεγχος της άδειας εγγραφής οθόνης..."
 
-#: src/features/auth/components/AltchaVerification.tsx:62
-msgid "Checking your browser. This takes a few seconds."
-msgstr "Ελέγχουμε το πρόγραμμα περιήγησής σας. Αυτό διαρκεί λίγα δευτερόλεπτα."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -7570,11 +7551,6 @@ msgstr "Επιλέξτε Αρχείο, έπειτα Προσθήκη στο Dock
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
 msgid "Choose friends to message."
 msgstr "Επιλέξτε φίλους για αποστολή μηνύματος."
-
-#. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:989
-msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
-msgstr "Επιλέξτε hCaptcha ή Cloudflare Turnstile για τους ελέγχους ασφαλείας κατά την εγγραφή."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
@@ -7982,17 +7958,17 @@ msgid "Clear selection"
 msgstr "Κατάργηση επιλογής"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:88
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:87
 msgid "Clear trust all setting"
 msgstr "Εκκαθάριση ρύθμισης \"Να εμπιστεύεστε πάντα\""
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:63
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:62
 msgid "Clear trusted domains"
 msgstr "Εκκαθάριση αξιόπιστων τομέων"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:96
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:95
 msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "Εκκαθάριση αξιόπιστων τομέων ({trustedDomainsCount})"
 
@@ -8002,7 +7978,7 @@ msgid "Clearer text"
 msgstr "Καθαρότερο κείμενο"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:107
 msgid "Clearing trusted domains..."
 msgstr "Εκκαθάριση αξιόπιστων τομέων..."
 
@@ -8100,7 +8076,7 @@ msgid "Client"
 msgstr "Εφαρμογή"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1057
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1031
 msgid "Client name"
 msgstr "Όνομα πελάτη"
 
@@ -8117,7 +8093,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Το μυστικό του πελάτη ανανεώθηκε. Ενημερώστε κάθε κώδικα που χρησιμοποιεί το παλιό μυστικό."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
 msgid "Client URL"
 msgstr "URL πελάτη"
 
@@ -8268,11 +8244,6 @@ msgstr "Κλειστά DM"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
 msgid "Cloud upload"
 msgstr "Αποστολή στο cloud"
-
-#. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1014
-msgid "Cloudflare Turnstile"
-msgstr "Cloudflare Turnstile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:58
@@ -8669,7 +8640,7 @@ msgstr "Όνομα κοινότητας"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "Ψευδώνυμο κοινότητας"
@@ -8722,7 +8693,7 @@ msgid "Community profile"
 msgstr "Προφίλ κοινότητας"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
 msgid "Community profile updated"
 msgstr "Το προφίλ κοινότητας ενημερώθηκε"
 
@@ -8880,7 +8851,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "Διαμόρφωση συντομεύσεων πληκτρολογίου"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:961
+#: src/features/app/components/setup/SetupWizardSteps.tsx:954
 msgid "Configure now"
 msgstr "Ρύθμιση τώρα"
 
@@ -12341,7 +12312,7 @@ msgstr "Αποσύνδεση από το {channel}"
 msgid "Disconnect from voice"
 msgstr "Αποσύνδεση από τη φωνητική συνομιλία"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:261
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:243
 msgid "Disconnect socket"
 msgstr "Αποσύνδεση socket"
 
@@ -12479,7 +12450,7 @@ msgstr "Λειτουργία εμφάνισης"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "Όνομα εμφάνισης"
@@ -12625,7 +12596,7 @@ msgstr "Θέλεις να μπεις στο {communityName};"
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Γιατρέ, έρχομαι από το μέλλον. Ήρθα εδώ με μια χρονομηχανή που εφηύρατε εσείς. Τώρα, χρειάζομαι τη βοήθειά σας για να επιστρέψω στο έτος 1985."
 
@@ -13262,7 +13233,7 @@ msgid "Edit your messages above or below"
 msgstr "Επεξεργασία των μηνυμάτων σας από πάνω ή από κάτω"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
 msgid "Edit your profile appearance and see a live preview"
 msgstr "Επεξεργαστείτε την εμφάνιση του προφίλ σας και δείτε μια ζωντανή προεπισκόπηση"
 
@@ -13330,7 +13301,7 @@ msgid "Email changed"
 msgstr "Το email άλλαξε"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:993
+#: src/features/app/components/setup/SetupWizardSteps.tsx:978
 msgid "Email delivery"
 msgstr "Παράδοση email"
 
@@ -13635,7 +13606,7 @@ msgid "Enable beta feature"
 msgstr "Ενεργοποίηση λειτουργίας beta"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1053
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1027
 msgid "Enable Bluesky OAuth"
 msgstr "Ενεργοποίηση OAuth του Bluesky"
 
@@ -13668,7 +13639,7 @@ msgid "Enable developer mode"
 msgstr "Ενεργοποίηση λειτουργίας προγραμματιστή"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
+#: src/features/app/components/setup/SetupWizardSteps.tsx:995
 msgid "Enable email delivery"
 msgstr "Ενεργοποίηση παράδοσης email"
 
@@ -14705,7 +14676,7 @@ msgid "Failed to ban member. Try again."
 msgstr "Αποτυχία αποκλεισμού μέλους. Δοκιμάστε ξανά."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:59
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:58
 msgid "Failed to clear trusted domains."
 msgstr "Αποτυχία εκκαθάρισης αξιόπιστων τομέων."
 
@@ -14762,7 +14733,7 @@ msgid "Failed to enable camera."
 msgstr "Αποτυχία ενεργοποίησης κάμερας."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:42
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:41
 msgid "Failed to forget authorized IPs. Try again."
 msgstr "Αποτυχία κατάργησης εξουσιοδοτημένων IP. Δοκιμάστε ξανά."
 
@@ -14907,7 +14878,7 @@ msgid "Failed to resend verification code. Try again later."
 msgstr "Αποτυχία επανάληψης αποστολής κωδικού επαλήθευσης. Δοκιμάστε ξανά αργότερα."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:75
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:74
 msgid "Failed to reset premium state."
 msgstr "Αποτυχία επαναφοράς της κατάστασης premium."
 
@@ -15581,7 +15552,7 @@ msgstr "Εξαναγκασμός σκελετού φόρτωσης"
 msgid "Force mature media"
 msgstr "Εξαναγκασμός εμφάνισης περιεχομένου ενηλίκων"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:276
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:258
 msgid "Force move to AFK channel"
 msgstr "Αναγκαστική μετακίνηση στο κανάλι AFK"
 
@@ -15640,7 +15611,7 @@ msgid "Forced off"
 msgstr "Αναγκαστική απενεργοποίηση"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:46
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:45
 msgid "Forget authorized IPs"
 msgstr "Κατάργηση εξουσιοδοτημένων IP"
 
@@ -15650,7 +15621,7 @@ msgid "Forget subscriptions"
 msgstr "Κατάργηση συνδρομών"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:104
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:103
 msgid "Forgetting authorized IPs..."
 msgstr "Κατάργηση εξουσιοδοτημένων IP..."
 
@@ -15907,12 +15878,12 @@ msgid "from <0>{0}</0>"
 msgstr "από <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
+#: src/features/app/components/setup/SetupWizardSteps.tsx:999
 msgid "From email"
 msgstr "Διεύθυνση email αποστολέα"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1003
 msgid "From name"
 msgstr "Όνομα αποστολέα"
 
@@ -16204,7 +16175,7 @@ msgid "GIF preview"
 msgstr "Προεπισκόπηση GIF"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:969
+#: src/features/app/components/setup/SetupWizardSteps.tsx:962
 msgid "GIF search"
 msgstr "Αναζήτηση GIF"
 
@@ -16853,20 +16824,11 @@ msgstr "Έχετε κωδικό δώρου; Εξαργυρώστε τον για
 msgid "Having fun?"
 msgstr "Περνάς καλά;"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:175
-msgid "Having issues? Try hCaptcha instead"
-msgstr "Αντιμετωπίζετε προβλήματα; Δοκιμάστε το hCaptcha"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:63
 msgctxt "us-state"
 msgid "Hawaii"
 msgstr "Χαβάη"
-
-#. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
-msgid "hCaptcha"
-msgstr "hCaptcha"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:238
@@ -19768,7 +19730,7 @@ msgid "Logo"
 msgstr "Λογότυπο"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1039
 msgid "Logo URL"
 msgstr "Διεύθυνση URL λογότυπου"
 
@@ -22941,7 +22903,7 @@ msgid "No tokens match \"{searchQuery}\"."
 msgstr "Δεν βρέθηκαν διακριτικά που να ταιριάζουν με το \"{searchQuery}\"."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:92
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:91
 msgid "No trusted domains"
 msgstr "Δεν υπάρχουν αξιόπιστοι τομείς"
 
@@ -23696,10 +23658,6 @@ msgstr "Άνοιγμα επιλογέα προγράμματος περιήγη�
 msgid "Open call view"
 msgstr "Άνοιγμα προβολής κλήσης"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:288
-msgid "Open captcha modal"
-msgstr "Άνοιγμα παραθύρου captcha"
-
 #. Accessible label for the channel header title button in a community channel.
 #: src/features/channel/components/channel_header/shared.ts:14
 msgid "Open channel details for {channelName}"
@@ -23712,7 +23670,7 @@ msgstr "Άνοιγμα λεπτομερειών καναλιού για {channel
 msgid "Open chat"
 msgstr "Άνοιγμα συνομιλίας"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:314
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:290
 msgid "Open claim account modal"
 msgstr "Άνοιγμα παραθύρου διεκδίκησης λογαριασμού"
 
@@ -23944,11 +23902,11 @@ msgstr "Άνοιγμα αυτοκόλλητου στο πρόγραμμα περ
 msgid "Open streaming privacy settings"
 msgstr "Άνοιγμα ρυθμίσεων απορρήτου ροής"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:327
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:303
 msgid "Open sudo verification modal"
 msgstr "Άνοιγμα παραθύρου επιβεβαίωσης sudo"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:342
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:318
 msgid "Open system DM"
 msgstr "Άνοιγμα DM συστήματος"
 
@@ -24430,7 +24388,7 @@ msgstr "Τα κλειδιά πρόσβασης απαιτούν ένα υπογ�
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1010
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -25212,7 +25170,7 @@ msgid "Popup"
 msgstr "Αναδυόμενο"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1008
 msgid "Port"
 msgstr "Θύρα"
 
@@ -25338,7 +25296,7 @@ msgid "Premium since date"
 msgstr "Ημερομηνία έναρξης Premium"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:71
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:70
 msgid "Premium state reset on the backend."
 msgstr "Η κατάσταση Premium επαναφέρθηκε στο backend."
 
@@ -25608,7 +25566,7 @@ msgid "Privacy settings"
 msgstr "Ρυθμίσεις απορρήτου"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1047
 msgid "Privacy URL"
 msgstr "Διεύθυνση URL απορρήτου"
 
@@ -25633,7 +25591,7 @@ msgid "Private details"
 msgstr "Προσωπικά στοιχεία"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1055
 msgid "Private key"
 msgstr "Ιδιωτικό κλειδί"
 
@@ -25699,18 +25657,18 @@ msgstr "Χρώμα προφίλ"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "Προσαρμογή προφίλ"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
 msgid "Profile customization for {selectedGuildName}"
 msgstr "Προσαρμογή προφίλ για το {selectedGuildName}"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
 msgid "Profile customization form"
 msgstr "Φόρμα προσαρμογής προφίλ"
 
@@ -25775,7 +25733,7 @@ msgid "Profile type"
 msgstr "Τύπος προφίλ"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
 msgid "Profile updated"
 msgstr "Το προφίλ ενημερώθηκε"
 
@@ -25812,7 +25770,7 @@ msgstr "Εμφάνιση ειδοποίησης για νέες συσκευές
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -25841,11 +25799,6 @@ msgstr "Δώστε είτε το αναγνωριστικό χρήστη είτ�
 #: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Provide your full legal name for the declaration."
 msgstr "Δώστε το πλήρες νόμιμο όνομά σας για τη δήλωση."
-
-#. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
-msgid "Provider"
-msgstr "Πάροχος"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27626,7 +27579,7 @@ msgid "Reset password"
 msgstr "Επαναφορά κωδικού πρόσβασης"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:79
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:78
 msgid "Reset premium state"
 msgstr "Επαναφορά κατάστασης premium"
 
@@ -27635,7 +27588,7 @@ msgstr "Επαναφορά κατάστασης premium"
 msgid "Reset slider to default value"
 msgstr "Επαναφορά ρυθμιστικού στην προεπιλεγμένη τιμή"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:247
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:229
 msgid "Reset socket"
 msgstr "Επαναφορά socket"
 
@@ -27684,7 +27637,7 @@ msgid "Reset zoom"
 msgstr "Επαναφορά ζουμ"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:112
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:111
 msgid "Resetting premium state..."
 msgstr "Επαναφορά κατάστασης premium..."
 
@@ -28315,7 +28268,7 @@ msgid "Run the instance as one community instead of many. This can only be enabl
 msgstr "Εκτελέστε την παρουσία ως μία κοινότητα αντί για πολλές. Αυτό μπορεί να ενεργοποιηθεί μόνο τώρα, κατά τη ρύθμιση."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:100
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:99
 msgid "Runtime utilities"
 msgstr "Βοηθητικά προγράμματα χρόνου εκτέλεσης"
 
@@ -29102,11 +29055,6 @@ msgstr "Πατήθηκε το δευτερεύον κουμπί."
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:136
 msgid "Secret"
 msgstr "Μυστικό"
-
-#. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
-msgid "Secret key"
-msgstr "Μυστικό κλειδί"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the secrets section. Keep it concise. Keep the tone plain and specific.
@@ -29925,7 +29873,7 @@ msgid "Set up authenticator app"
 msgstr "Ρύθμιση εφαρμογής ελέγχου ταυτότητας"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:953
+#: src/features/app/components/setup/SetupWizardSteps.tsx:946
 msgid "Set up later"
 msgstr "Ρύθμιση αργότερα"
 
@@ -30427,7 +30375,7 @@ msgstr "Εμφάνιση λίστας DM"
 msgid "Show just the typing indicator without avatars"
 msgstr "Να εμφανίζεται μόνο η ένδειξη πληκτρολόγησης χωρίς avatar"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:308
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:284
 msgid "Show keyboard mode intro"
 msgstr "Εμφάνιση εισαγωγής λειτουργίας πληκτρολογίου"
 
@@ -30538,7 +30486,7 @@ msgstr "Εμφάνιση Neko"
 msgid "Show new device alerts"
 msgstr "Εμφάνιση ειδοποιήσεων νέων συσκευών"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:282
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:264
 msgid "Show new device modal"
 msgstr "Εμφάνιση παραθύρου νέας συσκευής"
 
@@ -30820,7 +30768,7 @@ msgid "Signed-in devices"
 msgstr "Συνδεδεμένες συσκευές"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1051
 msgid "Signing key ID"
 msgstr "Αναγνωριστικό κλειδιού υπογραφής"
 
@@ -30910,11 +30858,6 @@ msgstr "Μία γραμμή"
 msgid "Single user (all statuses)"
 msgstr "Ένας χρήστης (όλες οι καταστάσεις)"
 
-#. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
-msgid "Site key"
-msgstr "Κλειδί ιστότοπου"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
@@ -30964,7 +30907,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "Παράλειψη του μηνύματος αποχώρησης του συστήματος. Δεν ειδοποιείται κανείς."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:957
+#: src/features/app/components/setup/SetupWizardSteps.tsx:950
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Παράλειψη τώρα και ρύθμιση από τον πίνακα διαχείρισης."
 
@@ -31212,17 +31155,17 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "Η επαλήθευση SMS δεν είναι διαθέσιμη αυτήν τη στιγμή. Δοκιμάστε ξανά αργότερα ή επικοινωνήστε με την υποστήριξη."
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1045
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
 msgid "SMTP connection verified."
 msgstr "Η σύνδεση SMTP επαληθεύτηκε."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1007
 msgid "SMTP host"
 msgstr "Διακομιστής SMTP"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1049
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1023
 msgid "SMTP validation failed."
 msgstr "Η επαλήθευση SMTP απέτυχε."
 
@@ -31402,7 +31345,7 @@ msgstr "Κάτι πήγε στραβά. Δοκιμάστε ξανά αργότε
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "Κάτι πήγε στραβά. Δοκιμάστε ξανά."
@@ -32098,6 +32041,11 @@ msgstr "Γίνεται ακόμα ευρετηρίαση — δοκιμάστε 
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Still Neko"
 msgstr "Ακίνητο Neko"
+
+#. Small toast shown only when an automatic background check before sign-in, sign-up or a similar request takes more than a couple of seconds. No user action needed. Keep it short and calm.
+#: src/features/auth/altcha/CaptchaInterceptor.ts:13
+msgid "Still working on it…"
+msgstr "Επεξεργασία…"
 
 #. Stop-recording button label in the desktop voice message composer.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:65
@@ -33013,7 +32961,7 @@ msgid "Terms of service"
 msgstr "Όροι παροχής υπηρεσιών"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1043
 msgid "Terms URL"
 msgstr "Διεύθυνση URL όρων"
 
@@ -33023,7 +32971,7 @@ msgid "Terrorism or violent extremism"
 msgstr "Τρομοκρατία ή βίαιος εξτρεμισμός"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1041
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1015
 msgid "Test SMTP"
 msgstr "Δοκιμή SMTP"
 
@@ -33800,7 +33748,7 @@ msgid "This clears quick CSS, imported themes, uploaded assets, and local file r
 msgstr "Αυτό εκκαθαρίζει το γρήγορο CSS, τα εισαγόμενα θέματα, τα μεταφορτωμένα στοιχεία και τις τοπικές αναφορές αρχείων σε αυτήν τη συσκευή."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:83
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:82
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "Αυτό διαγράφει εντελώς την κατάσταση premium στο backend σας, μαζί με τον τύπο premium, τα μεταδεδομένα χρέωσης και τα flags παράκαμψης."
 
@@ -34200,7 +34148,7 @@ msgid "This message no longer exists."
 msgstr "Αυτό το μήνυμα δεν υπάρχει πλέον."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
 msgid "This nickname will only be visible in this community"
 msgstr "Αυτό το ψευδώνυμο θα είναι ορατό μόνο σε αυτήν την κοινότητα"
 
@@ -34277,12 +34225,12 @@ msgid "This removes all custom CSS overrides. Theme files in your library are no
 msgstr "Αυτό καταργεί όλες τις προσαρμοσμένες παρακάμψεις CSS. Τα αρχεία θέματος στη βιβλιοθήκη σας δεν επηρεάζονται."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:50
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:49
 msgid "This removes all previously authorized IP addresses on your account. The next login from any IP will require email verification."
 msgstr "Αυτό καταργεί όλες τις διευθύνσεις IP που είχαν εξουσιοδοτηθεί προηγουμένως στον λογαριασμό σας. Η επόμενη σύνδεση από οποιαδήποτε IP θα απαιτεί επαλήθευση μέσω email."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:67
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:66
 msgid "This removes all trusted domains. You will see the external link warning for all domains again."
 msgstr "Αυτό καταργεί όλα τα αξιόπιστα domain. Θα βλέπετε ξανά την προειδοποίηση εξωτερικού συνδέσμου για όλα τα domain."
 
@@ -34949,7 +34897,7 @@ msgstr "Οι αλλαγές στο εικονίδιο της περιοχής ε
 msgid "Trending GIFs"
 msgstr "Δημοφιλή GIF"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:383
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "Πρόκληση σφάλματος React"
 
@@ -35008,7 +34956,7 @@ msgid "Trusted domains"
 msgstr "Αξιόπιστοι τομείς"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:55
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:54
 msgid "Trusted domains cleared."
 msgstr "Οι αξιόπιστοι τομείς διαγράφηκαν."
 
@@ -35054,7 +35002,6 @@ msgid "Try a different variable name or clear the search."
 msgstr "Δοκιμάστε ένα διαφορετικό όνομα μεταβλητής ή διαγράψτε την αναζήτηση."
 
 #. Generic action label for retrying a failed or interrupted operation.
-#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35131,10 +35078,6 @@ msgstr "Δοκιμάστε κλειδί ασφαλείας / κλειδί πρό
 #: src/features/messaging/components/alerts/MessageSendFailedModal.tsx:17
 msgid "Try sending your message again."
 msgstr "Δοκιμάστε να στείλετε ξανά το μήνυμά σας."
-
-#: src/features/auth/components/modals/CaptchaModal.tsx:177
-msgid "Try Turnstile instead"
-msgstr "Δοκιμάστε το Turnstile αντ' αυτού"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
@@ -36890,7 +36833,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "Χρησιμοποιήστε το για την αντιμετώπιση προβλημάτων του προγράμματος-πελάτη ή τη συλλογή αρχείων καταγραφής. Ενδέχεται να προσθέσει λεπτομερή μηνύματα στην κονσόλα του προγράμματος περιήγησης για τον τρέχοντα πελάτη."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1011
 msgid "Use TLS"
 msgstr "Χρήση TLS"
 
@@ -37056,7 +36999,7 @@ msgstr "Ένταση χρήστη"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -37337,11 +37280,6 @@ msgstr "Επαλήθευση αριθμού τηλεφώνου"
 msgid "Verify phone number form"
 msgstr "Φόρμα επαλήθευσης αριθμού τηλεφώνου"
 
-#. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:17
-msgid "Verify you're human"
-msgstr "Επιβεβαιώστε ότι είστε άνθρωπος"
-
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:40
@@ -37369,22 +37307,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "Επαληθεύστε το email σας πριν προσθέσετε μια εφαρμογή ελέγχου ταυτότητας."
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "Επαληθεύστε το email σας πριν αλλάξετε το ψευδώνυμο κοινότητας, το avatar, το banner, το βιογραφικό, τις αντωνυμίες ή το χρώμα έμφασης."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
 msgstr "Επαληθεύστε το email σας πριν αλλάξετε το όνομα χρήστη, το όνομα εμφάνισης, το avatar, το banner, το βιογραφικό, τις αντωνυμίες, τη ζώνη ώρας ή το απόρρητο του σήματος {premiumProductName}."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "Επαληθεύστε το email σας πριν επεξεργαστείτε αυτό το προφίλ κοινότητας. Μπορείτε ακόμα να το δείτε εδώ."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "Επαληθεύστε το email σας πριν επεξεργαστείτε το προφίλ σας. Μπορείτε ακόμα να το δείτε εδώ."
 
@@ -37416,12 +37354,12 @@ msgid "Verify your email to continue using {productName}."
 msgstr "Επαληθεύστε το email σας για να συνεχίσετε να χρησιμοποιείτε το {productName}."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
 msgid "Verify your email to edit this community profile"
 msgstr "Επαληθεύστε το email σας για να επεξεργαστείτε αυτό το προφίλ κοινότητας"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
 msgid "Verify your email to edit your profile"
 msgstr "Επαληθεύστε το email σας για να επεξεργαστείτε το προφίλ σας"
 
@@ -38398,10 +38336,6 @@ msgstr "Μειώσαμε την τιμή του {premiumProductName} στη Βρ
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "Χρειάζεται ένα βήμα επαλήθευσης πριν συνεχίσετε. Αυτό βοηθά στην προστασία των λογαριασμών και στην αποφυγή ανεπιθύμητων μηνυμάτων στο {productName}."
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:128
-msgid "We need to make sure you're not a bot. Complete the verification below."
-msgstr "Πρέπει να βεβαιωθούμε ότι δεν είστε ρομπότ. Ολοκληρώστε την παρακάτω επαλήθευση."
-
 #. Required-action modal intro text when both email and phone verification are required.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:216
 msgid "We need two verification steps before you continue. We will show one step at a time."
@@ -39256,7 +39190,7 @@ msgid "You can't befriend yourself"
 msgstr "Δεν μπορείτε να κάνετε φίλο τον εαυτό σας"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
 msgid "You can't change your nickname here"
 msgstr "Δεν μπορείτε να αλλάξετε το ψευδώνυμό σας εδώ"
 
@@ -39506,7 +39440,7 @@ msgid "You have unsaved changes."
 msgstr "Έχετε μη αποθηκευμένες αλλαγές."
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "Έχετε μη αποθηκευμένες αλλαγές. Αποθηκεύστε ή επαναφέρετε πριν φύγετε."
 
@@ -40031,10 +39965,6 @@ msgstr "Η ενέργειά σας δεν ολοκληρώθηκε επειδή 
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Η αίτησή σας εκκρεμεί για έλεγχο. Μπορείτε ακόμα να ενημερώσετε τα στοιχεία της καταχώρισής σας ή να αποσύρετε την αίτηση."
 
-#: src/features/auth/components/AltchaVerification.tsx:50
-msgid "Your browser couldn't finish the check."
-msgstr "Ο περιηγητής σας δεν μπόρεσε να ολοκληρώσει τον έλεγχο."
-
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -40386,7 +40316,7 @@ msgid "YouTube enrichment"
 msgstr "Εμπλουτισμός YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:977
+#: src/features/app/components/setup/SetupWizardSteps.tsx:970
 msgid "YouTube previews"
 msgstr "Προεπισκοπήσεις YouTube"
 

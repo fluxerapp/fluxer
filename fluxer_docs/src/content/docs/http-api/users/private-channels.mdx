@@ -120,12 +120,9 @@ Fluxer holds a bot caller to no friendship. A recipient that has blocked the bot
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The CAPTCHA proof |
-| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> Read only on a request supplying `recipients`, where a missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, as does a proof for a provider the instance holds no secret key for. [CAPTCHA](/topics/captcha/) states when an instance skips verification
-
-<sup>2</sup> The value `hcaptcha` or `turnstile` selects that provider whether or not the instance configured it. The instance's configured provider is used when the header is absent or has any other value
+<sup>1</sup> Read only on a request supplying `recipients`, where a missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. [CAPTCHA handling](/topics/captcha/#exemption) states when an instance skips verification
 
 ### JSON body
 

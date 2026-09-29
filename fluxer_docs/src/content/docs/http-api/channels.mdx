@@ -568,7 +568,7 @@ Adds a user to a group direct message and returns 204 with an empty body. Emits 
 
 - The caller must be a current recipient of the group, and must be friends with the target, including when the caller is a bot.
 - The target's group direct message admission policy must allow the caller.
-- An instance with CAPTCHA enabled also requires a CAPTCHA proof.
+- A solved [CAPTCHA](/topics/captcha/) challenge is required while the instance check is on.
 
 Fluxer evaluates the target's admission policy in this order.
 
@@ -588,12 +588,9 @@ Fluxer evaluates the target's admission policy in this order.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | A CAPTCHA proof |
-| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, as does a proof for a provider the instance holds no secret key for. [CAPTCHA](/topics/captcha/) states when an instance skips verification
-
-<sup>2</sup> `hcaptcha` or `turnstile` selects that provider whether or not the instance configured it. The instance's configured provider is used when the header is absent or has any other value
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. [CAPTCHA handling](/topics/captcha/#exemption) states when an instance skips verification
 
 ### Response
 

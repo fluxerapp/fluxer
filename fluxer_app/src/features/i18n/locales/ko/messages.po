@@ -2395,11 +2395,6 @@ msgstr "60초"
 msgid "7 days"
 msgstr "7일"
 
-#. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
-msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
-msgstr "전화번호 인증 전에 브라우저 확인이 필요합니다. 로그인 페이지에서 다시 시도하거나 고객지원팀에 문의하세요."
-
 #. Hint shown beside in:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:77
 msgid "a channel"
@@ -2928,7 +2923,7 @@ msgid "Add a friend to get started."
 msgstr "친구를 추가하여 시작해 보세요."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:973
+#: src/features/app/components/setup/SetupWizardSteps.tsx:966
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Klipy API 키를 추가하여 실행 시 GIF 검색을 사용 설정하세요."
 
@@ -2965,7 +2960,7 @@ msgid "Add a working email"
 msgstr "사용 가능한 이메일 추가"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:981
+#: src/features/app/components/setup/SetupWizardSteps.tsx:974
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "YouTube 링크에 더 자세한 정보를 표시하려면 YouTube Data API 키를 추가하세요."
 
@@ -3011,7 +3006,7 @@ msgid "Add another reaction"
 msgstr "다른 반응 추가"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
+#: src/features/app/components/setup/SetupWizardSteps.tsx:990
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Bluesky OAuth 클라이언트 메타데이터와 서명 키를 추가하세요."
 
@@ -3161,7 +3156,7 @@ msgid "Add shortcut"
 msgstr "단축키 추가"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:997
+#: src/features/app/components/setup/SetupWizardSteps.tsx:982
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "인스턴스에서 확인 및 알림 이메일을 보낼 수 있도록 SMTP 자격 증명을 추가하세요."
 
@@ -3188,7 +3183,7 @@ msgid "Add stream"
 msgstr "스트림 추가"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:965
+#: src/features/app/components/setup/SetupWizardSteps.tsx:958
 msgid "Add the credentials during setup."
 msgstr "설정 중에 자격 증명을 추가하세요."
 
@@ -3954,7 +3949,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "잘못된 상태 값이 전달되었습니다. 이제 이 탭을 닫고 앱으로 돌아가세요."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:13
+#: src/features/auth/hooks/useAuthForm.ts:12
 msgid "An unexpected error occurred"
 msgstr "예기치 않은 오류가 발생했습니다"
 
@@ -4262,7 +4257,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "누구나 계정을 요청할 수 있지만, 관리자의 승인이 필요합니다."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
+#: src/features/app/components/setup/SetupWizardSteps.tsx:994
 msgid "API key"
 msgstr "API 키"
 
@@ -4958,7 +4953,7 @@ msgid "Authorized apps"
 msgstr "승인된 앱"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:38
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:37
 msgid "Authorized IPs cleared. New logins will require email verification."
 msgstr "승인된 IP가 삭제되었습니다. 새로 로그인하려면 이메일 인증이 필요합니다."
 
@@ -5730,7 +5725,7 @@ msgid "Bluesky connections"
 msgstr "Bluesky 연결"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
+#: src/features/app/components/setup/SetupWizardSteps.tsx:986
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -5896,11 +5891,6 @@ msgstr "봇 권한은 음수일 수 없습니다."
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:64
 msgid "Bot profile"
 msgstr "봇 프로필"
-
-#. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:985
-msgid "Bot protection"
-msgstr "봇 방지"
 
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:20
@@ -6553,11 +6543,6 @@ msgstr "수정할 수 없음"
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx:12
 msgid "Cannot delete account"
 msgstr "계정을 삭제할 수 없습니다"
-
-#. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:15
-msgid "Captcha verification failed. Try again."
-msgstr "캡차 인증에 실패했습니다. 다시 시도해 주세요."
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:50
@@ -7398,10 +7383,6 @@ msgstr "접근 권한 확인 중..."
 msgid "Checking screen recording permission..."
 msgstr "화면 녹화 권한 확인 중..."
 
-#: src/features/auth/components/AltchaVerification.tsx:62
-msgid "Checking your browser. This takes a few seconds."
-msgstr "브라우저를 확인 중입니다. 몇 초 정도 걸립니다."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -7570,11 +7551,6 @@ msgstr "파일을 선택한 다음 Dock에 추가를 선택하세요."
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
 msgid "Choose friends to message."
 msgstr "메시지를 보낼 친구를 선택하세요."
-
-#. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:989
-msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
-msgstr "가입 시 hCaptcha 또는 Cloudflare Turnstile을 선택하세요."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
@@ -7982,17 +7958,17 @@ msgid "Clear selection"
 msgstr "선택 해제"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:88
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:87
 msgid "Clear trust all setting"
 msgstr "모든 도메인 신뢰 설정 지우기"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:63
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:62
 msgid "Clear trusted domains"
 msgstr "신뢰하는 도메인 지우기"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:96
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:95
 msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "신뢰하는 도메인 지우기 ({trustedDomainsCount})"
 
@@ -8002,7 +7978,7 @@ msgid "Clearer text"
 msgstr "더 선명한 텍스트"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:107
 msgid "Clearing trusted domains..."
 msgstr "신뢰하는 도메인 지우는 중..."
 
@@ -8100,7 +8076,7 @@ msgid "Client"
 msgstr "클라이언트"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1057
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1031
 msgid "Client name"
 msgstr "클라이언트 이름"
 
@@ -8117,7 +8093,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "클라이언트 보안 비밀이 재생성되었습니다. 이전 보안 비밀을 사용하는 코드를 업데이트하세요."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
 msgid "Client URL"
 msgstr "클라이언트 URL"
 
@@ -8268,11 +8244,6 @@ msgstr "닫은 DM"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
 msgid "Cloud upload"
 msgstr "클라우드 업로드"
-
-#. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1014
-msgid "Cloudflare Turnstile"
-msgstr "Cloudflare Turnstile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:58
@@ -8669,7 +8640,7 @@ msgstr "커뮤니티 이름"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "커뮤니티 닉네임"
@@ -8722,7 +8693,7 @@ msgid "Community profile"
 msgstr "커뮤니티 프로필"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
 msgid "Community profile updated"
 msgstr "커뮤니티 프로필 업데이트 완료"
 
@@ -8880,7 +8851,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "키보드 단축키 설정"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:961
+#: src/features/app/components/setup/SetupWizardSteps.tsx:954
 msgid "Configure now"
 msgstr "지금 설정"
 
@@ -12341,7 +12312,7 @@ msgstr "{channel}에서 연결 끊기"
 msgid "Disconnect from voice"
 msgstr "음성 연결 끊기"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:261
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:243
 msgid "Disconnect socket"
 msgstr "소켓 연결 해제"
 
@@ -12479,7 +12450,7 @@ msgstr "화면 모드"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "표시 이름"
@@ -12625,7 +12596,7 @@ msgstr "{communityName}에 참여하시겠어요?"
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "박사님, 저는 미래에서 왔어요. 박사님이 발명한 타임머신을 타고 여기로 왔습니다. 이제 1985년으로 돌아가려면 박사님의 도움이 필요해요."
 
@@ -13262,7 +13233,7 @@ msgid "Edit your messages above or below"
 msgstr "위 또는 아래의 내 메시지 수정"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
 msgid "Edit your profile appearance and see a live preview"
 msgstr "프로필 모양을 편집하고 실시간 미리보기를 확인하세요"
 
@@ -13330,7 +13301,7 @@ msgid "Email changed"
 msgstr "이메일 변경 완료"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:993
+#: src/features/app/components/setup/SetupWizardSteps.tsx:978
 msgid "Email delivery"
 msgstr "이메일 전송"
 
@@ -13635,7 +13606,7 @@ msgid "Enable beta feature"
 msgstr "베타 기능 활성화"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1053
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1027
 msgid "Enable Bluesky OAuth"
 msgstr "Bluesky OAuth 사용 설정"
 
@@ -13668,7 +13639,7 @@ msgid "Enable developer mode"
 msgstr "개발자 모드 활성화"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
+#: src/features/app/components/setup/SetupWizardSteps.tsx:995
 msgid "Enable email delivery"
 msgstr "이메일 전송 사용 설정"
 
@@ -14705,7 +14676,7 @@ msgid "Failed to ban member. Try again."
 msgstr "멤버 차단에 실패했습니다. 다시 시도해 주세요."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:59
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:58
 msgid "Failed to clear trusted domains."
 msgstr "신뢰할 수 있는 도메인 지우기 실패."
 
@@ -14762,7 +14733,7 @@ msgid "Failed to enable camera."
 msgstr "카메라를 켤 수 없습니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:42
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:41
 msgid "Failed to forget authorized IPs. Try again."
 msgstr "승인된 IP를 지우지 못했습니다. 다시 시도해 주세요."
 
@@ -14907,7 +14878,7 @@ msgid "Failed to resend verification code. Try again later."
 msgstr "인증 코드 재전송에 실패했습니다. 나중에 다시 시도해 주세요."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:75
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:74
 msgid "Failed to reset premium state."
 msgstr "프리미엄 상태 초기화에 실패했습니다."
 
@@ -15581,7 +15552,7 @@ msgstr "로딩 스켈레톤 강제 표시"
 msgid "Force mature media"
 msgstr "성인용 미디어 강제 적용"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:276
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:258
 msgid "Force move to AFK channel"
 msgstr "자리 비움 채널로 강제 이동"
 
@@ -15640,7 +15611,7 @@ msgid "Forced off"
 msgstr "강제 꺼짐"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:46
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:45
 msgid "Forget authorized IPs"
 msgstr "승인된 IP 지우기"
 
@@ -15650,7 +15621,7 @@ msgid "Forget subscriptions"
 msgstr "푸시 구독 삭제"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:104
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:103
 msgid "Forgetting authorized IPs..."
 msgstr "승인된 IP 지우는 중..."
 
@@ -15907,12 +15878,12 @@ msgid "from <0>{0}</0>"
 msgstr "<0>{0}</0>에서"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
+#: src/features/app/components/setup/SetupWizardSteps.tsx:999
 msgid "From email"
 msgstr "보내는 사람 이메일"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1003
 msgid "From name"
 msgstr "보내는 사람 이름"
 
@@ -16204,7 +16175,7 @@ msgid "GIF preview"
 msgstr "GIF 미리보기"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:969
+#: src/features/app/components/setup/SetupWizardSteps.tsx:962
 msgid "GIF search"
 msgstr "GIF 검색"
 
@@ -16853,20 +16824,11 @@ msgstr "선물 코드가 있으신가요? {PREMIUM_PRODUCT_NAME}을(를) 잠금 
 msgid "Having fun?"
 msgstr "재밌게 보내고 계신가요?"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:175
-msgid "Having issues? Try hCaptcha instead"
-msgstr "문제가 있으신가요? hCaptcha를 대신 사용해 보세요"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:63
 msgctxt "us-state"
 msgid "Hawaii"
 msgstr "하와이"
-
-#. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
-msgid "hCaptcha"
-msgstr "hCaptcha"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:238
@@ -19768,7 +19730,7 @@ msgid "Logo"
 msgstr "로고"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1039
 msgid "Logo URL"
 msgstr "로고 URL"
 
@@ -22941,7 +22903,7 @@ msgid "No tokens match \"{searchQuery}\"."
 msgstr "일치하는 토큰이 없습니다: \"{searchQuery}\"."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:92
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:91
 msgid "No trusted domains"
 msgstr "신뢰할 수 있는 도메인 없음"
 
@@ -23696,10 +23658,6 @@ msgstr "브라우저 선택기 열기"
 msgid "Open call view"
 msgstr "통화 화면 열기"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:288
-msgid "Open captcha modal"
-msgstr "캡차 모달 열기"
-
 #. Accessible label for the channel header title button in a community channel.
 #: src/features/channel/components/channel_header/shared.ts:14
 msgid "Open channel details for {channelName}"
@@ -23712,7 +23670,7 @@ msgstr "{channelName} 채널 정보 열기"
 msgid "Open chat"
 msgstr "채팅 열기"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:314
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:290
 msgid "Open claim account modal"
 msgstr "계정 등록 모달 열기"
 
@@ -23944,11 +23902,11 @@ msgstr "브라우저에서 스티커 열기"
 msgid "Open streaming privacy settings"
 msgstr "스트리밍 개인 정보 보호 설정 열기"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:327
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:303
 msgid "Open sudo verification modal"
 msgstr "관리자 인증 모달 열기"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:342
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:318
 msgid "Open system DM"
 msgstr "시스템 DM 열기"
 
@@ -24430,7 +24388,7 @@ msgstr "패스키를 사용하려면 유효한 앱 식별자가 있는 서명된
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1010
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -25212,7 +25170,7 @@ msgid "Popup"
 msgstr "팝업"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1008
 msgid "Port"
 msgstr "포트"
 
@@ -25338,7 +25296,7 @@ msgid "Premium since date"
 msgstr "프리미엄 시작일"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:71
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:70
 msgid "Premium state reset on the backend."
 msgstr "백엔드에서 프리미엄 상태가 재설정되었습니다."
 
@@ -25608,7 +25566,7 @@ msgid "Privacy settings"
 msgstr "개인 정보 보호 설정"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1047
 msgid "Privacy URL"
 msgstr "개인정보처리방침 URL"
 
@@ -25633,7 +25591,7 @@ msgid "Private details"
 msgstr "개인 정보"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1055
 msgid "Private key"
 msgstr "개인 키"
 
@@ -25699,18 +25657,18 @@ msgstr "프로필 색상"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "프로필 맞춤 설정"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
 msgid "Profile customization for {selectedGuildName}"
 msgstr "{selectedGuildName} 프로필 맞춤 설정"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
 msgid "Profile customization form"
 msgstr "프로필 맞춤 설정 양식"
 
@@ -25775,7 +25733,7 @@ msgid "Profile type"
 msgstr "프로필 유형"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
 msgid "Profile updated"
 msgstr "프로필 업데이트 완료"
 
@@ -25812,7 +25770,7 @@ msgstr "새 오디오 장치가 연결되면 알림 표시"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -25841,11 +25799,6 @@ msgstr "신고하려는 사람의 사용자 ID 또는 사용자 이름을 입력
 #: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Provide your full legal name for the declaration."
 msgstr "법적 진술을 위해 본인의 법적 성명 전체를 입력해 주세요."
-
-#. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
-msgid "Provider"
-msgstr "제공업체"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27626,7 +27579,7 @@ msgid "Reset password"
 msgstr "비밀번호 재설정"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:79
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:78
 msgid "Reset premium state"
 msgstr "프리미엄 상태 초기화"
 
@@ -27635,7 +27588,7 @@ msgstr "프리미엄 상태 초기화"
 msgid "Reset slider to default value"
 msgstr "슬라이더를 기본값으로 초기화"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:247
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:229
 msgid "Reset socket"
 msgstr "소켓 재설정"
 
@@ -27684,7 +27637,7 @@ msgid "Reset zoom"
 msgstr "확대/축소 초기화"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:112
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:111
 msgid "Resetting premium state..."
 msgstr "프리미엄 상태 재설정 중..."
 
@@ -28315,7 +28268,7 @@ msgid "Run the instance as one community instead of many. This can only be enabl
 msgstr "인스턴스를 여러 커뮤니티가 아닌 하나의 커뮤니티로 운영합니다. 지금 설정 중에만 켤 수 있습니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:100
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:99
 msgid "Runtime utilities"
 msgstr "런타임 유틸리티"
 
@@ -29102,11 +29055,6 @@ msgstr "보조 버튼이 클릭되었습니다."
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:136
 msgid "Secret"
 msgstr "비밀"
-
-#. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
-msgid "Secret key"
-msgstr "비밀 키"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the secrets section. Keep it concise. Keep the tone plain and specific.
@@ -29925,7 +29873,7 @@ msgid "Set up authenticator app"
 msgstr "인증 앱 설정"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:953
+#: src/features/app/components/setup/SetupWizardSteps.tsx:946
 msgid "Set up later"
 msgstr "나중에 설정"
 
@@ -30427,7 +30375,7 @@ msgstr "인라인 DM 목록 표시"
 msgid "Show just the typing indicator without avatars"
 msgstr "아바타 없이 입력 중 표시만 보기"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:308
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:284
 msgid "Show keyboard mode intro"
 msgstr "키보드 모드 소개 표시"
 
@@ -30538,7 +30486,7 @@ msgstr "네코 표시"
 msgid "Show new device alerts"
 msgstr "새 기기 알림 표시"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:282
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:264
 msgid "Show new device modal"
 msgstr "새 기기 모달 표시"
 
@@ -30820,7 +30768,7 @@ msgid "Signed-in devices"
 msgstr "로그인된 기기"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1051
 msgid "Signing key ID"
 msgstr "서명 키 ID"
 
@@ -30910,11 +30858,6 @@ msgstr "한 줄"
 msgid "Single user (all statuses)"
 msgstr "단일 사용자 (모든 상태)"
 
-#. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
-msgid "Site key"
-msgstr "사이트 키"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
@@ -30964,7 +30907,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "시스템 퇴장 알림을 건너뛰어 아무도 알림을 받지 않도록 합니다."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:957
+#: src/features/app/components/setup/SetupWizardSteps.tsx:950
 msgid "Skip this now and configure it from the admin panel."
 msgstr "지금 건너뛰고 관리자 패널에서 설정하세요."
 
@@ -31212,17 +31155,17 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "지금은 SMS 인증을 이용할 수 없습니다. 나중에 다시 시도하거나 고객지원팀에 문의하세요."
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1045
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
 msgid "SMTP connection verified."
 msgstr "SMTP 연결이 확인되었습니다."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1007
 msgid "SMTP host"
 msgstr "SMTP 호스트"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1049
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1023
 msgid "SMTP validation failed."
 msgstr "SMTP 검증에 실패했습니다."
 
@@ -31402,7 +31345,7 @@ msgstr "문제가 발생했습니다. 나중에 다시 시도해 주세요."
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "문제가 발생했습니다. 다시 시도해 주세요."
@@ -32098,6 +32041,11 @@ msgstr "아직 색인 작업 중입니다. 잠시 후에 다시 확인해 주세
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Still Neko"
 msgstr "네코 정지"
+
+#. Small toast shown only when an automatic background check before sign-in, sign-up or a similar request takes more than a couple of seconds. No user action needed. Keep it short and calm.
+#: src/features/auth/altcha/CaptchaInterceptor.ts:13
+msgid "Still working on it…"
+msgstr "계속 작업 중입니다…"
 
 #. Stop-recording button label in the desktop voice message composer.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:65
@@ -33013,7 +32961,7 @@ msgid "Terms of service"
 msgstr "이용약관"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1043
 msgid "Terms URL"
 msgstr "이용약관 URL"
 
@@ -33023,7 +32971,7 @@ msgid "Terrorism or violent extremism"
 msgstr "테러 또는 폭력적 극단주의"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1041
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1015
 msgid "Test SMTP"
 msgstr "SMTP 테스트"
 
@@ -33800,7 +33748,7 @@ msgid "This clears quick CSS, imported themes, uploaded assets, and local file r
 msgstr "이 기기에서 빠른 CSS, 가져온 테마, 업로드한 에셋, 로컬 파일 참조를 지웁니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:83
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:82
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "프리미엄 유형, 결제 메타데이터, 재정의 플래그를 포함하여 백엔드 프리미엄 상태를 완전히 지웁니다."
 
@@ -34200,7 +34148,7 @@ msgid "This message no longer exists."
 msgstr "이 메시지는 더 이상 존재하지 않습니다."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
 msgid "This nickname will only be visible in this community"
 msgstr "이 닉네임은 이 커뮤니티에서만 표시됩니다"
 
@@ -34277,12 +34225,12 @@ msgid "This removes all custom CSS overrides. Theme files in your library are no
 msgstr "모든 사용자 지정 CSS 재정의를 제거합니다. 라이브러리의 테마 파일은 영향을 받지 않습니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:50
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:49
 msgid "This removes all previously authorized IP addresses on your account. The next login from any IP will require email verification."
 msgstr "이 작업은 이전에 승인된 모든 IP 주소를 계정에서 제거합니다. 다음 로그인 시에는 어떤 IP에서든 이메일 인증이 필요합니다."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:67
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:66
 msgid "This removes all trusted domains. You will see the external link warning for all domains again."
 msgstr "모든 신뢰하는 도메인이 제거됩니다. 모든 도메인에 대해 외부 링크 경고가 다시 표시됩니다."
 
@@ -34949,7 +34897,7 @@ msgstr "시스템 트레이 프로토콜은 런타임에 앱이 아이콘을 추
 msgid "Trending GIFs"
 msgstr "인기 GIF"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:383
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "React 충돌 유발"
 
@@ -35008,7 +34956,7 @@ msgid "Trusted domains"
 msgstr "신뢰하는 도메인"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:55
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:54
 msgid "Trusted domains cleared."
 msgstr "신뢰하는 도메인이 삭제되었습니다."
 
@@ -35054,7 +35002,6 @@ msgid "Try a different variable name or clear the search."
 msgstr "다른 변수 이름을 사용하거나 검색을 지워주세요."
 
 #. Generic action label for retrying a failed or interrupted operation.
-#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35131,10 +35078,6 @@ msgstr "보안 키/패스키로 시도하기"
 #: src/features/messaging/components/alerts/MessageSendFailedModal.tsx:17
 msgid "Try sending your message again."
 msgstr "메시지를 다시 보내보세요."
-
-#: src/features/auth/components/modals/CaptchaModal.tsx:177
-msgid "Try Turnstile instead"
-msgstr "대신 Turnstile을 시도해 보세요"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
@@ -36890,7 +36833,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "클라이언트 문제 해결 또는 로그 수집 시 사용하세요. 현재 클라이언트에 대한 자세한 메시지가 브라우저 콘솔에 추가될 수 있습니다."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1011
 msgid "Use TLS"
 msgstr "TLS 사용"
 
@@ -37056,7 +36999,7 @@ msgstr "사용자 볼륨"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -37337,11 +37280,6 @@ msgstr "전화번호 인증"
 msgid "Verify phone number form"
 msgstr "전화번호 인증 양식"
 
-#. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:17
-msgid "Verify you're human"
-msgstr "사람인지 확인"
-
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:40
@@ -37369,22 +37307,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "인증 앱을 추가하기 전에 이메일을 인증하세요."
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "커뮤니티 닉네임, 아바타, 배너, 자기소개, 대명사 또는 강조 색상을 변경하기 전에 이메일을 인증하세요."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
 msgstr "사용자 이름, 표시 이름, 아바타, 배너, 자기소개, 대명사, 시간대 또는 {premiumProductName} 배지 공개 설정을 변경하기 전에 이메일을 인증하세요."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "커뮤니티 프로필을 수정하려면 이메일을 인증해야 합니다. 그래도 여기에서 미리 볼 수 있습니다."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "프로필을 수정하려면 이메일을 인증해야 합니다. 그래도 여기에서 미리 볼 수 있습니다."
 
@@ -37416,12 +37354,12 @@ msgid "Verify your email to continue using {productName}."
 msgstr "{productName}을(를) 계속 사용하려면 이메일을 인증하세요."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
 msgid "Verify your email to edit this community profile"
 msgstr "커뮤니티 프로필을 수정하려면 이메일을 인증하세요"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
 msgid "Verify your email to edit your profile"
 msgstr "프로필을 수정하려면 이메일을 인증하세요"
 
@@ -38398,10 +38336,6 @@ msgstr "브라질에서 {premiumProductName} 가격을 인하했습니다. 이�
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "계속하기 전에 한 단계의 인증이 필요합니다. 이는 계정을 보호하고 {productName}에서 스팸을 방지하는 데 도움이 됩니다."
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:128
-msgid "We need to make sure you're not a bot. Complete the verification below."
-msgstr "로봇이 아님을 확인해야 합니다. 아래 인증을 완료해 주세요."
-
 #. Required-action modal intro text when both email and phone verification are required.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:216
 msgid "We need two verification steps before you continue. We will show one step at a time."
@@ -39256,7 +39190,7 @@ msgid "You can't befriend yourself"
 msgstr "자신을 친구로 추가할 수 없습니다"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
 msgid "You can't change your nickname here"
 msgstr "여기서는 닉네임을 변경할 수 없습니다"
 
@@ -39506,7 +39440,7 @@ msgid "You have unsaved changes."
 msgstr "저장되지 않은 변경사항이 있습니다."
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "저장되지 않은 변경사항이 있습니다. 나가기 전에 저장하거나 재설정하세요."
 
@@ -40031,10 +39965,6 @@ msgstr "요청하신 작업이 안전 시스템에 감지되어 완료되지 않
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "신청이 검토 대기 중입니다. 등록 정보를 업데이트하거나 신청을 철회할 수 있습니다."
 
-#: src/features/auth/components/AltchaVerification.tsx:50
-msgid "Your browser couldn't finish the check."
-msgstr "브라우저에서 확인을 완료할 수 없습니다."
-
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -40386,7 +40316,7 @@ msgid "YouTube enrichment"
 msgstr "YouTube 콘텐츠 연동"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:977
+#: src/features/app/components/setup/SetupWizardSteps.tsx:970
 msgid "YouTube previews"
 msgstr "YouTube 미리보기"
 

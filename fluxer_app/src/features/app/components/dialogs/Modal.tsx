@@ -250,7 +250,6 @@ const RootComponent = React.forwardRef<HTMLDivElement, ModalProps>(
 									return [];
 								}
 								const inside: Array<Element> = [];
-								modalDocument.querySelectorAll('iframe[src*="hcaptcha"], .h-captcha').forEach((el) => inside.push(el));
 								const popoutsRoot = modalDocument.querySelector('[data-popouts-root]');
 								if (popoutsRoot) inside.push(popoutsRoot);
 								const mediaViewerPortalRoot = modalDocument.querySelector('[data-media-viewer-portal-root]');

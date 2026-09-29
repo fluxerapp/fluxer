@@ -2395,11 +2395,6 @@ msgstr "60 sekund"
 msgid "7 days"
 msgstr "7 dní"
 
-#. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
-msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
-msgstr "Před ověřením telefonu je vyžadována kontrola prohlížeče. Zkuste to znovu z přihlašovací stránky nebo kontaktujte podporu."
-
 #. Hint shown beside in:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:77
 msgid "a channel"
@@ -2928,7 +2923,7 @@ msgid "Add a friend to get started."
 msgstr "Přidejte si přítele a začněte."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:973
+#: src/features/app/components/setup/SetupWizardSteps.tsx:966
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Přidejte klíč API Klipy, aby bylo možné za běhu aplikace vyhledávat GIFy."
 
@@ -2965,7 +2960,7 @@ msgid "Add a working email"
 msgstr "Přidat funkční e-mailovou adresu"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:981
+#: src/features/app/components/setup/SetupWizardSteps.tsx:974
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Přidejte klíč YouTube Data API pro doplnění informací k odkazům na YouTube."
 
@@ -3011,7 +3006,7 @@ msgid "Add another reaction"
 msgstr "Přidat další reakci"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
+#: src/features/app/components/setup/SetupWizardSteps.tsx:990
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Přidejte metadata klienta OAuth pro Bluesky a podepisovací klíč."
 
@@ -3161,7 +3156,7 @@ msgid "Add shortcut"
 msgstr "Přidat zkratku"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:997
+#: src/features/app/components/setup/SetupWizardSteps.tsx:982
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "Přidejte přihlašovací údaje SMTP, aby instance mohla odesílat ověřovací e-maily a e-mailová oznámení."
 
@@ -3188,7 +3183,7 @@ msgid "Add stream"
 msgstr "Přidat stream"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:965
+#: src/features/app/components/setup/SetupWizardSteps.tsx:958
 msgid "Add the credentials during setup."
 msgstr "Při nastavení přidejte přihlašovací údaje."
 
@@ -3954,7 +3949,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "Byl poskytnut neplatný stav. Nyní můžete tuto kartu zavřít a vrátit se do aplikace."
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:13
+#: src/features/auth/hooks/useAuthForm.ts:12
 msgid "An unexpected error occurred"
 msgstr "Došlo k neočekávané chybě"
 
@@ -4262,7 +4257,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "O účet může požádat kdokoli, ale správce ho musí schválit."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
+#: src/features/app/components/setup/SetupWizardSteps.tsx:994
 msgid "API key"
 msgstr "Klíč API"
 
@@ -4958,7 +4953,7 @@ msgid "Authorized apps"
 msgstr "Autorizované aplikace"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:38
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:37
 msgid "Authorized IPs cleared. New logins will require email verification."
 msgstr "Autorizované IP adresy vymazány. Nová přihlášení budou vyžadovat ověření e-mailem."
 
@@ -5730,7 +5725,7 @@ msgid "Bluesky connections"
 msgstr "Propojení s Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
+#: src/features/app/components/setup/SetupWizardSteps.tsx:986
 msgid "Bluesky OAuth"
 msgstr "OAuth pro Bluesky"
 
@@ -5896,11 +5891,6 @@ msgstr "Oprávnění bota nemohou být záporná."
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:64
 msgid "Bot profile"
 msgstr "Profil bota"
-
-#. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:985
-msgid "Bot protection"
-msgstr "Ochrana proti botům"
 
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:20
@@ -6553,11 +6543,6 @@ msgstr "Nelze upravit"
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx:12
 msgid "Cannot delete account"
 msgstr "Účet nelze smazat"
-
-#. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:15
-msgid "Captcha verification failed. Try again."
-msgstr "Ověření CAPTCHA se nezdařilo. Zkuste to znovu."
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:50
@@ -7398,10 +7383,6 @@ msgstr "Kontrola přístupu..."
 msgid "Checking screen recording permission..."
 msgstr "Kontrola oprávnění k nahrávání obrazovky..."
 
-#: src/features/auth/components/AltchaVerification.tsx:62
-msgid "Checking your browser. This takes a few seconds."
-msgstr "Kontrolujeme váš prohlížeč. Zabere to pár sekund."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -7570,11 +7551,6 @@ msgstr "Vyberte Soubor a poté Přidat do Docku."
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
 msgid "Choose friends to message."
 msgstr "Vyberte přátele, kterým chcete poslat zprávu."
-
-#. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:989
-msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
-msgstr "Pro ověřování při registraci vyberte hCaptcha nebo Cloudflare Turnstile."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
@@ -7982,17 +7958,17 @@ msgid "Clear selection"
 msgstr "Zrušit výběr"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:88
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:87
 msgid "Clear trust all setting"
 msgstr "Zrušit nastavení „Důvěřovat všem“"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:63
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:62
 msgid "Clear trusted domains"
 msgstr "Vymazat důvěryhodné domény"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:96
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:95
 msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "Vymazat důvěryhodné domény ({trustedDomainsCount})"
 
@@ -8002,7 +7978,7 @@ msgid "Clearer text"
 msgstr "Zřetelnější text"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:107
 msgid "Clearing trusted domains..."
 msgstr "Mazání důvěryhodných domén..."
 
@@ -8100,7 +8076,7 @@ msgid "Client"
 msgstr "Klient"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1057
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1031
 msgid "Client name"
 msgstr "Název klienta"
 
@@ -8117,7 +8093,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Klientský tajný klíč byl vygenerován znovu. Aktualizujte veškerý kód, který používá starý klíč."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
 msgid "Client URL"
 msgstr "URL klienta"
 
@@ -8268,11 +8244,6 @@ msgstr "Zavřené soukromé konverzace"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
 msgid "Cloud upload"
 msgstr "Nahrát na cloud"
-
-#. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1014
-msgid "Cloudflare Turnstile"
-msgstr "Cloudflare Turnstile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:58
@@ -8669,7 +8640,7 @@ msgstr "Název komunity"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "Přezdívka v komunitě"
@@ -8722,7 +8693,7 @@ msgid "Community profile"
 msgstr "Profil v komunitě"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
 msgid "Community profile updated"
 msgstr "Profil v komunitě aktualizován"
 
@@ -8880,7 +8851,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "Nastavit klávesové zkratky"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:961
+#: src/features/app/components/setup/SetupWizardSteps.tsx:954
 msgid "Configure now"
 msgstr "Nastavit nyní"
 
@@ -12341,7 +12312,7 @@ msgstr "Odpojit od {channel}"
 msgid "Disconnect from voice"
 msgstr "Odpojit se od hlasového hovoru"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:261
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:243
 msgid "Disconnect socket"
 msgstr "Odpojit socket"
 
@@ -12479,7 +12450,7 @@ msgstr "Režim zobrazení"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "Zobrazované jméno"
@@ -12625,7 +12596,7 @@ msgstr "Chceš se připojit do komunity {communityName}?"
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Doktore, jsem z budoucnosti. Přicestoval jsem sem ve stroji času, který jste vynalezl. Teď potřebuji vaši pomoc, abych se dostal zpět do roku 1985."
 
@@ -13262,7 +13233,7 @@ msgid "Edit your messages above or below"
 msgstr "Upravit své zprávy výše nebo níže"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
 msgid "Edit your profile appearance and see a live preview"
 msgstr "Upravte si vzhled profilu a podívejte se na živý náhled"
 
@@ -13330,7 +13301,7 @@ msgid "Email changed"
 msgstr "E-mail změněn"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:993
+#: src/features/app/components/setup/SetupWizardSteps.tsx:978
 msgid "Email delivery"
 msgstr "Doručování e-mailů"
 
@@ -13635,7 +13606,7 @@ msgid "Enable beta feature"
 msgstr "Zapnout beta funkci"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1053
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1027
 msgid "Enable Bluesky OAuth"
 msgstr "Povolit OAuth pro Bluesky"
 
@@ -13668,7 +13639,7 @@ msgid "Enable developer mode"
 msgstr "Zapnout režim pro vývojáře"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
+#: src/features/app/components/setup/SetupWizardSteps.tsx:995
 msgid "Enable email delivery"
 msgstr "Povolit doručování e-mailů"
 
@@ -14705,7 +14676,7 @@ msgid "Failed to ban member. Try again."
 msgstr "Člena se nepodařilo zabanovat. Zkuste to znovu."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:59
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:58
 msgid "Failed to clear trusted domains."
 msgstr "Nepodařilo se vymazat důvěryhodné domény."
 
@@ -14762,7 +14733,7 @@ msgid "Failed to enable camera."
 msgstr "Nepodařilo se zapnout kameru."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:42
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:41
 msgid "Failed to forget authorized IPs. Try again."
 msgstr "Nepodařilo se vymazat autorizované IP adresy. Zkuste to znovu."
 
@@ -14907,7 +14878,7 @@ msgid "Failed to resend verification code. Try again later."
 msgstr "Nepodařilo se znovu odeslat ověřovací kód. Zkuste to prosím později."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:75
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:74
 msgid "Failed to reset premium state."
 msgstr "Nepodařilo se resetovat stav prémiového účtu."
 
@@ -15581,7 +15552,7 @@ msgstr "Vynutit zástupný náhled načítání"
 msgid "Force mature media"
 msgstr "Vynutit označení médií jako určených pro dospělé"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:276
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:258
 msgid "Force move to AFK channel"
 msgstr "Vynutit přesun do AFK kanálu"
 
@@ -15640,7 +15611,7 @@ msgid "Forced off"
 msgstr "Vynuceně vypnuto"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:46
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:45
 msgid "Forget authorized IPs"
 msgstr "Vymazat autorizované IP adresy"
 
@@ -15650,7 +15621,7 @@ msgid "Forget subscriptions"
 msgstr "Zrušit odběry oznámení"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:104
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:103
 msgid "Forgetting authorized IPs..."
 msgstr "Mazání autorizovaných IP adres..."
 
@@ -15907,12 +15878,12 @@ msgid "from <0>{0}</0>"
 msgstr "z <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
+#: src/features/app/components/setup/SetupWizardSteps.tsx:999
 msgid "From email"
 msgstr "Odesílatel (e-mail)"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1003
 msgid "From name"
 msgstr "Odesílatel (jméno)"
 
@@ -16204,7 +16175,7 @@ msgid "GIF preview"
 msgstr "Náhled GIFu"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:969
+#: src/features/app/components/setup/SetupWizardSteps.tsx:962
 msgid "GIF search"
 msgstr "Vyhledávání GIFů"
 
@@ -16853,20 +16824,11 @@ msgstr "Máte dárkový kód? Uplatněte ho a odemkněte {PREMIUM_PRODUCT_NAME}.
 msgid "Having fun?"
 msgstr "Bavíte se?"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:175
-msgid "Having issues? Try hCaptcha instead"
-msgstr "Máte potíže? Zkuste místo toho hCaptcha"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:63
 msgctxt "us-state"
 msgid "Hawaii"
 msgstr "Havaj"
-
-#. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
-msgid "hCaptcha"
-msgstr "hCaptcha"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:238
@@ -19768,7 +19730,7 @@ msgid "Logo"
 msgstr "Logo"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1039
 msgid "Logo URL"
 msgstr "URL loga"
 
@@ -22941,7 +22903,7 @@ msgid "No tokens match \"{searchQuery}\"."
 msgstr "Žádné tokeny neodpovídají hledání „{searchQuery}“."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:92
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:91
 msgid "No trusted domains"
 msgstr "Žádné důvěryhodné domény"
 
@@ -23696,10 +23658,6 @@ msgstr "Otevřít výběr prohlížeče"
 msgid "Open call view"
 msgstr "Otevřít zobrazení hovoru"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:288
-msgid "Open captcha modal"
-msgstr "Otevřít dialog CAPTCHA"
-
 #. Accessible label for the channel header title button in a community channel.
 #: src/features/channel/components/channel_header/shared.ts:14
 msgid "Open channel details for {channelName}"
@@ -23712,7 +23670,7 @@ msgstr "Otevřít podrobnosti kanálu {channelName}"
 msgid "Open chat"
 msgstr "Otevřít chat"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:314
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:290
 msgid "Open claim account modal"
 msgstr "Otevřít dialog pro dokončení registrace účtu"
 
@@ -23944,11 +23902,11 @@ msgstr "Otevřít samolepku v prohlížeči"
 msgid "Open streaming privacy settings"
 msgstr "Otevřít nastavení ochrany soukromí při streamování"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:327
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:303
 msgid "Open sudo verification modal"
 msgstr "Otevřít modální okno pro ověření sudo"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:342
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:318
 msgid "Open system DM"
 msgstr "Otevřít systémovou soukromou konverzaci"
 
@@ -24430,7 +24388,7 @@ msgstr "Přístupové klíče vyžadují podepsaný balíček macOS s platným i
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1010
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -25212,7 +25170,7 @@ msgid "Popup"
 msgstr "Vyskakovací okno"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1008
 msgid "Port"
 msgstr "Port"
 
@@ -25338,7 +25296,7 @@ msgid "Premium since date"
 msgstr "Datum začátku předplatného"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:71
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:70
 msgid "Premium state reset on the backend."
 msgstr "Stav Premium byl resetován na backendu."
 
@@ -25608,7 +25566,7 @@ msgid "Privacy settings"
 msgstr "Nastavení soukromí"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1047
 msgid "Privacy URL"
 msgstr "URL zásad ochrany osobních údajů"
 
@@ -25633,7 +25591,7 @@ msgid "Private details"
 msgstr "Soukromé údaje"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1055
 msgid "Private key"
 msgstr "Soukromý klíč"
 
@@ -25699,18 +25657,18 @@ msgstr "Barva profilu"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "Přizpůsobení profilu"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
 msgid "Profile customization for {selectedGuildName}"
 msgstr "Přizpůsobení profilu pro {selectedGuildName}"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
 msgid "Profile customization form"
 msgstr "Formulář pro úpravu profilu"
 
@@ -25775,7 +25733,7 @@ msgid "Profile type"
 msgstr "Typ profilu"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
 msgid "Profile updated"
 msgstr "Profil aktualizován"
 
@@ -25812,7 +25770,7 @@ msgstr "Nabídnout přepnutí při připojení nového zvukového zařízení"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -25841,11 +25799,6 @@ msgstr "Zadejte ID uživatele nebo uživatelské jméno osoby, kterou nahlašuje
 #: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Provide your full legal name for the declaration."
 msgstr "Uveďte své celé jméno, které je uvedeno v úředních dokumentech."
-
-#. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
-msgid "Provider"
-msgstr "Poskytovatel"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27626,7 +27579,7 @@ msgid "Reset password"
 msgstr "Obnovit heslo"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:79
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:78
 msgid "Reset premium state"
 msgstr "Resetovat stav prémiového účtu"
 
@@ -27635,7 +27588,7 @@ msgstr "Resetovat stav prémiového účtu"
 msgid "Reset slider to default value"
 msgstr "Obnovit výchozí hodnotu posuvníku"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:247
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:229
 msgid "Reset socket"
 msgstr "Resetovat socket"
 
@@ -27684,7 +27637,7 @@ msgid "Reset zoom"
 msgstr "Obnovit přiblížení"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:112
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:111
 msgid "Resetting premium state..."
 msgstr "Resetování prémiového stavu..."
 
@@ -28315,7 +28268,7 @@ msgid "Run the instance as one community instead of many. This can only be enabl
 msgstr "Spusťte instanci jako jednu komunitu místo mnoha. Toto lze povolit pouze nyní, během nastavení."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:100
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:99
 msgid "Runtime utilities"
 msgstr "Nástroje za běhu"
 
@@ -29102,11 +29055,6 @@ msgstr "Bylo kliknuto na sekundární tlačítko."
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:136
 msgid "Secret"
 msgstr "Tajné"
-
-#. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
-msgid "Secret key"
-msgstr "Tajný klíč"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the secrets section. Keep it concise. Keep the tone plain and specific.
@@ -29925,7 +29873,7 @@ msgid "Set up authenticator app"
 msgstr "Nastavit ověřovací aplikaci"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:953
+#: src/features/app/components/setup/SetupWizardSteps.tsx:946
 msgid "Set up later"
 msgstr "Nastavit později"
 
@@ -30427,7 +30375,7 @@ msgstr "Zobrazit seznam soukromých konverzací v postranním panelu"
 msgid "Show just the typing indicator without avatars"
 msgstr "Zobrazit jen indikátor psaní bez avatarů"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:308
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:284
 msgid "Show keyboard mode intro"
 msgstr "Zobrazit úvod do režimu klávesnice"
 
@@ -30538,7 +30486,7 @@ msgstr "Zobrazit Neko"
 msgid "Show new device alerts"
 msgstr "Zobrazovat upozornění na nová zařízení"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:282
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:264
 msgid "Show new device modal"
 msgstr "Zobrazit modální okno nového zařízení"
 
@@ -30820,7 +30768,7 @@ msgid "Signed-in devices"
 msgstr "Přihlášená zařízení"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1051
 msgid "Signing key ID"
 msgstr "ID podepisovacího klíče"
 
@@ -30910,11 +30858,6 @@ msgstr "Jeden řádek"
 msgid "Single user (all statuses)"
 msgstr "Jeden uživatel (všechny stavy)"
 
-#. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
-msgid "Site key"
-msgstr "Klíč webu"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
@@ -30964,7 +30907,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "Přeskočit systémové oznámení o odchodu – nikdo nedostane upozornění."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:957
+#: src/features/app/components/setup/SetupWizardSteps.tsx:950
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Přeskočit teď a nakonfigurovat z administračního panelu."
 
@@ -31212,17 +31155,17 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "Ověření SMS zprávou momentálně není k dispozici. Zkuste to prosím později, nebo kontaktujte podporu."
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1045
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
 msgid "SMTP connection verified."
 msgstr "Spojení SMTP ověřeno."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1007
 msgid "SMTP host"
 msgstr "Hostitel SMTP"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1049
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1023
 msgid "SMTP validation failed."
 msgstr "Ověření SMTP se nezdařilo."
 
@@ -31402,7 +31345,7 @@ msgstr "Něco se pokazilo. Zkuste to prosím později."
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "Něco se pokazilo. Zkuste to znovu."
@@ -32098,6 +32041,11 @@ msgstr "Indexování stále probíhá – zkuste to za chvíli znovu"
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Still Neko"
 msgstr "Nehybná Neko"
+
+#. Small toast shown only when an automatic background check before sign-in, sign-up or a similar request takes more than a couple of seconds. No user action needed. Keep it short and calm.
+#: src/features/auth/altcha/CaptchaInterceptor.ts:13
+msgid "Still working on it…"
+msgstr "Ještě pracujeme…"
 
 #. Stop-recording button label in the desktop voice message composer.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:65
@@ -33013,7 +32961,7 @@ msgid "Terms of service"
 msgstr "Podmínky služby"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1043
 msgid "Terms URL"
 msgstr "URL podmínek"
 
@@ -33023,7 +32971,7 @@ msgid "Terrorism or violent extremism"
 msgstr "Terorismus nebo násilný extremismus"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1041
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1015
 msgid "Test SMTP"
 msgstr "Otestovat SMTP"
 
@@ -33800,7 +33748,7 @@ msgid "This clears quick CSS, imported themes, uploaded assets, and local file r
 msgstr "Tím se z tohoto zařízení vymaže rychlé CSS, importované motivy, nahrané podklady a odkazy na místní soubory."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:83
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:82
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "Tím se zcela vymaže váš prémiový stav na backendu, včetně typu prémia, fakturačních metadat a příznaků přepsání."
 
@@ -34200,7 +34148,7 @@ msgid "This message no longer exists."
 msgstr "Tato zpráva již neexistuje."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
 msgid "This nickname will only be visible in this community"
 msgstr "Tato přezdívka bude viditelná pouze v této komunitě"
 
@@ -34277,12 +34225,12 @@ msgid "This removes all custom CSS overrides. Theme files in your library are no
 msgstr "Tím se odstraní všechna vlastní přepsání CSS. Soubory motivů ve vaší knihovně to neovlivní."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:50
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:49
 msgid "This removes all previously authorized IP addresses on your account. The next login from any IP will require email verification."
 msgstr "Tímto odeberete všechny dříve autorizované IP adresy z vašeho účtu. Příští přihlášení z jakékoli IP adresy bude vyžadovat ověření e-mailem."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:67
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:66
 msgid "This removes all trusted domains. You will see the external link warning for all domains again."
 msgstr "Tím se odstraní všechny důvěryhodné domény. Znovu se vám bude zobrazovat upozornění na externí odkazy pro všechny domény."
 
@@ -34949,7 +34897,7 @@ msgstr "V Linuxu se změny ikony v oznamovací oblasti projeví až po restartu,
 msgid "Trending GIFs"
 msgstr "Populární GIFy"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:383
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "Spustit pád Reactu"
 
@@ -35008,7 +34956,7 @@ msgid "Trusted domains"
 msgstr "Důvěryhodné domény"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:55
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:54
 msgid "Trusted domains cleared."
 msgstr "Důvěryhodné domény vymazány."
 
@@ -35054,7 +35002,6 @@ msgid "Try a different variable name or clear the search."
 msgstr "Zkuste jiný název proměnné nebo vymažte hledání."
 
 #. Generic action label for retrying a failed or interrupted operation.
-#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35131,10 +35078,6 @@ msgstr "Zkusit místo toho bezpečnostní klíč / přístupový klíč"
 #: src/features/messaging/components/alerts/MessageSendFailedModal.tsx:17
 msgid "Try sending your message again."
 msgstr "Zkuste zprávu odeslat znovu."
-
-#: src/features/auth/components/modals/CaptchaModal.tsx:177
-msgid "Try Turnstile instead"
-msgstr "Zkusit místo toho Turnstile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
@@ -36890,7 +36833,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "Použijte to při řešení problémů s klientem nebo sběru protokolů. Může to přidat podrobné zprávy do konzole prohlížeče pro aktuálního klienta."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1011
 msgid "Use TLS"
 msgstr "Použít TLS"
 
@@ -37056,7 +36999,7 @@ msgstr "Hlasitost uživatele"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -37337,11 +37280,6 @@ msgstr "Ověřit telefonní číslo"
 msgid "Verify phone number form"
 msgstr "Formulář pro ověření telefonního čísla"
 
-#. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:17
-msgid "Verify you're human"
-msgstr "Ověřte, že jste člověk"
-
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:40
@@ -37369,22 +37307,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "Před přidáním ověřovací aplikace si ověřte svůj e-mail."
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "Před změnou přezdívky, avataru, banneru, popisu profilu, zájmen nebo barvy zvýraznění pro tuto komunitu ověřte svůj e-mail."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
 msgstr "Před změnou uživatelského jména, zobrazovaného jména, avataru, banneru, popisu profilu, zájmen, časového pásma nebo soukromí odznaku {premiumProductName} ověřte svůj e-mail."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "Před úpravou tohoto komunitního profilu si ověřte svůj e-mail. Stále si ho můžete prohlédnout zde."
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "Před úpravou profilu si ověřte svůj e-mail. Stále si ho zde můžete prohlédnout."
 
@@ -37416,12 +37354,12 @@ msgid "Verify your email to continue using {productName}."
 msgstr "Ověřte svůj e-mail, abyste mohli nadále používat {productName}."
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
 msgid "Verify your email to edit this community profile"
 msgstr "Ověřte svůj e-mail, abyste mohli upravit tento komunitní profil"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
 msgid "Verify your email to edit your profile"
 msgstr "Ověřte svůj e-mail pro úpravu profilu"
 
@@ -38398,10 +38336,6 @@ msgstr "V Brazílii jsme snížili cenu {premiumProductName}. Nyní je to {month
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "Než budete pokračovat, potřebujeme jeden ověřovací krok. Pomáhá to chránit účty a udržet spam mimo {productName}."
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:128
-msgid "We need to make sure you're not a bot. Complete the verification below."
-msgstr "Musíme se ujistit, že nejste robot. Dokončete ověření níže."
-
 #. Required-action modal intro text when both email and phone verification are required.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:216
 msgid "We need two verification steps before you continue. We will show one step at a time."
@@ -39256,7 +39190,7 @@ msgid "You can't befriend yourself"
 msgstr "Nemůžete si přidat sami sebe do přátel"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
 msgid "You can't change your nickname here"
 msgstr "Zde si nemůžete změnit přezdívku"
 
@@ -39506,7 +39440,7 @@ msgid "You have unsaved changes."
 msgstr "Máte neuložené změny."
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "Máte neuložené změny. Před odchodem je uložte nebo resetujte."
 
@@ -40031,10 +39965,6 @@ msgstr "Vaši akci se nepodařilo dokončit, protože byla označena našimi bez
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Vaše žádost čeká na posouzení. Stále můžete upravovat údaje v záznamu nebo žádost stáhnout."
 
-#: src/features/auth/components/AltchaVerification.tsx:50
-msgid "Your browser couldn't finish the check."
-msgstr "Prohlížeč nemohl dokončit kontrolu."
-
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -40386,7 +40316,7 @@ msgid "YouTube enrichment"
 msgstr "Rozšířené náhledy YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:977
+#: src/features/app/components/setup/SetupWizardSteps.tsx:970
 msgid "YouTube previews"
 msgstr "Náhledy YouTube"
 

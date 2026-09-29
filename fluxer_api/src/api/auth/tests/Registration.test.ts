@@ -87,6 +87,7 @@ describe('Auth registration', () => {
 		expect(reg.user_id.length).toBeGreaterThan(0);
 	});
 	it('grants wildcard admin ACL to first accepted local dev registration', async () => {
+		await getInstanceConfigRepository().updateCaptchaConfig({enabled: false});
 		await withBootstrapAdminConfig({selfHosted: false, testModeEnabled: false}, async () => {
 			const first = await registerUser(harness, bootstrapRegistrationBodyWithDnsEmail('localdevadminone'));
 			const second = await registerUser(harness, bootstrapRegistrationBodyWithDnsEmail('localdevadmintwo'));

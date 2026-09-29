@@ -11,10 +11,7 @@ import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/Ad
 import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {UserAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
-import {
-	AltchaCaptchaConfigResponse,
-	AltchaCaptchaConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
+import {CaptchaConfigResponse, CaptchaConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
 import {
 	DomainMigrationConfigResponse,
 	DomainMigrationConfigUpdateRequest,
@@ -33,10 +30,7 @@ import {
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import {
-	InstanceCaptchaProviderSchema,
-	InstanceRegistrationModeSchema,
-} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
+import {InstanceRegistrationModeSchema} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {GiftCodeDurationTypeSchema} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
@@ -608,15 +602,6 @@ const InstanceIntegrationsResponse = z.object({
 		api_key_set: z.boolean(),
 		effective_available: z.boolean(),
 	}),
-	captcha: z.object({
-		provider: InstanceCaptchaProviderSchema.nullable(),
-		effective_provider: InstanceCaptchaProviderSchema,
-		hcaptcha_site_key: z.string().nullable(),
-		hcaptcha_secret_key_set: z.boolean(),
-		turnstile_site_key: z.string().nullable(),
-		turnstile_secret_key_set: z.boolean(),
-		effective_enabled: z.boolean(),
-	}),
 	email: z.object({
 		enabled: z.boolean().nullable(),
 		effective_enabled: z.boolean(),
@@ -651,7 +636,7 @@ export const InstanceConfigResponse = z.object({
 	gateway_rollout: GatewayRolloutConfigResponse,
 	push_relay: PushRelayConfigResponse,
 	domain_migration: DomainMigrationConfigResponse,
-	altcha_captcha: AltchaCaptchaConfigResponse,
+	captcha: CaptchaConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
@@ -683,7 +668,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	push_relay: PushRelayConfigUpdateRequest.nullish(),
 	domain_migration: DomainMigrationConfigUpdateRequest.nullish(),
-	altcha_captcha: AltchaCaptchaConfigUpdateRequest.nullish(),
+	captcha: CaptchaConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
@@ -719,15 +704,6 @@ export const InstanceConfigUpdateRequest = z.object({
 			youtube: z
 				.object({
 					api_key: z.string().trim().max(4096).nullish(),
-				})
-				.nullish(),
-			captcha: z
-				.object({
-					provider: InstanceCaptchaProviderSchema.nullish(),
-					hcaptcha_site_key: z.string().trim().max(4096).nullish(),
-					hcaptcha_secret_key: z.string().trim().max(4096).nullish(),
-					turnstile_site_key: z.string().trim().max(4096).nullish(),
-					turnstile_secret_key: z.string().trim().max(4096).nullish(),
 				})
 				.nullish(),
 			email: z

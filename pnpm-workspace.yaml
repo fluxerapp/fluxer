@@ -50,7 +50,6 @@ catalog:
   '@elastic/elasticsearch': 9.5.1
   '@floating-ui/react': 0.27.20
   '@floating-ui/react-dom': 2.1.9
-  '@hcaptcha/react-hcaptcha': 2.2.0
   '@hono/node-server': 2.1.1
   '@lexical/history': 0.50.0
   '@lexical/react': 0.50.0
@@ -61,7 +60,6 @@ catalog:
   '@lingui/react': 6.7.0
   '@lingui/swc-plugin': 6.7.0
   '@livekit/components-react': 2.9.24
-  '@marsidev/react-turnstile': 1.6.1
   '@mdx-js/mdx': 3.1.1
   '@messageformat/core': 3.4.0
   '@messageformat/parser': 5.1.1

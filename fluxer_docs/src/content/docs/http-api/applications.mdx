@@ -291,12 +291,9 @@ An unclaimed account cannot create an application. An account is unclaimed while
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The CAPTCHA proof for the request |
-| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider to verify against, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Fluxer skips verification when CAPTCHA is disabled for the instance, when the account has the CAPTCHA exemption flag, or when the caller's email address is on an exempt domain, as described by [CAPTCHA handling](/topics/captcha/)
-
-<sup>2</sup> Fluxer verifies against the instance's configured provider when the header is absent
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Fluxer skips verification when the check is off for the instance, when the account has the CAPTCHA exemption flag, or when the caller's email address is on an exempt domain
 
 ### JSON body
 

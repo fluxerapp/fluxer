@@ -32,7 +32,6 @@ import {PhoneNumberNotInServiceError} from '@fluxer/errors/src/domains/auth/Phon
 import {PhoneNumberNotMobileError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotMobileError';
 import {PhoneVerificationNeedsReviewError} from '@fluxer/errors/src/domains/auth/PhoneVerificationNeedsReviewError';
 import {SmsVerificationUnavailableError} from '@fluxer/errors/src/domains/auth/SmsVerificationUnavailableError';
-import {CaptchaVerificationRequiredError} from '@fluxer/errors/src/domains/core/CaptchaVerificationRequiredError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import type {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {type NatsConnection, headers as natsHeaders, RequestError, TimeoutError} from '@nats-io/transport-node';
@@ -204,8 +203,18 @@ export function errorForPhoneReply(error: PhoneError): FluxerError {
 			return new PhoneInboundVerificationRequiredError();
 		case 'already_used':
 			return new PhoneAlreadyUsedError();
-		case 'captcha_required':
-			return new CaptchaVerificationRequiredError();
+		case 'captcha_required': {
+			const retryAfter = 24 * 60 * 60;
+			return new RateLimitError({
+				code: APIErrorCodes.PHONE_RATE_LIMIT_EXCEEDED,
+				retryAfter,
+				retryAfterDecimal: retryAfter,
+				limit: 1,
+				resetTime: new Date(Date.now() + retryAfter * 1000),
+				resetAfterDecimal: retryAfter,
+				scope: 'user',
+			});
+		}
 		case 'invalid_code':
 			return new InvalidPhoneVerificationCodeError();
 		case 'rate_limited': {

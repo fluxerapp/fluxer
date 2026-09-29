@@ -1513,7 +1513,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		}
 	}
 
-	const ENV_VALUE_FLOOR = 19;
+	const ENV_VALUE_FLOOR = 17;
 	const ENV_VALUE_UNSET = 'unset';
 	let inEnvValueTable = false;
 	let envEntry: string | null = null;

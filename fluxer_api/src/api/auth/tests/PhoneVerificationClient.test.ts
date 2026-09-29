@@ -146,6 +146,9 @@ describe('phone verification client', () => {
 		for (const code of ['unavailable', 'deadline_exceeded', 'unsupported_contract'] as const) {
 			expect(errorForPhoneReply({code, ...blank})).toBeInstanceOf(SmsVerificationUnavailableError);
 		}
+		const captchaRequired = errorForPhoneReply({code: 'captcha_required', ...blank});
+		expect(captchaRequired).toBeInstanceOf(RateLimitError);
+		expect((captchaRequired as RateLimitError).code).toBe(APIErrorCodes.PHONE_RATE_LIMIT_EXCEEDED);
 	});
 });
 

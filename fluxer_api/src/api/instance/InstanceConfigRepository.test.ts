@@ -39,6 +39,7 @@ const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
 const INSTANCE_INTEGRATIONS_CONFIG_KEY = 'instance_integrations_config';
+const LEGACY_ALTCHA_CAPTCHA_CONFIG_KEY = 'altcha_captcha_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
 const REGISTRATION_PENDING_APPROVALS_KEY = 'registration_pending_approvals';
@@ -150,36 +151,54 @@ describe('InstanceConfigRepository', () => {
 		});
 	});
 
-	it('reports the effective captcha provider as none while the selected pair is incomplete', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
+	it('turns the captcha on at the default difficulty when no row is stored', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
 
-		await repository.setInstanceIntegrationsConfig({
-			captcha: {
-				provider: 'turnstile',
-				hcaptcha_site_key: 'hcaptcha-site-key',
-				hcaptcha_secret_key: 'hcaptcha-secret-key',
-			},
-		});
+		await expect(repository.getCaptchaConfig()).resolves.toEqual({enabled: true, cost: 5000, max_counter: 1000});
+	});
 
-		await expect(repository.getEffectiveCaptchaConfig()).resolves.toMatchObject({
-			enabled: false,
-			provider: 'none',
-		});
+	it('ignores a legacy altcha captcha row that turned the experiment off', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
 
-		await repository.setInstanceIntegrationsConfig({
-			captcha: {
-				turnstile_site_key: 'turnstile-site-key',
-				turnstile_secret_key: 'turnstile-secret-key',
-			},
-		});
+		await repository.setConfig(
+			LEGACY_ALTCHA_CAPTCHA_CONFIG_KEY,
+			JSON.stringify({enabled: false, config_version: 4, cost: 5000, max_counter: 10000}),
+		);
 
-		await expect(repository.getEffectiveCaptchaConfig()).resolves.toMatchObject({
-			enabled: true,
-			provider: 'turnstile',
-		});
+		await expect(repository.getCaptchaConfig()).resolves.toEqual({enabled: true, cost: 5000, max_counter: 1000});
+	});
+
+	it('merges a partial captcha update onto the stored config', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+
+		await repository.updateCaptchaConfig({cost: 2000});
+		await repository.updateCaptchaConfig({enabled: false});
+
+		await expect(repository.getCaptchaConfig()).resolves.toEqual({enabled: false, cost: 2000, max_counter: 1000});
+	});
+
+	it('drops a legacy captcha integration, secrets included, on the next integrations write', async () => {
+		setCassandraQueryExecutorForTesting(new CountingInMemoryCassandraQueryExecutor());
+		const repository = createRepository(new MockKVProvider());
+
+		await repository.setConfig(
+			INSTANCE_INTEGRATIONS_CONFIG_KEY,
+			JSON.stringify({
+				captcha: {provider: 'legacy-provider', site_key: 'legacy-site-key', secret_key: 'legacy-secret-key'},
+				youtube: {api_key: 'youtube-key'},
+			}),
+		);
+		expect(await repository.getInstanceIntegrationsConfig()).not.toHaveProperty('captcha');
+
+		await repository.setInstanceIntegrationsConfig({gif: {klipy_api_key: 'klipy-key'}});
+
+		const stored = JSON.parse((await repository.getConfig(INSTANCE_INTEGRATIONS_CONFIG_KEY)) ?? '{}');
+		expect(stored).not.toHaveProperty('captcha');
+		expect(stored.youtube.api_key).toBe('youtube-key');
+		expect(stored.gif.klipy_api_key).toBe('klipy-key');
 	});
 
 	it('keeps the stored setup state when a branding field is invalid', async () => {

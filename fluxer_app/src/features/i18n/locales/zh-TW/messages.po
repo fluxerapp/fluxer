@@ -2395,11 +2395,6 @@ msgstr "60 秒"
 msgid "7 days"
 msgstr "7 天"
 
-#. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
-msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
-msgstr "電話驗證前需要進行瀏覽器檢查。請從登入頁面重試，或聯絡客服。"
-
 #. Hint shown beside in:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:77
 msgid "a channel"
@@ -2928,7 +2923,7 @@ msgid "Add a friend to get started."
 msgstr "新增好友以開始使用。"
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:973
+#: src/features/app/components/setup/SetupWizardSteps.tsx:966
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "新增 Klipy API 金鑰，即可在執行階段啟用 GIF 搜尋。"
 
@@ -2965,7 +2960,7 @@ msgid "Add a working email"
 msgstr "新增可用的電子郵件"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:981
+#: src/features/app/components/setup/SetupWizardSteps.tsx:974
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "新增 YouTube Data API 金鑰以豐富 YouTube 連結。"
 
@@ -3011,7 +3006,7 @@ msgid "Add another reaction"
 msgstr "新增其他反應"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
+#: src/features/app/components/setup/SetupWizardSteps.tsx:990
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "新增 Bluesky OAuth 用戶端中繼資料和簽署金鑰。"
 
@@ -3161,7 +3156,7 @@ msgid "Add shortcut"
 msgstr "新增快速鍵"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:997
+#: src/features/app/components/setup/SetupWizardSteps.tsx:982
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "新增 SMTP 憑證，讓此實例可以傳送驗證和通知電子郵件。"
 
@@ -3188,7 +3183,7 @@ msgid "Add stream"
 msgstr "新增直播"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:965
+#: src/features/app/components/setup/SetupWizardSteps.tsx:958
 msgid "Add the credentials during setup."
 msgstr "在設定期間新增憑證。"
 
@@ -3954,7 +3949,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "提供的狀態無效。您現在可以關閉此分頁並返回應用程式。"
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:13
+#: src/features/auth/hooks/useAuthForm.ts:12
 msgid "An unexpected error occurred"
 msgstr "發生未預期的錯誤"
 
@@ -4262,7 +4257,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "任何人都可以申請帳號，但必須由管理員核准。"
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
+#: src/features/app/components/setup/SetupWizardSteps.tsx:994
 msgid "API key"
 msgstr "API 金鑰"
 
@@ -4958,7 +4953,7 @@ msgid "Authorized apps"
 msgstr "已授權的應用程式"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:38
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:37
 msgid "Authorized IPs cleared. New logins will require email verification."
 msgstr "已清除授權 IP。新的登入將需要電子郵件驗證。"
 
@@ -5730,7 +5725,7 @@ msgid "Bluesky connections"
 msgstr "Bluesky 連結"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
+#: src/features/app/components/setup/SetupWizardSteps.tsx:986
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -5896,11 +5891,6 @@ msgstr "機器人權限不能是負數。"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:64
 msgid "Bot profile"
 msgstr "機器人個人檔案"
-
-#. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:985
-msgid "Bot protection"
-msgstr "機器人防護"
 
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:20
@@ -6553,11 +6543,6 @@ msgstr "無法編輯"
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx:12
 msgid "Cannot delete account"
 msgstr "無法刪除帳號"
-
-#. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:15
-msgid "Captcha verification failed. Try again."
-msgstr "驗證碼驗證失敗。請再試一次。"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:50
@@ -7398,10 +7383,6 @@ msgstr "正在檢查存取權限…"
 msgid "Checking screen recording permission..."
 msgstr "正在檢查螢幕錄製權限…"
 
-#: src/features/auth/components/AltchaVerification.tsx:62
-msgid "Checking your browser. This takes a few seconds."
-msgstr "正在檢查您的瀏覽器。這需要幾秒鐘的時間。"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -7570,11 +7551,6 @@ msgstr "選擇「檔案」，然後選擇「加入 Dock」。"
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
 msgid "Choose friends to message."
 msgstr "選擇要傳送訊息的好友。"
-
-#. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:989
-msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
-msgstr "選擇 hCaptcha 或 Cloudflare Turnstile 來進行註冊驗證。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
@@ -7982,17 +7958,17 @@ msgid "Clear selection"
 msgstr "清除選取"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:88
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:87
 msgid "Clear trust all setting"
 msgstr "清除「信任所有連結」設定"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:63
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:62
 msgid "Clear trusted domains"
 msgstr "清除信任的網域"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:96
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:95
 msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "清除信任的網域 ({trustedDomainsCount})"
 
@@ -8002,7 +7978,7 @@ msgid "Clearer text"
 msgstr "文字更清晰"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:107
 msgid "Clearing trusted domains..."
 msgstr "正在清除信任的網域…"
 
@@ -8100,7 +8076,7 @@ msgid "Client"
 msgstr "用戶端"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1057
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1031
 msgid "Client name"
 msgstr "用戶端名稱"
 
@@ -8117,7 +8093,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "用戶端密鑰已重新產生。請更新任何使用舊密鑰的程式碼。"
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
 msgid "Client URL"
 msgstr "用戶端網址"
 
@@ -8268,11 +8244,6 @@ msgstr "已關閉的私訊"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
 msgid "Cloud upload"
 msgstr "雲端上傳"
-
-#. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1014
-msgid "Cloudflare Turnstile"
-msgstr "Cloudflare Turnstile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:58
@@ -8669,7 +8640,7 @@ msgstr "社群名稱"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "社群暱稱"
@@ -8722,7 +8693,7 @@ msgid "Community profile"
 msgstr "社群個人檔案"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
 msgid "Community profile updated"
 msgstr "社群個人檔案已更新"
 
@@ -8880,7 +8851,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "設定鍵盤快速鍵"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:961
+#: src/features/app/components/setup/SetupWizardSteps.tsx:954
 msgid "Configure now"
 msgstr "立即設定"
 
@@ -12341,7 +12312,7 @@ msgstr "從 {channel} 中斷連線"
 msgid "Disconnect from voice"
 msgstr "中斷語音連線"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:261
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:243
 msgid "Disconnect socket"
 msgstr "中斷 socket 連線"
 
@@ -12479,7 +12450,7 @@ msgstr "顯示模式"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "顯示名稱"
@@ -12625,7 +12596,7 @@ msgstr "你想加入 {communityName} 嗎？"
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "博士，我來自未來。我搭乘您發明的時光機來到這裡。現在，我需要您的幫助才能回到 1985 年。"
 
@@ -13262,7 +13233,7 @@ msgid "Edit your messages above or below"
 msgstr "編輯上方或下方的訊息"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
 msgid "Edit your profile appearance and see a live preview"
 msgstr "編輯個人檔案外觀並查看即時預覽"
 
@@ -13330,7 +13301,7 @@ msgid "Email changed"
 msgstr "電子郵件已變更"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:993
+#: src/features/app/components/setup/SetupWizardSteps.tsx:978
 msgid "Email delivery"
 msgstr "電子郵件遞送"
 
@@ -13635,7 +13606,7 @@ msgid "Enable beta feature"
 msgstr "啟用測試版功能"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1053
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1027
 msgid "Enable Bluesky OAuth"
 msgstr "啟用 Bluesky OAuth"
 
@@ -13668,7 +13639,7 @@ msgid "Enable developer mode"
 msgstr "啟用開發者模式"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
+#: src/features/app/components/setup/SetupWizardSteps.tsx:995
 msgid "Enable email delivery"
 msgstr "啟用電子郵件遞送"
 
@@ -14705,7 +14676,7 @@ msgid "Failed to ban member. Try again."
 msgstr "無法停權成員。請再試一次。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:59
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:58
 msgid "Failed to clear trusted domains."
 msgstr "無法清除信任的網域。"
 
@@ -14762,7 +14733,7 @@ msgid "Failed to enable camera."
 msgstr "無法開啟相機。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:42
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:41
 msgid "Failed to forget authorized IPs. Try again."
 msgstr "無法清除已授權的 IP。請再試一次。"
 
@@ -14907,7 +14878,7 @@ msgid "Failed to resend verification code. Try again later."
 msgstr "無法重新傳送驗證碼。請稍後再試。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:75
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:74
 msgid "Failed to reset premium state."
 msgstr "無法重設付費狀態。"
 
@@ -15581,7 +15552,7 @@ msgstr "強制顯示載入骨架"
 msgid "Force mature media"
 msgstr "強制成人媒體"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:276
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:258
 msgid "Force move to AFK channel"
 msgstr "強制移至閒置頻道"
 
@@ -15640,7 +15611,7 @@ msgid "Forced off"
 msgstr "強制關閉"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:46
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:45
 msgid "Forget authorized IPs"
 msgstr "清除已授權的 IP"
 
@@ -15650,7 +15621,7 @@ msgid "Forget subscriptions"
 msgstr "清除推播訂閱"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:104
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:103
 msgid "Forgetting authorized IPs..."
 msgstr "正在清除已授權的 IP…"
 
@@ -15907,12 +15878,12 @@ msgid "from <0>{0}</0>"
 msgstr "來自 <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
+#: src/features/app/components/setup/SetupWizardSteps.tsx:999
 msgid "From email"
 msgstr "寄件人電子郵件"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1003
 msgid "From name"
 msgstr "寄件人名稱"
 
@@ -16204,7 +16175,7 @@ msgid "GIF preview"
 msgstr "GIF 預覽"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:969
+#: src/features/app/components/setup/SetupWizardSteps.tsx:962
 msgid "GIF search"
 msgstr "GIF 搜尋"
 
@@ -16853,20 +16824,11 @@ msgstr "有禮物代碼嗎？兌換它以解鎖 {PREMIUM_PRODUCT_NAME}。"
 msgid "Having fun?"
 msgstr "玩得開心嗎？"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:175
-msgid "Having issues? Try hCaptcha instead"
-msgstr "有問題嗎？改用 hCaptcha 試試"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:63
 msgctxt "us-state"
 msgid "Hawaii"
 msgstr "夏威夷州"
-
-#. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
-msgid "hCaptcha"
-msgstr "hCaptcha"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:238
@@ -19768,7 +19730,7 @@ msgid "Logo"
 msgstr "Logo"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1039
 msgid "Logo URL"
 msgstr "Logo 網址"
 
@@ -22941,7 +22903,7 @@ msgid "No tokens match \"{searchQuery}\"."
 msgstr "沒有權杖符合「{searchQuery}」。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:92
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:91
 msgid "No trusted domains"
 msgstr "沒有信任的網域"
 
@@ -23696,10 +23658,6 @@ msgstr "開啟瀏覽器選取器"
 msgid "Open call view"
 msgstr "開啟通話畫面"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:288
-msgid "Open captcha modal"
-msgstr "開啟驗證碼視窗"
-
 #. Accessible label for the channel header title button in a community channel.
 #: src/features/channel/components/channel_header/shared.ts:14
 msgid "Open channel details for {channelName}"
@@ -23712,7 +23670,7 @@ msgstr "開啟「{channelName}」的頻道詳細資訊"
 msgid "Open chat"
 msgstr "開啟聊天"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:314
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:290
 msgid "Open claim account modal"
 msgstr "開啟帳號認領視窗"
 
@@ -23944,11 +23902,11 @@ msgstr "在瀏覽器中開啟貼圖"
 msgid "Open streaming privacy settings"
 msgstr "開啟直播隱私設定"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:327
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:303
 msgid "Open sudo verification modal"
 msgstr "開啟 sudo 驗證視窗"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:342
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:318
 msgid "Open system DM"
 msgstr "開啟系統私訊"
 
@@ -24430,7 +24388,7 @@ msgstr "通行金鑰需要具備有效應用程式識別碼的已簽署 macOS �
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1010
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -25212,7 +25170,7 @@ msgid "Popup"
 msgstr "彈出式視窗"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1008
 msgid "Port"
 msgstr "埠號"
 
@@ -25338,7 +25296,7 @@ msgid "Premium since date"
 msgstr "進階方案開始日期"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:71
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:70
 msgid "Premium state reset on the backend."
 msgstr "已在後端重設進階方案狀態。"
 
@@ -25608,7 +25566,7 @@ msgid "Privacy settings"
 msgstr "隱私設定"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1047
 msgid "Privacy URL"
 msgstr "隱私權政策網址"
 
@@ -25633,7 +25591,7 @@ msgid "Private details"
 msgstr "個人資料"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1055
 msgid "Private key"
 msgstr "私鑰"
 
@@ -25699,18 +25657,18 @@ msgstr "個人檔案顏色"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "個人檔案自訂"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
 msgid "Profile customization for {selectedGuildName}"
 msgstr "{selectedGuildName} 的個人檔案自訂"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
 msgid "Profile customization form"
 msgstr "個人檔案自訂表單"
 
@@ -25775,7 +25733,7 @@ msgid "Profile type"
 msgstr "個人檔案類型"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
 msgid "Profile updated"
 msgstr "個人檔案已更新"
 
@@ -25812,7 +25770,7 @@ msgstr "偵測到新音訊裝置時提示"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -25841,11 +25799,6 @@ msgstr "請提供您要檢舉對象的使用者 ID 或使用者名稱。"
 #: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Provide your full legal name for the declaration."
 msgstr "請提供您的完整法定姓名以進行聲明。"
-
-#. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
-msgid "Provider"
-msgstr "供應商"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27626,7 +27579,7 @@ msgid "Reset password"
 msgstr "重設密碼"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:79
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:78
 msgid "Reset premium state"
 msgstr "重設付費狀態"
 
@@ -27635,7 +27588,7 @@ msgstr "重設付費狀態"
 msgid "Reset slider to default value"
 msgstr "將滑桿重設為預設值"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:247
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:229
 msgid "Reset socket"
 msgstr "重設 socket 連線"
 
@@ -27684,7 +27637,7 @@ msgid "Reset zoom"
 msgstr "重設縮放"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:112
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:111
 msgid "Resetting premium state..."
 msgstr "正在重設付費狀態…"
 
@@ -28315,7 +28268,7 @@ msgid "Run the instance as one community instead of many. This can only be enabl
 msgstr "將此實例做為單一社群執行，而非多個社群。此選項只能在現在的設定過程中啟用。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:100
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:99
 msgid "Runtime utilities"
 msgstr "執行階段工具"
 
@@ -29102,11 +29055,6 @@ msgstr "已點擊「次要」按鈕。"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:136
 msgid "Secret"
 msgstr "密鑰"
-
-#. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
-msgid "Secret key"
-msgstr "祕密金鑰"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the secrets section. Keep it concise. Keep the tone plain and specific.
@@ -29925,7 +29873,7 @@ msgid "Set up authenticator app"
 msgstr "設定驗證器應用程式"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:953
+#: src/features/app/components/setup/SetupWizardSteps.tsx:946
 msgid "Set up later"
 msgstr "稍後設定"
 
@@ -30427,7 +30375,7 @@ msgstr "顯示內嵌的私訊列表"
 msgid "Show just the typing indicator without avatars"
 msgstr "只顯示正在輸入提示，不顯示大頭貼"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:308
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:284
 msgid "Show keyboard mode intro"
 msgstr "顯示鍵盤模式介紹"
 
@@ -30538,7 +30486,7 @@ msgstr "顯示 Neko"
 msgid "Show new device alerts"
 msgstr "顯示新裝置提醒"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:282
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:264
 msgid "Show new device modal"
 msgstr "顯示新裝置彈出視窗"
 
@@ -30820,7 +30768,7 @@ msgid "Signed-in devices"
 msgstr "已登入的裝置"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1051
 msgid "Signing key ID"
 msgstr "簽署金鑰 ID"
 
@@ -30910,11 +30858,6 @@ msgstr "單行"
 msgid "Single user (all statuses)"
 msgstr "單一使用者（所有狀態）"
 
-#. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
-msgid "Site key"
-msgstr "網站金鑰"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
@@ -30964,7 +30907,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "略過離開群組的系統訊息，不會有人收到通知。"
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:957
+#: src/features/app/components/setup/SetupWizardSteps.tsx:950
 msgid "Skip this now and configure it from the admin panel."
 msgstr "現在略過，並從管理員面板進行設定。"
 
@@ -31212,17 +31155,17 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "目前無法進行簡訊驗證。請稍後再試或聯絡客服。"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1045
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
 msgid "SMTP connection verified."
 msgstr "SMTP 連線已驗證。"
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1007
 msgid "SMTP host"
 msgstr "SMTP 主機"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1049
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1023
 msgid "SMTP validation failed."
 msgstr "SMTP 驗證失敗。"
 
@@ -31402,7 +31345,7 @@ msgstr "發生錯誤。請稍後再試。"
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "發生錯誤。請再試一次。"
@@ -32098,6 +32041,11 @@ msgstr "仍在建立索引中，請稍後再查看"
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Still Neko"
 msgstr "靜止 Neko"
+
+#. Small toast shown only when an automatic background check before sign-in, sign-up or a similar request takes more than a couple of seconds. No user action needed. Keep it short and calm.
+#: src/features/auth/altcha/CaptchaInterceptor.ts:13
+msgid "Still working on it…"
+msgstr "仍在處理中…"
 
 #. Stop-recording button label in the desktop voice message composer.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:65
@@ -33013,7 +32961,7 @@ msgid "Terms of service"
 msgstr "服務條款"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1043
 msgid "Terms URL"
 msgstr "條款網址"
 
@@ -33023,7 +32971,7 @@ msgid "Terrorism or violent extremism"
 msgstr "恐怖主義或暴力極端主義"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1041
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1015
 msgid "Test SMTP"
 msgstr "測試 SMTP"
 
@@ -33800,7 +33748,7 @@ msgid "This clears quick CSS, imported themes, uploaded assets, and local file r
 msgstr "這會清除此裝置上的快速 CSS、已匯入的主題、已上傳的素材和本機檔案參考。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:83
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:82
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "這會完全清除您的後端進階方案狀態，包含方案類型、帳務中繼資料和覆寫標記。"
 
@@ -34200,7 +34148,7 @@ msgid "This message no longer exists."
 msgstr "此訊息已不存在。"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
 msgid "This nickname will only be visible in this community"
 msgstr "這個暱稱只會在此社群中顯示"
 
@@ -34277,12 +34225,12 @@ msgid "This removes all custom CSS overrides. Theme files in your library are no
 msgstr "這會移除所有自訂 CSS 覆寫。您主題庫中的主題檔案不受影響。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:50
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:49
 msgid "This removes all previously authorized IP addresses on your account. The next login from any IP will require email verification."
 msgstr "這會移除您帳號中所有先前已授權的 IP 位址。下次從任何 IP 登入時，都需要進行電子郵件驗證。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:67
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:66
 msgid "This removes all trusted domains. You will see the external link warning for all domains again."
 msgstr "這會移除所有信任的網域。您將會再次看到所有網域的外部連結警告。"
 
@@ -34949,7 +34897,7 @@ msgstr "在 Linux 上，系統匣圖示的變更只有在重新啟動後才會�
 msgid "Trending GIFs"
 msgstr "熱門 GIF"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:383
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "觸發 React 當機"
 
@@ -35008,7 +34956,7 @@ msgid "Trusted domains"
 msgstr "信任的網域"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:55
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:54
 msgid "Trusted domains cleared."
 msgstr "已清除信任的網域。"
 
@@ -35054,7 +35002,6 @@ msgid "Try a different variable name or clear the search."
 msgstr "請嘗試不同的變數名稱或清除搜尋。"
 
 #. Generic action label for retrying a failed or interrupted operation.
-#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35131,10 +35078,6 @@ msgstr "改用安全金鑰或通行金鑰"
 #: src/features/messaging/components/alerts/MessageSendFailedModal.tsx:17
 msgid "Try sending your message again."
 msgstr "請再試一次傳送訊息。"
-
-#: src/features/auth/components/modals/CaptchaModal.tsx:177
-msgid "Try Turnstile instead"
-msgstr "改用 Turnstile 驗證"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
@@ -36890,7 +36833,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "當您在排解用戶端問題或收集日誌時使用此功能。這可能會在目前用戶端的瀏覽器主控台中新增詳細訊息。"
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1011
 msgid "Use TLS"
 msgstr "使用 TLS"
 
@@ -37056,7 +36999,7 @@ msgstr "使用者音量"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -37337,11 +37280,6 @@ msgstr "驗證電話號碼"
 msgid "Verify phone number form"
 msgstr "驗證電話號碼表單"
 
-#. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:17
-msgid "Verify you're human"
-msgstr "驗證您是真人"
-
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:40
@@ -37369,22 +37307,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "請先驗證您的電子郵件，然後再新增驗證器應用程式。"
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "請先驗證您的電子郵件，才能更改社群暱稱、大頭貼、橫幅、個人簡介、代名詞或強調色。"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
 msgstr "請先驗證您的電子郵件，然後再變更您的使用者名稱、顯示名稱、大頭貼、橫幅、個人簡介、代名詞、時區或 {premiumProductName} 徽章隱私設定。"
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "請先驗證您的電子郵件，才能編輯這個社群個人檔案。您仍然可以在這裡預覽。"
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "請先驗證您的電子郵件，然後再編輯個人檔案。您仍然可以在這裡預覽。"
 
@@ -37416,12 +37354,12 @@ msgid "Verify your email to continue using {productName}."
 msgstr "請驗證您的電子郵件，以繼續使用 {productName}。"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
 msgid "Verify your email to edit this community profile"
 msgstr "請驗證您的電子郵件以編輯此社群個人檔案"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
 msgid "Verify your email to edit your profile"
 msgstr "請驗證您的電子郵件以編輯個人檔案"
 
@@ -38398,10 +38336,6 @@ msgstr "我們在巴西調降了 {premiumProductName} 的價格。現在每月�
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "在您繼續之前，我們需要一個驗證步驟。這有助於保護帳號並防止垃圾訊息出現在 {productName} 上。"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:128
-msgid "We need to make sure you're not a bot. Complete the verification below."
-msgstr "我們需要確認您不是機器人。請完成下方的驗證。"
-
 #. Required-action modal intro text when both email and phone verification are required.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:216
 msgid "We need two verification steps before you continue. We will show one step at a time."
@@ -39256,7 +39190,7 @@ msgid "You can't befriend yourself"
 msgstr "您無法將自己新增為朋友"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
 msgid "You can't change your nickname here"
 msgstr "您無法在這裡變更暱稱"
 
@@ -39506,7 +39440,7 @@ msgid "You have unsaved changes."
 msgstr "您有未儲存的變更。"
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "您有未儲存的變更。請先儲存或重設，再離開。"
 
@@ -40031,10 +39965,6 @@ msgstr "您的操作未能完成，因為系統偵測到有安全疑慮。如果
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "您的申請正在審核中。您仍然可以更新刊登資訊或撤回申請。"
 
-#: src/features/auth/components/AltchaVerification.tsx:50
-msgid "Your browser couldn't finish the check."
-msgstr "您的瀏覽器無法完成驗證。"
-
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -40386,7 +40316,7 @@ msgid "YouTube enrichment"
 msgstr "YouTube 豐富預覽"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:977
+#: src/features/app/components/setup/SetupWizardSteps.tsx:970
 msgid "YouTube previews"
 msgstr "YouTube 預覽"
 

@@ -507,46 +507,6 @@ describe('ConfigLoader', () => {
 		expect(config.instance.setup.configured).toBe(true);
 	});
 
-	test('rejects an enabled captcha with no keys for the selected provider', async () => {
-		stubMinimalEnv({FLUXER_CAPTCHA_ENABLED: 'true', FLUXER_CAPTCHA_PROVIDER: 'hcaptcha'});
-		await expect(loadConfig()).rejects.toThrow('FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY is required');
-	});
-
-	test('rejects an enabled captcha with a site key but no secret key', async () => {
-		stubMinimalEnv({
-			FLUXER_CAPTCHA_ENABLED: 'true',
-			FLUXER_CAPTCHA_PROVIDER: 'turnstile',
-			FLUXER_CAPTCHA_TURNSTILE_SITE_KEY: 'turnstile-site-key',
-		});
-		await expect(loadConfig()).rejects.toThrow('FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY is required');
-	});
-
-	test('rejects an enabled captcha with no provider', async () => {
-		stubMinimalEnv({FLUXER_CAPTCHA_ENABLED: 'true'});
-		await expect(loadConfig()).rejects.toThrow(
-			'FLUXER_CAPTCHA_PROVIDER must be hcaptcha or turnstile when FLUXER_CAPTCHA_ENABLED is true',
-		);
-	});
-
-	test('accepts an enabled captcha with both keys for the selected provider', async () => {
-		stubMinimalEnv({
-			FLUXER_CAPTCHA_ENABLED: 'true',
-			FLUXER_CAPTCHA_PROVIDER: 'hcaptcha',
-			FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY: 'hcaptcha-site-key',
-			FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY: 'hcaptcha-secret-key',
-		});
-
-		const config = await loadConfig();
-
-		expect(config.integrations.captcha.enabled).toBe(true);
-		expect(config.integrations.captcha.hcaptcha?.secret_key).toBe('hcaptcha-secret-key');
-	});
-
-	test('leaves a disabled captcha unvalidated', async () => {
-		stubMinimalEnv({FLUXER_CAPTCHA_PROVIDER: 'hcaptcha'});
-		expect((await loadConfig()).integrations.captcha.enabled).toBe(false);
-	});
-
 	test('defaults the cache purge adapter to none', async () => {
 		stubMinimalEnv();
 		expect((await loadConfig()).integrations.cache_purge).toEqual({

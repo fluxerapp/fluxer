@@ -207,18 +207,6 @@ export interface MasterConfig {
 				secure: boolean;
 			};
 		};
-		captcha: {
-			enabled: boolean;
-			provider: 'hcaptcha' | 'turnstile' | 'none';
-			hcaptcha?: {
-				site_key: string;
-				secret_key: string;
-			};
-			turnstile?: {
-				site_key: string;
-				secret_key: string;
-			};
-		};
 		voice: {
 			enabled: boolean;
 			api_key: string;

@@ -760,14 +760,7 @@ Only `api` and `worker` build the mail service, so recreating those two is enoug
 
 ## CAPTCHA
 
-All are optional.
-
-| Variable | Value in `.env.example` | Controls |
-| --- | --- | --- |
-| FLUXER_CAPTCHA_ENABLED | `false` | The [CAPTCHA](/topics/captcha/) switch. Startup fails when it is `true` without a provider and that provider's keys |
-| FLUXER_CAPTCHA_PROVIDER | `none` | The provider. `hcaptcha`, `turnstile`, or `none`. Anything else fails startup |
-
-`FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY`, `FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY`, `FLUXER_CAPTCHA_TURNSTILE_SITE_KEY`, and `FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY` ship empty in `.env.example` and the shipped Compose file forwards them all. Set the pair the selected provider needs. The admin dashboard's Runtime Integrations panel sets the same provider and keys, and a value stored there wins over the environment. An instance that configures CAPTCHA only there must leave `FLUXER_CAPTCHA_ENABLED` at `false`, because the boot check reads the environment alone.
+[ALTCHA](/topics/captcha/) proof-of-work is on by default. Turn it off or tune it under Instance Config, Bot protection in the admin panel. No environment variables configure it.
 
 ## Single sign-on and passkeys
 
@@ -1677,13 +1670,17 @@ Product name, client-visible brand assets, and the setup state in the instance d
 
 Registration mode of `open`, `approval`, or `closed`, admin-issued registration URLs, and pending approval requests.
 
+#### Instance Config, Bot protection
+
+The [ALTCHA](/topics/captcha/) proof-of-work check on sign-up, login, password recovery, and a few other gated operations. It is on by default. Turn it off here, or change its cost and maximum counter.
+
 #### Instance Config, Community & Policy
 
 Single-community mode, direct messages and friends, the premium model, and optional embed services.
 
 #### Instance Config, Runtime Integrations
 
-The Klipy GIF key, the YouTube Data API key, the CAPTCHA provider and its keys, email delivery with an SMTP connection test, and Bluesky OAuth.
+The Klipy GIF key, the YouTube Data API key, email delivery with an SMTP connection test, and Bluesky OAuth.
 
 #### Instance Config, Premium & billing
 

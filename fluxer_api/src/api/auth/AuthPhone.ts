@@ -39,6 +39,8 @@ interface IssuedChallenge {
 interface SendPhoneVerificationOptions {
 	clientIp: string;
 	channel?: PhoneChannel;
+	hasCaptchaToken: boolean;
+	verifyCaptcha: () => Promise<boolean>;
 }
 
 function assertPhoneFormat(phone: string): void {
@@ -74,18 +76,25 @@ export async function sendPhoneVerificationCode(
 ): Promise<PhoneVerificationStartResult> {
 	assertPhoneFormat(phone);
 	const user = await loadRequestingUser(ctx, userId);
-	const reply = await getPhoneVerificationClient().start(
-		{
-			user_id: user.id.toString(),
-			user_flags: user.flags.toString(),
-			has_verified_phone: user.hasVerifiedPhone,
-			phone,
-			requested_channel: options.channel ?? null,
-			client_ip: options.clientIp,
-			captcha_passed: false,
-		},
-		requestInfo(ctx, userId, phone),
-	);
+	const start = (captchaPassed: boolean) =>
+		getPhoneVerificationClient().start(
+			{
+				user_id: user.id.toString(),
+				user_flags: user.flags.toString(),
+				has_verified_phone: user.hasVerifiedPhone,
+				phone,
+				requested_channel: options.channel ?? null,
+				client_ip: options.clientIp,
+				captcha_passed: captchaPassed,
+			},
+			requestInfo(ctx, userId, phone),
+		);
+	const captchaPassed = options.hasCaptchaToken && (await options.verifyCaptcha());
+	const reply = await start(captchaPassed);
+	if (reply.result === 'error' && reply.code === 'captcha_required' && !captchaPassed) {
+		await options.verifyCaptcha();
+		Logger.warn({userId: userId.toString()}, 'Phone verification asked for a captcha without a captcha check');
+	}
 	switch (reply.result) {
 		case 'sms_sent':
 			return {channel: 'sms'};

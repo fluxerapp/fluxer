@@ -106,29 +106,22 @@ A client MUST NOT upgrade a published `http` value to `https`, downgrade a publi
 
 ## CAPTCHA configuration object
 
-Which CAPTCHA provider this deployment uses, and the site keys a client needs to render its challenge.
+Whether this deployment asks for a CAPTCHA on gated operations.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| provider<sup>1</sup> | string | The selected [CAPTCHA provider](#captcha-providers) |
-| hcaptcha_site_key<sup>2</sup> | ?string | The configured hCaptcha site key, or null when none is configured |
-| turnstile_site_key<sup>2</sup> | ?string | The configured Turnstile site key, or null when none is configured |
-
-<sup>1</sup> The value is `none` when the configured provider's site key or secret key is missing
-
-<sup>2</sup> Only the key that matches `provider` is non-null, so both are null while `provider` is `none`
+| provider | string | The [CAPTCHA provider](#captcha-providers) in use |
 
 ### CAPTCHA providers
 
 | Value | Description |
 | --- | --- |
+| altcha | An ALTCHA proof-of-work challenge gates the operations that require one |
 | none | The deployment requires no CAPTCHA |
-| hcaptcha | hCaptcha challenges gate the operations that require one |
-| turnstile | Cloudflare Turnstile challenges gate the operations that require one |
 
-The complete challenge handshake, including the `X-Captcha-Token` and `X-Captcha-Type` request headers, is defined in [CAPTCHA handling](/topics/captcha/).
+The complete challenge handshake, including the `X-Captcha-Token` request header, is defined in [CAPTCHA handling](/topics/captcha/).
 
 ## Instance features object
 

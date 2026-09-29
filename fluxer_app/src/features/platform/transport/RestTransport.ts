@@ -35,6 +35,7 @@ const SUDO_VERIFICATION_ERROR_FIELDS: ReadonlySet<string> = new Set([
 ]);
 
 type RestMode = NonNullable<RestRequestOptions['mode']>;
+type PlanOptions = RestRequestOptions & {skipIntercept?: boolean};
 type BodyShape =
 	| {tag: 'empty'}
 	| {tag: 'json'; payload: string}
@@ -49,7 +50,6 @@ interface RuntimeState {
 	defaultRetries: number;
 	authProvider: () => string | null;
 	sudo: SudoBindings | null;
-	prepare?: RestClientHooks['prepareRequest'];
 	globalIntercept?: RestInterceptor;
 	pacing: Map<string, {until: number; note?: string}>;
 }
@@ -69,7 +69,7 @@ interface Plan {
 	sudoApplied: boolean;
 	signal?: AbortSignal;
 	onProgress?: (event: ProgressEvent) => void;
-	options: RestRequestOptions;
+	options: PlanOptions;
 }
 
 type TransportOutcome =
@@ -168,7 +168,6 @@ export class RestClient {
 	}
 
 	installHooks(hooks: RestClientHooks): void {
-		this.state.prepare = hooks.prepareRequest;
 		this.state.globalIntercept = hooks.intercept;
 	}
 
@@ -277,7 +276,7 @@ async function runRetryLoop<T>(
 	state: RuntimeState,
 	method: HttpMethod,
 	path: string,
-	options: RestRequestOptions,
+	options: PlanOptions,
 	sudoApplied: boolean,
 	attempt: number,
 ): Promise<RestResponse<T>> {
@@ -296,7 +295,6 @@ async function runRetryLoop<T>(
 		}
 	}
 	const handle = createHandle(plan.signal);
-	state.prepare?.(handle);
 	const outcome = await performTransport(plan, handle);
 	const decision = await reactToOutcome(state, plan, outcome);
 	switch (decision.next) {
@@ -323,7 +321,7 @@ function composePlan(
 	state: RuntimeState,
 	method: HttpMethod,
 	path: string,
-	options: RestRequestOptions,
+	options: PlanOptions,
 	sudoApplied: boolean,
 ): Plan {
 	const url = resolveUrl(state, path, options.query);
@@ -655,12 +653,10 @@ async function reactToOutcome(state: RuntimeState, plan: Plan, outcome: Transpor
 	if (reply.status === 429) {
 		return reactToRateLimit(state, plan, reply);
 	}
-	const interceptor = plan.options.intercept ?? state.globalIntercept;
+	const interceptor = plan.options.skipIntercept ? undefined : state.globalIntercept;
 	if (interceptor) {
 		const intercepted = await invokeInterceptor(state, plan, interceptor, reply);
-		if (intercepted.next !== 'passthrough') {
-			return intercepted.decision;
-		}
+		if (intercepted) return intercepted;
 	}
 	if (RETRYABLE_STATUSES.has(reply.status)) {
 		return {next: 'retry-after', delayMs: 0, mode: 'backoff'};
@@ -719,61 +715,27 @@ function extractMessage(body: unknown): string | undefined {
 	return typeof m === 'string' ? m : undefined;
 }
 
-type InterceptorFold = {next: 'passthrough'} | {next: 'used'; decision: AttemptDecision};
-
 async function invokeInterceptor(
 	state: RuntimeState,
 	plan: Plan,
 	interceptor: RestInterceptor,
 	reply: RestResponse,
-): Promise<InterceptorFold> {
-	let captured: Error | null = null;
-	let chained: Promise<RestResponse> | null = null;
-	const retry = (extra: Record<string, string>): Promise<RestResponse> => {
-		const augmented: RestRequestOptions = {
-			...plan.options,
-			headers: {...(plan.options.headers ?? {}), ...extra},
-		};
-		chained = runRetryLoop(state, plan.method, plan.path, augmented, plan.sudoApplied, 0);
-		return chained;
-	};
-	const reject = (err: Error) => {
-		captured = err;
-	};
-	let result: boolean | undefined | Promise<RestResponse | undefined>;
+): Promise<AttemptDecision | null> {
+	const retry = (extra: Record<string, string>): Promise<RestResponse> =>
+		runRetryLoop(
+			state,
+			plan.method,
+			plan.path,
+			{...plan.options, headers: {...(plan.options.headers ?? {}), ...extra}, skipIntercept: true},
+			plan.sudoApplied,
+			0,
+		);
 	try {
-		result = interceptor(reply, retry, reject);
+		const finalReply = await interceptor(reply, retry);
+		return finalReply === undefined ? null : {next: 'deliver', reply: finalReply};
 	} catch (err) {
-		return {next: 'used', decision: {next: 'fail', error: err}};
+		return {next: 'fail', error: err};
 	}
-	if (captured) {
-		return {next: 'used', decision: {next: 'fail', error: captured}};
-	}
-	if (result instanceof Promise) {
-		try {
-			const finalReply = await result;
-			if (captured) {
-				return {next: 'used', decision: {next: 'fail', error: captured}};
-			}
-			if (finalReply === undefined && chained) {
-				return {next: 'used', decision: {next: 'deliver', reply: await chained}};
-			}
-			if (finalReply === undefined) {
-				return {next: 'passthrough'};
-			}
-			return {next: 'used', decision: {next: 'deliver', reply: finalReply}};
-		} catch (err) {
-			return {next: 'used', decision: {next: 'fail', error: err}};
-		}
-	}
-	if (result === true && chained) {
-		try {
-			return {next: 'used', decision: {next: 'deliver', reply: await chained}};
-		} catch (err) {
-			return {next: 'used', decision: {next: 'fail', error: err}};
-		}
-	}
-	return {next: 'passthrough'};
 }
 
 function hasContentBlockedCode(body: unknown): boolean {

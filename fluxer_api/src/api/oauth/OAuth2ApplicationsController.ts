@@ -84,7 +84,7 @@ export function OAuth2ApplicationsController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['OAuth2'],
 			description:
-				'Creates a new bot-backed OAuth2 application (client). Requires CAPTCHA verification. Returns client credentials including ID and secret. Application can be used for authorization flows and API access.',
+				'Creates a new bot-backed OAuth2 application (client). Requires a solved captcha challenge (X-Captcha-Token). Returns client credentials including ID and secret. Application can be used for authorization flows and API access.',
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;

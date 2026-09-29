@@ -126,13 +126,19 @@ export class UserAuthRequestService {
 		user,
 		data,
 		clientIp,
+		hasCaptchaToken,
+		verifyCaptcha,
 	}: UserAuthRequest<PhoneSendVerificationRequest> & {
 		clientIp: string;
+		hasCaptchaToken: boolean;
+		verifyCaptcha: () => Promise<boolean>;
 	}): Promise<PhoneSendVerificationResponse> {
 		await this.assertPhoneEligible(user);
 		const result = await AuthPhone.sendPhoneVerificationCode(this.apiContext, data.phone, user.id, {
 			clientIp,
 			channel: data.channel,
+			hasCaptchaToken,
+			verifyCaptcha,
 		});
 		if (result.channel === 'inbound_challenge') {
 			return {

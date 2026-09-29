@@ -10,10 +10,6 @@ import {grantPremium} from '@app/api/user/tests/UserTestUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {
-	DEFAULT_ALTCHA_CAPTCHA_CONFIG,
-	INERT_ALTCHA_CAPTCHA_ASSIGNMENT,
-} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
-import {
 	DEFAULT_DOMAIN_MIGRATION_CONFIG,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
@@ -58,7 +54,6 @@ describe('GET /experiments', () => {
 			poll_jitter_percent: DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
 			assignments: {
 				domain_migration: INERT_DOMAIN_MIGRATION_ASSIGNMENT,
-				altcha_captcha: INERT_ALTCHA_CAPTCHA_ASSIGNMENT,
 			},
 		});
 	});
@@ -109,62 +104,6 @@ describe('GET /experiments', () => {
 		expect(body.assignments.domain_migration).toEqual({enabled: false});
 	});
 
-	it('resolves the altcha captcha caller through the allowlist and the exclusion list', async () => {
-		const targeted = await createTestAccount(harness);
-		const excluded = await createTestAccount(harness);
-		await getInstanceConfigRepository().setAltchaCaptchaConfig({
-			...DEFAULT_ALTCHA_CAPTCHA_CONFIG,
-			enabled: true,
-			rollout_basis_points: 10000,
-			anonymous_enabled: true,
-			included_user_ids: [targeted.userId],
-			excluded_user_ids: [excluded.userId],
-		});
-
-		const targetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, targeted.token)
-			.get(ENDPOINT)
-			.execute();
-		expect(targetedBody.assignments.altcha_captcha).toEqual({enabled: true});
-
-		const excludedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, excluded.token)
-			.get(ENDPOINT)
-			.execute();
-		expect(excludedBody.assignments.altcha_captcha).toEqual({enabled: false});
-	});
-
-	it('bumps the altcha captcha config version on every admin update without the client sending one', async () => {
-		const admin = await setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_VIEW,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
-		]);
-
-		const afterFirst = await createBuilder<{altcha_captcha: {config_version: number; enabled: boolean}}>(
-			harness,
-			admin.token,
-		)
-			.patch('/admin/instance/config')
-			.body({altcha_captcha: {enabled: true, included_user_ids: [admin.userId]}})
-			.execute();
-		expect(afterFirst.altcha_captcha).toMatchObject({config_version: 1, enabled: true});
-
-		const afterSecond = await createBuilder<{
-			altcha_captcha: {config_version: number; anonymous_enabled: boolean; cost: number; max_counter: number};
-		}>(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({altcha_captcha: {anonymous_enabled: true, cost: 2000, max_counter: 400}})
-			.execute();
-		expect(afterSecond.altcha_captcha).toMatchObject({
-			config_version: 2,
-			anonymous_enabled: true,
-			cost: 2000,
-			max_counter: 400,
-		});
-
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
-		expect(body.assignments.altcha_captcha).toEqual({enabled: true});
-	});
-
 	it('enrols members of an included guild in every experiment and leaves everyone else out', async () => {
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
@@ -179,23 +118,16 @@ describe('GET /experiments', () => {
 			enabled: true,
 			included_guild_ids: [guild.id],
 		});
-		await repository.setAltchaCaptchaConfig({
-			...DEFAULT_ALTCHA_CAPTCHA_CONFIG,
-			enabled: true,
-			included_guild_ids: [guild.id],
-		});
 
 		const memberBody = await createBuilder<ExperimentAssignmentsResponse>(harness, member.token)
 			.get(ENDPOINT)
 			.execute();
 		expect(memberBody.assignments.domain_migration).toEqual({enabled: true});
-		expect(memberBody.assignments.altcha_captcha).toEqual({enabled: true});
 
 		const outsiderBody = await createBuilder<ExperimentAssignmentsResponse>(harness, outsider.token)
 			.get(ENDPOINT)
 			.execute();
 		expect(outsiderBody.assignments.domain_migration).toEqual({enabled: false});
-		expect(outsiderBody.assignments.altcha_captcha).toEqual({enabled: false});
 	});
 
 	it('enrols premium users, subscription and lifetime alike, when the switch is on', async () => {
@@ -227,19 +159,15 @@ describe('GET /experiments', () => {
 		]);
 		const guildIds = ['1500000000000000001', '1500000000000000002'];
 		const body = await createBuilder<
-			Record<'domain_migration' | 'altcha_captcha', {included_guild_ids: Array<string>; include_premium_users: boolean}>
+			Record<'domain_migration', {included_guild_ids: Array<string>; include_premium_users: boolean}>
 		>(harness, admin.token)
 			.patch('/admin/instance/config')
 			.body({
 				domain_migration: {included_guild_ids: guildIds, include_premium_users: true},
-				altcha_captcha: {included_guild_ids: guildIds, include_premium_users: true},
 			})
 			.execute();
 		expect(body.domain_migration.included_guild_ids).toEqual(guildIds);
-		expect(body.altcha_captcha.included_guild_ids).toEqual(guildIds);
-		for (const section of [body.domain_migration, body.altcha_captcha]) {
-			expect(section.include_premium_users).toBe(true);
-		}
+		expect(body.domain_migration.include_premium_users).toBe(true);
 	});
 
 	it('revalidates with a strong etag and answers 304 when nothing changed', async () => {

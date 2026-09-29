@@ -74,8 +74,7 @@ export const InstanceAppPublicSchema = z.object({
 });
 export type InstanceAppPublic = z.infer<typeof InstanceAppPublicSchema>;
 
-export const InstanceCaptchaProviderSchema = z.enum(['hcaptcha', 'turnstile', 'none']);
-export type InstanceCaptchaProvider = z.infer<typeof InstanceCaptchaProviderSchema>;
+export const InstanceCaptchaProviderSchema = z.enum(['altcha', 'none']);
 
 export const InstanceEndpointsSchema = z
 	.object({
@@ -96,9 +95,7 @@ export type InstanceEndpoints = z.infer<typeof InstanceEndpointsSchema>;
 
 export const InstanceCaptchaSchema = z
 	.object({
-		provider: InstanceCaptchaProviderSchema.describe('Captcha provider name (hcaptcha, turnstile, none)'),
-		hcaptcha_site_key: z.string().nullable().describe('hCaptcha site key if using hCaptcha'),
-		turnstile_site_key: z.string().nullable().describe('Cloudflare Turnstile site key if using Turnstile'),
+		provider: InstanceCaptchaProviderSchema.describe('Captcha provider (altcha or none)'),
 	})
 	.describe('Captcha configuration');
 export type InstanceCaptcha = z.infer<typeof InstanceCaptchaSchema>;

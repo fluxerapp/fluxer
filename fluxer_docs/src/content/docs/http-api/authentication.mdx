@@ -506,21 +506,18 @@ Approval mode registration instead returns 403 `REGISTRATION_PENDING_APPROVAL` a
 
 Creates an ordinary account. Returns an [authentication token response](#authentication-token-response) when the instance admits the account immediately and a [registration pending approval response](#registration-pending-approval-response-object) when it does not. Emits a [Guild Member Add](/gateway/events/#guild-member-add) Gateway event for each guild the new account joins through an invite or through the instance's single community guild.
 
-Registration verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. It permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those allowances are separate from the route bucket, and only a deployment with `dev.relax_registration_rate_limits` set to true disables them.
+Registration verifies a [CAPTCHA](/topics/captcha/). It permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those allowances are separate from the route bucket, and only a deployment with `dev.relax_registration_rate_limits` set to true disables them.
 
 ### Request headers
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
-| X-Captcha-Type?<sup>2</sup> | string | The provider that issued the proof, either `hcaptcha` or `turnstile` |
-| Accept-Language?<sup>3</sup> | string | The language tag that selects the locale stored on the new account |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| Accept-Language?<sup>2</sup> | string | The language tag that selects the locale stored on the new account |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, and verification is skipped entirely when CAPTCHA is disabled for the instance
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Verification is skipped entirely while the check is off for the instance
 
-<sup>2</sup> Omitting the header selects the instance's configured provider
-
-<sup>3</sup> The parsed locale becomes the account locale and selects the language of the verification email
+<sup>2</sup> The parsed locale becomes the account locale and selects the language of the verification email
 
 ### JSON body
 
@@ -589,22 +586,19 @@ Approval mode registration creates no guild membership and no authentication ses
 
 Validates local email and password credentials. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when no second factor and no IP approval are outstanding, and an [MFA challenge response](#mfa-challenge-response) when the account has a second factor.
 
-Login verifies CAPTCHA when CAPTCHA is enabled. It also permits 10 attempts per client IP address in 30 minutes, keyed by the exact IPv4 address or the IPv6 /64 network, and 5 attempts per email address in 15 minutes. Every admitted attempt consumes both allowances, whether or not the credentials turn out to be correct, and a successful login clears neither.
+Login verifies a [CAPTCHA](/topics/captcha/). It also permits 10 attempts per client IP address in 30 minutes, keyed by the exact IPv4 address or the IPv6 /64 network, and 5 attempts per email address in 15 minutes. Every admitted attempt consumes both allowances, whether or not the credentials turn out to be correct, and a successful login clears neither.
 
 ### Request headers
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
-| X-Captcha-Type?<sup>2</sup> | string | The provider that issued the proof, either `hcaptcha` or `turnstile` |
-| X-Fluxer-Client-Properties?<sup>3</sup> | string | The base64-encoded JSON with the reporting client's `os` |
-| User-Agent?<sup>3</sup> | string | The client string recorded on the created session and shown by [list authentication sessions](#list-authentication-sessions) |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+| X-Fluxer-Client-Properties?<sup>2</sup> | string | The base64-encoded JSON with the reporting client's `os` |
+| User-Agent?<sup>2</sup> | string | The client string recorded on the created session and shown by [list authentication sessions](#list-authentication-sessions) |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, and verification is skipped entirely when CAPTCHA is disabled for the instance
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Verification is skipped entirely while the check is off for the instance
 
-<sup>2</sup> Omitting the header selects the instance's configured provider
-
-<sup>3</sup> Both values feed the [client info](#client-info-object) object recorded on the session, and `X-Fluxer-Client-Properties` is read only for a native Fluxer `User-Agent`
+<sup>2</sup> Both values feed the [client info](#client-info-object) object recorded on the session, and `X-Fluxer-Client-Properties` is read only for a native Fluxer `User-Agent`
 
 ### JSON body
 
@@ -935,18 +929,15 @@ The operation creates one 64-character verification token bound to the account a
 
 Accepts a password recovery request for an email address. Authentication is not required. Returns 204 with no body.
 
-Password recovery verifies CAPTCHA when CAPTCHA is enabled. Fluxer consumes both the client IP address and email address allowances before it validates the address, and exhausting either returns 429.
+Password recovery verifies a [CAPTCHA](/topics/captcha/). Fluxer consumes both the client IP address and email address allowances before it validates the address, and exhausting either returns 429.
 
 ### Request headers
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
-| X-Captcha-Type?<sup>2</sup> | string | The provider that issued the proof, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`, and verification is skipped entirely when CAPTCHA is disabled for the instance
-
-<sup>2</sup> Omitting the header selects the instance's configured provider
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Verification is skipped entirely while the check is off for the instance
 
 ### JSON body
 

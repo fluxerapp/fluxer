@@ -169,7 +169,15 @@ Starts verification of the submitted number. Requires an account satisfying [eli
 
 The instance can route the attempt to an inbound challenge instead of outbound SMS, and that overrides a requested `sms`. Requesting `inbound_challenge` always yields a challenge.
 
-The number then passes the [number checks](#number-checks). A number that has reached its verification limit is refused with 400 `PHONE_ALREADY_USED`. Sends are limited for each account and for each number, and a denial returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. A request can also return 400 `CAPTCHA_REQUIRED`. This route reads no [CAPTCHA](/topics/captcha/) solution header, so the attempt cannot be retried with a solution. Every other refusal returns 400 `SMS_VERIFICATION_UNAVAILABLE`, as does an instance with no phone verification service.
+The number then passes the [number checks](#number-checks). A number that has reached its verification limit is refused with 400 `PHONE_ALREADY_USED`. Sends are limited for each account and for each number, and a denial returns 429 `PHONE_RATE_LIMIT_EXCEEDED`. The phone verification service can also ask for a solved [CAPTCHA](/topics/captcha/) challenge. The route then answers 400 `CAPTCHA_REQUIRED` with a challenge, and a retry with the solved challenge in `X-Captcha-Token` continues the send. When the instance has the check turned off, or the account is exempt from it, that request returns 429 `PHONE_RATE_LIMIT_EXCEEDED` instead. Every other refusal returns 400 `SMS_VERIFICATION_UNAVAILABLE`, as does an instance with no phone verification service.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+
+<sup>1</sup> Read only when the phone verification service asks for a CAPTCHA. A missing token then returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge
 
 ### JSON body
 
@@ -185,7 +193,7 @@ The number then passes the [number checks](#number-checks). A number that has re
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [SMS delivery](#sms-delivery-object) object \| [inbound challenge](#inbound-challenge-object) object | Verification was started on the channel named by the response |
-| 400 | [error response](/http-api/#error-response) | The number is refused with `INVALID_PHONE_NUMBER`, has reached its verification limit and returns `PHONE_ALREADY_USED`, the attempt returns `CAPTCHA_REQUIRED`, or the send could not start and returns `SMS_VERIFICATION_UNAVAILABLE` |
+| 400 | [error response](/http-api/#error-response) | The number is refused with `INVALID_PHONE_NUMBER`, has reached its verification limit and returns `PHONE_ALREADY_USED`, the attempt asks for a CAPTCHA with `CAPTCHA_REQUIRED` or `INVALID_CAPTCHA`, or the send could not start and returns `SMS_VERIFICATION_UNAVAILABLE` |
 | 403 | [error response](/http-api/#error-response) | The account is not eligible and the request returns `PHONE_ADD_NOT_ELIGIBLE` |
 | 429<sup>1</sup> | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A send limit or a provider throttle denies the request, which returns `PHONE_RATE_LIMIT_EXCEEDED` |
 

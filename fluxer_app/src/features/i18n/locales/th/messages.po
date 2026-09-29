@@ -2395,11 +2395,6 @@ msgstr "60 วินาที"
 msgid "7 days"
 msgstr "7 วัน"
 
-#. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
-msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
-msgstr "ต้องมีการตรวจสอบเบราว์เซอร์ก่อนยืนยันเบอร์โทรศัพท์ ลองอีกครั้งจากหน้าลงชื่อเข้าใช้หรือติดต่อฝ่ายสนับสนุน"
-
 #. Hint shown beside in:. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:77
 msgid "a channel"
@@ -2928,7 +2923,7 @@ msgid "Add a friend to get started."
 msgstr "เพิ่มเพื่อนเพื่อเริ่มต้นใช้งาน"
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:973
+#: src/features/app/components/setup/SetupWizardSteps.tsx:966
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "เพิ่มคีย์ API ของ Klipy เพื่อเปิดใช้งานการค้นหา GIF ขณะใช้งาน"
 
@@ -2965,7 +2960,7 @@ msgid "Add a working email"
 msgstr "เพิ่มอีเมลที่ใช้งานได้"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:981
+#: src/features/app/components/setup/SetupWizardSteps.tsx:974
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "เพิ่มคีย์ YouTube Data API เพื่อปรับปรุงลิงก์ YouTube"
 
@@ -3011,7 +3006,7 @@ msgid "Add another reaction"
 msgstr "เพิ่มรีแอ็กชันอื่น"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
+#: src/features/app/components/setup/SetupWizardSteps.tsx:990
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "เพิ่มข้อมูลเมตาไคลเอ็นต์ OAuth ของ Bluesky และคีย์การลงนาม"
 
@@ -3161,7 +3156,7 @@ msgid "Add shortcut"
 msgstr "เพิ่มปุ่มลัด"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:997
+#: src/features/app/components/setup/SetupWizardSteps.tsx:982
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "เพิ่มข้อมูลประจำตัว SMTP เพื่อให้อินสแตนซ์สามารถส่งอีเมลยืนยันและแจ้งเตือนได้"
 
@@ -3188,7 +3183,7 @@ msgid "Add stream"
 msgstr "เพิ่มสตรีม"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:965
+#: src/features/app/components/setup/SetupWizardSteps.tsx:958
 msgid "Add the credentials during setup."
 msgstr "เพิ่มข้อมูลประจำตัวระหว่างการตั้งค่า"
 
@@ -3954,7 +3949,7 @@ msgid "An invalid status was provided. You can now close this tab and return to 
 msgstr "สถานะไม่ถูกต้อง ปิดแท็บนี้แล้วกลับไปที่แอปได้เลย"
 
 #. Short label in the authentication auth form. Keep the tone plain and specific.
-#: src/features/auth/hooks/useAuthForm.ts:13
+#: src/features/auth/hooks/useAuthForm.ts:12
 msgid "An unexpected error occurred"
 msgstr "เกิดข้อผิดพลาดที่ไม่คาดคิด"
 
@@ -4262,7 +4257,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "ทุกคนสามารถขอบัญชีได้ แต่ผู้ดูแลระบบต้องอนุมัติ"
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
+#: src/features/app/components/setup/SetupWizardSteps.tsx:994
 msgid "API key"
 msgstr "คีย์ API"
 
@@ -4958,7 +4953,7 @@ msgid "Authorized apps"
 msgstr "แอปที่ได้รับอนุญาต"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:38
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:37
 msgid "Authorized IPs cleared. New logins will require email verification."
 msgstr "ล้าง IP ที่ได้รับอนุญาตแล้ว การเข้าสู่ระบบใหม่จะต้องยืนยันอีเมล"
 
@@ -5730,7 +5725,7 @@ msgid "Bluesky connections"
 msgstr "การเชื่อมต่อ Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
+#: src/features/app/components/setup/SetupWizardSteps.tsx:986
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -5896,11 +5891,6 @@ msgstr "สิทธิ์ของบอทต้องไม่เป็นค
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:64
 msgid "Bot profile"
 msgstr "โปรไฟล์บอท"
-
-#. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:985
-msgid "Bot protection"
-msgstr "การป้องกันบอท"
 
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:20
@@ -6553,11 +6543,6 @@ msgstr "แก้ไขไม่ได้"
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx:12
 msgid "Cannot delete account"
 msgstr "ไม่สามารถลบบัญชีได้"
-
-#. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:15
-msgid "Captcha verification failed. Try again."
-msgstr "การยืนยันแคปต์ชาล้มเหลว โปรดลองอีกครั้ง"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:50
@@ -7398,10 +7383,6 @@ msgstr "กำลังตรวจสอบสิทธิ์..."
 msgid "Checking screen recording permission..."
 msgstr "กำลังตรวจสอบสิทธิ์การบันทึกหน้าจอ…"
 
-#: src/features/auth/components/AltchaVerification.tsx:62
-msgid "Checking your browser. This takes a few seconds."
-msgstr "กำลังตรวจสอบเบราว์เซอร์ของคุณ ใช้เวลาสักครู่"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
 msgid "Checkout"
@@ -7570,11 +7551,6 @@ msgstr "เลือก ไฟล์ แล้วเลือก เพิ่ม
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
 msgid "Choose friends to message."
 msgstr "เลือกเพื่อนเพื่อส่งข้อความ"
-
-#. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:989
-msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
-msgstr "เลือก hCaptcha หรือ Cloudflare Turnstile สำหรับการยืนยันแคปต์ชาตอนสมัครสมาชิก"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
@@ -7982,17 +7958,17 @@ msgid "Clear selection"
 msgstr "ล้างการเลือก"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:88
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:87
 msgid "Clear trust all setting"
 msgstr "ล้างการตั้งค่าเชื่อถือทั้งหมด"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:63
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:62
 msgid "Clear trusted domains"
 msgstr "ล้างโดเมนที่เชื่อถือได้"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:96
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:95
 msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "ล้างโดเมนที่เชื่อถือได้ ({trustedDomainsCount})"
 
@@ -8002,7 +7978,7 @@ msgid "Clearer text"
 msgstr "ข้อความชัดเจนขึ้น"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:108
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:107
 msgid "Clearing trusted domains..."
 msgstr "กำลังล้างโดเมนที่เชื่อถือได้..."
 
@@ -8100,7 +8076,7 @@ msgid "Client"
 msgstr "ไคลเอ็นต์"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1057
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1031
 msgid "Client name"
 msgstr "ชื่อไคลเอ็นต์"
 
@@ -8117,7 +8093,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "สร้าง Client secret ใหม่แล้ว โปรดอัปเดตโค้ดที่ใช้ secret เก่า"
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
 msgid "Client URL"
 msgstr "URL ไคลเอ็นต์"
 
@@ -8268,11 +8244,6 @@ msgstr "ข้อความส่วนตัวที่ปิดไปแล
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:128
 msgid "Cloud upload"
 msgstr "อัปโหลดขึ้นคลาวด์"
-
-#. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1014
-msgid "Cloudflare Turnstile"
-msgstr "Cloudflare Turnstile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:58
@@ -8669,7 +8640,7 @@ msgstr "ชื่อคอมมูนิตี้"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "ชื่อเล่นในคอมมูนิตี้"
@@ -8722,7 +8693,7 @@ msgid "Community profile"
 msgstr "โปรไฟล์คอมมูนิตี้"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
 msgid "Community profile updated"
 msgstr "อัปเดตโปรไฟล์คอมมูนิตี้แล้ว"
 
@@ -8880,7 +8851,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "ตั้งค่าปุ่มลัด"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:961
+#: src/features/app/components/setup/SetupWizardSteps.tsx:954
 msgid "Configure now"
 msgstr "ตั้งค่าเลย"
 
@@ -12341,7 +12312,7 @@ msgstr "ตัดการเชื่อมต่อจาก {channel}"
 msgid "Disconnect from voice"
 msgstr "ตัดการเชื่อมต่อจากช่องเสียง"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:261
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:243
 msgid "Disconnect socket"
 msgstr "ตัดการเชื่อมต่อซ็อกเก็ต"
 
@@ -12479,7 +12450,7 @@ msgstr "โหมดการแสดงผล"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "ชื่อที่แสดง"
@@ -12625,7 +12596,7 @@ msgstr "คุณต้องการเข้าร่วม {communityName} �
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "ด็อก ผมมาจากอนาคต ผมมาที่นี่ด้วยไทม์แมชชีนที่คุณเป็นคนประดิษฐ์ขึ้นมา ตอนนี้ผมต้องการความช่วยเหลือจากคุณเพื่อกลับไปยังปี 1985"
 
@@ -13262,7 +13233,7 @@ msgid "Edit your messages above or below"
 msgstr "แก้ไขข้อความของคุณด้านบนหรือด้านล่าง"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
 msgid "Edit your profile appearance and see a live preview"
 msgstr "แก้ไขรูปลักษณ์โปรไฟล์ของคุณและดูตัวอย่างแบบเรียลไทม์"
 
@@ -13330,7 +13301,7 @@ msgid "Email changed"
 msgstr "เปลี่ยนอีเมลแล้ว"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:993
+#: src/features/app/components/setup/SetupWizardSteps.tsx:978
 msgid "Email delivery"
 msgstr "การส่งอีเมล"
 
@@ -13635,7 +13606,7 @@ msgid "Enable beta feature"
 msgstr "เปิดใช้ฟีเจอร์เบต้า"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1053
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1027
 msgid "Enable Bluesky OAuth"
 msgstr "เปิดใช้งาน Bluesky OAuth"
 
@@ -13668,7 +13639,7 @@ msgid "Enable developer mode"
 msgstr "เปิดโหมดนักพัฒนา"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
+#: src/features/app/components/setup/SetupWizardSteps.tsx:995
 msgid "Enable email delivery"
 msgstr "เปิดใช้งานการส่งอีเมล"
 
@@ -14705,7 +14676,7 @@ msgid "Failed to ban member. Try again."
 msgstr "แบนสมาชิกไม่สำเร็จ ลองอีกครั้ง"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:59
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:58
 msgid "Failed to clear trusted domains."
 msgstr "ล้างโดเมนที่เชื่อถือแล้วไม่สำเร็จ"
 
@@ -14762,7 +14733,7 @@ msgid "Failed to enable camera."
 msgstr "ไม่สามารถเปิดกล้องได้"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:42
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:41
 msgid "Failed to forget authorized IPs. Try again."
 msgstr "ลบ IP ที่ได้รับอนุญาตไม่สำเร็จ ลองอีกครั้ง"
 
@@ -14907,7 +14878,7 @@ msgid "Failed to resend verification code. Try again later."
 msgstr "ส่งรหัสยืนยันอีกครั้งไม่สำเร็จ โปรดลองอีกครั้งในภายหลัง"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:75
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:74
 msgid "Failed to reset premium state."
 msgstr "รีเซ็ตสถานะพรีเมียมไม่สำเร็จ"
 
@@ -15581,7 +15552,7 @@ msgstr "บังคับโครงร่างขณะโหลด"
 msgid "Force mature media"
 msgstr "บังคับสื่อสำหรับผู้ใหญ่"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:276
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:258
 msgid "Force move to AFK channel"
 msgstr "บังคับย้ายไปช่อง AFK"
 
@@ -15640,7 +15611,7 @@ msgid "Forced off"
 msgstr "บังคับปิด"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:46
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:45
 msgid "Forget authorized IPs"
 msgstr "ลบ IP ที่ได้รับอนุญาต"
 
@@ -15650,7 +15621,7 @@ msgid "Forget subscriptions"
 msgstr "ลบการสมัครรับการแจ้งเตือน"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:104
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:103
 msgid "Forgetting authorized IPs..."
 msgstr "กำลังลบ IP ที่ได้รับอนุญาต..."
 
@@ -15907,12 +15878,12 @@ msgid "from <0>{0}</0>"
 msgstr "จาก <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
+#: src/features/app/components/setup/SetupWizardSteps.tsx:999
 msgid "From email"
 msgstr "อีเมลผู้ส่ง"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1003
 msgid "From name"
 msgstr "ชื่อผู้ส่ง"
 
@@ -16204,7 +16175,7 @@ msgid "GIF preview"
 msgstr "ตัวอย่าง GIF"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:969
+#: src/features/app/components/setup/SetupWizardSteps.tsx:962
 msgid "GIF search"
 msgstr "ค้นหา GIF"
 
@@ -16853,20 +16824,11 @@ msgstr "มีรหัสของขวัญไหม? ใช้แลกร�
 msgid "Having fun?"
 msgstr "สนุกอยู่ไหม?"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:175
-msgid "Having issues? Try hCaptcha instead"
-msgstr "มีปัญหาใช่ไหม? ลองใช้ hCaptcha แทน"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:63
 msgctxt "us-state"
 msgid "Hawaii"
 msgstr "ฮาวาย"
-
-#. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
-msgid "hCaptcha"
-msgstr "hCaptcha"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:238
@@ -19768,7 +19730,7 @@ msgid "Logo"
 msgstr "โลโก้"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1039
 msgid "Logo URL"
 msgstr "URL โลโก้"
 
@@ -22941,7 +22903,7 @@ msgid "No tokens match \"{searchQuery}\"."
 msgstr "ไม่มีโทเค็นที่ตรงกับ \"{searchQuery}\""
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:92
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:91
 msgid "No trusted domains"
 msgstr "ไม่มีโดเมนที่เชื่อถือได้"
 
@@ -23696,10 +23658,6 @@ msgstr "เปิดตัวเลือกเบราว์เซอร์"
 msgid "Open call view"
 msgstr "เปิดหน้าจอการโทร"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:288
-msgid "Open captcha modal"
-msgstr "เปิดหน้าต่างแคปต์ชา"
-
 #. Accessible label for the channel header title button in a community channel.
 #: src/features/channel/components/channel_header/shared.ts:14
 msgid "Open channel details for {channelName}"
@@ -23712,7 +23670,7 @@ msgstr "เปิดรายละเอียดช่อง {channelName}"
 msgid "Open chat"
 msgstr "เปิดแชท"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:314
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:290
 msgid "Open claim account modal"
 msgstr "เปิดหน้าต่างยืนยันบัญชี"
 
@@ -23944,11 +23902,11 @@ msgstr "เปิดสติกเกอร์ในเบราว์เซอ
 msgid "Open streaming privacy settings"
 msgstr "เปิดการตั้งค่าความเป็นส่วนตัวของการสตรีม"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:327
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:303
 msgid "Open sudo verification modal"
 msgstr "เปิดหน้าต่างยืนยันตัวตน"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:342
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:318
 msgid "Open system DM"
 msgstr "เปิดข้อความส่วนตัวของระบบ"
 
@@ -24430,7 +24388,7 @@ msgstr "พาสคีย์ต้องใช้บันเดิล macOS �
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1010
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -25212,7 +25170,7 @@ msgid "Popup"
 msgstr "ป๊อปอัป"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1008
 msgid "Port"
 msgstr "พอร์ต"
 
@@ -25338,7 +25296,7 @@ msgid "Premium since date"
 msgstr "พรีเมียมตั้งแต่วันที่"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:71
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:70
 msgid "Premium state reset on the backend."
 msgstr "รีเซ็ตสถานะพรีเมียมในระบบหลังบ้านแล้ว"
 
@@ -25608,7 +25566,7 @@ msgid "Privacy settings"
 msgstr "การตั้งค่าความเป็นส่วนตัว"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1047
 msgid "Privacy URL"
 msgstr "URL ความเป็นส่วนตัว"
 
@@ -25633,7 +25591,7 @@ msgid "Private details"
 msgstr "ข้อมูลส่วนตัว"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1055
 msgid "Private key"
 msgstr "คีย์ส่วนตัว"
 
@@ -25699,18 +25657,18 @@ msgstr "สีโปรไฟล์"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "ปรับแต่งโปรไฟล์"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
 msgid "Profile customization for {selectedGuildName}"
 msgstr "การปรับแต่งโปรไฟล์สำหรับ {selectedGuildName}"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
 msgid "Profile customization form"
 msgstr "แบบฟอร์มปรับแต่งโปรไฟล์"
 
@@ -25775,7 +25733,7 @@ msgid "Profile type"
 msgstr "ประเภทโปรไฟล์"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
 msgid "Profile updated"
 msgstr "อัปเดตโปรไฟล์แล้ว"
 
@@ -25812,7 +25770,7 @@ msgstr "แจ้งเตือนเมื่อมีอุปกรณ์เ
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -25841,11 +25799,6 @@ msgstr "ระบุ ID ผู้ใช้ หรือชื่อผู้ใ�
 #: src/features/moderation/components/pages/ReportPage.tsx:102
 msgid "Provide your full legal name for the declaration."
 msgstr "ระบุชื่อ-นามสกุลตามกฎหมายของคุณสำหรับคำรับรองนี้"
-
-#. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
-msgid "Provider"
-msgstr "ผู้ให้บริการ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
@@ -27626,7 +27579,7 @@ msgid "Reset password"
 msgstr "รีเซ็ตรหัสผ่าน"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:79
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:78
 msgid "Reset premium state"
 msgstr "รีเซ็ตสถานะพรีเมียม"
 
@@ -27635,7 +27588,7 @@ msgstr "รีเซ็ตสถานะพรีเมียม"
 msgid "Reset slider to default value"
 msgstr "รีเซ็ตแถบเลื่อนเป็นค่าเริ่มต้น"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:247
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:229
 msgid "Reset socket"
 msgstr "รีเซ็ตซ็อกเก็ต"
 
@@ -27684,7 +27637,7 @@ msgid "Reset zoom"
 msgstr "รีเซ็ตการซูม"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:112
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:111
 msgid "Resetting premium state..."
 msgstr "กำลังรีเซ็ตสถานะพรีเมียม..."
 
@@ -28315,7 +28268,7 @@ msgid "Run the instance as one community instead of many. This can only be enabl
 msgstr "เรียกใช้อินสแตนซ์เป็นคอมมูนิตี้เดียวแทนที่จะเป็นหลายคอมมูนิตี้ เปิดใช้งานได้เฉพาะตอนนี้ระหว่างการตั้งค่าเท่านั้น"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:100
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:99
 msgid "Runtime utilities"
 msgstr "เครื่องมือยูทิลิตีรันไทม์"
 
@@ -29102,11 +29055,6 @@ msgstr "คลิกปุ่มรองแล้ว"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:136
 msgid "Secret"
 msgstr "รหัสลับ"
-
-#. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
-msgid "Secret key"
-msgstr "คีย์ลับ"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the secrets section. Keep it concise. Keep the tone plain and specific.
@@ -29925,7 +29873,7 @@ msgid "Set up authenticator app"
 msgstr "ตั้งค่าแอปยืนยันตัวตน"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:953
+#: src/features/app/components/setup/SetupWizardSteps.tsx:946
 msgid "Set up later"
 msgstr "ตั้งค่าทีหลัง"
 
@@ -30427,7 +30375,7 @@ msgstr "แสดงรายการข้อความส่วนตัว
 msgid "Show just the typing indicator without avatars"
 msgstr "แสดงเฉพาะสถานะกำลังพิมพ์ ไม่แสดงรูปโปรไฟล์"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:308
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:284
 msgid "Show keyboard mode intro"
 msgstr "แสดงหน้าแนะนำโหมดแป้นพิมพ์"
 
@@ -30538,7 +30486,7 @@ msgstr "แสดง Neko"
 msgid "Show new device alerts"
 msgstr "แสดงการแจ้งเตือนอุปกรณ์ใหม่"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:282
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:264
 msgid "Show new device modal"
 msgstr "แสดงโมดัลอุปกรณ์ใหม่"
 
@@ -30820,7 +30768,7 @@ msgid "Signed-in devices"
 msgstr "อุปกรณ์ที่ลงชื่อเข้าใช้"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1051
 msgid "Signing key ID"
 msgstr "ID คีย์การลงนาม"
 
@@ -30910,11 +30858,6 @@ msgstr "บรรทัดเดียว"
 msgid "Single user (all statuses)"
 msgstr "ผู้ใช้คนเดียว (ทุกสถานะ)"
 
-#. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
-msgid "Site key"
-msgstr "คีย์ไซต์"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:98
@@ -30964,7 +30907,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "ข้ามข้อความระบบแจ้งการออกจากกลุ่ม ไม่มีใครได้รับการแจ้งเตือน"
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:957
+#: src/features/app/components/setup/SetupWizardSteps.tsx:950
 msgid "Skip this now and configure it from the admin panel."
 msgstr "ข้ามตอนนี้และกำหนดค่าจากแผงผู้ดูแลระบบ"
 
@@ -31212,17 +31155,17 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "ไม่สามารถยืนยัน SMS ได้ในขณะนี้ โปรดลองอีกครั้งในภายหลังหรือติดต่อฝ่ายสนับสนุน"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1045
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
 msgid "SMTP connection verified."
 msgstr "ยืนยันการเชื่อมต่อ SMTP แล้ว"
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1007
 msgid "SMTP host"
 msgstr "โฮสต์ SMTP"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1049
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1023
 msgid "SMTP validation failed."
 msgstr "ตรวจสอบ SMTP ไม่สำเร็จ"
 
@@ -31402,7 +31345,7 @@ msgstr "เกิดข้อผิดพลาด โปรดลองอี�
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "เกิดข้อผิดพลาด โปรดลองอีกครั้ง"
@@ -32098,6 +32041,11 @@ msgstr "ยังจัดทำดัชนีอยู่ กลับมา�
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
 msgid "Still Neko"
 msgstr "เนโกะอยู่นิ่ง"
+
+#. Small toast shown only when an automatic background check before sign-in, sign-up or a similar request takes more than a couple of seconds. No user action needed. Keep it short and calm.
+#: src/features/auth/altcha/CaptchaInterceptor.ts:13
+msgid "Still working on it…"
+msgstr "กำลังดำเนินการอยู่…"
 
 #. Stop-recording button label in the desktop voice message composer.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:65
@@ -33013,7 +32961,7 @@ msgid "Terms of service"
 msgstr "ข้อกำหนดในการให้บริการ"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1043
 msgid "Terms URL"
 msgstr "URL ข้อกำหนด"
 
@@ -33023,7 +32971,7 @@ msgid "Terrorism or violent extremism"
 msgstr "การก่อการร้ายหรือแนวคิดสุดโต่งที่ใช้ความรุนแรง"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1041
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1015
 msgid "Test SMTP"
 msgstr "ทดสอบ SMTP"
 
@@ -33800,7 +33748,7 @@ msgid "This clears quick CSS, imported themes, uploaded assets, and local file r
 msgstr "การดำเนินการนี้จะล้าง CSS ด่วน ธีมที่นำเข้า เนื้อหาที่อัปโหลด และการอ้างอิงไฟล์ในเครื่องบนอุปกรณ์นี้"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:83
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:82
 msgid "This clears your backend premium state entirely, including premium type, billing metadata, and override flags."
 msgstr "การดำเนินการนี้จะล้างสถานะพรีเมียมในส่วนแบ็กเอนด์ของคุณทั้งหมด รวมถึงประเภทพรีเมียม ข้อมูลเมตาสำหรับการเรียกเก็บเงิน และแฟล็กการแทนที่"
 
@@ -34200,7 +34148,7 @@ msgid "This message no longer exists."
 msgstr "ข้อความนี้ไม่มีอยู่อีกต่อไปแล้ว"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
 msgid "This nickname will only be visible in this community"
 msgstr "ชื่อเล่นนี้จะแสดงในคอมมูนิตี้นี้เท่านั้น"
 
@@ -34277,12 +34225,12 @@ msgid "This removes all custom CSS overrides. Theme files in your library are no
 msgstr "การดำเนินการนี้จะลบการปรับแต่ง CSS ทั้งหมด ไฟล์ธีมในคลังของคุณจะไม่ได้รับผลกระทบ"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:50
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:49
 msgid "This removes all previously authorized IP addresses on your account. The next login from any IP will require email verification."
 msgstr "การดำเนินการนี้จะลบที่อยู่ IP ที่เคยได้รับอนุญาตทั้งหมดในบัญชีของคุณ การเข้าสู่ระบบครั้งถัดไปจาก IP ใดๆ จะต้องมีการยืนยันทางอีเมล"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:67
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:66
 msgid "This removes all trusted domains. You will see the external link warning for all domains again."
 msgstr "การดำเนินการนี้จะลบโดเมนที่เชื่อถือได้ทั้งหมด คุณจะเห็นคำเตือนลิงก์ภายนอกสำหรับทุกโดเมนอีกครั้ง"
 
@@ -34949,7 +34897,7 @@ msgstr "การเปลี่ยนแปลงไอคอนถาดระ
 msgid "Trending GIFs"
 msgstr "GIF ยอดนิยม"
 
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:383
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:359
 msgid "Trigger React crash"
 msgstr "ทำให้ React หยุดทำงาน"
 
@@ -35008,7 +34956,7 @@ msgid "Trusted domains"
 msgstr "โดเมนที่เชื่อถือได้"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:55
+#: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:54
 msgid "Trusted domains cleared."
 msgstr "ล้างโดเมนที่เชื่อถือได้แล้ว"
 
@@ -35054,7 +35002,6 @@ msgid "Try a different variable name or clear the search."
 msgstr "ลองใช้ชื่อตัวแปรอื่นหรือล้างการค้นหา"
 
 #. Generic action label for retrying a failed or interrupted operation.
-#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35131,10 +35078,6 @@ msgstr "ลองใช้คีย์ความปลอดภัย/พา�
 #: src/features/messaging/components/alerts/MessageSendFailedModal.tsx:17
 msgid "Try sending your message again."
 msgstr "ลองส่งข้อความของคุณอีกครั้ง"
-
-#: src/features/auth/components/modals/CaptchaModal.tsx:177
-msgid "Try Turnstile instead"
-msgstr "ลองใช้ Turnstile แทน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
@@ -36890,7 +36833,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "ใช้เมื่อแก้ไขปัญหาไคลเอ็นต์หรือรวบรวมบันทึก อาจเพิ่มข้อความที่ละเอียดลงในคอนโซลเบราว์เซอร์สำหรับไคลเอ็นต์ปัจจุบัน"
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1011
 msgid "Use TLS"
 msgstr "ใช้ TLS"
 
@@ -37056,7 +36999,7 @@ msgstr "ระดับเสียงของผู้ใช้"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -37337,11 +37280,6 @@ msgstr "ยืนยันเบอร์โทรศัพท์"
 msgid "Verify phone number form"
 msgstr "แบบฟอร์มยืนยันเบอร์โทรศัพท์"
 
-#. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:17
-msgid "Verify you're human"
-msgstr "ยืนยันว่าคุณไม่ใช่หุ่นยนต์"
-
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:40
@@ -37369,22 +37307,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "ยืนยันอีเมลของคุณก่อนเพิ่มแอปยืนยันตัวตน"
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "ยืนยันอีเมลของคุณก่อนเปลี่ยนชื่อเล่นในคอมมูนิตี้ รูปโปรไฟล์ แบนเนอร์ ประวัติส่วนตัว คำสรรพนาม หรือสีเน้น"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
 msgstr "ยืนยันอีเมลของคุณก่อนเปลี่ยนชื่อผู้ใช้ ชื่อที่แสดง รูปโปรไฟล์ แบนเนอร์ ประวัติส่วนตัว คำสรรพนาม เขตเวลา หรือความเป็นส่วนตัวของป้าย {premiumProductName}"
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "ยืนยันอีเมลของคุณก่อนแก้ไขโปรไฟล์คอมมูนิตี้นี้ คุณยังดูตัวอย่างได้ที่นี่"
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "ยืนยันอีเมลของคุณก่อนแก้ไขโปรไฟล์ คุณยังดูตัวอย่างได้ที่นี่"
 
@@ -37416,12 +37354,12 @@ msgid "Verify your email to continue using {productName}."
 msgstr "ยืนยันอีเมลของคุณเพื่อใช้งาน {productName} ต่อไป"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
 msgid "Verify your email to edit this community profile"
 msgstr "ยืนยันอีเมลเพื่อแก้ไขโปรไฟล์คอมมูนิตี้นี้"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
 msgid "Verify your email to edit your profile"
 msgstr "ยืนยันอีเมลเพื่อแก้ไขโปรไฟล์"
 
@@ -38398,10 +38336,6 @@ msgstr "เราได้ลดราคา {premiumProductName} ในบร�
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "เราต้องการขั้นตอนการยืนยันหนึ่งขั้นตอนก่อนที่คุณจะดำเนินการต่อ ซึ่งจะช่วยปกป้องบัญชีและป้องกันสแปมบน {productName}"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:128
-msgid "We need to make sure you're not a bot. Complete the verification below."
-msgstr "เราต้องตรวจสอบให้แน่ใจว่าคุณไม่ใช่บอท โปรดทำการยืนยันด้านล่าง"
-
 #. Required-action modal intro text when both email and phone verification are required.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:216
 msgid "We need two verification steps before you continue. We will show one step at a time."
@@ -39256,7 +39190,7 @@ msgid "You can't befriend yourself"
 msgstr "คุณไม่สามารถเป็นเพื่อนกับตัวเองได้"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
 msgid "You can't change your nickname here"
 msgstr "คุณเปลี่ยนชื่อเล่นที่นี่ไม่ได้"
 
@@ -39506,7 +39440,7 @@ msgid "You have unsaved changes."
 msgstr "คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก"
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก บันทึกหรือรีเซ็ตก่อนออกจากหน้านี้"
 
@@ -40031,10 +39965,6 @@ msgstr "ดำเนินการไม่สำเร็จเนื่อง
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "ใบสมัครของคุณอยู่ระหว่างการตรวจสอบ คุณยังสามารถอัปเดตรายละเอียดประกาศหรือถอนใบสมัครได้"
 
-#: src/features/auth/components/AltchaVerification.tsx:50
-msgid "Your browser couldn't finish the check."
-msgstr "เบราว์เซอร์ของคุณไม่สามารถดำเนินการตรวจสอบให้เสร็จสิ้นได้"
-
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -40386,7 +40316,7 @@ msgid "YouTube enrichment"
 msgstr "การเสริมข้อมูล YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:977
+#: src/features/app/components/setup/SetupWizardSteps.tsx:970
 msgid "YouTube previews"
 msgstr "ตัวอย่าง YouTube"
 

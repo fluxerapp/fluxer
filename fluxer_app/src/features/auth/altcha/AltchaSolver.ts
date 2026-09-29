@@ -6,7 +6,7 @@ import type {Challenge} from 'altcha-lib/types';
 export type AltchaChallenge = Challenge;
 
 const MAX_SOLVER_WORKERS = 8;
-const SOLVE_TIMEOUT_MS = 120_000;
+const SOLVE_TIMEOUT_MS = 60_000;
 
 function createSolverWorker(): Worker {
 	return new Worker(
@@ -26,14 +26,10 @@ export function readAltchaChallenge(body: unknown): AltchaChallenge | null {
 	return challenge as AltchaChallenge;
 }
 
-export async function solveAltchaChallenge(
-	challenge: AltchaChallenge,
-	controller: AbortController,
-): Promise<string | null> {
+export async function solveAltchaChallenge(challenge: AltchaChallenge): Promise<string | null> {
 	const solution = await solveChallengeWorkers({
 		challenge,
 		concurrency: Math.min(MAX_SOLVER_WORKERS, navigator.hardwareConcurrency || 2),
-		controller,
 		createWorker: createSolverWorker,
 		timeout: SOLVE_TIMEOUT_MS,
 	});

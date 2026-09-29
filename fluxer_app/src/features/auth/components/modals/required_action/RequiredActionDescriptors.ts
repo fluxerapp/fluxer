@@ -573,10 +573,6 @@ export const PHONE_NEEDS_REVIEW_DESCRIPTOR = msg({
 	comment:
 		'Required-action form error when a phone attempt cannot be verified automatically and needs a support review. Keep it non-specific.',
 });
-export const CAPTCHA_REQUIRED_DESCRIPTOR = msg({
-	message: 'A browser check is required before phone verification. Try again from the sign-in page or contact support.',
-	comment: 'Required-action error when the API requires a captcha for phone verification.',
-});
 export const SOMETHING_WENT_WRONG_TRY_AGAIN_DESCRIPTOR = msg({
 	message: 'Something went wrong. Try again.',
 	comment: 'Generic required-action error fallback.',

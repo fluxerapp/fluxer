@@ -915,21 +915,14 @@ export interface MediaExpiryDraft {
 	renewWindowDays: string;
 }
 
-export type IntegrationStepKind = 'gif' | 'youtube' | 'captcha' | 'email' | 'bluesky';
+export type IntegrationStepKind = 'gif' | 'youtube' | 'email' | 'bluesky';
 export type IntegrationSetupMode = 'later' | 'configure';
-export type CaptchaProvider = 'hcaptcha' | 'turnstile';
 
 export interface ServiceIntegrationDraft {
 	gifMode: IntegrationSetupMode;
 	klipyApiKey: string;
 	youtubeMode: IntegrationSetupMode;
 	youtubeApiKey: string;
-	captchaMode: IntegrationSetupMode;
-	captchaProvider: CaptchaProvider;
-	hcaptchaSiteKey: string;
-	hcaptchaSecretKey: string;
-	turnstileSiteKey: string;
-	turnstileSecretKey: string;
 	emailMode: IntegrationSetupMode;
 	emailEnabled: boolean;
 	emailFromEmail: string;
@@ -982,14 +975,6 @@ const YOUTUBE_SETUP_BODY_DESCRIPTOR = msg({
 	message: 'Add a YouTube Data API key to enrich YouTube links.',
 	comment: 'Setup wizard body for YouTube integration credentials.',
 });
-const CAPTCHA_SETUP_TITLE_DESCRIPTOR = msg({
-	message: 'Bot protection',
-	comment: 'Setup wizard title for CAPTCHA integration credentials.',
-});
-const CAPTCHA_SETUP_BODY_DESCRIPTOR = msg({
-	message: 'Choose hCaptcha or Cloudflare Turnstile for signup challenges.',
-	comment: 'Setup wizard body for CAPTCHA integration credentials.',
-});
 const EMAIL_SETUP_TITLE_DESCRIPTOR = msg({
 	message: 'Email delivery',
 	comment: 'Setup wizard title for SMTP integration credentials.',
@@ -1006,18 +991,7 @@ const BLUESKY_SETUP_BODY_DESCRIPTOR = msg({
 	message: 'Add Bluesky OAuth client metadata and a signing key.',
 	comment: 'Setup wizard body for Bluesky integration credentials.',
 });
-const PROVIDER_LABEL_DESCRIPTOR = msg({
-	message: 'Provider',
-	comment: 'Label for an integration provider choice.',
-});
-const HCAPTCHA_NAME_DESCRIPTOR = msg({message: 'hCaptcha', comment: 'hCaptcha provider option.'});
-const TURNSTILE_NAME_DESCRIPTOR = msg({
-	message: 'Cloudflare Turnstile',
-	comment: 'Cloudflare Turnstile provider option.',
-});
 const API_KEY_LABEL_DESCRIPTOR = msg({message: 'API key', comment: 'Label for an integration API key input.'});
-const SITE_KEY_LABEL_DESCRIPTOR = msg({message: 'Site key', comment: 'Label for a CAPTCHA site key input.'});
-const SECRET_KEY_LABEL_DESCRIPTOR = msg({message: 'Secret key', comment: 'Label for a CAPTCHA secret key input.'});
 const ENABLE_EMAIL_LABEL_DESCRIPTOR = msg({
 	message: 'Enable email delivery',
 	comment: 'Label for enabling SMTP email delivery in setup.',
@@ -1106,8 +1080,6 @@ function getIntegrationMode(draft: ServiceIntegrationDraft, kind: IntegrationSte
 			return draft.gifMode;
 		case 'youtube':
 			return draft.youtubeMode;
-		case 'captcha':
-			return draft.captchaMode;
 		case 'email':
 			return draft.emailMode;
 		case 'bluesky':
@@ -1121,8 +1093,6 @@ function getIntegrationCopy(kind: IntegrationStepKind): {title: MessageDescripto
 			return {title: GIF_SETUP_TITLE_DESCRIPTOR, body: GIF_SETUP_BODY_DESCRIPTOR};
 		case 'youtube':
 			return {title: YOUTUBE_SETUP_TITLE_DESCRIPTOR, body: YOUTUBE_SETUP_BODY_DESCRIPTOR};
-		case 'captcha':
-			return {title: CAPTCHA_SETUP_TITLE_DESCRIPTOR, body: CAPTCHA_SETUP_BODY_DESCRIPTOR};
 		case 'email':
 			return {title: EMAIL_SETUP_TITLE_DESCRIPTOR, body: EMAIL_SETUP_BODY_DESCRIPTOR};
 		case 'bluesky':
@@ -1302,9 +1272,6 @@ export const IntegrationStep = observer(
 					case 'youtube':
 						onDraftChange({youtubeMode: next});
 						break;
-					case 'captcha':
-						onDraftChange({captchaMode: next});
-						break;
 					case 'email':
 						onDraftChange({emailMode: next});
 						break;
@@ -1315,10 +1282,6 @@ export const IntegrationStep = observer(
 			},
 			[kind, onDraftChange],
 		);
-		const captchaOptions: ReadonlyArray<RadioOption<CaptchaProvider>> = [
-			{value: 'hcaptcha', name: i18n._(HCAPTCHA_NAME_DESCRIPTOR), desc: i18n._(CAPTCHA_SETUP_BODY_DESCRIPTOR)},
-			{value: 'turnstile', name: i18n._(TURNSTILE_NAME_DESCRIPTOR), desc: i18n._(CAPTCHA_SETUP_BODY_DESCRIPTOR)},
-		];
 		return (
 			<section className={styles.step} data-flx={`app.self-hosted-setup-wizard-gate.integration-${kind}-step`}>
 				<StepHeader
@@ -1353,48 +1316,6 @@ export const IntegrationStep = observer(
 								disabled={disabled}
 								data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--2"
 							/>
-						)}
-						{kind === 'captcha' && (
-							<>
-								<div className={styles.fieldLabel} data-flx="app.setup.setup-wizard-steps.integration-step.field-label">
-									{i18n._(PROVIDER_LABEL_DESCRIPTOR)}
-								</div>
-								<RadioGroup
-									options={captchaOptions}
-									value={draft.captchaProvider}
-									onChange={(value) => onDraftChange({captchaProvider: value})}
-									disabled={disabled}
-									aria-label={i18n._(PROVIDER_LABEL_DESCRIPTOR)}
-									data-flx="app.setup.setup-wizard-steps.integration-step.radio-group.draft-change"
-								/>
-								<Input
-									label={i18n._(SITE_KEY_LABEL_DESCRIPTOR)}
-									value={draft.captchaProvider === 'hcaptcha' ? draft.hcaptchaSiteKey : draft.turnstileSiteKey}
-									onChange={(event) =>
-										onDraftChange(
-											draft.captchaProvider === 'hcaptcha'
-												? {hcaptchaSiteKey: event.target.value}
-												: {turnstileSiteKey: event.target.value},
-										)
-									}
-									disabled={disabled}
-									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--3"
-								/>
-								<Input
-									label={i18n._(SECRET_KEY_LABEL_DESCRIPTOR)}
-									type="password"
-									value={draft.captchaProvider === 'hcaptcha' ? draft.hcaptchaSecretKey : draft.turnstileSecretKey}
-									onChange={(event) =>
-										onDraftChange(
-											draft.captchaProvider === 'hcaptcha'
-												? {hcaptchaSecretKey: event.target.value}
-												: {turnstileSecretKey: event.target.value},
-										)
-									}
-									disabled={disabled}
-									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change.password"
-								/>
-							</>
 						)}
 						{kind === 'email' && (
 							<>

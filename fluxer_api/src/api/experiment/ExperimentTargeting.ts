@@ -11,11 +11,6 @@ interface TargetableExperimentConfig {
 
 const NO_GUILDS: ReadonlySet<string> = new Set();
 
-export const ANONYMOUS_EXPERIMENT_TARGETING: ExperimentTargeting = {
-	memberGuildIds: NO_GUILDS,
-	premium: false,
-};
-
 export async function resolveExperimentTargeting(
 	user: User,
 	configs: ReadonlyArray<TargetableExperimentConfig>,

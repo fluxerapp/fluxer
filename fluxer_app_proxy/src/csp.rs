@@ -25,9 +25,6 @@ pub struct RuntimeCspSources {
 const FRAME_SOURCES: &[&str] = &[
     "https://www.youtube.com/embed/",
     "https://www.youtube.com/s/player/",
-    "https://hcaptcha.com",
-    "https://*.hcaptcha.com",
-    "https://challenges.cloudflare.com",
 ];
 
 const IMAGE_SOURCES: &[&str] = &[
@@ -45,17 +42,10 @@ const MEDIA_SOURCES: &[&str] = &[
     "https://fluxer.media",
 ];
 
-const SCRIPT_SOURCES: &[&str] = &[
-    "https://*.fluxer.app",
-    "https://hcaptcha.com",
-    "https://*.hcaptcha.com",
-    "https://challenges.cloudflare.com",
-];
+const SCRIPT_SOURCES: &[&str] = &["https://*.fluxer.app"];
 
 const STYLE_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
-    "https://hcaptcha.com",
-    "https://*.hcaptcha.com",
     "https://fonts.googleapis.com",
     "https://api.fonts.coollabs.io",
 ];
@@ -72,9 +62,6 @@ const CONNECT_SOURCES: &[&str] = &[
     "https://*.fluxer.media",
     "wss://*.fluxer.media",
     "https://fluxer-uploads.ewr1.vultrobjects.com",
-    "https://hcaptcha.com",
-    "https://*.hcaptcha.com",
-    "https://challenges.cloudflare.com",
     "https://fluxerstatus.com",
     "https://fluxer.media",
 ];
@@ -393,6 +380,13 @@ mod tests {
         let config = default_csp_config();
         let csp = build_asset_csp(&config, &runtime_sources());
         assert!(!csp.contains("nonce-"));
+    }
+
+    #[test]
+    fn build_csp_allows_no_third_party_captcha_hosts() {
+        let csp = build_csp(&default_csp_config(), "test-nonce", &runtime_sources());
+        assert!(!csp.contains("hcaptcha"));
+        assert!(!csp.contains("challenges.cloudflare.com"));
     }
 
     #[test]

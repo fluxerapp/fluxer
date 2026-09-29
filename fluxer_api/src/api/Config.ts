@@ -329,22 +329,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		breachedPasswordCheck: {
 			enabled: master.integrations.breached_password_check.enabled ?? !master.instance.self_hosted,
 		},
-		captcha: {
-			enabled: master.integrations.captcha.enabled,
-			provider: master.integrations.captcha.provider,
-			hcaptcha: master.integrations.captcha.hcaptcha
-				? {
-						siteKey: master.integrations.captcha.hcaptcha.site_key,
-						secretKey: master.integrations.captcha.hcaptcha.secret_key,
-					}
-				: undefined,
-			turnstile: master.integrations.captcha.turnstile
-				? {
-						siteKey: master.integrations.captcha.turnstile.site_key,
-						secretKey: master.integrations.captcha.turnstile.secret_key,
-					}
-				: undefined,
-		},
 		contentModeration: {
 			nsfwThreshold: master.services.api.content_moderation?.nsfw_threshold ?? 0.7,
 		},

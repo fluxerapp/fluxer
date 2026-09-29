@@ -9,7 +9,6 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
-import {resolveAltchaCaptchaAssignment} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
 import {resolveDomainMigrationAssignment} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 
@@ -30,20 +29,18 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, domainMigrationConfig, altchaCaptchaConfig] = await Promise.all([
+			const [delivery, domainMigrationConfig] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getDomainMigrationConfig(),
-				instanceConfigRepository.getAltchaCaptchaConfig(),
 			]);
 			const user = ctx.get('user');
 			const userId = user.id.toString();
-			const targeting = await resolveExperimentTargeting(user, [domainMigrationConfig, altchaCaptchaConfig]);
+			const targeting = await resolveExperimentTargeting(user, [domainMigrationConfig]);
 			const body: ExperimentAssignmentsResponse = {
 				poll_interval_seconds: delivery.poll_interval_seconds,
 				poll_jitter_percent: delivery.poll_jitter_percent,
 				assignments: {
 					domain_migration: resolveDomainMigrationAssignment(domainMigrationConfig, userId, targeting),
-					altcha_captcha: resolveAltchaCaptchaAssignment(altchaCaptchaConfig, userId, targeting),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

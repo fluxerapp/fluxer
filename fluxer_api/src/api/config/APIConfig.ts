@@ -191,18 +191,6 @@ export interface APIConfig {
 	breachedPasswordCheck: {
 		enabled: boolean;
 	};
-	captcha: {
-		enabled: boolean;
-		provider: 'hcaptcha' | 'turnstile' | 'none';
-		hcaptcha?: {
-			siteKey: string;
-			secretKey: string;
-		};
-		turnstile?: {
-			siteKey: string;
-			secretKey: string;
-		};
-	};
 	contentModeration: {
 		nsfwThreshold: number;
 	};

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type FormSubmission, type UseFormReturn, useForm} from '@app/features/app/hooks/useForm';
-import {CaptchaCancelledError, CaptchaValidationError} from '@app/features/auth/hooks/useCaptcha';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureMessage, failureValidationErrors} from '@app/features/platform/utils/ResponseInspection';
@@ -96,12 +95,6 @@ export function useAuthForm({initialValues, onSubmit, redirectPath, firstFieldNa
 					RouterUtils.replaceWith(redirectPath);
 				}
 			} catch (err) {
-				if (err instanceof CaptchaCancelledError) {
-					return;
-				}
-				if (err instanceof CaptchaValidationError) {
-					return;
-				}
 				if (!submission.isCurrent()) {
 					return;
 				}

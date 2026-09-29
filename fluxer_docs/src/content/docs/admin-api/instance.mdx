@@ -36,7 +36,7 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
 | push_relay | [push relay configuration](#push-relay-configuration-object) object | Operator consent to the Fluxer-run push relay |
 | domain_migration | [domain migration configuration](#domain-migration-configuration-object) object | Web domain migration rollout |
-| altcha_captcha | [ALTCHA captcha configuration](#altcha-captcha-configuration-object) object | ALTCHA proof-of-work captcha rollout |
+| captcha | [captcha configuration](#captcha-configuration-object) object | ALTCHA proof-of-work captcha settings |
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
 | registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
@@ -144,33 +144,21 @@ Only the official web client acts on this configuration. On any other instance i
 Setting `enabled` to false stops new migrations and also stops forwarding from the legacy origin for clients that already moved. Excluding an account only stops a migration that has not started yet.
 :::
 
-## ALTCHA captcha configuration object
+## Captcha configuration object
 
-The instance rollout that replaces the configured captcha provider with an ALTCHA proof-of-work challenge the API issues and verifies itself. [Experiments](/http-api/experiments/#altcha-captcha-assignment-object) defines what a signed-in client resolves from it, and [CAPTCHA handling](/topics/captcha/#altcha-proof-of-work) defines the challenge exchange.
+The ALTCHA proof-of-work check that the API issues and verifies itself on gated operations. [CAPTCHA handling](/topics/captcha/) defines the challenge exchange and lists the gated operations.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| enabled | boolean | Whether the rollout runs at all (default false) |
-| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
-| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
-| rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `altcha-captcha-v1`) |
-| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
-| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
-| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
-| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
-| anonymous_enabled | boolean | Whether logged-out requests get ALTCHA (default false) |
-| cost | integer | PBKDF2 iterations per solving attempt (1000-100000, default 5000) |
-| max_counter | integer | Upper bound of the hidden counter a client searches for (100-1000000, default 10000) |
+| enabled | boolean | Whether gated operations require a solved challenge (default true) |
+| cost | integer | PBKDF2 iterations per solving attempt (1000-20000, default 5000) |
+| max_counter | integer | Upper bound of the hidden counter a client searches for (100-20000, default 1000) |
 
-Every field is present on read. An absent document or missing field uses the defaults above.
-
-`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says. `anonymous_enabled` has no effect on signed-in requests, and the account rules have no effect on logged-out ones.
+Every field is present on read. An absent document or missing field uses the defaults above, so the check is on until an administrator sets `enabled` to false. Setting `enabled` to false turns the check off for the whole instance. Phone sends that the [phone verification service](/http-api/users/phone-verification/#send-phone-verification) challenges are refused instead.
 
 Each challenge hides its counter between half of `max_counter` and `max_counter`, and a client tries counters from 0 upward. Solve time grows with `cost` times `max_counter`. Fluxer spends one attempt at `cost` to issue each challenge.
-
-The rollout only changes which provider answers a captcha that is already required. While the instance captcha provider is `none`, it has no effect.
 
 ## Experiment delivery configuration object
 
@@ -340,25 +328,8 @@ Every provider reports its stored settings, a `_set` boolean in place of each se
 | --- | --- | --- |
 | gif | object | `klipy_api_key_set` and `effective_available` |
 | youtube | object | `api_key_set` and `effective_available` |
-| captcha | [captcha integration](#captcha-integration-object) object | CAPTCHA provider settings |
 | email | [email integration](#email-integration-object) object | Outbound email settings |
 | bluesky | [Bluesky integration](#bluesky-integration-object) object | Bluesky client settings |
-
-## Captcha integration object
-
-CAPTCHA provider settings, and the provider resolved from them.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| provider | ?string | Operator override of `hcaptcha`, `turnstile`, or `none`, or null for no override |
-| effective_provider | string | Provider in use, one of `hcaptcha`, `turnstile`, or `none` |
-| hcaptcha_site_key | ?string | hCaptcha site key |
-| hcaptcha_secret_key_set | boolean | Whether an hCaptcha secret is stored or supplied by deployment configuration |
-| turnstile_site_key | ?string | Turnstile site key |
-| turnstile_secret_key_set | boolean | Whether a Turnstile secret is stored or supplied by deployment configuration |
-| effective_enabled | boolean | Whether CAPTCHA verification is in force |
 
 ## Email integration object
 
@@ -622,11 +593,11 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
 | push_relay? | object | `relay_consent_accepted` from the [push relay configuration](#push-relay-configuration-object) |
 | domain_migration? | object | Any subset of the [domain migration](#domain-migration-configuration-object) fields |
-| altcha_captcha? | object | Any subset of the [ALTCHA captcha](#altcha-captcha-configuration-object) fields |
+| captcha? | object | Any subset of the [captcha configuration](#captcha-configuration-object) fields |
 | experiment_delivery? | object | Any subset of the [experiment delivery](#experiment-delivery-configuration-object) fields |
 | registration? | object | `mode` and `admin_registration_urls_enabled` |
 | app_public?<sup>2</sup> | object | `branding`, `setup`, `legal`, and `registration` sub-objects, each merged field by field |
-| integrations?<sup>3</sup> | object | `gif`, `youtube`, `captcha`, `email`, and `bluesky` sub-objects, the last of which also has the `keys` array |
+| integrations?<sup>3</sup> | object | `gif`, `youtube`, `email`, and `bluesky` sub-objects, the last of which also has the `keys` array |
 | media? | object | `attachment_decay` overrides, each nullable to restore the deployment default |
 | policy? | [instance policy update](#instance-policy-update-structure) object | Community, direct message, premium, and gating policy |
 | billing?<sup>4</sup> | object | Stored [instance billing](#instance-billing-object) fields, with `stripe_secret_key` and `stripe_webhook_secret` for the secrets |
@@ -639,11 +610,11 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 
 `domain_migration` takes every [domain migration configuration](#domain-migration-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 
-`altcha_captcha` works the same way, over the [ALTCHA captcha configuration](#altcha-captcha-configuration-object) fields and its own `config_version`.
+`captcha` takes any subset of the [captcha configuration](#captcha-configuration-object) fields, each bound as documented there. Fluxer merges the supplied fields over the stored ones. The section has no `config_version`.
 
 `experiment_delivery` takes both [experiment delivery configuration](#experiment-delivery-configuration-object) fields, each bound as documented there. It is a section of its own, so a write to it changes no `config_version` and changes no assignment, only the cadence on which clients ask for one.
 
-<sup>3</sup> A secret such as `klipy_api_key`, `api_key`, `hcaptcha_secret_key`, `turnstile_secret_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
+<sup>3</sup> A secret such as `klipy_api_key`, `api_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
 
 <sup>4</sup> Accepted only on a self-hosted deployment. A hosted deployment rejects the section, and `app_public.branding.premium_product_name` and `premium_info_url`, with 400 `INVALID_FORM_BODY`. A Stripe secret, `enabled`, `automatic_tax`, `tax_id_collection` and `terms_consent_required` are written when supplied, cleared by null, and left alone when absent. A null `enabled` follows `FLUXER_STRIPE_ENABLED`. `prices`, `country_currencies`, and `legacy_prices` replace the stored value outright, a price slot left out is stored as null, and an empty `prices` object restores the deployment catalogue. A price ID is `price_` followed by letters and digits. A currency is three upper-case letters and a country code is two
 
@@ -678,7 +649,7 @@ On a self-hosted deployment, billing and the `everyone` premium mode exclude eac
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `push_relay`, `domain_migration`, `altcha_captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `push_relay`, `domain_migration`, `captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects

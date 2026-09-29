@@ -8,12 +8,14 @@ import {
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {Config} from '@app/api/Config';
 import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {verifyCaptchaToken} from '@app/api/middleware/CaptchaMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
+import {Headers} from '@fluxer/constants/src/Headers';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
 	DisableTotpRequest,
@@ -234,7 +236,7 @@ export function UserAuthController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel="sms" to request SMS (only honoured for SMS-allowlisted destinations) or channel="inbound_challenge" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge.',
+				'Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel="sms" to request SMS (only honoured for SMS-allowlisted destinations) or channel="inbound_challenge" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge. Requires a solved captcha challenge (X-Captcha-Token) when the phone verification service asks for one.',
 		}),
 		async (ctx) => {
 			return ctx.json(
@@ -245,6 +247,8 @@ export function UserAuthController(app: HonoApp) {
 						trustClientIpHeader: Config.proxy.trust_client_ip_header,
 						clientIpHeaderName: Config.proxy.client_ip_header,
 					}),
+					hasCaptchaToken: ctx.req.header(Headers.X_CAPTCHA_TOKEN) !== undefined,
+					verifyCaptcha: () => verifyCaptchaToken(ctx),
 				}),
 			);
 		},

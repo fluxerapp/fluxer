@@ -95,8 +95,7 @@ These headers are accepted across resources. An operation-specific header is doc
 | X-Audit-Log-Reason?<sup>3</sup> | string | Free-text reason recorded on the resulting audit log entry |
 | X-Fluxer-Client-Properties?<sup>4</sup> | string | Base64-encoded JSON with the native client's `os`, read when an authentication session is created |
 | X-Fluxer-Sudo-Mode-JWT?<sup>5</sup> | string | A sudo mode proof previously issued to the authenticated user |
-| X-Captcha-Token?<sup>6</sup> | string | The CAPTCHA solution issued by the selected provider |
-| X-Captcha-Type?<sup>6</sup> | string | Either `hcaptcha` or `turnstile`, selecting the provider that issued the token |
+| X-Captcha-Token?<sup>6</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 | X-Request-ID?<sup>7</sup> | string | A correlation identifier the client chooses, echoed unchanged in the response |
 | User-Agent? | string | The originating client description recorded on a new authentication session and on an Admin audit entry |
 | Origin?<sup>8</sup> | string | The browser origin used for cross-origin negotiation and for the mutating same-host origin check |
@@ -111,7 +110,7 @@ These headers are accepted across resources. An operation-specific header is doc
 
 <sup>5</sup> A valid token replaces the sudo proof fields in the operation body and is echoed in the response header without extending its lifetime.
 
-<sup>6</sup> Read only while the instance has a provider configured and the operation is gated. The handshake is defined in [CAPTCHA handling](/topics/captcha/)
+<sup>6</sup> Read only on a gated operation while the instance CAPTCHA check is on
 
 <sup>7</sup> A supplied value is echoed back unchanged and unvalidated
 

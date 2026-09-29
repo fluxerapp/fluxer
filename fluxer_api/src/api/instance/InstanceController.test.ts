@@ -14,8 +14,6 @@ import {afterEach, describe, expect, it} from 'vitest';
 
 interface DiscoveryCaptcha {
 	provider: string;
-	hcaptcha_site_key: string | null;
-	turnstile_site_key: string | null;
 }
 
 describe('InstanceController discovery captcha', () => {
@@ -62,40 +60,15 @@ describe('InstanceController discovery captcha', () => {
 		return ((await response.json()) as {captcha: DiscoveryCaptcha}).captcha;
 	}
 
-	it('advertises no provider and no site key while the selected pair is incomplete', async () => {
-		const repository = createRepository();
-		await repository.setInstanceIntegrationsConfig({
-			captcha: {
-				provider: 'turnstile',
-				hcaptcha_site_key: 'hcaptcha-site-key',
-				hcaptcha_secret_key: 'hcaptcha-secret-key',
-			},
-		});
-
-		await expect(readCaptcha(repository)).resolves.toEqual({
-			provider: 'none',
-			hcaptcha_site_key: null,
-			turnstile_site_key: null,
-		});
+	it('advertises altcha by default', async () => {
+		await expect(readCaptcha(createRepository())).resolves.toEqual({provider: 'altcha'});
 	});
 
-	it('advertises only the site key that matches the named provider', async () => {
+	it('advertises no provider once an admin turns the captcha off', async () => {
 		const repository = createRepository();
-		await repository.setInstanceIntegrationsConfig({
-			captcha: {
-				provider: 'turnstile',
-				hcaptcha_site_key: 'hcaptcha-site-key',
-				hcaptcha_secret_key: 'hcaptcha-secret-key',
-				turnstile_site_key: 'turnstile-site-key',
-				turnstile_secret_key: 'turnstile-secret-key',
-			},
-		});
+		await repository.updateCaptchaConfig({enabled: false});
 
-		await expect(readCaptcha(repository)).resolves.toEqual({
-			provider: 'turnstile',
-			hcaptcha_site_key: null,
-			turnstile_site_key: 'turnstile-site-key',
-		});
+		await expect(readCaptcha(repository)).resolves.toEqual({provider: 'none'});
 	});
 
 	it('publishes the domain migration kill switch and anonymous rollout without the targeting lists', async () => {

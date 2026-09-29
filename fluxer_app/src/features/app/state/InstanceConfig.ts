@@ -12,7 +12,6 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {MS_PER_HOUR, MS_PER_MINUTE} from '@fluxer/date_utils/src/DateConstants';
 import type {
 	InstanceAppPublic,
-	InstanceCaptcha,
 	InstanceCommunity,
 	InstanceDiscoveryResponse,
 	InstanceEndpoints,
@@ -34,7 +33,6 @@ export interface InstanceConfig {
 	fetchedAt: number;
 	apiCodeVersion: number;
 	endpoints: InstanceEndpoints;
-	captcha: InstanceCaptcha;
 	features: InstanceFeatures;
 	registration: InstanceRegistration;
 	community: InstanceCommunity;
@@ -145,7 +143,6 @@ class InstanceConfigs {
 			fetchedAt: Date.now(),
 			apiCodeVersion: data.api_code_version,
 			endpoints: data.endpoints,
-			captcha: data.captcha,
 			features: data.features,
 			gif: {
 				provider: gifProviderInfo.name,
@@ -207,11 +204,6 @@ class InstanceConfigs {
 				invite: RuntimeConfig.inviteEndpoint,
 				gift: RuntimeConfig.giftEndpoint,
 				webapp: RuntimeConfig.webAppEndpoint,
-			},
-			captcha: {
-				provider: RuntimeConfig.captchaProvider,
-				hcaptcha_site_key: RuntimeConfig.hcaptchaSiteKey,
-				turnstile_site_key: RuntimeConfig.turnstileSiteKey,
 			},
 			features: RuntimeConfig.features,
 			gif: {

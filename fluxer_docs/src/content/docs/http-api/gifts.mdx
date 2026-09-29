@@ -131,12 +131,9 @@ One redemption can be in flight for a code across the whole deployment, and a se
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
-| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Verification is skipped when CAPTCHA is disabled, when the account has the exemption flag, or when the account's email address is on an exempt domain, as described by [CAPTCHA handling](/topics/captcha/)
-
-<sup>2</sup> Any other value, including an omitted header, falls back to the instance's configured provider
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Verification is skipped when the check is off for the instance, when the account has the exemption flag, or when the account's email address is on an exempt domain
 
 ### Response
 

@@ -220,7 +220,7 @@ export function ChannelController(app: HonoApp) {
 			operationId: 'add_group_dm_recipient',
 			summary: 'Add recipient to group DM',
 			description:
-				'Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires CAPTCHA verification.',
+				'Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires a solved captcha challenge (X-Captcha-Token).',
 			responseSchema: null,
 			statusCode: 204,
 			security: ['botToken', 'bearerToken', 'sessionToken'],

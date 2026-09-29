@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
-import type {CaptchaProviderType, ICaptchaProvider, VerifyCaptchaParams} from '@pkgs/captcha/src/ICaptchaProvider';
 import {createChallenge, randomInt, verifySolution} from 'altcha-lib';
 import {deriveKey} from 'altcha-lib/algorithms/pbkdf2';
 import type {Challenge} from 'altcha-lib/types';
 import {ms} from 'itty-time';
 import {z} from 'zod';
 
-export const ALTCHA_ALGORITHM = 'PBKDF2/SHA-256';
+const ALTCHA_ALGORITHM = 'PBKDF2/SHA-256';
 const ALTCHA_CHALLENGE_TTL_MS = ms('10 minutes');
 const ALTCHA_MAX_TOKEN_LENGTH = 4096;
 const HEX_PATTERN = /^[0-9a-f]+$/u;
@@ -56,8 +55,7 @@ function decodePayload(token: string): AltchaPayload | null {
 	}
 }
 
-export class AltchaProvider implements ICaptchaProvider {
-	readonly type: CaptchaProviderType = 'altcha';
+export class AltchaProvider {
 	private readonly options: AltchaProviderOptions;
 	private readonly now: () => number;
 
@@ -79,7 +77,7 @@ export class AltchaProvider implements ICaptchaProvider {
 		});
 	}
 
-	async verify({token}: VerifyCaptchaParams): Promise<boolean> {
+	async verify({token}: {token: string}): Promise<boolean> {
 		const payload = decodePayload(token);
 		if (!payload) return false;
 		try {

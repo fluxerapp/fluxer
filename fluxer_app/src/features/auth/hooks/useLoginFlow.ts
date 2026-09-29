@@ -2,7 +2,6 @@
 
 import {showBrowserLoginHandoffModal} from '@app/features/auth/flow/BrowserLoginHandoffModal';
 import {useAuthForm} from '@app/features/auth/hooks/useAuthForm';
-import {CaptchaCancelledError} from '@app/features/auth/hooks/useCaptcha';
 import {
 	isPasskeyCeremonyDismissed,
 	runPasskeyBridgeNativeLogin,
@@ -174,9 +173,6 @@ export function useLoginFormController({
 				RouterUtils.replaceWith(redirectPath);
 			}
 		} catch (err) {
-			if (err instanceof CaptchaCancelledError) {
-				return;
-			}
 			logger.error('Passkey login failed', err);
 			const userCancelled =
 				err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'AbortError');

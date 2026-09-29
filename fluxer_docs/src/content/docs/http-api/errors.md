@@ -20,7 +20,7 @@ An OAuth2 protocol failure raised by the [OAuth2 resource](/http-api/oauth2/) an
 
 ## Supplementary members
 
-The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply.
+The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply. `captcha_provider` and `altcha_challenge` are the challenge described in [CAPTCHA handling](/topics/captcha/).
 
 `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` have their own members:
 
@@ -286,7 +286,7 @@ Community ownership can't be transferred to a bot
 
 ### `CAPTCHA_REQUIRED`
 
-Captcha is required
+Verification required. Try again
 
 ### `COMMUNICATION_DISABLED`
 
@@ -506,7 +506,7 @@ Invalid bot flag
 
 ### `INVALID_CAPTCHA`
 
-Invalid captcha
+Verification failed. Try again
 
 ### `INVALID_CHANNEL_TYPE`
 
