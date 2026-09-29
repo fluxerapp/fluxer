@@ -2874,7 +2874,7 @@ msgid "Activity sharing"
 msgstr "Compartir actividad"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Umbral de actividad"
@@ -3611,11 +3611,11 @@ msgstr "Permitir {everyoneMention} y {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Permite que {PRODUCT_NAME} acceda a tu cámara en {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Permite que {PRODUCT_NAME} acceda a tu micrófono en {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Permite que {PRODUCT_NAME} acceda a tu micrófono. Revisa la barra de direcciones o la configuración de tu navegador."
 
@@ -3718,7 +3718,7 @@ msgstr "Permitir que los miembros sin el permiso {readMessageHistoryPermissionLa
 msgid "Allow mentions for this role"
 msgstr "Permitir menciones para este rol"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:560
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:555
 msgid "Allow microphone"
 msgstr "Permitir micrófono"
 
@@ -4767,7 +4767,7 @@ msgid "Audio output"
 msgstr "Salida de audio"
 
 #. Field label in the voice connection status popout. Shows received audio packet loss percentage.
-#: src/features/voice/components/voice_connection_status/shared.ts:107
+#: src/features/voice/components/voice_connection_status/shared.ts:108
 msgid "Audio packet loss:"
 msgstr "Pérdida de paquetes de audio:"
 
@@ -4782,32 +4782,32 @@ msgid "Audio preview"
 msgstr "Vista previa de audio"
 
 #. Voice settings modal title for microphone processing options.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:48
 msgid "Audio processing"
 msgstr "Procesamiento de audio"
 
 #. Tooltip in the voice status popout. Describes the custom mic processing profile with enhanced (DeepFilterNet3) noise suppression.
-#: src/features/voice/components/voice_connection_status/shared.ts:19
+#: src/features/voice/components/voice_connection_status/shared.ts:20
 msgid "Audio processing (custom, enhanced)"
 msgstr "Procesamiento de audio (personalizado, mejorado)"
 
 #. Tooltip in the voice status popout. Describes the custom mic processing profile with no noise suppression.
-#: src/features/voice/components/voice_connection_status/shared.ts:29
+#: src/features/voice/components/voice_connection_status/shared.ts:30
 msgid "Audio processing (custom, no suppression)"
 msgstr "Procesamiento de audio (personalizado, sin supresión)"
 
 #. Tooltip in the voice status popout. Describes the custom mic processing profile with browser-built-in noise suppression.
-#: src/features/voice/components/voice_connection_status/shared.ts:24
+#: src/features/voice/components/voice_connection_status/shared.ts:25
 msgid "Audio processing (custom)"
 msgstr "Procesamiento de audio (personalizado)"
 
 #. Tooltip in the voice status popout. Describes the studio / direct-input mic processing profile.
-#: src/features/voice/components/voice_connection_status/shared.ts:11
+#: src/features/voice/components/voice_connection_status/shared.ts:12
 msgid "Audio processing (direct input, raw)"
 msgstr "Procesamiento de audio (entrada directa, sin procesar)"
 
 #. Tooltip in the voice status popout. Describes the focused-voice mic processing profile.
-#: src/features/voice/components/voice_connection_status/shared.ts:15
+#: src/features/voice/components/voice_connection_status/shared.ts:16
 msgid "Audio processing (focused voice)"
 msgstr "Procesamiento de audio (voz enfocada)"
 
@@ -4817,12 +4817,12 @@ msgid "Audio progress"
 msgstr "Progreso del audio"
 
 #. Field label in the voice connection status popout. Shows current inbound audio bitrate.
-#: src/features/voice/components/voice_connection_status/shared.ts:95
+#: src/features/voice/components/voice_connection_status/shared.ts:96
 msgid "Audio receive:"
 msgstr "Recepción de audio:"
 
 #. Field label in the voice connection status popout. Shows current outbound audio bitrate.
-#: src/features/voice/components/voice_connection_status/shared.ts:91
+#: src/features/voice/components/voice_connection_status/shared.ts:92
 msgid "Audio send:"
 msgstr "Envío de audio:"
 
@@ -4993,7 +4993,7 @@ msgstr "Detectar idioma automáticamente"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
 msgid "Auto-set activity threshold"
 msgstr "Establecer umbral de actividad automáticamente"
 
@@ -5210,7 +5210,7 @@ msgid "Avatars"
 msgstr "Avatares"
 
 #. Field label in the voice connection status popout. Shows the average RTT in ms over the recent window.
-#: src/features/voice/components/voice_connection_status/shared.ts:50
+#: src/features/voice/components/voice_connection_status/shared.ts:51
 msgid "Average ping:"
 msgstr "Ping promedio:"
 
@@ -5450,7 +5450,7 @@ msgid "Ban this user"
 msgstr "Banear a este usuario"
 
 #. Section heading in the voice connection status popout for current media bitrate usage.
-#: src/features/voice/components/voice_connection_status/shared.ts:66
+#: src/features/voice/components/voice_connection_status/shared.ts:67
 msgid "Bandwidth"
 msgstr "Ancho de banda"
 
@@ -6501,12 +6501,12 @@ msgstr "Cancelar cambio programado"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:844
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:140
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Cancelar suscripción"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:133
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
 msgid "Cancel subscription?"
 msgstr "¿Cancelar suscripción?"
 
@@ -7865,7 +7865,7 @@ msgid "Clean link"
 msgstr "Limpiar enlace"
 
 #. Description for the focused-voice option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:34
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:31
 msgid "Cleans up your mic for clear speech."
 msgstr "Mejora tu micrófono para que tu voz se escuche con claridad."
 
@@ -9013,7 +9013,7 @@ msgstr "Conecta una cámara o un dispositivo de captura virtual y vuelve a inten
 msgid "Connect a display, then try again."
 msgstr "Conecta una pantalla y vuelve a intentarlo."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:545
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
 msgid "Connect a microphone and try again."
 msgstr "Conecta un micrófono e inténtalo de nuevo."
 
@@ -9058,7 +9058,7 @@ msgid "Connecting..."
 msgstr "Conectando..."
 
 #. Voice connection status while joining or reconnecting.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:46
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:47
 msgctxt "voice-connection-status"
 msgid "Connecting..."
 msgstr "Conectando..."
@@ -9077,7 +9077,7 @@ msgid "Connection failed"
 msgstr "Falló la conexión"
 
 #. Voice connection status when the most recent attempt to join the channel failed.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:56
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:57
 msgctxt "voice-connection-status"
 msgid "Connection failed"
 msgstr "Conexión fallida"
@@ -9503,7 +9503,7 @@ msgid "Copy emoji URL"
 msgstr "Copiar URL del emoji"
 
 #. Tooltip / button label that copies the voice endpoint hostname to the clipboard.
-#: src/features/voice/components/voice_connection_status/shared.ts:58
+#: src/features/voice/components/voice_connection_status/shared.ts:59
 msgid "Copy endpoint"
 msgstr "Copiar punto de conexión"
 
@@ -10653,7 +10653,7 @@ msgid "Current DM"
 msgstr "MD actual"
 
 #. Field label in the voice connection status popout. Shows the latest RTT in ms.
-#: src/features/voice/components/voice_connection_status/shared.ts:41
+#: src/features/voice/components/voice_connection_status/shared.ts:42
 msgid "Current ping:"
 msgstr "Ping actual:"
 
@@ -10701,7 +10701,7 @@ msgstr "Personalizado"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:39
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
 msgid "Custom"
@@ -12007,7 +12007,7 @@ msgid "Device volume"
 msgstr "Volumen del dispositivo"
 
 #. Field label in the voice connection status popout. Shows the connected voice region / device.
-#: src/features/voice/components/voice_connection_status/shared.ts:37
+#: src/features/voice/components/voice_connection_status/shared.ts:38
 msgid "Device:"
 msgstr "Dispositivo:"
 
@@ -12353,7 +12353,7 @@ msgid "Disconnected"
 msgstr "Desconectado"
 
 #. Voice connection status when not connected.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:51
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:52
 msgctxt "voice-connection-status"
 msgid "Disconnected"
 msgstr "Desconectado"
@@ -12418,7 +12418,7 @@ msgid "Dismiss"
 msgstr "Descartar"
 
 #. Button that dismisses the failed voice connection status banner.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:66
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:67
 msgctxt "voice-connection-status"
 msgid "Dismiss"
 msgstr "Descartar"
@@ -13014,7 +13014,7 @@ msgid "Duplicate role"
 msgstr "Duplicar rol"
 
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
-#: src/features/voice/components/voice_connection_status/shared.ts:74
+#: src/features/voice/components/voice_connection_status/shared.ts:75
 msgid "Duration:"
 msgstr "Duración:"
 
@@ -13894,11 +13894,11 @@ msgstr "Fecha de finalización"
 msgid "End grace now"
 msgstr "Terminar período de gracia ahora"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
 msgid "End grace period"
 msgstr "Finalizar período de gracia"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:155
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
 msgid "End grace period now?"
 msgstr "¿Terminar período de gracia ahora?"
 
@@ -13930,7 +13930,7 @@ msgid "Endpoint"
 msgstr "Punto de conexión"
 
 #. Field label in the voice connection status popout. Shows the voice server endpoint hostname.
-#: src/features/voice/components/voice_connection_status/shared.ts:54
+#: src/features/voice/components/voice_connection_status/shared.ts:55
 msgid "Endpoint:"
 msgstr "Punto de conexión:"
 
@@ -14344,7 +14344,7 @@ msgstr "Noche"
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:173
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:60
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Ajusta el volumen de tu micrófono para que no suenes demasiado bajo."
 
@@ -16839,7 +16839,7 @@ msgid "Hate speech"
 msgstr "Discurso de odio"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:295
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "¿Tienes un código de regalo? Canjéalo para desbloquear {PREMIUM_PRODUCT_NAME}."
 
@@ -17183,11 +17183,6 @@ msgstr "Alto rango dinámico"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab.tsx:29
 msgid "High dynamic range display mode"
 msgstr "Modo de pantalla de alto rango dinámico"
-
-#. Description for the DeepFilterNet3 noise suppression strength slider.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:71
-msgid "Higher values remove more noise but can affect speech texture."
-msgstr "Los valores más altos eliminan más ruido, pero pueden afectar la textura del habla."
 
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:64
@@ -17809,7 +17804,7 @@ msgstr "En"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "En el modo \"Sistema operativo\", los diccionarios que se muestran arriba son orientativos. {PRODUCT_NAME} pasará estas etiquetas de idioma al corrector ortográfico de tu sistema operativo cuando sea compatible. Las etiquetas que no reconozca serán ignoradas."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:310
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:307
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "En un navegador, la función pulsar para hablar solo funciona mientras la pestaña de {PRODUCT_NAME} esté activa. Instala la aplicación de escritorio para usar pulsar para hablar en todo el sistema."
 
@@ -17955,7 +17950,7 @@ msgid "Incoming calls: nobody"
 msgstr "Llamadas entrantes: nadie"
 
 #. Field label in the voice connection status popout. Shows WebRTC estimated available incoming bandwidth.
-#: src/features/voice/components/voice_connection_status/shared.ts:123
+#: src/features/voice/components/voice_connection_status/shared.ts:124
 msgid "Incoming capacity:"
 msgstr "Capacidad de entrada:"
 
@@ -18664,7 +18659,7 @@ msgid "Jitter"
 msgstr "Fluctuación de retardo"
 
 #. Field label in the voice connection status popout. Shows audio jitter in milliseconds.
-#: src/features/voice/components/voice_connection_status/shared.ts:115
+#: src/features/voice/components/voice_connection_status/shared.ts:116
 msgid "Jitter:"
 msgstr "Fluctuación del retardo:"
 
@@ -18807,7 +18802,7 @@ msgid "Jump straight to the app to continue."
 msgstr "Ve directo a la app para continuar."
 
 #. Tooltip / aria label on a button that jumps to the channel. {channelSourceLabel} is the channel or DM name.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:87
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:88
 msgid "Jump to {channelSourceLabel}"
 msgstr "Ir a {channelSourceLabel}"
 
@@ -18942,7 +18937,7 @@ msgstr "Conservar archivos adjuntos al borrar el texto de una edición"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Mantén los niveles gratuito y premium. Puedes personalizar los niveles, vender premium a través de Stripe o entregar códigos de regalo más tarde desde el panel de administración."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
 msgid "Keep grace period"
 msgstr "Mantener período de gracia"
 
@@ -18956,7 +18951,7 @@ msgstr "Mantener a Neko quieto"
 msgid "Keep running"
 msgstr "Seguir ejecutándose"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
 msgid "Keep subscription"
 msgstr "Mantener suscripción"
 
@@ -19129,7 +19124,7 @@ msgid "Latency {latency} milliseconds"
 msgstr "Latencia {latency} milisegundos"
 
 #. Aria label for the latency graph chart in the voice connection status popout.
-#: src/features/voice/components/voice_connection_status/shared.ts:33
+#: src/features/voice/components/voice_connection_status/shared.ts:34
 msgid "Latency graph"
 msgstr "Gráfico de latencia"
 
@@ -19798,7 +19793,7 @@ msgid "Look and feel"
 msgstr "Apariencia y estilo"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:654
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Parece que estás usando {0}. Si agregas el procesamiento de {PRODUCT_NAME} encima, puede causar bombeo o distorsión. La entrada directa pasa tu audio sin modificaciones."
 
@@ -20367,12 +20362,12 @@ msgid "Maybe later"
 msgstr "Quizás más tarde"
 
 #. Tooltip on the latency badge while voice latency is still being sampled.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:83
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:84
 msgid "Measuring latency..."
 msgstr "Midiendo latencia..."
 
 #. Placeholder shown while voice latency is still being sampled. Trailing ellipsis indicates ongoing measurement.
-#: src/features/voice/components/voice_connection_status/shared.ts:45
+#: src/features/voice/components/voice_connection_status/shared.ts:46
 msgid "Measuring…"
 msgstr "Midiendo…"
 
@@ -22115,7 +22110,7 @@ msgid "Netherlands"
 msgstr "Países Bajos"
 
 #. Section heading in the voice connection status popout for WebRTC network quality stats.
-#: src/features/voice/components/voice_connection_status/shared.ts:70
+#: src/features/voice/components/voice_connection_status/shared.ts:71
 msgid "Network"
 msgstr "Red"
 
@@ -22706,7 +22701,7 @@ msgstr "No se encontraron resultados"
 msgid "No mentions yet"
 msgstr "Aún no hay menciones"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:525
 msgid "No microphone found"
 msgstr "No se encontró ningún micrófono"
 
@@ -24238,7 +24233,7 @@ msgid "Our safety team is reviewing it. We'll send you a DM and email once we've
 msgstr "Nuestro equipo de seguridad lo está revisando. Te enviaremos un mensaje directo y un correo electrónico cuando tengamos un veredicto."
 
 #. Field label in the voice connection status popout. Shows WebRTC estimated available outgoing bandwidth.
-#: src/features/voice/components/voice_connection_status/shared.ts:119
+#: src/features/voice/components/voice_connection_status/shared.ts:120
 msgid "Outgoing capacity:"
 msgstr "Capacidad de salida:"
 
@@ -24384,7 +24379,7 @@ msgid "Participants"
 msgstr "Participantes"
 
 #. Field label in the voice connection status popout. Shows the current LiveKit participant count.
-#: src/features/voice/components/voice_connection_status/shared.ts:79
+#: src/features/voice/components/voice_connection_status/shared.ts:80
 msgid "Participants:"
 msgstr "Participantes:"
 
@@ -24999,12 +24994,12 @@ msgid "Ping on reply"
 msgstr "Notificar al responder"
 
 #. Compact latency badge on the voice control bar. {currentLatency} is an integer millisecond count.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:79
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:80
 msgid "Ping: {currentLatency}ms"
 msgstr "Ping: {currentLatency} ms"
 
 #. Compact latency badge variant used in another voice surface. {latency} is an integer millisecond count.
-#: src/features/voice/components/voice_connection_status/MockedVoiceConnectionStatus.tsx:43
+#: src/features/voice/components/voice_connection_status/MockedVoiceConnectionStatus.tsx:44
 msgid "Ping: {latency}ms"
 msgstr "Ping: {latency} ms"
 
@@ -25870,7 +25865,7 @@ msgid "Public registration is closed."
 msgstr "El registro público está cerrado."
 
 #. Field label in the voice connection status popout. Shows technical WebRTC publisher ICE transport details.
-#: src/features/voice/components/voice_connection_status/shared.ts:127
+#: src/features/voice/components/voice_connection_status/shared.ts:128
 msgid "Publisher transport:"
 msgstr "Transporte del publicador:"
 
@@ -26014,7 +26009,7 @@ msgstr "Tecla para pulsar y hablar"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:349
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:346
 #: src/features/voice/components/VoiceSettingsMenus.tsx:419
 msgid "Push-to-talk"
 msgstr "Pulsar para hablar"
@@ -26024,7 +26019,7 @@ msgstr "Pulsar para hablar"
 msgid "Push-to-talk (limited)"
 msgstr "Pulsar para hablar (limitado)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:681
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:676
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "La función pulsar para hablar se ignora en la entrada directa. Cambia a voz enfocada o personalizada para usarla."
 
@@ -26280,7 +26275,7 @@ msgid "Receive notifications when someone mentions you"
 msgstr "Recibir notificaciones cuando alguien te mencione"
 
 #. Field label in the voice connection status popout. Shows total current inbound media bitrate.
-#: src/features/voice/components/voice_connection_status/shared.ts:87
+#: src/features/voice/components/voice_connection_status/shared.ts:88
 msgid "Receive:"
 msgstr "Recibir:"
 
@@ -26399,7 +26394,7 @@ msgstr "Canjear para ti"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:719
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:305
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
 msgid "Redeem gift code"
 msgstr "Canjear código de regalo"
 
@@ -29607,7 +29602,7 @@ msgid "Send voice message"
 msgstr "Enviar mensaje de voz"
 
 #. Field label in the voice connection status popout. Shows total current outbound media bitrate.
-#: src/features/voice/components/voice_connection_status/shared.ts:83
+#: src/features/voice/components/voice_connection_status/shared.ts:84
 msgid "Send:"
 msgstr "Enviar:"
 
@@ -29640,7 +29635,7 @@ msgid "Sends both channels of a stereo microphone. Needs all processing off and 
 msgstr "Envía ambos canales de un micrófono estéreo. Requiere que todo el procesamiento esté desactivado y un canal a 128 kbps o superior."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:35
 msgid "Sends raw mic audio with no processing."
 msgstr "Envía el audio puro del micrófono sin procesar."
 
@@ -29714,7 +29709,7 @@ msgid "Service incident nagbar"
 msgstr "Incidente de servicio"
 
 #. Section heading in the voice connection status popout for current call/session debug stats.
-#: src/features/voice/components/voice_connection_status/shared.ts:62
+#: src/features/voice/components/voice_connection_status/shared.ts:63
 msgid "Session"
 msgstr "Sesión"
 
@@ -30164,7 +30159,7 @@ msgstr "Códigos cortos"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:364
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -30266,7 +30261,7 @@ msgid "Show attachment expiration indicator"
 msgstr "Mostrar indicador de vencimiento de archivos adjuntos"
 
 #. Developer voice status menu option for displaying participant avatars.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:71
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:72
 msgid "Show call avatars"
 msgstr "Mostrar avatares de la llamada"
 
@@ -30291,7 +30286,7 @@ msgid "Show chat with {count, plural, one {# unread message} other {# unread mes
 msgstr "Mostrar chat con {count, plural, one {# mensaje sin leer} other {# mensajes sin leer}}"
 
 #. Developer voice status menu option for displaying the voice connection identifier.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:75
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:76
 msgid "Show connection ID"
 msgstr "Mostrar ID de conexión"
 
@@ -32225,7 +32220,7 @@ msgid "Stopped the member from hearing others in this community"
 msgstr "Se impidió que el miembro escuchara a otros en esta comunidad"
 
 #. Description for the echo cancellation toggle in the custom voice processing settings.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:59
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:56
 msgid "Stops your speakers from looping back into your mic."
 msgstr "Evita que el audio de tus parlantes se escuche en tu micrófono."
 
@@ -32378,7 +32373,7 @@ msgid "Submitting"
 msgstr "Enviando"
 
 #. Field label in the voice connection status popout. Shows technical WebRTC subscriber ICE transport details.
-#: src/features/voice/components/voice_connection_status/shared.ts:131
+#: src/features/voice/components/voice_connection_status/shared.ts:132
 msgid "Subscriber transport:"
 msgstr "Transporte del suscriptor:"
 
@@ -32472,11 +32467,6 @@ msgstr "Suprimir las menciones que recibo de usuarios sin privilegios"
 msgid "Suppression"
 msgstr "Supresión"
 
-#. Label for the DeepFilterNet3 noise suppression strength slider in the custom voice processing settings.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:67
-msgid "Suppression strength"
-msgstr "Intensidad de supresión"
-
 #. Collapsible group heading in the Theme Studio tokens list, for background surface tokens.
 #: src/features/theme_studio/sections/TokenGroups.ts:46
 msgid "Surfaces"
@@ -32565,7 +32555,7 @@ msgstr "Cambiar a diseño cómodo"
 msgid "Switch to dense layout"
 msgstr "Cambiar a diseño compacto"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 msgid "Switch to direct input"
 msgstr "Cambiar a entrada directa"
 
@@ -35066,7 +35056,7 @@ msgid "Try again"
 msgstr "Reintentar"
 
 #. Button that retries connecting to the voice channel after a failed attempt.
-#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:61
+#: src/features/voice/components/voice_connection_status/VoiceConnectionStatusInner.tsx:62
 msgctxt "voice-connection-status"
 msgid "Try again"
 msgstr "Reintentar"
@@ -35157,7 +35147,7 @@ msgid "TTS speed"
 msgstr "Velocidad de TTS"
 
 #. Description for the custom option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:44
 msgid "Tune the processing yourself."
 msgstr "Ajusta el procesamiento tú mismo."
 
@@ -35896,7 +35886,7 @@ msgstr "Desbloquea los emojis personalizados en los MD con {premiumProductName}"
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Desbloquea la pantalla compartida en HD con {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:215
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Desbloquea límites más altos y funciones exclusivas mientras apoyas una plataforma de comunicación independiente."
 
@@ -37534,7 +37524,7 @@ msgid "Video options"
 msgstr "Opciones de video"
 
 #. Field label in the voice connection status popout. Shows received video packet loss percentage.
-#: src/features/voice/components/voice_connection_status/shared.ts:111
+#: src/features/voice/components/voice_connection_status/shared.ts:112
 msgid "Video packet loss:"
 msgstr "Pérdida de paquetes de video:"
 
@@ -37558,7 +37548,7 @@ msgid "Video quality"
 msgstr "Calidad de video"
 
 #. Field label in the voice connection status popout. Shows current inbound video bitrate.
-#: src/features/voice/components/voice_connection_status/shared.ts:103
+#: src/features/voice/components/voice_connection_status/shared.ts:104
 msgid "Video receive:"
 msgstr "Recepción de video:"
 
@@ -37568,7 +37558,7 @@ msgid "Video scrubbing"
 msgstr "Desplazamiento de video"
 
 #. Field label in the voice connection status popout. Shows current outbound video bitrate.
-#: src/features/voice/components/voice_connection_status/shared.ts:99
+#: src/features/voice/components/voice_connection_status/shared.ts:100
 msgid "Video send:"
 msgstr "Envío de video:"
 
@@ -38050,7 +38040,7 @@ msgstr "Canales de voz"
 
 #. Voice status popout title (secondary call site for the same surface as VOICE_CONNECTION_DESCRIPTOR).
 #. Voice status popout title.
-#: src/features/voice/components/voice_connection_status/MockedVoiceConnectionStatus.tsx:47
+#: src/features/voice/components/voice_connection_status/MockedVoiceConnectionStatus.tsx:48
 #: src/features/voice/components/voice_connection_status/VoiceDetailsPopout.tsx:56
 msgid "Voice connection"
 msgstr "Conexión de voz"
@@ -38108,8 +38098,8 @@ msgid "Voice participants"
 msgstr "Participantes en la llamada"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:52
 msgid "Voice processing"
 msgstr "Procesamiento de voz"
 
@@ -38841,7 +38831,7 @@ msgstr "Qué conversaciones"
 msgid "Which rule was broken?"
 msgstr "¿Qué regla se rompió?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:358
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:355
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Mientras la función pulsar para hablar esté activada, tu atajo controlará el micrófono, por lo que el botón de silenciar estará deshabilitado."
 
@@ -39532,11 +39522,11 @@ msgstr "Todavía no has bloqueado a nadie."
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
 msgstr "Acabas de presionar Tab. El modo de teclado está activado para que puedas navegar por {productName} sin mouse."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
 msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
 msgstr "Conservarás tus beneficios hasta la próxima fecha de renovación y luego tendrás un período de gracia de 3 días para volver a suscribirte y mantener tu historial de suscriptor."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Perderás todos los beneficios de {PREMIUM_PRODUCT_NAME} inmediatamente y tu historial de suscripción se restablecerá. Esto no se puede deshacer."
 

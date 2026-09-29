@@ -3,13 +3,10 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {createVoiceAudioContext} from '@app/features/voice/engine/VoiceSharedAudioContext';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {DeepFilterNoiseFilterProcessor} from 'deepfilternet3-noise-filter';
-import type {LocalAudioTrack} from 'livekit-client';
 
 const logger = new Logger('DeepFilterNoiseProcessor');
 const DEEP_FILTER_MODEL_SAMPLE_RATE = 48000;
-const DEFAULT_SUPPRESSION_LEVEL = 80;
 const HIGH_PASS_FREQUENCY_HZ = 60;
 const HIGH_PASS_Q = Math.SQRT1_2;
 const LIMITER_THRESHOLD_DB = -3;
@@ -17,17 +14,12 @@ const LIMITER_KNEE_DB = 0;
 const LIMITER_RATIO = 20;
 const LIMITER_ATTACK_SEC = 0.003;
 const LIMITER_RELEASE_SEC = 0.05;
+const DEEP_FILTER_NOISE_REDUCTION_LEVEL = 80;
 
-let activeProcessor: DeepFilterNoiseFilterProcessor | null = null;
-let activeTrack: LocalAudioTrack | null = null;
-
-export function createDeepFilterProcessor(
-	noiseReductionLevel = DEFAULT_SUPPRESSION_LEVEL,
-): DeepFilterNoiseFilterProcessor {
-	const clampedNoiseReductionLevel = Math.max(0, Math.min(100, noiseReductionLevel));
+function createDeepFilterProcessor(): DeepFilterNoiseFilterProcessor {
 	return new DeepFilterNoiseFilterProcessor({
 		sampleRate: DEEP_FILTER_MODEL_SAMPLE_RATE,
-		noiseReductionLevel: clampedNoiseReductionLevel,
+		noiseReductionLevel: DEEP_FILTER_NOISE_REDUCTION_LEVEL,
 		enabled: true,
 		assetConfig: {
 			cdnUrl: `${RuntimeConfig.staticCdnEndpoint}/libs/deepfilternet3`,
@@ -81,15 +73,7 @@ function safeStopTrack(track: MediaStreamTrack | null | undefined): void {
 	} catch {}
 }
 
-export async function buildDeepFilterAudioChain(opts: {
-	audioContext: AudioContext;
-	noiseReductionLevel?: number;
-}): Promise<DeepFilterAudioChain> {
-	const {audioContext} = opts;
-	const noiseReductionLevel = Math.max(
-		0,
-		Math.min(100, opts.noiseReductionLevel ?? VoiceSettings.getDeepFilterNoiseSuppressionLevel()),
-	);
+export async function buildDeepFilterAudioChain(audioContext: AudioContext): Promise<DeepFilterAudioChain> {
 	const inputDestination = audioContext.createMediaStreamDestination();
 	const inputTrack = inputDestination.stream.getAudioTracks()[0];
 	if (!inputTrack) {
@@ -112,7 +96,7 @@ export async function buildDeepFilterAudioChain(opts: {
 		safeStopTrack(inputTrack);
 		throw new Error('buildDeepFilterAudioChain: missing DeepFilter feed track');
 	}
-	const processor = createDeepFilterProcessor(noiseReductionLevel);
+	const processor = createDeepFilterProcessor();
 	processor.audioContext = resolveDeepFilterAudioContext(audioContext, deepFilterFeedTrack);
 	const disposeDeepFilterInputGraph = () => {
 		safeDisconnect(inputDestination);
@@ -192,64 +176,4 @@ export async function buildDeepFilterAudioChain(opts: {
 		inputDestination,
 		dispose,
 	};
-}
-
-export async function applyDeepFilterProcessor(
-	track: LocalAudioTrack,
-	noiseReductionLevel = VoiceSettings.getDeepFilterNoiseSuppressionLevel(),
-): Promise<void> {
-	if (!VoiceSettings.getDeepFilterNoiseSuppression()) {
-		return;
-	}
-	try {
-		await removeDeepFilterProcessor();
-		const processor = createDeepFilterProcessor(noiseReductionLevel);
-		await track.setProcessor(processor);
-		activeTrack = track;
-		activeProcessor = processor;
-		logger.info('Applied DeepFilterNet3 noise suppression');
-	} catch (error) {
-		logger.warn('Failed to apply DeepFilterNet3 noise suppression', error);
-		activeTrack = null;
-		activeProcessor = null;
-	}
-}
-
-export async function removeDeepFilterProcessor(track?: LocalAudioTrack): Promise<void> {
-	if (activeProcessor) {
-		const targetTrack = activeTrack ?? track;
-		try {
-			if (targetTrack) {
-				await targetTrack.stopProcessor();
-			}
-		} catch (error) {
-			logger.warn('Failed to stop DeepFilter processor', error);
-		}
-		try {
-			await activeProcessor.destroy();
-		} catch (error) {
-			logger.warn('Failed to destroy DeepFilter processor', error);
-		}
-		activeTrack = null;
-		activeProcessor = null;
-		logger.debug('Removed DeepFilterNet3 noise suppression');
-	}
-}
-
-export function setDeepFilterEnabled(enabled: boolean): void {
-	if (activeProcessor) {
-		const result = activeProcessor.setEnabled(enabled);
-		void Promise.resolve(result).catch((error) => {
-			logger.warn('Failed to set DeepFilter enabled state', error);
-		});
-		logger.debug('Set DeepFilter enabled', {enabled});
-	}
-}
-
-export function isDeepFilterActive(): boolean {
-	return activeProcessor != null;
-}
-
-export function isDeepFilterAppliedToTrack(track?: LocalAudioTrack | null): boolean {
-	return activeProcessor != null && activeTrack === (track ?? null);
 }

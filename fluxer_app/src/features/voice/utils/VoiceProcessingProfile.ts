@@ -2,18 +2,22 @@
 
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {
+	getNoiseSuppressionBackendDescriptor,
+	type VoiceNoiseSuppressionBackend,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import {
+	resolveNoiseSuppressionBackend,
+	resolveStereoCapture,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
 import {resolveEffectiveDeviceId} from '@app/features/voice/utils/VoiceDeviceManager';
-import type {VoiceNoiseSuppressionBackend} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 
 export type VoiceProcessingMode = 'voice' | 'studio' | 'custom';
 
 export interface VoiceProcessingSettingsLike {
 	voiceProcessingMode: VoiceProcessingMode;
 	echoCancellation: boolean;
-	noiseSuppression: boolean;
 	autoGainControl: boolean;
-	deepFilterNoiseSuppression: boolean;
-	deepFilterNoiseSuppressionLevel: number;
 }
 
 export interface ResolvedVoiceProcessing {
@@ -22,33 +26,23 @@ export interface ResolvedVoiceProcessing {
 	browserNoiseSuppression: boolean;
 	autoGainControl: boolean;
 	deepFilter: boolean;
-	deepFilterNoiseReductionLevel: number;
 	contentHint: '' | 'speech' | 'music';
 	noiseSuppressionBackend: VoiceNoiseSuppressionBackend;
 	stereoCapture: boolean;
 }
 
-export function legacyNoiseSuppressionBackend(
-	deepFilter: boolean,
-	browserNoiseSuppression: boolean,
-): VoiceNoiseSuppressionBackend {
-	if (deepFilter) return 'deep_filter';
-	if (browserNoiseSuppression) return 'standard';
-	return 'none';
-}
-
 export const DEFAULT_VOICE_PROCESSING_MODE: VoiceProcessingMode = 'voice';
-export const DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN = 0;
-export const DEEP_FILTER_NOISE_REDUCTION_LEVEL_MAX = 100;
 
-export function clampDeepFilterNoiseReductionLevel(level: number): number {
-	if (!Number.isFinite(level)) {
-		return DEEP_FILTER_NOISE_REDUCTION_LEVEL_MAX;
-	}
-	return Math.min(DEEP_FILTER_NOISE_REDUCTION_LEVEL_MAX, Math.max(DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN, level));
-}
-
-export function resolveVoiceProcessing(settings: VoiceProcessingSettingsLike): ResolvedVoiceProcessing {
+function resolveBaseVoiceProcessing(
+	settings: VoiceProcessingSettingsLike,
+	backend: VoiceNoiseSuppressionBackend,
+): ResolvedVoiceProcessing {
+	const noiseSuppression = {
+		browserNoiseSuppression: getNoiseSuppressionBackendDescriptor(backend).browserNoiseSuppression,
+		deepFilter: backend === 'deep_filter',
+		noiseSuppressionBackend: backend,
+		stereoCapture: false,
+	};
 	switch (settings.voiceProcessingMode) {
 		case 'studio':
 			return {
@@ -57,65 +51,62 @@ export function resolveVoiceProcessing(settings: VoiceProcessingSettingsLike): R
 				browserNoiseSuppression: false,
 				autoGainControl: false,
 				deepFilter: false,
-				deepFilterNoiseReductionLevel: DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN,
 				contentHint: 'music',
 				noiseSuppressionBackend: 'none',
 				stereoCapture: false,
 			};
-		case 'custom': {
-			const browserNs = settings.noiseSuppression && !settings.deepFilterNoiseSuppression;
+		case 'custom':
 			return {
+				...noiseSuppression,
 				mode: 'custom',
 				echoCancellation: settings.echoCancellation,
-				browserNoiseSuppression: browserNs,
 				autoGainControl: settings.autoGainControl,
-				deepFilter: settings.deepFilterNoiseSuppression,
-				deepFilterNoiseReductionLevel: settings.deepFilterNoiseSuppression
-					? clampDeepFilterNoiseReductionLevel(settings.deepFilterNoiseSuppressionLevel)
-					: DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN,
 				contentHint: '',
-				noiseSuppressionBackend: legacyNoiseSuppressionBackend(settings.deepFilterNoiseSuppression, browserNs),
-				stereoCapture: false,
 			};
-		}
 		default:
 			return {
+				...noiseSuppression,
 				mode: 'voice',
 				echoCancellation: true,
-				browserNoiseSuppression: true,
 				autoGainControl: settings.autoGainControl,
-				deepFilter: false,
-				deepFilterNoiseReductionLevel: DEEP_FILTER_NOISE_REDUCTION_LEVEL_MIN,
 				contentHint: 'speech',
-				noiseSuppressionBackend: 'standard',
-				stereoCapture: false,
 			};
 	}
 }
 
+export function resolveVoiceProcessing(
+	settings: VoiceProcessingSettingsLike,
+	backend: VoiceNoiseSuppressionBackend,
+	stereoPreferred: boolean,
+): ResolvedVoiceProcessing {
+	const profile = resolveBaseVoiceProcessing(settings, backend);
+	return {...profile, stereoCapture: resolveStereoCapture(profile, stereoPreferred)};
+}
+
 export function resolveVoiceProcessingFromState(store: typeof VoiceSettings): ResolvedVoiceProcessing {
-	return resolveVoiceProcessing({
-		voiceProcessingMode: store.voiceProcessingMode,
-		echoCancellation: store.echoCancellation,
-		noiseSuppression: store.noiseSuppression,
-		autoGainControl: store.autoGainControl,
-		deepFilterNoiseSuppression: store.deepFilterNoiseSuppression,
-		deepFilterNoiseSuppressionLevel: store.deepFilterNoiseSuppressionLevel,
-	});
+	return resolveVoiceProcessingFromStateForMode(store, store.voiceProcessingMode);
 }
 
 export function resolveVoiceProcessingFromStateForDeviceLabel(
 	store: typeof VoiceSettings,
 	label: string | null | undefined,
 ): ResolvedVoiceProcessing {
-	return resolveVoiceProcessing({
-		voiceProcessingMode: store.getVoiceProcessingModeForDeviceLabel(label),
-		echoCancellation: store.echoCancellation,
-		noiseSuppression: store.noiseSuppression,
-		autoGainControl: store.autoGainControl,
-		deepFilterNoiseSuppression: store.deepFilterNoiseSuppression,
-		deepFilterNoiseSuppressionLevel: store.deepFilterNoiseSuppressionLevel,
-	});
+	return resolveVoiceProcessingFromStateForMode(store, store.getVoiceProcessingModeForDeviceLabel(label));
+}
+
+function resolveVoiceProcessingFromStateForMode(
+	store: typeof VoiceSettings,
+	voiceProcessingMode: VoiceProcessingMode,
+): ResolvedVoiceProcessing {
+	return resolveVoiceProcessing(
+		{
+			voiceProcessingMode,
+			echoCancellation: store.echoCancellation,
+			autoGainControl: store.autoGainControl,
+		},
+		resolveNoiseSuppressionBackend(store.getNoiseSuppressionBackend()),
+		store.getStereoMicrophone() === true,
+	);
 }
 
 export function getActiveInputDeviceLabel(store: typeof VoiceSettings): string | null {

@@ -23,10 +23,6 @@ import {
 	type DomainMigrationConfig,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {
-	DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
-	type VoiceNoiseSuppressionConfig,
-} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
-import {
 	DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
 	type ExperimentDeliveryConfig,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -38,7 +34,6 @@ import {
 } from '@pkgs/postgres/src/Client';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
-const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
@@ -287,75 +282,6 @@ describe('InstanceConfigRepository', () => {
 		expect(domains).not.toContain('example.com');
 	});
 
-	it('returns the default voice noise suppression config when the key is absent', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
-
-		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
-	});
-
-	it.each([
-		{name: 'unparseable text', stored: 'not-json'},
-		{name: 'a json array', stored: '[]'},
-		{name: 'out-of-range values', stored: '{"rollout_basis_points":99999}'},
-		{name: 'an unknown backend', stored: '{"default_backend":"magic"}'},
-	])('falls back to the default voice noise suppression config for $name', async ({stored}) => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
-
-		await repository.setConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY, stored);
-
-		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
-	});
-
-	it('round-trips a stored voice noise suppression config', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
-
-		const config: VoiceNoiseSuppressionConfig = {
-			...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
-			enabled: true,
-			config_version: 3,
-			default_backend: 'rnnoise',
-			enabled_backends: ['none', 'standard', 'rnnoise'],
-			allow_user_override: false,
-			rollout_basis_points: 2500,
-			rollout_salt: 'voice-ns-v2',
-			included_user_ids: ['1400000000000000001'],
-			excluded_user_ids: ['1400000000000000002'],
-			guild_overrides: [{guild_id: '2400000000000000001', backend: 'rnnoise'}],
-			suppression_strength: 55,
-		};
-		await repository.setVoiceNoiseSuppressionConfig(config);
-
-		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual(config);
-	});
-
-	it('fills newly added voice noise suppression fields from the schema defaults', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const repository = createRepository(kvProvider);
-
-		await repository.setConfig(
-			VOICE_NOISE_SUPPRESSION_CONFIG_KEY,
-			JSON.stringify({enabled: true, config_version: 2, rollout_basis_points: 1000}),
-		);
-
-		await expect(repository.getVoiceNoiseSuppressionConfig()).resolves.toEqual({
-			...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
-			enabled: true,
-			config_version: 2,
-			rollout_basis_points: 1000,
-		});
-	});
-
 	it('returns the default domain migration config when the key is absent', async () => {
 		const executor = new CountingInMemoryCassandraQueryExecutor();
 		setCassandraQueryExecutorForTesting(executor);
@@ -491,26 +417,6 @@ describe('InstanceConfigRepository', () => {
 		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual({
 			...DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
 			poll_interval_seconds: 3600,
-		});
-	});
-
-	it('publishes a refresh so another repository observes the voice noise suppression config', async () => {
-		const executor = new CountingInMemoryCassandraQueryExecutor();
-		setCassandraQueryExecutorForTesting(executor);
-		const kvProvider = new MockKVProvider();
-		const reader = createRepository(kvProvider);
-		const writer = createRepository(kvProvider);
-
-		await expect(reader.getVoiceNoiseSuppressionConfig()).resolves.toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
-
-		await writer.setVoiceNoiseSuppressionConfig({
-			...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
-			enabled: true,
-			config_version: 1,
-		});
-
-		await vi.waitFor(async () => {
-			expect(await reader.getVoiceNoiseSuppressionConfig()).toMatchObject({enabled: true, config_version: 1});
 		});
 	});
 

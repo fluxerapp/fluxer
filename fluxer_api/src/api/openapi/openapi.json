@@ -27950,7 +27950,6 @@
 					"assignments": {
 						"type": "object",
 						"properties": {
-							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
 							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
 							"altcha_captcha": {"$ref": "#/components/schemas/AltchaCaptchaAssignmentResponse"},
 							"profile_timezone": {"$ref": "#/components/schemas/ProfileTimezoneAssignmentResponse"}
@@ -31669,50 +31668,6 @@
 				"properties": {"enabled": {"type": "boolean"}},
 				"required": ["enabled"],
 				"additionalProperties": false
-			},
-			"VoiceNoiseSuppressionAssignmentResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"backend": {"anyOf": [{"$ref": "#/components/schemas/VoiceNoiseSuppressionBackendSchema"}, {"type": "null"}]},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]},
-					"guild_overrides": {
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"guild_id": {"type": "string", "pattern": "^\\d{1,20}$"},
-								"backend": {"$ref": "#/components/schemas/VoiceNoiseSuppressionBackendSchema"}
-							},
-							"required": ["guild_id", "backend"],
-							"additionalProperties": false
-						}
-					},
-					"enabled_backends": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/VoiceNoiseSuppressionBackendSchema"}
-					},
-					"allow_user_override": {"type": "boolean"},
-					"suppression_strength": {"type": "integer", "minimum": 0, "maximum": 100}
-				},
-				"required": [
-					"enabled",
-					"config_version",
-					"user_targeted",
-					"backend",
-					"source",
-					"guild_overrides",
-					"enabled_backends",
-					"allow_user_override",
-					"suppression_strength"
-				],
-				"additionalProperties": false
-			},
-			"VoiceNoiseSuppressionBackendSchema": {
-				"type": "string",
-				"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"]
 			},
 			"GiftCodeDurationTypeSchema": {
 				"description": "Gift code duration unit",

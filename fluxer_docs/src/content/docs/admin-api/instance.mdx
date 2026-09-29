@@ -34,7 +34,6 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | --- | --- | --- |
 | sso | [SSO configuration](#sso-configuration-object) object | Single sign-on settings |
 | gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
-| voice_noise_suppression | [voice noise suppression configuration](#voice-noise-suppression-configuration-object) object | Client-side noise suppression rollout |
 | push_relay | [push relay configuration](#push-relay-configuration-object) object | Operator consent to the Fluxer-run push relay |
 | domain_migration | [domain migration configuration](#domain-migration-configuration-object) object | Web domain migration rollout |
 | altcha_captcha | [ALTCHA captcha configuration](#altcha-captcha-configuration-object) object | ALTCHA proof-of-work captcha rollout |
@@ -98,34 +97,6 @@ Admission and dispatch tuning for the Gateway cluster.
 Every field is present on read. An absent document or missing field uses the defaults above.
 
 Admin reads and writes name this field `rpc_request_timeout_ms`. The legacy stored name is covered in the [operator configuration reference](/operator/configuration/#stored-instance-policy).
-
-## Voice noise suppression configuration object
-
-The instance rollout of client-side noise suppression. [Experiments](/http-api/experiments/) defines what a client resolves from it and the closed [backend registry](/http-api/experiments/#noise-suppression-backends) every backend field draws on.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| enabled | boolean | Whether the rollout runs at all (default false) |
-| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
-| default_backend | string | Backend given to an account the rollout selects (default `standard`) |
-| enabled_backends | array[string] | Backends a client MAY run, up to 7 entries (default every backend) |
-| allow_user_override | boolean | Whether an account's own choice replaces the assigned backend (default true) |
-| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
-| rollout_salt | string | Salt of the sampling hash (1-64 characters, default `voice-ns-v1`) |
-| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
-| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
-| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
-| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
-| guild_overrides | array[[guild override](/http-api/experiments/#noise-suppression-guild-override-object) object] | Per-guild replacements, up to 200 entries (default empty) |
-| suppression_strength | integer | Suppression strength (0-100, default 80) |
-
-Every field is present on read. An absent document or missing field uses the defaults above.
-
-`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
-
-How often a client revalidates this rollout is not set here. It is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) below.
 
 ## Push relay configuration object
 
@@ -686,7 +657,6 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | --- | --- | --- |
 | sso?<sup>1</sup> | object | Every [SSO configuration](#sso-configuration-object) field except `client_secret_set` and `redirect_uri`, plus `client_secret` |
 | gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
-| voice_noise_suppression? | object | Any subset of the [noise suppression](#voice-noise-suppression-configuration-object) fields |
 | push_relay? | object | `relay_consent_accepted` from the [push relay configuration](#push-relay-configuration-object) |
 | domain_migration? | object | Any subset of the [domain migration](#domain-migration-configuration-object) fields |
 | altcha_captcha? | object | Any subset of the [ALTCHA captcha](#altcha-captcha-configuration-object) fields |
@@ -703,11 +673,9 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 
 <sup>2</sup> `branding.product_name` is 1 to 80 characters, every branding and legal URL is at most 2048 characters and nullable, `branding.theme_color` is at most 64 characters and nullable, and `setup.configured` and `registration.collect_date_of_birth` are booleans. `branding.premium_product_name` is 1 to 40 characters, and null restores the default. `branding.premium_info_url` is an absolute `http` or `https` URL. Every string is trimmed before it is stored
 
-`voice_noise_suppression` takes every [voice noise suppression configuration](#voice-noise-suppression-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
-
 `push_relay` takes only `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request. Turning the flag on stamps the current time and the acting account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
 
-`domain_migration` works the same way as `voice_noise_suppression`, over the [domain migration configuration](#domain-migration-configuration-object) fields and its own `config_version`.
+`domain_migration` takes every [domain migration configuration](#domain-migration-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 
 `altcha_captcha` works the same way, over the [ALTCHA captcha configuration](#altcha-captcha-configuration-object) fields and its own `config_version`.
 
@@ -753,7 +721,7 @@ On a self-hosted deployment, billing and the `everyone` premium mode exclude eac
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `voice_noise_suppression`, `push_relay`, `domain_migration`, `altcha_captcha`, `profile_timezone`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `push_relay`, `domain_migration`, `altcha_captcha`, `profile_timezone`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects

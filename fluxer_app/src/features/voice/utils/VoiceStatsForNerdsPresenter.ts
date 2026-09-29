@@ -6,6 +6,7 @@ import {
 	type VoiceTrackPublicationSourceLike,
 	VoiceTrackSource,
 } from '@app/features/voice/engine/VoiceTrackSource';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import {
 	classifyVoiceEngineV2TrackStats,
 	selectVoiceEngineV2StatsPresentationProjection,
@@ -68,10 +69,8 @@ export interface StatsForNerdsData {
 	};
 	audio: {
 		echoCancellation: boolean;
-		noiseSuppression: boolean;
 		autoGainControl: boolean;
-		deepFilterNoiseSuppression: boolean;
-		deepFilterNoiseSuppressionLevel: number;
+		noiseSuppressionBackend: VoiceNoiseSuppressionBackend;
 		processingMode: string;
 	};
 	screenShareSettings: {

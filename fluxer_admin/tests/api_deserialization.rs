@@ -392,25 +392,6 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "voice_e2ee_scope": "guild_feature_only",
             "future_rollout_knob": 3
         },
-        "voice_noise_suppression": {
-            "enabled": true,
-            "config_version": 4,
-            "default_backend": "rnnoise",
-            "enabled_backends": ["none", "standard", "rnnoise"],
-            "allow_user_override": true,
-            "rollout_basis_points": 10000,
-            "rollout_salt": "voice-ns-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": [],
-            "guild_overrides": [],
-            "included_guild_ids": ["1500000000000000005"],
-            "include_premium_users": true,
-            "suppression_strength": 80,
-            "future_presentation_knob": "verbose",
-            "future_knob": 7,
-            "future_object_knob": {"nested": true},
-            "future_list_knob": ["a", "b"]
-        },
         "push_relay": {
             "relay_consent_accepted": true,
             "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
@@ -426,6 +407,10 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "included_guild_ids": [],
             "include_premium_users": false,
             "future_migration_knob": 9,
+            "future_presentation_knob": "verbose",
+            "future_knob": 7,
+            "future_object_knob": {"nested": true},
+            "future_list_knob": ["a", "b"],
             "anonymous_rollout_basis_points": 100,
             "standalone_forwarding": true
         },
@@ -610,11 +595,6 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     );
 
     assert!(!resp.self_hosted);
-    assert!(resp.voice_noise_suppression.enabled);
-    assert_eq!(resp.voice_noise_suppression.config_version, 4);
-    assert_eq!(resp.voice_noise_suppression.rollout_basis_points, 10000);
-    assert_eq!(*resp.voice_noise_suppression.rollout_salt, "voice-ns-v1");
-    assert_eq!(resp.voice_noise_suppression.enabled_backends.len(), 3);
     assert!(resp.domain_migration.enabled);
     assert_eq!(resp.domain_migration.config_version, 2);
     assert_eq!(resp.domain_migration.rollout_basis_points, 2500);
@@ -633,7 +613,6 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.profile_timezone.included_user_ids.len(), 1);
     assert_eq!(resp.profile_timezone.included_guild_ids.len(), 1);
     assert!(resp.profile_timezone.include_premium_users);
-    assert!(resp.voice_noise_suppression.include_premium_users);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));

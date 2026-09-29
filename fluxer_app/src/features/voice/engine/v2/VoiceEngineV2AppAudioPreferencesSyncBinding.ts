@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {
 	createVoiceEngineV2AppAudioSettingsSnapshot,
@@ -50,7 +49,7 @@ export function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2A
 
 export function createVoiceEngineV2AppAudioPreferencesSyncSources(): VoiceEngineV2AppAudioPreferencesSyncSources {
 	return {
-		stores: [VoiceSettings, VoiceDevicePermissionState, ParticipantVolume, StreamAudioPrefs, ExperimentAssignments],
+		stores: [VoiceSettings, VoiceDevicePermissionState, ParticipantVolume, StreamAudioPrefs],
 		getSnapshot: createVoiceEngineV2AppAudioPreferencesSnapshot,
 	};
 }

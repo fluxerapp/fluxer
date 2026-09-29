@@ -33,7 +33,7 @@ import {useMediaPermission} from '@app/features/user/components/modals/tabs/hook
 import styles from '@app/features/user/components/modals/tabs/UserVoiceTab.module.css';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	type ExternalAudioProcessorMatch,
 	findExternalProcessorForDevice,
@@ -209,10 +209,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 		inputVolume,
 		outputVolume,
 		echoCancellation,
-		noiseSuppression,
 		autoGainControl,
-		deepFilterNoiseSuppression,
-		deepFilterNoiseSuppressionLevel,
 		vadThreshold,
 		vadAutoSensitivity,
 	} = voiceSettings;
@@ -451,9 +448,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 				label={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
 				description={i18n._(STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR)}
 				value={isStereoMicrophoneEnabled()}
-				onChange={(value) => {
-					VoiceSettings.stereoMicrophone = value;
-				}}
+				onChange={(value) => VoiceSettingsCommands.update({stereoMicrophone: value})}
 				ariaLabel={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
 				data-flx={dataFlx}
 			/>
@@ -693,10 +688,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						inputVolume,
 						outputVolume,
 						echoCancellation,
-						noiseSuppression,
 						autoGainControl,
-						deepFilterNoiseSuppression,
-						deepFilterNoiseSuppressionLevel,
 						voiceProcessingMode,
 					}}
 					data-flx="user.voice-tab.mic-test-section"

@@ -12,6 +12,7 @@ import ScreenShareCodecNegotiation, {
 import {getPublishedScreenShareMaxBitrateBps} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {getNativeAudioCaptureDiagnosticState} from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import {readNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
@@ -185,10 +186,8 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 		},
 		audio: {
 			echoCancellation: VoiceSettings.echoCancellation,
-			noiseSuppression: VoiceSettings.noiseSuppression,
 			autoGainControl: VoiceSettings.autoGainControl,
-			deepFilterNoiseSuppression: VoiceSettings.deepFilterNoiseSuppression,
-			deepFilterNoiseSuppressionLevel: VoiceSettings.deepFilterNoiseSuppressionLevel,
+			noiseSuppressionBackend: readNoiseSuppressionBackend(),
 			processingMode: VoiceSettings.voiceProcessingMode,
 		},
 		screenShareSettings: {

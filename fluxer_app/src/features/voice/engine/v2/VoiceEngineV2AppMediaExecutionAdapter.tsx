@@ -103,8 +103,6 @@ import {
 	buildCameraPublishOptions,
 	findVideoPublishCodecPolicyViolation,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
-import {readEffectiveNoiseSuppression} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
-import {applyNoiseSuppressionOverride} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
 import {applyBackgroundProcessor, clearCameraVideoProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
 import {
 	removeVoiceInputProcessor,
@@ -141,7 +139,6 @@ import {Track} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppMediaExecutionAdapter');
 const LOCAL_SPEAKING_ANALYSER_INTERVAL_MS = 50;
-const MICROPHONE_CAPTURE_SAMPLE_RATE = 48000;
 const CAMERA_PUBLISH_CODEC_CORRECTION_MAX = 1;
 export const REPUBLISH_MICROPHONE_GUARD_MS = 150;
 type VoiceMuteReason = VoiceEngineV2AppVoiceMuteReason;
@@ -601,8 +598,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 	}
 
 	private resolveActiveMicrophoneProfile(): ResolvedVoiceProcessing {
-		const profile = resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, this.resolveActiveInputDeviceLabel());
-		return applyNoiseSuppressionOverride(profile, readEffectiveNoiseSuppression(MICROPHONE_CAPTURE_SAMPLE_RATE));
+		return resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, this.resolveActiveInputDeviceLabel());
 	}
 
 	private resolveMicrophoneChannelBitrate(channelId: string | null): number {

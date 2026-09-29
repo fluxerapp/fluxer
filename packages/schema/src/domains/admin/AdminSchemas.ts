@@ -33,10 +33,6 @@ import {
 } from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import {PushRelayConfigResponse, PushRelayConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {
-	VoiceNoiseSuppressionConfigResponse,
-	VoiceNoiseSuppressionConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
-import {
 	ExperimentDeliveryConfigResponse,
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -675,7 +671,6 @@ const InstanceIntegrationsResponse = z.object({
 export const InstanceConfigResponse = z.object({
 	sso: SsoConfigResponse,
 	gateway_rollout: GatewayRolloutConfigResponse,
-	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
 	push_relay: PushRelayConfigResponse,
 	domain_migration: DomainMigrationConfigResponse,
 	altcha_captcha: AltchaCaptchaConfigResponse,
@@ -716,7 +711,6 @@ const InstancePolicyUpdateSchema = z.object({
 
 export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
-	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
 	push_relay: PushRelayConfigUpdateRequest.nullish(),
 	domain_migration: DomainMigrationConfigUpdateRequest.nullish(),
 	altcha_captcha: AltchaCaptchaConfigUpdateRequest.nullish(),

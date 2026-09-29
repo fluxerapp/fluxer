@@ -17,8 +17,6 @@ import {
 	buildNoiseSuppressionWorkletChain,
 	type NoiseSuppressionWorkletChain,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChain';
-import {readEffectiveNoiseSuppression} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
-import {applyNoiseSuppressionOverride} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
 import type {NoiseSuppressionWorkletBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionWorkletTypes';
 import {
 	getActiveInputDeviceLabel,
@@ -33,7 +31,6 @@ const GATE_ANALYSER_FFT_SIZE = 256;
 const GATE_TICK_INTERVAL_MS = 50;
 const GATE_ATTACK_TIME_CONSTANT = 0.005;
 const GATE_RELEASE_TIME_CONSTANT = 0.02;
-const DEFAULT_NOISE_SUPPRESSION_PROBE_SAMPLE_RATE = 48000;
 
 class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio> {
 	name = 'fluxer-voice-input-processor';
@@ -58,25 +55,19 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio> {
 	constructor(
 		private inputVolumePercent: number,
 		private deepFilterEnabled: boolean,
-		private deepFilterNoiseReductionLevel: number,
 		private gateEnabled: boolean,
 		private workletBackend: NoiseSuppressionWorkletBackend | null,
-		private suppressionStrength: number,
 	) {}
 
 	matchesMode(
 		deepFilterEnabled: boolean,
-		deepFilterNoiseReductionLevel: number,
 		gateEnabled: boolean,
 		workletBackend: NoiseSuppressionWorkletBackend | null,
-		suppressionStrength: number,
 	): boolean {
 		return (
 			this.deepFilterEnabled === deepFilterEnabled &&
-			this.deepFilterNoiseReductionLevel === deepFilterNoiseReductionLevel &&
 			this.gateEnabled === gateEnabled &&
-			this.workletBackend === workletBackend &&
-			this.suppressionStrength === suppressionStrength
+			this.workletBackend === workletBackend
 		);
 	}
 
@@ -137,10 +128,7 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio> {
 				}
 			}
 			if (this.deepFilterEnabled) {
-				const chain = await buildDeepFilterAudioChain({
-					audioContext: opts.audioContext,
-					noiseReductionLevel: this.deepFilterNoiseReductionLevel,
-				});
+				const chain = await buildDeepFilterAudioChain(opts.audioContext);
 				if (generation !== this.buildGeneration) {
 					await chain.dispose();
 					throw new DOMException('Voice input build cancelled', 'AbortError');
@@ -175,7 +163,6 @@ class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio> {
 			return await buildNoiseSuppressionWorkletChain({
 				audioContext: opts.audioContext,
 				backend,
-				suppressionStrength: this.suppressionStrength,
 				signal,
 				onRuntimeFailure: (error) => {
 					if (generation !== this.buildGeneration) return;
@@ -321,14 +308,6 @@ function markNoiseSuppressionBackendFailed(backend: NoiseSuppressionWorkletBacke
 	failedWorkletBackends.add(backend);
 }
 
-let lastSeenNoiseSuppressionConfigVersion: number | null = null;
-
-function forgetFailedBackendsOnConfigChange(configVersion: number): void {
-	if (lastSeenNoiseSuppressionConfigVersion === configVersion) return;
-	lastSeenNoiseSuppressionConfigVersion = configVersion;
-	failedWorkletBackends.clear();
-}
-
 async function restartVoiceInputProcessorAfterWorkletFailure(processor: VoiceInputTrackProcessor): Promise<void> {
 	const track = processor === activeProcessor ? activeTrack : pendingProcessor?.track;
 	if (!track) return;
@@ -343,13 +322,8 @@ async function restartVoiceInputProcessorAfterWorkletFailure(processor: VoiceInp
 	}
 }
 
-function resolveActiveVoiceProcessing(sampleRate?: number): ResolvedVoiceProcessing {
-	const label = getActiveInputDeviceLabel(VoiceSettings);
-	const profile = resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, label);
-	return applyNoiseSuppressionOverride(
-		profile,
-		readEffectiveNoiseSuppression(sampleRate ?? DEFAULT_NOISE_SUPPRESSION_PROBE_SAMPLE_RATE),
-	);
+function resolveActiveVoiceProcessing(): ResolvedVoiceProcessing {
+	return resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, getActiveInputDeviceLabel(VoiceSettings));
 }
 
 function resolveWorkletBackend(profile: ResolvedVoiceProcessing): NoiseSuppressionWorkletBackend | null {
@@ -382,42 +356,22 @@ export async function syncVoiceInputProcessor(track: LocalAudioTrack | null): Pr
 		await stopCurrentVoiceInputProcessors();
 		return;
 	}
-	const effective = readEffectiveNoiseSuppression(DEFAULT_NOISE_SUPPRESSION_PROBE_SAMPLE_RATE);
-	forgetFailedBackendsOnConfigChange(effective.configVersion);
 	const profile = resolveActiveVoiceProcessing();
 	const deepFilterEnabled = profile.deepFilter;
-	const deepFilterNoiseReductionLevel = profile.deepFilterNoiseReductionLevel;
 	const workletBackend = resolveWorkletBackend(profile);
-	const suppressionStrength = effective.suppressionStrength;
 	const inputVolumePercent = VoiceSettings.getInputVolume();
 	const gateEnabled = isVoiceActivityGateEnabled();
 	if (!shouldUseVoiceInputProcessor()) {
 		await stopCurrentVoiceInputProcessors();
 		return;
 	}
-	if (
-		activeTrack === track &&
-		activeProcessor?.matchesMode(
-			deepFilterEnabled,
-			deepFilterNoiseReductionLevel,
-			gateEnabled,
-			workletBackend,
-			suppressionStrength,
-		)
-	) {
+	if (activeTrack === track && activeProcessor?.matchesMode(deepFilterEnabled, gateEnabled, workletBackend)) {
 		activeProcessor.updateInputVolumePercent(inputVolumePercent);
 		return;
 	}
 	await stopCurrentVoiceInputProcessors();
 	if (generation !== synchronizationGeneration) return;
-	const processor = new VoiceInputTrackProcessor(
-		inputVolumePercent,
-		deepFilterEnabled,
-		deepFilterNoiseReductionLevel,
-		gateEnabled,
-		workletBackend,
-		suppressionStrength,
-	);
+	const processor = new VoiceInputTrackProcessor(inputVolumePercent, deepFilterEnabled, gateEnabled, workletBackend);
 	try {
 		if (!(await installVoiceInputProcessor({track, processor}, generation))) return;
 	} catch (error) {

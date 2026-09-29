@@ -3,17 +3,13 @@
 import assert from 'node:assert/strict';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {readEffectiveNoiseSuppression} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
-import {applyNoiseSuppressionOverride} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import {isVoiceActivityGateEnabled} from '@app/features/voice/utils/VoiceInputProcessor';
 import {
 	getActiveInputDeviceLabel,
 	resolveVoiceProcessingFromStateForDeviceLabel,
 	type VoiceProcessingMode,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
-import type {VoiceNoiseSuppressionBackend} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
-
-const MICROPHONE_CAPTURE_SAMPLE_RATE = 48000;
 
 export interface VoiceEngineV2AppAudioSettingsSnapshot {
 	readonly inputVolume: number;
@@ -29,10 +25,8 @@ export interface VoiceEngineV2AppAudioSettingsSnapshot {
 	readonly browserNoiseSuppression: boolean;
 	readonly autoGainControl: boolean;
 	readonly deepFilter: boolean;
-	readonly deepFilterNoiseReductionLevel: number;
 	readonly contentHint: '' | 'speech' | 'music';
 	readonly noiseSuppressionBackend: VoiceNoiseSuppressionBackend;
-	readonly suppressionStrength: number;
 	readonly stereoCapture: boolean;
 }
 
@@ -59,17 +53,12 @@ function assertAudioSettingsSnapshot(snapshot: VoiceEngineV2AppAudioSettingsSnap
 	assert.equal(typeof snapshot.autoGainControl, 'boolean', `${name}.autoGainControl must be a boolean`);
 	assert.equal(typeof snapshot.deepFilter, 'boolean', `${name}.deepFilter must be a boolean`);
 	assert.equal(typeof snapshot.noiseSuppressionBackend, 'string', `${name}.noiseSuppressionBackend must be a string`);
-	assert.equal(typeof snapshot.suppressionStrength, 'number', `${name}.suppressionStrength must be a number`);
 	assert.equal(typeof snapshot.stereoCapture, 'boolean', `${name}.stereoCapture must be a boolean`);
 }
 
 export function createVoiceEngineV2AppAudioSettingsSnapshot(): VoiceEngineV2AppAudioSettingsSnapshot {
 	const activeInputDeviceLabel = getActiveInputDeviceLabel(VoiceSettings);
-	const effective = readEffectiveNoiseSuppression(MICROPHONE_CAPTURE_SAMPLE_RATE);
-	const profile = applyNoiseSuppressionOverride(
-		resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, activeInputDeviceLabel),
-		effective,
-	);
+	const profile = resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, activeInputDeviceLabel);
 	return {
 		inputVolume: VoiceSettings.getInputVolume(),
 		outputVolume: VoiceSettings.getOutputVolume(),
@@ -84,10 +73,8 @@ export function createVoiceEngineV2AppAudioSettingsSnapshot(): VoiceEngineV2AppA
 		browserNoiseSuppression: profile.browserNoiseSuppression,
 		autoGainControl: profile.autoGainControl,
 		deepFilter: profile.deepFilter,
-		deepFilterNoiseReductionLevel: profile.deepFilterNoiseReductionLevel,
 		contentHint: profile.contentHint,
 		noiseSuppressionBackend: profile.noiseSuppressionBackend,
-		suppressionStrength: effective.suppressionStrength,
 		stereoCapture: profile.stereoCapture,
 	};
 }
@@ -115,10 +102,8 @@ export function hasVoiceEngineV2InputProcessorSettingsChanged(
 	assertAudioSettingsSnapshot(previous, 'previous');
 	assertAudioSettingsSnapshot(current, 'current');
 	if (previous.deepFilter !== current.deepFilter) return true;
-	if (previous.deepFilterNoiseReductionLevel !== current.deepFilterNoiseReductionLevel) return true;
 	if (previous.voiceActivityGate !== current.voiceActivityGate) return true;
 	if (previous.vadAutoSensitivity !== current.vadAutoSensitivity) return true;
 	if (previous.noiseSuppressionBackend !== current.noiseSuppressionBackend) return true;
-	if (previous.suppressionStrength !== current.suppressionStrength) return true;
 	return false;
 }

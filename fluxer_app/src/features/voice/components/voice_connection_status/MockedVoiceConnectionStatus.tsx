@@ -26,6 +26,7 @@ import {
 	LATENCY_GRAPH_DESCRIPTOR,
 } from '@app/features/voice/components/voice_connection_status/shared';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {readNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {
 	VOICE_DISCONNECT_DESCRIPTOR,
 	VOICE_IN_CHAT_DESCRIPTOR,
@@ -52,9 +53,8 @@ export const MockedVoiceConnectionStatus = observer(() => {
 	const {i18n} = useLingui();
 	const voiceSettings = VoiceSettings;
 	const processingMode = getActiveVoiceProcessingMode(voiceSettings);
-	const noiseSuppressionEnabled = voiceSettings.noiseSuppression;
-	const deepFilterEnabled = voiceSettings.deepFilterNoiseSuppression;
-	const isProcessingActive = isAudioProcessingActive(processingMode, noiseSuppressionEnabled, deepFilterEnabled);
+	const noiseSuppressionBackend = readNoiseSuppressionBackend();
+	const isProcessingActive = isAudioProcessingActive(processingMode, noiseSuppressionBackend);
 	const showVoiceConnectionId = voiceSettings.showVoiceConnectionId;
 	const openNoiseSuppressionModal = useCallback(() => {
 		ModalCommands.push(
@@ -63,12 +63,7 @@ export const MockedVoiceConnectionStatus = observer(() => {
 			)),
 		);
 	}, []);
-	const noiseSuppressionTooltip = getAudioProcessingTooltip(
-		i18n,
-		processingMode,
-		noiseSuppressionEnabled,
-		deepFilterEnabled,
-	);
+	const noiseSuppressionTooltip = getAudioProcessingTooltip(i18n, processingMode, noiseSuppressionBackend);
 	const disconnectLabel = i18n._(VOICE_DISCONNECT_DESCRIPTOR);
 	const {openProps: popoutProps} = usePopout('voice-details-popout');
 	const latency = 42;

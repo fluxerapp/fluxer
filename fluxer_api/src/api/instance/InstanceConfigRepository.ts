@@ -62,10 +62,6 @@ import {
 	toLegacyPushServiceDeliveryWire,
 } from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {
-	type VoiceNoiseSuppressionConfig,
-	VoiceNoiseSuppressionConfigSchema,
-} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
-import {
 	type ExperimentDeliveryConfig,
 	ExperimentDeliveryConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -86,7 +82,6 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {z} from 'zod';
 
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
-const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const PUSH_RELAY_CONFIG_KEY = 'push_service_delivery_config';
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
 const ALTCHA_CAPTCHA_CONFIG_KEY = 'altcha_captcha_config';
@@ -447,7 +442,6 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 type StoredConfigSection =
 	| 'app public'
 	| 'gateway rollout'
-	| 'voice noise suppression'
 	| 'push relay'
 	| 'domain migration'
 	| 'altcha captcha'
@@ -585,10 +579,6 @@ function decodeGatewayRolloutConfig(value: unknown): GatewayRolloutConfig {
 
 function parseStoredGatewayRolloutConfig(raw: string | null): GatewayRolloutConfig {
 	return decodeGatewayRolloutConfig(parseStoredConfigValue(raw, 'gateway rollout'));
-}
-
-function parseStoredVoiceNoiseSuppressionConfig(raw: string | null): VoiceNoiseSuppressionConfig {
-	return parseStoredConfigOrDefault(VoiceNoiseSuppressionConfigSchema, raw, 'voice noise suppression');
 }
 
 const StoredPushRelayConfigSchema = PushRelayConfigSchema.extend({
@@ -1296,7 +1286,6 @@ export class InstanceConfigRepository {
 		checkStoredConfig('gateway rollout', () =>
 			parseStoredGatewayRolloutConfig(snapshot.get(GATEWAY_ROLLOUT_CONFIG_KEY) ?? null),
 		);
-		parseStoredVoiceNoiseSuppressionConfig(snapshot.get(VOICE_NOISE_SUPPRESSION_CONFIG_KEY) ?? null);
 		parseStoredPushRelayConfig(snapshot.get(PUSH_RELAY_CONFIG_KEY) ?? null);
 		parseStoredDomainMigrationConfig(snapshot.get(DOMAIN_MIGRATION_CONFIG_KEY) ?? null);
 		parseStoredAltchaCaptchaConfig(snapshot.get(ALTCHA_CAPTCHA_CONFIG_KEY) ?? null);
@@ -1374,27 +1363,6 @@ export class InstanceConfigRepository {
 	): Promise<GatewayRolloutConfig> {
 		return this.updateStoredConfig(GATEWAY_ROLLOUT_CONFIG_KEY, (raw) =>
 			decodeGatewayRolloutConfig(update(parseStoredGatewayRolloutConfig(raw))),
-		);
-	}
-
-	async getVoiceNoiseSuppressionConfig(): Promise<VoiceNoiseSuppressionConfig> {
-		const raw = await this.getConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY);
-		return parseStoredVoiceNoiseSuppressionConfig(raw);
-	}
-
-	async setVoiceNoiseSuppressionConfig(config: VoiceNoiseSuppressionConfig): Promise<void> {
-		await this.updateVoiceNoiseSuppressionConfig(() => config);
-	}
-
-	updateVoiceNoiseSuppressionConfig(
-		update: (current: VoiceNoiseSuppressionConfig) => VoiceNoiseSuppressionConfig,
-	): Promise<VoiceNoiseSuppressionConfig> {
-		return this.updateStoredConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY, (raw) =>
-			validateStoredConfig(
-				VoiceNoiseSuppressionConfigSchema,
-				update(parseStoredVoiceNoiseSuppressionConfig(raw)),
-				'voice noise suppression',
-			),
 		);
 	}
 

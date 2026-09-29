@@ -40,7 +40,6 @@ import {DomainMigrationConfigSchema} from '@fluxer/schema/src/domains/admin/Doma
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {ProfileTimezoneConfigSchema} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import type {PushRelayConfig, PushRelayConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
-import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
@@ -67,7 +66,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 	const [
 		ssoConfig,
 		gatewayRollout,
-		voiceNoiseSuppression,
 		pushRelay,
 		domainMigration,
 		altchaCaptcha,
@@ -79,7 +77,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 	] = await Promise.all([
 		instanceConfigRepository.getSsoConfig(),
 		instanceConfigRepository.getGatewayRolloutConfig(),
-		instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
 		instanceConfigRepository.getPushRelayConfig(),
 		instanceConfigRepository.getDomainMigrationConfig(),
 		instanceConfigRepository.getAltchaCaptchaConfig(),
@@ -115,7 +112,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 			redirect_uri: deriveSsoRedirectUri(Config.endpoints.webApp),
 		},
 		gateway_rollout: gatewayRollout,
-		voice_noise_suppression: voiceNoiseSuppression,
 		push_relay: pushRelay,
 		domain_migration: domainMigration,
 		altcha_captcha: altchaCaptcha,
@@ -376,18 +372,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 					GatewayRolloutConfigSchema.parse({...current, ...patch}),
 				);
 				await getGatewayRolloutConfigPublisher().publish(landed);
-			}
-			if (data.voice_noise_suppression) {
-				const patch = omitUndefinedFields(data.voice_noise_suppression);
-				if (Object.keys(patch).length > 0) {
-					await instanceConfigRepository.updateVoiceNoiseSuppressionConfig((current) =>
-						VoiceNoiseSuppressionConfigSchema.parse({
-							...current,
-							...patch,
-							config_version: current.config_version + 1,
-						}),
-					);
-				}
 			}
 			if (data.push_relay) {
 				const patch = omitUndefinedFields(data.push_relay);

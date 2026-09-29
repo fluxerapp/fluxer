@@ -9,6 +9,10 @@ import type {
 	ScreenShareEncoderMode,
 	ScreenShareScalabilityModePreference,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
+import {
+	isVoiceNoiseSuppressionBackend,
+	type VoiceNoiseSuppressionBackend,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {areVoiceBackgroundsAvailable} from '@app/features/voice/utils/VoiceBackgroundAvailability';
 import {
@@ -16,7 +20,6 @@ import {
 	type VoiceProcessingMode,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
 import {clampVoiceVolumePercent} from '@app/features/voice/utils/VoiceVolumeUtils';
-import type {VoiceNoiseSuppressionBackend} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {makeAutoObservable} from 'mobx';
 
 export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
@@ -48,8 +51,6 @@ const MAX_VOICE_PROCESSING_DEVICE_OVERRIDES = 16;
 const VIDEO_FRAME_RATE_MIN = 15;
 const VIDEO_FRAME_RATE_MAX = 120;
 const VIDEO_FRAME_RATE_DEFAULT = 30;
-const DEFAULT_BROWSER_NOISE_SUPPRESSION = true;
-const DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION = false;
 const FREE_VIDEO_FRAME_RATE_MAX = 30;
 const RETIRED_SCREENSHARE_RESOLUTION_REPLACEMENT: ScreenshareResolution = 'low_480p';
 const PREMIUM_SCREENSHARE_RESOLUTIONS: ReadonlySet<ScreenshareResolution> = new Set(['high', 'ultra', 'source']);
@@ -67,10 +68,9 @@ type VoiceSettingsUpdate = Partial<{
 	inputVolume: number;
 	outputVolume: number;
 	echoCancellation: boolean;
-	noiseSuppression: boolean;
 	autoGainControl: boolean;
-	deepFilterNoiseSuppression: boolean;
-	deepFilterNoiseSuppressionLevel: number;
+	noiseSuppressionBackend: VoiceNoiseSuppressionBackend | null;
+	stereoMicrophone: boolean | null;
 	voiceProcessingMode: VoiceProcessingMode;
 	cameraResolution: CameraResolution;
 	mirrorCamera: boolean;
@@ -363,14 +363,12 @@ function applyVideoQualityNormalisationMigration(parsed: Record<string, unknown>
 	return changed;
 }
 
-function applyNoiseSuppressionStandardDefaultMigrationV1(parsed: Record<string, unknown>): boolean {
-	if (parsed.noiseSuppressionStandardDefaultMigratedV1 === true) {
-		return false;
-	}
-	parsed.noiseSuppression = DEFAULT_BROWSER_NOISE_SUPPRESSION;
-	parsed.deepFilterNoiseSuppressionPrefV2 = DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION;
-	parsed.noiseSuppressionStandardDefaultMigratedV1 = true;
-	return true;
+function validateNoiseSuppressionBackend(value: unknown): VoiceNoiseSuppressionBackend | null {
+	return isVoiceNoiseSuppressionBackend(value) ? value : null;
+}
+
+function validateStereoMicrophone(value: unknown): boolean | null {
+	return typeof value === 'boolean' ? value : null;
 }
 
 function validateBackgroundImages(images: unknown): Array<BackgroundImage> {
@@ -399,11 +397,7 @@ class VoiceSettings {
 	inputVolume = 100;
 	outputVolume = 100;
 	echoCancellation = true;
-	noiseSuppression = DEFAULT_BROWSER_NOISE_SUPPRESSION;
 	autoGainControl = true;
-	deepFilterNoiseSuppressionPrefV2 = DEFAULT_DEEP_FILTER_NOISE_SUPPRESSION;
-	deepFilterNoiseSuppressionLevelPrefV2 = 80;
-	noiseSuppressionStandardDefaultMigratedV1 = false;
 	noiseSuppressionBackendPrefV1: VoiceNoiseSuppressionBackend | null = null;
 	stereoMicrophonePrefV1: boolean | null = null;
 	voiceProcessingMode: VoiceProcessingMode = DEFAULT_VOICE_PROCESSING_MODE;
@@ -479,10 +473,7 @@ class VoiceSettings {
 				getInputVolume: false,
 				getOutputVolume: false,
 				getEchoCancellation: false,
-				getNoiseSuppression: false,
 				getAutoGainControl: false,
-				getDeepFilterNoiseSuppression: false,
-				getDeepFilterNoiseSuppressionLevel: false,
 				getVoiceProcessingMode: false,
 				getCameraResolution: false,
 				getMirrorCamera: false,
@@ -563,7 +554,6 @@ class VoiceSettings {
 			changed = applyManualAudioSourcesOptOutResetMigrationV1(parsed) || changed;
 			changed = applyScreenShareContentHintDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
-			changed = applyNoiseSuppressionStandardDefaultMigrationV1(parsed) || changed;
 			changed = applyVideoQualityNormalisationMigration(parsed) || changed;
 			changed = applyScreenShareAv1OptOutMigrationV1(parsed) || changed;
 			changed = applyScreenShareHevcOptOutMigrationV1(parsed) || changed;
@@ -590,11 +580,7 @@ class VoiceSettings {
 			'inputVolume',
 			'outputVolume',
 			'echoCancellation',
-			'noiseSuppression',
 			'autoGainControl',
-			'deepFilterNoiseSuppressionPrefV2',
-			'deepFilterNoiseSuppressionLevelPrefV2',
-			'noiseSuppressionStandardDefaultMigratedV1',
 			'noiseSuppressionBackendPrefV1',
 			'stereoMicrophonePrefV1',
 			'voiceProcessingMode',
@@ -699,22 +685,6 @@ class VoiceSettings {
 		return this.stereoMicrophonePrefV1;
 	}
 
-	get deepFilterNoiseSuppression(): boolean {
-		return this.deepFilterNoiseSuppressionPrefV2;
-	}
-
-	set deepFilterNoiseSuppression(value: boolean) {
-		this.deepFilterNoiseSuppressionPrefV2 = value;
-	}
-
-	get deepFilterNoiseSuppressionLevel(): number {
-		return this.deepFilterNoiseSuppressionLevelPrefV2;
-	}
-
-	set deepFilterNoiseSuppressionLevel(value: number) {
-		this.deepFilterNoiseSuppressionLevelPrefV2 = Math.max(0, Math.min(100, value));
-	}
-
 	get screenShareContentHint(): ScreenShareContentHint {
 		return this.screenShareContentHintPrefV2;
 	}
@@ -763,20 +733,8 @@ class VoiceSettings {
 		return this.echoCancellation;
 	}
 
-	getNoiseSuppression(): boolean {
-		return this.noiseSuppression;
-	}
-
 	getAutoGainControl(): boolean {
 		return this.autoGainControl;
-	}
-
-	getDeepFilterNoiseSuppression(): boolean {
-		return this.deepFilterNoiseSuppression;
-	}
-
-	getDeepFilterNoiseSuppressionLevel(): number {
-		return this.deepFilterNoiseSuppressionLevel;
 	}
 
 	getVoiceProcessingMode(): VoiceProcessingMode {
@@ -1069,12 +1027,10 @@ class VoiceSettings {
 		if (validated.inputVolume !== undefined) this.inputVolume = validated.inputVolume;
 		if (validated.outputVolume !== undefined) this.outputVolume = validated.outputVolume;
 		if (validated.echoCancellation !== undefined) this.echoCancellation = validated.echoCancellation;
-		if (validated.noiseSuppression !== undefined) this.noiseSuppression = validated.noiseSuppression;
 		if (validated.autoGainControl !== undefined) this.autoGainControl = validated.autoGainControl;
-		if (validated.deepFilterNoiseSuppression !== undefined)
-			this.deepFilterNoiseSuppression = validated.deepFilterNoiseSuppression;
-		if (validated.deepFilterNoiseSuppressionLevel !== undefined)
-			this.deepFilterNoiseSuppressionLevel = validated.deepFilterNoiseSuppressionLevel;
+		if (validated.noiseSuppressionBackend !== undefined)
+			this.noiseSuppressionBackend = validated.noiseSuppressionBackend;
+		if (validated.stereoMicrophone !== undefined) this.stereoMicrophone = validated.stereoMicrophone;
 		if (validated.voiceProcessingMode !== undefined) this.voiceProcessingMode = validated.voiceProcessingMode;
 		if (validated.cameraResolution !== undefined) this.cameraResolution = validated.cameraResolution;
 		if (validated.mirrorCamera !== undefined) this.mirrorCamera = validated.mirrorCamera;
@@ -1195,13 +1151,13 @@ class VoiceSettings {
 			inputVolume: clampVoiceVolumePercent(data.inputVolume ?? this.inputVolume),
 			outputVolume: clampVoiceVolumePercent(data.outputVolume ?? this.outputVolume),
 			echoCancellation: data.echoCancellation ?? this.echoCancellation,
-			noiseSuppression: data.noiseSuppression ?? this.noiseSuppression,
 			autoGainControl: data.autoGainControl ?? this.autoGainControl,
-			deepFilterNoiseSuppression: data.deepFilterNoiseSuppression ?? this.deepFilterNoiseSuppression,
-			deepFilterNoiseSuppressionLevel: Math.max(
-				0,
-				Math.min(100, data.deepFilterNoiseSuppressionLevel ?? this.deepFilterNoiseSuppressionLevel),
-			),
+			noiseSuppressionBackend:
+				data.noiseSuppressionBackend === undefined
+					? this.noiseSuppressionBackend
+					: validateNoiseSuppressionBackend(data.noiseSuppressionBackend),
+			stereoMicrophone:
+				data.stereoMicrophone === undefined ? this.stereoMicrophone : validateStereoMicrophone(data.stereoMicrophone),
 			voiceProcessingMode,
 			cameraResolution,
 			mirrorCamera: data.mirrorCamera ?? this.mirrorCamera,

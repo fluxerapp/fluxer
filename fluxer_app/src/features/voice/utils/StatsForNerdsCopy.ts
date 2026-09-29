@@ -32,6 +32,7 @@ import {
 	getNativeAudioBridgeStats,
 	getNativeAudioCaptureDiagnosticState,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import {readNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {getRecentScreenShares} from '@app/features/voice/utils/ScreenShareLifecycleLog';
 import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
@@ -277,10 +278,8 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		inputVolume: VoiceSettings.getInputVolume(),
 		outputVolume: VoiceSettings.getOutputVolume(),
 		echoCancellation: VoiceSettings.getEchoCancellation(),
-		noiseSuppression: VoiceSettings.getNoiseSuppression(),
 		autoGainControl: VoiceSettings.getAutoGainControl(),
-		deepFilterNoiseSuppression: VoiceSettings.getDeepFilterNoiseSuppression(),
-		deepFilterNoiseSuppressionLevel: VoiceSettings.getDeepFilterNoiseSuppressionLevel(),
+		noiseSuppressionBackend: readNoiseSuppressionBackend(),
 		voiceProcessingMode: VoiceSettings.getVoiceProcessingMode(),
 		vadThreshold: VoiceSettings.getVadThreshold(),
 		vadAutoSensitivity: VoiceSettings.getVadAutoSensitivity(),
@@ -497,10 +496,8 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 		},
 		audio: {
 			echoCancellation: VoiceSettings.echoCancellation,
-			noiseSuppression: VoiceSettings.noiseSuppression,
 			autoGainControl: VoiceSettings.autoGainControl,
-			deepFilterNoiseSuppression: VoiceSettings.deepFilterNoiseSuppression,
-			deepFilterNoiseSuppressionLevel: VoiceSettings.deepFilterNoiseSuppressionLevel,
+			noiseSuppressionBackend: readNoiseSuppressionBackend(),
 			processingMode: VoiceSettings.voiceProcessingMode,
 		},
 		screenShareSettings: {

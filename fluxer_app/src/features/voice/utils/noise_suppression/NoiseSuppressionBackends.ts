@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	VOICE_NOISE_SUPPRESSION_BACKENDS,
-	type VoiceNoiseSuppressionBackend,
-} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+export const VOICE_NOISE_SUPPRESSION_BACKENDS = [
+	'none',
+	'standard',
+	'gate',
+	'speex',
+	'rnnoise',
+	'gtcrn',
+	'deep_filter',
+] as const;
 
-export type {VoiceNoiseSuppressionBackend};
-export {VOICE_NOISE_SUPPRESSION_BACKENDS};
+export type VoiceNoiseSuppressionBackend = (typeof VOICE_NOISE_SUPPRESSION_BACKENDS)[number];
 
 export type NoiseSuppressionEngine = 'passthrough' | 'constraint' | 'worklet' | 'deep_filter';
 

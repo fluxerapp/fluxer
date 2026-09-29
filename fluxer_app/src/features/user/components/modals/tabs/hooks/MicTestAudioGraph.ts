@@ -31,9 +31,7 @@ interface CreateMicTestAudioGraphOptions {
 	playbackTarget: AudioNode;
 	playbackDelaySeconds: number;
 	deepFilter: boolean;
-	deepFilterNoiseReductionLevel: number;
 	workletBackend: NoiseSuppressionWorkletBackend | null;
-	suppressionStrength: number;
 }
 
 export async function createMicTestAudioGraph({
@@ -44,9 +42,7 @@ export async function createMicTestAudioGraph({
 	playbackTarget,
 	playbackDelaySeconds,
 	deepFilter,
-	deepFilterNoiseReductionLevel,
 	workletBackend,
-	suppressionStrength,
 }: CreateMicTestAudioGraphOptions): Promise<MicTestAudioGraph> {
 	const source = audioContext.createMediaStreamSource(new MediaStream([sourceTrack]));
 	const inputGainNode = audioContext.createGain();
@@ -59,10 +55,7 @@ export async function createMicTestAudioGraph({
 	let monitorHead: AudioNode = inputGainNode;
 	try {
 		if (deepFilter) {
-			deepFilterChain = await buildDeepFilterAudioChain({
-				audioContext,
-				noiseReductionLevel: deepFilterNoiseReductionLevel,
-			});
+			deepFilterChain = await buildDeepFilterAudioChain(audioContext);
 			inputGainNode.connect(deepFilterChain.inputDestination);
 			suppressedSource = audioContext.createMediaStreamSource(new MediaStream([deepFilterChain.processedTrack]));
 			monitorHead = suppressedSource;
@@ -70,7 +63,6 @@ export async function createMicTestAudioGraph({
 			workletChain = await buildNoiseSuppressionWorkletChain({
 				audioContext,
 				backend: workletBackend,
-				suppressionStrength,
 			});
 			inputGainNode.connect(workletChain.inputDestination);
 			suppressedSource = audioContext.createMediaStreamSource(new MediaStream([workletChain.processedTrack]));

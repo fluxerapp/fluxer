@@ -6,7 +6,6 @@ import {
 	detectWasmSimdSupport,
 	resolveNoiseSuppressionContextSampleRate,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
-import {resolveNoiseGateTuning} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionGateTuning';
 import type * as NoiseSuppressionWorkletAssets from '@app/features/voice/utils/noise_suppression/NoiseSuppressionWorkletAssets';
 import {
 	NOISE_SUPPRESSION_WORKLET_PROCESSOR_NAMES,
@@ -14,6 +13,9 @@ import {
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionWorkletTypes';
 
 const logger = new Logger('NoiseSuppressionChain');
+const NOISE_GATE_OPEN_THRESHOLD_DB = -41.6;
+const NOISE_GATE_CLOSE_THRESHOLD_DB = -47.6;
+const NOISE_GATE_HOLD_MS = 180;
 export const NOISE_SUPPRESSION_STARTUP_TIMEOUT_MS = 8000;
 
 export interface NoiseSuppressionWorkletChain {
@@ -30,7 +32,6 @@ interface WorkletSignal {
 export interface NoiseSuppressionWorkletOptions {
 	audioContext: AudioContext;
 	backend: NoiseSuppressionWorkletBackend;
-	suppressionStrength: number;
 	signal?: AbortSignal;
 	onRuntimeFailure?: (error: Error) => void;
 }
@@ -88,15 +89,13 @@ function resolveWasmUrl(
 
 function buildProcessorOptions(
 	backend: NoiseSuppressionWorkletBackend,
-	suppressionStrength: number,
 	wasmBinary: ArrayBuffer | null,
 ): Record<string, unknown> {
 	if (backend === 'gate') {
-		const tuning = resolveNoiseGateTuning(suppressionStrength);
 		return {
-			openThreshold: tuning.openThreshold,
-			closeThreshold: tuning.closeThreshold,
-			holdMs: tuning.holdMs,
+			openThreshold: NOISE_GATE_OPEN_THRESHOLD_DB,
+			closeThreshold: NOISE_GATE_CLOSE_THRESHOLD_DB,
+			holdMs: NOISE_GATE_HOLD_MS,
 			maxChannels: 1,
 		};
 	}
@@ -257,7 +256,7 @@ async function installWorklet(
 	options: NoiseSuppressionWorkletOptions,
 	signal: AbortSignal,
 ): Promise<void> {
-	const {backend, suppressionStrength} = options;
+	const {backend} = options;
 	const assets = await awaitStartupStep(
 		import('@app/features/voice/utils/noise_suppression/NoiseSuppressionWorkletAssets'),
 		signal,
@@ -280,7 +279,7 @@ async function installWorklet(
 		channelCount: 1,
 		channelCountMode: 'explicit',
 		channelInterpretation: 'speakers',
-		processorOptions: buildProcessorOptions(backend, suppressionStrength, wasmBinary),
+		processorOptions: buildProcessorOptions(backend, wasmBinary),
 	});
 	resources.node = node;
 	await awaitWorkletReady(node, backend, signal);

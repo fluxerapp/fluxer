@@ -12,6 +12,7 @@ import type {
 	ScreenShareEncoderMode,
 	ScreenShareScalabilityModePreference,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import {getActiveInputDeviceLabel, type VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 
 type VoiceSettingsPatch = Partial<{
@@ -21,10 +22,9 @@ type VoiceSettingsPatch = Partial<{
 	inputVolume: number;
 	outputVolume: number;
 	echoCancellation: boolean;
-	noiseSuppression: boolean;
 	autoGainControl: boolean;
-	deepFilterNoiseSuppression: boolean;
-	deepFilterNoiseSuppressionLevel: number;
+	noiseSuppressionBackend: VoiceNoiseSuppressionBackend | null;
+	stereoMicrophone: boolean | null;
 	voiceProcessingMode: VoiceProcessingMode;
 	cameraResolution: CameraResolution;
 	mirrorCamera: boolean;
@@ -84,10 +84,9 @@ interface VoiceSettingsUpdateOptions {
 const MICROPHONE_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 	'inputDeviceId',
 	'echoCancellation',
-	'noiseSuppression',
 	'autoGainControl',
-	'deepFilterNoiseSuppression',
-	'deepFilterNoiseSuppressionLevel',
+	'noiseSuppressionBackend',
+	'stereoMicrophone',
 	'voiceProcessingMode',
 ];
 const CAMERA_BACKGROUND_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
