@@ -126,7 +126,7 @@ The private representation of the current account, returned by [Get current user
 | premium_will_cancel<sup>3</sup> | boolean | Whether subscription premium will cancel at the billing boundary |
 | premium_billing_cycle<sup>3</sup> | ?string | The premium billing cycle, or null |
 | premium_lifetime_sequence<sup>3</sup> | ?integer | The lifetime premium sequence, or null |
-| premium_grace_ends_at<sup>12</sup> | ?ISO8601 timestamp | The end of the post-cancellation grace interval, or null when the account is not in grace |
+| premium_grace_ends_at<sup>12</sup> | ?ISO8601 timestamp | The end of grace access after premium_until passes, or null when no grace is recorded |
 | premium_discriminator<sup>13</sup> | boolean | Whether the current discriminator was selected under a premium entitlement |
 | premium_badge_hidden<sup>3</sup> | boolean | Whether the premium badge is hidden from the public profile |
 | premium_badge_masked<sup>3</sup> | boolean | Whether a lifetime badge is presented as an ordinary subscription badge |

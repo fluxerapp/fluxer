@@ -463,6 +463,22 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 										</Trans>
 									);
 								})()
+							) : gracePeriodInfo.isPaymentRecovery ? (
+								(() => {
+									const graceDate = graceEndDate ? getFormattedLongDate(graceEndDate, locale) : undefined;
+									return (
+										<Trans comment="Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.">
+											Your renewal payment failed but{' '}
+											<PerksButton
+												onClick={scrollToPerks}
+												data-flx="app.plutonium.subscription-card.perks-button.scroll-to-perks--9"
+											/>{' '}
+											stay active until{' '}
+											<strong data-flx="app.plutonium.subscription-card.strong--16">{graceDate}</strong>. Update your
+											payment method before then to keep your subscription.
+										</Trans>
+									);
+								})()
 							) : isInGracePeriod ? (
 								(() => {
 									const graceDate = graceEndDate ? getFormattedLongDate(graceEndDate, locale) : undefined;
@@ -844,7 +860,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 										<Trans comment="Billing button that starts subscription cancellation.">Cancel subscription</Trans>
 									</Button>
 								)}
-								{isInGracePeriod && (
+								{isInGracePeriod && !gracePeriodInfo.isPaymentRecovery && (
 									<Button
 										variant="danger"
 										onClick={handleEndPremiumGracePeriod}

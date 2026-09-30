@@ -2471,7 +2471,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "Linux 데스크톱 업데이트가 있습니다. 이 시스템에 맞는 패키지 형식을 선택하면 {productName}이 파일을 로컬에 저장합니다."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:684
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "더 저렴한 가격으로 이용하실 수 있습니다. 변경 사항은 <0>{listPriceEffectiveDate}</0>부터 적용되며 다른 내용은 변경되지 않습니다."
 
@@ -3487,19 +3487,19 @@ msgstr "정렬 컨트롤은 더 넓은 화면에서만 사용할 수 있습니�
 msgid "All"
 msgstr "전체"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:524
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "모든 <0/>을 <1>월 {effectiveMonthlyPrice}</1>에 이용할 수 있습니다."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:546
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "모든 <0/>을 <1>연 {effectiveYearlyPrice}</1>에 이용할 수 있습니다."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:567
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:583
 msgid "All <0/> included with your subscription."
 msgstr "구독에 모든 <0/>이 포함됩니다."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:514
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:530
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "모든 <0/>을 평생 이용할 수 있습니다. 청구도 갱신도 없습니다."
 
@@ -6469,7 +6469,7 @@ msgid "Cancel import"
 msgstr "가져오기 취소"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:837
 msgid "Cancel price change"
 msgstr "가격 변경 취소"
 
@@ -6484,13 +6484,13 @@ msgid "Cancel request"
 msgstr "요청 취소"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:829
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:845
 msgid "Cancel scheduled switch"
 msgstr "예약된 전환 취소"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:844
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
@@ -6501,7 +6501,7 @@ msgid "Cancel subscription?"
 msgstr "구독을 취소하시겠어요?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:663
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "현재 가격으로 변경하려면 예약된 변경을 취소하세요."
 
@@ -6511,7 +6511,7 @@ msgid "Cancel upload"
 msgstr "업로드 취소"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:825
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:841
 msgid "Cancel yearly upgrade"
 msgstr "연간 업그레이드 취소"
 
@@ -6530,7 +6530,7 @@ msgstr "취소 예정"
 msgid "Cancellation"
 msgstr "에코 제거"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:501
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:517
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "<0>{cancelDate}</0>에 취소됩니다. <1/>은 그때까지 계속 유지됩니다."
 
@@ -10872,7 +10872,7 @@ msgstr "직접 지정…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:750
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:766
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "고객 포털"
@@ -13877,7 +13877,7 @@ msgid "End date"
 msgstr "종료일"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
 msgid "End grace now"
 msgstr "유예 기간 지금 종료"
 
@@ -16347,7 +16347,7 @@ msgstr "선물: 곧 만료"
 msgid "Gift: grace period (still have access)"
 msgstr "선물: 유예 기간(계속 이용 가능)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:502
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "<0/>을 선물로 받아 <1>{giftEndDate}</1>까지 이용할 수 있습니다. 자동 갱신되지 않습니다. 선물 코드를 더 사용하면 기간을 연장할 수 있습니다."
 
@@ -19297,8 +19297,8 @@ msgstr "마우스 왼쪽 버튼"
 msgid "Left tooltip"
 msgstr "왼쪽 툴팁"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:539
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:561
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
 msgid "Legacy rate"
 msgstr "기존 요금"
 
@@ -21339,11 +21339,11 @@ msgstr "월간"
 msgid "Monthly {monthlyPrice}"
 msgstr "월 {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:631
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "월별 요금 청구는 <0>{pendingChangeDate}</0>에 시작됩니다."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:624
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:640
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "<0>{pendingChangeDate}</0>부터 월별 요금이 청구됩니다. 첫 월별 요금: {pendingInitialPriceLabel}. 이후 월별 갱신 요금: 월 {pendingRecurringPriceLabel}."
 
@@ -22269,12 +22269,12 @@ msgid "New password"
 msgstr "새 비밀번호"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:595
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:611
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "새 가격이 <0>{pendingChangeDate}</0>에 적용될 예정입니다."
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:589
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:605
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "새 가격이 <0>{pendingChangeDate}</0>에 적용될 예정입니다. 이후 갱신 금액은 {pendingTargetPriceLabel}입니다."
 
@@ -26152,7 +26152,7 @@ msgstr "반응"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:746
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "재활성화"
@@ -26375,7 +26375,7 @@ msgstr "내 계정으로 사용"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:719
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
 msgid "Redeem gift code"
 msgstr "선물 코드 사용"
@@ -27147,7 +27147,7 @@ msgstr "갱신 임계값(일)"
 msgid "Renew window (days)"
 msgstr "갱신 기간(일)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "<0>{renewalDate}</0>에 갱신됩니다."
 
@@ -27896,8 +27896,8 @@ msgstr "창 복원"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:754
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
 msgid "Resubscribe"
 msgstr "재구독"
 
@@ -32521,7 +32521,7 @@ msgid "Switch price"
 msgstr "가격 변경"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:806
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:822
 msgid "Switch to {listPriceNewLabel}"
 msgstr "{listPriceNewLabel}(으)로 전환"
 
@@ -32546,7 +32546,7 @@ msgstr "직접 입력으로 전환"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:789
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
 msgid "Switch to monthly"
 msgstr "월간으로 전환"
 
@@ -32615,7 +32615,7 @@ msgstr "2열로 전환"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:785
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:801
 msgid "Switch to yearly"
 msgstr "연간으로 전환"
 
@@ -39015,15 +39015,15 @@ msgstr "연간 {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "연간 선물"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:618
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:634
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "<0>{pendingChangeDate}</0>에 연간 업그레이드가 예정되어 있습니다."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:603
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "<0>{pendingChangeDate}</0>에 연간 업그레이드가 예정되어 있습니다. 첫 연간 요금: {pendingCreditPriceLabel} 크레딧 적용 후 {pendingInitialPriceLabel}. 향후 연간 갱신 요금: 연간 {pendingRecurringPriceLabel}."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:610
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:626
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "<0>{pendingChangeDate}</0>에 연간 업그레이드가 예정되어 있습니다. 첫 연간 요금: {pendingInitialPriceLabel}. 향후 연간 갱신 요금: 연간 {pendingRecurringPriceLabel}."
 
@@ -40231,6 +40231,11 @@ msgstr "현재 지역"
 msgid "Your registration needs an extra anti-spam check before you can continue."
 msgstr "가입을 계속하려면 추가 스팸 방지 확인이 필요합니다."
 
+#. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
+msgstr "갱신 결제에 실패했지만 <0/>은 <1>{graceDate}</1>까지 계속 활성 상태입니다. 구독을 유지하려면 그 전에 결제 수단을 업데이트하세요."
+
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
@@ -40252,7 +40257,7 @@ msgstr "회원님의 스트림은 계속 라이브 상태입니다"
 msgid "Your subscription can't move to the new price right now."
 msgstr "지금은 구독을 새 가격으로 변경할 수 없습니다."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "구독이 종료되었지만 <0/>은 <1>{graceDate}</1>까지 계속 활성 상태입니다. 구독 기록을 유지하려면 그 전에 다시 구독하세요."
 
@@ -40281,7 +40286,7 @@ msgstr "구독이 월간 결제로 전환되었습니다."
 msgid "Your subscription has been switched to yearly billing."
 msgstr "구독이 연간 결제로 전환되었습니다."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:528
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "구독은 활성 상태이지만 혜택이 일시적으로 중지되었습니다."
 
@@ -40301,7 +40306,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "구독이 {effectiveDate}에 새로운 가격으로 변경됩니다."
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:666
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "구독은 <0>{cancelDate}</0>에 종료됩니다. 현재 가격은 {listPriceNewLabel}입니다. 다시 활성화하면 여기서 전환할 수 있습니다."
 

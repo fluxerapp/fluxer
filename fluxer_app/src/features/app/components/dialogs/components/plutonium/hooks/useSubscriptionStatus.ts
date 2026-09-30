@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
+import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
 import type {User} from '@app/features/user/models/User';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
@@ -12,6 +13,7 @@ export interface GracePeriodInfo {
 	isExpired: boolean;
 	graceEndDate: Date | null;
 	showExpiredState: boolean;
+	isPaymentRecovery: boolean;
 }
 
 export interface SubscriptionStatusInfo {
@@ -82,13 +84,25 @@ export const useSubscriptionStatus = (
 	const isGiftSubscription = Boolean(!billingCycle && hasPaidPremium && !isVisionary && premiumUntil);
 	const gracePeriodInfo = useMemo((): GracePeriodInfo => {
 		if (isVisionary) {
-			return {isInGracePeriod: false, isExpired: false, graceEndDate: null, showExpiredState: false};
+			return {
+				isInGracePeriod: false,
+				isExpired: false,
+				graceEndDate: null,
+				showExpiredState: false,
+				isPaymentRecovery: false,
+			};
 		}
 		const explicitGraceEnd = premiumGraceEndsAt ?? null;
 		const expiryDate = premiumUntil ? new Date(premiumUntil) : null;
-		const graceEndDate = explicitGraceEnd ?? (expiryDate ? new Date(expiryDate.getTime() + 3 * MS_PER_DAY) : null);
+		const graceEndDate = expiryDate ? getPremiumGraceEndDate(expiryDate, explicitGraceEnd) : explicitGraceEnd;
 		if (!graceEndDate) {
-			return {isInGracePeriod: false, isExpired: false, graceEndDate: null, showExpiredState: false};
+			return {
+				isInGracePeriod: false,
+				isExpired: false,
+				graceEndDate: null,
+				showExpiredState: false,
+				isPaymentRecovery: false,
+			};
 		}
 		const now = new Date();
 		const anchorDate = expiryDate ?? graceEndDate;
@@ -96,8 +110,9 @@ export const useSubscriptionStatus = (
 		const isInGracePeriod = (!expiryDate || now > expiryDate) && now <= graceEndDate;
 		const isExpired = now > graceEndDate;
 		const showExpiredState = isExpired && now <= expiredStateEndDate;
-		return {isInGracePeriod, isExpired, graceEndDate, showExpiredState};
-	}, [premiumUntil, premiumGraceEndsAt, isVisionary]);
+		const isPaymentRecovery = isInGracePeriod && explicitGraceEnd != null && billingCycle != null;
+		return {isInGracePeriod, isExpired, graceEndDate, showExpiredState, isPaymentRecovery};
+	}, [premiumUntil, premiumGraceEndsAt, isVisionary, billingCycle]);
 	const {isInGracePeriod, isExpired: isFullyExpired, showExpiredState} = gracePeriodInfo;
 	const isPremium = useDeveloperOverride
 		? hasPaidPremium && !isFullyExpired && !perksDisabled

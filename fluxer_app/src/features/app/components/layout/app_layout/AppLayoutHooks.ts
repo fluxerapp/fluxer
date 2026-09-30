@@ -21,6 +21,7 @@ import * as NotificationUtils from '@app/features/notification/utils/Notificatio
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
 import PremiumState from '@app/features/premium/state/PremiumState';
+import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
 import {canServiceStripeSubscriptions, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import Nagbar from '@app/features/ui/state/Nagbar';
@@ -117,14 +118,11 @@ export const useNagbarConditions = (): NagbarConditions => {
 		if (!showPremium || !canServiceSubscription) return false;
 		if (nagbarState.forceHidePremiumGracePeriod) return false;
 		if (nagbarState.forcePremiumGracePeriod) return true;
-		if (!user?.premiumUntil || user.premiumType === 2 || premiumWillCancel) return false;
+		if (!user?.premiumUntil || !user.premiumGraceEndsAt || !user.premiumBillingCycle || user.premiumType === 2) {
+			return false;
+		}
 		const now = new Date();
-		const expiryDate = new Date(user.premiumUntil);
-		const gracePeriodMs = 3 * MS_PER_DAY;
-		const graceEndDate = user.premiumGraceEndsAt
-			? new Date(user.premiumGraceEndsAt)
-			: new Date(expiryDate.getTime() + gracePeriodMs);
-		const isInGracePeriod = now > expiryDate && now <= graceEndDate;
+		const isInGracePeriod = now > new Date(user.premiumUntil) && now <= new Date(user.premiumGraceEndsAt);
 		return isInGracePeriod && !nagbarState.premiumGracePeriodDismissed;
 	})();
 	const canShowPremiumExpired = (() => {
@@ -134,11 +132,8 @@ export const useNagbarConditions = (): NagbarConditions => {
 		if (!user?.premiumUntil || user.premiumType === 2 || premiumWillCancel) return false;
 		const now = new Date();
 		const expiryDate = new Date(user.premiumUntil);
-		const gracePeriodMs = 3 * MS_PER_DAY;
 		const expiredStateDurationMs = 30 * MS_PER_DAY;
-		const graceEndDate = user.premiumGraceEndsAt
-			? new Date(user.premiumGraceEndsAt)
-			: new Date(expiryDate.getTime() + gracePeriodMs);
+		const graceEndDate = getPremiumGraceEndDate(expiryDate, user.premiumGraceEndsAt);
 		const expiredStateEndDate = new Date(graceEndDate.getTime() + expiredStateDurationMs);
 		const isExpired = now > graceEndDate;
 		const showExpiredState = isExpired && now <= expiredStateEndDate;

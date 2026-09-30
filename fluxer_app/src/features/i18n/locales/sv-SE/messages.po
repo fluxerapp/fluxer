@@ -2471,7 +2471,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "En uppdatering av datorappen för Linux är tillgänglig. Välj paketformatet för det här systemet så sparar {productName} paketet lokalt."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:684
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "Ett lägre pris är tillgängligt. Bytet börjar gälla den <0>{listPriceEffectiveDate}</0> och ändrar inget annat."
 
@@ -3487,19 +3487,19 @@ msgstr "Justeringskontroller är bara tillgängliga på bredare skärmar"
 msgid "All"
 msgstr "Alla"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:524
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "Alla <0/> för <1>{effectiveMonthlyPrice}/månad</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:546
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "Alla <0/> för <1>{effectiveYearlyPrice}/år</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:567
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:583
 msgid "All <0/> included with your subscription."
 msgstr "Alla <0/> ingår i ditt abonnemang."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:514
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:530
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Alla <0/>, för alltid. Ingen fakturering, inga förnyelser."
 
@@ -6469,7 +6469,7 @@ msgid "Cancel import"
 msgstr "Avbryt import"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:837
 msgid "Cancel price change"
 msgstr "Avbryt prisförändring"
 
@@ -6484,13 +6484,13 @@ msgid "Cancel request"
 msgstr "Avbryt förfrågan"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:829
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:845
 msgid "Cancel scheduled switch"
 msgstr "Avbryt schemalagt byte"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:844
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
@@ -6501,7 +6501,7 @@ msgid "Cancel subscription?"
 msgstr "Säga upp abonnemanget?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:663
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "Avbryt den schemalagda ändringen för att istället byta till den aktuella prisnivån."
 
@@ -6511,7 +6511,7 @@ msgid "Cancel upload"
 msgstr "Avbryt uppladdning"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:825
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:841
 msgid "Cancel yearly upgrade"
 msgstr "Avbryt byte till årsabonnemang"
 
@@ -6530,7 +6530,7 @@ msgstr "Avbryter"
 msgid "Cancellation"
 msgstr "Ekoeliminering"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:501
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:517
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "Avslutas den <0>{cancelDate}</0>. <1/> är aktiva fram till dess."
 
@@ -10872,7 +10872,7 @@ msgstr "Anpassad…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:750
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:766
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "Kundportal"
@@ -13877,7 +13877,7 @@ msgid "End date"
 msgstr "Slutdatum"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
 msgid "End grace now"
 msgstr "Avsluta respitperioden nu"
 
@@ -16347,7 +16347,7 @@ msgstr "Present: går snart ut"
 msgid "Gift: grace period (still have access)"
 msgstr "Present: respitperiod (har fortfarande åtkomst)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:502
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "<0/> som present till <1>{giftEndDate}</1>. Förnyas inte automatiskt. Lös in fler presentkoder för att förlänga."
 
@@ -19297,8 +19297,8 @@ msgstr "Vänster musknapp"
 msgid "Left tooltip"
 msgstr "Verktygstips till vänster"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:539
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:561
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
 msgid "Legacy rate"
 msgstr "Äldre pris"
 
@@ -21339,11 +21339,11 @@ msgstr "Månadsvis"
 msgid "Monthly {monthlyPrice}"
 msgstr "Månatligen {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:631
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "Månatlig fakturering startar den <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:624
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:640
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "Månatlig fakturering startar den <0>{pendingChangeDate}</0>. Första månadsavgiften: {pendingInitialPriceLabel}. Framtida månatliga förnyelser: {pendingRecurringPriceLabel}/månad."
 
@@ -22269,12 +22269,12 @@ msgid "New password"
 msgstr "Nytt lösenord"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:595
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:611
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Nytt pris planerat till <0>{pendingChangeDate}</0>."
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:589
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:605
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "Nytt pris börjar gälla den <0>{pendingChangeDate}</0>. Därefter kostar varje förnyelse {pendingTargetPriceLabel}."
 
@@ -26152,7 +26152,7 @@ msgstr "Reaktioner"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:746
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "Återaktivera"
@@ -26375,7 +26375,7 @@ msgstr "Lös in själv"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:719
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
 msgid "Redeem gift code"
 msgstr "Lös in presentkod"
@@ -27147,7 +27147,7 @@ msgstr "Förnyelsetröskel (dagar)"
 msgid "Renew window (days)"
 msgstr "Förnyelsefönster (dagar)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "Förnyas den <0>{renewalDate}.</0>"
 
@@ -27896,8 +27896,8 @@ msgstr "Återställ fönster"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:754
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
 msgid "Resubscribe"
 msgstr "Teckna abonnemang igen"
 
@@ -32521,7 +32521,7 @@ msgid "Switch price"
 msgstr "Byt pris"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:806
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:822
 msgid "Switch to {listPriceNewLabel}"
 msgstr "Byt till {listPriceNewLabel}"
 
@@ -32546,7 +32546,7 @@ msgstr "Byt till direktinmatning"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:789
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
 msgid "Switch to monthly"
 msgstr "Byt till månadsvis"
 
@@ -32615,7 +32615,7 @@ msgstr "Växla till två kolumner"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:785
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:801
 msgid "Switch to yearly"
 msgstr "Byt till årsvis"
 
@@ -39015,15 +39015,15 @@ msgstr "Årligen {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "Present för ett år"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:618
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:634
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Byte till årsabonnemang planerat till <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:603
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Byte till årsabonnemang planerat till <0>{pendingChangeDate}</0>. Första årsavgiften: {pendingInitialPriceLabel} efter ett tillgodo på {pendingCreditPriceLabel}. Därefter kostar årliga förnyelser {pendingRecurringPriceLabel}/år."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:610
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:626
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Byte till årsabonnemang planerat till <0>{pendingChangeDate}</0>. Första årsavgiften: {pendingInitialPriceLabel}. Därefter kostar årliga förnyelser {pendingRecurringPriceLabel}/år."
 
@@ -40231,6 +40231,11 @@ msgstr "din region"
 msgid "Your registration needs an extra anti-spam check before you can continue."
 msgstr "Din registrering behöver en extra antispamkontroll innan du kan fortsätta."
 
+#. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
+msgstr "Din förnyelsebetalning misslyckades, men <0/> är aktiva till <1>{graceDate}</1>. Uppdatera din betalningsmetod före dess för att behålla ditt abonnemang."
+
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
@@ -40252,7 +40257,7 @@ msgstr "Din sändning är fortfarande live"
 msgid "Your subscription can't move to the new price right now."
 msgstr "Priset för ditt abonnemang kan inte ändras just nu."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "Ditt abonnemang har avslutats, men <0/> är aktiva till <1>{graceDate}</1>. Teckna abonnemang igen före dess för att behålla din abonnemangshistorik."
 
@@ -40281,7 +40286,7 @@ msgstr "Ditt abonnemang har ändrats till månadsfakturering."
 msgid "Your subscription has been switched to yearly billing."
 msgstr "Ditt abonnemang har ändrats till årsfakturering."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:528
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "Ditt abonnemang är aktivt men förmånerna är tillfälligt pausade."
 
@@ -40301,7 +40306,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "Det nya priset för ditt abonnemang börjar gälla den {effectiveDate}."
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:666
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "Ditt abonnemang avslutas fortfarande den <0>{cancelDate}</0>. Det aktuella priset är nu {listPriceNewLabel}. Om du återaktiverar abonnemanget kan du byta till det priset härifrån."
 

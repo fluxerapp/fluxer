@@ -327,7 +327,7 @@ The entitlement the account holds from billing alone. Nothing here reacts to the
 | premium_will_cancel | boolean | Whether the subscription is set to cancel at the end of the current period |
 | premium_billing_cycle | ?string | [Billing cycle](#billing-cycles), or null when no recurring cycle is known |
 | premium_lifetime_sequence<sup>3</sup> | ?integer | The Visionary sequence number, or null without lifetime entitlement |
-| premium_grace_ends_at | ?ISO8601 timestamp | The time the post-cancellation grace access ends, or null when no grace is active |
+| premium_grace_ends_at | ?ISO8601 timestamp | The end of grace access after a failed renewal, a subscription end or a store grace period, or null if none is recorded |
 | has_active_paid_premium<sup>4</sup> | boolean | Whether paid premium access is active before local disabling |
 | is_visionary | boolean | Whether the entitlement is lifetime Visionary access |
 | has_ever_purchased | boolean | Whether the account has ever completed a premium purchase |
@@ -372,7 +372,7 @@ The effective state decides whether premium features are available. It differs f
 | premium_will_cancel<sup>3</sup> | boolean | Whether the subscription is set to cancel at the end of the current period |
 | premium_billing_cycle<sup>3</sup> | ?string | [Billing cycle](#billing-cycles) |
 | premium_lifetime_sequence<sup>3</sup> | ?integer | The Visionary sequence number, or null without lifetime entitlement |
-| premium_grace_ends_at<sup>3</sup> | ?ISO8601 timestamp | The time the post-cancellation grace access ends, or null when no grace is active |
+| premium_grace_ends_at<sup>3</sup> | ?ISO8601 timestamp | The end of grace access after a failed renewal, a subscription end or a store grace period, or null if none is recorded |
 | premium_enabled_override<sup>4</sup> | boolean | Whether an operator premium override applies to the account |
 | premium_purchase_disabled<sup>4</sup> | boolean | Whether purchases are disabled for the account |
 | premium_perks_disabled<sup>4</sup> | boolean | Whether the account has the perks-disabled flag |
@@ -739,14 +739,16 @@ The operation creates an externally hosted billing portal session that returns t
 
 <RouteHeader method="POST" path="/v1/premium/grace/end" />
 
-Ends an active post-cancellation grace period immediately. Emits a [User Update](/gateway/events/#user-update) Gateway event when a grace period was ended.
+Ends an active grace period immediately. Emits a [User Update](/gateway/events/#user-update) Gateway event when a grace period was ended.
 
 The operation is idempotent and reports success without changing anything when no grace deadline is recorded, when the account holds a lifetime entitlement, and when the account's premium end has not yet passed.
 
-The window this operation ends runs to `premium_grace_ends_at`. [Receive Stripe webhook](/http-api/billing/#receive-stripe-webhook) records that deadline when a subscription is deleted for an account whose stored premium type is subscription.
+The window this operation ends runs to `premium_grace_ends_at`. [Receive Stripe webhook](/http-api/billing/#receive-stripe-webhook) records that deadline when a renewal payment fails and when a subscription is deleted, for an account whose stored premium type is subscription.
 
 | Condition | Recorded deadline |
 | --- | --- |
+| A renewal payment fails | The start of the unpaid period plus 7 days for a monthly plan or 14 days for a yearly plan |
+| The subscription was cancelled for non-payment | The same deadline, never extended |
 | The subscription ran to its recorded premium end | The subscription end plus 3 days |
 | The subscription ended early | The subscription end itself, which leaves no window for this route to close |
 | The early cancellation is already recorded | Nothing |

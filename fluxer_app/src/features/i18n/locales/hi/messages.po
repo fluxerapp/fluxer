@@ -2471,7 +2471,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "लिनक्स डेस्कटॉप के लिए एक अपडेट उपलब्ध है। इस सिस्टम के लिए पैकेज फ़ॉर्मैट चुनें और {productName} उसे आपके डिवाइस पर सेव कर लेगा।"
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:684
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "कम कीमत उपलब्ध है। स्विच <0>{listPriceEffectiveDate}</0> से लागू होगा और इससे कुछ और नहीं बदलेगा।"
 
@@ -3487,19 +3487,19 @@ msgstr "अलाइनमेंट कंट्रोल केवल चौड
 msgid "All"
 msgstr "सभी"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:524
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "सभी <0/> <1>{effectiveMonthlyPrice}/माह</1> में।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:546
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "सभी <0/> <1>{effectiveYearlyPrice}/साल</1> में।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:567
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:583
 msgid "All <0/> included with your subscription."
 msgstr "आपकी सदस्यता के साथ सभी <0/> शामिल हैं।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:514
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:530
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "सभी <0/>, हमेशा के लिए। कोई बिलिंग नहीं, कोई नवीनीकरण नहीं।"
 
@@ -6469,7 +6469,7 @@ msgid "Cancel import"
 msgstr "इंपोर्ट रद्द करें"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:837
 msgid "Cancel price change"
 msgstr "कीमत बदलना रद्द करें"
 
@@ -6484,13 +6484,13 @@ msgid "Cancel request"
 msgstr "अनुरोध रद्द करें"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:829
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:845
 msgid "Cancel scheduled switch"
 msgstr "निर्धारित स्विच रद्द करें"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:844
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
@@ -6501,7 +6501,7 @@ msgid "Cancel subscription?"
 msgstr "सदस्यता रद्द करें?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:663
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "निर्धारित बदलाव को रद्द करें और इसके बजाय वर्तमान मूल्य पर जाएँ।"
 
@@ -6511,7 +6511,7 @@ msgid "Cancel upload"
 msgstr "अपलोड रद्द करें"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:825
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:841
 msgid "Cancel yearly upgrade"
 msgstr "सालाना अपग्रेड रद्द करें"
 
@@ -6530,7 +6530,7 @@ msgstr "रद्द किया जा रहा है"
 msgid "Cancellation"
 msgstr "इको कैंसलेशन"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:501
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:517
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "<0>{cancelDate}</0> को रद्द हो जाएगा। <1/> तब तक सक्रिय रहेंगे।"
 
@@ -10872,7 +10872,7 @@ msgstr "कस्टम…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:750
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:766
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "ग्राहक पोर्टल"
@@ -13877,7 +13877,7 @@ msgid "End date"
 msgstr "अंतिम तिथि"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
 msgid "End grace now"
 msgstr "ग्रेस पीरियड अभी खत्म करें"
 
@@ -16347,7 +16347,7 @@ msgstr "उपहार: जल्द समाप्त होगा"
 msgid "Gift: grace period (still have access)"
 msgstr "उपहार: ग्रेस पीरियड (अभी भी एक्सेस है)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:502
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "<1>{giftEndDate}</1> तक <0/> उपहार में मिला है। अपने आप रिन्यू नहीं होगा। अवधि बढ़ाने के लिए और उपहार कोड रिडीम करें।"
 
@@ -19297,8 +19297,8 @@ msgstr "माउस का बायाँ बटन"
 msgid "Left tooltip"
 msgstr "बायां टूलटिप"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:539
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:561
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
 msgid "Legacy rate"
 msgstr "पुरानी दर"
 
@@ -21339,11 +21339,11 @@ msgstr "मासिक"
 msgid "Monthly {monthlyPrice}"
 msgstr "मासिक {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:631
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "<0>{pendingChangeDate}</0> से मासिक बिलिंग शुरू होगी।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:624
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:640
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "<0>{pendingChangeDate}</0> से मासिक बिलिंग शुरू होगी। पहला मासिक शुल्क: {pendingInitialPriceLabel}। भविष्य के मासिक नवीनीकरण: {pendingRecurringPriceLabel}/माह।"
 
@@ -22269,12 +22269,12 @@ msgid "New password"
 msgstr "नया पासवर्ड"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:595
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:611
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "नई कीमत <0>{pendingChangeDate}</0> के लिए शेड्यूल की गई है।"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:589
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:605
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "नई कीमत <0>{pendingChangeDate}</0> के लिए शेड्यूल की गई है। उसके बाद हर नवीनीकरण {pendingTargetPriceLabel} का होगा।"
 
@@ -26152,7 +26152,7 @@ msgstr "रिएक्शन"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:746
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "फिर से सक्रिय करें"
@@ -26375,7 +26375,7 @@ msgstr "अपने लिए रिडीम करें"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:719
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
 msgid "Redeem gift code"
 msgstr "उपहार कोड रिडीम करें"
@@ -27147,7 +27147,7 @@ msgstr "नवीनीकरण सीमा (दिन)"
 msgid "Renew window (days)"
 msgstr "नवीनीकरण विंडो (दिन)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "<0>{renewalDate}</0> को रिन्यू होगा।"
 
@@ -27896,8 +27896,8 @@ msgstr "विंडो को पहले जैसा करें"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:754
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
 msgid "Resubscribe"
 msgstr "फिर से सदस्यता लें"
 
@@ -32521,7 +32521,7 @@ msgid "Switch price"
 msgstr "कीमत बदलें"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:806
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:822
 msgid "Switch to {listPriceNewLabel}"
 msgstr "{listPriceNewLabel} पर स्विच करें"
 
@@ -32546,7 +32546,7 @@ msgstr "सीधे इनपुट पर स्विच करें"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:789
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
 msgid "Switch to monthly"
 msgstr "मासिक पर स्विच करें"
 
@@ -32615,7 +32615,7 @@ msgstr "दो कॉलम पर स्विच करें"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:785
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:801
 msgid "Switch to yearly"
 msgstr "सालाना पर स्विच करें"
 
@@ -39015,15 +39015,15 @@ msgstr "सालाना {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "सालाना उपहार"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:618
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:634
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "<0>{pendingChangeDate}</0> के लिए सालाना अपग्रेड शेड्यूल किया गया है।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:603
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "<0>{pendingChangeDate}</0> के लिए सालाना अपग्रेड शेड्यूल किया गया है। पहला सालाना शुल्क: {pendingCreditPriceLabel} क्रेडिट के बाद {pendingInitialPriceLabel}। आगे के सालाना रिन्यूअल: {pendingRecurringPriceLabel}/वर्ष।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:610
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:626
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "<0>{pendingChangeDate}</0> के लिए सालाना अपग्रेड शेड्यूल किया गया है। पहला सालाना शुल्क: {pendingInitialPriceLabel}। आगे के सालाना रिन्यूअल: {pendingRecurringPriceLabel}/वर्ष।"
 
@@ -40231,6 +40231,11 @@ msgstr "आपका क्षेत्र"
 msgid "Your registration needs an extra anti-spam check before you can continue."
 msgstr "जारी रखने से पहले आपके रजिस्ट्रेशन के लिए एक अतिरिक्त एंटी-स्पैम जाँच की ज़रूरत है।"
 
+#. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
+msgstr "आपका नवीनीकरण भुगतान विफल हो गया, लेकिन <0/> <1>{graceDate}</1> तक सक्रिय रहेगी। अपनी सदस्यता बनाए रखने के लिए इससे पहले अपना भुगतान का तरीका अपडेट करें।"
+
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
@@ -40252,7 +40257,7 @@ msgstr "आपकी स्ट्रीम अभी भी लाइव है"
 msgid "Your subscription can't move to the new price right now."
 msgstr "आपकी सदस्यता अभी नई कीमत पर नहीं जा सकती।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "आपकी सदस्यता समाप्त हो गई है, लेकिन <0/> <1>{graceDate}</1> तक सक्रिय रहेगी। अपनी सब्सक्राइबर हिस्ट्री बनाए रखने के लिए इससे पहले फिर से सदस्यता लें।"
 
@@ -40281,7 +40286,7 @@ msgstr "आपकी सदस्यता मासिक बिलिंग �
 msgid "Your subscription has been switched to yearly billing."
 msgstr "आपकी सदस्यता सालाना बिलिंग पर स्विच कर दी गई है।"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:528
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "आपकी सदस्यता सक्रिय है, लेकिन पर्क कुछ समय के लिए रोक दिए गए हैं।"
 
@@ -40301,7 +40306,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "आपकी सदस्यता {effectiveDate} को नई कीमत पर चली जाएगी।"
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:666
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "आपकी सदस्यता अब भी <0>{cancelDate}</0> को खत्म होगी। मौजूदा कीमत अब {listPriceNewLabel} है। अगर आप इसे फिर से सक्रिय करते हैं, तो यहीं से उस पर स्विच कर सकते हैं।"
 

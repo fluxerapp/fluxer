@@ -120,7 +120,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		.string()
 		.nullable()
 		.describe(
-			'ISO8601 timestamp at which the post-cancel grace period ends. Set when the subscription is fully canceled in Stripe; perks remain active and the original premium_since is restored on resubscribe until this timestamp passes. Null when not in grace.',
+			'ISO8601 timestamp at which grace access ends after premium_until passes: after a failed renewal payment (7 days from the renewal for monthly plans, 14 for yearly), after a subscription ends (3 days), or during an App Store or Google Play grace period. Perks stay active and the original premium_since is kept on resubscribe until this timestamp passes. Null when no grace is recorded, in which case access lasts 3 days after premium_until.',
 		),
 	premium_discriminator: z
 		.boolean()

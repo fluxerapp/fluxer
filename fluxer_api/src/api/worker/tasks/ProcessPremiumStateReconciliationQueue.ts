@@ -75,6 +75,9 @@ function buildStripePremiumRepairPatch(user: User, subscription: Stripe.Subscrip
 	if (user.premiumWillCancel !== premiumWillCancel) {
 		patch.premium_will_cancel = premiumWillCancel;
 	}
+	if (user.premiumGraceEndsAt != null) {
+		patch.premium_grace_ends_at = null;
+	}
 	if (premiumBillingCycle && user.premiumBillingCycle !== premiumBillingCycle) {
 		patch.premium_billing_cycle = premiumBillingCycle;
 	}
@@ -293,7 +296,9 @@ async function reconcileUserPremiumStateFromStripe(params: {userId: UserID; stri
 			const patch: Partial<UserRow> = {};
 			let effectivePremiumUntil = getEffectivePremiumUntil(user);
 			const paidThrough = await getPaidThroughFromSubscriptionInvoices(stripe, mostRecentTerminalSubscription);
-			if (mostRecentTerminalSubscription?.ended_at && user.premiumUntil) {
+			const terminalSubscriptionIsCurrent =
+				user.stripeSubscriptionId == null || mostRecentTerminalSubscription?.id === user.stripeSubscriptionId;
+			if (mostRecentTerminalSubscription?.ended_at && user.premiumUntil && terminalSubscriptionIsCurrent) {
 				const subscriptionEndedAt = new Date(mostRecentTerminalSubscription.ended_at * 1000);
 				const entitlementEnd =
 					paidThrough && paidThrough.getTime() > subscriptionEndedAt.getTime() ? paidThrough : subscriptionEndedAt;
@@ -314,7 +319,10 @@ async function reconcileUserPremiumStateFromStripe(params: {userId: UserID; stri
 					premiumGiftExtensionEndsAt: user.premiumGiftExtensionEndsAt,
 				});
 			}
-			const hasFutureLocalEntitlement = effectivePremiumUntil != null && Date.now() <= effectivePremiumUntil.getTime();
+			const graceEndsAt = patch.premium_grace_ends_at ?? user.premiumGraceEndsAt;
+			const hasFutureLocalEntitlement =
+				(effectivePremiumUntil != null && Date.now() <= effectivePremiumUntil.getTime()) ||
+				(graceEndsAt != null && Date.now() <= graceEndsAt.getTime());
 			if (hasFutureLocalEntitlement) {
 				if (user.premiumWillCancel !== true) {
 					patch.premium_will_cancel = true;

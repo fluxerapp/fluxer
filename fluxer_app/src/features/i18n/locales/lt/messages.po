@@ -2471,7 +2471,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "Prieinamas „Linux“ darbalaukio atnaujinimas. Pasirinkite šios sistemos paketų formatą, o programa „{productName}“ išsaugos jį jūsų įrenginyje."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:684
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "Galima rinktis mažesnę kainą. Pakeitimai įsigalios <0>{listPriceEffectiveDate}</0>, ir niekas kitas nesikeis."
 
@@ -3487,19 +3487,19 @@ msgstr "Lygiavimo valdikliai pasiekiami tik platesniuose ekranuose"
 msgid "All"
 msgstr "Visi"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:524
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "Viskas <0/> už <1>{effectiveMonthlyPrice}/mėn.</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:546
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "Viskas <0/> už <1>{effectiveYearlyPrice}/metus</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:567
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:583
 msgid "All <0/> included with your subscription."
 msgstr "Viskas <0/> įskaičiuota į jūsų prenumeratą."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:514
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:530
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Viskas <0/>, amžinai. Jokių sąskaitų, jokių atnaujinimų."
 
@@ -6469,7 +6469,7 @@ msgid "Cancel import"
 msgstr "Atšaukti importavimą"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:837
 msgid "Cancel price change"
 msgstr "Atšaukti kainos pakeitimą"
 
@@ -6484,13 +6484,13 @@ msgid "Cancel request"
 msgstr "Atšaukti užklausą"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:829
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:845
 msgid "Cancel scheduled switch"
 msgstr "Atšaukti suplanuotą keitimą"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:844
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
@@ -6501,7 +6501,7 @@ msgid "Cancel subscription?"
 msgstr "Atšaukti prenumeratą?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:663
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "Atšaukti suplanuotą pakeitimą ir pereiti prie dabartinės kainos."
 
@@ -6511,7 +6511,7 @@ msgid "Cancel upload"
 msgstr "Atšaukti įkėlimą"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:825
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:841
 msgid "Cancel yearly upgrade"
 msgstr "Atšaukti metinį atnaujinimą"
 
@@ -6530,7 +6530,7 @@ msgstr "Atšaukiama"
 msgid "Cancellation"
 msgstr "Aido slopinimas"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:501
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:517
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "Atšaukiama <0>{cancelDate}</0>. <1/> liks aktyvios iki tol."
 
@@ -10872,7 +10872,7 @@ msgstr "Pasirinktinis…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:750
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:766
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "Klientų portalas"
@@ -13877,7 +13877,7 @@ msgid "End date"
 msgstr "Pabaigos data"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
 msgid "End grace now"
 msgstr "Baigti lengvatinį laikotarpį dabar"
 
@@ -16347,7 +16347,7 @@ msgstr "Dovana: galiojimas baigsis netrukus"
 msgid "Gift: grace period (still have access)"
 msgstr "Dovana: lengvatinis laikotarpis (vis dar turite prieigą)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:502
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "Dovanota <0/> iki <1>{giftEndDate}</1>. Automatiškai nepratęsiama. Norėdami pratęsti, išpirkite daugiau dovanų kodų."
 
@@ -16920,7 +16920,8 @@ msgstr "Pagalbos centras"
 #. Settings search entry description. One-line summary of what the setting controls.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:102
 msgid "Help center button in the sidebar"
-msgstr "My suggestion:\nPagalbos centro mygtukas šoninėje juostoje"
+msgstr "My suggestion:\n"
+"Pagalbos centro mygtukas šoninėje juostoje"
 
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:348
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
@@ -19297,8 +19298,8 @@ msgstr "Kairysis pelės mygtukas"
 msgid "Left tooltip"
 msgstr "Kairysis patarimas"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:539
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:561
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
 msgid "Legacy rate"
 msgstr "Senasis tarifas"
 
@@ -21339,11 +21340,11 @@ msgstr "Mėnesinis"
 msgid "Monthly {monthlyPrice}"
 msgstr "Mėnesiui {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:631
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "Mėnesinis atsiskaitymas prasidės <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:624
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:640
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "Mėnesinis atsiskaitymas prasidės <0>{pendingChangeDate}</0>. Pirmasis mėnesinis mokestis: {pendingInitialPriceLabel}. Būsimi mėnesiniai atnaujinimai: {pendingRecurringPriceLabel}/mėn."
 
@@ -22269,12 +22270,12 @@ msgid "New password"
 msgstr "Naujas slaptažodis"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:595
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:611
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Nauja kaina numatyta <0>{pendingChangeDate}</0>."
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:589
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:605
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "Nauja kaina numatyta <0>{pendingChangeDate}</0>. Nuo tada atnaujinimai kainuos {pendingTargetPriceLabel}."
 
@@ -26152,7 +26153,7 @@ msgstr "Reakcijos"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:746
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "Suaktyvinti iš naujo"
@@ -26375,7 +26376,7 @@ msgstr "Išpirkti sau"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:719
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
 msgid "Redeem gift code"
 msgstr "Išpirkti dovanos kodą"
@@ -27147,7 +27148,7 @@ msgstr "Atnaujinimo riba (dienos)"
 msgid "Renew window (days)"
 msgstr "Atnaujinimo laikotarpis (dienos)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "Atnaujinama <0>{renewalDate}.</0>"
 
@@ -27896,8 +27897,8 @@ msgstr "Atkurti langą"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:754
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
 msgid "Resubscribe"
 msgstr "Prenumeruoti iš naujo"
 
@@ -32521,7 +32522,7 @@ msgid "Switch price"
 msgstr "Keisti kainą"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:806
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:822
 msgid "Switch to {listPriceNewLabel}"
 msgstr "Pereiti prie {listPriceNewLabel}"
 
@@ -32546,7 +32547,7 @@ msgstr "Perjungti į tiesioginį įvedimą"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:789
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
 msgid "Switch to monthly"
 msgstr "Pereiti prie mėnesinio plano"
 
@@ -32615,7 +32616,7 @@ msgstr "Perjungti į du stulpelius"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:785
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:801
 msgid "Switch to yearly"
 msgstr "Pereiti prie metinio plano"
 
@@ -39015,15 +39016,15 @@ msgstr "Metinis {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "Metinė dovana"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:618
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:634
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Metinis atnaujinimas suplanuotas <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:603
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Metinis atnaujinimas suplanuotas <0>{pendingChangeDate}</0>. Pirmasis metinis mokestis: {pendingInitialPriceLabel} po {pendingCreditPriceLabel} kredito. Būsimi metiniai atnaujinimai: {pendingRecurringPriceLabel} per metus."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:610
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:626
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Metinis atnaujinimas suplanuotas <0>{pendingChangeDate}</0>. Pirmasis metinis mokestis: {pendingInitialPriceLabel}. Būsimi metiniai atnaujinimai: {pendingRecurringPriceLabel} per metus."
 
@@ -40231,6 +40232,11 @@ msgstr "jūsų regionas"
 msgid "Your registration needs an extra anti-spam check before you can continue."
 msgstr "Prieš tęsiant, jūsų registracijai reikalingas papildomas apsaugos nuo brukalų patikrinimas."
 
+#. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
+msgstr "Prenumeratos atnaujinimo mokėjimas nepavyko, bet <0/> liks aktyvios iki <1>{graceDate}</1>. Iki tol atnaujinkite mokėjimo būdą, kad išsaugotumėte prenumeratą."
+
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
@@ -40252,7 +40258,7 @@ msgstr "Jūsų transliacija vis dar aktyvi"
 msgid "Your subscription can't move to the new price right now."
 msgstr "Jūsų prenumeratos šiuo metu negalima perkelti į naują kainą."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "Jūsų prenumerata baigėsi, bet <0/> liks aktyvios iki <1>{graceDate}</1>. Prenumeruokite iš naujo iki tol, kad išsaugotumėte prenumeratoriaus istoriją."
 
@@ -40281,7 +40287,7 @@ msgstr "Jūsų prenumerata pakeista į mėnesinį atsiskaitymą."
 msgid "Your subscription has been switched to yearly billing."
 msgstr "Jūsų prenumerata pakeista į metinį atsiskaitymą."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:528
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "Jūsų prenumerata aktyvi, bet privilegijos laikinai pristabdytos."
 
@@ -40301,7 +40307,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "Jūsų prenumerata į naują kainą persikels {effectiveDate}."
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:666
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "Jūsų prenumerata vis tiek baigsis <0>{cancelDate}</0>. Dabartinė kaina yra {listPriceNewLabel}. Jei aktyvuosite iš naujo, čia galėsite prie jos pereiti."
 
