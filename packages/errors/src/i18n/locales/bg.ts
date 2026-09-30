@@ -163,6 +163,7 @@ const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Откриваемите общности трябва да имат ниво на потвърждение поне „Ниско“.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Един или повече избрани потребители не могат да бъдат добавени към това групово DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Банерът на общността изисква функцията BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Тази функция не може да се превключва.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID на общността трябва да съвпада с общността, която съдържа канала, от който е извлечено посоченото съобщение.",
 	"channels_and_guilds.guild_template_invalid": "Данните на шаблона за общност са невалидни или неправилно форматирани.",

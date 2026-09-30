@@ -163,6 +163,7 @@ const ERROR_I18N_VI_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Cộng đồng có trong danh sách Khám phá phải có mức xác minh tối thiểu là Thấp.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Không thể thêm một hoặc nhiều người dùng đã chọn vào tin nhắn nhóm này.",
 	"channels_and_guilds.guild_banner_requires_feature": "Ảnh bìa cộng đồng yêu cầu tính năng BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Không thể bật/tắt tính năng này.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID cộng đồng phải khớp với cộng đồng chứa kênh mà tin nhắn được tham chiếu được lấy từ đó.",
 	"channels_and_guilds.guild_template_invalid": "Dữ liệu mẫu cộng đồng không hợp lệ hoặc sai định dạng.",

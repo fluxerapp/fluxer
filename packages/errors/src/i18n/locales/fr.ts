@@ -163,6 +163,7 @@ const ERROR_I18N_FR_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Les communautés présentes dans Découverte doivent avoir un niveau de vérification au moins égal à Faible.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Un ou plusieurs utilisateurs sélectionnés ne peuvent pas être ajoutés à ce MP de groupe.",
 	"channels_and_guilds.guild_banner_requires_feature": "La bannière de la communauté nécessite la fonctionnalité BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Cette fonctionnalité ne peut pas être activée ou désactivée.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "L’ID de communauté doit correspondre à la communauté contenant le salon d’où provient le message référencé.",
 	"channels_and_guilds.guild_template_invalid": "Les données du modèle de la communauté sont invalides ou mal formatées.",

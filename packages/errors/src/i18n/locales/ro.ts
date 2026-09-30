@@ -163,6 +163,7 @@ const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Comunitățile listate în Discovery trebuie să aibă un nivel de verificare de cel puțin Scăzut.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Unul sau mai mulți utilizatori selectați nu pot fi adăugați la acest DM de grup.",
 	"channels_and_guilds.guild_banner_requires_feature": "Bannerul comunității necesită funcția BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Această funcție nu poate fi comutată.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID-ul comunității trebuie să corespundă comunității care conține canalul din care a fost preluat mesajul referit.",
 	"channels_and_guilds.guild_template_invalid": "Datele șablonului comunității sunt invalide sau incorect formate.",

@@ -111,6 +111,7 @@ export const DEFAULT_INSTANCE_COMMUNITY: InstanceCommunity = {
 	single_community: false,
 	single_community_guild_id: null,
 	direct_messages_disabled: false,
+	guild_create_access: true,
 };
 
 export function normalizeInstanceCommunity(community?: InstanceCommunity | null): InstanceCommunity {
@@ -402,6 +403,7 @@ class RuntimeConfig {
 					? config.policy.single_community_guild_id
 					: null,
 				direct_messages_disabled: config.policy.direct_messages_disabled,
+				guild_create_access: config.policy.guild_create_access,
 			});
 			this.services = normalizeInstanceServices({
 				gif_enabled: config.policy.services_resolved.gif_enabled,

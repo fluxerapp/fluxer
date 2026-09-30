@@ -163,6 +163,7 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Zajednice za otkrivanje moraju imati barem nisku razinu provjere.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Jedan ili više odabranih korisnika ne može se dodati u ovu grupnu izravnu poruku.",
 	"channels_and_guilds.guild_banner_requires_feature": "Banner zajednice zahtijeva značajku BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Ova se značajka ne može uključiti ni isključiti.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID zajednice mora odgovarati zajednici koja sadrži kanal iz kojeg je dohvaćena referencirana poruka.",
 	"channels_and_guilds.guild_template_invalid": "Podaci predloška zajednice su neispravni ili loše formatirani.",

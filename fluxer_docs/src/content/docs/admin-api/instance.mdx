@@ -298,6 +298,7 @@ Community, direct message, premium and gating policy for the whole deployment.
 | single_community_guild_id | ?string | Guild used as that community, or null before one has been created |
 | direct_messages_disabled | boolean | Whether direct messages are disabled |
 | direct_messages_locked<sup>1</sup> | boolean | Whether the direct message setting is locked against further change |
+| guild_create_access | boolean | Whether every account can create communities, or only accounts granted the `feature_guild_create` limit |
 | premium_mode | string | [Premium mode](#premium-modes) |
 | services | object | Operator overrides for `gif_enabled`, `youtube_enabled`, and `bluesky_enabled`. Each is nullable, and null means no override |
 | services_resolved<sup>2</sup> | object | The same keys as concrete booleans, resolved from the override and the provider's own availability |

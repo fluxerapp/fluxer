@@ -163,6 +163,7 @@ const ERROR_I18N_PT_BR_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "As comunidades exibidas em Descobrir devem ter um nível de verificação de, no mínimo, Baixo.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Um ou mais usuários selecionados não podem ser adicionados a esta conversa em grupo.",
 	"channels_and_guilds.guild_banner_requires_feature": "O banner da comunidade requer o recurso BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Este recurso não pode ser alternado.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "O ID da comunidade deve corresponder à comunidade que contém o canal de onde a mensagem referenciada foi obtida.",
 	"channels_and_guilds.guild_template_invalid": "Os dados do modelo da comunidade são inválidos ou malformados.",

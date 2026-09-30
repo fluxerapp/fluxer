@@ -163,6 +163,7 @@ const ERROR_I18N_RU_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Видимые в каталоге сообщества должны иметь уровень проверки не ниже «Низкий».",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Одного или нескольких выбранных пользователей нельзя добавить в этот групповой чат.",
 	"channels_and_guilds.guild_banner_requires_feature": "Для баннера сообщества требуется функция BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Эту функцию нельзя переключить.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID сообщества должен совпадать с сообществом, которому принадлежит канал, откуда было получено указанное сообщение.",
 	"channels_and_guilds.guild_template_invalid": "Данные шаблона сообщества недействительны или повреждены.",

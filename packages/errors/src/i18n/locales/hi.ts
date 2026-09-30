@@ -163,6 +163,7 @@ const ERROR_I18N_HI_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "डिस्कवरेबल कम्युनिटी का वेरिफ़िकेशन लेवल कम से कम \"कम\" होना चाहिए।",
 	"channels_and_guilds.group_dm_recipients_not_addable": "चुने गए एक या ज़्यादा यूज़र को इस ग्रुप DM में नहीं जोड़ा जा सकता।",
 	"channels_and_guilds.guild_banner_requires_feature": "कम्युनिटी बैनर के लिए BANNER फ़ीचर ज़रूरी है।",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "यह फ़ीचर टॉगल नहीं किया जा सकता।",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "कम्युनिटी ID उसी कम्युनिटी की होनी चाहिए जिसमें वह चैनल है जहाँ से रेफ़रेंस किया गया मैसेज लिया गया था।",
 	"channels_and_guilds.guild_template_invalid": "कम्युनिटी टेम्पलेट डेटा अमान्य है या उसका फ़ॉर्मेट गलत है।",

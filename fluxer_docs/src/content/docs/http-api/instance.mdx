@@ -197,6 +197,7 @@ Whether this deployment runs as one community, and whether direct messages exist
 | single_community | boolean | Whether this deployment runs as one community that every account joins |
 | single_community_guild_id<sup>1</sup> | ?snowflake | The ID of the guild every account joins in single-community mode, or null |
 | direct_messages_disabled | boolean | Whether direct messages and friend requests are disabled for the whole deployment |
+| guild_create_access | boolean | Whether every account can create communities, or only accounts granted the feature_guild_create limit |
 
 <sup>1</sup> The identifier is published only while `single_community` is true and the deployment has designated a community guild
 
@@ -319,6 +320,7 @@ Each key names one limit. A key whose name begins with `feature_` is a feature g
 | feature_custom_notification_sounds | Allow custom notification sounds, in user scope |
 | feature_early_access | Access to beta features, in user scope |
 | feature_global_expressions | Use expressions across all guilds, in user scope |
+| feature_guild_create | Allow community creation when the instance policy disables it, in user scope |
 | feature_higher_video_quality | Access to higher video streaming quality, in user scope |
 | feature_per_guild_profiles | Different profile per guild, in user scope |
 | feature_voice_entrance_sounds | Play a sound when joining voice, in user scope |

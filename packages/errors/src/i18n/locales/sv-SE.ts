@@ -163,6 +163,7 @@ const ERROR_I18N_SV_SE_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Communities som visas i Upptäck måste ha verifieringsnivån Låg eller högre.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "En eller flera av de valda användarna kan inte läggas till i den här grupp-DM:n.",
 	"channels_and_guilds.guild_banner_requires_feature": "En communitybanner kräver funktionen BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Den här funktionen kan inte aktiveras eller inaktiveras.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "Community-ID:t måste avse den community som innehåller kanalen där det refererade meddelandet hämtades.",
 	"channels_and_guilds.guild_template_invalid": "Data för communitymallen är ogiltiga eller felaktigt formaterade.",

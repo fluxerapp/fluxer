@@ -163,6 +163,7 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Communities in Ontdekken moeten minstens het verificatieniveau Laag hebben.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Een of meer geselecteerde gebruikers kunnen niet worden toegevoegd aan deze groeps-DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Een communitybanner vereist de functie BANNER.",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "Deze functie kan niet worden in- of uitgeschakeld.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "De community-ID moet horen bij de community die het kanaal bevat waaruit het betreffende bericht is opgehaald.",
 	"channels_and_guilds.guild_template_invalid": "De gegevens van het communitysjabloon zijn ongeldig of onjuist opgemaakt.",

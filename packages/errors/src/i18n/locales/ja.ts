@@ -163,6 +163,7 @@ const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "「見つける」に掲載されるコミュニティは、認証レベルが「低」以上である必要があります。",
 	"channels_and_guilds.group_dm_recipients_not_addable": "選択したユーザーの一部をこのグループDMに追加できません。",
 	"channels_and_guilds.guild_banner_requires_feature": "コミュニティバナーにはBANNER機能が必要です。",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "この機能は切り替えられません。",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "コミュニティIDは、参照メッセージの取得元チャンネルが属するコミュニティと一致する必要があります。",
 	"channels_and_guilds.guild_template_invalid": "コミュニティテンプレートデータが無効または不正な形式です。",

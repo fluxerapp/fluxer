@@ -159,6 +159,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "คอมมูนิตี้ที่เปิดให้ค้นพบได้ต้องมีระดับการยืนยันอย่างน้อยระดับต่ำ",
 	"channels_and_guilds.group_dm_recipients_not_addable": "ไม่สามารถเพิ่มผู้ใช้ที่เลือกไว้อย่างน้อยหนึ่งคนเข้าแชตกลุ่มนี้ได้",
 	"channels_and_guilds.guild_banner_requires_feature": "แบนเนอร์คอมมูนิตี้ต้องมีฟีเจอร์ BANNER",
+	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	"channels_and_guilds.guild_feature_not_toggleable": "ไม่สามารถเปิดปิดฟีเจอร์นี้ได้",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID คอมมูนิตี้ต้องตรงกับคอมมูนิตี้ที่มีช่องซึ่งดึงข้อความอ้างอิงมา",
 	"channels_and_guilds.guild_template_invalid": "ข้อมูลเทมเพลตคอมมูนิตี้ไม่ถูกต้องหรือมีรูปแบบผิด",
