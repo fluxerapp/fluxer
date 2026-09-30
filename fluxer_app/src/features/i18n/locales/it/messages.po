@@ -2639,7 +2639,7 @@ msgstr "Accedi alle tue informazioni di base del profilo (nome utente, avatar, e
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:61
 msgid "Accessibility"
 msgstr "Accessibilità"
@@ -4706,7 +4706,7 @@ msgstr "Allegati"
 #. Generic tab / section / category label for audio content or settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:255
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:179
 msgid "Audio"
 msgstr "Audio"
 
@@ -6210,7 +6210,7 @@ msgid "California"
 msgstr "California"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
 msgid "Call"
 msgstr "Chiamata"
 
@@ -7088,7 +7088,7 @@ msgid "Channel"
 msgstr "Canale"
 
 #. Fallback name for an unnamed channel in the forward modal destination list. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:78
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:79
 msgid "Channel {id}"
 msgstr "Canale {id}"
 
@@ -7317,7 +7317,7 @@ msgid "Chat font size"
 msgstr "Dimensione carattere chat"
 
 #. Settings search synonym. Refers to the message composer area.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
 msgid "chat input"
 msgstr "campo di inserimento della chat"
 
@@ -8726,7 +8726,7 @@ msgid "Community updated"
 msgstr "Community aggiornata"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:35
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:38
 msgid "Community voice"
 msgstr "Chat vocale della community"
 
@@ -8789,12 +8789,13 @@ msgstr "Completa la verifica richiesta per continuare a usare {productName}."
 msgid "Completely hide your {premiumProductName} badge from other users"
 msgstr "Nascondi completamente il tuo badge {premiumProductName} agli altri utenti"
 
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:134
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:118
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:168
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:218
 msgid "Completing sign-in…"
 msgstr "Accesso in corso…"
 
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:138
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:172
 msgid "Completing your sign-in…"
 msgstr "Completamento dell'accesso…"
 
@@ -8912,8 +8913,8 @@ msgstr "Conferma"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:21
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:15
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:18
 msgid "Confirm before joining voice channels"
 msgstr "Chiedi conferma prima di unirti ai canali vocali"
 
@@ -8952,7 +8953,7 @@ msgstr "Conferma password"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:27
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:398
 msgid "Confirm voice join"
 msgstr "Conferma partecipazione vocale"
@@ -8963,7 +8964,7 @@ msgid "Confirmation"
 msgstr "Conferma"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:46
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Conferma o doppio clic per partecipare alle chat vocali"
 
@@ -9200,7 +9201,7 @@ msgstr "Controlli di sicurezza dei contenuti"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/ui/action_menu/ContextMenu.tsx:23
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:225
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
 msgid "Context menu"
 msgstr "Menu contestuale"
 
@@ -11341,7 +11342,7 @@ msgstr "Delaware"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
 msgid "Delete"
 msgstr "Elimina"
 
@@ -11626,7 +11627,7 @@ msgid "Deleted {duration} of the member's recent message history"
 msgstr "Eliminata la cronologia dei messaggi recenti del membro per un periodo di {duration}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
 msgid "Deleted text"
 msgstr "Testo eliminato"
 
@@ -12028,7 +12029,7 @@ msgid "Different sizes & member counts"
 msgstr "Dimensioni e numero di membri diversi"
 
 #. Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:106
 msgid "Dim strikethrough text"
 msgstr "Attenua il testo barrato"
 
@@ -12043,7 +12044,7 @@ msgstr "Input diretto"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
 msgid "Direct message"
 msgstr "Messaggio diretto"
 
@@ -12480,7 +12481,7 @@ msgid "District of Columbia"
 msgstr "Distretto di Columbia"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:180
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
 msgid "DM"
 msgstr "DM"
 
@@ -12734,6 +12735,16 @@ msgstr "Scarica {productName}"
 #: src/features/connection/components/modals/AddConnectionModal.tsx:330
 msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</1> folder so we can validate the domain."
 msgstr "Scarica <0>fluxer-verification</0> e posizionalo nella tua cartella <1>.well-known</1> per consentirci di convalidare il dominio."
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:98
+msgid "Download app"
+msgstr "Scarica l'app"
+
+#. Settings search entry description. One-line summary of what the setting controls.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:106
+msgid "Download app button in the sidebar"
+msgstr "Scarica l'app"
 
 #. Media context menu action that downloads an audio attachment.
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:122
@@ -13433,7 +13444,7 @@ msgstr "Contenuti incorporati nuovamente visibili"
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/theme_studio/sections/TokenGroups.ts:114
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Emoji"
 msgstr "Emoji"
 
@@ -14681,7 +14692,7 @@ msgid "Failed to clear trusted domains."
 msgstr "Impossibile cancellare i domini attendibili."
 
 #. Short label in the authentication SSO callback page. Keep the tone plain and specific.
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:28
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:30
 msgid "Failed to complete SSO sign-in"
 msgstr "Accesso SSO non riuscito"
 
@@ -15027,7 +15038,7 @@ msgid "Favorite channel"
 msgstr "Aggiungi canale ai preferiti"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:79
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:82
 msgid "Favorite channels"
 msgstr "Canali preferiti"
 
@@ -15800,7 +15811,7 @@ msgstr "Bot amico"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
 msgid "Friends"
 msgstr "Amici"
 
@@ -16145,7 +16156,7 @@ msgstr "Scarica la nuova app {productName}"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
 msgid "GIF"
 msgstr "GIF"
 
@@ -16549,7 +16560,7 @@ msgid "Graphics"
 msgstr "Grafica"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
 msgid "Gray text"
 msgstr "Testo grigio"
 
@@ -16896,9 +16907,19 @@ msgstr "Ciao, {username}! Lieti di averti qui."
 msgid "Help"
 msgstr "Aiuto"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:94
+msgid "Help button"
+msgstr "Pulsante Aiuto"
+
 #. Short label in the sidebar navigation help button.
 #: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:27
 msgid "Help center"
+msgstr "Centro assistenza"
+
+#. Settings search entry description. One-line summary of what the setting controls.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:102
+msgid "Help center button in the sidebar"
 msgstr "Centro assistenza"
 
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:348
@@ -17035,7 +17056,7 @@ msgid "Hide join messages"
 msgstr "Nascondi i messaggi di ingresso"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:47
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:50
 msgid "Hide keyboard hints"
 msgstr "Nascondi i suggerimenti per la tastiera"
 
@@ -18721,7 +18742,7 @@ msgstr "Partecipa alla videochiamata"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:67
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:34
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
 msgstr "Partecipa alla chat vocale"
@@ -18764,6 +18785,7 @@ msgstr "Passa da un canale non letto all'altro"
 msgid "Jump between unread channels with mentions"
 msgstr "Passa tra i canali non letti con menzioni"
 
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:121
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:75
 msgid "Jump straight to the app to continue."
 msgstr "Passa all'app per continuare."
@@ -18980,7 +19002,7 @@ msgid "Keyboard mode"
 msgstr "Modalità tastiera"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:59
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:62
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "Suggerimenti per le scorciatoie da tastiera nei tooltip"
 
@@ -20094,7 +20116,7 @@ msgstr "Segna come letto il primo canale nella posta in arrivo"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
 msgid "Markdown"
 msgstr "Markdown"
 
@@ -20644,7 +20666,7 @@ msgstr "Menzionare questo ruolo?"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:648
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
 msgid "Mentions"
 msgstr "Menzioni"
 
@@ -21158,7 +21180,7 @@ msgid "Missing client_id"
 msgstr "client_id mancante"
 
 #. SSO callback page error shown when the SSO callback is missing code or state parameters.
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:24
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:26
 msgid "Missing SSO code. Sign in again."
 msgstr "Codice SSO mancante. Accedi di nuovo."
 
@@ -21756,7 +21778,7 @@ msgstr "silenziato"
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
 msgstr "Silenziato"
@@ -21779,7 +21801,7 @@ msgstr "Microfono disattivato dai moderatori"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
 msgid "Muted channels"
 msgstr "Canali silenziati"
 
@@ -21992,7 +22014,7 @@ msgid "Narrates only the channel you're viewing. Narration follows you between c
 msgstr "Legge solo il canale che stai visualizzando. La lettura ti segue tra i canali."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
 msgid "Narration"
 msgstr "Narrazione"
 
@@ -22057,12 +22079,12 @@ msgid "Need an account?"
 msgstr "Ti serve un account?"
 
 #. Settings search synonym. Proper name of the optional cat sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
 msgid "Neko"
 msgstr "Neko"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:63
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:66
 msgid "Neko cat that chases your cursor"
 msgstr "Gatto Neko che insegue il cursore"
 
@@ -23560,6 +23582,8 @@ msgid "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} 
 msgstr "Apri {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} → {macosScreenRecordingPermissionName}, quindi autorizza {productName}. Se {productName2} è già abilitato, chiudi completamente e riavvia {productName3} affinché macOS applichi l’autorizzazione."
 
 #. Button label that opens the desktop app. productName is the app name.
+#. Button that hands SSO sign-in back to the mobile app. productName is the app name.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:34
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "Apri {productName}"
@@ -24945,7 +24969,7 @@ msgstr "Fissa questo messaggio al canale in modo che tutti possano vederlo."
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice stats field label (mobile lobby). Shows current latency in ms.
 #. Voice stats field label (mobile voice lobby). Shows current latency in ms.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:184
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:118
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:86
 msgid "Ping"
@@ -25165,7 +25189,7 @@ msgid "Popped out"
 msgstr "In finestra separata"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:204
 msgid "Popup"
 msgstr "Pop-up"
 
@@ -26139,7 +26163,7 @@ msgid "Reactivate subscription"
 msgstr "Riattiva abbonamento"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
 msgid "Read aloud"
 msgstr "Leggi ad alta voce"
 
@@ -26156,7 +26180,7 @@ msgstr "Leggi la cronologia dei messaggi"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:177
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
 msgid "Read messages"
 msgstr "Leggi messaggi"
 
@@ -26630,7 +26654,7 @@ msgstr "Ricorda dimensioni e posizione della finestra"
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:200
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
 msgstr "Rimuovi"
@@ -27321,7 +27345,7 @@ msgid "Require a passkey as your second factor"
 msgstr "Richiedi una passkey come secondo fattore"
 
 #. Short label for an advanced voice-channel navigation preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:17
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:20
 msgid "Require double-click to join voice channels"
 msgstr "Richiedi doppio clic per unirti ai canali vocali"
 
@@ -29578,7 +29602,7 @@ msgid "Sending malware or dangerous links"
 msgstr "Invio di malware o link pericolosi"
 
 #. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:54
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:55
 msgid "Sending messages is disabled in this community"
 msgstr "L'invio di messaggi è disabilitato in questa community"
 
@@ -30120,7 +30144,7 @@ msgstr "Scorciatoia"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:55
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:58
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:370
 msgid "Shortcut badges"
 msgstr "Badge scorciatoie"
@@ -30280,7 +30304,9 @@ msgid "Show delete button"
 msgstr "Mostra pulsante elimina"
 
 #. Short label for an advanced media button preference.
+#. Toggle label and settings search entry for showing the download app button in the sidebar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
 msgid "Show download button"
 msgstr "Mostra pulsante download"
 
@@ -30322,7 +30348,7 @@ msgid "Show favorite button"
 msgstr "Mostra pulsante preferiti"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:87
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:90
 msgid "Show favorites throughout the app"
 msgstr "Mostra i preferiti in tutta l'app"
 
@@ -30349,6 +30375,11 @@ msgstr "Mostra indicatore GIF"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show GIFs button"
 msgstr "Mostra pulsante GIF"
+
+#. Toggle label and settings search entry for showing the help center button in the sidebar.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
+msgid "Show help center button"
+msgstr "Mostra il pulsante del centro assistenza"
 
 #. Switch label in the community-folder settings modal. When on, the folder icon is shown in the sidebar while the folder is collapsed.
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:77
@@ -30565,7 +30596,7 @@ msgid "Show stickers in expression autocomplete"
 msgstr "Mostra gli sticker nel completamento automatico delle espressioni"
 
 #. Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:110
 msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "Mostra il testo barrato in Markdown con un colore leggermente attenuato."
 
@@ -31008,7 +31039,7 @@ msgid "Slowmode"
 msgstr "Modalità lenta"
 
 #. Short label under a destination row in the forward modal while slowmode blocks sending. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:73
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:74
 msgid "Slowmode · wait {remaining}"
 msgstr "Modalità lenta · attendi {remaining}"
 
@@ -31559,7 +31590,7 @@ msgstr "Spettatori - {count}"
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:85
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
 msgid "Speech"
 msgstr "Voce"
 
@@ -31670,12 +31701,12 @@ msgstr "Pulsanti con icona quadrata"
 msgid "SSO is required to access this workspace."
 msgstr "Per accedere a quest'area di lavoro è richiesto l'SSO."
 
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:105
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:139
 msgid "SSO sign-in failed"
 msgstr "Accesso SSO non riuscito"
 
 #. SSO callback page error shown when the SSO sign-in timed out before the callback arrived.
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:20
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:22
 msgid "SSO sign-in timed out. Try again."
 msgstr "Accesso SSO scaduto. Riprova."
 
@@ -31714,7 +31745,7 @@ msgid "Star animation"
 msgstr "Animazione stella"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:83
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:86
 msgid "Starred channels"
 msgstr "Canali preferiti"
 
@@ -31791,7 +31822,7 @@ msgstr "Ricomincia"
 msgid "Start recording"
 msgstr "Avvia registrazione"
 
-#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:592
+#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:582
 msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> to narrow down results."
 msgstr "Inizia le ricerche con <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> per restringere i risultati."
 
@@ -31831,7 +31862,7 @@ msgid "Startup"
 msgstr "Avvio"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:75
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:78
 msgid "Static Neko"
 msgstr "Neko statico"
 
@@ -32038,7 +32069,7 @@ msgid "Still indexing — check back in a moment"
 msgstr "Indicizzazione in corso. Riprova tra un momento"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:74
 msgid "Still Neko"
 msgstr "Neko immobile"
 
@@ -32067,7 +32098,7 @@ msgid "Stop mic test"
 msgstr "Interrompi test del microfono"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:67
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:70
 msgid "Stop Neko from chasing your cursor while keeping it draggable and interactive."
 msgstr "Impedisci a Neko di inseguire il cursore, mantenendolo trascinabile e interattivo."
 
@@ -32259,14 +32290,14 @@ msgid "Streaming privacy on"
 msgstr "Privacy streaming attiva"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
 msgid "Strike through"
 msgstr "Barrato"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/lexical/composer/SelectionFormattingToolbar.tsx:72
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:107
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
 msgid "Strikethrough"
 msgstr "Barrato"
 
@@ -33074,7 +33105,7 @@ msgstr "Inviaci un SMS dal tuo telefono"
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:419
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
 msgid "Text-to-speech"
 msgstr "Sintesi vocale"
 
@@ -34133,7 +34164,7 @@ msgid "This member isn't connected to voice anymore."
 msgstr "Questo membro non è più connesso alla chat vocale."
 
 #. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:68
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:69
 msgid "This message can only be forwarded to age-restricted channels"
 msgstr "Questo messaggio può essere inoltrato solo a canali con restrizioni d'età"
 
@@ -34766,7 +34797,7 @@ msgid "Toolbar"
 msgstr "Barra degli strumenti"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:51
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:54
 msgid "Tooltip shortcuts"
 msgstr "Scorciatoie per i suggerimenti"
 
@@ -35080,7 +35111,7 @@ msgid "Try sending your message again."
 msgstr "Prova a inviare di nuovo il messaggio."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
 msgid "TTS"
 msgstr "TTS"
 
@@ -35277,7 +35308,7 @@ msgstr "Ventiquattro ore"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:39
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:42
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:406
 msgid "Two clicks"
 msgstr "Due clic"
@@ -36044,7 +36075,7 @@ msgstr "non letto"
 #. Tab label in the inbox popout filtering to channels with unread messages.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:30
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
 msgid "Unread"
 msgstr "Non letti"
 
@@ -37866,7 +37897,7 @@ msgstr "Indicatori visivi che mostrano lo stato dell'utente, renderizzati usando
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
 #: src/features/channel/utils/ChannelUtils.tsx:31
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
 msgid "Voice"
 msgstr "Voce"
 
@@ -37961,7 +37992,7 @@ msgstr "Canale vocale"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:23
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:402
 msgid "Voice channel confirmation"
 msgstr "Conferma canale vocale"
@@ -37972,7 +38003,7 @@ msgid "Voice channel full"
 msgstr "Canale vocale pieno"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:22
 msgid "Voice channel join behavior"
 msgstr "Comportamento di accesso ai canali vocali"
 
@@ -38099,7 +38130,7 @@ msgstr "Annullato"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:378
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:181
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
 msgstr "Volume"
 
@@ -39508,12 +39539,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "Per modificare l'email da qui, devi avere accesso a quella attuale. Usa la verifica telefonica se disponibile o contatta il supporto."
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:64
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "Per allegare file in questo canale, devi avere il permesso \"{attachFilesPermissionLabel}\""
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:58
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:59
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "Per incorporare link in questo canale, ti serve l'autorizzazione \"{embedLinksPermissionLabel}\""
 

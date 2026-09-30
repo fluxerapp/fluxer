@@ -2639,7 +2639,7 @@ msgstr "Få åtkomst till din grundläggande profilinformation (användarnamn, a
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:61
 msgid "Accessibility"
 msgstr "Tillgänglighet"
@@ -4706,7 +4706,7 @@ msgstr "Bilagor"
 #. Generic tab / section / category label for audio content or settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:255
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:179
 msgid "Audio"
 msgstr "Ljud"
 
@@ -6210,7 +6210,7 @@ msgid "California"
 msgstr "Kalifornien"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
 msgid "Call"
 msgstr "Samtal"
 
@@ -7088,7 +7088,7 @@ msgid "Channel"
 msgstr "Kanal"
 
 #. Fallback name for an unnamed channel in the forward modal destination list. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:78
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:79
 msgid "Channel {id}"
 msgstr "Kanal {id}"
 
@@ -7317,7 +7317,7 @@ msgid "Chat font size"
 msgstr "Teckenstorlek i chatt"
 
 #. Settings search synonym. Refers to the message composer area.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
 msgid "chat input"
 msgstr "chattfält"
 
@@ -8726,7 +8726,7 @@ msgid "Community updated"
 msgstr "Communityn uppdaterad"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:35
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:38
 msgid "Community voice"
 msgstr "Röstchatt i communityn"
 
@@ -8789,12 +8789,13 @@ msgstr "Slutför den obligatoriska verifieringen för att fortsätta använda {p
 msgid "Completely hide your {premiumProductName} badge from other users"
 msgstr "Dölj ditt {premiumProductName}-märke helt för andra användare"
 
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:134
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:118
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:168
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:218
 msgid "Completing sign-in…"
 msgstr "Loggar in…"
 
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:138
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:172
 msgid "Completing your sign-in…"
 msgstr "Slutför inloggningen…"
 
@@ -8912,8 +8913,8 @@ msgstr "Bekräfta"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice-channel safety preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:21
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:15
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:24
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:18
 msgid "Confirm before joining voice channels"
 msgstr "Bekräfta innan du går med i röstkanaler"
 
@@ -8952,7 +8953,7 @@ msgstr "Bekräfta lösenord"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:27
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:30
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:398
 msgid "Confirm voice join"
 msgstr "Bekräfta röstanslutning"
@@ -8963,7 +8964,7 @@ msgid "Confirmation"
 msgstr "Bekräftelse"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:46
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Bekräftelse eller dubbelklick för att ansluta till röstkanaler i communities"
 
@@ -9200,7 +9201,7 @@ msgstr "Säkerhetskontroller för innehåll"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/ui/action_menu/ContextMenu.tsx:23
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:225
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
 msgid "Context menu"
 msgstr "Snabbmeny"
 
@@ -11341,7 +11342,7 @@ msgstr "Delaware"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
 msgid "Delete"
 msgstr "Ta bort"
 
@@ -11626,7 +11627,7 @@ msgid "Deleted {duration} of the member's recent message history"
 msgstr "Raderade {duration} av medlemmens senaste meddelandehistorik"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
 msgid "Deleted text"
 msgstr "Borttagen text"
 
@@ -12028,7 +12029,7 @@ msgid "Different sizes & member counts"
 msgstr "Olika storlekar och antal medlemmar"
 
 #. Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:106
 msgid "Dim strikethrough text"
 msgstr "Tona ned genomstruken text"
 
@@ -12043,7 +12044,7 @@ msgstr "Direktinmatning"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
 msgid "Direct message"
 msgstr "Direktmeddelande"
 
@@ -12480,7 +12481,7 @@ msgid "District of Columbia"
 msgstr "District of Columbia"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:180
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
 msgid "DM"
 msgstr "DM"
 
@@ -12734,6 +12735,16 @@ msgstr "Ladda ner {productName}"
 #: src/features/connection/components/modals/AddConnectionModal.tsx:330
 msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</1> folder so we can validate the domain."
 msgstr "Ladda ner <0>fluxer-verification</0> och placera den i din <1>.well-known</1>-mapp så att vi kan validera domänen."
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:98
+msgid "Download app"
+msgstr "Ladda ner app"
+
+#. Settings search entry description. One-line summary of what the setting controls.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:106
+msgid "Download app button in the sidebar"
+msgstr "Ladda ner app-knapp i sidofältet"
 
 #. Media context menu action that downloads an audio attachment.
 #: src/features/ui/action_menu/items/MediaMenuData.tsx:122
@@ -13433,7 +13444,7 @@ msgstr "Inbäddningar visas"
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/theme_studio/sections/TokenGroups.ts:114
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Emoji"
 msgstr "Emoji"
 
@@ -14681,7 +14692,7 @@ msgid "Failed to clear trusted domains."
 msgstr "Kunde inte rensa betrodda domäner."
 
 #. Short label in the authentication SSO callback page. Keep the tone plain and specific.
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:28
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:30
 msgid "Failed to complete SSO sign-in"
 msgstr "Det gick inte att slutföra SSO-inloggningen"
 
@@ -15027,7 +15038,7 @@ msgid "Favorite channel"
 msgstr "Favoritmarkera kanal"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:79
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:82
 msgid "Favorite channels"
 msgstr "Favoritkanaler"
 
@@ -15800,7 +15811,7 @@ msgstr "Vänlig bot"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
 msgid "Friends"
 msgstr "Vänner"
 
@@ -16145,7 +16156,7 @@ msgstr "Skaffa den nya {productName}-appen"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
 msgid "GIF"
 msgstr "GIF"
 
@@ -16549,7 +16560,7 @@ msgid "Graphics"
 msgstr "Grafik"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
 msgid "Gray text"
 msgstr "Grå text"
 
@@ -16896,10 +16907,20 @@ msgstr "Hej, {username}! Kul att du är här."
 msgid "Help"
 msgstr "Hjälp"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:94
+msgid "Help button"
+msgstr "Hjälpknapp"
+
 #. Short label in the sidebar navigation help button.
 #: src/features/app/components/layout/sidebar_nav/HelpButton.tsx:27
 msgid "Help center"
 msgstr "Hjälpcenter"
+
+#. Settings search entry description. One-line summary of what the setting controls.
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:102
+msgid "Help center button in the sidebar"
+msgstr "Hjälpcenterknapp i sidofältet"
 
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:348
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
@@ -17035,7 +17056,7 @@ msgid "Hide join messages"
 msgstr "Dölj meddelanden om att någon har gått med"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:47
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:50
 msgid "Hide keyboard hints"
 msgstr "Dölj tangentbordshjälp"
 
@@ -18721,7 +18742,7 @@ msgstr "Gå med i videosamtal"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:67
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:31
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:34
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:454
 msgid "Join voice"
 msgstr "Gå med i röstchatt"
@@ -18764,6 +18785,7 @@ msgstr "Hoppa mellan olästa kanaler"
 msgid "Jump between unread channels with mentions"
 msgstr "Hoppa mellan olästa kanaler med omnämnanden"
 
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:121
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:75
 msgid "Jump straight to the app to continue."
 msgstr "Gå direkt till appen för att fortsätta."
@@ -18980,7 +19002,7 @@ msgid "Keyboard mode"
 msgstr "Tangentbordsläge"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:59
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:62
 msgid "Keyboard shortcut hints in tooltips"
 msgstr "Visa kortkommandon i verktygstips"
 
@@ -20094,7 +20116,7 @@ msgstr "Markera översta inkorgskanalen som läst"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
 msgid "Markdown"
 msgstr "Markdown"
 
@@ -20644,7 +20666,7 @@ msgstr "Nämn den här rollen?"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:648
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
 msgid "Mentions"
 msgstr "Omnämnanden"
 
@@ -21158,7 +21180,7 @@ msgid "Missing client_id"
 msgstr "client_id saknas"
 
 #. SSO callback page error shown when the SSO callback is missing code or state parameters.
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:24
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:26
 msgid "Missing SSO code. Sign in again."
 msgstr "SSO-kod saknas. Logga in igen."
 
@@ -21756,7 +21778,7 @@ msgstr "tystad"
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
 msgstr "Tystad"
@@ -21779,7 +21801,7 @@ msgstr "Tystad av moderatorer"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
 msgid "Muted channels"
 msgstr "Tystade kanaler"
 
@@ -21992,7 +22014,7 @@ msgid "Narrates only the channel you're viewing. Narration follows you between c
 msgstr "Läser bara upp meddelanden i kanalen du tittar på. Uppläsningen följer dig mellan kanaler."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
 msgid "Narration"
 msgstr "Uppläsning"
 
@@ -22057,12 +22079,12 @@ msgid "Need an account?"
 msgstr "Behöver du ett konto?"
 
 #. Settings search synonym. Proper name of the optional cat sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
 msgid "Neko"
 msgstr "Neko"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:63
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:66
 msgid "Neko cat that chases your cursor"
 msgstr "Neko-katt som jagar din muspekare"
 
@@ -23560,6 +23582,8 @@ msgid "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} 
 msgstr "Öppna {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} → {macosScreenRecordingPermissionName}, och tillåt sedan att {productName} använder skärminspelning. Om {productName2} redan är aktiverat, avsluta och starta om {productName3} helt så att macOS tillämpar behörigheten."
 
 #. Button label that opens the desktop app. productName is the app name.
+#. Button that hands SSO sign-in back to the mobile app. productName is the app name.
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:34
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "Öppna {productName}"
@@ -24945,7 +24969,7 @@ msgstr "Fäst det här meddelandet i kanalen så att alla kan se det."
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice stats field label (mobile lobby). Shows current latency in ms.
 #. Voice stats field label (mobile voice lobby). Shows current latency in ms.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:184
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:118
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:86
 msgid "Ping"
@@ -25165,7 +25189,7 @@ msgid "Popped out"
 msgstr "Visas i separat fönster"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:204
 msgid "Popup"
 msgstr "Popup"
 
@@ -26139,7 +26163,7 @@ msgid "Reactivate subscription"
 msgstr "Återaktivera abonnemang"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
 msgid "Read aloud"
 msgstr "Läs upp"
 
@@ -26156,7 +26180,7 @@ msgstr "Läs meddelandehistorik"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:177
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
 msgid "Read messages"
 msgstr "Läs meddelanden"
 
@@ -26630,7 +26654,7 @@ msgstr "Kom ihåg fönsterstorlek och position"
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:200
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
 msgstr "Ta bort"
@@ -27321,7 +27345,7 @@ msgid "Require a passkey as your second factor"
 msgstr "Kräv en lösennyckel som din andra faktor"
 
 #. Short label for an advanced voice-channel navigation preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:17
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:20
 msgid "Require double-click to join voice channels"
 msgstr "Kräv dubbelklick för att ansluta till röstkanaler"
 
@@ -29578,7 +29602,7 @@ msgid "Sending malware or dangerous links"
 msgstr "Skickar skadlig programvara eller farliga länkar"
 
 #. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:54
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:55
 msgid "Sending messages is disabled in this community"
 msgstr "Det går inte att skicka meddelanden i den här communityn"
 
@@ -30120,7 +30144,7 @@ msgstr "Genväg"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:55
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:58
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:370
 msgid "Shortcut badges"
 msgstr "Märken för kortkommandon"
@@ -30280,7 +30304,9 @@ msgid "Show delete button"
 msgstr "Visa radera-knapp"
 
 #. Short label for an advanced media button preference.
+#. Toggle label and settings search entry for showing the download app button in the sidebar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:76
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
 msgid "Show download button"
 msgstr "Visa nedladdningsknapp"
 
@@ -30322,7 +30348,7 @@ msgid "Show favorite button"
 msgstr "Visa favoritknapp"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:87
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:90
 msgid "Show favorites throughout the app"
 msgstr "Visa favoriter i hela appen"
 
@@ -30349,6 +30375,11 @@ msgstr "Visa GIF-indikator"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show GIFs button"
 msgstr "Visa GIF-knapp"
+
+#. Toggle label and settings search entry for showing the help center button in the sidebar.
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
+msgid "Show help center button"
+msgstr "Visa knappen för hjälpcenter"
 
 #. Switch label in the community-folder settings modal. When on, the folder icon is shown in the sidebar while the folder is collapsed.
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:77
@@ -30565,7 +30596,7 @@ msgid "Show stickers in expression autocomplete"
 msgstr "Visa klistermärken i förslag för uttryck"
 
 #. Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:110
 msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "Visa genomstruken Markdown-text i en något dämpad färg."
 
@@ -31008,7 +31039,7 @@ msgid "Slowmode"
 msgstr "Långsamt läge"
 
 #. Short label under a destination row in the forward modal while slowmode blocks sending. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:73
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:74
 msgid "Slowmode · wait {remaining}"
 msgstr "Långsamt läge · vänta {remaining}"
 
@@ -31559,7 +31590,7 @@ msgstr "Åskådare – {count}"
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:85
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
 msgid "Speech"
 msgstr "Tal"
 
@@ -31670,12 +31701,12 @@ msgstr "Fyrkantiga ikonknappar"
 msgid "SSO is required to access this workspace."
 msgstr "SSO krävs för att komma åt den här arbetsytan."
 
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:105
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:139
 msgid "SSO sign-in failed"
 msgstr "SSO-inloggningen misslyckades"
 
 #. SSO callback page error shown when the SSO sign-in timed out before the callback arrived.
-#: src/features/auth/components/pages/SsoCallbackPage.tsx:20
+#: src/features/auth/components/pages/SsoCallbackPage.tsx:22
 msgid "SSO sign-in timed out. Try again."
 msgstr "SSO-inloggningen tog för lång tid. Försök igen."
 
@@ -31714,7 +31745,7 @@ msgid "Star animation"
 msgstr "Stjärnanimation"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:83
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:86
 msgid "Starred channels"
 msgstr "Stjärnmärkta kanaler"
 
@@ -31791,7 +31822,7 @@ msgstr "Börja om"
 msgid "Start recording"
 msgstr "Starta inspelning"
 
-#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:592
+#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:582
 msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> to narrow down results."
 msgstr "Börja sökningar med <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> för att begränsa resultaten."
 
@@ -31831,7 +31862,7 @@ msgid "Startup"
 msgstr "Start"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:75
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:78
 msgid "Static Neko"
 msgstr "Statisk Neko"
 
@@ -32038,7 +32069,7 @@ msgid "Still indexing — check back in a moment"
 msgstr "Indexerar fortfarande – titta tillbaka om en stund"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:71
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:74
 msgid "Still Neko"
 msgstr "Stillastående Neko"
 
@@ -32067,7 +32098,7 @@ msgid "Stop mic test"
 msgstr "Stoppa mikrofontest"
 
 #. Settings search entry description. One-line summary of what the setting controls.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:67
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:70
 msgid "Stop Neko from chasing your cursor while keeping it draggable and interactive."
 msgstr "Hindra Neko från att jaga muspekaren, men behåll möjligheten att dra och interagera med katten."
 
@@ -32259,14 +32290,14 @@ msgid "Streaming privacy on"
 msgstr "Sekretess vid sändning är på"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
 msgid "Strike through"
 msgstr "Genomstruken text"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/lexical/composer/SelectionFormattingToolbar.tsx:72
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:107
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
 msgid "Strikethrough"
 msgstr "Genomstrykning"
 
@@ -33074,7 +33105,7 @@ msgstr "Sms:a oss från din telefon"
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:419
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
 msgid "Text-to-speech"
 msgstr "Text till tal"
 
@@ -34133,7 +34164,7 @@ msgid "This member isn't connected to voice anymore."
 msgstr "Den här medlemmen är inte längre ansluten till röstkanalen."
 
 #. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:68
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:69
 msgid "This message can only be forwarded to age-restricted channels"
 msgstr "Det här meddelandet kan bara skickas till kanaler med åldersgräns"
 
@@ -34766,7 +34797,7 @@ msgid "Toolbar"
 msgstr "Verktygsfält"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:51
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:54
 msgid "Tooltip shortcuts"
 msgstr "Kortkommandon i verktygstips"
 
@@ -35080,7 +35111,7 @@ msgid "Try sending your message again."
 msgstr "Försök skicka meddelandet igen."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
 msgid "TTS"
 msgstr "TTS"
 
@@ -35277,7 +35308,7 @@ msgstr "24-timmarsformat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:39
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:42
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:406
 msgid "Two clicks"
 msgstr "Två klick"
@@ -36044,7 +36075,7 @@ msgstr "oläst"
 #. Tab label in the inbox popout filtering to channels with unread messages.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:30
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
 msgid "Unread"
 msgstr "Olästa"
 
@@ -37866,7 +37897,7 @@ msgstr "Visuella indikatorer för användarstatus med samma maskerade statusmär
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
 #: src/features/channel/utils/ChannelUtils.tsx:31
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
 msgid "Voice"
 msgstr "Röst"
 
@@ -37961,7 +37992,7 @@ msgstr "Röstkanal"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:23
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:26
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:402
 msgid "Voice channel confirmation"
 msgstr "Bekräftelse av röstkanal"
@@ -37972,7 +38003,7 @@ msgid "Voice channel full"
 msgstr "Röstkanalen är full"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
+#: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:22
 msgid "Voice channel join behavior"
 msgstr "Beteende vid anslutning till röstkanal"
 
@@ -38099,7 +38130,7 @@ msgstr "Ogiltig"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:378
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:181
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
 msgstr "Volym"
 
@@ -39508,12 +39539,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "Du behöver åtkomst till din nuvarande e-postadress för att ändra den härifrån. Använd telefonverifiering om det finns tillgängligt eller kontakta supporten."
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:64
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "Du behöver behörigheten \"{attachFilesPermissionLabel}\" för att bifoga filer i den här kanalen"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:58
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:59
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "Du behöver behörigheten \"{embedLinksPermissionLabel}\" för att kunna bädda in länkar i den här kanalen"
 

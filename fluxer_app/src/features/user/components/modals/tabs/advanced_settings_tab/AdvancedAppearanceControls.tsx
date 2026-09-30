@@ -2,12 +2,15 @@
 
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import HiddenGuildListButtons from '@app/features/guild/state/HiddenGuildListButtons';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGroup';
 import {
 	ENABLE_FAVORITES_DESCRIPTOR,
 	KEEP_NEKO_STILL_DESCRIPTOR,
 	KEYBOARD_HINTS_DESCRIPTOR,
+	SHOW_DOWNLOAD_BUTTON_DESCRIPTOR,
+	SHOW_HELP_CENTER_BUTTON_DESCRIPTOR,
 	SHOW_NEKO_DESCRIPTOR,
 } from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
@@ -92,6 +95,34 @@ export const FavoritesControl = observer(() => {
 			onChange={(value) => AccessibilityCommands.update({showFavorites: value})}
 			compact
 			data-flx="user.advanced-settings-tab.switch.favorites"
+		/>
+	);
+});
+
+export const HelpCenterButtonControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(SHOW_HELP_CENTER_BUTTON_DESCRIPTOR)}
+			value={!HiddenGuildListButtons.helpButtonHidden}
+			onChange={(value) => (value ? HiddenGuildListButtons.showHelpButton() : HiddenGuildListButtons.hideHelpButton())}
+			compact
+			data-flx="user.advanced-settings-tab.switch.help-center-button"
+		/>
+	);
+});
+
+export const DownloadButtonControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(SHOW_DOWNLOAD_BUTTON_DESCRIPTOR)}
+			value={!HiddenGuildListButtons.downloadButtonHidden}
+			onChange={(value) =>
+				value ? HiddenGuildListButtons.showDownloadButton() : HiddenGuildListButtons.hideDownloadButton()
+			}
+			compact
+			data-flx="user.advanced-settings-tab.switch.download-button"
 		/>
 	);
 });
