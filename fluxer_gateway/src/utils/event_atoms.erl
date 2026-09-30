@@ -46,6 +46,7 @@ known_event_map() ->
 core_event_map() ->
     #{
         <<"AUTH_SESSION_CHANGE">> => auth_session_change,
+        <<"BADGES_UPDATE">> => badges_update,
         <<"ENTRANCE_SOUND_PLAY">> => entrance_sound_play,
         <<"FAVORITE_MEME_CREATE">> => favorite_meme_create,
         <<"FAVORITE_MEME_DELETE">> => favorite_meme_delete,
@@ -118,6 +119,7 @@ message_event_map() ->
 -spec user_voice_event_map() -> #{binary() => atom()}.
 user_voice_event_map() ->
     #{
+        <<"USER_BADGES_UPDATE">> => user_badges_update,
         <<"USER_CONNECTIONS_UPDATE">> => user_connections_update,
         <<"USER_GUILD_SETTINGS_UPDATE">> => user_guild_settings_update,
         <<"USER_NOTE_UPDATE">> => user_note_update,

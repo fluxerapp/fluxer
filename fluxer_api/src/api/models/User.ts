@@ -72,6 +72,7 @@ export class User {
 	readonly deletionScheduledAt: Date | null;
 	readonly acls: Set<string>;
 	private readonly _traits: Set<string>;
+	readonly badgeIds: Set<bigint>;
 	readonly firstRefundAt: Date | null;
 	readonly giftInventoryServerSeq: number | null;
 	readonly giftInventoryClientSeq: number | null;
@@ -138,6 +139,7 @@ export class User {
 		this.deletionScheduledAt = row.deletion_scheduled_at ?? null;
 		this.acls = row.acls ?? new Set();
 		this._traits = row.traits ?? new Set();
+		this.badgeIds = row.badge_ids ?? new Set();
 		this.firstRefundAt = row.first_refund_at ?? null;
 		this.giftInventoryServerSeq = row.gift_inventory_server_seq ?? null;
 		this.giftInventoryClientSeq = row.gift_inventory_client_seq ?? null;
@@ -231,6 +233,7 @@ export class User {
 			deletion_scheduled_at: this.deletionScheduledAt,
 			acls: this.acls.size > 0 ? this.acls : null,
 			traits: this._traits.size > 0 ? this._traits : null,
+			badge_ids: this.badgeIds.size > 0 ? this.badgeIds : null,
 			first_refund_at: this.firstRefundAt,
 			gift_inventory_server_seq: this.giftInventoryServerSeq,
 			gift_inventory_client_seq: this.giftInventoryClientSeq,

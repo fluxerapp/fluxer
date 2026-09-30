@@ -239,6 +239,7 @@ export async function register(
 		deletion_audit_log_reason: null,
 		acls: grantBootstrapAdmin ? new Set([AdminACLs.WILDCARD]) : null,
 		traits: registrationAccess.pendingApproval ? new Set([REGISTRATION_PENDING_APPROVAL_TRAIT]) : null,
+		badge_ids: null,
 		first_refund_at: null,
 		gift_inventory_server_seq: null,
 		gift_inventory_client_seq: null,

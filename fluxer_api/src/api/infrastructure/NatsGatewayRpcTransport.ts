@@ -85,6 +85,26 @@ export class NatsGatewayRpcTransport implements IGatewayRpcTransport {
 		return response.result;
 	}
 
+	async publish(subject: string, payload: Record<string, unknown>): Promise<void> {
+		if (this.connectionManager.isClosed()) {
+			await this.connectionManager.connect();
+		}
+		try {
+			const connection = this.connectionManager.getConnection();
+			connection.publish(subject, textEncoder.encode(JSON.stringify(payload)));
+			await connection.flush();
+		} catch (error) {
+			const mappedError = mapNatsRpcTransportError(error);
+			if (mappedError !== null) {
+				if (mappedError.code === GatewayRpcMethodErrorCodes.NO_RESPONDERS) {
+					Logger.warn({subject}, '[nats-rpc] no responders for subject');
+				}
+				throw mappedError;
+			}
+			throw error;
+		}
+	}
+
 	async destroy(): Promise<void> {
 		await this.connectionManager.drain();
 	}

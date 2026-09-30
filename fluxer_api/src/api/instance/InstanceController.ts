@@ -18,6 +18,7 @@ import {buildDiscoveryResponse, type DiscoveryStaticInput} from '@fluxer/instanc
 import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
 import type {CaptchaConfig} from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
 import {toDomainMigrationDiscovery} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {BadgesResponse} from '@fluxer/schema/src/domains/badge/BadgeSchemas';
 import {WellKnownFluxerResponse} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import type {Hono} from 'hono';
 
@@ -104,15 +105,17 @@ export function InstanceController(app: Hono<HonoEnv>) {
 			const limits = ctx.get('limitConfigService').getConfigWireFormat();
 			const sso = await ctx.get('ssoService').getPublicStatus();
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [registration, community, services, appPublicConfig, captcha, email, domainMigration] = await Promise.all([
-				instanceConfigRepository.getRegistrationPublicConfig(),
-				instanceConfigRepository.getInstanceCommunityPublicConfig(),
-				instanceConfigRepository.getResolvedServicesConfig(),
-				instanceConfigRepository.getAppPublicConfig(),
-				instanceConfigRepository.getCaptchaConfig(),
-				instanceConfigRepository.getEffectiveEmailConfig(),
-				instanceConfigRepository.getDomainMigrationConfig(),
-			]);
+			const [registration, community, services, appPublicConfig, captcha, email, domainMigration, badges] =
+				await Promise.all([
+					instanceConfigRepository.getRegistrationPublicConfig(),
+					instanceConfigRepository.getInstanceCommunityPublicConfig(),
+					instanceConfigRepository.getResolvedServicesConfig(),
+					instanceConfigRepository.getAppPublicConfig(),
+					instanceConfigRepository.getCaptchaConfig(),
+					instanceConfigRepository.getEffectiveEmailConfig(),
+					instanceConfigRepository.getDomainMigrationConfig(),
+					instanceConfigRepository.getBadgeConfig(),
+				]);
 			const discovery = buildDiscoveryResponse(
 				buildDiscoveryStaticInput(
 					gifService,
@@ -134,6 +137,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 					community,
 					services,
 					limits,
+					badges,
 				},
 			);
 			const response = {...discovery, domain_migration: toDomainMigrationDiscovery(domainMigration)};
@@ -150,6 +154,29 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				return ctx.body(null, 304);
 			}
 			return ctx.json(response);
+		},
+	);
+	app.get(
+		'/badges',
+		RateLimitMiddleware(RateLimitConfigs.INSTANCE_INFO),
+		OpenAPI({
+			operationId: 'list_badges',
+			summary: 'List badges',
+			responseSchema: BadgesResponse,
+			statusCode: 200,
+			security: [],
+			tags: ['Instance'],
+			description:
+				'Returns the badges defined on this instance and the overrides for built-in badge icons.',
+		}),
+		async (ctx) => {
+			const badges = await ctx.get('instanceConfigRepository').getBadgeConfig();
+			const etag = `"badges-${badges.version}"`;
+			ctx.header('ETag', etag);
+			if (ctx.req.header('If-None-Match') === etag) {
+				return ctx.body(null, 304);
+			}
+			return ctx.json(badges);
 		},
 	);
 }

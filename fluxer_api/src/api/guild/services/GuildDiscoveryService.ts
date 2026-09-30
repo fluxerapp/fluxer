@@ -434,6 +434,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			member_count: hit.memberCount,
 			online_count: 0,
 			features: hit.features,
+			badges: hit.badgeIds?.length ? hit.badgeIds : undefined,
 			verification_level: getEffectiveGuildVerificationLevel(hit.verificationLevel, hit.isDiscoverable),
 		}));
 		const total = results.total;

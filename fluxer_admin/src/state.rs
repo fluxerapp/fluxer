@@ -3,7 +3,7 @@
 use crate::{
     api::{
         client::{AdminApiClient, ApiResultExt},
-        types::PremiumBranding,
+        types::{ListBadgesResponse, PremiumBranding},
     },
     config::AdminConfig,
 };
@@ -13,6 +13,7 @@ use std::{
 };
 
 const PREMIUM_BRANDING_TTL: Duration = Duration::from_secs(60);
+const BADGES_TTL: Duration = Duration::from_secs(60);
 
 #[derive(Clone)]
 pub struct AppState {
@@ -23,6 +24,7 @@ struct AppStateInner {
     pub config: AdminConfig,
     pub http_client: reqwest::Client,
     premium_branding: Mutex<Option<(Instant, PremiumBranding)>>,
+    badges: Mutex<Option<(Instant, ListBadgesResponse)>>,
 }
 
 impl AppState {
@@ -36,6 +38,7 @@ impl AppState {
                 config,
                 http_client,
                 premium_branding: Mutex::new(None),
+                badges: Mutex::new(None),
             }),
         }
     }
@@ -80,6 +83,31 @@ impl AppState {
         );
         self.remember_premium_branding(branding.clone());
         Some(branding)
+    }
+
+    pub fn remember_badges(&self, badges: ListBadgesResponse) {
+        *self
+            .inner
+            .badges
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some((Instant::now(), badges));
+    }
+
+    pub async fn badges(&self, client: &AdminApiClient) -> Option<ListBadgesResponse> {
+        let cached = self
+            .inner
+            .badges
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .as_ref()
+            .filter(|(fetched_at, _)| fetched_at.elapsed() < BADGES_TTL)
+            .map(|(_, badges)| badges.clone());
+        if cached.is_some() {
+            return cached;
+        }
+        let badges = client.get_public_badges().await.log_error("load badges")?;
+        self.remember_badges(badges.clone());
+        Some(badges)
     }
 }
 

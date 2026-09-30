@@ -8,7 +8,7 @@ use crate::{
         badge::{BadgeVariant, badge},
         data_field::{data_field_mono, data_field_muted, data_field_text, data_grid},
         media::user_avatar_url,
-        user_profile_badges::user_profile_badges,
+        user_profile_badges::{ProfileBadges, user_profile_badges},
     },
     utils::{bigint::format_discriminator, timestamps::snowflake_creation_date},
 };
@@ -37,7 +37,7 @@ pub fn user_peek_fragment(
     config: &AdminConfig,
     user: &AdminUser,
     admin_acls: &[String],
-    premium_badge_name: Option<&str>,
+    profile_badges: ProfileBadges<'_>,
 ) -> Markup {
     let base = &config.base_path;
     let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL);
@@ -64,10 +64,11 @@ pub fn user_peek_fragment(
                         (user_profile_badges(
                             &config.static_cdn_endpoint,
                             user.flags,
+                            profile_badges,
+                            &user.badge_ids,
                             user.premium_type,
                             user.premium_since.as_deref(),
                             config.self_hosted,
-                            premium_badge_name,
                             true,
                         ))
                     }

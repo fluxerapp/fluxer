@@ -2,7 +2,7 @@
 
 use crate::{
     acl, admin_flags,
-    api::types::{AdminUser, LimitConfigResponse, ListUserChangeLogResponse},
+    api::types::{AdminUser, LimitConfigResponse, ListBadgesResponse, ListUserChangeLogResponse},
     config::AdminConfig,
     templates::components::{
         badge::{BadgeVariant, badge},
@@ -24,7 +24,7 @@ pub fn overview_tab(
     change_log: Option<&ListUserChangeLogResponse>,
 ) -> Markup {
     render_overview_tab(
-        config, user, admin_acls, csrf_token, change_log, None, false,
+        config, user, admin_acls, csrf_token, change_log, None, None, false,
     )
 }
 
@@ -35,6 +35,7 @@ pub fn overview_tab_with_limit_config(
     csrf_token: &str,
     change_log: Option<&ListUserChangeLogResponse>,
     limit_config: Option<&LimitConfigResponse>,
+    badges: Option<&ListBadgesResponse>,
 ) -> Markup {
     render_overview_tab(
         config,
@@ -43,10 +44,12 @@ pub fn overview_tab_with_limit_config(
         csrf_token,
         change_log,
         limit_config,
+        badges,
         true,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_overview_tab(
     config: &AdminConfig,
     user: &AdminUser,
@@ -54,6 +57,7 @@ fn render_overview_tab(
     csrf_token: &str,
     change_log: Option<&ListUserChangeLogResponse>,
     limit_config: Option<&LimitConfigResponse>,
+    badges: Option<&ListBadgesResponse>,
     show_traits: bool,
 ) -> Markup {
     html! {
@@ -225,6 +229,9 @@ fn render_overview_tab(
                 }
             }))
             (flags_card(config, user, admin_acls, csrf_token))
+            @if let Some(badges) = badges {
+                (badges_card(config, user, badges, admin_acls, csrf_token))
+            }
             (acls_card(config, user, admin_acls, csrf_token))
             @if show_traits {
                 (traits_card(config, user, admin_acls, csrf_token, limit_config))
@@ -422,6 +429,46 @@ fn flag_form_shell(
                         }
                     }
                 }
+            }
+        },
+    )
+}
+
+fn badges_card(
+    config: &AdminConfig,
+    user: &AdminUser,
+    badges: &ListBadgesResponse,
+    admin_acls: &[String],
+    csrf_token: &str,
+) -> Markup {
+    let can_edit = acl::has_permission(admin_acls, acl::USER_UPDATE_BADGES);
+    let mut user_badges: Vec<_> = badges
+        .badges
+        .iter()
+        .filter(|badge| badge.badge_type == "user")
+        .collect();
+    user_badges.sort_by_key(|badge| badge.position);
+    flag_form_shell(
+        config,
+        &user.id,
+        "Badges",
+        "update_badges",
+        String::new(),
+        csrf_token,
+        can_edit,
+        Some(acl::USER_UPDATE_BADGES),
+        html! {
+            @if user_badges.is_empty() {
+                p class="text-sm text-neutral-500" { "No user badges defined." }
+            }
+            @for badge in user_badges {
+                (flag_checkbox(
+                    "badge_ids[]",
+                    badge.id.clone(),
+                    &badge.name,
+                    user.badge_ids.contains(&badge.id),
+                    can_edit,
+                ))
             }
         },
     )

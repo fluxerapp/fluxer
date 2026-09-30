@@ -11,6 +11,7 @@ import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import {createPasswordResetToken, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {mapBadgeIds, resolveBadgeIds} from '@app/api/badge/BadgeUtils';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import {Logger} from '@app/api/Logger';
@@ -21,6 +22,7 @@ import {getIpAddressReverse, getLocationLabelFromIp} from '@app/api/utils/IpUtil
 import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {BadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 import {
 	ADMIN_PHONE_TOGGLE_CLEARABLE_FLAGS,
 	DEFERRABLE_PHONE_FLAGS,
@@ -157,6 +159,48 @@ export class AdminUserSecurityService {
 			}),
 		});
 		await emitAdminAction(adminUserId, userId, 'update_flags');
+		return {
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+		};
+	}
+
+	async updateUserBadges({
+		userId,
+		badgeIds,
+		adminUserId,
+		auditLogReason,
+		acls,
+	}: {
+		userId: UserID;
+		badgeIds: Array<bigint>;
+		adminUserId: UserID;
+		auditLogReason: string | null;
+		acls: ReadonlySet<string>;
+	}) {
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
+		const user = await userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		const newBadgeIds = await resolveBadgeIds(getInstanceConfigRepository(), BadgeTypes.USER, badgeIds);
+		const updatedUser = await userRepository.patchUpsert(
+			userId,
+			{badge_ids: newBadgeIds.size > 0 ? newBadgeIds : null},
+			user.toRow(),
+		);
+		const data = {user_id: userId.toString(), badges: mapBadgeIds(newBadgeIds) ?? []};
+		await gatewayService.dispatchPresence({userId, event: 'USER_BADGES_UPDATE', data});
+		for (const guildId of await userRepository.getUserGuildIds(userId)) {
+			await gatewayService.dispatchGuild({guildId, event: 'USER_BADGES_UPDATE', data});
+		}
+		await this.deps.auditService.createAuditLog({
+			adminUserId,
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: 'update_badges',
+			auditLogReason,
+			metadata: new Map([['badge_ids', Array.from(newBadgeIds).join(',')]]),
+		});
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {handleBadgesUpdate, handleUserBadgesUpdate} from '@app/features/badge/events/BadgesUpdate';
 import {handleChannelCreate} from '@app/features/channel/events/ChannelCreate';
 import {handleChannelDelete} from '@app/features/channel/events/ChannelDelete';
 import {handleChannelPinsAck} from '@app/features/channel/events/ChannelPinsAck';
@@ -92,6 +93,8 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	const registry: GatewayHandlerRegistry = new Map();
 	registry.set('READY', handleReady as GatewayEventHandler);
 	registry.set('AUTH_SESSION_CHANGE', handleAuthSessionChange as GatewayEventHandler);
+	registry.set('BADGES_UPDATE', handleBadgesUpdate as GatewayEventHandler);
+	registry.set('USER_BADGES_UPDATE', handleUserBadgesUpdate as GatewayEventHandler);
 	registry.set('USER_UPDATE', handleUserUpdate as GatewayEventHandler);
 	registry.set('USER_SETTINGS_UPDATE', handleUserSettingsUpdate as GatewayEventHandler);
 	registry.set('USER_GUILD_SETTINGS_UPDATE', handleUserGuildSettingsUpdate as GatewayEventHandler);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapBadgeIds} from '@app/api/badge/BadgeUtils';
 import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
 import {
 	stripGuildBannerForFeatures,
@@ -47,6 +48,7 @@ export function mapGuildToPartialResponse(guild: Guild): GuildPartialResponse {
 		embed_splash_height: embedSplashHash ? guild.embedSplashHeight : null,
 		splash_card_alignment: guild.splashCardAlignment,
 		features: mapGuildFeatures(guild.features),
+		badges: mapBadgeIds(guild.badgeIds),
 	};
 }
 
@@ -82,6 +84,7 @@ export function mapGuildToGuildResponse(
 		afk_channel_id: guild.afkChannelId ? guild.afkChannelId.toString() : null,
 		afk_timeout: guild.afkTimeout,
 		features: mapGuildFeatures(guild.features),
+		badges: Array.from(guild.badgeIds, String),
 		verification_level: guild.verificationLevel,
 		mfa_level: guild.mfaLevel,
 		nsfw_level: guild.nsfwLevel,

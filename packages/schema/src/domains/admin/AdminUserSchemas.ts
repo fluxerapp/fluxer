@@ -10,6 +10,7 @@ import {
 	UserFlagsDescriptions,
 } from '@fluxer/constants/src/UserConstants';
 import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
+import {BadgeIdsResponse} from '@fluxer/schema/src/domains/badge/BadgeSchemas';
 import {CalendarDateType} from '@fluxer/schema/src/primitives/DateValidators';
 import {NSFWLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
 import {createQueryIntegerType, QueryBooleanType} from '@fluxer/schema/src/primitives/QueryValidators';
@@ -79,6 +80,7 @@ export const UserAdminResponseSchema = z.object({
 	deletion_scheduled_at: z.string().nullable().describe('ISO 8601 timestamp when the pending deletion was scheduled'),
 	acls: z.array(z.string()).max(ADMIN_ACL_COUNT),
 	traits: z.array(z.string()).max(100),
+	badge_ids: BadgeIdsResponse,
 	has_totp: z.boolean(),
 	authenticator_types: z.array(Int32Type).max(10),
 	last_active_at: z.string().nullable(),

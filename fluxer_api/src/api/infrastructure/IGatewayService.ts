@@ -292,6 +292,8 @@ export abstract class IGatewayService {
 
 	abstract dispatchPresence(params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void>;
 
+	abstract broadcastDispatch(params: {event: GatewayDispatchEvent; data: unknown}): Promise<void>;
+
 	abstract clearPushChannelNotifications(params: {
 		userId: UserID;
 		channelId: ChannelID;

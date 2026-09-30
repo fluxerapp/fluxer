@@ -1171,6 +1171,7 @@ export class RpcService {
 				'RPC session handling completed',
 			);
 		});
+		const {version: badgesVersion} = await this.instanceConfigRepository.getBadgeConfig();
 		const responseBuildSteps: RpcTimingSteps = {};
 		const responseBuildStartedAtNs = startRpcTiming();
 		const responsePayload = {
@@ -1205,6 +1206,7 @@ export class RpcService {
 			latitude: geoipLatitude,
 			longitude: geoipLongitude,
 			rtc_regions: rtcRegions,
+			badges_version: badgesVersion,
 			webauthn_credentials: timeRpcStepSync(responseBuildSteps, 'map_webauthn_credentials', () =>
 				visibleWebAuthnCredentials(userData.webAuthnCredentials).map((cred) =>
 					mapWebAuthnCredentialToResponse(cred, Config.auth.passkeys.rpId),

@@ -12,6 +12,7 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
+import {BadgeAssignmentRequest} from '@fluxer/schema/src/domains/admin/AdminBadgeSchemas';
 import {ListUserGuildsResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {SearchUsersResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
@@ -1094,6 +1095,33 @@ export function UserAdminController(app: HonoApp) {
 				}),
 			);
 		},
+	);
+	app.patch(
+		'/admin/users/:user_id/badges',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_UPDATE_BADGES),
+		Validator('param', UserIdParam),
+		Validator('json', BadgeAssignmentRequest),
+		OpenAPI({
+			operationId: 'update_admin_user_badges',
+			summary: 'Update user badges',
+			responseSchema: UserMutationResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Replaces the badges shown on the user profile with the given badges. Creates audit log entry. Requires USER_UPDATE_BADGES permission.',
+		}),
+		async (ctx) =>
+			ctx.json(
+				await ctx.get('adminService').userService.securityService.updateUserBadges({
+					userId: createUserID(ctx.req.valid('param').user_id),
+					badgeIds: ctx.req.valid('json').badge_ids,
+					adminUserId: ctx.get('adminUserId'),
+					auditLogReason: ctx.get('auditLogReason'),
+					acls: ctx.get('adminUserAcls'),
+				}),
+			),
 	);
 	app.patch(
 		'/admin/users/:user_id/premium-flags',

@@ -5,6 +5,7 @@ import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
 import {AdminApplicationService} from '@app/api/admin/services/AdminApplicationService';
 import {AdminAssetPurgeService} from '@app/api/admin/services/AdminAssetPurgeService';
 import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminBadgeService} from '@app/api/admin/services/AdminBadgeService';
 import {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
 import {AdminCodeGenerationService} from '@app/api/admin/services/AdminCodeGenerationService';
 import {AdminGuildService} from '@app/api/admin/services/AdminGuildService';
@@ -32,6 +33,7 @@ import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
 import {JobAdminService} from '@app/api/jobs/JobAdminService';
 import {
 	getGuildDiscoveryRepository,
+	getInstanceConfigRepository,
 	getKVAccountDeletionQueue,
 	getNcmecSubmissionService,
 } from '@app/api/middleware/ServiceSingletons';
@@ -53,6 +55,7 @@ export class AdminService {
 	readonly messageDeletionService: AdminMessageDeletionService;
 	readonly reportServiceAggregate: AdminReportService;
 	readonly voiceService: AdminVoiceService;
+	readonly badgeService: AdminBadgeService;
 	readonly searchService: AdminSearchService;
 	readonly codeGenerationService: AdminCodeGenerationService;
 	readonly assetPurgeService: AdminAssetPurgeService;
@@ -118,6 +121,7 @@ export class AdminService {
 			entityAssetService: this.entityAssetService,
 			auditService: this.auditService,
 			discoveryRepository: getGuildDiscoveryRepository(),
+			instanceConfigRepository: getInstanceConfigRepository(),
 		});
 		this.assetPurgeService = new AdminAssetPurgeService({
 			guildRepository: this.guildRepository,
@@ -156,6 +160,12 @@ export class AdminService {
 		this.voiceService = new AdminVoiceService({
 			apiContext: this.apiContext,
 			voiceRepository: this.voiceRepository,
+			auditService: this.auditService,
+		});
+		this.badgeService = new AdminBadgeService({
+			instanceConfigRepository: getInstanceConfigRepository(),
+			snowflakeService: snowflake,
+			gatewayService: gateway,
 			auditService: this.auditService,
 		});
 		this.searchService = new AdminSearchService({

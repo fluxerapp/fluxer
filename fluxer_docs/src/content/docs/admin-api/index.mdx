@@ -48,6 +48,7 @@ The operations below derive their required ACLs from the validated request body.
 - `vanity_url_code` maps to `guild:update:vanity`.
 - `new_owner_id` maps to `guild:transfer_ownership`.
 - `add_features` and `remove_features` map to `guild:update:features`.
+- `badge_ids` maps to `guild:update:badges`.
 - `fields` together with every remaining setting maps to `guild:update:settings`.
 
 A body with none of those fields resolves to no ACL at all and applies no change. The route also names those ACLs as an ordinary any-of requirement, evaluated before the body is read.
@@ -62,7 +63,7 @@ A body with none of those fields resolves to no ACL at all and applies no change
 
 Fluxer checks each ACL an Admin grants against the ACLs that Admin holds. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs also refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it looks up the target account before it checks the granted ACLs, so an unknown ID fails first with 404 `UNKNOWN_USER`.
 
-[Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 111 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
+[Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 117 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
 
 :::caution[`*` satisfies every present and future ACL]
 A key whose owning account holds `*` skips the owner check. An Admin holding `*` can grant any ACL.
@@ -481,7 +482,7 @@ Returns every Admin permission string the instance recognises, in [ACL registry]
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | The permission strings the Admin API recognises (at most 111 entries) |
+| acls<sup>1</sup> | array[string] | The permission strings the Admin API recognises (at most 117 entries) |
 
 <sup>1</sup> The response is the registry itself and does not vary with the caller's own ACL set
 
@@ -520,6 +521,10 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | admin:authenticate | Permits the account to reach the Admin API at all, and admits [List ACLs](#list-acls) and [Get current Admin user](/admin-api/users/#get-current-admin-user) |
 | jobs:view | Reads background [job](/admin-api/jobs/) state |
 | jobs:cancel | Requests background job cancellation |
+| badge:create | Creates [badges](/admin-api/badges/) |
+| badge:delete | Deletes badges |
+| badge:list | Reads badges and the built-in badge icon overrides |
+| badge:update | Updates badges and overrides built-in badge icons |
 | ban:email:add | Adds and updates `email` [blocklist](/admin-api/blocklists/) entries |
 | ban:email:check | Reads the `email` blocklist |
 | ban:email:remove | Removes `email` blocklist entries |
@@ -566,6 +571,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | guild:reload | Reloads one guild on the main Gateway |
 | guild:shutdown | Stops one guild on the main Gateway |
 | guild:transfer_ownership<sup>5</sup> | Transfers guild ownership |
+| guild:update:badges<sup>5</sup> | Replaces the badges assigned to a guild |
 | guild:update:features<sup>5</sup> | Adds and removes guild features |
 | guild:update:name<sup>5</sup> | Updates a guild name |
 | guild:update:settings<sup>5</sup> | Updates general guild settings and clears guild fields |
@@ -596,6 +602,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | user:view:email<sup>6</sup> | Unredacts user email addresses and email verification state |
 | user:view:ip<sup>6</sup> | Unredacts the last active IP address and the location derived from it |
 | user:temp_ban | Applies and removes an account ban |
+| user:update:badges | Replaces the badges assigned to an account |
 | user:update:bot_status | Updates bot and system account state |
 | user:update:dob | Updates dates of birth |
 | user:update:email | Updates the email address, marks the address verified, resends verification, and sends a password reset |

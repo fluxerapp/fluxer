@@ -16,6 +16,7 @@ import {
 	PublicUserFlags,
 	PublicUserFlagsDescriptions,
 } from '@fluxer/constants/src/UserConstants';
+import {BadgeIdsResponse} from '@fluxer/schema/src/domains/badge/BadgeSchemas';
 import {ConnectionResponse} from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -568,6 +569,7 @@ export const UserProfileFullResponse = z.object({
 	premium_type: withFieldDescription(UserPremiumTypesSchema, 'The type of premium subscription').optional(),
 	premium_since: z.string().optional().describe('ISO8601 timestamp of when premium was activated'),
 	premium_lifetime_sequence: Int32Type.optional().describe('Sequence number for lifetime premium'),
+	badges: BadgeIdsResponse.optional(),
 	mutual_friends: z.array(UserPartialResponse).optional().describe('Array of mutual friends'),
 	mutual_guilds: z.array(MutualGuildResponse).optional().describe('Array of mutual guilds'),
 	connected_accounts: z.array(ConnectionResponse).optional().describe('Array of verified external connections'),

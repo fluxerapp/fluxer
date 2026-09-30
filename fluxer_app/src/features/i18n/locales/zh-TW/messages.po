@@ -42,7 +42,7 @@ msgid "(you)"
 msgstr "（您）"
 
 #. placeholder {0}: guild.member_count
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:184
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:185
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# 位成員} other {# 位成員}}"
 
@@ -1328,14 +1328,14 @@ msgstr "{formats}。最大 {maxSize}。建議：{recommendedSize}"
 msgid "{formats}. Max {maxSize}. Recommended: {recommendedSize}. {note}"
 msgstr "{formats}。最大 {maxSize}。建議：{recommendedSize}。{note}"
 
-#: src/features/auth/flow/InviteHeader.tsx:90
-#: src/features/auth/flow/InviteHeader.tsx:135
-#: src/features/auth/flow/InviteHeader.tsx:249
+#: src/features/auth/flow/InviteHeader.tsx:94
+#: src/features/auth/flow/InviteHeader.tsx:139
+#: src/features/auth/flow/InviteHeader.tsx:253
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{formattedMemberCount} {memberCount, plural, one {位成員} other {位成員}}"
 
-#: src/features/auth/flow/InviteHeader.tsx:84
-#: src/features/auth/flow/InviteHeader.tsx:234
+#: src/features/auth/flow/InviteHeader.tsx:88
+#: src/features/auth/flow/InviteHeader.tsx:238
 msgid "{formattedPresenceCount} online"
 msgstr "{formattedPresenceCount} 人在線上"
 
@@ -1562,7 +1562,7 @@ msgid "{paymentProviderName} will first verify that your card is eligible for lo
 msgstr "{paymentProviderName} 會先確認您的卡片是否符合當地定價資格，接著帶您前往付款。完成後請返回 {productName}。"
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:53
+#: src/features/user/components/popouts/UserProfileBadges.tsx:46
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "自 {premiumSinceFormatted} 起訂閱 {premiumProductFullName}"
 
@@ -1642,11 +1642,6 @@ msgstr "{productName} 應用程式標誌"
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:16
 msgid "{productName} avoids sending push notifications to your mobile devices when you are at your computer. Choose how long you need to be inactive on desktop before you receive push notifications."
 msgstr "{productName} 會在您使用電腦時，避免向您的行動裝置傳送推播通知。請選擇要在桌面端閒置多久之後，才開始接收推播通知。"
-
-#. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:38
-msgid "{productName} Bug Hunter"
-msgstr "{productName} 錯誤獵人"
 
 #. Inline notice body on Windows. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
 #. Inline notice body on macOS. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
@@ -1772,11 +1767,6 @@ msgstr "{productName} 現在已移至 {host}。請從該處安裝，然後使用
 msgid "{productName} now lives at {host}. Install it from there."
 msgstr "{productName} 現在已移至 {host}。請從該處安裝。"
 
-#. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:33
-msgid "{productName} Partner"
-msgstr "{productName} 合作夥伴"
-
 #. Nagbar shown after the app restarts while the user was connected to a community voice channel. {productName} is Fluxer, {channelName} is the voice channel name, and {communityName} is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:24
 msgid "{productName} restarted while you were connected to the {channelName} channel in the {communityName} community."
@@ -1798,7 +1788,7 @@ msgid "{productName} spotted a possible raid here. Invites are paused — try ag
 msgstr "{productName} 在此偵測到可能的突襲。邀請已暫停，請稍後再試。"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:28
+#: src/features/user/components/popouts/UserProfileBadges.tsx:31
 msgid "{productName} Staff"
 msgstr "{productName} 員工"
 
@@ -1808,12 +1798,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "當以行動 PWA 形式安裝時，{productName} 會使用推播通知。註冊可確保即使應用程式在背景執行，閘道也能連線到您的裝置。"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:48
+#: src/features/user/components/popouts/UserProfileBadges.tsx:41
 msgid "{productName} Visionary"
 msgstr "{productName} 遠見者"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:43
+#: src/features/user/components/popouts/UserProfileBadges.tsx:36
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} 遠見者，自 {premiumSinceFormatted} 起"
 
@@ -1856,8 +1846,8 @@ msgid "{remainingSlotCount} remaining"
 msgstr "還剩 {remainingSlotCount} 個"
 
 #: src/features/channel/components/InviteEmbed.tsx:248
-#: src/features/channel/components/InviteEmbed.tsx:356
-#: src/features/channel/components/InviteEmbed.tsx:625
+#: src/features/channel/components/InviteEmbed.tsx:357
+#: src/features/channel/components/InviteEmbed.tsx:627
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {位成員} other {位成員}}"
 
@@ -23709,7 +23699,7 @@ msgid "Open community"
 msgstr "開啟社群"
 
 #. Short label in the app layout guild header. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/GuildHeader.tsx:33
+#: src/features/app/components/layout/GuildHeader.tsx:35
 msgid "Open community menu for {guildName}"
 msgstr "開啟「{guildName}」社群選單"
 
@@ -24376,7 +24366,7 @@ msgid "Participants: {names}"
 msgstr "參與者：{names}"
 
 #. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:17
+#: src/features/guild/components/GuildBadge.tsx:23
 msgid "Partnered community"
 msgstr "合作社群"
 
@@ -31383,7 +31373,7 @@ msgstr "發生錯誤。請再試一次。"
 
 #. Community layout error-boundary body shown when rendering the community pane crashes. Keep plain and calm.
 #: src/features/app/components/layout/GuildLayout.tsx:96
-#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:203
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:204
 msgid "Something went wrong. We're working on it."
 msgstr "發生錯誤，我們正在處理中。"
 
@@ -37251,12 +37241,12 @@ msgid "Verification failed"
 msgstr "驗證失敗"
 
 #. Label in the community badge.
-#: src/features/guild/components/GuildBadge.tsx:13
+#: src/features/guild/components/GuildBadge.tsx:19
 msgid "Verified & partnered community"
 msgstr "已驗證與合作社群"
 
 #. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:21
+#: src/features/guild/components/GuildBadge.tsx:27
 msgid "Verified community"
 msgstr "已驗證社群"
 
@@ -37861,7 +37851,7 @@ msgid "Visionary badge ID"
 msgstr "遠見者徽章 ID"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:58
+#: src/features/user/components/popouts/UserProfileBadges.tsx:51
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "遠見者 ID {visionaryIdLabel}"
 
@@ -39858,11 +39848,11 @@ msgid "You've arrived, {username}! Let's get started."
 msgstr "{username}，歡迎上線！我們開始吧。"
 
 #: src/features/auth/flow/InviteHeader.tsx:69
-#: src/features/auth/flow/InviteHeader.tsx:213
+#: src/features/auth/flow/InviteHeader.tsx:217
 msgid "You've been invited to join"
 msgstr "您受邀加入"
 
-#: src/features/auth/flow/InviteHeader.tsx:124
+#: src/features/auth/flow/InviteHeader.tsx:128
 msgid "You've been invited to join a group DM by"
 msgstr "您受邀加入群組私訊，邀請人："
 

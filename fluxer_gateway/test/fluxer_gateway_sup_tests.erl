@@ -136,6 +136,7 @@ init_sessions_role_includes_cluster_handoff_test() ->
     Ids = child_ids(Children),
     ?assert(lists:member(session_manager, Ids)),
     ?assert(lists:member(session_state_transfer, Ids)),
+    ?assert(lists:member(gateway_broadcast, Ids)),
     ?assert(lists:member(gateway_cluster_handoff, Ids)),
     ?assertNot(lists:member(guild_manager, Ids)),
     ?assertNot(lists:member(gateway_clock_offset, Ids)),

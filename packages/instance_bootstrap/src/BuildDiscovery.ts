@@ -14,6 +14,7 @@ import type {
 	InstanceSso,
 } from '@fluxer/instance_bootstrap/src/Types';
 import type {LimitConfigSnapshot, LimitConfigWireFormat} from '@fluxer/limits/src/LimitTypes';
+import type {BadgesResponse} from '@fluxer/schema/src/domains/badge/BadgeSchemas';
 
 export interface DiscoveryStaticInput {
 	apiCodeVersion: number;
@@ -31,6 +32,7 @@ export interface DiscoveryDynamicInput {
 	community: InstanceCommunity;
 	services: InstanceServices;
 	limits: LimitConfigSnapshot | LimitConfigWireFormat;
+	badges: BadgesResponse;
 }
 
 export function buildDiscoveryResponse(
@@ -50,5 +52,6 @@ export function buildDiscoveryResponse(
 		limits: dynamicInput.limits,
 		push: staticInput.push,
 		app_public: staticInput.appPublic,
+		badges: dynamicInput.badges,
 	};
 }

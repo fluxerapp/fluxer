@@ -24,6 +24,7 @@ function gatewayRejectingSyncWith(code: string): GatewayService {
 		async call(): Promise<unknown> {
 			throw new GatewayRpcMethodError(code);
 		},
+		async publish(): Promise<void> {},
 		async destroy(): Promise<void> {},
 	});
 	return new GatewayService();

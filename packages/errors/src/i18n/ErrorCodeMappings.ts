@@ -180,6 +180,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.GLOBAL_IP_TEMPORARILY_BANNED]: 'permissions.global_ip_temporarily_banned',
 	[APIErrorCodes.IP_BAN_DECLINED]: 'moderation_and_reports.ip_ban_declined',
 	[APIErrorCodes.MAX_APPLICATIONS]: 'misc_limits.max_applications_reached',
+	[APIErrorCodes.MAX_BADGES]: 'misc_limits.max_badges_reached',
 	[APIErrorCodes.MAX_BOOKMARKS]: 'misc_limits.max_bookmarks_reached',
 	[APIErrorCodes.MAX_CATEGORY_CHANNELS]: 'misc_limits.max_category_channels_reached',
 	[APIErrorCodes.MAX_EMOJIS]: 'invites_and_packs.max_emojis_reached',
@@ -294,6 +295,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES]: 'misc.invalid_request_generic',
 	[APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_SUBMIT_REPORTS]:
 		'moderation_and_reports.unclaimed_account_cannot_submit_reports',
+	[APIErrorCodes.UNKNOWN_BADGE]: 'unknown_entities.unknown_badge',
 	[APIErrorCodes.UNKNOWN_CHANNEL]: 'unknown_entities.unknown_channel',
 	[APIErrorCodes.UNKNOWN_EMOJI]: 'stickers_and_emojis.unknown_emoji',
 	[APIErrorCodes.UNKNOWN_FAVORITE_MEME]: 'media_and_memes.unknown_favorite_meme',

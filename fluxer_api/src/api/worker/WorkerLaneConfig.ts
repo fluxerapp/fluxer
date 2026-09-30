@@ -85,6 +85,7 @@ const LANE_CONFIG = {
 			'pollAppStoreNotificationHistory',
 			'prunePostgresKvTtl',
 			'refreshSearchIndex',
+			'migrateLegacyBadges',
 			'syncDiscoveryIndex',
 			'syncUrlBlocklists',
 			'syncFileShaBlocklists',

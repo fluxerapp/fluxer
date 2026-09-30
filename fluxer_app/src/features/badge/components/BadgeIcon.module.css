@@ -1,0 +1,11 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.icon {
+	display: inline-flex;
+	flex-shrink: 0;
+}
+
+.icon > svg {
+	width: 100%;
+	height: 100%;
+}

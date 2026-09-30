@@ -2,10 +2,12 @@
 
 import type {AdminAuditCoverageCase} from '@app/api/admin/tests/audit_coverage/AdminAuditCoverage';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestBadge} from '@app/api/badge/tests/BadgeTestUtils';
 import {createGuild} from '@app/api/message/tests/MessageTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
+import {BadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 
 const MISSING_GUILD_ID = '900000000000000001';
 
@@ -92,6 +94,24 @@ export const GuildAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetType: 'guild',
 					targetId: guild.id,
 					metadata: {old_name: 'Audit Patch Guild', new_name: 'Audit Patched Guild'},
+				},
+			};
+		},
+	},
+	{
+		method: 'PATCH',
+		route: '/admin/guilds/:guild_id',
+		name: 'badges',
+		async prepare({harness, admin}) {
+			const guild = await createGuild(harness, admin.token, 'Audit Badge Guild');
+			const badge = await createTestBadge(harness, admin.token, {type: BadgeTypes.GUILD});
+			return {
+				request: {path: `/admin/guilds/${guild.id}`, body: {badge_ids: [badge.id]}},
+				expected: {
+					action: 'update_badges',
+					targetType: 'guild',
+					targetId: guild.id,
+					metadata: {badge_ids: badge.id},
 				},
 			};
 		},

@@ -257,6 +257,16 @@ async fn dispatch_guild_action(
                 "Failed to update guild features",
             )
         }
+        "update_badges" => action_result(
+            client
+                .update_guild_badges(
+                    guild_id,
+                    &form.list_values_any(&["badge_ids[]", "badge_ids"]),
+                )
+                .await,
+            "Guild badges updated",
+            "Failed to update guild badges",
+        ),
         "clear_fields" => {
             let fields = form.list_values_any(&["fields[]", "fields"]);
             action_result(

@@ -3,6 +3,8 @@
 import {Routes} from '@app/app/Routes';
 import {PREMIUM_PRODUCT_FULL_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {BadgeIcon} from '@app/features/badge/components/BadgeIcon';
+import Badges from '@app/features/badge/state/Badges';
 import {cdnUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
@@ -13,6 +15,7 @@ import styles from '@app/features/user/components/popouts/UserProfileBadges.modu
 import type {Profile} from '@app/features/user/models/Profile';
 import type {User} from '@app/features/user/models/User';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import {BadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 import {PublicUserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -27,16 +30,6 @@ const badgeAssetUrl = (fileName: string) => cdnUrl(`badges/${fileName}?v=${BADGE
 
 const STAFF_DESCRIPTOR = msg({
 	message: '{productName} Staff',
-	comment:
-		'Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.',
-});
-const PARTNER_DESCRIPTOR = msg({
-	message: '{productName} Partner',
-	comment:
-		'Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.',
-});
-const BUG_HUNTER_DESCRIPTOR = msg({
-	message: '{productName} Bug Hunter',
 	comment:
 		'Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.',
 });
@@ -73,12 +66,20 @@ interface IconBadge extends BaseBadge {
 	iconUrl: string;
 }
 
+interface SvgBadge extends BaseBadge {
+	type: 'svg';
+	icon: string;
+}
+
 interface TextBadge extends BaseBadge {
 	type: 'text';
 	text: string;
 }
 
-type Badge = IconBadge | TextBadge;
+type Badge = IconBadge | SvgBadge | TextBadge;
+
+const builtinBadge = (badge: BaseBadge, icon: string | null, fileName: string): Badge =>
+	icon ? {...badge, type: 'svg', icon} : {...badge, type: 'icon', iconUrl: badgeAssetUrl(fileName)};
 
 interface UserProfileBadgesProps {
 	user: User;
@@ -96,30 +97,25 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 		const badges = useMemo(() => {
 			const result: Array<Badge> = [];
 			if (user.flags & PublicUserFlags.STAFF) {
-				result.push({
-					type: 'icon',
-					key: 'staff',
-					iconUrl: badgeAssetUrl('staff.svg'),
-					tooltip: i18n._(STAFF_DESCRIPTOR, {productName: PRODUCT_NAME}),
-					url: Routes.careers(),
-				});
+				result.push(
+					builtinBadge(
+						{
+							key: 'staff',
+							tooltip: i18n._(STAFF_DESCRIPTOR, {productName: PRODUCT_NAME}),
+							url: Routes.careers(),
+						},
+						Badges.builtinIcons.staff,
+						'staff.svg',
+					),
+				);
 			}
-			if (!selfHosted && user.flags & PublicUserFlags.PARTNER) {
+			for (const badge of Badges.resolve(BadgeTypes.USER, Badges.userBadges.get(user.id) ?? profile?.badges)) {
 				result.push({
-					type: 'icon',
-					key: 'partner',
-					iconUrl: badgeAssetUrl('partner.svg'),
-					tooltip: i18n._(PARTNER_DESCRIPTOR, {productName: PRODUCT_NAME}),
-					url: Routes.partners(),
-				});
-			}
-			if (!selfHosted && user.flags & PublicUserFlags.BUG_HUNTER) {
-				result.push({
-					type: 'icon',
-					key: 'bug_hunter',
-					iconUrl: badgeAssetUrl('bug-hunter.svg'),
-					tooltip: i18n._(BUG_HUNTER_DESCRIPTOR, {productName: PRODUCT_NAME}),
-					url: Routes.bugs(),
+					type: 'svg',
+					key: badge.id,
+					icon: badge.icon,
+					tooltip: badge.tooltip,
+					url: badge.url ?? undefined,
 				});
 			}
 			if (showPremium && profile?.premiumType && profile.premiumType !== UserPremiumTypes.NONE) {
@@ -141,14 +137,13 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 						premiumSinceFormatted,
 					});
 				}
-				result.push({
-					type: 'icon',
-					key: 'premium',
-					iconUrl: badgeAssetUrl('plutonium.svg'),
-					tooltip: tooltipText,
-					url: badgeUrl,
-					onClick: badgeOnClick,
-				});
+				result.push(
+					builtinBadge(
+						{key: 'premium', tooltip: tooltipText, url: badgeUrl, onClick: badgeOnClick},
+						Badges.builtinIcons.premium,
+						'plutonium.svg',
+					),
+				);
 				if (
 					!selfHosted &&
 					profile.premiumType === UserPremiumTypes.LIFETIME &&
@@ -169,7 +164,13 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 			selfHosted,
 			showPremium,
 			premiumInfoUrl,
+			user.id,
 			user.flags,
+			Badges.badges,
+			Badges.userBadges,
+			Badges.builtinIcons.staff,
+			Badges.builtinIcons.premium,
+			profile?.badges,
 			profile?.premiumType,
 			profile?.premiumSince,
 			profile?.premiumLifetimeSequence,
@@ -232,6 +233,8 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 								className={badgeClassName}
 								data-flx="user.user-profile-badges.img"
 							/>
+						) : badge.type === 'svg' ? (
+							<BadgeIcon icon={badge.icon} label={badge.tooltip} className={badgeClassName} />
 						) : (
 							<span
 								className={clsx(styles.sequenceBadge, sequenceClassName)}

@@ -1,0 +1,181 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Badges
+description: Define badges to be used on user and guild profiles
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A badge is displayed next to a user's name in their profile, or next to the guild icon in its profile. Some built-in badges are automatically defined, namely Staff and Premium (for users) and Verified, Partnered and Discoverable (for guilds). The icons for these internal badges can be overridden, but no other property can be edited.
+
+[Update user badges](/admin-api/users/#update-user-badges) and [Update guild badges](/admin-api/guilds/#update-guild) assign badges. [List badges](/http-api/instance/#list-badges) provides a list of user or guild badges.
+
+## List badges
+
+<RouteHeader method="GET" path="/v1/admin/badges" auditReason />
+
+Returns the [badges object](/http-api/instance/#badges-object). Requires `badge:list`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [badges](/http-api/instance/#badges-object) object | The badges were returned |
+
+### Side effects
+
+The operation records one read [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_badges` and the metadata key `result_count`.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Create badge
+
+<RouteHeader method="POST" path="/v1/admin/badges" auditReason />
+
+Creates a badge and returns it. Requires `badge:create`.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | `user` or `guild` |
+| name | string | The name of the badge (1-64 characters) |
+| tooltip | string | The text shown when hovering over the badge image (1-256 characters) |
+| icon | string | The SVG markup of the icon |
+| url? | ?string | The absolute HTTP URL opened when the badge is clicked, if any |
+| position? | integer | The order in which the badge appears in a profile |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badge | [badge](/http-api/instance/#badge-object) object | The created badge |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The badge was created |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because a field or the icon failed validation, or `MAX_BADGES`, because the instance badge limit has been reached |
+
+### Side effects
+
+[Badges Update](/gateway/events/#badges-update) is emitted with the new badge. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `create_badge`, target type `badge`, the badge ID as the target, and the metadata keys `type` and `name`.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:general` bucket.
+
+## Update badge
+
+<RouteHeader method="PATCH" path="/v1/admin/badges/{badge_id}" auditReason />
+
+Applies a partial update to a badge and returns it. Requires `badge:update`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badge_id | snowflake | The ID of the badge |
+
+### JSON body
+
+Every field is optional and an omitted field is left unchanged.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | string | The name of the badge (1-64 characters) |
+| tooltip? | string | The text shown when hovering over the badge (1-256 characters) |
+| icon? | string | The replacement SVG markup |
+| url? | string | The absolute HTTP URL opened when the badge is clicked, or null for none |
+| position? | integer | The order in which the badge appears in a profile |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badge | [badge](/http-api/instance/#badge-object) object | The updated badge |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The badge was updated |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because a field or the icon failed validation |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE`, because the badge does not exist |
+
+### Side effects
+
+[Badges Update](/gateway/events/#badges-update) is emitted with the updated badge. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_badge`, target type `badge`, the badge ID as the target, and the metadata key `fields`.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:general` bucket.
+
+## Delete badge
+
+<RouteHeader method="DELETE" path="/v1/admin/badges/{badge_id}" auditReason />
+
+Deletes a badge. Requires `badge:delete`. Accounts and guilds keep the badge ID, and clients stop showing it because no definition resolves it.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badge_id | snowflake | The ID of the badge |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Always true |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The badge was deleted |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_BADGE`, because the badge does not exist |
+
+### Side effects
+
+[Badges Update](/gateway/events/#badges-update) is emitted with the deleted badge ID. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `delete_badge`, target type `badge`, the badge ID as the target, and the metadata keys `type` and `name`.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:general` bucket.
+
+## Update built-in badge icon
+
+<RouteHeader method="PUT" path="/v1/admin/badges/builtin/{badge}" auditReason />
+
+Overrides the icon of a built-in badge, or restores its default icon, and returns the [built-in badge icons object](/http-api/instance/#built-in-badge-icons-object). Requires `badge:update`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badge | string | `staff`, `premium`, `verified`, `partnered`, or `discoverable` |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| icon? | string | The SVG markup of the icon, or null to restore the default icon |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [built-in badge icons](/http-api/instance/#built-in-badge-icons-object) object | The icon was updated |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because the icon failed validation |
+
+### Side effects
+
+[Badges Update](/gateway/events/#badges-update) is emitted with the changed icon. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_builtin_badge_icon`, target type `badge`, and the metadata keys `badge` and `reset`.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:general` bucket.

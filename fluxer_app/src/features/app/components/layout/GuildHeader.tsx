@@ -12,6 +12,7 @@ import {
 	measureSkeletonTextWidthPx,
 	useSkeletonLayoutReport,
 } from '@app/features/app/hooks/useSkeletonLayoutMemoryCapture';
+import Badges from '@app/features/badge/state/Badges';
 import {GuildHeaderBottomSheet} from '@app/features/guild/components/bottomsheets/GuildHeaderBottomSheet';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildHeaderPopout} from '@app/features/guild/components/popouts/GuildHeaderPopout';
@@ -20,6 +21,7 @@ import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Popout from '@app/features/ui/state/Popout';
+import {BadgeTypes} from '@fluxer/constants/src/BadgeConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -40,8 +42,11 @@ const GUILD_BADGE_FEATURES: ReadonlyArray<string> = [
 	GuildFeatures.DISCOVERABLE,
 ];
 
-function resolveGuildBadgeVisible(features: ReadonlySet<string>): boolean {
-	return GUILD_BADGE_FEATURES.some((feature) => features.has(feature));
+function resolveGuildBadgeVisible(guild: Guild): boolean {
+	return (
+		Badges.resolve(BadgeTypes.GUILD, guild.badges).length > 0 ||
+		GUILD_BADGE_FEATURES.some((feature) => guild.features.has(feature))
+	);
 }
 
 function resolveSkeletonBannerPlacement(hasBanner: boolean, isDetachedBanner: boolean): SkeletonGuildBannerPlacement {
@@ -74,7 +79,7 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 		[guild],
 	);
 	const guildNameRef = useRef<HTMLSpanElement | null>(null);
-	const badgeVisible = resolveGuildBadgeVisible(guild.features);
+	const badgeVisible = resolveGuildBadgeVisible(guild);
 	const bannerPlacement = resolveSkeletonBannerPlacement(banner.hasBanner, banner.isDetached);
 	useSkeletonLayoutReport(() => {
 		reportSkeletonGuildPresentation(guild.id, {
@@ -152,6 +157,7 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 						<>
 							<GuildBadge
 								features={guild.features}
+								badges={guild.badges}
 								variant={onBanner ? 'banner' : 'default'}
 								tooltipPosition="bottom"
 								data-flx="app.guild-header.guild-badge"

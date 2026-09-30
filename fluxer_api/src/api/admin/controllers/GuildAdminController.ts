@@ -34,6 +34,7 @@ const GUILD_UPDATE_ACLS = [
 	AdminACLs.GUILD_UPDATE_NAME,
 	AdminACLs.GUILD_UPDATE_SETTINGS,
 	AdminACLs.GUILD_UPDATE_FEATURES,
+	AdminACLs.GUILD_UPDATE_BADGES,
 	AdminACLs.GUILD_UPDATE_VANITY,
 	AdminACLs.GUILD_TRANSFER_OWNERSHIP,
 ];
@@ -66,6 +67,9 @@ function selectGuildUpdateACLs(body: UpdateGuildRequest): Array<string> {
 	}
 	if (hasGuildFeatureUpdate(body)) {
 		required.push(AdminACLs.GUILD_UPDATE_FEATURES);
+	}
+	if (body.badge_ids !== undefined) {
+		required.push(AdminACLs.GUILD_UPDATE_BADGES);
 	}
 	if (body.vanity_url_code !== undefined) {
 		required.push(AdminACLs.GUILD_UPDATE_VANITY);
@@ -167,7 +171,7 @@ export function GuildAdminController(app: HonoApp) {
 			operationId: 'update_admin_guild',
 			summary: 'Update guild',
 			description:
-				'Partially updates a guild. The permissions required are selected by the fields present in the body and are evaluated with all-of semantics: name requires GUILD_UPDATE_NAME, vanity_url_code requires GUILD_UPDATE_VANITY, new_owner_id requires GUILD_TRANSFER_OWNERSHIP, add_features and remove_features require GUILD_UPDATE_FEATURES, and fields together with every other setting requires GUILD_UPDATE_SETTINGS. A body with no fields applies no change. Every applied change is logged to the audit log.',
+				'Partially updates a guild. The permissions required are selected by the fields present in the body and are evaluated with all-of semantics: name requires GUILD_UPDATE_NAME, vanity_url_code requires GUILD_UPDATE_VANITY, new_owner_id requires GUILD_TRANSFER_OWNERSHIP, add_features and remove_features require GUILD_UPDATE_FEATURES, badge_ids requires GUILD_UPDATE_BADGES, and fields together with every other setting requires GUILD_UPDATE_SETTINGS. A body with no fields applies no change. Every applied change is logged to the audit log.',
 			responseSchema: GuildUpdateResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -211,6 +215,14 @@ export function GuildAdminController(app: HonoApp) {
 					auditLogReason,
 				});
 			}
+			if (body.badge_ids !== undefined) {
+				await updateService.updateGuildBadges({
+					guildId: createGuildID(guildIdRaw),
+					badgeIds: body.badge_ids,
+					adminUserId,
+					auditLogReason,
+				});
+			}
 			if (body.name !== undefined) {
 				await updateService.updateGuildName({guild_id: guildIdRaw, name: body.name}, adminUserId, auditLogReason);
 			}
@@ -236,6 +248,7 @@ export function GuildAdminController(app: HonoApp) {
 				body.fields !== undefined ||
 				hasGuildSettingsUpdate(body) ||
 				hasGuildFeatureUpdate(body) ||
+				body.badge_ids !== undefined ||
 				body.name !== undefined ||
 				body.vanity_url_code !== undefined ||
 				body.new_owner_id !== undefined;

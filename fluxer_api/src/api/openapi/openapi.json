@@ -1976,6 +1976,50 @@
 				"description": "Retrieve WebAuthn authentication challenge and options for passwordless login with biometrics or security keys."
 			}
 		},
+		"/badges": {
+			"get": {
+				"operationId": "list_badges",
+				"summary": "List badges",
+				"tags": ["Instance"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/BadgesResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the badges defined on this instance and the overrides for built-in badge icons"
+			}
+		},
 		"/channels/messages/bulk": {
 			"post": {
 				"operationId": "bulk_list_channel_messages",
@@ -22574,6 +22618,7 @@
 						"description": "Sequence number for lifetime premium",
 						"$ref": "#/components/schemas/Int32Type"
 					},
+					"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"},
 					"mutual_friends": {
 						"description": "Array of mutual friends",
 						"type": "array",
@@ -27224,6 +27269,7 @@
 						"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
 						"description": "Array of guild feature flags"
 					},
+					"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"},
 					"verification_level": {
 						"$ref": "#/components/schemas/GuildVerificationLevel",
 						"description": "Required verification level for members to participate"
@@ -28482,6 +28528,7 @@
 								"member_count": {"type": "number", "description": "Approximate member count"},
 								"online_count": {"type": "number", "description": "Approximate online member count"},
 								"features": {"type": "array", "items": {"type": "string"}, "description": "Guild feature flags"},
+								"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"},
 								"verification_level": {"type": "number", "description": "Verification level"}
 							},
 							"required": [
@@ -29318,6 +29365,25 @@
 				"required": ["channels"],
 				"additionalProperties": false
 			},
+			"BadgesResponse": {
+				"type": "object",
+				"properties": {
+					"version": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Version of the badge configuration"
+					},
+					"badges": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/BadgeResponse"},
+						"description": "Badges defined on this instance"
+					},
+					"builtin_icons": {"$ref": "#/components/schemas/BuiltinBadgeIconsResponse"}
+				},
+				"required": ["version", "badges", "builtin_icons"],
+				"additionalProperties": false
+			},
 			"WebAuthnAuthenticationOptionsResponse": {
 				"type": "object",
 				"properties": {
@@ -30077,6 +30143,10 @@
 						"description": "Public application configuration for client-side features",
 						"$ref": "#/components/schemas/InstanceAppPublicSchema"
 					},
+					"badges": {
+						"description": "Badges defined on this instance and overrides for built-in badge icons",
+						"$ref": "#/components/schemas/BadgesResponse"
+					},
 					"domain_migration": {
 						"description": "Web domain migration switch and anonymous rollout, only acted on by official instance clients",
 						"$ref": "#/components/schemas/DomainMigrationDiscoveryResponse"
@@ -30611,6 +30681,45 @@
 				"required": ["id_hash", "masked_ip", "current"],
 				"additionalProperties": false
 			},
+			"BuiltinBadgeIconsResponse": {
+				"type": "object",
+				"properties": {
+					"staff": {"type": ["string", "null"]},
+					"premium": {"type": ["string", "null"]},
+					"verified": {"type": ["string", "null"]},
+					"partnered": {"type": ["string", "null"]},
+					"discoverable": {"type": ["string", "null"]}
+				},
+				"required": ["staff", "premium", "verified", "partnered", "discoverable"],
+				"additionalProperties": false,
+				"description": "SVG markup overriding built-in badge icons, or null to use the default icon"
+			},
+			"BadgeResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the badge", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"type": {"$ref": "#/components/schemas/BadgeTypeEnum"},
+					"name": {"type": "string", "description": "The name of the badge"},
+					"tooltip": {"type": "string", "description": "The text shown when hovering the badge"},
+					"icon": {"type": "string", "description": "SVG markup of the badge icon"},
+					"url": {"description": "The URL opened when the badge is clicked", "type": ["string", "null"]},
+					"position": {
+						"type": "integer",
+						"minimum": -9007199254740991,
+						"maximum": 9007199254740991,
+						"description": "Sort order of the badge; lower values are shown first"
+					}
+				},
+				"required": ["id", "type", "name", "tooltip", "icon", "url", "position"],
+				"additionalProperties": false
+			},
+			"BadgeTypeEnum": {
+				"description": "Entity type a badge can be assigned to",
+				"x-enumNames": ["User", "Guild"],
+				"x-enumDescriptions": ["Badge shown on user profiles", "Badge shown next to community names"],
+				"enum": ["user", "guild"],
+				"type": "string"
+			},
 			"ChannelNicknameOverrides": {
 				"type": "object",
 				"propertyNames": {"type": "string", "description": "User ID"},
@@ -30912,7 +31021,8 @@
 								"type": "array",
 								"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
 								"description": "Array of guild feature flags"
-							}
+							},
+							"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"}
 						},
 						"description": "The guild this invite is for",
 						"$ref": "#/components/schemas/GuildPartialResponse"
@@ -31038,10 +31148,17 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
 						"description": "Array of guild feature flags"
-					}
+					},
+					"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"}
 				},
 				"required": ["id", "name", "splash_card_alignment", "features"],
 				"additionalProperties": false
+			},
+			"BadgeIdsResponse": {
+				"maxItems": 25,
+				"type": "array",
+				"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
+				"description": "IDs of the badges assigned to the entity"
 			},
 			"GuildFeatureSchema": {
 				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD (other values allowed)",

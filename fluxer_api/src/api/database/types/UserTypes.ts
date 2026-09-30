@@ -79,6 +79,7 @@ export interface UserRow {
 	deletion_scheduled_at?: Nullish<Date>;
 	acls: Nullish<Set<string>>;
 	traits: Nullish<Set<string>>;
+	badge_ids: Nullish<Set<bigint>>;
 	first_refund_at: Nullish<Date>;
 	gift_inventory_server_seq: Nullish<number>;
 	gift_inventory_client_seq: Nullish<number>;
@@ -145,6 +146,7 @@ export const USER_COLUMNS = [
 	'deletion_scheduled_at',
 	'acls',
 	'traits',
+	'badge_ids',
 	'first_refund_at',
 	'gift_inventory_server_seq',
 	'gift_inventory_client_seq',
@@ -210,6 +212,7 @@ export const EMPTY_USER_ROW: UserRow = {
 	deletion_scheduled_at: null,
 	acls: null,
 	traits: null,
+	badge_ids: null,
 	first_refund_at: null,
 	gift_inventory_server_seq: null,
 	gift_inventory_client_seq: null,

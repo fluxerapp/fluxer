@@ -18,6 +18,7 @@ export interface DiscoveryGuild {
 	member_count: number;
 	online_count: number;
 	features: Array<string>;
+	badges?: Array<string>;
 	verification_level: number;
 }
 

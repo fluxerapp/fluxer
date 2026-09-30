@@ -551,6 +551,7 @@ The profile read returned by [Get user profile](#get-user-profile) for one targe
 | premium_type?<sup>2</sup> | integer | The [premium type](#premium-types) visible to the caller |
 | premium_since?<sup>2</sup> | ISO8601 timestamp | The premium activation time visible to the caller |
 | premium_lifetime_sequence?<sup>2</sup> | integer | The lifetime premium sequence visible to the caller |
+| badges? | array[snowflake] | IDs of the [custom badges](/http-api/instance/#badge-object) assigned to the target account |
 | mutual_friends?<sup>3</sup> | array[[partial user](#partial-user-object) object] | The mutual friends in descending account identifier order |
 | mutual_guilds?<sup>3</sup> | array[[mutual guild](#mutual-guild-object) object] | The guilds the caller and the target are both members of |
 | connected_accounts<sup>4</sup> | array[[connection](/http-api/connections/#connection-object) object] | The verified connections the caller is permitted to see |

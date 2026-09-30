@@ -308,6 +308,7 @@ export const RpcResponseSessionData = z.object({
 	latitude: createStringType(1, 32).optional().describe('Latitude from IP geolocation'),
 	longitude: createStringType(1, 32).optional().describe('Longitude from IP geolocation'),
 	rtc_regions: z.array(RtcRegionResponse).describe('Available voice server regions'),
+	badges_version: z.number().int().describe('Version of the instance badge configuration'),
 	webauthn_credentials: z
 		.array(WebAuthnCredentialResponse)
 		.describe('Registered WebAuthn credentials (passkeys) for the authenticated user'),

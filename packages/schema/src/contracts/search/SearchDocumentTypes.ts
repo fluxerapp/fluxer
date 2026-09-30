@@ -76,6 +76,7 @@ export interface SearchableGuild {
 	bannerHash: string | null;
 	splashHash: string | null;
 	features: Array<string>;
+	badgeIds?: Array<string>;
 	verificationLevel: number;
 	mfaLevel: number;
 	nsfwLevel: number;

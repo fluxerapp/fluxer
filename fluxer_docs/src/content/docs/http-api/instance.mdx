@@ -35,6 +35,7 @@ The discovery document is the complete public description of one deployment. Eve
 | push | [push configuration](#push-configuration-object) object | Public Web Push identity |
 | app_public | [public application configuration](#public-application-configuration-object) object | Public client configuration |
 | domain_migration? | [domain migration](#domain-migration-object) object | Web domain migration switch and logged-out rollout |
+| badges? | [badges](#badges-object) object | Badges defined on the instance and the overrides for built-in badge icons |
 
 <sup>1</sup> The value is a plain integer that increases when the API introduces a change a client is expected to notice, and the current value is `1`
 
@@ -449,6 +450,50 @@ A logged-out device draws its own random ID once and keeps it. The device moves 
 
 While `standalone_forwarding` is false, an installed desktop web app moves its data and stays on the legacy origin. Browser tabs forward either way.
 
+## Badges object
+
+The custom badges of the instance.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| version<sup>1</sup> | integer | Version of the badge configuration |
+| badges | array[[badge](#badge-object) object] | User and guild badges |
+| builtin_icons | [built-in badge icons](#built-in-badge-icons-object) object | Icon overrides for the built-in badges |
+
+<sup>1</sup> This value increases every time badges for the instance are updated.
+
+## Badge object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the badge |
+| type | string | `user` or `guild` |
+| name | string | The name of the badge |
+| tooltip | string | The text shown when hovering the badge |
+| icon | string | The SVG source for the icon |
+| url | ?string | The URL opened when the badge is clicked, or null |
+| position<sup>1</sup> | integer | The order in which the badge is displayed |
+
+<sup>1</sup> Lower numbers display first. For guilds, only the lowest-position badge is displayed.
+
+## Built-in badge icons object
+
+Each field is the SVG source for an icon replacing the default icon of that badge, or null when the default icon is used.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| staff | ?string | Icon of the staff badge |
+| premium | ?string | Icon of the premium badge |
+| verified | ?string | Icon of the verified community badge |
+| partnered | ?string | Icon of the partnered community badge |
+| discoverable | ?string | Icon of the discoverable community badge |
+
 ## Geolocation object
 
 The approximate location Fluxer resolved for the request, together with the regions where mature content is gated behind an age check or is unavailable.
@@ -513,6 +558,23 @@ The path has no `/v1` prefix.
 ### Rate limit
 
 60 requests per minute for each authenticated user, or for each client IP address when the request has no credential, on the `instance:info` bucket. [Get OpenAPI document](#get-openapi-document) shares this bucket.
+
+## List badges
+
+<RouteHeader method="GET" path="/v1/badges" unauthenticated />
+
+Returns the [badges object](#badges-object).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [badges](#badges-object) object | The badges were returned |
+| 304 | none | The badges have not changed since the supplied `ETag` |
+
+### Rate limit
+
+60 requests per minute for each authenticated user, or for each client IP address when the request has no credential, on the `instance:info` bucket.
 
 ## Get client geolocation
 
