@@ -48,6 +48,7 @@ tempfile = "3.27.0"
 thiserror = "2.0.20"
 tokio = {version = "1.53.1", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"]}
 tokio-util = {version = "0.7.19", features = ["io"]}
+tower-http = {version = "0.7.1", features = ["compression-gzip"]}
 tracing = "0.1.44"
 tracing-subscriber = {version = "0.3.23", features = ["fmt", "json"]}
 url = "2.5.8"
@@ -59,5 +60,6 @@ pkg-config = "0.3.34"
 
 [dev-dependencies]
 criterion = "0.8.2"
+flate2 = "1.1.10"
 proptest = "1.11.0"
 tower = {version = "0.5.3", features = ["util"]}
