@@ -338,7 +338,7 @@ export function BanAdminController(app: HonoApp) {
 			tags: ['Admin'],
 			requestSchema: AdminBlocklistEntryCreateRequest,
 			description:
-				'Add a value to a blocklist. The request body is the shape the blocklist named by list_type accepts, and the value is validated and canonicalized for that blocklist. Adding an IP address that is on the instance exemption list, or that IPInfo reports as a high blast-radius carrier NAT, is refused with 400 IP_BAN_DECLINED and recorded in the audit log.',
+				'Add a value to a blocklist. The request body is the shape the blocklist named by list_type accepts, and the value is validated and canonicalized for that blocklist. Adding an IP address that is on the instance exemption list is refused with 400 IP_BAN_DECLINED and recorded in the audit log.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');

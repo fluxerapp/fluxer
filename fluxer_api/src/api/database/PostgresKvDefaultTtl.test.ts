@@ -333,7 +333,6 @@ RETURNING updated_at::text`,
 		await seed('attachment_upload_traces_by_key', 'at-29', '29 days');
 		await seed('oauth2_access_tokens', 'oa-8', '8 days');
 		await seed('donor_magic_link_tokens', 'dm-hour', '1 hour');
-		await seed('ipinfo_requests_by_hour', 'ip-day', '1 day');
 		await seed('jobs_by_id', 'job', '100 days');
 		await seed('users', 'user', '100 days');
 		await seed('recent_mentions', 'rm-forever', '1 day', 'infinity');
@@ -346,7 +345,6 @@ RETURNING updated_at::text`,
 		});
 		expect(await remaining()).toEqual([
 			{table_name: 'attachment_upload_traces_by_key', row_key: 'at-29'},
-			{table_name: 'ipinfo_requests_by_hour', row_key: 'ip-day'},
 			{table_name: 'jobs_by_id', row_key: 'job'},
 			{table_name: 'recent_mentions', row_key: 'rm-day'},
 			{table_name: 'recent_mentions', row_key: 'rm-forever'},

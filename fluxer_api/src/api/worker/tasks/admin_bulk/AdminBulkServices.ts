@@ -5,7 +5,7 @@ import {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagem
 import {AdminGuildService} from '@app/api/admin/services/AdminGuildService';
 import {AdminUserService} from '@app/api/admin/services/AdminUserService';
 import {createApiContext} from '@app/api/CreateApiContext';
-import {getIpInfoService, getReportServiceInstance} from '@app/api/middleware/ServiceMiddleware';
+import {getReportServiceInstance} from '@app/api/middleware/ServiceMiddleware';
 import {
 	getDiscriminatorService,
 	getEntityAssetService,
@@ -28,7 +28,6 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		apiContext,
 		adminRepository: deps.adminRepository,
 		auditService,
-		ipInfoService: getIpInfoService(),
 	});
 	const userService = new AdminUserService({
 		apiContext,

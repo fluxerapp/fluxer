@@ -215,9 +215,6 @@ function defaultConfig(): MasterConfig {
 			},
 			blocklist_feeds: {},
 			breached_password_check: {},
-			ipinfo: {
-				api_key: '',
-			},
 			push: {
 				apns: {
 					enabled: false,

@@ -988,10 +988,6 @@ Default `3310`. The scanner port. Integer. Compose forwards it from `.env`.
 
 Default `false`. Behaviour when the scanner is unreachable. With scanning on and this off, an unreachable scanner rejects every upload. Compose forwards it from `.env`.
 
-#### `FLUXER_IPINFO_API_KEY`
-
-Default empty. The ipinfo key. Admin and guild IP bans use it to skip carrier-grade NAT and other shared addresses. Without it those checks treat every address as unknown. The previous name `FLUXER_RISK_IPINFO_API_KEY` is still read when this one is unset or empty. Compose forwards this name from `.env`, and not the previous one.
-
 #### `FLUXER_BLOCKLIST_FEEDS_ENABLED`
 
 Defaults to the inverse of `FLUXER_SELF_HOSTED`. Off by default on a self-hosted instance. With feeds on, the worker downloads the URLhaus and PhishTank URL lists every six hours, and MalwareBazaar file hashes every twelve hours. Fluxer checks posted links against the URLs and uploads against the hashes.
@@ -1686,7 +1682,7 @@ Every `FLUXER_CASSANDRA_` name. The stack runs Postgres.
 
 #### Older names of a forwarded setting
 
-`FLUXER_NATS_CORE_URL`, `FLUXER_RISK_IPINFO_API_KEY`, `KLIPY_API_KEY` and `YOUTUBE_API_KEY`. A service reads each only when the name it replaces is unset or empty, and Compose forwards that name instead.
+`FLUXER_NATS_CORE_URL`, `KLIPY_API_KEY` and `YOUTUBE_API_KEY`. A service reads each only when the name it replaces is unset or empty, and Compose forwards that name instead.
 
 #### Individual Stripe price names
 

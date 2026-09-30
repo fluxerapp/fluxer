@@ -41,7 +41,6 @@ import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlem
 import type {UserService} from '@app/api/user/services/UserService';
 import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import type {SendSystemDmResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type Stripe from 'stripe';
 
 export class AdminService {
@@ -81,7 +80,6 @@ export class AdminService {
 		private readonly applicationRepository: IApplicationRepository,
 		private readonly stripe: Stripe | null = null,
 		private readonly jobLedger: IJobLedgerRepository,
-		private readonly ipInfoService: IpInfoService,
 		private readonly storeEntitlementService: StoreEntitlementService,
 	) {
 		const {users, gateway, worker, snowflake} = this.apiContext.services;
@@ -94,7 +92,6 @@ export class AdminService {
 			apiContext: this.apiContext,
 			adminRepository: this.adminRepository,
 			auditService: this.auditService,
-			ipInfoService: this.ipInfoService,
 		});
 		this.userService = new AdminUserService({
 			apiContext: this.apiContext,

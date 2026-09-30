@@ -240,9 +240,6 @@ export interface MasterConfig {
 		breached_password_check: {
 			enabled?: boolean;
 		};
-		ipinfo: {
-			api_key: string;
-		};
 		push: {
 			apns: {
 				enabled: boolean;

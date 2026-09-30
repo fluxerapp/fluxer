@@ -4,7 +4,6 @@ import type {ApiContext} from '@app/api/ApiContext';
 import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
-import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '@app/api/ban/IpBanCgnatGuard';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import {
 	BANNED_AVATAR_HASHES_REFRESH_CHANNEL,
@@ -18,7 +17,6 @@ import {
 } from '@app/api/constants/ContentModeration';
 import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
 import type {BannedProfileSubstringScope} from '@app/api/database/types/AdminArchiveTypes';
-import {Logger} from '@app/api/Logger';
 import {bannedAvatarHashCache} from '@app/api/middleware/BannedAvatarHashCache';
 import {fileShaCache} from '@app/api/middleware/FileShaCache';
 import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
@@ -34,13 +32,11 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {AdminBlocklistListType} from '@fluxer/schema/src/domains/admin/AdminBlocklistSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 
 interface AdminBanManagementServiceDeps {
 	apiContext: ApiContext;
 	adminRepository: IAdminRepository;
 	auditService: AdminAuditService;
-	ipInfoService: IpInfoService;
 }
 
 interface AdminBlocklistEntry {
@@ -146,20 +142,6 @@ export class AdminBanManagementService {
 				message: 'This IP address is on the instance exemption list',
 			});
 		}
-		if (await this.shouldSkipIpBanForCgnat(data.ip)) {
-			await auditService.createAuditLog({
-				adminUserId,
-				targetType: 'ip',
-				targetId: BigInt(0),
-				action: 'ban_ip_skipped_cgnat',
-				auditLogReason,
-				metadata: new Map([['ip', data.ip]]),
-			});
-			throw new BadRequestError({
-				code: APIErrorCodes.IP_BAN_DECLINED,
-				message: 'This IP address is a high blast-radius carrier network',
-			});
-		}
 		await adminRepository.banIp(data.ip);
 		ipBanCache.ban(data.ip);
 		await cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
@@ -198,25 +180,6 @@ export class AdminBanManagementService {
 	}> {
 		const banned = ipBanCache.isBanned(data.ip);
 		return {banned};
-	}
-
-	private async shouldSkipIpBanForCgnat(ip: string): Promise<boolean> {
-		if (!isSingleIpBanCandidate(ip)) {
-			return false;
-		}
-		try {
-			const {cgnat: highRisk} = await getIpBanBlastRadiusVerdict(ip, this.deps.ipInfoService, {
-				source: 'admin.ip_ban',
-				reason: 'pre_write_cgnat_guard',
-			});
-			if (highRisk) {
-				Logger.warn({ip}, 'Skipping IP ban because IPInfo indicates high CGNAT blast-radius risk');
-			}
-			return highRisk;
-		} catch (error) {
-			Logger.warn({error, ip}, 'IPInfo CGNAT guard failed while adding IP ban');
-			return false;
-		}
 	}
 
 	async banEmail(

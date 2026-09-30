@@ -86,12 +86,9 @@ describe('buildNamedFluxerEnvOverrides', () => {
 			buildNamedFluxerEnvOverrides({
 				FLUXER_NATS_URL: '',
 				FLUXER_NATS_CORE_URL: 'nats://alias',
-				FLUXER_IPINFO_API_KEY: ' ',
-				FLUXER_RISK_IPINFO_API_KEY: 'alias-key',
 			}),
 		).toMatchObject({
 			services: {nats: {core_url: 'nats://alias'}},
-			integrations: {ipinfo: {api_key: 'alias-key'}},
 		});
 	});
 

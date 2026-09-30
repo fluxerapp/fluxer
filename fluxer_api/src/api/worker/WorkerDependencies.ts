@@ -38,7 +38,6 @@ import type {InviteService} from '@app/api/invite/InviteService';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {createGuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
-import {getIpInfoService} from '@app/api/middleware/ServiceMiddleware';
 import {
 	ensureVoiceResourcesInitialized,
 	getGatewayService,
@@ -237,7 +236,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	}
 	const inviteRepository = getInviteRepository();
 	const webhookRepository = getWebhookRepository();
-	const ipInfoService = getIpInfoService();
 	const contactChangeLogService = getContactChangeLogService();
 	const apiContext = createApiContext();
 	const {channelService, guildService, inviteService} = createGuildStackServices({
@@ -263,7 +261,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		voiceRoomStore,
 		liveKitService,
 		voiceAvailabilityService,
-		ipInfoService,
 	});
 	const billingRepository = new BillingRepository(snowflakeService, kvClient);
 	const storeEntitlementService = createStoreEntitlementService({

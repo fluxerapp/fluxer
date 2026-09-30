@@ -24,7 +24,6 @@ import type {JoinSourceType} from '@fluxer/constants/src/GuildConstants';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildMemberUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 export class GuildMemberService {
@@ -47,11 +46,10 @@ export class GuildMemberService {
 		rateLimitService: IRateLimitService,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		limitConfigService: LimitConfigService,
-		ipInfoService: IpInfoService,
 	) {
 		this.userRepository = userRepository;
 		this.authService = new GuildMemberAuthService(gatewayService, userRepository);
-		this.validationService = new GuildMemberValidationService(guildRepository, userRepository, ipInfoService);
+		this.validationService = new GuildMemberValidationService(guildRepository, userRepository);
 		this.auditService = new GuildMemberAuditService(guildAuditLogService);
 		this.eventService = new GuildMemberEventService(gatewayService, userCacheService);
 		this.searchIndexService = new GuildMemberSearchIndexService();

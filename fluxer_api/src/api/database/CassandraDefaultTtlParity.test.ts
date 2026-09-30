@@ -6,7 +6,6 @@ import {fileURLToPath} from 'node:url';
 import {DEFAULT_TTL_TABLES} from '@app/api/database/PostgresKvDefaultTtlExpiry';
 import * as DonationTables from '@app/api/donation/DonationTables';
 import * as Tables from '@app/api/Tables';
-import {IPINFO_CACHE_TTL_SECONDS, IPINFO_REQUEST_AUDIT_TTL_SECONDS} from '@pkgs/geoip/src/PostgresIpInfoKv';
 import {describe, expect, it} from 'vitest';
 
 const THIS_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -32,8 +31,6 @@ const DSL_TABLES = [...Object.values(Tables), ...Object.values(DonationTables)];
 const DSL_NAMES = new Set<string>(DSL_TABLES.map((table) => table.name));
 
 const NON_DSL_DEFAULTS: Record<string, number | null> = {
-	ipinfo_cache: IPINFO_CACHE_TTL_SECONDS,
-	ipinfo_requests_by_hour: IPINFO_REQUEST_AUDIT_TTL_SECONDS,
 	billing_webhook_events: null,
 	forensic_identifier_by_key_day: null,
 	forensic_identifier_by_request: null,

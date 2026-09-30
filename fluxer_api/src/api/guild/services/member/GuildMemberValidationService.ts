@@ -2,10 +2,8 @@
 
 import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {guildIdToRoleId} from '@app/api/BrandedTypes';
-import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '@app/api/ban/IpBanCgnatGuard';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
-import {Logger} from '@app/api/Logger';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -17,7 +15,6 @@ import {IpBannedFromGuildError} from '@fluxer/errors/src/domains/guild/IpBannedF
 import {UnknownGuildRoleError} from '@fluxer/errors/src/domains/guild/UnknownGuildRoleError';
 import {isSameIpDecisionMatch} from '@fluxer/ip_utils/src/IpAddress';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 
 function ensureNotEveryoneRole(roleId: RoleID, guildId: GuildID, path: string): void {
 	if (roleId === guildIdToRoleId(guildId)) {
@@ -29,7 +26,6 @@ export class GuildMemberValidationService {
 	constructor(
 		private readonly guildRepository: IGuildRepositoryAggregate,
 		private readonly userRepository: IUserRepository,
-		private readonly ipInfoService: IpInfoService,
 	) {}
 
 	async validateAndGetRoleIds(params: {
@@ -102,38 +98,9 @@ export class GuildMemberValidationService {
 			if (ban.userId === userId) {
 				throw new BannedFromGuildError();
 			}
-			if (isSameIpDecisionMatch(userIp, ban.ipAddress) && (await this.shouldEnforceIpBan(userIp, ban.ipAddress))) {
+			if (isSameIpDecisionMatch(userIp, ban.ipAddress) && !isIpBanExempt(userIp)) {
 				throw new IpBannedFromGuildError();
 			}
-		}
-	}
-
-	private async shouldEnforceIpBan(
-		userIp: string | null | undefined,
-		bannedIp: string | null | undefined,
-	): Promise<boolean> {
-		if (isIpBanExempt(userIp)) {
-			return false;
-		}
-		if (!userIp || !bannedIp || !isSingleIpBanCandidate(bannedIp)) {
-			return true;
-		}
-		try {
-			const {cgnat, sharedAccess} = await getIpBanBlastRadiusVerdict(userIp, this.ipInfoService, {
-				source: 'guild.member_ip_ban',
-				reason: 'join_cgnat_guard',
-			});
-			const highRisk = cgnat || sharedAccess;
-			if (highRisk) {
-				Logger.warn(
-					{userIp, bannedIp},
-					'Skipping guild member IP ban match because IPInfo indicates high shared-network blast-radius risk',
-				);
-			}
-			return !highRisk;
-		} catch (error) {
-			Logger.warn({error, userIp, bannedIp}, 'IPInfo CGNAT guard failed while checking guild member IP ban');
-			return true;
 		}
 	}
 }

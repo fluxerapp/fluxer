@@ -27,7 +27,7 @@ Fluxer builds each permission name from `ban:`, the list name with each hyphen w
 | avatar-hash<sup>7</sup> | Avatar hashes blocked from being set |
 | profile-substring<sup>3</sup> <sup>8</sup> | Substrings blocked from one named profile field |
 
-<sup>1</sup> Fluxer refuses an address with 400 `IP_BAN_DECLINED` when it is on the instance exemption list, or when IP lookup data shows that a single address is on a mobile carrier network, and records both refusals in the Admin audit log
+<sup>1</sup> Fluxer refuses an address with 400 `IP_BAN_DECLINED` when it is on the instance exemption list, and records the refusal in the Admin audit log
 
 <sup>2</sup> Stored lowercased, so a mixed-case value does not create a second row
 
@@ -367,7 +367,7 @@ Every write is an upsert on the canonical value. An omitted optional field is wr
 
 A body field the selected blocklist does not accept is stripped and never produces that 400. A `url` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
 
-Fluxer refuses to add an `ip` with 400 `IP_BAN_DECLINED` when the address is on the instance exemption list, and when a single address is classified as a high blast-radius mobile or carrier network. Fluxer runs that carrier network check only for a single address, so the check never refuses a CIDR range. When the IP lookup for the check fails, Fluxer writes the address.
+Fluxer refuses to add an `ip` with 400 `IP_BAN_DECLINED` when the address is on the instance exemption list.
 
 The response has no body, so it does not report the canonical form that was stored. Read it back with [List blocklist entries](#list-blocklist-entries).
 
@@ -375,7 +375,7 @@ The response has no body, so it does not report the canonical form that was stor
 
 Fluxer checks later requests against the written rows. For every list except `email`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. It records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt` or `ban_ip_skipped_cgnat`, before it returns the 400.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. It records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt`, before it returns the 400.
 
 ### Rate limit
 

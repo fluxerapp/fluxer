@@ -259,9 +259,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 					}
 				: undefined,
 		},
-		ipinfo: {
-			apiKey: master.integrations.ipinfo.api_key || undefined,
-		},
 		blocklistFeeds: {
 			enabled: master.integrations.blocklist_feeds.enabled ?? !master.instance.self_hosted,
 		},
