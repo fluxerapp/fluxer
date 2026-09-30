@@ -131,6 +131,7 @@ describe('Auth SSO flow', () => {
 				.body({redirect_to: '/me'})
 				.execute();
 			expect(startData.state).toBeTruthy();
+			expect(startData.state.startsWith('m.')).toBe(false);
 			expect(startData.authorization_url).toBeTruthy();
 			const authUrlString = startData.authorization_url;
 			expect(authUrlString).toContain(`state=${startData.state}`);
@@ -179,7 +180,8 @@ describe('Auth SSO flow', () => {
 			expect(startData.redirect_uri).not.toContain('evil.example');
 			expect(startData.authorization_url).toContain(encodeURIComponent(startData.redirect_uri));
 		});
-		it('uses the requested mobile SSO redirect URI without changing the post-login redirect', async () => {
+		it('routes mobile SSO through the default redirect URI without changing the post-login redirect', async () => {
+			const status = await createBuilderWithoutAuth<{redirect_uri: string}>(harness).get('/auth/sso/status').execute();
 			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
 				.post('/auth/sso/start')
 				.body({
@@ -187,8 +189,10 @@ describe('Auth SSO flow', () => {
 					redirect_uri: 'fluxer://auth/sso/callback',
 				})
 				.execute();
-			expect(startData.redirect_uri).toBe('fluxer://auth/sso/callback');
-			expect(getAuthorizationUrlParam(startData.authorization_url, 'redirect_uri')).toBe('fluxer://auth/sso/callback');
+			expect(startData.redirect_uri).toBe(status.redirect_uri);
+			expect(getAuthorizationUrlParam(startData.authorization_url, 'redirect_uri')).toBe(status.redirect_uri);
+			expect(startData.state.startsWith('m.')).toBe(true);
+			expect(getAuthorizationUrlParam(startData.authorization_url, 'state')).toBe(startData.state);
 			const email = `sso-mobile-redirect-${Date.now()}@example.com`;
 			const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
 				.post('/auth/sso/complete')

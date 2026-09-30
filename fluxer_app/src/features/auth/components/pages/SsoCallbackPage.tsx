@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/components/pages/LoginPage.module.css';
 import {
@@ -12,6 +13,7 @@ import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
 import {BACK_TO_SIGN_IN_DESCRIPTOR, TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import * as FormUtils from '@app/lib/forms';
+import {SSO_MOBILE_CALLBACK_URI, SSO_MOBILE_STATE_PREFIX} from '@fluxer/constants/src/SsoConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -29,6 +31,10 @@ const FAILED_TO_COMPLETE_SSO_SIGN_IN_DESCRIPTOR = msg({
 	message: 'Failed to complete SSO sign-in',
 	comment: 'Short label in the authentication SSO callback page. Keep the tone plain and specific.',
 });
+const OPEN_PRODUCT_DESCRIPTOR = msg({
+	message: 'Open {productName}',
+	comment: 'Button that hands SSO sign-in back to the mobile app. productName is the app name.',
+});
 const SSO_TIMEOUT_MS = 30_000;
 const SsoCallbackPage = observer(function SsoCallbackPage() {
 	const {i18n} = useLingui();
@@ -37,6 +43,9 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 	const state = params['get']('state');
 	const providerError = params['get']('error');
 	const providerErrorDescription = params['get']('error_description');
+	const mobileCallbackUrl = state?.startsWith(SSO_MOBILE_STATE_PREFIX)
+		? `${SSO_MOBILE_CALLBACK_URI}${window.location.search}`
+		: null;
 	const [error, setError] = useState<string | null>(null);
 	const [isProcessing, setIsProcessing] = useState(true);
 	const abortControllerRef = useRef<AbortController | null>(null);
@@ -54,6 +63,10 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 		}
 	}, []);
 	useEffect(() => {
+		if (mobileCallbackUrl) {
+			window.location.replace(mobileCallbackUrl);
+			return;
+		}
 		const controller = new AbortController();
 		abortControllerRef.current = controller;
 		const timeoutId = setTimeout(() => {
@@ -97,7 +110,28 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 			clearTimeout(timeoutId);
 			controller.abort();
 		};
-	}, [code, state, providerError, providerErrorDescription, i18n]);
+	}, [code, state, providerError, providerErrorDescription, mobileCallbackUrl, i18n]);
+	if (mobileCallbackUrl) {
+		return (
+			<div className={styles.loginContainer} data-flx="auth.sso-callback-page.login-container--mobile">
+				<h1 className={styles.title} data-flx="auth.sso-callback-page.title--mobile">
+					<Trans>Completing sign-in…</Trans>
+				</h1>
+				<p className={styles.ssoProcessingHint} data-flx="auth.sso-callback-page.sso-processing-hint--mobile">
+					<Trans>Jump straight to the app to continue.</Trans>
+				</p>
+				<div className={styles.ssoCallbackActions} data-flx="auth.sso-callback-page.sso-callback-actions--mobile">
+					<a
+						href={mobileCallbackUrl}
+						className={styles.ssoRetryButton}
+						data-flx="auth.sso-callback-page.sso-open-app-button"
+					>
+						{i18n._(OPEN_PRODUCT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+					</a>
+				</div>
+			</div>
+		);
+	}
 	if (error) {
 		return (
 			<div className={styles.loginContainer} data-flx="auth.sso-callback-page.login-container">

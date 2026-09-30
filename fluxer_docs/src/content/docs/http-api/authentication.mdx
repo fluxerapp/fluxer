@@ -423,11 +423,11 @@ Starts a single sign-on flow. Authentication is not required. Returns an [SSO st
 | Field | Type | Description |
 | --- | --- | --- |
 | redirect_to?<sup>1</sup> | ?string | The post-authentication redirect to bind to the state |
-| redirect_uri?<sup>2</sup> | ?string | The provider callback URI to use instead of the configured default |
+| redirect_uri?<sup>2</sup> | ?string | The callback URI the client wants the result delivered to |
 
 <sup>1</sup> Fluxer sanitises the value before binding it to the state and discards a value that does not survive, which the [SSO completion response](#sso-completion-response-object) reports as the empty string. Sanitisation keeps the trimmed value only when it begins with a single `/`, is at most 2,048 characters, and contains no carriage return or line feed
 
-<sup>2</sup> The accepted values are the instance default reported as `redirect_uri` by [get SSO status](#get-sso-status) and the mobile callback `fluxer://auth/sso/callback`, and any other value returns the field code `INVALID_URL_FORMAT`. The accepted value is bound to the state and reused at the token exchange
+<sup>2</sup> The accepted values are the instance default reported as `redirect_uri` by [get SSO status](#get-sso-status) and the mobile callback `fluxer://auth/sso/callback`, and any other value returns the field code `INVALID_URL_FORMAT`. The provider always receives the instance default. For the mobile callback the state starts with `m.`, and the web callback page forwards the provider's query string to `fluxer://auth/sso/callback` unchanged
 
 ### Response
 
