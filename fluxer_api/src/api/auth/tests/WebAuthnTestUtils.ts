@@ -21,6 +21,7 @@ export interface WebAuthnDevice {
 	rpId: string;
 	origin: string;
 	signCount: number;
+	transports?: Array<string> | null;
 }
 
 export interface WebAuthnRegistrationOptions {
@@ -47,6 +48,7 @@ export interface WebAuthnAuthenticationOptions {
 	allowCredentials?: Array<{
 		id: string;
 		type: string;
+		transports?: Array<string>;
 	}>;
 	userVerification: string;
 }
@@ -75,7 +77,7 @@ export interface WebAuthnTwoFactorResult {
 interface AuthenticatorAttestationResponse {
 	clientDataJSON: string;
 	attestationObject: string;
-	transports: Array<string>;
+	transports?: Array<string>;
 }
 
 interface AuthenticatorAssertionResponse {
@@ -363,7 +365,7 @@ export function createRegistrationResponse(
 		response: {
 			clientDataJSON: encodeBase64URL(clientDataJSON),
 			attestationObject: encodeBase64URL(attestationObject),
-			transports: ['internal'],
+			...(device.transports === null ? {} : {transports: device.transports ?? ['internal']}),
 		},
 	};
 }
