@@ -860,18 +860,9 @@ importers:
       '@fluxer/ip_utils':
         specifier: workspace:*
         version: link:../../../packages/ip_utils
-      '@pkgs/cassandra':
-        specifier: workspace:*
-        version: link:../cassandra
-      '@pkgs/postgres':
-        specifier: workspace:*
-        version: link:../postgres
       maxmind:
         specifier: 'catalog:'
         version: 5.0.7
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
