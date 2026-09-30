@@ -349,9 +349,10 @@ safe_gen_server_call(Pid, Request, Timeout) ->
         exit:_ -> error
     end.
 
--spec safe_guild_call(integer(), pid(), term(), pos_integer()) -> {ok, term()} | error.
+-spec safe_guild_call(integer(), pid(), {atom(), map()}, pos_integer()) ->
+    {ok, term()} | error.
 safe_guild_call(GuildId, Pid, Request, Timeout) ->
-    try gen_server:call(Pid, Request, Timeout) of
+    try guild_query_handler:call(Pid, Request, Timeout) of
         Reply -> {ok, Reply}
     catch
         exit:{timeout, _} ->
@@ -366,13 +367,13 @@ safe_guild_call(GuildId, Pid, Request, Timeout) ->
             error
     end.
 
--spec retry_after_guild_call_failure(integer(), pid(), term(), pos_integer()) ->
+-spec retry_after_guild_call_failure(integer(), pid(), {atom(), map()}, pos_integer()) ->
     {ok, term()} | error.
 retry_after_guild_call_failure(GuildId, Pid, Request, Timeout) ->
     delete_cached_guild_pid(GuildId, Pid),
     retry_guild_call(GuildId, Request, Timeout).
 
--spec retry_guild_call(integer(), term(), pos_integer()) -> {ok, term()} | error.
+-spec retry_guild_call(integer(), {atom(), map()}, pos_integer()) -> {ok, term()} | error.
 retry_guild_call(GuildId, Request, Timeout) ->
     case get_guild_pid(GuildId) of
         {ok, NewPid} ->
@@ -381,9 +382,10 @@ retry_guild_call(GuildId, Request, Timeout) ->
             error
     end.
 
--spec retry_guild_call_pid(integer(), pid(), term(), pos_integer()) -> {ok, term()} | error.
+-spec retry_guild_call_pid(integer(), pid(), {atom(), map()}, pos_integer()) ->
+    {ok, term()} | error.
 retry_guild_call_pid(GuildId, NewPid, Request, Timeout) ->
-    try gen_server:call(NewPid, Request, Timeout) of
+    try guild_query_handler:call(NewPid, Request, Timeout) of
         Reply -> {ok, Reply}
     catch
         throw:_Reason ->

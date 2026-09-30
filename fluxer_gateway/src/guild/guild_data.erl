@@ -303,8 +303,8 @@ get_guild_data_for_user(UserId, Data, State) ->
         undefined ->
             {reply, #{guild_data => null, error_reason => <<"forbidden">>}, State};
         Member ->
-            GuildData = build_member_guild_data(UserId, Member, Data, State),
-            {reply, #{guild_data => GuildData}, State}
+            {GuildData, NewState} = build_member_guild_data(UserId, Member, Data, State),
+            {reply, #{guild_data => GuildData}, NewState}
     end.
 
 -spec build_complete_guild_data(map(), guild_state()) -> map().
@@ -313,14 +313,17 @@ build_complete_guild_data(Data, State) ->
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
     maps:merge(GuildProperties, build_guild_collection_data(Data, Channels, State)).
 
--spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> map().
+-spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> {map(), guild_state()}.
 build_member_guild_data(UserId, Member, Data, State) ->
     GuildProperties = maps:get(<<"guild">>, Data, #{}),
     AllChannels = guild_data_channels:channels_from_data(Data),
-    {ViewableChannels, _JoinedAt} = guild_data_channels:derive_member_view(
+    {ViewableChannels, NewState} = guild_data_channels:member_view(
         UserId, Member, State, AllChannels
     ),
-    maps:merge(GuildProperties, build_guild_collection_data(Data, ViewableChannels, State)).
+    GuildData = maps:merge(
+        GuildProperties, build_guild_collection_data(Data, ViewableChannels, State)
+    ),
+    {GuildData, NewState}.
 
 -spec build_guild_collection_data(map(), [map()], guild_state()) -> map().
 build_guild_collection_data(Data, Channels, State) ->

@@ -6,6 +6,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -define(GENERATIONAL_FULLSWEEP_AFTER, 10).
+-define(GUILD_FULLSWEEP_AFTER, 100).
 
 session_init_keeps_generational_gc_test() ->
     ?assertEqual(
@@ -21,13 +22,13 @@ session_code_change_keeps_generational_gc_test() ->
 
 guild_init_keeps_generational_gc_test() ->
     ?assertEqual(
-        ?GENERATIONAL_FULLSWEEP_AFTER,
+        ?GUILD_FULLSWEEP_AFTER,
         fullsweep_after_in(fun() -> guild:init(guild_data()) end)
     ).
 
 guild_code_change_keeps_generational_gc_test() ->
     ?assertEqual(
-        ?GENERATIONAL_FULLSWEEP_AFTER,
+        ?GUILD_FULLSWEEP_AFTER,
         fullsweep_after_in(fun() -> guild:code_change(0, #{}, []) end)
     ).
 

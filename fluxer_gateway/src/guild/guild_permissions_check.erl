@@ -5,6 +5,7 @@
 
 -export([
     can_view_channel/4,
+    viewable_channel_ids/4,
     can_view_channel_by_permissions/4,
     can_view_channel_members/4,
     can_manage_channel/3,
@@ -43,9 +44,78 @@
 
 -spec can_view_channel(user_id(), channel_id(), maybe_member(), guild_state()) -> boolean().
 can_view_channel(UserId, ChannelId, Member, State) ->
+    Base = guild_permissions:member_base_permissions(UserId, Member, State),
     guild_virtual_channel_access:has_virtual_access(UserId, ChannelId, State) orelse
-        can_view_channel_by_permissions(UserId, ChannelId, Member, State) orelse
-        is_category_with_viewable_child(UserId, ChannelId, Member, State).
+        base_has_view(Base, UserId, ChannelId, State) orelse
+        is_category_with_viewable_child(UserId, ChannelId, Base, State).
+
+-spec viewable_channel_ids(
+    user_id(), guild_permissions:base_permissions(), [map()], guild_state()
+) -> #{channel_id() => true}.
+viewable_channel_ids(UserId, Base, Channels, State) ->
+    Virtual = maps:from_keys(
+        guild_virtual_channel_access:get_virtual_channels_for_user(UserId, State), true
+    ),
+    {Viewable, Undecided, ViewableParents} = lists:foldl(
+        fun(Channel, Acc) -> classify_channel(Channel, UserId, Base, Virtual, State, Acc) end,
+        {#{}, [], #{}},
+        Channels
+    ),
+    lists:foldl(
+        fun(Id, Acc) ->
+            case maps:is_key(Id, ViewableParents) andalso is_category(Id, State) of
+                true -> Acc#{Id => true};
+                false -> Acc
+            end
+        end,
+        Viewable,
+        Undecided
+    ).
+
+-spec classify_channel(
+    map(),
+    user_id(),
+    guild_permissions:base_permissions(),
+    #{channel_id() => true},
+    guild_state(),
+    {#{channel_id() => true}, [channel_id()], map()}
+) -> {#{channel_id() => true}, [channel_id()], map()}.
+classify_channel(Channel, UserId, Base, Virtual, State, {Viewable, Undecided, Parents} = Acc) ->
+    case channel_list_id(Channel) of
+        undefined ->
+            Acc;
+        Id ->
+            case base_has_view(Base, UserId, Id, State) of
+                true ->
+                    Parent = snowflake_id:parse_maybe(
+                        maps:get(<<"parent_id">>, Channel, undefined)
+                    ),
+                    {Viewable#{Id => true}, Undecided, Parents#{Parent => true}};
+                false when is_map_key(Id, Virtual) ->
+                    {Viewable#{Id => true}, Undecided, Parents};
+                false ->
+                    {Viewable, [Id | Undecided], Parents}
+            end
+    end.
+
+-spec channel_list_id(map()) -> channel_id() | undefined.
+channel_list_id(Channel) ->
+    snowflake_id:parse_maybe(maps:get(<<"id">>, Channel, undefined)).
+
+-spec is_category(channel_id(), guild_state()) -> boolean().
+is_category(ChannelId, State) ->
+    case find_channel_by_id(ChannelId, State) of
+        #{<<"type">> := 4} -> true;
+        _ -> false
+    end.
+
+-spec base_has_view(
+    guild_permissions:base_permissions(), user_id(), channel_id(), guild_state()
+) ->
+    boolean().
+base_has_view(Base, UserId, ChannelId, State) ->
+    Perms = guild_permissions:channel_permissions(Base, UserId, ChannelId, State),
+    permission_bits:has(Perms, constants:view_channel_permission()).
 
 -spec can_view_channel_by_permissions(user_id(), channel_id(), maybe_member(), guild_state()) ->
     boolean().
@@ -246,40 +316,37 @@ find_channel_by_id(ChannelId, State) ->
             undefined
     end.
 
--spec is_category_with_viewable_child(user_id(), channel_id(), maybe_member(), guild_state()) ->
-    boolean().
-is_category_with_viewable_child(UserId, ChannelId, Member, State) ->
-    case find_channel_by_id(ChannelId, State) of
-        #{<<"type">> := 4} -> any_child_viewable(UserId, ChannelId, Member, State);
-        _ -> false
-    end.
+-spec is_category_with_viewable_child(
+    user_id(), channel_id(), guild_permissions:base_permissions(), guild_state()
+) -> boolean().
+is_category_with_viewable_child(UserId, ChannelId, Base, State) ->
+    is_category(ChannelId, State) andalso any_child_viewable(UserId, ChannelId, Base, State).
 
--spec any_child_viewable(user_id(), channel_id(), maybe_member(), guild_state()) -> boolean().
-any_child_viewable(UserId, CategoryId, Member, State) ->
+-spec any_child_viewable(
+    user_id(), channel_id(), guild_permissions:base_permissions(), guild_state()
+) -> boolean().
+any_child_viewable(UserId, CategoryId, Base, State) ->
     case guild_permissions_common:resolve_data_map(State) of
         undefined ->
             false;
         Data ->
-            any_child_viewable_in_data(UserId, CategoryId, Member, State, Data)
+            Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
+            lists:any(
+                fun(Channel) -> is_viewable_child(Channel, UserId, CategoryId, Base, State) end,
+                Channels
+            )
     end.
 
--spec any_child_viewable_in_data(user_id(), channel_id(), maybe_member(), guild_state(), map()) ->
-    boolean().
-any_child_viewable_in_data(UserId, CategoryId, Member, State, Data) ->
-    Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
-    lists:any(
-        fun(Channel) -> is_viewable_child(Channel, UserId, CategoryId, Member, State) end,
-        Channels
-    ).
-
--spec is_viewable_child(map(), user_id(), channel_id(), maybe_member(), guild_state()) ->
-    boolean().
-is_viewable_child(Channel, UserId, CategoryId, Member, State) ->
-    ParentId = snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined)),
-    ChildId = snowflake_id:parse_maybe(maps:get(<<"id">>, Channel, undefined)),
-    case {ParentId, ChildId} of
-        {CategoryId, ResolvedChildId} when is_integer(ResolvedChildId) ->
-            can_view_channel_by_permissions(UserId, ResolvedChildId, Member, State);
+-spec is_viewable_child(
+    map(), user_id(), channel_id(), guild_permissions:base_permissions(), guild_state()
+) -> boolean().
+is_viewable_child(Channel, UserId, CategoryId, Base, State) ->
+    case snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Channel, undefined)) of
+        CategoryId ->
+            case channel_list_id(Channel) of
+                ChildId when is_integer(ChildId) -> base_has_view(Base, UserId, ChildId, State);
+                undefined -> false
+            end;
         _ ->
             false
     end.

@@ -56,6 +56,8 @@ parse_optional(Value) ->
     parse(Value).
 
 -spec parse_maybe(term()) -> t() | undefined.
+parse_maybe(Value) when is_integer(Value), Value > 0, Value =< ?MAX_SNOWFLAKE ->
+    Value;
 parse_maybe(Value) ->
     try parse_optional(Value) of
         Id -> Id

@@ -39,6 +39,9 @@ init_base_state(GuildState) ->
         member_presence => ets:new(member_presence, [set, public]),
         connected_user_ids => sets:new(),
         user_session_counts => #{},
+        guild_session_refs => guild_sessions_connect:build_session_ref_index(
+            maps:get(sessions, TransferSafe, #{})
+        ),
         viewable_channels_cache => ets:new(viewable_channels_cache, [set, public])
     },
     guild_handoff:restore_transferred_session_state(BaseState).

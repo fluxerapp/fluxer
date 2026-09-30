@@ -13,9 +13,11 @@
     maybe_prune_invalid_member_subscriptions/2,
     cleanup_removed_member_subscriptions/3,
     apply_everyone_perm_bit/2,
-    viewable_exceptions/1
+    viewable_exceptions/1,
+    new_viewable_memo/1,
+    memoised_member_viewable_channel_map/3
 ]).
--export_type([guild_state/0]).
+-export_type([guild_state/0, viewable_memo/0]).
 
 -define(COUNT_CACHE_REFRESH_INTERVAL, 30000).
 

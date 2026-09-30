@@ -54,12 +54,16 @@ take_pending_list_ids(ListIds, State) ->
         #{pending_list_ids := PendingListIds} = Batch when is_map(PendingListIds) ->
             cancel_timer(Batch),
             {
-                normalize_list_ids(ListIds ++ maps:keys(PendingListIds)),
+                normalize_list_ids(ListIds ++ unsynced_list_ids(PendingListIds)),
                 maps:remove(?SYNC_BATCH_STATE_KEY, State)
             };
         _ ->
             {normalize_list_ids(ListIds), State}
     end.
+
+-spec unsynced_list_ids(map()) -> [term()].
+unsynced_list_ids(PendingListIds) ->
+    maps:keys(maps:filter(fun(_ListId, Mark) -> Mark =/= synced end, PendingListIds)).
 
 -spec normalize_list_ids([term()]) -> [list_id()].
 normalize_list_ids(ListIds) ->
@@ -168,5 +172,24 @@ queue_list_sync_drains_preexisting_pending_batch_test() ->
         }
     },
     ?assertEqual(#{}, queue_list_sync(<<"500">>, State)).
+
+flush_pending_syncs_skips_synced_lists_test() ->
+    Ref = erlang:send_after(60000, self(), ?FLUSH_SYNC_BATCH_MSG),
+    State = #{
+        ?SYNC_BATCH_STATE_KEY => #{
+            timer_ref => Ref,
+            pending_list_ids => #{<<"500">> => synced, <<"600">> => true}
+        }
+    },
+    ?assertEqual({[<<"600">>], #{}}, take_pending_list_ids([], State)),
+    ?assertEqual(false, erlang:read_timer(Ref)).
+
+queue_list_sync_keeps_explicit_list_marked_synced_test() ->
+    State = #{
+        ?SYNC_BATCH_STATE_KEY => #{
+            pending_list_ids => #{<<"500">> => synced, <<"600">> => synced}
+        }
+    },
+    ?assertEqual({[<<"500">>], #{}}, take_pending_list_ids([<<"500">>], State)).
 
 -endif.

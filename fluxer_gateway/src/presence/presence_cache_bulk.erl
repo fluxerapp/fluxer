@@ -7,6 +7,7 @@
 
 -export([
     bulk_get_inner/1,
+    bulk_get_map_inner/1,
     get_from_cluster/1,
     get_local_fast/1,
     local_bulk_presence_map/1,
@@ -30,11 +31,15 @@
 
 -spec bulk_get_inner([integer()]) -> [map()].
 bulk_get_inner(UserIds) ->
+    presence_values(bulk_get_map_inner(UserIds)).
+
+-spec bulk_get_map_inner([integer()]) -> #{integer() => map()}.
+bulk_get_map_inner(UserIds) ->
     UniqueUserIds = normalize_user_ids(UserIds),
     PrimaryPresenceMap = fetch_primary_presences(UniqueUserIds),
     MissingUserIds = [U || U <- UniqueUserIds, not maps:is_key(U, PrimaryPresenceMap)],
     FallbackPresenceMap = fetch_fallback_presences(MissingUserIds),
-    presence_values(maps:merge(PrimaryPresenceMap, FallbackPresenceMap)).
+    maps:merge(PrimaryPresenceMap, FallbackPresenceMap).
 
 -spec get_from_cluster(integer()) -> {ok, map()} | not_found.
 get_from_cluster(UserId) ->

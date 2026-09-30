@@ -234,8 +234,7 @@ overwrite_target_id(_Overwrite, Acc) ->
 
 -spec has_mutual_channel(user_id(), map(), guild_state()) -> boolean().
 has_mutual_channel(MemberId, SessionMap, State) ->
-    MemberChannels = guild_visibility:get_user_viewable_channels(MemberId, State),
-    has_shared_channel(MemberChannels, SessionMap).
+    guild_visibility_channels:shares_viewable_channel(MemberId, SessionMap, State).
 
 -spec has_shared_channel([integer()], map()) -> boolean().
 has_shared_channel(MemberChannels, SessionMap) ->
@@ -298,8 +297,6 @@ test_state() ->
         }
     }.
 
-%% filter_member_ids/3 as it read before the memo: every candidate materialises its
-%% own complete viewable channel list.
 reference_filter_member_ids(SessionUserId, MemberIds, State) ->
     SessionMap = session_channel_map(SessionUserId, State),
     lists:filtermap(
@@ -312,7 +309,8 @@ reference_keep(MemberId, SessionUserId, _SessionMap, _State) when
 ->
     false;
 reference_keep(MemberId, _SessionUserId, SessionMap, State) ->
-    case has_mutual_channel(MemberId, SessionMap, State) of
+    MemberChannels = guild_visibility:get_user_viewable_channels(MemberId, State),
+    case has_shared_channel(MemberChannels, SessionMap) of
         true -> {true, MemberId};
         false -> false
     end.

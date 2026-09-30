@@ -13,6 +13,7 @@
 -endif.
 
 -define(HIBERNATE_TIMEOUT, 60000).
+-define(FULLSWEEP_AFTER, 100).
 -define(VOICE_MEMBERS_TABLE_WARNED, {?MODULE, voice_members_table_unavailable}).
 
 -type guild_state() :: map().
@@ -35,7 +36,7 @@ update_counts(State) -> guild_maintenance:update_counts(State).
 -spec init(map()) -> {ok, guild_state(), timeout()}.
 init(GuildState) ->
     process_flag(trap_exit, true),
-    erlang:process_flag(fullsweep_after, 10),
+    erlang:process_flag(fullsweep_after, ?FULLSWEEP_AFTER),
     State0 = guild_init:init_base_state(GuildState),
     State1 = guild_init:init_member_list(State0),
     State2 = guild_init:init_counts(State1),
@@ -83,6 +84,7 @@ call_handler(Tag) -> query_call_handler(Tag).
 -spec query_call_handler(atom()) -> query | voice | subscription | undefined.
 query_call_handler(get_counts) -> query;
 query_call_handler(get_user_counts) -> query;
+query_call_handler(get_viewer_counts) -> query;
 query_call_handler(get_channel_member_counts) -> query;
 query_call_handler(get_large_guild_metadata) -> query;
 query_call_handler(get_users_to_mention_by_roles) -> query;
@@ -214,8 +216,8 @@ handle_info(presence_reconcile, State) ->
     guild_presence_reconcile:start_async(State),
     _ = guild_presence_reconcile:schedule(),
     {noreply, State};
-handle_info({presence_reconcile_apply, PresenceById}, State) when is_map(PresenceById) ->
-    {noreply, guild_presence_reconcile:apply_reconcile_result(PresenceById, State)};
+handle_info({presence_reconcile_apply, Mismatches}, State) when is_list(Mismatches) ->
+    {noreply, guild_presence_reconcile:apply_mismatches(Mismatches, State)};
 handle_info({reconcile_user_presence, UserId}, State) ->
     {noreply, guild_presence_reconcile:reconcile_user(UserId, State)};
 handle_info({clear_stale_cached_voice_states, ConnectionIds}, State) ->
@@ -227,6 +229,11 @@ handle_info(flush_member_list_sync_batch, State) ->
 handle_info({check_auto_stop_empty, Token}, State) ->
     handle_auto_stop_info(Token, State);
 handle_info(check_auto_stop_empty, State) ->
+    {noreply, State};
+handle_info({timeout, TimerRef, member_list_sync_item_cache_rotate}, State) when
+    is_reference(TimerRef)
+->
+    ok = guild_member_list_subscribe:handle_sync_item_cache_timeout(TimerRef),
     {noreply, State};
 handle_info(timeout, State) ->
     {noreply, State, hibernate};
@@ -443,7 +450,7 @@ terminate(Reason, State) ->
 
 -spec code_change(term(), guild_state(), term()) -> {ok, guild_state()}.
 code_change(_OldVsn, State, _Extra) ->
-    erlang:process_flag(fullsweep_after, 10),
+    erlang:process_flag(fullsweep_after, ?FULLSWEEP_AFTER),
     erlang:garbage_collect(),
     {ok, State}.
 

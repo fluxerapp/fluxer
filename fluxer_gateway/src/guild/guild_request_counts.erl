@@ -100,8 +100,9 @@ spawn_fetch_worker(Self, Tag, GuildId, GuildPid, UserId) ->
 
 -spec worker(pid(), reference(), integer(), pid(), integer()) -> ok.
 worker(Parent, Tag, GuildId, GuildPid, UserId) ->
+    Request = {get_viewer_counts, #{user_id => UserId}},
     Result =
-        try gen_server:call(GuildPid, {get_user_counts, UserId}, ?GUILD_CALL_TIMEOUT_MS) of
+        try guild_query_handler:call(GuildPid, Request, ?GUILD_CALL_TIMEOUT_MS) of
             #{member_count := MemberCount, online_count := OnlineCount} ->
                 {ok, MemberCount, OnlineCount};
             _ ->
@@ -228,6 +229,27 @@ handle_request_echoes_nonce_test() ->
         {'$gen_cast', {dispatch, guild_counts_update, Payload}} ->
             ?assertEqual(<<"abc123">>, maps:get(<<"nonce">>, Payload)),
             ?assertEqual([], maps:get(<<"counts">>, Payload))
+    after 1000 ->
+        ?assert(false)
+    end.
+
+handle_request_fetches_viewer_counts_with_deadline_test() ->
+    Self = self(),
+    Guild = spawn(fun() ->
+        receive
+            {'$gen_call', From, {get_viewer_counts, #{user_id := 100, deadline := D}}} when
+                is_integer(D)
+            ->
+                gen_server:reply(From, #{member_count => 50, online_count => 10})
+        end
+    end),
+    SessionState = #{
+        session_pid => Self, user_id => <<"100">>, guilds => #{7 => {Guild, make_ref()}}
+    },
+    ok = handle_request(#{<<"guild_ids">> => [<<"7">>]}, Self, SessionState),
+    receive
+        {'$gen_cast', {dispatch, guild_counts_update, Payload}} ->
+            ?assertEqual([build_entry(7, 50, 10)], maps:get(<<"counts">>, Payload))
     after 1000 ->
         ?assert(false)
     end.

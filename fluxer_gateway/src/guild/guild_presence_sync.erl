@@ -8,8 +8,7 @@
     sync_member_data/2,
     partition_subscribed_sessions/5,
     get_user_viewable_channel_map/3,
-    remove_invalid_subscriptions/3,
-    dispatch_to_valid_sessions/4
+    session_pids/2
 ]).
 
 -export_type([guild_state/0, user_id/0]).
@@ -187,71 +186,14 @@ viewable_channels_or_continue(UserId, SessionData, NextIterator) ->
             find_session_viewable_channels_iter(UserId, NextIterator)
     end.
 
--spec remove_invalid_subscriptions([binary()], user_id(), guild_state()) -> guild_state().
-remove_invalid_subscriptions([], _UserId, State) ->
-    State;
-remove_invalid_subscriptions(InvalidSessionIds, UserId, State) ->
-    MemberSubs = maps:get(member_subscriptions, State, guild_subscriptions:init_state()),
-    {NewMemberSubs, RemovedCount} = unsubscribe_sessions_for_user(
-        InvalidSessionIds, UserId, MemberSubs
-    ),
-    State1 = State#{member_subscriptions => NewMemberSubs},
-    guild_sessions_presence:unsubscribe_many_from_user_presence(UserId, RemovedCount, State1).
-
--spec unsubscribe_sessions_for_user(
-    [binary()], user_id(), guild_subscriptions:subscription_state()
-) ->
-    {guild_subscriptions:subscription_state(), non_neg_integer()}.
-unsubscribe_sessions_for_user(SessionIds, UserId, MemberSubs) ->
-    case maps:get(UserId, MemberSubs, undefined) of
-        undefined ->
-            {MemberSubs, 0};
-        Subscribers ->
-            remove_sessions_from_subscribers(SessionIds, UserId, Subscribers, MemberSubs)
-    end.
-
--spec remove_sessions_from_subscribers(
-    [binary()],
-    user_id(),
-    sets:set(binary()),
-    guild_subscriptions:subscription_state()
-) -> {guild_subscriptions:subscription_state(), non_neg_integer()}.
-remove_sessions_from_subscribers(SessionIds, UserId, Subscribers, MemberSubs) ->
-    {NewSubscribers, RemovedCount} = lists:foldl(
-        fun remove_session_from_subscriber_set/2,
-        {Subscribers, 0},
-        SessionIds
-    ),
-    NewMemberSubs = put_or_remove_subscribers(UserId, NewSubscribers, MemberSubs),
-    {NewMemberSubs, RemovedCount}.
-
--spec remove_session_from_subscriber_set(binary(), {sets:set(binary()), non_neg_integer()}) ->
-    {sets:set(binary()), non_neg_integer()}.
-remove_session_from_subscriber_set(SessionId, {Subscribers, Count}) ->
-    case sets:is_element(SessionId, Subscribers) of
-        true -> {sets:del_element(SessionId, Subscribers), Count + 1};
-        false -> {Subscribers, Count}
-    end.
-
--spec put_or_remove_subscribers(
-    user_id(), sets:set(binary()), guild_subscriptions:subscription_state()
-) -> guild_subscriptions:subscription_state().
-put_or_remove_subscribers(UserId, Subscribers, MemberSubs) ->
-    case sets:size(Subscribers) of
-        0 -> maps:remove(UserId, MemberSubs);
-        _ -> MemberSubs#{UserId => Subscribers}
-    end.
-
--spec dispatch_to_valid_sessions([binary()], map(), map(), integer()) -> ok.
-dispatch_to_valid_sessions(ValidSessionIds, Sessions, PresenceUpdate, GuildId) ->
-    Pids = lists:filtermap(
+-spec session_pids([binary()], map()) -> [pid()].
+session_pids(SessionIds, Sessions) ->
+    lists:filtermap(
         fun(SessionId) ->
             session_pid(SessionId, Sessions)
         end,
-        ValidSessionIds
-    ),
-    gateway_dispatch_relay:dispatch_many(Pids, presence_update, PresenceUpdate, GuildId),
-    ok.
+        SessionIds
+    ).
 
 -spec session_pid(binary(), map()) -> {true, pid()} | false.
 session_pid(SessionId, Sessions) ->
@@ -333,21 +275,17 @@ partition_subscribed_sessions_excludes_target_user_test() ->
 partition_subscribed_sessions_missing_session_test() ->
     assert_partition_result(#{}, #{100 => true}, [], [<<"s1">>]).
 
-remove_invalid_subscriptions_batches_by_user_test() ->
-    MemberSubs0 = guild_subscriptions:init_state(),
-    MemberSubs1 = guild_subscriptions:subscribe(<<"s1">>, 10, MemberSubs0),
-    MemberSubs2 = guild_subscriptions:subscribe(<<"s2">>, 10, MemberSubs1),
-    MemberSubs3 = guild_subscriptions:subscribe(<<"s3">>, 10, MemberSubs2),
-    State = #{
-        member_subscriptions => MemberSubs3,
-        presence_subscriptions => #{10 => 5}
+session_pids_keeps_order_and_skips_unknown_and_pidless_test() ->
+    Pid = self(),
+    Sessions = #{
+        <<"s1">> => #{user_id => 20, pid => Pid},
+        <<"s2">> => #{user_id => 30},
+        <<"s3">> => #{user_id => 40, pid => Pid}
     },
-    Result = remove_invalid_subscriptions([<<"s1">>, <<"s3">>, <<"missing">>], 10, State),
-    Remaining = guild_subscriptions:get_subscribed_sessions(
-        10, maps:get(member_subscriptions, Result)
-    ),
-    ?assertEqual([<<"s2">>], lists:sort(Remaining)),
-    ?assertEqual(#{10 => 3}, maps:get(presence_subscriptions, Result)).
+    ?assertEqual(
+        [Pid, Pid],
+        session_pids([<<"s3">>, <<"missing">>, <<"s2">>, <<"s1">>], Sessions)
+    ).
 
 sync_member_data_updates_loaded_channel_engines_test() ->
     GuildId = 100,

@@ -16,6 +16,9 @@
 
 -define(PASSIVE_SYNC_INTERVAL, 30000).
 -define(LARGE_GUILD_MEMBER_COUNT, 250).
+-define(HEAVY_MEMBER_DATA_KEYS, [
+    <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
+]).
 
 -type guild_state() :: map().
 -type channel_id() :: binary().
@@ -35,61 +38,94 @@ handle_passive_sync(State) ->
     _ = schedule_passive_sync(State),
     {noreply, State}.
 
-%% send_passive_updates/4 keeps no session unless is_large_guild/1 holds, so for any other
-%% guild the spawned child returns without touching a session, a payload or the registry.
 -spec maybe_spawn_passive_updates(integer(), guild_state()) -> ok.
 maybe_spawn_passive_updates(GuildId, State) ->
-    case is_large_guild(maps:get(member_count, State, undefined)) of
-        false -> ok;
-        true -> spawn_passive_updates(GuildId, State)
+    case large_guild_passive_sessions(GuildId, State) of
+        PassiveSessions when map_size(PassiveSessions) =:= 0 ->
+            ok;
+        PassiveSessions ->
+            SyncState = passive_sync_state(State, PassiveSessions),
+            _ = spawn(fun() -> send_passive_updates(GuildId, PassiveSessions, SyncState) end),
+            ok
     end.
-
--spec spawn_passive_updates(integer(), guild_state()) -> ok.
-spawn_passive_updates(GuildId, State) ->
-    _ = spawn(fun() -> send_passive_updates_for_state(GuildId, State) end),
-    ok.
 
 -spec send_passive_updates_to_sessions(guild_state()) -> guild_state().
 send_passive_updates_to_sessions(State) ->
-    ok = send_passive_updates_for_state(maps:get(id, State), State),
+    GuildId = maps:get(id, State),
+    PassiveSessions = large_guild_passive_sessions(GuildId, State),
+    ok = send_passive_updates(
+        GuildId, PassiveSessions, passive_sync_state(State, PassiveSessions)
+    ),
     State.
 
--spec send_passive_updates_for_state(integer(), guild_state()) -> ok.
-send_passive_updates_for_state(GuildId, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    Data = maps:get(data, State, #{}),
-    MemberCount = maps:get(member_count, State, undefined),
-    VoiceStates = maps:get(voice_states, State, #{}),
-    send_passive_updates(
-        GuildId, Sessions, passive_sync_state(State, Data, VoiceStates), MemberCount
+-spec large_guild_passive_sessions(integer(), guild_state()) -> map().
+large_guild_passive_sessions(GuildId, State) ->
+    case is_large_guild(maps:get(member_count, State, undefined)) of
+        false -> #{};
+        true -> passive_sessions(GuildId, maps:get(sessions, State, #{}))
+    end.
+
+-spec passive_sessions(integer(), map()) -> map().
+passive_sessions(GuildId, Sessions) ->
+    maps:filtermap(
+        fun(_SessionId, SessionData) ->
+            case session_passive:is_passive(GuildId, SessionData) of
+                true -> {true, maps:with([pid, user_id], SessionData)};
+                false -> false
+            end
+        end,
+        Sessions
     ).
 
--spec passive_sync_state(guild_state(), map(), map()) -> guild_state().
-passive_sync_state(State, Data, VoiceStates) ->
-    State#{data => Data, voice_states => VoiceStates}.
+-spec passive_sync_state(guild_state(), map()) -> guild_state().
+passive_sync_state(State, PassiveSessions) ->
+    Base = maps:with([id, voice_server_pid, virtual_channel_access], State),
+    Base#{
+        data => passive_sync_data(maps:get(data, State, #{})),
+        voice_states => maps:get(voice_states, State, #{}),
+        sessions => first_viewable_sessions(PassiveSessions, maps:get(sessions, State, #{}))
+    }.
+
+-spec passive_sync_data(map()) -> map().
+passive_sync_data(#{members_ets := Tab} = Data) when is_reference(Tab) ->
+    maps:without(?HEAVY_MEMBER_DATA_KEYS, Data);
+passive_sync_data(Data) ->
+    Data.
+
+-spec first_viewable_sessions(map(), map()) -> map().
+first_viewable_sessions(PassiveSessions, Sessions) ->
+    UserIds = maps:fold(
+        fun(_SessionId, SessionData, Acc) ->
+            Acc#{maps:get(user_id, SessionData, undefined) => true}
+        end,
+        #{},
+        PassiveSessions
+    ),
+    first_viewable_sessions_iter(maps:next(maps:iterator(Sessions)), UserIds, #{}).
+
+-spec first_viewable_sessions_iter(none | {term(), term(), maps:iterator()}, map(), map()) ->
+    map().
+first_viewable_sessions_iter(none, _UserIds, Acc) ->
+    Acc;
+first_viewable_sessions_iter(
+    {SessionId, #{user_id := UserId, viewable_channels := Viewable}, Next}, UserIds, Acc
+) when is_map(Viewable), is_map_key(UserId, UserIds) ->
+    first_viewable_sessions_iter(
+        maps:next(Next),
+        maps:remove(UserId, UserIds),
+        Acc#{SessionId => #{user_id => UserId, viewable_channels => Viewable}}
+    );
+first_viewable_sessions_iter({_SessionId, _SessionData, Next}, UserIds, Acc) ->
+    first_viewable_sessions_iter(maps:next(Next), UserIds, Acc).
 
 -spec is_large_guild(term()) -> boolean().
 is_large_guild(MemberCount) ->
     is_integer(MemberCount) andalso MemberCount > ?LARGE_GUILD_MEMBER_COUNT.
 
--spec send_passive_updates(integer(), map(), guild_state(), non_neg_integer() | undefined) ->
-    ok.
-send_passive_updates(GuildId, Sessions, State, MemberCount) ->
-    Data = maps:get(data, State, #{}),
-    Channels = guild_data_index:channel_list(Data),
-    IsLargeGuild = is_large_guild(MemberCount),
-    PassiveSessions = maps:filter(
-        fun(_SessionId, SessionData) ->
-            IsLargeGuild andalso session_passive:is_passive(GuildId, SessionData)
-        end,
-        Sessions
-    ),
-    case map_size(PassiveSessions) of
-        0 ->
-            ok;
-        _ ->
-            send_passive_session_updates(PassiveSessions, GuildId, Channels, State)
-    end.
+-spec send_passive_updates(integer(), map(), guild_state()) -> ok.
+send_passive_updates(GuildId, PassiveSessions, SyncState) ->
+    Channels = guild_data_index:channel_list(maps:get(data, SyncState)),
+    send_passive_session_updates(PassiveSessions, GuildId, Channels, SyncState).
 
 -spec send_passive_session_updates(map(), integer(), [map()], guild_state()) -> ok.
 send_passive_session_updates(PassiveSessions, GuildId, Channels, SyncState) ->
@@ -465,5 +501,281 @@ flush_passive_dispatches() ->
         no_dispatch -> ok;
         _ -> flush_passive_dispatches()
     end.
+
+passive_sync_state_matches_full_state_dispatches_test() ->
+    with_differential_guild(fun(VoiceServer, Rounds, SessionIds, GuildId) ->
+        Reference = run_passive_rounds(
+            fun reference_send_passive_updates/1, VoiceServer, Rounds, SessionIds, GuildId
+        ),
+        Projected = run_passive_rounds(
+            fun send_passive_updates_to_sessions/1, VoiceServer, Rounds, SessionIds, GuildId
+        ),
+        [{Round1Dispatches, _}, {Round2Dispatches, _}] = Reference,
+        ?assertEqual(4, length(Round1Dispatches)),
+        ?assertEqual(4, length(Round2Dispatches)),
+        ?assertEqual(Reference, Projected)
+    end).
+
+passive_sync_state_drops_members_and_unrelated_sessions_test() ->
+    with_differential_guild(fun(_VoiceServer, [{_, State} | _], _SessionIds, GuildId) ->
+        PassiveSessions = large_guild_passive_sessions(GuildId, State),
+        SyncState = passive_sync_state(State, PassiveSessions),
+        ?assertEqual(
+            [data, id, sessions, virtual_channel_access, voice_server_pid, voice_states],
+            lists:sort(maps:keys(SyncState))
+        ),
+        SyncData = maps:get(data, SyncState),
+        ?assertEqual([], [K || K <- ?HEAVY_MEMBER_DATA_KEYS, is_map_key(K, SyncData)]),
+        ?assert(is_map_key(members_ets, SyncData)),
+        ?assertEqual(
+            #{
+                <<"u2-passive">> => #{
+                    user_id => diff_user(2), viewable_channels => #{diff_channel(1) => true}
+                },
+                <<"u3-first">> => #{
+                    user_id => diff_user(3), viewable_channels => #{diff_channel(3) => true}
+                }
+            },
+            maps:get(sessions, SyncState)
+        ),
+        ?assertEqual(
+            lists:sort([
+                <<"u1-passive">>,
+                <<"u2-passive">>,
+                <<"u3-passive">>,
+                <<"u4-passive">>,
+                <<"u5-passive">>
+            ]),
+            lists:sort(maps:keys(PassiveSessions))
+        )
+    end).
+
+passive_sync_data_keeps_members_without_members_ets_test() ->
+    Data = #{<<"members">> => #{1 => #{}}, members_sorted_ids => [1], <<"channels">> => []},
+    ?assertEqual(Data, passive_sync_data(Data)).
+
+first_viewable_sessions_picks_the_session_the_full_state_lookup_finds_test() ->
+    Sessions = maps:from_list([
+        {integer_to_binary(N), #{user_id => N rem 3, viewable_channels => #{N => true}}}
+     || N <- lists:seq(1, 64)
+    ]),
+    Passive = #{<<"p">> => #{user_id => 1}, <<"q">> => #{user_id => 2}},
+    Projected = first_viewable_sessions(Passive, Sessions),
+    ?assertEqual(2, map_size(Projected)),
+    lists:foreach(
+        fun(UserId) ->
+            ?assertEqual(
+                guild_visibility_channels:get_cached_viewable_channel_map(
+                    UserId, #{sessions => Sessions}
+                ),
+                guild_visibility_channels:get_cached_viewable_channel_map(
+                    UserId, #{sessions => Projected}
+                )
+            )
+        end,
+        [1, 2]
+    ).
+
+reference_send_passive_updates(State) ->
+    GuildId = maps:get(id, State),
+    PassiveSessions = reference_passive_sessions(
+        GuildId, maps:get(sessions, State), maps:get(member_count, State)
+    ),
+    Data = maps:get(data, State),
+    Channels = guild_data_index:channel_list(Data),
+    SyncState = State#{data => Data, voice_states => maps:get(voice_states, State, #{})},
+    ok = send_passive_session_updates(PassiveSessions, GuildId, Channels, SyncState),
+    State.
+
+run_passive_rounds(Send, VoiceServer, Rounds, SessionIds, GuildId) ->
+    flush_passive_dispatches(),
+    ok = passive_sync_registry:init(),
+    lists:foreach(
+        fun(SessionId) -> passive_sync_registry:delete(SessionId, GuildId) end, SessionIds
+    ),
+    [
+        begin
+            ok = gen_server:call(VoiceServer, {set, VoiceStates}),
+            _ = Send(State),
+            {collect_passive_dispatches([]), [
+                {SessionId, passive_sync_registry:lookup(SessionId, GuildId)}
+             || SessionId <- SessionIds
+            ]}
+        end
+     || {VoiceStates, State} <- Rounds
+    ].
+
+collect_passive_dispatches(Acc) ->
+    case receive_passive_dispatch(0) of
+        no_dispatch -> lists:reverse(Acc);
+        Payload -> collect_passive_dispatches([Payload | Acc])
+    end.
+
+with_differential_guild(Fun) ->
+    GuildId = 1427764882469228556,
+    Tab = ets:new(passive_diff_members, [set, public]),
+    VoiceServer = spawn(fun() -> fake_voice_server(#{}) end),
+    try
+        Rounds = [
+            {
+                diff_voice_states(GuildId, Round),
+                differential_state(GuildId, Tab, VoiceServer, Round)
+            }
+         || Round <- [0, 1]
+        ],
+        [{_, #{sessions := Sessions}} | _] = Rounds,
+        Fun(VoiceServer, Rounds, lists:sort(maps:keys(Sessions)), GuildId)
+    after
+        exit(VoiceServer, kill),
+        ets:delete(Tab)
+    end.
+
+fake_voice_server(VoiceStates) ->
+    receive
+        {'$gen_call', From, {set, NewVoiceStates}} ->
+            gen_server:reply(From, ok),
+            fake_voice_server(NewVoiceStates);
+        {'$gen_call', From, {get_voice_states_map}} ->
+            gen_server:reply(From, VoiceStates),
+            fake_voice_server(VoiceStates)
+    end.
+
+differential_state(GuildId, Tab, VoiceServer, Round) ->
+    Members = [
+        diff_member(diff_user(0), []),
+        diff_member(diff_user(1), [diff_role(1)]),
+        diff_member(diff_user(2), [diff_role(2)]),
+        diff_member(diff_user(3), [diff_role(1), diff_role(2)]),
+        diff_member(diff_user(4), []),
+        diff_member(diff_user(6), [diff_role(1)]),
+        diff_member(diff_user(7), [])
+    ],
+    true = ets:insert(Tab, [
+        {diff_user(N), M}
+     || {N, M} <- lists:zip([0, 1, 2, 3, 4, 6, 7], Members)
+    ]),
+    Data = guild_data_index:normalize_map(#{
+        <<"guild">> => #{<<"id">> => GuildId, <<"owner_id">> => diff_user(0)},
+        <<"roles">> => [
+            #{<<"id">> => GuildId, <<"permissions">> => <<"1024">>, <<"position">> => 0},
+            #{<<"id">> => diff_role(1), <<"permissions">> => <<"0">>, <<"position">> => 1},
+            #{<<"id">> => diff_role(2), <<"permissions">> => <<"0">>, <<"position">> => 2}
+        ],
+        <<"channels">> => diff_channels(GuildId, Round),
+        <<"members">> => Members
+    }),
+    #{
+        id => GuildId,
+        member_count => 55278,
+        voice_server_pid => VoiceServer,
+        virtual_channel_access => #{diff_user(4) => sets:from_list([diff_channel(5)])},
+        voice_states => #{},
+        member_presence => make_ref(),
+        presence_subscriptions => #{diff_user(1) => true},
+        data => Data#{members_ets => Tab},
+        sessions => diff_sessions(GuildId)
+    }.
+
+diff_channels(GuildId, Round) ->
+    Deny = fun(Id) ->
+        #{<<"id">> => Id, <<"type">> => 0, <<"allow">> => <<"0">>, <<"deny">> => <<"1024">>}
+    end,
+    Allow = fun(Id, Type) ->
+        #{<<"id">> => Id, <<"type">> => Type, <<"allow">> => <<"1024">>, <<"deny">> => <<"0">>}
+    end,
+    [
+        #{
+            <<"id">> => diff_channel(1),
+            <<"type">> => 0,
+            <<"last_message_id">> => diff_message(1, Round)
+        },
+        #{
+            <<"id">> => diff_channel(2),
+            <<"type">> => 0,
+            <<"last_message_id">> => diff_message(2, Round),
+            <<"permission_overwrites">> => [Deny(GuildId), Allow(diff_role(1), 0)]
+        },
+        #{
+            <<"id">> => diff_channel(3),
+            <<"type">> => 4,
+            <<"permission_overwrites">> => [Deny(GuildId)]
+        },
+        #{
+            <<"id">> => diff_channel(4),
+            <<"type">> => 0,
+            <<"parent_id">> => diff_channel(3),
+            <<"last_message_id">> => diff_message(4, 0),
+            <<"permission_overwrites">> => [Deny(GuildId), Allow(diff_role(2), 0)]
+        },
+        #{
+            <<"id">> => diff_channel(5),
+            <<"type">> => 2,
+            <<"last_message_id">> => diff_message(5, Round),
+            <<"permission_overwrites">> => [Deny(GuildId), Allow(diff_user(7), 1)]
+        },
+        #{<<"id">> => diff_channel(6), <<"type">> => 0, <<"last_message_id">> => null}
+    ].
+
+diff_sessions(GuildId) ->
+    Active = sets:from_list([GuildId]),
+    Passive = sets:new(),
+    Session = fun(User, ActiveGuilds, Extra) ->
+        maps:merge(
+            #{
+                user_id => diff_user(User),
+                pid => self(),
+                active_guilds => ActiveGuilds,
+                bot => false,
+                user_roles => [],
+                pending_connect => false
+            },
+            Extra
+        )
+    end,
+    #{
+        <<"u0-active">> => Session(0, Active, #{viewable_channels => #{diff_channel(2) => true}}),
+        <<"u1-passive">> => Session(1, Passive, #{}),
+        <<"u2-passive">> => Session(2, Passive, #{
+            viewable_channels => #{diff_channel(1) => true}
+        }),
+        <<"u3-first">> => Session(3, Active, #{viewable_channels => #{diff_channel(3) => true}}),
+        <<"u3-passive">> => Session(3, Passive, #{
+            viewable_channels => #{diff_channel(5) => true}
+        }),
+        <<"u4-passive">> => Session(4, Passive, #{viewable_channels => not_a_map}),
+        <<"u5-passive">> => Session(5, Passive, #{}),
+        <<"u6-bot">> => Session(6, Passive, #{bot => true}),
+        <<"u7-active">> => Session(7, Active, #{})
+    }.
+
+diff_voice_states(GuildId, Round) ->
+    VoiceState = fun(Conn, User, Channel, Version) ->
+        {Conn, #{
+            <<"connection_id">> => Conn,
+            <<"guild_id">> => integer_to_binary(GuildId),
+            <<"channel_id">> => integer_to_binary(diff_channel(Channel)),
+            <<"user_id">> => integer_to_binary(diff_user(User)),
+            <<"version">> => Version
+        }}
+    end,
+    maps:from_list(
+        [
+            VoiceState(<<"c1">>, 7, 5, 1),
+            VoiceState(<<"c2">>, 1, 1, 1 + Round),
+            VoiceState(<<"c4">>, 3, 3, 1)
+        ] ++
+            [VoiceState(<<"c3">>, 2, 2, 1) || Round =:= 0]
+    ).
+
+diff_member(UserId, Roles) ->
+    #{<<"user">> => #{<<"id">> => integer_to_binary(UserId)}, <<"roles">> => Roles}.
+
+diff_user(N) -> 1130650140672000000 + N.
+
+diff_role(N) -> 1428000118785000000 + N.
+
+diff_channel(N) -> 1428100000000000000 + N.
+
+diff_message(N, Round) -> 1500000000000000000 + N * 10 + Round.
 
 -endif.

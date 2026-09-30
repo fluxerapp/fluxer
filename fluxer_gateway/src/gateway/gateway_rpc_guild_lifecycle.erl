@@ -72,7 +72,7 @@ optional_channel_id(Value) ->
 -spec get_auth_context_from_guild(pid(), integer() | null, integer() | null) -> term().
 get_auth_context_from_guild(Pid, UserId, ChannelId) ->
     Request = {get_guild_auth_context, #{user_id => UserId, channel_id => ChannelId}},
-    case gen_server:call(Pid, Request, ?GUILD_CALL_TIMEOUT) of
+    case guild_query_handler:call(Pid, Request, ?GUILD_CALL_TIMEOUT) of
         #{auth_context := null} ->
             gateway_rpc_error:raise(<<"forbidden">>);
         #{auth_context := AuthContext} ->
@@ -91,7 +91,8 @@ optional_user_id(Value) ->
 
 -spec get_data_from_guild(pid(), integer() | null) -> term().
 get_data_from_guild(Pid, UserId) ->
-    case gen_server:call(Pid, {get_guild_data, #{user_id => UserId}}, ?GUILD_CALL_TIMEOUT) of
+    Request = {get_guild_data, #{user_id => UserId}},
+    case guild_query_handler:call(Pid, Request, ?GUILD_CALL_TIMEOUT) of
         #{guild_data := null, error_reason := <<"forbidden">>} ->
             gateway_rpc_error:raise(<<"forbidden">>);
         #{guild_data := null} ->

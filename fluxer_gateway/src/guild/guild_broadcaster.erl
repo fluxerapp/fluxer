@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/1, cast_presence/5, cast_member_list/4, cast_event/4, ensure/1]).
+-export([start_link/1, cast_member_list/4, cast_event/4, ensure/1]).
 
 -define(MAX_MAILBOX, 500).
 -define(IDLE_GC_DELAY_MS, 1000).
@@ -35,13 +35,6 @@ ensure_alive(Pid, State) ->
         true -> {Pid, State};
         false -> start_and_store(State)
     end.
-
--spec cast_presence(broadcaster_ref(), integer(), map(), snapshot(), snapshot()) -> boolean().
-cast_presence(BroadcasterPid, UserId, PresenceMap, OldSnapshot, NewSnapshot) ->
-    maybe_cast(
-        BroadcasterPid,
-        {presence_broadcast, UserId, PresenceMap, OldSnapshot, NewSnapshot}
-    ).
 
 -spec cast_member_list(broadcaster_ref(), integer(), snapshot(), snapshot()) -> boolean().
 cast_member_list(BroadcasterPid, UserId, OldSnapshot, NewSnapshot) ->
@@ -80,9 +73,6 @@ handle_call(_Req, _From, State) ->
     {reply, {error, unknown_call}, State}.
 
 -spec handle_cast(term(), map()) -> {noreply, map()}.
-handle_cast({presence_broadcast, UserId, PresenceMap, _OldSnapshot, NewSnapshot}, State) ->
-    maybe_broadcast_presence(UserId, PresenceMap, NewSnapshot),
-    {noreply, maybe_schedule_gc(State)};
 handle_cast({member_list_broadcast, _UserId, _OldSnapshot, _NewSnapshot}, State) ->
     {noreply, maybe_schedule_gc(State)};
 handle_cast({event_broadcast, Event, EncodedPayload, FilteredSessionPids}, State) ->
@@ -90,36 +80,6 @@ handle_cast({event_broadcast, Event, EncodedPayload, FilteredSessionPids}, State
     {noreply, maybe_schedule_gc(State)};
 handle_cast(_Other, State) ->
     {noreply, State}.
-
--spec maybe_broadcast_presence(term(), term(), term()) -> ok.
-maybe_broadcast_presence(UserId, PresenceMap, NewSnapshot) when
-    is_integer(UserId), is_map(PresenceMap), is_map(NewSnapshot)
-->
-    try
-        guild_presence:broadcast_presence_update(UserId, PresenceMap, NewSnapshot)
-    catch
-        Class:Reason:Stack ->
-            logger:warning(
-                "guild_broadcaster presence_broadcast error: ~p:~p ~p",
-                [Class, Reason, Stack]
-            )
-    end,
-    maybe_sync_online_status(UserId, NewSnapshot);
-maybe_broadcast_presence(_UserId, _PresenceMap, _NewSnapshot) ->
-    ok.
-
--spec maybe_sync_online_status(integer(), map()) -> ok.
-maybe_sync_online_status(UserId, NewSnapshot) ->
-    try
-        guild_presence:sync_online_status(UserId, NewSnapshot)
-    catch
-        Class2:Reason2 ->
-            logger:warning(
-                "guild_broadcaster engine_online error: ~p:~p",
-                [Class2, Reason2]
-            )
-    end,
-    ok.
 
 -spec handle_info(term(), map()) ->
     {noreply, map()} | {noreply, map(), hibernate} | {stop, normal, map()}.

@@ -207,12 +207,9 @@ member_from_guild(GuildId, Pid, Msg) ->
     integer(), integer()
 ) -> {ok, [integer()]} | error.
 get_members_with_role_cached_or_rpc(GuildId, RoleId) ->
-    case guild_permission_cache:get_snapshot(GuildId) of
-        {ok, Snapshot} ->
-            Data = maps:get(data, Snapshot, #{}),
-            MemberRoleIndex = guild_data_index:member_role_index(Data),
-            RoleMembers = maps:get(RoleId, MemberRoleIndex, #{}),
-            {ok, lists:sort(maps:keys(RoleMembers))};
+    case guild_permission_cache:get_role_members(GuildId, RoleId) of
+        {ok, UserIds} ->
+            {ok, UserIds};
         {error, not_found} ->
             get_members_with_role_via_rpc(GuildId, RoleId)
     end.

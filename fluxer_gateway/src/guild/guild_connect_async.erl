@@ -117,10 +117,8 @@ finalize_resolved(
     maybe_start_session_connect_workers(State1);
 finalize_resolved(GuildId, SessionId, Attempt, Result0, Computed, Request, SessionPid, State) ->
     State1 = upsert_session(SessionId, SessionPid, Request, Computed, State),
-    UserId = maps:get(user_id, Request, undefined),
-    State2 = guild_sessions_connect:resection_connected_user(UserId, State, State1),
     send_result(GuildId, Attempt, Result0, SessionPid),
-    maybe_start_session_connect_workers(State2).
+    maybe_start_session_connect_workers(State1).
 
 -spec discard_pending_session(session_id() | undefined, map()) -> map().
 discard_pending_session(SessionId, State) when is_binary(SessionId) ->
@@ -128,7 +126,10 @@ discard_pending_session(SessionId, State) when is_binary(SessionId) ->
     case maps:find(SessionId, Sessions0) of
         {ok, #{pending_connect := true} = Entry} ->
             demonitor_pending_session(Entry),
-            State#{sessions => maps:remove(SessionId, Sessions0)};
+            guild_sessions_connect:remove_session_ref(
+                maps:get(mref, Entry, undefined),
+                State#{sessions => maps:remove(SessionId, Sessions0)}
+            );
         _ ->
             State
     end;
@@ -306,18 +307,21 @@ upsert_pending_session(S, U, P, Request, State) ->
     Sessions0 = maps:get(sessions, State, #{}),
     case maps:find(S, Sessions0) of
         error ->
+            MRef = monitor(process, P),
             Entry = #{
                 session_id => S,
                 user_id => U,
                 pid => P,
-                mref => monitor(process, P),
+                mref => MRef,
                 active_guilds => maps:get(active_guilds, Request, sets:new()),
                 bot => maps:get(bot, Request, false),
                 is_staff => maps:get(is_staff, Request, false),
                 pending_connect => true,
                 viewable_channels => #{}
             },
-            State#{sessions => Sessions0#{S => Entry}};
+            guild_sessions_connect:put_session_ref(S, MRef, State#{
+                sessions => Sessions0#{S => Entry}
+            });
         {ok, Existing} ->
             State#{sessions => Sessions0#{S => Existing#{pending_connect => true}}}
     end.
@@ -485,9 +489,11 @@ upsert_session_valid(SessionId, SessionPid, UserId, Request, Computed, State) ->
     store_passive_state(SessionId, GuildId, Computed),
     FinalSD = maybe_mark_synced(GuildId, Computed, SessionData),
     Sessions = merge_session(SessionId, FinalSD, Existing1, Sessions0),
-    State1 = State#{sessions => Sessions},
+    State1 = reindex_session_ref(SessionId, Existing, MRef, State#{sessions => Sessions}),
     State2 = update_connected_tracking(UserId, Existing, State1),
-    update_presence_subscription(UserId, Existing, State2).
+    PresenceBefore = guild_member_list_connected:resolve_presence_for_user(State2, UserId),
+    State3 = update_presence_subscription(UserId, Existing, State2),
+    guild_sessions_connect:resection_connected_user(UserId, PresenceBefore, State, State3).
 
 -spec build_session_data(session_id(), integer(), pid(), reference(), map(), map()) -> map().
 build_session_data(SessionId, UserId, SessionPid, MRef, Request, Computed) ->
@@ -525,6 +531,13 @@ merge_session(SessionId, FinalSD, undefined, Sessions0) ->
     Sessions0#{SessionId => FinalSD};
 merge_session(SessionId, FinalSD, Existing, Sessions0) ->
     Sessions0#{SessionId => maps:merge(Existing, FinalSD)}.
+
+-spec reindex_session_ref(session_id(), map() | undefined, reference(), map()) -> map().
+reindex_session_ref(SessionId, #{mref := OldRef}, MRef, State) when OldRef =/= MRef ->
+    State1 = guild_sessions_connect:remove_session_ref(OldRef, State),
+    guild_sessions_connect:put_session_ref(SessionId, MRef, State1);
+reindex_session_ref(SessionId, _Existing, MRef, State) ->
+    guild_sessions_connect:put_session_ref(SessionId, MRef, State).
 
 -spec resolve_monitor(map() | undefined, pid()) -> {reference(), map() | undefined}.
 resolve_monitor(undefined, SessionPid) ->

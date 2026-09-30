@@ -378,14 +378,31 @@ filter_member_ids_for_subscription(_GuildId, SessionUserId, MemberIds, State) ->
 
 -spec handle_added_subscriptions([user_id()], session_id(), guild_state()) -> guild_state().
 handle_added_subscriptions(Added, SessionId, State) ->
+    Prefetched = guild_presence:cached_presences(
+        [UserId || UserId <- Added, presence_watched(UserId, State)]
+    ),
     lists:foldl(
-        fun(UserId, Acc) ->
-            StateWithPresence = guild_sessions:subscribe_to_user_presence(UserId, Acc),
-            guild_presence:send_cached_presence_to_session(UserId, SessionId, StateWithPresence)
-        end,
+        fun(UserId, Acc) -> subscribe_added_member(UserId, SessionId, Prefetched, Acc) end,
         State,
         Added
     ).
+
+-spec subscribe_added_member(user_id(), session_id(), map(), guild_state()) -> guild_state().
+subscribe_added_member(UserId, SessionId, Prefetched, State) ->
+    Watched = presence_watched(UserId, State),
+    StateWithPresence = guild_sessions:subscribe_to_user_presence(UserId, State),
+    case {Watched, maps:find(UserId, Prefetched)} of
+        {true, {ok, Lookup}} ->
+            guild_presence:send_presence_lookup_to_session(
+                UserId, SessionId, Lookup, StateWithPresence
+            );
+        _ ->
+            guild_presence:send_cached_presence_to_session(UserId, SessionId, StateWithPresence)
+    end.
+
+-spec presence_watched(user_id(), guild_state()) -> boolean().
+presence_watched(UserId, State) ->
+    maps:get(UserId, maps:get(presence_subscriptions, State, #{}), 0) > 0.
 
 -spec handle_removed_subscriptions([user_id()], guild_state()) -> guild_state().
 handle_removed_subscriptions(Removed, State) ->
@@ -640,5 +657,152 @@ arm_lazy_subscribe_timer_is_idempotent_test() ->
     Ref = make_ref(),
     State = #{lazy_subscribe_timer => Ref},
     ?assertEqual(Ref, maps:get(lazy_subscribe_timer, arm_lazy_subscribe_timer(State))).
+
+member_subscription_test_member(UserId, RoleIds) ->
+    #{
+        <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
+        <<"roles">> => [integer_to_binary(RoleId) || RoleId <- RoleIds]
+    }.
+
+member_subscription_test_presence(UserId) ->
+    #{<<"status">> => <<"online">>, <<"user">> => #{<<"id">> => integer_to_binary(UserId)}}.
+
+member_subscription_test_state() ->
+    GuildId = 42,
+    View = integer_to_binary(constants:view_channel_permission()),
+    Channels = [
+        #{
+            <<"id">> => <<"500">>,
+            <<"type">> => 0,
+            <<"permission_overwrites">> => [
+                #{
+                    <<"id">> => <<"3000">>,
+                    <<"type">> => 0,
+                    <<"allow">> => <<"0">>,
+                    <<"deny">> => View
+                }
+            ]
+        }
+    ],
+    Members = maps:from_list(
+        [{Id, member_subscription_test_member(Id, [])} || Id <- [10 | lists:seq(20, 27)]] ++
+            [{31, member_subscription_test_member(31, [3000])}]
+    ),
+    Tab = ets:new(member_subscription_test_presence, [set, public]),
+    ets:insert(
+        Tab,
+        {23,
+            presence_payload:build(
+                maps:get(<<"user">>, maps:get(23, Members)), <<"online">>, false, false, null
+            )}
+    ),
+    Subs = lists:foldl(
+        fun(UserId, Acc) -> guild_subscriptions:subscribe(<<"s1">>, UserId, Acc) end,
+        guild_subscriptions:init_state(),
+        [20, 27]
+    ),
+    #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"7">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => View},
+                #{<<"id">> => <<"3000">>, <<"permissions">> => <<"0">>}
+            ],
+            <<"members">> => Members,
+            <<"channels">> => Channels,
+            <<"channel_index">> => guild_data_index:build_id_index(Channels)
+        },
+        sessions => #{
+            <<"s1">> => #{user_id => 10, pid => self(), viewable_channels => #{500 => true}}
+        },
+        member_subscriptions => Subs,
+        presence_subscriptions => #{20 => 1, 21 => 1, 22 => 2, 27 => 1},
+        member_presence => Tab
+    }.
+
+reference_update_member_subscriptions(SessionId, MemberIds, State) ->
+    #{user_id := Viewer, viewable_channels := SessionMap} = maps:get(
+        SessionId, maps:get(sessions, State)
+    ),
+    Filtered = [
+        MemberId
+     || MemberId <- MemberIds,
+        MemberId =/= Viewer,
+        lists:any(
+            fun(ChannelId) -> maps:is_key(ChannelId, SessionMap) end,
+            guild_visibility:get_user_viewable_channels(MemberId, State)
+        )
+    ],
+    {NewSubs, Added, Removed} = guild_subscriptions:update_subscriptions_with_delta(
+        SessionId, Filtered, maps:get(member_subscriptions, State)
+    ),
+    State1 = lists:foldl(
+        fun(UserId, Acc) ->
+            StateWithPresence = guild_sessions:subscribe_to_user_presence(UserId, Acc),
+            guild_presence:send_cached_presence_to_session(UserId, SessionId, StateWithPresence)
+        end,
+        State#{member_subscriptions => NewSubs},
+        Added
+    ),
+    handle_removed_subscriptions(Removed, State1).
+
+drain_mailbox(Acc) ->
+    receive
+        Msg -> drain_mailbox([Msg | Acc])
+    after 50 -> lists:reverse(Acc)
+    end.
+
+ensure_started(Name, Start) ->
+    case whereis(Name) of
+        undefined ->
+            case Start() of
+                {ok, _} -> ok;
+                {error, {already_started, _}} -> ok
+            end;
+        _ ->
+            ok
+    end.
+
+update_member_subscriptions_matches_reference_test() ->
+    ensure_started(presence_bus, fun presence_bus:start_link/0),
+    ensure_started(presence_cache, fun presence_cache:start_link/0),
+    [ok = presence_cache:put(Id, member_subscription_test_presence(Id)) || Id <- [20, 21, 23]],
+    _ = sys:get_state(presence_cache),
+    ?assertMatch({ok, _}, presence_cache:get(21)),
+    MemberIds = [20, 21, 22, 23, 24, 25, 31, 99, 10, 21],
+    _ = drain_mailbox([]),
+    Expected = reference_update_member_subscriptions(
+        <<"s1">>, MemberIds, member_subscription_test_state()
+    ),
+    ExpectedDispatches = drain_mailbox([]),
+    Actual = handle_update_member_subscriptions_local(
+        42, <<"s1">>, MemberIds, member_subscription_test_state()
+    ),
+    ActualDispatches = drain_mailbox([]),
+    Strip = fun(S) -> maps:without([member_presence], S) end,
+    ?assertEqual(Strip(Expected), Strip(Actual)),
+    ?assertEqual(ExpectedDispatches, ActualDispatches),
+    ?assertEqual(2, length(ActualDispatches)),
+    ?assertEqual(
+        [20, 21, 22, 23, 24, 25],
+        lists:sort(
+            sets:to_list(
+                guild_subscriptions:get_user_ids_for_session(
+                    <<"s1">>, maps:get(member_subscriptions, Actual)
+                )
+            )
+        )
+    ).
+
+cached_presences_reports_every_requested_user_test() ->
+    ensure_started(presence_cache, fun presence_cache:start_link/0),
+    ok = presence_cache:put(61, member_subscription_test_presence(61)),
+    _ = sys:get_state(presence_cache),
+    ?assertEqual(
+        #{61 => presence_cache_safe:get(61), 62 => not_found},
+        guild_presence:cached_presences([61, 62])
+    ),
+    ?assertEqual(#{}, guild_presence:cached_presences([])).
 
 -endif.
