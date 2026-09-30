@@ -351,6 +351,7 @@ remove_session_id(undefined, Sessions) ->
 
 -spec put_session_ref(session_id(), term(), guild_state()) -> guild_state().
 put_session_ref(SessionId, Ref, State) when is_reference(Ref) ->
+    ok = guild_health:put_session(SessionId, State),
     Refs = maps:get(guild_session_refs, State, #{}),
     State#{guild_session_refs => Refs#{Ref => SessionId}};
 put_session_ref(_SessionId, _Ref, State) ->
@@ -359,6 +360,7 @@ put_session_ref(_SessionId, _Ref, State) ->
 -spec remove_session_ref(term(), guild_state()) -> guild_state().
 remove_session_ref(Ref, State) when is_reference(Ref) ->
     Refs = maps:get(guild_session_refs, State, #{}),
+    ok = guild_health:remove_session(maps:get(Ref, Refs, undefined), State),
     State#{guild_session_refs => maps:remove(Ref, Refs)};
 remove_session_ref(_Ref, State) ->
     State.

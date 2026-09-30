@@ -94,9 +94,11 @@ dispatch_pending_syncs(ListIds, State) ->
 dispatch_pending_syncs(ListIds, State, SubsTab) ->
     _ = guild_member_list_write_context:with_guild_id(State, fun(GuildId) ->
         Sessions = maps:get(sessions, State, #{}),
-        dispatch_pending_syncs_for_guild(
-            GuildId, lists:sort(ListIds), Sessions, State, SubsTab
-        ),
+        guild_member_list_read:with_member_item_memo(fun() ->
+            dispatch_pending_syncs_for_guild(
+                GuildId, lists:sort(ListIds), Sessions, State, SubsTab
+            )
+        end),
         {ok, State}
     end),
     State.

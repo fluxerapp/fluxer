@@ -43,30 +43,62 @@ init(GuildState) ->
     State3 = guild_init:init_caches_and_timers(State2),
     State4 = guild_init:init_voice_server(State3),
     erlang:garbage_collect(),
-    {ok, State4, ?HIBERNATE_TIMEOUT}.
+    State5 = guild_health:register_guild(State4),
+    ok = guild_read_model:put_state(State5),
+    {ok, State5, ?HIBERNATE_TIMEOUT}.
 
 -spec handle_call(term(), gen_server:from(), guild_state()) -> call_reply().
-handle_call({session_connect, Request}, {CallerPid, _}, State) ->
+handle_call(Msg, From, State) ->
+    Result = handle_call_internal(Msg, From, State),
+    ok = publish_read_model(Result, State),
+    Result.
+
+-spec handle_cast(term(), guild_state()) -> cast_reply().
+handle_cast(Msg, State) ->
+    Result = handle_cast_internal(Msg, State),
+    ok = publish_read_model(Result, State),
+    Result.
+
+-spec handle_info(term(), guild_state()) -> info_reply().
+handle_info(Msg, State) ->
+    Result = handle_info_internal(Msg, State),
+    ok = publish_read_model(Result, State),
+    Result.
+
+-spec publish_read_model(tuple(), guild_state()) -> ok.
+publish_read_model({reply, _Reply, NewState}, OldState) ->
+    guild_read_model:update(OldState, NewState);
+publish_read_model({noreply, NewState}, OldState) ->
+    guild_read_model:update(OldState, NewState);
+publish_read_model({noreply, NewState, _Timeout}, OldState) ->
+    guild_read_model:update(OldState, NewState);
+publish_read_model(_Result, _OldState) ->
+    ok.
+
+-spec handle_call_internal(term(), gen_server:from(), guild_state()) -> call_reply().
+handle_call_internal({session_connect, Request}, {CallerPid, _}, State) ->
     handle_session_connect_call(Request, CallerPid, State);
-handle_call(export_handoff_state, _From, State) ->
+handle_call_internal(export_handoff_state, _From, State) ->
     {reply, {ok, guild_handoff:export_handoff_state(State)}, State};
-handle_call({get_guild_id}, _From, State) ->
+handle_call_internal({get_guild_id}, _From, State) ->
     {reply, maps:get(id, State, undefined), State};
-handle_call({get_voice_guild_state}, _From, State) ->
+handle_call_internal({get_voice_guild_state}, _From, State) ->
     {reply, voice_guild_state(State), State};
-handle_call({dispatch, Request}, _From, State) ->
+handle_call_internal({dispatch, Request}, _From, State) ->
     handle_dispatch_call(Request, State);
-handle_call({reload, NewData}, _From, State) ->
+handle_call_internal({reload, NewData}, _From, State) ->
     handle_reload_call(NewData, State);
-handle_call(get_voice_server_pid, _From, State) ->
+handle_call_internal(get_voice_server_pid, _From, State) ->
     guild_voice_lifecycle:reply_voice_server_pid(State);
-handle_call({released_push_holds, SessionIds}, _From, State) when is_list(SessionIds) ->
+handle_call_internal({released_push_holds, SessionIds}, _From, State) when
+    is_list(SessionIds)
+->
     {reply, guild_sessions:released_push_holds(SessionIds, State), State};
-handle_call({terminate}, _From, State) ->
+handle_call_internal({terminate}, _From, State) ->
     {stop, normal, ok, State};
-handle_call(Msg, From, State) when is_tuple(Msg) ->
+handle_call_internal(Msg, From, State) when is_tuple(Msg) ->
     route_call(element(1, Msg), Msg, From, State);
-handle_call(_, _From, State) ->
+handle_call_internal(_, _From, State) ->
     {reply, ok, State}.
 
 -spec route_call(atom(), term(), gen_server:from(), guild_state()) -> call_reply().
@@ -143,38 +175,40 @@ voice_call_handler(Tag) -> subscription_call_handler(Tag).
 subscription_call_handler(lazy_subscribe) -> subscription;
 subscription_call_handler(_) -> undefined.
 
--spec handle_cast(term(), guild_state()) -> cast_reply().
-handle_cast({dispatch, Request}, State) ->
+-spec handle_cast_internal(term(), guild_state()) -> cast_reply().
+handle_cast_internal({dispatch, Request}, State) ->
     handle_dispatch_cast(Request, State);
-handle_cast(
+handle_cast_internal(
     {session_connect_async,
         #{guild_id := GuildId, attempt := Attempt, request := Request} = Msg},
     State
 ) ->
     handle_session_connect_async_cast(GuildId, Attempt, Request, Msg, State);
-handle_cast({session_connect_worker_done, SessionId, Attempt, Result0, Computed}, State) ->
+handle_cast_internal(
+    {session_connect_worker_done, SessionId, Attempt, Result0, Computed}, State
+) ->
     handle_session_connect_worker_done_cast(SessionId, Attempt, Result0, Computed, State);
-handle_cast({set_session_active, SessionId}, State) ->
+handle_cast_internal({set_session_active, SessionId}, State) ->
     handle_set_session_active_cast(SessionId, State);
-handle_cast({set_session_passive, SessionId}, State) ->
+handle_cast_internal({set_session_passive, SessionId}, State) ->
     handle_set_session_passive_cast(SessionId, State);
-handle_cast({drop_session_member_lists, SessionId}, State) when is_binary(SessionId) ->
+handle_cast_internal({drop_session_member_lists, SessionId}, State) when is_binary(SessionId) ->
     {noreply, guild_member_list:unsubscribe_session(SessionId, State)};
-handle_cast({set_session_typing_override, SessionId, TypingFlag}, State) ->
+handle_cast_internal({set_session_typing_override, SessionId, TypingFlag}, State) ->
     handle_set_session_typing_override_cast(SessionId, TypingFlag, State);
-handle_cast({set_session_push_hold, SessionId, Hold}, State) when
+handle_cast_internal({set_session_push_hold, SessionId, Hold}, State) when
     is_binary(SessionId), is_boolean(Hold)
 ->
     {noreply, guild_sessions:set_session_push_hold(SessionId, Hold, State)};
-handle_cast({send_guild_sync, SessionId}, State) ->
+handle_cast_internal({send_guild_sync, SessionId}, State) ->
     handle_send_guild_sync_cast(SessionId, State);
-handle_cast({send_members_chunk, SessionId, ChunkData}, State) ->
+handle_cast_internal({send_members_chunk, SessionId, ChunkData}, State) ->
     handle_send_members_chunk_cast(SessionId, ChunkData, State);
-handle_cast({patch_everyone_perms, Bit}, State) when is_integer(Bit), Bit > 0 ->
+handle_cast_internal({patch_everyone_perms, Bit}, State) when is_integer(Bit), Bit > 0 ->
     {noreply, guild_maintenance:apply_everyone_perm_bit(Bit, State)};
-handle_cast(Msg, State) when is_tuple(Msg) ->
+handle_cast_internal(Msg, State) when is_tuple(Msg) ->
     route_cast(element(1, Msg), Msg, State);
-handle_cast(_, State) ->
+handle_cast_internal(_, State) ->
     {noreply, State}.
 
 -spec route_cast(atom(), term(), guild_state()) -> cast_reply().
@@ -197,47 +231,52 @@ cast_handler(update_member_subscriptions) -> subscription;
 cast_handler(update_dm_partners) -> dm_partners;
 cast_handler(_) -> undefined.
 
--spec handle_info(term(), guild_state()) -> info_reply().
-handle_info({presence, UserId, Payload}, State) ->
+-spec handle_info_internal(term(), guild_state()) -> info_reply().
+handle_info_internal({guild_health_probe, Ref}, State) when is_reference(Ref) ->
+    gen_server:cast(guild_health, {pong, self(), Ref, erlang:monotonic_time(millisecond)}),
+    {noreply, State};
+handle_info_internal(guild_health_register, State) ->
+    {noreply, guild_health:register_guild(State)};
+handle_info_internal({presence, UserId, Payload}, State) ->
     handle_presence_info(UserId, Payload, State);
-handle_info({'EXIT', Pid, Reason}, State) ->
+handle_info_internal({'EXIT', Pid, Reason}, State) ->
     handle_exit_info(Pid, Reason, State);
-handle_info({'DOWN', Ref, process, _Pid, Reason}, State) ->
+handle_info_internal({'DOWN', Ref, process, _Pid, Reason}, State) ->
     handle_down_info(Ref, Reason, State);
-handle_info(count_cache_refresh, State) ->
+handle_info_internal(count_cache_refresh, State) ->
     State1 = update_counts(State),
     _ = guild_maintenance:schedule_count_cache_refresh(State1),
     {noreply, State1};
-handle_info(availability_recheck, State) ->
+handle_info_internal(availability_recheck, State) ->
     {noreply, guild_availability:handle_availability_recheck(State)};
-handle_info(passive_sync, State) ->
+handle_info_internal(passive_sync, State) ->
     guild_passive_sync:handle_passive_sync(State);
-handle_info(presence_reconcile, State) ->
+handle_info_internal(presence_reconcile, State) ->
     guild_presence_reconcile:start_async(State),
     _ = guild_presence_reconcile:schedule(),
     {noreply, State};
-handle_info({presence_reconcile_apply, Mismatches}, State) when is_list(Mismatches) ->
+handle_info_internal({presence_reconcile_apply, Mismatches}, State) when is_list(Mismatches) ->
     {noreply, guild_presence_reconcile:apply_mismatches(Mismatches, State)};
-handle_info({reconcile_user_presence, UserId}, State) ->
+handle_info_internal({reconcile_user_presence, UserId}, State) ->
     {noreply, guild_presence_reconcile:reconcile_user(UserId, State)};
-handle_info({clear_stale_cached_voice_states, ConnectionIds}, State) ->
+handle_info_internal({clear_stale_cached_voice_states, ConnectionIds}, State) ->
     handle_clear_stale_cached_voice_states_info(ConnectionIds, State);
-handle_info(flush_lazy_subscribe_buffer, State) ->
+handle_info_internal(flush_lazy_subscribe_buffer, State) ->
     guild_subscription_handler:handle_info(flush_lazy_subscribe_buffer, State);
-handle_info(flush_member_list_sync_batch, State) ->
+handle_info_internal(flush_member_list_sync_batch, State) ->
     {noreply, guild_member_list:flush_pending_member_list_syncs(State)};
-handle_info({check_auto_stop_empty, Token}, State) ->
+handle_info_internal({check_auto_stop_empty, Token}, State) ->
     handle_auto_stop_info(Token, State);
-handle_info(check_auto_stop_empty, State) ->
+handle_info_internal(check_auto_stop_empty, State) ->
     {noreply, State};
-handle_info({timeout, TimerRef, member_list_sync_item_cache_rotate}, State) when
+handle_info_internal({timeout, TimerRef, member_list_sync_item_cache_rotate}, State) when
     is_reference(TimerRef)
 ->
     ok = guild_member_list_subscribe:handle_sync_item_cache_timeout(TimerRef),
     {noreply, State};
-handle_info(timeout, State) ->
+handle_info_internal(timeout, State) ->
     {noreply, State, hibernate};
-handle_info(_, State) ->
+handle_info_internal(_, State) ->
     {noreply, State}.
 
 -spec handle_session_connect_call(term(), pid(), guild_state()) -> call_reply().
@@ -403,6 +442,10 @@ handle_auto_stop(Token, State) ->
 
 -spec terminate(term(), guild_state() | term()) -> ok.
 terminate(Reason, State) when is_map(State) ->
+    safe_cleanup(
+        fun() -> guild_read_model:delete(maps:get(id, State, undefined)) end,
+        "read_model_delete"
+    ),
     safe_cleanup(
         fun() ->
             PresenceSubs = presence_subscriptions(State),

@@ -23,4 +23,5 @@ export type GuildReadyData = Readonly<{
 	joined_at: string;
 	unavailable?: boolean;
 	unavailable_hidden?: boolean;
+	degraded?: boolean;
 }>;

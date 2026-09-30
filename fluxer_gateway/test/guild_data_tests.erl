@@ -5,6 +5,124 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+read_model_preserves_query_results_test() ->
+    State = read_model_state(),
+    try
+        ok = guild_read_model:put_state(State),
+        lists:foreach(
+            fun({Tag, Request, Handler}) ->
+                {reply, Expected, _} = Handler(Request, State),
+                ?assertEqual({ok, Expected}, guild_read_model:query(100, {Tag, Request}))
+            end,
+            [
+                {get_guild_data, #{user_id => 200}, fun guild_data:get_guild_data/2},
+                {get_guild_data, #{user_id => 999}, fun guild_data:get_guild_data/2},
+                {get_guild_data, #{user_id => null}, fun guild_data:get_guild_data/2},
+                {get_guild_auth_context, #{user_id => 200, channel_id => 500},
+                    fun guild_data:get_auth_context/2},
+                {get_guild_auth_context, #{user_id => 999, channel_id => null},
+                    fun guild_data:get_auth_context/2},
+                {get_guild_member, #{user_id => 200}, fun guild_data:get_guild_member/2},
+                {get_guild_member, #{user_id => 999}, fun guild_data:get_guild_member/2},
+                {has_member, #{user_id => 200}, fun guild_data:has_member/2}
+            ]
+        )
+    after
+        cleanup_read_model(State)
+    end.
+
+read_model_uses_live_member_rows_without_copying_members_test() ->
+    State = read_model_state(),
+    #{data := #{members_ets := Tab}} = State,
+    try
+        ok = guild_read_model:put_state(State),
+        [{100, _, #{data := SnapshotData}}] = ets:lookup(guild_read_model, 100),
+        ?assertEqual(#{}, maps:get(<<"members">>, SnapshotData)),
+        [{200, Member}] = ets:lookup(Tab, 200),
+        Updated = Member#{
+            <<"nick">> => <<"new nickname">>, <<"communication_disabled_until">> => null
+        },
+        ets:insert(Tab, {200, Updated}),
+        ?assertEqual(
+            {ok, #{success => true, member_data => Updated}},
+            guild_read_model:query(100, {get_guild_member, #{user_id => 200}})
+        ),
+        ets:delete(Tab, 200),
+        ?assertEqual(
+            {ok, #{has_member => false}},
+            guild_read_model:query(100, {has_member, #{user_id => 200}})
+        ),
+        ?assertMatch(
+            {ok, #{guild_data := null}},
+            guild_read_model:query(100, {get_guild_data, #{user_id => 200}})
+        )
+    after
+        cleanup_read_model(State)
+    end.
+
+read_model_observes_role_and_collection_changes_test() ->
+    State = read_model_state(),
+    try
+        ok = guild_read_model:put_state(State),
+        Data = maps:get(data, State),
+        UpdatedData = guild_data_index:normalize_map(Data#{
+            <<"roles">> => [#{<<"id">> => 100, <<"permissions">> => 0}],
+            <<"emojis">> => [#{<<"id">> => 700, <<"name">> => <<"new">>}]
+        }),
+        Updated = State#{data => UpdatedData},
+        ok = guild_read_model:update(State, Updated),
+        {reply, Expected, _} = guild_data:get_guild_data(#{user_id => 200}, Updated),
+        ?assertEqual(
+            {ok, Expected}, guild_read_model:query(100, {get_guild_data, #{user_id => 200}})
+        ),
+        #{guild_data := GuildData} = Expected,
+        ?assertEqual([], maps:get(<<"channels">>, GuildData))
+    after
+        cleanup_read_model(State)
+    end.
+
+read_model_survives_blocked_owner_and_rejects_dead_tables_test() ->
+    State = read_model_state(),
+    Self = self(),
+    Owner = spawn(fun() ->
+        ok = guild_read_model:put_state(State),
+        Self ! published,
+        receive
+            stop -> ok
+        end
+    end),
+    try
+        receive
+            published -> ok
+        after 1000 -> error(publish_timeout)
+        end,
+        ?assertMatch(
+            {ok, #{auth_context := #{}}},
+            guild_read_model:query(
+                100, {get_guild_auth_context, #{user_id => 200, channel_id => 500}}
+            )
+        ),
+        ?assertEqual({message_queue_len, 0}, process_info(Owner, message_queue_len)),
+        ets:delete(maps:get(members_ets, maps:get(data, State))),
+        ?assertEqual(miss, guild_read_model:query(100, {has_member, #{user_id => 200}}))
+    after
+        Owner ! stop,
+        cleanup_read_model(State)
+    end.
+
+read_model_state() ->
+    State = test_state(),
+    Data = guild_data_index:normalize_map(maps:get(data, State)),
+    Members = guild_data_index:member_map(Data),
+    Tab = ets:new(read_model_members, [set, public]),
+    ets:insert(Tab, maps:to_list(Members)),
+    State#{member_count => map_size(Members), data => Data#{members_ets => Tab}}.
+
+cleanup_read_model(#{data := Data} = State) ->
+    guild_read_model:delete(100),
+    catch ets:delete(maps:get(members_ets, Data)),
+    ets:delete(maps:get(member_presence, State)).
+
 get_guild_data_membership_gate_test() ->
     State = test_state(),
     {reply, Reply1, _} = guild_data:get_guild_data(#{user_id => 999}, State),

@@ -90,6 +90,8 @@ role_specs(presence, _Role) ->
     ];
 role_specs(guilds, _Role) ->
     [
+        child_spec(gateway_clock_offset, gateway_clock_offset),
+        child_spec(guild_health, guild_health),
         child_spec(guild_counts_cache, guild_counts_cache),
         child_spec(guild_manager, guild_manager),
         child_spec(voice_state_counts_sync, voice_state_counts_sync)

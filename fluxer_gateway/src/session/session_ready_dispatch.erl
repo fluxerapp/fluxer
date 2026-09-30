@@ -69,8 +69,9 @@ dispatch_ready_to_socket(State) ->
     StateAfterGuilds = dispatch_bot_guild_creates(
         IsBot, CollectedGuilds, Guilds, StateAfterReady
     ),
-    schedule_call_creates(StateAfterGuilds, SessionId),
-    StateAfterPresences = release_pending_presences(StateAfterGuilds, CollectedPresences),
+    StateAfterHealth = session_guild_health:dispatch_ready(StateAfterGuilds),
+    schedule_call_creates(StateAfterHealth, SessionId),
+    StateAfterPresences = release_pending_presences(StateAfterHealth, CollectedPresences),
     FinalState = StateAfterPresences#{
         ready => undefined,
         collected_guild_states => [],

@@ -100,18 +100,33 @@ spawn_fetch_worker(Self, Tag, GuildId, GuildPid, UserId) ->
 
 -spec worker(pid(), reference(), integer(), pid(), integer()) -> ok.
 worker(Parent, Tag, GuildId, GuildPid, UserId) ->
-    Request = {get_viewer_counts, #{user_id => UserId}},
-    Result =
-        try guild_query_handler:call(GuildPid, Request, ?GUILD_CALL_TIMEOUT_MS) of
-            #{member_count := MemberCount, online_count := OnlineCount} ->
-                {ok, MemberCount, OnlineCount};
-            _ ->
-                error
-        catch
-            _:_ -> error
-        end,
-    Parent ! {Tag, GuildId, Result},
+    Parent ! {Tag, GuildId, fetch_counts(GuildPid, UserId)},
     ok.
+
+-spec fetch_counts(pid(), integer()) -> {ok, non_neg_integer(), non_neg_integer()} | error.
+fetch_counts(GuildPid, UserId) ->
+    Request = {get_viewer_counts, #{user_id => UserId}},
+    try guild_query_handler:call(GuildPid, Request, ?GUILD_CALL_TIMEOUT_MS) of
+        ok -> fetch_legacy_counts(GuildPid, UserId);
+        Reply -> counts_result(Reply)
+    catch
+        _:_ -> error
+    end.
+
+-spec fetch_legacy_counts(pid(), integer()) ->
+    {ok, non_neg_integer(), non_neg_integer()} | error.
+fetch_legacy_counts(GuildPid, UserId) ->
+    try gen_server:call(GuildPid, {get_user_counts, UserId}, ?GUILD_CALL_TIMEOUT_MS) of
+        Reply -> counts_result(Reply)
+    catch
+        _:_ -> error
+    end.
+
+-spec counts_result(term()) -> {ok, non_neg_integer(), non_neg_integer()} | error.
+counts_result(#{member_count := MemberCount, online_count := OnlineCount}) ->
+    {ok, MemberCount, OnlineCount};
+counts_result(_) ->
+    error.
 
 -spec collect_responses(non_neg_integer(), reference(), integer(), [map()]) -> [map()].
 collect_responses(0, _Tag, _Deadline, Acc) ->
@@ -253,6 +268,91 @@ handle_request_fetches_viewer_counts_with_deadline_test() ->
     after 1000 ->
         ?assert(false)
     end.
+
+legacy_guild(Replies) ->
+    spawn(fun() -> legacy_guild_loop(Replies) end).
+
+legacy_guild_loop(Replies) ->
+    receive
+        {'$gen_call', From, {get_viewer_counts, #{user_id := 100, deadline := D}}} when
+            is_integer(D)
+        ->
+            gen_server:reply(From, ok),
+            legacy_guild_loop(Replies);
+        {'$gen_call', From, {get_user_counts, 100}} ->
+            [Reply | Rest] = Replies,
+            gen_server:reply(From, Reply),
+            legacy_guild_loop(Rest)
+    after 5000 ->
+        ok
+    end.
+
+request_counts_payload(Guilds) ->
+    Self = self(),
+    SessionState = #{session_pid => Self, user_id => <<"100">>, guilds => Guilds},
+    GuildIds = [integer_to_binary(Id) || Id <- maps:keys(Guilds)],
+    ok = handle_request(#{<<"guild_ids">> => GuildIds}, Self, SessionState),
+    receive
+        {'$gen_cast', {dispatch, guild_counts_update, Payload}} -> Payload
+    after 1000 ->
+        error(no_dispatch)
+    end.
+
+handle_request_falls_back_to_user_counts_on_legacy_guild_test() ->
+    Guild = legacy_guild([#{member_count => 50, online_count => 10}]),
+    Payload = request_counts_payload(#{7 => {Guild, make_ref()}}),
+    ?assertEqual([build_entry(7, 50, 10)], maps:get(<<"counts">>, Payload)).
+
+handle_request_omits_guild_when_legacy_fallback_fails_test() ->
+    Guild = legacy_guild([ok]),
+    Payload = request_counts_payload(#{7 => {Guild, make_ref()}}),
+    ?assertEqual([], maps:get(<<"counts">>, Payload)).
+
+handle_request_mixes_legacy_and_current_guilds_test() ->
+    Legacy = legacy_guild([#{member_count => 50, online_count => 10}]),
+    Current = spawn(fun() ->
+        receive
+            {'$gen_call', From, {get_viewer_counts, #{user_id := 100}}} ->
+                gen_server:reply(From, #{member_count => 80, online_count => 20})
+        end,
+        receive
+            {'$gen_call', From2, _} -> gen_server:reply(From2, unexpected)
+        after 500 -> ok
+        end
+    end),
+    Payload = request_counts_payload(#{7 => {Legacy, make_ref()}, 9 => {Current, make_ref()}}),
+    ?assertEqual(
+        [build_entry(7, 50, 10), build_entry(9, 80, 20)],
+        lists:sort(maps:get(<<"counts">>, Payload))
+    ).
+
+fetch_counts_does_not_fall_back_on_current_guild_test() ->
+    Self = self(),
+    Guild = spawn(fun() ->
+        receive
+            {'$gen_call', From, {get_viewer_counts, #{user_id := 100}}} ->
+                gen_server:reply(From, #{member_count => 3, online_count => 1})
+        end,
+        receive
+            {'$gen_call', From2, Msg} ->
+                Self ! {unexpected_call, Msg},
+                gen_server:reply(From2, ok)
+        after 300 -> ok
+        end
+    end),
+    ?assertEqual({ok, 3, 1}, fetch_counts(Guild, 100)),
+    receive
+        {unexpected_call, Msg} -> ?assertEqual(none, Msg)
+    after 400 -> ok
+    end.
+
+fetch_counts_errors_on_malformed_reply_test() ->
+    Guild = spawn(fun() ->
+        receive
+            {'$gen_call', From, {get_viewer_counts, _}} -> gen_server:reply(From, #{})
+        end
+    end),
+    ?assertEqual(error, fetch_counts(Guild, 100)).
 
 parse_nonce_test() ->
     ?assertEqual(<<"x">>, parse_nonce(<<"x">>)),

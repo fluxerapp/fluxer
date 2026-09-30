@@ -18,7 +18,8 @@
     get_all_item_keys/1,
     get_sorted_user_ids/1,
     index_of/2,
-    is_member_online/2
+    is_member_online/2,
+    version/1
 ]).
 
 -export([info/1]).
@@ -42,6 +43,7 @@ new() ->
         {hoisted_role_ids, []},
         {total_count, 0},
         {online_count, 0},
+        {version, 0},
         {{section_count, ?ONLINE_IDX}, 0},
         {{section_count, ?OFFLINE_IDX}, 0}
     ]),
@@ -86,7 +88,7 @@ bulk_load(Ref, Members, HoistedRoleIds) ->
     guild_member_list_oset:from_sorted(OSet, Keys),
     store_counts(Ref, Total, Online),
     store_section_counts(Ref, SC),
-    ok.
+    bump_version(Ref).
 
 -spec bulk_load_member(
     {integer(), binary(), [integer()], boolean()},
@@ -130,7 +132,7 @@ add_member(Ref, UserId, SortKey, RoleIds, IsOnline) ->
     _ = ets:update_counter(Ref, {section_count, SIdx}, 1),
     _ = ets:update_counter(Ref, total_count, 1),
     ok = adjust_online_counter(Ref, IsOnline, 1),
-    ok.
+    bump_version(Ref).
 
 -spec remove_member(ets:table(), integer()) -> ok.
 remove_member(Ref, UserId) ->
@@ -276,7 +278,7 @@ do_remove(Ref, UserId) ->
             _ = ets:update_counter(Ref, {section_count, SIdx}, -1),
             _ = ets:update_counter(Ref, total_count, -1),
             ok = adjust_online_counter(Ref, IsOnline, -1),
-            ok;
+            bump_version(Ref);
         [] ->
             ok
     end.
@@ -326,6 +328,20 @@ move_section(Ref, OSet, ITab, UserId, SortKey, OldSIdx, RoleIds, IsOnline) ->
             false -> -1
         end,
     _ = ets:update_counter(Ref, online_count, OnlineDelta),
+    bump_version(Ref).
+
+-spec version(ets:table()) -> non_neg_integer() | undefined.
+version(Ref) ->
+    try ets:lookup_element(Ref, version, 2) of
+        Version when is_integer(Version) -> Version;
+        _ -> undefined
+    catch
+        error:badarg -> undefined
+    end.
+
+-spec bump_version(ets:table()) -> ok.
+bump_version(Ref) ->
+    _ = ets:update_counter(Ref, version, 1, {version, 0}),
     ok.
 
 -spec adjust_online_counter(ets:table(), boolean(), integer()) -> ok.
@@ -410,7 +426,7 @@ do_set_hoisted_roles(Ref, NewHoistedRoleIds) ->
         {hoisted_role_ids, NewHoistedRoleIds}
     ]),
     store_section_counts(Ref, SC),
-    ok.
+    bump_version(Ref).
 
 -spec rebuild_members_into(
     ets:table(), guild_member_list_oset:oset(), #{integer() => non_neg_integer()}
