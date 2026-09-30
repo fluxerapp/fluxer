@@ -966,7 +966,7 @@ export default class LocalParticipant extends Participant {
 		if (settings.noiseSuppression) {
 			audioFeatures.push(AudioTrackFeature.TF_NOISE_SUPPRESSION);
 		}
-		if (settings.channelCount && settings.channelCount > 1) {
+		if (isStereo) {
 			audioFeatures.push(AudioTrackFeature.TF_STEREO);
 		}
 		if (disableDtx) {

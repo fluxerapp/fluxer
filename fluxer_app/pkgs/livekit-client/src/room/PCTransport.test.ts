@@ -8,6 +8,7 @@ import type {TrackBitrateInfo} from './PCTransport.ts';
 import {
 	applyVideoStartBitrate,
 	collectStereoMids,
+	conformBundledCodecFmtp,
 	ensureAudioNackAndStereo,
 	ensureOpusFmtp,
 	ensureVideoDDExtension,
@@ -282,15 +283,63 @@ describe('placeholderMidsFromTransceivers', () => {
 		return {mid, currentDirection, sender: {track}} as unknown as RTCRtpTransceiver;
 	}
 
-	it('keeps the trackless recvonly sections that still hold an m-line', () => {
+	it('keeps unused trackless sections that still hold an m-line', () => {
 		const mids = placeholderMidsFromTransceivers([
-			transceiver('3', null, 'recvonly'),
+			transceiver('3', null, 'inactive'),
+			transceiver('4', null, null),
 			transceiver('7', {} as MediaStreamTrack, 'sendonly'),
 		]);
-		expect(mids).toEqual(new Set(['3']));
+		expect(mids).toEqual(new Set(['3', '4']));
 	});
 
 	it('drops a transceiver that unpublish stopped so its recycled m-section is not fmtp-conformed', () => {
 		expect(placeholderMidsFromTransceivers([transceiver('7', null, 'stopped')])).toEqual(new Set());
+	});
+
+	it.each(['recvonly', 'sendrecv'] as const)(
+		'preserves a negotiated %s receiver without a local sender',
+		(direction) => {
+			expect(placeholderMidsFromTransceivers([transceiver('0', null, direction)])).toEqual(new Set());
+		},
+	);
+
+	it.each(['sendonly', 'sendrecv', undefined] as const)(
+		'preserves a receiver activated by a remote %s answer before currentDirection updates',
+		(direction) => {
+			const incoming = opusMedia('useinbandfec=1');
+			incoming.direction = direction;
+			expect(placeholderMidsFromTransceivers([transceiver('0', null, null)], [incoming])).toEqual(new Set());
+		},
+	);
+
+	it('keeps inactive and rejected remote sections eligible for placeholder conformance', () => {
+		const inactive = opusMedia('useinbandfec=1', '0');
+		inactive.direction = 'inactive';
+		const rejected = opusMedia('useinbandfec=1', '1');
+		rejected.direction = 'sendonly';
+		rejected.port = 0;
+		expect(
+			placeholderMidsFromTransceivers(
+				[transceiver('0', null, 'inactive'), transceiver('1', null, null)],
+				[inactive, rejected],
+			),
+		).toEqual(new Set(['0', '1']));
+	});
+
+	it('starting a stereo share preserves incoming microphone fmtp while conforming unused placeholders', () => {
+		const microphone = opusMedia('useinbandfec=1;maxaveragebitrate=64000', '0');
+		const placeholder = opusMedia('useinbandfec=1;usedtx=1', '1');
+		const screenShare = opusMedia('useinbandfec=1', '2');
+		ensureOpusFmtp(screenShare, 128000, true);
+		const microphoneConfig = opusConfig(microphone);
+		const mids = placeholderMidsFromTransceivers([
+			transceiver('0', null, 'recvonly'),
+			transceiver('1', null, 'inactive'),
+			transceiver('2', {} as MediaStreamTrack, 'sendonly'),
+		]);
+		conformBundledCodecFmtp([microphone, placeholder, screenShare], (media) => mids.has(String(media.mid)));
+		expect(opusConfig(microphone)).toBe(microphoneConfig);
+		expect(opusConfig(screenShare)).toContain('stereo=1');
+		expect(opusConfig(placeholder)).toBe(opusConfig(screenShare));
 	});
 });

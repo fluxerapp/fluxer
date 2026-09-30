@@ -294,7 +294,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			value: backend,
 			label: getNoiseSuppressionChoiceLabel(i18n, backend),
 		}));
-	const stereoMicrophoneAvailable = isStereoMicrophoneChoiceAvailable();
+	const stereoMicrophoneAvailable = isStereoMicrophoneChoiceAvailable(activeInputLabel);
 	const setPushToTalkEnabled = (enabled: boolean) => {
 		const mode = enabled ? 'voice_push_to_talk' : 'voice_activity';
 		if (enabled && !isNativeDesktop) {

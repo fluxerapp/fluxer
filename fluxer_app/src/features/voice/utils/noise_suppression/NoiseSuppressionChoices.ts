@@ -12,7 +12,7 @@ import {
 	readNoiseSuppressionRuntimeCapabilities,
 	supportsStereoCapture,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
-import {resolveVoiceProcessingFromState} from '@app/features/voice/utils/VoiceProcessingProfile';
+import {resolveVoiceProcessingFromStateForDeviceLabel} from '@app/features/voice/utils/VoiceProcessingProfile';
 
 export function getNoiseSuppressionChoiceValues(): ReadonlyArray<VoiceNoiseSuppressionBackend> {
 	const capabilities = readNoiseSuppressionRuntimeCapabilities();
@@ -29,8 +29,8 @@ export function setNoiseSuppressionChoice(backend: VoiceNoiseSuppressionBackend)
 	VoiceSettingsCommands.update({noiseSuppressionBackend: backend});
 }
 
-export function isStereoMicrophoneChoiceAvailable(): boolean {
-	return supportsStereoCapture(resolveVoiceProcessingFromState(VoiceSettings));
+export function isStereoMicrophoneChoiceAvailable(deviceLabel: string | null): boolean {
+	return supportsStereoCapture(resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, deviceLabel));
 }
 
 export function isStereoMicrophoneEnabled(): boolean {
