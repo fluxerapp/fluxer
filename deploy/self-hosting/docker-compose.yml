@@ -353,6 +353,7 @@ services:
           memory: ${FLUXER_SEAWEEDFS_MEMORY_LIMIT:-2gb}
     environment:
       GOMEMLIMIT: ${FLUXER_SEAWEEDFS_GOMEMLIMIT:-1536MiB}
+      WEED_MASTER_VOLUME_GROWTH_COPY_1: ${FLUXER_SEAWEEDFS_VOLUME_GROWTH:-1}
     command: ["server", "-s3", "-dir=/data", "-master.telemetry=${FLUXER_SEAWEEDFS_TELEMETRY:-false}"]
     volumes:
       - seaweedfs-data:/data
