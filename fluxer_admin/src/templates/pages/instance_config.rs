@@ -245,7 +245,7 @@ fn policy_config_section(
                 (single_community_form(base, csrf_token, policy))
                 (direct_messages_form(base, csrf_token, policy))
                 (premium_mode_form(base, csrf_token, policy, premium_name))
-								(guild_create_form(base, csrf_token, policy))
+                                (guild_create_form(base, csrf_token, policy))
                 (services_form(base, csrf_token, policy))
             }
         },
