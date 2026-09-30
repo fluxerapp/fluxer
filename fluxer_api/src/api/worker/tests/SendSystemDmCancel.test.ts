@@ -219,7 +219,7 @@ describe('System DM cancellation', () => {
 		await expect(runner.runJob(TASK_TYPE, createJobMessage({all_users: true}) as unknown as JsMsg)).resolves.toBe(true);
 
 		expect(recipientIds).toEqual([21n, 24n]);
-		expect(markSucceeded).toHaveBeenCalledTimes(1);
+		expect(markSucceeded).toHaveBeenCalledWith(LEDGER_JOB_ID, {sent_count: 2, failed_count: 0});
 		expect(kv.size).toBe(0);
 	});
 });

@@ -6,7 +6,7 @@ import type {User} from '@app/api/models/User';
 import {UserChannelService} from '@app/api/user/services/UserChannelService';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {JobCancelledError, type WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {JobCancelledError, type WorkerTaskHelpers, type WorkerTaskResult} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
 
 const SYSTEM_USER_ID: UserID = createUserID(0n);
@@ -56,7 +56,7 @@ async function* listedRecipients(userIds: Array<string>): AsyncGenerator<UserID>
 	}
 }
 
-export async function sendSystemDm(payload: unknown, helpers: WorkerTaskHelpers): Promise<void> {
+export async function sendSystemDm(payload: unknown, helpers: WorkerTaskHelpers): Promise<WorkerTaskResult> {
 	const parsed = PayloadSchema.parse(payload);
 	const {content} = parsed;
 	const total = 'user_ids' in parsed ? parsed.user_ids.length : null;
@@ -105,5 +105,7 @@ export async function sendSystemDm(payload: unknown, helpers: WorkerTaskHelpers)
 		}
 	}
 	requestCache.clear();
+	await helpers.reportProgress(sent + failed, sent + failed, `${sent} sent, ${failed} failed`);
 	helpers.logger.info({sent, failed, total: sent + failed}, 'System DM job complete');
+	return {sent_count: sent, failed_count: failed};
 }
