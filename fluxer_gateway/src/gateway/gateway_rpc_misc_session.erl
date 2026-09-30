@@ -185,8 +185,12 @@ aggregate_node_stats(NodeStats) ->
         <<"status">> => aggregate_status(SortedNodes),
         <<"sessions">> => sum_stat(SortedNodes, <<"sessions">>),
         <<"session_resumes_total">> => sum_stat(SortedNodes, <<"session_resumes_total">>),
-        <<"websocket_dispatches_total">> => sum_stat(SortedNodes, <<"websocket_dispatches_total">>),
-        <<"websocket_dispatch_drops_total">> => sum_stat(SortedNodes, <<"websocket_dispatch_drops_total">>),
+        <<"websocket_dispatches_total">> => sum_stat(
+            SortedNodes, <<"websocket_dispatches_total">>
+        ),
+        <<"websocket_dispatch_drops_total">> => sum_stat(
+            SortedNodes, <<"websocket_dispatch_drops_total">>
+        ),
         <<"guilds">> => sum_stat(SortedNodes, <<"guilds">>),
         <<"presences">> => sum_stat(SortedNodes, <<"presences">>),
         <<"calls">> => sum_stat(SortedNodes, <<"calls">>),
@@ -325,7 +329,7 @@ aggregate_node_stats_sums_cluster_totals_test() ->
         <<"node_id">> => <<"gateway_a@127.0.0.1">>,
         <<"status">> => <<"healthy">>,
         <<"sessions">> => 10,
-				<<"session_resumes_total">> => 1,
+        <<"session_resumes_total">> => 1,
         <<"websocket_dispatches_total">> => 7,
         <<"websocket_dispatch_drops_total">> => 7,
         <<"guilds">> => 20,
@@ -355,7 +359,7 @@ aggregate_node_stats_sums_cluster_totals_test() ->
     ?assertEqual(14, maps:get(<<"websocket_dispatches_total">>, A)),
     ?assertEqual(14, maps:get(<<"websocket_dispatch_drops_total">>, A)),
     ?assertEqual(13, maps:get(<<"sessions">>, A)),
-		?assertEqual(2, maps:get(<<"session_resumes_total">>, A)),
+    ?assertEqual(2, maps:get(<<"session_resumes_total">>, A)),
     ?assertEqual(24, maps:get(<<"guilds">>, A)),
     ?assertEqual(35, maps:get(<<"presences">>, A)),
     ?assertEqual(46, maps:get(<<"calls">>, A)),
