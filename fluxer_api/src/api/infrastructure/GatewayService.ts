@@ -1741,6 +1741,8 @@ export class GatewayService {
 	}
 
 	async getNodeStats(): Promise<GatewayNodeStats> {
+		const a = this.call<GatewayNodeStats>('process.node_stats', {});
+		console.log(a.then((stats) => console.log('Node stats:', stats)));
 		return this.call<GatewayNodeStats>('process.node_stats', {});
 	}
 

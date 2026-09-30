@@ -12048,6 +12048,9 @@
 				"properties": {
 					"status": {"type": "string", "minLength": 1, "maxLength": 256},
 					"sessions": {"$ref": "#/components/schemas/Int32Type"},
+					"session_resumes_total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+					"websocket_dispatches_total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+					"websocket_dispatch_drops_total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
 					"guilds": {"$ref": "#/components/schemas/Int32Type"},
 					"presences": {"$ref": "#/components/schemas/Int32Type"},
 					"calls": {"$ref": "#/components/schemas/Int32Type"},
@@ -12074,6 +12077,24 @@
 								"node_id": {"type": "string", "minLength": 1, "maxLength": 256},
 								"status": {"type": "string", "minLength": 1, "maxLength": 256},
 								"sessions": {"$ref": "#/components/schemas/Int32Type"},
+								"session_resumes_total": {
+									"nullable": true,
+									"type": "integer",
+									"minimum": 0,
+									"maximum": 9007199254740991
+								},
+								"websocket_dispatches_total": {
+									"nullable": true,
+									"type": "integer",
+									"minimum": 0,
+									"maximum": 9007199254740991
+								},
+								"websocket_dispatch_drops_total": {
+									"nullable": true,
+									"type": "integer",
+									"minimum": 0,
+									"maximum": 9007199254740991
+								},
 								"guilds": {"$ref": "#/components/schemas/Int32Type"},
 								"presences": {"$ref": "#/components/schemas/Int32Type"},
 								"calls": {"$ref": "#/components/schemas/Int32Type"},
@@ -12127,6 +12148,9 @@
 								"node_id",
 								"status",
 								"sessions",
+								"session_resumes_total",
+								"websocket_dispatches_total",
+								"websocket_dispatch_drops_total",
 								"guilds",
 								"presences",
 								"calls",
@@ -12142,6 +12166,9 @@
 				"required": [
 					"status",
 					"sessions",
+					"session_resumes_total",
+					"websocket_dispatches_total",
+					"websocket_dispatch_drops_total",
 					"guilds",
 					"presences",
 					"calls",
