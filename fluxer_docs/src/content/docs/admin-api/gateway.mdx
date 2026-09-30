@@ -24,6 +24,9 @@ One snapshot of the Gateway cluster, taken across the nodes the request polled. 
 | --- | --- | --- |
 | status<sup>1</sup> | string | The aggregate health of the cluster |
 | sessions | integer | The connected client Gateway sessions, summed across nodes |
+| session_resumes_total | integer | The total number of session resumes, summed across nodes |
+| websocket_dispatches_total | integer | The total number of WebSocket dispatches, summed across nodes |
+| websocket_dispatch_drops_total | integer | The total number of WebSocket dispatches dropped, summed across nodes |
 | guilds | integer | The live guild processes, summed across nodes |
 | presences | integer | The tracked presences, summed across nodes |
 | calls | integer | The live calls, summed across nodes |
@@ -48,6 +51,9 @@ One snapshot of the Gateway cluster, taken across the nodes the request polled. 
 {
   "status": "healthy",
   "sessions": 4820,
+	"session_resumes_total": 1234,
+	"websocket_dispatches_total": 1234567,
+	"websocket_dispatch_drops_total": 123,
   "guilds": 1913,
   "presences": 4611,
   "calls": 12,
@@ -71,6 +77,9 @@ One entry for each node the request polled, including nodes that did not answer 
 | node_id<sup>1</sup> | string | The name the node reports for itself |
 | status<sup>2</sup> | string | The health this node reported |
 | sessions | integer | The connected client Gateway sessions on this node |
+| session_resumes_total | integer | The total number of session resumes on this node |
+| websocket_dispatches_total | integer | The total number of WebSocket dispatches on this node |
+| websocket_dispatch_drops_total | integer | The total number of WebSocket dispatches dropped on
 | guilds | integer | The live guild processes on this node |
 | presences | integer | The tracked presences on this node |
 | calls | integer | The live calls on this node |
