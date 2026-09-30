@@ -6491,7 +6491,7 @@ msgstr "Atšaukti suplanuotą keitimą"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Atšaukti prenumeratą"
@@ -13881,11 +13881,11 @@ msgstr "Pabaigos data"
 msgid "End grace now"
 msgstr "Baigti lengvatinį laikotarpį dabar"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Baigti lengvatinį laikotarpį"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "Baigti lengvatinį laikotarpį dabar?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Neapykantos kalba"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Turite dovanų kodą? Aktyvuokite jį, kad atrakintumėte {PREMIUM_PRODUCT_NAME}."
 
@@ -18927,7 +18927,7 @@ msgstr "Išsaugoti priedus išvalius redagavimą"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Pasilikite nemokamą ir mokamą lygius. Vėliau galėsite tinkinti lygius, parduoti mokamą turinį per „Stripe“ arba dalyti dovanų kodus iš administratoriaus skydelio."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Palikti lengvatinį laikotarpį"
 
@@ -18941,7 +18941,7 @@ msgstr "Neleisti Neko judėti"
 msgid "Keep running"
 msgstr "Palikti veikti"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Palikti prenumeratą"
 
@@ -26377,7 +26377,7 @@ msgstr "Išpirkti sau"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Išpirkti dovanos kodą"
 
@@ -35866,7 +35866,7 @@ msgstr "Atrakinkite pasirinktinius jaustukus DM pokalbiuose su „{premiumProduc
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Atrakinkite HD ekrano bendrinimą su „{premiumProductName}“"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Atrakinkite didesnius limitus ir išskirtines funkcijas, kartu palaikydami nepriklausomą komunikacijos platformą."
 
@@ -39494,10 +39494,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Ką tik paspaudėte „Tab“. Įjungtas klaviatūros režimas, kad galėtumėte naršyti {productName} be pelės."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Privilegijas išsaugosite iki kito atnaujinimo datos, o tada turėsite 3 dienų pereinamąjį laikotarpį, kad vėl užsiprenumeruotumėte ir išsaugotumėte prenumeratos istoriją."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Privilegijas išsaugosite iki kito atnaujinimo datos. Suaktyvinkite prenumeratą iš naujo iki tol, kad išsaugotumėte prenumeratos istoriją."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Iškart prarasite visas „{PREMIUM_PRODUCT_NAME}“ privilegijas, o jūsų prenumeratos istorija bus nustatyta iš naujo. Šio veiksmo anuliuoti negalima."
 

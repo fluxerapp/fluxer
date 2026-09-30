@@ -6491,7 +6491,7 @@ msgstr "Ακύρωση προγραμματισμένης αλλαγής"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Ακύρωση συνδρομής"
@@ -13881,11 +13881,11 @@ msgstr "Ημερομηνία λήξης"
 msgid "End grace now"
 msgstr "Τερματισμός περιόδου χάριτος τώρα"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Τερματισμός περιόδου χάριτος"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "Να τερματιστεί τώρα η περίοδος χάριτος;"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Ρητορική μίσους"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Έχετε κωδικό δώρου; Εξαργυρώστε τον για να ξεκλειδώσετε το {PREMIUM_PRODUCT_NAME}."
 
@@ -18926,7 +18926,7 @@ msgstr "Διατήρηση συνημμένων κατά την εκκαθάρι
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Διατήρησε δωρεάν και premium βαθμίδες. Μπορείς να προσαρμόσεις τις βαθμίδες, να πουλήσεις premium μέσω Stripe ή να διανείμεις κωδικούς δώρου αργότερα από τον πίνακα διαχειριστή."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Διατήρηση περιόδου χάριτος"
 
@@ -18940,7 +18940,7 @@ msgstr "Κράτα το Neko ακίνητο"
 msgid "Keep running"
 msgstr "Παραμονή σε λειτουργία"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Διατήρηση συνδρομής"
 
@@ -26376,7 +26376,7 @@ msgstr "Εξαργύρωση για εσάς"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Εξαργύρωση κωδικού δώρου"
 
@@ -35865,7 +35865,7 @@ msgstr "Ξεκλειδώστε προσαρμοσμένα emoji σε DM με τ�
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Ξεκλειδώστε την κοινή χρήση οθόνης HD με το {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Ξεκλειδώστε υψηλότερα όρια και αποκλειστικές λειτουργίες, υποστηρίζοντας ταυτόχρονα μια ανεξάρτητη πλατφόρμα επικοινωνίας."
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Μόλις πατήσατε Tab. Η λειτουργία πληκτρολογίου είναι πλέον ενεργή, ώστε να μπορείτε να περιηγηθείτε στο {productName} χωρίς ποντίκι."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Διατηρείτε τα προνόμιά σας μέχρι την επόμενη ημερομηνία ανανέωσης και, στη συνέχεια, έχετε μια περίοδο χάριτος 3 ημερών για να εγγραφείτε ξανά και να διατηρήσετε το ιστορικό συνδρομών σας."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Διατηρείτε τα προνόμιά σας μέχρι την επόμενη ημερομηνία ανανέωσης. Ενεργοποιήστε ξανά τη συνδρομή σας πριν από τότε για να διατηρήσετε το ιστορικό συνδρομών σας."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Χάνετε όλα τα προνόμια {PREMIUM_PRODUCT_NAME} αμέσως και το ιστορικό συνδρομών σας μηδενίζεται. Αυτό δεν μπορεί να αναιρεθεί."
 

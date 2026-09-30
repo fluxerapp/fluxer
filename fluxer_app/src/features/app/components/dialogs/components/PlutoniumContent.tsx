@@ -135,8 +135,7 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 					title={<Trans>Cancel subscription?</Trans>}
 					description={
 						<Trans>
-							You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep
-							your subscriber history.
+							You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history.
 						</Trans>
 					}
 					primaryText={<Trans>Cancel subscription</Trans>}

@@ -6491,7 +6491,7 @@ msgstr "Poništi zakazanu promjenu"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Otkaži pretplatu"
@@ -13881,11 +13881,11 @@ msgstr "Datum završetka"
 msgid "End grace now"
 msgstr "Završi poček sada"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Završi razdoblje počeka"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "Završiti poček sada?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Govor mržnje"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Imaš poklon-kod? Iskoristi ga za otključavanje {PREMIUM_PRODUCT_NAME}."
 
@@ -18926,7 +18926,7 @@ msgstr "Zadrži privitke pri brisanju izmjene"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Zadržite besplatnu i premium razinu. Možete prilagoditi razine, prodavati premium putem Stripe-a ili kasnije dijeliti poklon-kodove iz administratorske ploče."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Zadrži poček"
 
@@ -18940,7 +18940,7 @@ msgstr "Neka Neko miruje"
 msgid "Keep running"
 msgstr "Nastavi raditi"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Zadrži pretplatu"
 
@@ -26376,7 +26376,7 @@ msgstr "Iskoristi za sebe"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Iskoristi kôd poklona"
 
@@ -35865,7 +35865,7 @@ msgstr "Otključajte prilagođene emojije u izravnim porukama uz {premiumProduct
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Otključajte HD dijeljenje zaslona uz {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Otključajte veća ograničenja i ekskluzivne značajke, a istovremeno podržite neovisnu komunikacijsku platformu."
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Upravo ste pritisnuli tipku Tab. Način rada tipkovnice sada je uključen, tako da se možete kretati kroz {productName} bez miša."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Zadržavate svoje pogodnosti do sljedećeg datuma obnove, a zatim imate razdoblje od 3 dana za ponovnu pretplatu i zadržavanje povijesti pretplate."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Zadržavate svoje pogodnosti do sljedećeg datuma obnove. Ponovno aktivirajte pretplatu prije toga kako biste zadržali povijest pretplate."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Odmah gubite sve pogodnosti {PREMIUM_PRODUCT_NAME} i vaša se povijest pretplate poništava. Ovo se ne može poništiti."
 

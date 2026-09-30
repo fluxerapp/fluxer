@@ -749,8 +749,7 @@ The window this operation ends runs to `premium_grace_ends_at`. [Receive Stripe 
 | --- | --- |
 | A renewal payment fails | The start of the unpaid period plus 7 days for a monthly plan or 14 days for a yearly plan |
 | The subscription was cancelled for non-payment | The same deadline, never extended |
-| The subscription ran to its recorded premium end | The subscription end plus 3 days |
-| The subscription ended early | The subscription end itself, which leaves no window for this route to close |
+| The subscription ended for any other reason | The subscription end itself, which leaves no window for this route to close |
 | The early cancellation is already recorded | Nothing |
 
 This route requires an explicit `premium_grace_ends_at`. It does not end the default 3-day grace period used when that field is absent.

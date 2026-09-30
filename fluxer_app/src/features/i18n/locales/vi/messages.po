@@ -6491,7 +6491,7 @@ msgstr "Hủy chuyển đổi đã lên lịch"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Hủy gói đăng ký"
@@ -13881,11 +13881,11 @@ msgstr "Ngày kết thúc"
 msgid "End grace now"
 msgstr "Kết thúc thời gian ân hạn ngay"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Kết thúc thời gian ân hạn"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "Kết thúc thời gian ân hạn ngay bây giờ?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Ngôn từ gây thù ghét"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Có mã quà tặng? Hãy đổi mã để mở khóa {PREMIUM_PRODUCT_NAME}."
 
@@ -18926,7 +18926,7 @@ msgstr "Giữ tệp đính kèm khi xóa hết nội dung chỉnh sửa"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Giữ nguyên các gói miễn phí và cao cấp. Bạn có thể tùy chỉnh các gói, bán gói cao cấp qua Stripe hoặc phát mã quà tặng sau từ bảng quản trị."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Giữ thời gian ân hạn"
 
@@ -18940,7 +18940,7 @@ msgstr "Giữ Neko đứng yên"
 msgid "Keep running"
 msgstr "Tiếp tục chạy"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Giữ gói đăng ký"
 
@@ -26376,7 +26376,7 @@ msgstr "Đổi cho bản thân"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Đổi mã quà tặng"
 
@@ -35865,7 +35865,7 @@ msgstr "Mở khóa biểu tượng cảm xúc tùy chỉnh trong tin nhắn tr�
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Mở khóa chia sẻ màn hình HD với {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Mở khóa giới hạn cao hơn và các tính năng độc quyền, đồng thời ủng hộ một nền tảng liên lạc độc lập."
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Bạn vừa nhấn phím Tab. Chế độ bàn phím hiện đã bật để bạn có thể điều hướng {productName} mà không cần chuột."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Bạn giữ các đặc quyền của mình cho đến ngày gia hạn tiếp theo, sau đó có thời gian ân hạn 3 ngày để đăng ký lại và giữ lịch sử đăng ký của mình."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Bạn giữ các đặc quyền của mình cho đến ngày gia hạn tiếp theo. Hãy kích hoạt lại gói đăng ký trước ngày đó để giữ lịch sử đăng ký của mình."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Bạn sẽ mất tất cả các đặc quyền của {PREMIUM_PRODUCT_NAME} ngay lập tức và lịch sử đăng ký của bạn sẽ được đặt lại. Thao tác này không thể hoàn tác."
 

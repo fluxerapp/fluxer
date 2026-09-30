@@ -577,7 +577,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
 			expect(checkHasActivePaidPremium(afterUser!)).toBe(false);
 		});
-		test('grants standard grace when the subscription is cancelled at the end of its paid period', async () => {
+		test('ends premium without grace when the subscription is cancelled at the end of its paid period', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
 			const subscriptionId = 'sub_test_cancel_natural';
@@ -599,10 +599,9 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumUntil?.getTime()).toBe(premiumUntil.getTime());
-			expect(afterUser?.premiumGraceEndsAt).not.toBeNull();
-			expect(afterUser!.premiumGraceEndsAt!.getTime()).toBe(endedAt * 1000 + PREMIUM_GRACE_PERIOD_MS);
+			expect(afterUser?.premiumGraceEndsAt?.getTime()).toBe(endedAt * 1000);
 			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
-			expect(checkHasActivePaidPremium(afterUser!)).toBe(true);
+			expect(checkHasActivePaidPremium(afterUser!)).toBe(false);
 		});
 		test('keeps the payment recovery deadline when Stripe cancels for non-payment', async () => {
 			const account = await createTestAccount(harness);

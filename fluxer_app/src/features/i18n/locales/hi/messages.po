@@ -6491,7 +6491,7 @@ msgstr "निर्धारित स्विच रद्द करें"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "सदस्यता रद्द करें"
@@ -13881,11 +13881,11 @@ msgstr "अंतिम तिथि"
 msgid "End grace now"
 msgstr "ग्रेस पीरियड अभी खत्म करें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "ग्रेस पीरियड खत्म करें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "ग्रेस पीरियड अभी खत्म करें?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "नफ़रत फैलाने वाला भाषण"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "गिफ्ट कोड है? {PREMIUM_PRODUCT_NAME} को अनलॉक करने के लिए इसे रिडीम करें।"
 
@@ -18926,7 +18926,7 @@ msgstr "एडिट साफ़ करते समय अटैचमें�
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "मुफ़्त और प्रीमियम टियर रखें। आप टियर को कस्टमाइज़ कर सकते हैं, स्ट्राइप के ज़रिए प्रीमियम बेच सकते हैं, या बाद में एडमिन पैनल से गिफ्ट कोड दे सकते हैं।"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "ग्रेस पीरियड रखें"
 
@@ -18940,7 +18940,7 @@ msgstr "नेको को स्थिर रखें"
 msgid "Keep running"
 msgstr "चालू रखें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "सदस्यता रखें"
 
@@ -26376,7 +26376,7 @@ msgstr "अपने लिए रिडीम करें"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "उपहार कोड रिडीम करें"
 
@@ -35865,7 +35865,7 @@ msgstr "{premiumProductName} के साथ DM में कस्टम इ�
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "{premiumProductName} के साथ HD स्क्रीन शेयर अनलॉक करें"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "एक स्वतंत्र संचार प्लेटफ़ॉर्म को सपोर्ट करते हुए ज़्यादा बड़ी सीमाएँ और खास सुविधाएँ अनलॉक करें।"
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "आपने अभी Tab दबाया है। कीबोर्ड मोड अब चालू है, ताकि आप माउस के बिना {productName} को नेविगेट कर सकें।"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "आपके पर्क आपकी अगली रिन्यूअल तारीख तक बने रहेंगे, फिर दोबारा सदस्यता लेने और अपनी सब्सक्राइबर हिस्ट्री बनाए रखने के लिए 3 दिन का ग्रेस पीरियड मिलेगा।"
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "आपके पर्क आपकी अगली रिन्यूअल तारीख तक बने रहेंगे। अपनी सब्सक्राइबर हिस्ट्री बनाए रखने के लिए उससे पहले सदस्यता फिर से सक्रिय करें।"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "आप तुरंत सभी {PREMIUM_PRODUCT_NAME} पर्क खो देंगे और आपकी सब्सक्राइबर हिस्ट्री रीसेट हो जाएगी। इसे पूर्ववत नहीं किया जा सकता।"
 

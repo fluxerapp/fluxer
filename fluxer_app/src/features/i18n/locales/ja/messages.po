@@ -6491,7 +6491,7 @@ msgstr "予約済みの切り替えをキャンセル"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "サブスクリプションをキャンセル"
@@ -13881,11 +13881,11 @@ msgstr "終了日"
 msgid "End grace now"
 msgstr "猶予期間を終了"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "猶予期間を終了"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "猶予期間を今すぐ終了しますか？"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "ヘイトスピーチ"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "ギフトコードをお持ちですか？{PREMIUM_PRODUCT_NAME}をアンロックするためにコードを入力してください。"
 
@@ -18926,7 +18926,7 @@ msgstr "編集をクリアしても添付ファイルを保持する"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "無料版とプレミアム版を残します。ティアをカスタマイズしたり、Stripe で"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "猶予期間を保持"
 
@@ -18940,7 +18940,7 @@ msgstr "ネコを固定する"
 msgid "Keep running"
 msgstr "常駐"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "サブスクリプションを継続"
 
@@ -26376,7 +26376,7 @@ msgstr "自分で引き換える"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "ギフトコードを引き換える"
 
@@ -35865,7 +35865,7 @@ msgstr "{premiumProductName}でDMのカスタム絵文字をアンロック"
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "{premiumProductName}でHD画面共有をアンロック"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "独立したコミュニケーションプラットフォームを支援しながら、上限アップや限定機能をご利用いただけます。"
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Tabキーを押しましたね。キーボードモードがオンになり、マウスなしで{productName}を操作できます。"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "特典は次回の更新日まで保持され、その後3日間の猶予期間中に再登録すると、サブスクリプション履歴を引き継ぐことができます。"
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "特典は次回の更新日まで保持されます。サブスクリプション履歴を引き継ぐには、それまでに再開してください。"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "{PREMIUM_PRODUCT_NAME}のすべての特典が直ちに失われ、サブスクリプション履歴がリセットされます。この操作は元に戻せません。"
 

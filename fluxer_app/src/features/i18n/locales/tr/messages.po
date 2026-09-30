@@ -6491,7 +6491,7 @@ msgstr "Planlanan değişikliği iptal et"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Aboneliği iptal et"
@@ -13881,11 +13881,11 @@ msgstr "Bitiş tarihi"
 msgid "End grace now"
 msgstr "Ödemesiz dönemi şimdi bitir"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Ödemesiz dönemi bitir"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "Ödemesiz dönemi şimdi bitirilsin mi?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Nefret söylemi"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Hediye kodun mu var? {PREMIUM_PRODUCT_NAME}'ın kilidini açmak için kullan."
 
@@ -18926,7 +18926,7 @@ msgstr "Bir düzenlemeyi temizlerken ekleri sakla"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Ücretsiz ve premium katmanları sakla. Katmanları özelleştirebilir, Stripe üzerinden premium satabilir veya daha sonra yönetici panelinden hediye kodları verebilirsin."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Ödemesiz dönemi koru"
 
@@ -18940,7 +18940,7 @@ msgstr "Neko'yu sabit tut"
 msgid "Keep running"
 msgstr "Çalışmaya devam et"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Aboneliği sürdür"
 
@@ -26376,7 +26376,7 @@ msgstr "Kendiniz için kullan"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Hediye kodunu kullan"
 
@@ -35865,7 +35865,7 @@ msgstr "{premiumProductName} ile DM'lerde özel emojilerin kilidini açın"
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "{premiumProductName} ile HD ekran paylaşımının kilidini açın"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Bağımsız bir iletişim platformunu desteklerken daha yüksek limitlerin ve ayrıcalıklı özelliklerin kilidini açın."
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Az önce Tab tuşuna bastınız. Klavye modu artık açık, böylece {productName} uygulamasında fare kullanmadan gezinebilirsiniz."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Avantajlarınız bir sonraki yenileme tarihinize kadar devam eder, ardından yeniden abone olup abone geçmişinizi korumak için 3 günlük ek süreniz olur."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Avantajlarınız bir sonraki yenileme tarihinize kadar devam eder. Abone geçmişinizi korumak için aboneliğinizi bu tarihten önce yeniden etkinleştirin."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Tüm {PREMIUM_PRODUCT_NAME} avantajlarınızı anında kaybedersiniz ve abone geçmişiniz sıfırlanır. Bu işlem geri alınamaz."
 

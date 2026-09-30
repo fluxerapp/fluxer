@@ -6491,7 +6491,7 @@ msgstr "ยกเลิกการเปลี่ยนที่กำหนด
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "ยกเลิกการสมัครสมาชิก"
@@ -13881,11 +13881,11 @@ msgstr "วันที่สิ้นสุด"
 msgid "End grace now"
 msgstr "สิ้นสุดช่วงผ่อนผันตอนนี้"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "สิ้นสุดช่วงผ่อนผัน"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "สิ้นสุดช่วงผ่อนผันตอนนี้ใช่ไหม"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "คำพูดที่สร้างความเกลียดชัง"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "มีรหัสของขวัญไหม? ใช้แลกรับ {PREMIUM_PRODUCT_NAME}"
 
@@ -18926,7 +18926,7 @@ msgstr "เก็บไฟล์แนบเมื่อล้างการแ
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "คงระดับฟรีและระดับพรีเมียมไว้ คุณสามารถปรับแต่งระดับต่างๆ ขายแบบพรีเมียมผ่าน Stripe หรือแจกโค้ดของขวัญในภายหลังจากแผงผู้ดูแลระบบ"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "คงช่วงผ่อนผัน"
 
@@ -18940,7 +18940,7 @@ msgstr "ตรึง Neko ไว้"
 msgid "Keep running"
 msgstr "ทำงานเบื้องหลัง"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "คงการสมัครสมาชิก"
 
@@ -26376,7 +26376,7 @@ msgstr "แลกให้ตัวเอง"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "แลกรหัสของขวัญ"
 
@@ -35865,7 +35865,7 @@ msgstr "ปลดล็อกอิโมจิแบบกำหนดเอง
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "ปลดล็อกการแชร์หน้าจอแบบ HD ด้วย {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "ปลดล็อกขีดจำกัดที่สูงขึ้นและฟีเจอร์พิเศษ พร้อมสนับสนุนแพลตฟอร์มการสื่อสารอิสระ"
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "คุณเพิ่งกด Tab ตอนนี้เปิดโหมดแป้นพิมพ์แล้ว คุณจึงสามารถไปยังส่วนต่างๆ ของ {productName} ได้โดยไม่ต้องใช้เมาส์"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "คุณจะยังคงได้รับสิทธิประโยชน์จนถึงวันต่ออายุครั้งถัดไป จากนั้นจะมีระยะเวลาผ่อนผัน 3 วันในการสมัครสมาชิกอีกครั้งเพื่อรักษาประวัติการเป็นสมาชิกของคุณไว้"
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "คุณจะยังคงได้รับสิทธิประโยชน์จนถึงวันต่ออายุครั้งถัดไป เปิดใช้งานการสมัครสมาชิกอีกครั้งก่อนวันดังกล่าวเพื่อรักษาประวัติการเป็นสมาชิกของคุณไว้"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "คุณจะสูญเสียสิทธิประโยชน์ทั้งหมดของ {PREMIUM_PRODUCT_NAME} ทันที และประวัติการเป็นสมาชิกของคุณจะถูกรีเซ็ต การดำเนินการนี้ไม่สามารถยกเลิกได้"
 

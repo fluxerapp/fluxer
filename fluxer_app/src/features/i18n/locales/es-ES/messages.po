@@ -6491,7 +6491,7 @@ msgstr "Cancelar cambio programado"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Cancelar suscripción"
@@ -13881,11 +13881,11 @@ msgstr "Fecha de finalización"
 msgid "End grace now"
 msgstr "Finalizar período de gracia ahora"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Finalizar período de gracia"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "¿Finalizar el período de gracia ahora?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Discurso de odio"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "¿Tienes un código de regalo? Canjéalo para desbloquear {PREMIUM_PRODUCT_NAME}."
 
@@ -18926,7 +18926,7 @@ msgstr "Conservar archivos adjuntos al borrar el texto de una edición"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Mantén los niveles gratuito y premium. Puedes personalizar los niveles, vender premium a través de Stripe o entregar códigos de regalo más tarde desde el panel de administración."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Mantener período de gracia"
 
@@ -18940,7 +18940,7 @@ msgstr "Mantener a Neko quieto"
 msgid "Keep running"
 msgstr "Seguir ejecutando"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Mantener suscripción"
 
@@ -26376,7 +26376,7 @@ msgstr "Canjear para mí"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Canjear código de regalo"
 
@@ -35865,7 +35865,7 @@ msgstr "Desbloquea los emojis personalizados en los MD con {premiumProductName}"
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Desbloquea la pantalla compartida en HD con {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Desbloquea límites más altos y funciones exclusivas mientras apoyas una plataforma de comunicación independiente."
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Acabas de pulsar Tab. El modo de teclado está activado para que puedas navegar por {productName} sin ratón."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Conservarás tus ventajas hasta la próxima fecha de renovación y, después, tendrás un periodo de gracia de 3 días para volver a suscribirte y mantener tu historial de suscriptor."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Conservarás tus ventajas hasta la próxima fecha de renovación. Reactiva tu suscripción antes de esa fecha para mantener tu historial de suscriptor."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Perderás todas las ventajas de {PREMIUM_PRODUCT_NAME} inmediatamente y tu historial de suscripción se restablecerá. Esto no se puede deshacer."
 

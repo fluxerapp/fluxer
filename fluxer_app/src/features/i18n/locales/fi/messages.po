@@ -6491,7 +6491,7 @@ msgstr "Peruuta ajoitettu vaihto"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Peruuta tilaus"
@@ -13881,11 +13881,11 @@ msgstr "Päättymispäivä"
 msgid "End grace now"
 msgstr "Lopeta armonaika nyt"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Lopeta armonaika"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "Päätetäänkö armonaika nyt?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Vihapuhe"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Onko sinulla lahjakoodi? Lunasta se avataksesi {PREMIUM_PRODUCT_NAME}."
 
@@ -18926,7 +18926,7 @@ msgstr "Säilytä liitteet muokkauksen tyhjentämisen yhteydessä"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Pidä ilmaiset ja premium-tasot. Voit muokata tasoja, myydä premiumia Stripellä tai jakaa lahjakoodeja myöhemmin ylläpitopaneelista."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Säilytä armonaika"
 
@@ -18940,7 +18940,7 @@ msgstr "Pidä Neko paikallaan"
 msgid "Keep running"
 msgstr "Pidä käynnissä"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Säilytä tilaus"
 
@@ -26376,7 +26376,7 @@ msgstr "Lunasta itsellesi"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Lunasta lahjakoodi"
 
@@ -35865,7 +35865,7 @@ msgstr "Avaa mukautetut emojit yksityisviesteissä {premiumProductName}-tilaukse
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Avaa HD-näytönjako käyttöön {premiumProductName}-tilauksella"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Saat käyttöösi suuremmat rajat ja vain tilaajille tarkoitetut ominaisuudet sekä tuet samalla riippumatonta viestintäalustaa."
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Painoit juuri sarkainta. Näppäimistötila on nyt käytössä, joten voit liikkua {productName}-sovelluksessa ilman hiirtä."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Pidät etusi seuraavaan uusimispäivään asti, minkä jälkeen sinulla on kolmen päivän lisäaika tilata uudelleen ja säilyttää tilaushistoriasi."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Pidät etusi seuraavaan uusimispäivään asti. Aktivoi tilaus uudelleen ennen sitä, niin säilytät tilaushistoriasi."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Menetät kaikki {PREMIUM_PRODUCT_NAME}-edut välittömästi ja tilaushistoriasi nollataan. Tätä ei voi kumota."
 

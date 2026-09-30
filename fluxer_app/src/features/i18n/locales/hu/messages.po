@@ -6491,7 +6491,7 @@ msgstr "Ütemezett váltás visszavonása"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Előfizetés lemondása"
@@ -13881,11 +13881,11 @@ msgstr "Befejezés dátuma"
 msgid "End grace now"
 msgstr "Türelmi időszak befejezése most"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Türelmi időszak befejezése"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "Befejezed most a türelmi időszakot?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Gyűlöletbeszéd"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Van ajándékkódod? Váltsd be, hogy feloldd a(z) {PREMIUM_PRODUCT_NAME} funkciót."
 
@@ -18926,7 +18926,7 @@ msgstr "Mellékletek megtartása a szerkesztett szöveg törlésekor"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Tartsd meg az ingyenes és a prémium szinteket. Testre szabhatod a szinteket, prémiumot adhatsz el a Stripe-on keresztül, vagy később ajándékkódokat osztogathatsz az admin panelből."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Türelmi időszak megtartása"
 
@@ -18940,7 +18940,7 @@ msgstr "Tartsd mozdulatlanul Nekót"
 msgid "Keep running"
 msgstr "Futtatás folytatása"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Előfizetés megtartása"
 
@@ -26376,7 +26376,7 @@ msgstr "Beváltás magadnak"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Ajándékkód beváltása"
 
@@ -35865,7 +35865,7 @@ msgstr "Egyéni emojik feloldása közvetlen beszélgetésekben a(z) {premiumPro
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "HD-képernyőmegosztás feloldása a(z) {premiumProductName} csomaggal"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Oldj fel magasabb limiteket és exkluzív funkciókat, miközben támogatsz egy független kommunikációs platformot."
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Megnyomtad a Tab billentyűt. Bekapcsolt a billentyűzetes mód, így egér nélkül is navigálhatsz a(z) {productName} alkalmazásban."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Az előnyöket a következő megújítási dátumig megtartod. Ezután 3 napos türelmi időszak áll rendelkezésedre, hogy újra előfizess és megőrizd az előfizetői előzményeidet."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Az előnyöket a következő megújítási dátumig megtartod. Ha addig újraaktiválod az előfizetést, megőrzöd az előfizetői előzményeidet."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Azonnal elveszíted a(z) {PREMIUM_PRODUCT_NAME} összes előnyét, és az előfizetői előzményeid lenullázódnak. Ez nem vonható vissza."
 

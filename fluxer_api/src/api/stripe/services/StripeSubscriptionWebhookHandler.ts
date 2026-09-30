@@ -30,7 +30,7 @@ import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumS
 import type {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
-import {getPremiumPaymentRecoveryGraceMs, PREMIUM_GRACE_PERIOD_MS} from '@app/api/user/UserHelpers';
+import {getPremiumPaymentRecoveryGraceMs} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -674,11 +674,11 @@ export class StripeSubscriptionWebhookHandler {
 					updates.premium_grace_ends_at = new Date(
 						lapseStart.getTime() + getPremiumPaymentRecoveryGraceMs(billingCycle),
 					);
-				} else if (cancelledBeforePeriodEnd) {
-					updates.premium_until = subscriptionEndedAt;
-					updates.premium_grace_ends_at = subscriptionEndedAt;
 				} else {
-					updates.premium_grace_ends_at = new Date(subscriptionEndedAt.getTime() + PREMIUM_GRACE_PERIOD_MS);
+					if (cancelledBeforePeriodEnd) {
+						updates.premium_until = subscriptionEndedAt;
+					}
+					updates.premium_grace_ends_at = subscriptionEndedAt;
 				}
 			}
 		}

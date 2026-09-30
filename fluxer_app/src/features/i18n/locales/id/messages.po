@@ -6491,7 +6491,7 @@ msgstr "Batalkan perubahan terjadwal"
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Batalkan langganan"
@@ -13881,11 +13881,11 @@ msgstr "Tanggal akhir"
 msgid "End grace now"
 msgstr "Akhiri masa tenggang sekarang"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
 msgid "End grace period"
 msgstr "Akhiri masa tenggang"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
 msgid "End grace period now?"
 msgstr "Akhiri masa tenggang sekarang?"
 
@@ -16826,7 +16826,7 @@ msgid "Hate speech"
 msgstr "Ujaran kebencian"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:297
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Punya kode hadiah? Tukarkan untuk membuka {PREMIUM_PRODUCT_NAME}."
 
@@ -18926,7 +18926,7 @@ msgstr "Pertahankan lampiran saat kolom edit dikosongkan"
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Pertahankan tingkatan gratis dan premium. Anda dapat menyesuaikan tingkatan, menjual premium melalui Stripe, atau membagikan kode hadiah nanti dari panel admin."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:166
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
 msgid "Keep grace period"
 msgstr "Pertahankan masa tenggang"
 
@@ -18940,7 +18940,7 @@ msgstr "Diamkan Neko"
 msgid "Keep running"
 msgstr "Tetap berjalan"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
 msgid "Keep subscription"
 msgstr "Tetap berlangganan"
 
@@ -26376,7 +26376,7 @@ msgstr "Tukarkan untuk diri sendiri"
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:307
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
 msgid "Redeem gift code"
 msgstr "Tukarkan kode hadiah"
 
@@ -35865,7 +35865,7 @@ msgstr "Buka emoji kustom di DM dengan {premiumProductName}"
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Buka berbagi layar HD dengan {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:217
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:216
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Dapatkan batas lebih tinggi dan fitur eksklusif sambil mendukung platform komunikasi independen."
 
@@ -39493,10 +39493,10 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Kamu baru saja menekan Tab. Mode keyboard kini aktif sehingga kamu bisa menavigasi {productName} tanpa mouse."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
-msgstr "Kamu tetap mendapat semua keuntungan hingga tanggal perpanjangan berikutnya, lalu ada masa tenggang 3 hari untuk berlangganan lagi dan mempertahankan riwayat langgananmu."
+msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
+msgstr "Kamu tetap mendapat semua keuntungan hingga tanggal perpanjangan berikutnya. Aktifkan lagi langgananmu sebelum tanggal itu untuk mempertahankan riwayat langgananmu."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:159
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Kamu langsung kehilangan semua keuntungan {PREMIUM_PRODUCT_NAME} dan riwayat langgananmu diatur ulang. Ini tidak dapat dibatalkan."
 
