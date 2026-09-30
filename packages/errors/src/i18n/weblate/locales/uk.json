@@ -159,7 +159,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "У спільнот, відкритих для пошуку, рівень перевірки має бути щонайменше «Низький».",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Одного або кількох вибраних користувачів не можна додати до цього групового чату.",
 	"channels_and_guilds.guild_banner_requires_feature": "Для банера спільноти потрібна функція BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "У тебе немає дозволу створювати спільноти в цьому екземплярі. Звернись до адміністратора екземпляра, щоб запросити доступ.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Цю функцію не можна перемкнути.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID спільноти має збігатися зі спільнотою, якій належить канал, з якого отримано вказане повідомлення.",
 	"channels_and_guilds.guild_template_invalid": "Дані шаблону спільноти недійсні або пошкоджені.",

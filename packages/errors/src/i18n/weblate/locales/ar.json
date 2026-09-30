@@ -159,7 +159,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "يجب أن يكون مستوى التحقق في المجتمعات القابلة للاكتشاف \"منخفض\" على الأقل.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "لا يمكن إضافة واحد أو أكثر من المستخدمين المحددين إلى هذه المحادثة الجماعية.",
 	"channels_and_guilds.guild_banner_requires_feature": "تتطلب لافتة المجتمع ميزة BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "لا تملك إذنًا لإنشاء مجتمعات على هذا المثيل. تواصل مع مسؤول المثيل لطلب الوصول.",
 	"channels_and_guilds.guild_feature_not_toggleable": "لا يمكن تفعيل هذه الميزة أو تعطيلها.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "يجب أن يكون معرف المجتمع مطابقًا للمجتمع الذي يضم القناة التي تم جلب الرسالة المرجعية منها.",
 	"channels_and_guilds.guild_template_invalid": "بيانات قالب المجتمع غير صالحة أو تالفة.",

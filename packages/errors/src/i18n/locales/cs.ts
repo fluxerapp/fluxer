@@ -163,7 +163,7 @@ const ERROR_I18N_CS_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Komunity v Objevování musí mít úroveň ověření alespoň Nízká.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Jednoho nebo více vybraných uživatelů nelze přidat do této skupinové konverzace.",
 	"channels_and_guilds.guild_banner_requires_feature": "Banner komunity vyžaduje funkci BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "Nemáte oprávnění vytvářet komunity na této instanci. Požádejte o přístup správce instance.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Tuto funkci nelze přepínat.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID komunity musí odpovídat komunitě, do které patří kanál, z něhož byla načtena odkazovaná zpráva.",
 	"channels_and_guilds.guild_template_invalid": "Data šablony komunity jsou neplatná nebo chybná.",

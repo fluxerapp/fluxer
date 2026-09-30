@@ -163,7 +163,7 @@ const ERROR_I18N_IT_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Le community presenti in Scopri devono avere un livello di verifica almeno basso.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Uno o più utenti selezionati non possono essere aggiunti a questo DM di gruppo.",
 	"channels_and_guilds.guild_banner_requires_feature": "Il banner della community richiede la funzionalità BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "Non hai il permesso di creare community su questa istanza. Contatta l'amministratore dell'istanza per richiedere l'accesso.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Questa funzionalità non può essere attivata o disattivata.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "L’ID della community deve corrispondere a quello della community che contiene il canale da cui è stato recuperato il messaggio a cui si fa riferimento.",
 	"channels_and_guilds.guild_template_invalid": "I dati del modello della community non sono validi o sono malformati.",

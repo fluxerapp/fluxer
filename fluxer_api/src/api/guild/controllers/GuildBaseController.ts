@@ -45,7 +45,8 @@ export function GuildBaseController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'create_guild',
 			summary: 'Create guild',
-			description: 'Only claimed, email-verified non-bot users can create guilds.',
+			description:
+				'Only claimed, email-verified non-bot users can create guilds. A self-hosted instance can restrict creation to admins and users granted the feature_guild_create limit.',
 			responseSchema: GuildResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
@@ -61,19 +62,17 @@ export function GuildBaseController(app: HonoApp) {
 			if (!user.isUnclaimedAccount()) {
 				requireEmailVerified(user, 'guild_creation');
 			}
-			if (Config.instance.selfHosted) {
-				const wildcardCheck = user.acls.has(AdminACLs.WILDCARD);
-				const policyCheck = (await ctx.get('instanceConfigRepository').readStoredInstancePolicyConfig())
-					.guild_create_access;
-				const limitCheck =
+			if (Config.instance.selfHosted && !policy.guild_create_access) {
+				const granted =
+					user.acls.has(AdminACLs.WILDCARD) ||
 					resolveLimitSafe(
 						ctx.get('limitConfigService').getConfigSnapshot(),
 						createLimitMatchContext({user}),
 						'feature_guild_create',
 						0,
 					) > 0;
-				if (!(policyCheck || wildcardCheck || limitCheck)) {
-					throw new GuildCreationPermissionRequiredError({instanceEmail: Config.auth.vapid.email});
+				if (!granted) {
+					throw new GuildCreationPermissionRequiredError();
 				}
 			}
 			const auditLogReason = ctx.get('auditLogReason') ?? null;

@@ -163,7 +163,7 @@ const ERROR_I18N_ZH_CN_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "可发现的社区验证等级至少要设为“低”。",
 	"channels_and_guilds.group_dm_recipients_not_addable": "某些选中的用户无法添加到该群聊。",
 	"channels_and_guilds.guild_banner_requires_feature": "社区横幅需要启用 BANNER 功能。",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "你没有在此实例上创建社区的权限。请联系实例管理员申请访问权限。",
 	"channels_and_guilds.guild_feature_not_toggleable": "此功能无法切换。",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "社区 ID 必须与引用消息所在频道所属的社区一致。",
 	"channels_and_guilds.guild_template_invalid": "社区模板数据无效或格式错误。",

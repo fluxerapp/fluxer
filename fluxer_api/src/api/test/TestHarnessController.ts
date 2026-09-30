@@ -427,41 +427,6 @@ export function TestHarnessController(app: HonoApp) {
 		await userCacheService.invalidateUserCache(userId);
 		return ctx.json({success: true, count: normalized?.size ?? 0});
 	});
-	app.patch('/test/users/:userId/traits', async (ctx) => {
-		ensureHarnessAccess(ctx);
-		const params = ctx.req.param() as {
-			userId?: string;
-		};
-		const userIdParam = params.userId;
-		if (!userIdParam) {
-			throw new Error('Missing userId parameter');
-		}
-		const userId = createUserID(BigInt(userIdParam));
-		const body = await ctx.req.json();
-		const {traits} = body;
-		if (traits !== null && !Array.isArray(traits)) {
-			throw new Error('traits must be an array of trait names or null');
-		}
-		let normalized: Set<string> | null = null;
-		if (Array.isArray(traits)) {
-			normalized = new Set<string>();
-			for (const trait of traits) {
-				if (typeof trait !== 'string' || !trait.trim()) {
-					throw new Error('trait names must be non-empty strings');
-				}
-				normalized.add(trait);
-			}
-		}
-		const userRepository = ctx.get('userRepository');
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		await userRepository.patchUpsert(userId, {traits: normalized}, user.toRow());
-		const userCacheService = ctx.get('userCacheService');
-		await userCacheService.invalidateUserCache(userId);
-		return ctx.json({success: true, count: normalized?.size ?? 0});
-	});
 	app.post('/test/users/:userId/security-flags', async (ctx) => {
 		ensureHarnessAccess(ctx);
 		const params = ctx.req.param() as {

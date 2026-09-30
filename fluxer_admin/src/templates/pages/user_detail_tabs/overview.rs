@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    acl, admin_flags, admin_hints,
+    acl, admin_flags,
     api::types::{AdminUser, LimitConfigResponse, ListUserChangeLogResponse},
     config::AdminConfig,
     templates::components::{
         badge::{BadgeVariant, badge},
         form::{checkbox, csrf_input, form_actions, submit_button},
         page_container::{card_with_header, detail_row},
-        tooltip,
     },
     utils::{
         bigint::format_discriminator,
@@ -344,12 +343,13 @@ fn u64_flag_form(
         required_acl,
         html! {
             @for flag in flags {
-                div class="flex w-fit items-center gap-1" {
-                    (flag_checkbox(input_name, flag.value.to_string(), flag.name, value & flag.value != 0, can_edit))
-                    @if let Some(hint) = admin_hints::u64_flag_hint(flag.value) {
-                        (tooltip::info(&hint))
-                    }
-                }
+                (flag_checkbox(
+                    input_name,
+                    flag.value.to_string(),
+                    flag.name,
+                    value & flag.value != 0,
+                    can_edit,
+                ))
             }
         },
     )

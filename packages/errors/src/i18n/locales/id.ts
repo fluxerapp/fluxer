@@ -163,7 +163,7 @@ const ERROR_I18N_ID_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Komunitas yang bisa ditemukan harus memiliki tingkat verifikasi minimal Rendah.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Satu atau lebih pengguna yang dipilih tidak bisa ditambahkan ke DM grup ini.",
 	"channels_and_guilds.guild_banner_requires_feature": "Banner komunitas memerlukan fitur BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "Kamu tidak punya izin untuk membuat komunitas di instance ini. Hubungi admin instance untuk meminta akses.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Fitur ini tidak bisa diaktifkan atau dinonaktifkan.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "ID komunitas harus cocok dengan komunitas yang memuat saluran tempat pesan yang dirujuk diambil.",
 	"channels_and_guilds.guild_template_invalid": "Data template komunitas tidak valid atau salah format.",

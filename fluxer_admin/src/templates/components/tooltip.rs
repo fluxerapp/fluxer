@@ -4,7 +4,6 @@ use super::icons::paperclip_icon;
 use maud::{Markup, html};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-/// Counter that hands every hint toggle its own unique checkbox id.
 static HINT_TOGGLE_ID: AtomicUsize = AtomicUsize::new(0);
 
 pub struct HintLink<'a> {
@@ -12,7 +11,6 @@ pub struct HintLink<'a> {
     label: &'a str,
 }
 
-// Validation for links
 impl<'a> HintLink<'a> {
     pub fn new(href: &'a str, label: &'a str) -> Self {
         debug_assert!(
@@ -34,7 +32,7 @@ pub struct Hint<'a> {
     pub link: Option<HintLink<'a>>,
 }
 
-pub fn info(hint: &Hint<'_>) -> Markup {
+pub fn info(base: &str, hint: &Hint<'_>) -> Markup {
     let aria_label = match hint.name {
         Some(name) => format!("About {name}"),
         None => "More information".to_owned(),
@@ -46,14 +44,14 @@ pub fn info(hint: &Hint<'_>) -> Markup {
     html! {
         span class="group relative inline-flex items-center" {
             input type="checkbox" id=(toggle_id) class="peer sr-only";
-                        label for=(toggle_id) tabindex="0" aria-label=(aria_label)
+            label for=(toggle_id) tabindex="0" aria-label=(aria_label)
                 class="flex h-4 w-4 shrink-0 cursor-pointer items-center justify-center rounded-full \
                        font-semibold text-brand-primary leading-none active:scale-97 \
                        hover:text-brand-primary-dark" {
-                                "?"
-                        }
-                        label for=(toggle_id) aria-hidden="true"
-                                class="invisible fixed inset-0 z-20 cursor-default peer-checked:visible" {}
+                "?"
+            }
+            label for=(toggle_id) aria-hidden="true"
+                class="invisible fixed inset-0 z-20 cursor-default peer-checked:visible" {}
             div class="invisible absolute bottom-full left-2 z-30 w-64 pb-3 pl-2 opacity-0 \
                       transition-[opacity,visibility] duration-200 ease-out motion-reduce:transition-none \
                       group-hover:visible group-hover:opacity-100 \
@@ -66,8 +64,8 @@ pub fn info(hint: &Hint<'_>) -> Markup {
                     }
                     p class=[hint.name.is_some().then_some("mt-1")] { (hint.body) }
                     @if let Some(link) = &hint.link {
-                        a href={(crate::config::admin_base_path()) (link.href)} hx-boost="false"
-                            class="mt-2 inline-block text-blue-600 hover:underline" {
+                        a href={(base) (link.href)} hx-boost="false"
+                            class="mt-2 inline-flex items-center gap-1 text-blue-600 hover:underline" {
                             (paperclip_icon(""))(link.label)
                         }
                     }

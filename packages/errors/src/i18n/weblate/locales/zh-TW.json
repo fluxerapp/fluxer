@@ -159,7 +159,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "可探索社群的驗證等級至少須為「低」。",
 	"channels_and_guilds.group_dm_recipients_not_addable": "有一或多個選取的使用者無法加入此群組私訊。",
 	"channels_and_guilds.guild_banner_requires_feature": "社群橫幅需要 BANNER 功能。",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "你沒有在此實例上建立社群的權限。請聯絡實例管理員以申請存取權限。",
 	"channels_and_guilds.guild_feature_not_toggleable": "此功能無法切換。",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "社群 ID 必須與取得參考訊息的頻道所屬的社群相符。",
 	"channels_and_guilds.guild_template_invalid": "社群範本資料無效或格式錯誤。",

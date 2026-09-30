@@ -6236,7 +6236,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Only claimed, email-verified non-bot users can create guilds.",
+				"description": "Only claimed, email-verified non-bot users can create guilds. A self-hosted instance can restrict creation to admins and users granted the feature_guild_create limit.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -30262,7 +30262,7 @@
 					},
 					"guild_create_access": {
 						"type": "boolean",
-						"description": "Whether this instance's users all have the capability to create new communities"
+						"description": "Whether every account can create communities. When false, only admins and accounts granted the feature_guild_create limit can"
 					}
 				},
 				"required": [

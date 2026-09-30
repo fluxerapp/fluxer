@@ -163,7 +163,7 @@ const ERROR_I18N_DE_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Auffindbare Communitys müssen mindestens die Verifizierungsstufe \"Niedrig\" haben.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Ein oder mehrere ausgewählte Benutzer können dieser Gruppen-DM nicht hinzugefügt werden.",
 	"channels_and_guilds.guild_banner_requires_feature": "Community-Banner erfordert die BANNER-Funktion.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "Du hast keine Berechtigung, auf dieser Instanz Communitys zu erstellen. Wende dich an den Administrator der Instanz, um Zugriff anzufragen.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Diese Funktion kann nicht umgeschaltet werden.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "Die Community-ID muss mit der ID der Community übereinstimmen, zu der der Kanal gehört, aus dem die referenzierte Nachricht abgerufen wurde.",
 	"channels_and_guilds.guild_template_invalid": "Die Daten der Community-Vorlage sind ungültig oder fehlerhaft.",

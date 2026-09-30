@@ -163,7 +163,7 @@ const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Οι κοινότητες προς ανακάλυψη πρέπει να έχουν επίπεδο επαλήθευσης τουλάχιστον «Χαμηλό».",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Ένας ή περισσότεροι επιλεγμένοι χρήστες δεν μπορούν να προστεθούν σε αυτό το ομαδικό DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Το banner της κοινότητας απαιτεί τη λειτουργία BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "Δεν έχεις το δικαίωμα να δημιουργείς κοινότητες σε αυτή την εγκατάσταση. Επικοινώνησε με τον διαχειριστή της εγκατάστασης για να ζητήσεις πρόσβαση.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Αυτή η λειτουργία δεν μπορεί να αλλάξει.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "Το αναγνωριστικό της κοινότητας πρέπει να ταιριάζει με την κοινότητα στην οποία ανήκει το κανάλι από το οποίο λήφθηκε το μήνυμα αναφοράς.",
 	"channels_and_guilds.guild_template_invalid": "Τα δεδομένα του προτύπου κοινότητας είναι άκυρα ή κακοσχηματισμένα.",

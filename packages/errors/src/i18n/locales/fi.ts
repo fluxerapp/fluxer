@@ -163,7 +163,7 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Löydettävien yhteisöjen vahvistustason on oltava vähintään matala.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Yhtä tai useampaa valittua käyttäjää ei voi lisätä tähän ryhmäkeskusteluun.",
 	"channels_and_guilds.guild_banner_requires_feature": "Yhteisön banneri vaatii BANNER-ominaisuuden.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "Sinulla ei ole oikeutta luoda yhteisöjä tässä instanssissa. Pyydä käyttöoikeutta instanssin ylläpitäjältä.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Tätä ominaisuutta ei voi ottaa käyttöön tai poistaa käytöstä.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "Yhteisön tunnuksen on vastattava yhteisöä, johon viitatun viestin lähdekanava kuuluu.",
 	"channels_and_guilds.guild_template_invalid": "Yhteisöpohjan tiedot ovat virheelliset tai väärin muotoillut.",

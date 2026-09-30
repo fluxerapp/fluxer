@@ -877,7 +877,6 @@ fn build_smtp_test_request(form: &MultiValueForm) -> Result<InstanceEmailSmtpTes
 
 fn build_single_community_update(enabled: bool) -> InstanceConfigUpdateRequest {
     InstanceConfigUpdateRequest {
-        //Replace duplicative fields with default
         policy: Some(InstancePolicyUpdateRequest {
             single_community_enabled: Some(enabled),
             ..Default::default()

@@ -159,7 +159,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "קהילות הניתנות לגילוי חייבות להיות ברמת אימות \"נמוכה\" לפחות.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "לא ניתן להוסיף ל-DM הקבוצתי הזה חלק מהמשתמשים שנבחרו.",
 	"channels_and_guilds.guild_banner_requires_feature": "באנר הקהילה דורש את התכונה BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "אין לך הרשאה ליצור קהילות במופע זה. יש לפנות למנהל המופע כדי לבקש גישה.",
 	"channels_and_guilds.guild_feature_not_toggleable": "לא ניתן להפעיל או לבטל תכונה זו.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "מזהה הקהילה חייב להתאים לקהילה שמכילה את הערוץ שממנו נשלפה ההודעה שאליה יש הפניה.",
 	"channels_and_guilds.guild_template_invalid": "נתוני תבנית הקהילה שגויים או פגומים.",

@@ -163,7 +163,7 @@ const ERROR_I18N_DA_MESSAGES = defineErrorI18nLocaleMessages({
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Fællesskaber i Opdag skal have et verificeringsniveau på mindst Lavt.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "En eller flere valgte brugere kan ikke tilføjes til denne gruppe-DM.",
 	"channels_and_guilds.guild_banner_requires_feature": "Et fællesskabsbanner kræver funktionen BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "Du har ikke tilladelse til at oprette fællesskaber på denne instans. Kontakt administratoren af instansen for at anmode om adgang.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Denne funktion kan ikke slås til eller fra.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "Fællesskabs-id’et skal svare til det fællesskab, der indeholder den kanal, som den refererede besked blev hentet fra.",
 	"channels_and_guilds.guild_template_invalid": "Dataene i fællesskabsskabelonen er ugyldige eller forkert formateret.",

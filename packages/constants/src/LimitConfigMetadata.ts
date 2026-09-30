@@ -478,7 +478,7 @@ export const LIMIT_KEY_METADATA: Record<LimitKey, LimitKeyMetadata> = {
 	feature_guild_create: {
 		key: 'feature_guild_create',
 		label: 'Community Creation Access',
-		description: 'Create communities when instance policy disables it',
+		description: 'Create communities while the instance restricts community creation',
 		category: 'features',
 		scope: 'user',
 		isToggle: true,

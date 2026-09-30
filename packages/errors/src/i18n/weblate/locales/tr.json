@@ -159,7 +159,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Keşfedilebilir topluluklar en az düşük doğrulama seviyesine sahip olmalı.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Seçilen bir veya daha fazla kullanıcı bu grup DM'sine eklenemiyor.",
 	"channels_and_guilds.guild_banner_requires_feature": "Topluluk banner'ı BANNER özelliği gerektirir.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "Bu kurulumda topluluk oluşturma yetkin yok. Erişim istemek için kurulumun yöneticisiyle iletişime geç.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Bu özellik açılıp kapatılamaz.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "Topluluk kimliği, başvurulan mesajın alındığı kanalın bulunduğu toplulukla eşleşmeli.",
 	"channels_and_guilds.guild_template_invalid": "Topluluk şablonu verileri geçersiz veya hatalı biçimlendirilmiş.",

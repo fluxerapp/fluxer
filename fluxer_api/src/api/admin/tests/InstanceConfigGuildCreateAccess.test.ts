@@ -53,9 +53,9 @@ describe('guild creation access on a self-hosted instance', () => {
 			AdminACLs.INSTANCE_CONFIG_UPDATE,
 			AdminACLs.INSTANCE_LIMIT_CONFIG_VIEW,
 			AdminACLs.INSTANCE_LIMIT_CONFIG_UPDATE,
+			AdminACLs.USER_UPDATE_TRAITS,
 		]);
 
-	// Create members so that they start with no ACLs
 	const createMember = async (): Promise<TestAccount> =>
 		await setUserACLs(harness, await createTestAccount(harness), []);
 
@@ -93,9 +93,9 @@ describe('guild creation access on a self-hosted instance', () => {
 			.execute();
 	};
 
-	const grantTrait = async (account: TestAccount, trait: string): Promise<void> => {
-		await createBuilder(harness, '')
-			.patch(`/test/users/${account.userId}/traits`)
+	const grantTrait = async (admin: TestAccount, account: TestAccount, trait: string): Promise<void> => {
+		await createBuilder(harness, admin.token)
+			.put(`/admin/users/${account.userId}/traits`)
 			.body({traits: [trait]})
 			.expect(HTTP_STATUS.OK)
 			.execute();
@@ -137,7 +137,7 @@ describe('guild creation access on a self-hosted instance', () => {
 				.execute();
 		});
 
-		await grantTrait(member, COMMUNITY_CREATOR_TRAIT);
+		await grantTrait(admin, member, COMMUNITY_CREATOR_TRAIT);
 		await asSelfHosted(async () => {
 			const guild = await createGuild(member, 'Granted community').execute();
 			expect(guild.id).toBeTruthy();

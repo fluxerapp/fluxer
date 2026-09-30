@@ -162,7 +162,9 @@ export const InstanceCommunitySchema = z
 			.describe('Whether direct messages and friend requests are disabled instance-wide'),
 		guild_create_access: z
 			.boolean()
-			.describe("Whether this instance's users all have the capability to create new communities"),
+			.describe(
+				'Whether every account can create communities. When false, only admins and accounts granted the feature_guild_create limit can',
+			),
 	})
 	.describe('Community topology and direct-message policy for this instance');
 export type InstanceCommunity = z.infer<typeof InstanceCommunitySchema>;

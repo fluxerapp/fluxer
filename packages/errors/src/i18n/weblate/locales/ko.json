@@ -159,7 +159,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "검색 가능한 커뮤니티는 인증 수준이 \"낮음\" 이상이어야 해요.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "선택한 사용자 중 한 명 이상을 이 그룹 DM에 추가할 수 없어요.",
 	"channels_and_guilds.guild_banner_requires_feature": "커뮤니티 배너에는 BANNER 기능이 필요해요.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "이 인스턴스에서 커뮤니티를 만들 권한이 없어요. 접근 권한을 요청하려면 인스턴스 관리자에게 문의해 주세요.",
 	"channels_and_guilds.guild_feature_not_toggleable": "이 기능은 켜고 끌 수 없어요.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "커뮤니티 ID는 참조된 메시지를 가져온 채널이 속한 커뮤니티와 일치해야 해요.",
 	"channels_and_guilds.guild_template_invalid": "커뮤니티 템플릿 데이터가 유효하지 않거나 형식이 잘못되었어요.",

@@ -159,7 +159,7 @@
 	"channels_and_guilds.discoverable_guild_verification_level_too_low": "Las comunidades que aparecen en Descubrir deben tener un nivel de verificación de al menos bajo.",
 	"channels_and_guilds.group_dm_recipients_not_addable": "Uno o más usuarios seleccionados no se pueden agregar a este MD de grupo.",
 	"channels_and_guilds.guild_banner_requires_feature": "El banner de la comunidad requiere la función BANNER.",
-	"channels_and_guilds.guild_creation_permission_required": "You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
+	"channels_and_guilds.guild_creation_permission_required": "No tienes permiso para crear comunidades en esta instancia. Contacta al administrador de la instancia para solicitar acceso.",
 	"channels_and_guilds.guild_feature_not_toggleable": "Esta función no se puede activar ni desactivar.",
 	"channels_and_guilds.guild_id_must_match_referenced_message": "El ID de la comunidad debe coincidir con el de la comunidad a la que pertenece el canal del que se obtuvo el mensaje referenciado.",
 	"channels_and_guilds.guild_template_invalid": "Los datos de la plantilla de la comunidad no son válidos o están mal formados.",

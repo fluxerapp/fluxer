@@ -210,7 +210,7 @@ fn rule_editor(
                 @for category in CATEGORY_ORDER {
                     @let keys = keys_for_category(response, category);
                     @if !keys.is_empty() {
-                        (category_section(response, rule, category, &keys, can_update))
+                        (category_section(&config.base_path, response, rule, category, &keys, can_update))
                     }
                 }
                 @if can_update {
@@ -276,6 +276,7 @@ fn keys_for_category(response: &LimitConfigResponse, category: &str) -> Vec<Stri
 }
 
 fn category_section(
+    base: &str,
     response: &LimitConfigResponse,
     rule: &LimitRule,
     category: &str,
@@ -294,7 +295,7 @@ fn category_section(
             div class="space-y-4" {
                 @for key in keys {
                     @if let Some(metadata) = response.metadata.get(key) {
-                        (limit_field(response, rule, key, metadata, can_update))
+                        (limit_field(base, response, rule, key, metadata, can_update))
                     }
                 }
             }
@@ -303,6 +304,7 @@ fn category_section(
 }
 
 fn limit_field(
+    base: &str,
     response: &LimitConfigResponse,
     rule: &LimitRule,
     key: &str,
@@ -321,9 +323,10 @@ fn limit_field(
         .as_ref()
         .is_some_and(|fields| fields.iter().any(|field| field == key));
     if metadata.is_toggle {
-        toggle_field(key, metadata, current_value, modified, can_update)
+        toggle_field(base, key, metadata, current_value, modified, can_update)
     } else {
         numeric_field(
+            base,
             key,
             metadata,
             current_value,
@@ -335,6 +338,7 @@ fn limit_field(
 }
 
 fn toggle_field(
+    base: &str,
     key: &str,
     metadata: &LimitKeyMetadata,
     current_value: Option<u64>,
@@ -345,7 +349,7 @@ fn toggle_field(
     html! {
         div class={(field_class(modified, false))} {
             div class="flex-1 space-y-1" {
-                (field_label_row(key, metadata, modified))
+                (field_label_row(base, key, metadata, modified))
                 p class="text-xs text-neutral-500" { (metadata.description) }
             }
             div class="shrink-0" {
@@ -371,6 +375,7 @@ fn toggle_field(
 }
 
 fn numeric_field(
+    base: &str,
     key: &str,
     metadata: &LimitKeyMetadata,
     current_value: Option<u64>,
@@ -387,7 +392,7 @@ fn numeric_field(
     html! {
         div class={(field_class(modified, true))} {
             div class="flex flex-wrap items-center justify-between gap-2" {
-                (field_label_row(key, metadata, modified))
+                (field_label_row(base, key, metadata, modified))
             }
             p class="text-xs text-neutral-500" {
                 (metadata.description)
@@ -419,12 +424,12 @@ fn numeric_field(
     }
 }
 
-fn field_label_row(key: &str, metadata: &LimitKeyMetadata, modified: bool) -> Markup {
+fn field_label_row(base: &str, key: &str, metadata: &LimitKeyMetadata, modified: bool) -> Markup {
     html! {
         div class="flex flex-wrap items-center gap-2" {
             label for=(key) class="font-medium text-neutral-900 text-sm" { (metadata.label) }
             @if let Some(hint) = admin_hints::limit_key_hint(key) {
-                (tooltip::info(&hint))
+                (tooltip::info(base, &hint))
             }
             span class=(scope_class(&metadata.scope)) { (scope_label(&metadata.scope)) }
             @if modified {

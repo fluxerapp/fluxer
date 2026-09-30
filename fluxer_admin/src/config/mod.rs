@@ -4,15 +4,8 @@ use fluxer_common::config::{
     normalize_base_path, normalize_public_endpoint_from_env, read_bool_env, read_env,
     read_first_env, trim_trailing_slash,
 };
-use std::sync::OnceLock;
 
 const DEFAULT_ADMIN_OAUTH_CLIENT_ID: &str = "1234567890123456789";
-
-static ADMIN_BASE_PATH: OnceLock<String> = OnceLock::new();
-
-pub fn admin_base_path() -> &'static str {
-    ADMIN_BASE_PATH.get().map(String::as_str).unwrap_or("")
-}
 
 #[derive(Clone, Debug)]
 pub struct AdminConfig {
@@ -50,7 +43,6 @@ pub enum RuntimeEnv {
 impl AdminConfig {
     pub fn from_env() -> anyhow::Result<Self> {
         let base_path = normalize_base_path(&read_env("FLUXER_ADMIN_BASE_PATH", ""));
-        let _ = ADMIN_BASE_PATH.set(base_path.clone());
         let admin_endpoint = normalize_public_endpoint_from_env(&trim_trailing_slash(&read_env(
             "FLUXER_ADMIN_ENDPOINT",
             "https://admin.fluxer.app",

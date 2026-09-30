@@ -43,7 +43,7 @@ pub struct InstancePolicyResponse {
     pub direct_messages_locked: bool,
     #[serde(default)]
     pub premium_mode: PremiumMode,
-    #[serde(default)]
+    #[serde(default = "default_guild_create_access")]
     pub guild_create_access: bool,
     #[serde(default)]
     pub services: InstanceServicesOverrides,
@@ -51,6 +51,10 @@ pub struct InstancePolicyResponse {
     pub services_resolved: InstanceServicesResolved,
     #[serde(default)]
     pub services_available: InstanceServicesAvailable,
+}
+
+fn default_guild_create_access() -> bool {
+    true
 }
 
 impl Default for InstancePolicyResponse {
@@ -61,7 +65,7 @@ impl Default for InstancePolicyResponse {
             direct_messages_disabled: false,
             direct_messages_locked: false,
             premium_mode: PremiumMode::Everyone,
-            guild_create_access: true,
+            guild_create_access: default_guild_create_access(),
             services: InstanceServicesOverrides::default(),
             services_resolved: InstanceServicesResolved::default(),
             services_available: InstanceServicesAvailable::default(),
