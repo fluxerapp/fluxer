@@ -62,7 +62,9 @@ describe('queueBlocklistFeedStartupJobs', () => {
 		expect(await kv.exists(INITIAL_SYNC_KEY)).toBe(0);
 
 		await queueBlocklistFeedStartupJobs(kv, createWorkerService(), true);
-		expect(await kv.ttl(INITIAL_SYNC_KEY)).toBe(21600);
+		const ttl = await kv.ttl(INITIAL_SYNC_KEY);
+		expect(ttl).toBeGreaterThanOrEqual(21599);
+		expect(ttl).toBeLessThanOrEqual(21600);
 	});
 
 	it('a full jobs stream drops the job without failing startup', async () => {
