@@ -134,7 +134,7 @@ export class ChannelOperationsService {
 			}
 		}
 		const requestedNsfwOverride =
-			params.data.nsfw_override !== undefined ? params.data.nsfw_override : (params.data.nsfw ?? null);
+			params.data.nsfw_override !== undefined ? params.data.nsfw_override : params.data.nsfw === true ? true : null;
 		const requestedContentWarningLevel =
 			params.data.content_warning_level === ContentWarningLevel.CONTENT_WARNING
 				? ContentWarningLevel.CONTENT_WARNING
