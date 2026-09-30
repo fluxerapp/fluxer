@@ -178,20 +178,20 @@ export class AdminService {
 	}
 
 	async sendSystemDm(
-		data: {content: string; userIds: Array<string>},
+		data: {content: string; recipients: {kind: 'all'} | {kind: 'list'; userIds: Array<string>}},
 		adminUserId: UserID,
 		auditLogReason: string | null,
 	): Promise<SendSystemDmResponse> {
+		const recipientCount = data.recipients.kind === 'all' ? null : data.recipients.userIds.length;
 		await this.apiContext.services.worker.addJob(
 			'sendSystemDm',
-			{
-				content: data.content,
-				user_ids: data.userIds,
-			},
+			data.recipients.kind === 'all'
+				? {content: data.content, all_users: true}
+				: {content: data.content, user_ids: data.recipients.userIds},
 			{requireLedger: true},
 		);
 		const metadata = new Map<string, string>([
-			['recipient_count', data.userIds.length.toString()],
+			['recipient_count', recipientCount === null ? 'all' : recipientCount.toString()],
 			['content_length', data.content.length.toString()],
 		]);
 		await this.auditService.createAuditLog({
@@ -202,6 +202,6 @@ export class AdminService {
 			auditLogReason,
 			metadata,
 		});
-		return {recipient_count: data.userIds.length};
+		return {recipient_count: recipientCount};
 	}
 }

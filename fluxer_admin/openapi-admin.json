@@ -5435,7 +5435,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Queue a worker job that delivers the same content to every listed user as a direct message from the system account. Progress is observable through the Jobs admin resource (task_type=sendSystemDm), and an in-flight broadcast is stopped by cancelling that job. Requires SYSTEM_DM_SEND permission.",
+				"description": "Queue a worker job that delivers the same content to every listed user, or to every user when all_users is set, as a direct message from the system account. Progress is observable through the Jobs admin resource (task_type=sendSystemDm), and an in-flight broadcast is stopped by cancelling that job. Requires SYSTEM_DM_SEND permission.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
 					"required": true,
@@ -10150,20 +10150,25 @@
 						"description": "Message content to send to each recipient"
 					},
 					"user_ids": {
+						"description": "Recipient user IDs. Each receives the same content as a system DM.",
 						"minItems": 1,
 						"maxItems": 10000,
 						"type": "array",
-						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "Recipient user IDs. Each receives the same content as a system DM."
+						"items": {"$ref": "#/components/schemas/SnowflakeType"}
+					},
+					"all_users": {
+						"description": "Send to every user account, skipping bots, system accounts, and deleted or disabled accounts",
+						"type": "boolean"
 					}
 				},
-				"required": ["content", "user_ids"]
+				"required": ["content"]
 			},
 			"SendSystemDmResponse": {
 				"type": "object",
 				"properties": {
 					"recipient_count": {
-						"description": "Number of recipients the worker job was queued to deliver to",
+						"nullable": true,
+						"description": "Number of recipients the worker job was queued to deliver to, or null when sending to all users",
 						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
 					}
 				},

@@ -861,19 +861,31 @@ export const LimitConfigUpdateRequest = z.object({
 
 export type LimitConfigUpdateRequest = z.infer<typeof LimitConfigUpdateRequest>;
 
-export const SendSystemDmRequest = z.object({
-	content: z.string().min(1).max(4000).describe('Message content to send to each recipient'),
-	user_ids: z
-		.array(SnowflakeType)
-		.min(1)
-		.max(10000)
-		.describe('Recipient user IDs. Each receives the same content as a system DM.'),
-});
+export const SendSystemDmRequest = z
+	.object({
+		content: z.string().min(1).max(4000).describe('Message content to send to each recipient'),
+		user_ids: z
+			.array(SnowflakeType)
+			.min(1)
+			.max(10000)
+			.optional()
+			.describe('Recipient user IDs. Each receives the same content as a system DM.'),
+		all_users: z
+			.boolean()
+			.optional()
+			.describe('Send to every user account, skipping bots, system accounts, and deleted or disabled accounts'),
+	})
+	.refine((value) => (value.all_users === true) !== (value.user_ids !== undefined), {
+		error: 'Provide either user_ids or all_users, not both',
+		path: ['user_ids'],
+	});
 
 export type SendSystemDmRequest = z.infer<typeof SendSystemDmRequest>;
 
 export const SendSystemDmResponse = z.object({
-	recipient_count: Int32Type.describe('Number of recipients the worker job was queued to deliver to'),
+	recipient_count: Int32Type.nullable().describe(
+		'Number of recipients the worker job was queued to deliver to, or null when sending to all users',
+	),
 });
 
 export type SendSystemDmResponse = z.infer<typeof SendSystemDmResponse>;
