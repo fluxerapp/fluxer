@@ -77,43 +77,12 @@ handle_session_down(Ref, State) ->
     session_id(), session_data(), reference(), {session_id(), session_data()}, guild_state()
 ) -> {noreply, guild_state()} | {stop, normal, guild_state()}.
 handle_pending_ref_down(SessionId, Session, Ref, Found, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    case pending_session_owns_connected_tracking(Session, Sessions, State) of
-        true -> guild_sessions_connect:handle_session_down(Ref, Found, State);
-        false -> handle_pending_session_down(SessionId, Ref, Sessions, State)
+    case guild_sessions_connect:counts_as_connected(Session) of
+        true ->
+            guild_sessions_connect:handle_session_down(Ref, Found, State);
+        false ->
+            handle_pending_session_down(SessionId, Ref, maps:get(sessions, State, #{}), State)
     end.
-
--spec pending_session_owns_connected_tracking(session_data(), sessions_map(), guild_state()) ->
-    boolean().
-pending_session_owns_connected_tracking(Session, Sessions, State) ->
-    UserId = maps:get(user_id, Session, undefined),
-    Counts = maps:get(user_session_counts, State, #{}),
-    TrackedCount = non_negative_count(maps:get(UserId, Counts, 0)),
-    TrackedCount > active_session_count(UserId, Sessions).
-
--spec non_negative_count(term()) -> non_neg_integer().
-non_negative_count(Count) when is_integer(Count), Count >= 0 -> Count;
-non_negative_count(_) -> 0.
-
--spec active_session_count(user_id() | undefined, sessions_map()) -> non_neg_integer().
-active_session_count(UserId, Sessions) ->
-    maps:fold(
-        fun(_SessionId, Session, Count) ->
-            count_active_session(UserId, Session, Count)
-        end,
-        0,
-        Sessions
-    ).
-
--spec count_active_session(user_id() | undefined, session_data(), non_neg_integer()) ->
-    non_neg_integer().
-count_active_session(UserId, #{user_id := UserId} = Session, Count) ->
-    case maps:get(pending_connect, Session, false) of
-        true -> Count;
-        false -> Count + 1
-    end;
-count_active_session(_UserId, _Session, Count) ->
-    Count.
 
 -spec handle_pending_session_down(session_id(), reference(), sessions_map(), guild_state()) ->
     {noreply, guild_state()}.
@@ -756,41 +725,6 @@ filter_sessions_for_message_test() ->
         [{<<"a">>, maps:get(<<"a">>, Sessions)}],
         filter_sessions_for_message(Sessions, 5, <<"1">>, undefined, State)
     ).
-
-non_negative_count_test() ->
-    ?assertEqual(3, non_negative_count(3)),
-    ?assertEqual(0, non_negative_count(0)),
-    ?assertEqual(0, non_negative_count(-1)),
-    ?assertEqual(0, non_negative_count(undefined)).
-
-active_session_count_test() ->
-    Sessions = #{
-        <<"a">> => #{user_id => 1, pending_connect => true},
-        <<"b">> => #{user_id => 1, pending_connect => false},
-        <<"c">> => #{user_id => 1},
-        <<"d">> => #{user_id => 2}
-    },
-    ?assertEqual(2, active_session_count(1, Sessions)),
-    ?assertEqual(1, active_session_count(2, Sessions)),
-    ?assertEqual(0, active_session_count(3, Sessions)).
-
-pending_session_owns_connected_tracking_untracked_test() ->
-    Session = #{user_id => 1, pending_connect => true},
-    Sessions = #{<<"a">> => Session},
-    ?assertEqual(false, pending_session_owns_connected_tracking(Session, Sessions, #{})).
-
-pending_session_owns_connected_tracking_other_session_owns_test() ->
-    Session = #{user_id => 1, pending_connect => true},
-    Active = #{user_id => 1, pending_connect => false},
-    Sessions = #{<<"a">> => Session, <<"b">> => Active},
-    State = #{user_session_counts => #{1 => 1}},
-    ?assertEqual(false, pending_session_owns_connected_tracking(Session, Sessions, State)).
-
-pending_session_owns_connected_tracking_true_test() ->
-    Session = #{user_id => 1, pending_connect => true},
-    Sessions = #{<<"a">> => Session},
-    State = #{user_session_counts => #{1 => 1}},
-    ?assertEqual(true, pending_session_owns_connected_tracking(Session, Sessions, State)).
 
 handle_pending_session_down_keeps_tracking_test() ->
     Ref = make_ref(),

@@ -140,11 +140,15 @@ restore_transferred_session(_SessionId, _SessionData, State) ->
     State.
 
 -spec active_session_user_id(map()) -> integer() | undefined.
-active_session_user_id(#{pending_connect := true}) ->
-    undefined;
 active_session_user_id(SessionData) ->
-    case {maps:get(user_id, SessionData, undefined), maps:get(pid, SessionData, undefined)} of
-        {UserId, Pid} when is_integer(UserId), UserId > 0, is_pid(Pid) ->
+    case
+        {
+            guild_sessions_connect:counts_as_connected(SessionData),
+            maps:get(user_id, SessionData, undefined),
+            maps:get(pid, SessionData, undefined)
+        }
+    of
+        {true, UserId, Pid} when is_integer(UserId), UserId > 0, is_pid(Pid) ->
             UserId;
         _ ->
             undefined

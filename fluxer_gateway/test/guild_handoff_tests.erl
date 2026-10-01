@@ -36,7 +36,13 @@ restore_transferred_session_state_rebuilds_connected_counts_test() ->
         <<"s1">> => #{pid => self(), user_id => UserId},
         <<"s2">> => #{pid => self(), user_id => UserId, pending_connect => false},
         <<"pending">> => #{pid => self(), user_id => 11, pending_connect => true},
-        <<"bad">> => #{user_id => 12}
+        <<"bad">> => #{user_id => 12},
+        <<"reconnecting">> => #{
+            pid => self(),
+            user_id => 13,
+            pending_connect => true,
+            owns_connected_tracking => true
+        }
     },
     State0 = #{
         sessions => Sessions,
@@ -45,10 +51,11 @@ restore_transferred_session_state_rebuilds_connected_counts_test() ->
         presence_subscriptions => #{UserId => 1}
     },
     State1 = guild_handoff:restore_transferred_session_state(State0),
-    ?assertEqual(#{UserId => 2}, maps:get(user_session_counts, State1)),
+    ?assertEqual(#{UserId => 2, 13 => 1}, maps:get(user_session_counts, State1)),
     Connected = maps:get(connected_user_ids, State1),
     ?assertEqual(true, sets:is_element(UserId, Connected)),
     ?assertEqual(false, sets:is_element(11, Connected)),
+    ?assertEqual(true, sets:is_element(13, Connected)),
     ?assertEqual(3, maps:get(UserId, maps:get(presence_subscriptions, State1))).
 
 export_handoff_state_contains_all_required_keys_test() ->

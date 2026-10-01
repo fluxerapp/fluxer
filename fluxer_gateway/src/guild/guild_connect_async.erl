@@ -144,14 +144,14 @@ finalize_resolved(
     GuildId,
     SessionId,
     Attempt,
-    {error, _} = Result0,
+    {error, Reason} = Result0,
     _Computed,
     _Request,
     SessionPid,
     State,
     Joined
 ) ->
-    State1 = discard_pending_session(SessionId, State),
+    State1 = discard_pending_session(SessionId, Reason, State),
     send_result(GuildId, Attempt, Result0, SessionPid),
     {State1, Joined};
 finalize_resolved(
@@ -174,10 +174,12 @@ finish_joined_users({Joined, Fresh}, StartState, State) ->
         Joined
     ).
 
--spec discard_pending_session(session_id(), map()) -> map().
-discard_pending_session(SessionId, State) ->
+-spec discard_pending_session(session_id(), term(), map()) -> map().
+discard_pending_session(SessionId, Reason, State) ->
     Sessions0 = maps:get(sessions, State, #{}),
     case maps:find(SessionId, Sessions0) of
+        {ok, #{pending_connect := true, owns_connected_tracking := true} = Entry} ->
+            discard_reconnecting_session(SessionId, Reason, Entry, State);
         {ok, #{pending_connect := true} = Entry} ->
             demonitor_pending_session(Entry),
             guild_sessions_connect:remove_session_ref(
@@ -187,6 +189,18 @@ discard_pending_session(SessionId, State) ->
         _ ->
             State
     end.
+
+-spec discard_reconnecting_session(session_id(), term(), map(), map()) -> map().
+discard_reconnecting_session(SessionId, not_member, #{mref := MRef} = Entry, State) when
+    is_reference(MRef)
+->
+    demonitor(MRef, [flush]),
+    {noreply, State1} = guild_sessions_connect:handle_session_down(
+        MRef, {SessionId, Entry}, State
+    ),
+    State1;
+discard_reconnecting_session(_SessionId, _Reason, _Entry, State) ->
+    State.
 
 -spec demonitor_pending_session(map()) -> ok.
 demonitor_pending_session(#{mref := MRef}) when is_reference(MRef) ->
@@ -344,7 +358,7 @@ cleanup_dropped_session_connect(Item, State) ->
     case queued_session_id(Item) of
         SessionId when is_binary(SessionId) ->
             State1 = remove_pending_session_connect(SessionId, State),
-            discard_pending_session(SessionId, State1);
+            discard_pending_session(SessionId, overloaded, State1);
         _ ->
             State
     end.
@@ -387,7 +401,16 @@ upsert_pending_session(S, U, P, Request, State) ->
                 sessions => Sessions0#{S => Entry}
             });
         {ok, Existing} ->
-            State#{sessions => Sessions0#{S => Existing#{pending_connect => true}}}
+            State#{sessions => Sessions0#{S => mark_pending(Existing)}}
+    end.
+
+-spec mark_pending(map()) -> map().
+mark_pending(#{pending_connect := true} = Existing) ->
+    Existing;
+mark_pending(Existing) ->
+    case connected_user_id_from_existing(Existing) of
+        undefined -> Existing#{pending_connect => true};
+        _UserId -> Existing#{pending_connect => true, owns_connected_tracking => true}
     end.
 
 -spec drop_queued(session_id(), queue:queue()) -> queue:queue().
@@ -617,7 +640,9 @@ maybe_mark_synced(GuildId, Computed, SessionData) ->
 merge_session(SessionId, FinalSD, undefined, Sessions0) ->
     Sessions0#{SessionId => FinalSD};
 merge_session(SessionId, FinalSD, Existing, Sessions0) ->
-    Sessions0#{SessionId => maps:merge(Existing, FinalSD)}.
+    Sessions0#{
+        SessionId => maps:merge(maps:remove(owns_connected_tracking, Existing), FinalSD)
+    }.
 
 -spec reindex_session_ref(session_id(), map() | undefined, reference(), map()) -> map().
 reindex_session_ref(SessionId, #{mref := OldRef}, MRef, State) when OldRef =/= MRef ->
@@ -673,11 +698,14 @@ subscribe_joined_user(UserId, State, {Joined, Fresh}) ->
 -spec connected_user_id_from_existing(map() | undefined) -> integer() | undefined.
 connected_user_id_from_existing(undefined) ->
     undefined;
-connected_user_id_from_existing(#{pending_connect := true}) ->
-    undefined;
 connected_user_id_from_existing(Existing) ->
-    case maps:get(user_id, Existing, undefined) of
-        UserId when is_integer(UserId), UserId > 0 ->
+    case
+        {
+            guild_sessions_connect:counts_as_connected(Existing),
+            maps:get(user_id, Existing, undefined)
+        }
+    of
+        {true, UserId} when is_integer(UserId), UserId > 0 ->
             UserId;
         _ ->
             undefined
@@ -798,6 +826,7 @@ enqueue_marks_existing_session_pending_connect_test() ->
         SessionId, UserId, pending_connect_state(#{SessionId => Existing})
     ),
     ?assertEqual(true, maps:get(pending_connect, Entry)),
+    ?assertEqual(true, maps:get(owns_connected_tracking, Entry)),
     ?assertEqual(MRef, maps:get(mref, Entry)),
     ?assertEqual(UserId, maps:get(user_id, Entry)).
 
@@ -807,6 +836,7 @@ enqueue_creates_pending_session_entry_test() ->
     Entry = enqueued_session_entry(SessionId, UserId, pending_connect_state(#{})),
     demonitor(maps:get(mref, Entry), [flush]),
     ?assertEqual(true, maps:get(pending_connect, Entry)),
+    ?assertNot(maps:is_key(owns_connected_tracking, Entry)),
     ?assertEqual(UserId, maps:get(user_id, Entry)).
 
 -endif.
