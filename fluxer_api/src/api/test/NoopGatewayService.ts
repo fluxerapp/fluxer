@@ -795,6 +795,8 @@ export class NoopGatewayService extends IGatewayService {
 
 	async dispatchPresence(_params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void> {}
 
+	async broadcastDispatch(_params: {event: GatewayDispatchEvent; data: unknown}): Promise<void> {}
+
 	async clearPushChannelNotifications(_params: {
 		userId: UserID;
 		channelId: ChannelID;

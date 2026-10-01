@@ -14,6 +14,10 @@ pub const AUDIT_LOG_VIEW: &str = "audit_log:view";
 pub const AUTHENTICATE: &str = "admin:authenticate";
 pub const JOBS_VIEW: &str = "jobs:view";
 pub const JOBS_CANCEL: &str = "jobs:cancel";
+pub const BADGE_CREATE: &str = "badge:create";
+pub const BADGE_DELETE: &str = "badge:delete";
+pub const BADGE_LIST: &str = "badge:list";
+pub const BADGE_UPDATE: &str = "badge:update";
 pub const BAN_EMAIL_ADD: &str = "ban:email:add";
 pub const BAN_EMAIL_CHECK: &str = "ban:email:check";
 pub const BAN_EMAIL_REMOVE: &str = "ban:email:remove";
@@ -60,6 +64,7 @@ pub const GUILD_LOOKUP: &str = "guild:lookup";
 pub const GUILD_RELOAD: &str = "guild:reload";
 pub const GUILD_SHUTDOWN: &str = "guild:shutdown";
 pub const GUILD_TRANSFER_OWNERSHIP: &str = "guild:transfer_ownership";
+pub const GUILD_UPDATE_BADGES: &str = "guild:update:badges";
 pub const GUILD_UPDATE_FEATURES: &str = "guild:update:features";
 pub const GUILD_UPDATE_NAME: &str = "guild:update:name";
 pub const GUILD_UPDATE_SETTINGS: &str = "guild:update:settings";
@@ -90,6 +95,7 @@ pub const USER_VIEW_DOB: &str = "user:view:dob";
 pub const USER_VIEW_EMAIL: &str = "user:view:email";
 pub const USER_VIEW_IP: &str = "user:view:ip";
 pub const USER_TEMP_BAN: &str = "user:temp_ban";
+pub const USER_UPDATE_BADGES: &str = "user:update:badges";
 pub const USER_UPDATE_BOT_STATUS: &str = "user:update:bot_status";
 pub const USER_UPDATE_DOB: &str = "user:update:dob";
 pub const USER_UPDATE_EMAIL: &str = "user:update:email";
@@ -123,6 +129,10 @@ pub const ALL_ACLS: &[&str] = &[
     AUTHENTICATE,
     JOBS_VIEW,
     JOBS_CANCEL,
+    BADGE_CREATE,
+    BADGE_DELETE,
+    BADGE_LIST,
+    BADGE_UPDATE,
     BAN_EMAIL_ADD,
     BAN_EMAIL_CHECK,
     BAN_EMAIL_REMOVE,
@@ -169,6 +179,7 @@ pub const ALL_ACLS: &[&str] = &[
     GUILD_RELOAD,
     GUILD_SHUTDOWN,
     GUILD_TRANSFER_OWNERSHIP,
+    GUILD_UPDATE_BADGES,
     GUILD_UPDATE_FEATURES,
     GUILD_UPDATE_NAME,
     GUILD_UPDATE_SETTINGS,
@@ -199,6 +210,7 @@ pub const ALL_ACLS: &[&str] = &[
     USER_VIEW_EMAIL,
     USER_VIEW_IP,
     USER_TEMP_BAN,
+    USER_UPDATE_BADGES,
     USER_UPDATE_BOT_STATUS,
     USER_UPDATE_DOB,
     USER_UPDATE_EMAIL,

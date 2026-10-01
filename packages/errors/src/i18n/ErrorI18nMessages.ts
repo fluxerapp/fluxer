@@ -412,6 +412,7 @@ export const ERROR_I18N_MESSAGES = {
 	'misc.must_have_bot_to_mark_system_user': 'User must be a bot to be marked as a system user.',
 	'misc_limits.max_applications_reached':
 		"You've reached the maximum of {limit, plural, one {# application} other {# applications}}.",
+	'misc_limits.max_badges_reached': "You've reached the maximum number of badges.",
 	'misc_limits.max_bookmarks_reached':
 		"You've reached the maximum of {count, plural, one {# bookmark} other {# bookmarks}}.",
 	'misc_limits.max_category_channels_reached':
@@ -534,6 +535,7 @@ export const ERROR_I18N_MESSAGES = {
 	'tos_and_age.must_agree_to_tos_and_privacy': 'You must agree to the Terms of service and Privacy policy.',
 	'tos_and_age.must_be_minimum_age':
 		'You must be at least {minAge, plural, one {# year} other {# years}} old to create an account.',
+	'unknown_entities.unknown_badge': "Badge wasn't found.",
 	'unknown_entities.unknown_channel': "Channel wasn't found.",
 	'unknown_entities.unknown_guild': "Community wasn't found.",
 	'unknown_entities.unknown_invite': "Invite wasn't found or is no longer valid.",

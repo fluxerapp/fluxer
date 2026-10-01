@@ -10,6 +10,7 @@ import {
 	getDiscriminatorService,
 	getEntityAssetService,
 	getGuildDiscoveryRepository,
+	getInstanceConfigRepository,
 	getInviteRepository,
 } from '@app/api/middleware/ServiceSingletons';
 import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
@@ -54,6 +55,7 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		entityAssetService: getEntityAssetService(),
 		auditService,
 		discoveryRepository: getGuildDiscoveryRepository(),
+		instanceConfigRepository: getInstanceConfigRepository(),
 	});
 	return {auditService, banManagementService, userService, guildService};
 }

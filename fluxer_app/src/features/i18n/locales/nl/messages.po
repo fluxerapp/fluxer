@@ -42,7 +42,7 @@ msgid "(you)"
 msgstr "(jij)"
 
 #. placeholder {0}: guild.member_count
-#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:184
+#: src/features/discovery/discovery/DiscoveryGuildCard.tsx:185
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# lid} other {# leden}}"
 
@@ -1328,14 +1328,14 @@ msgstr "{formats}. Maximaal {maxSize}. Aanbevolen: {recommendedSize}"
 msgid "{formats}. Max {maxSize}. Recommended: {recommendedSize}. {note}"
 msgstr "{formats}. Maximaal {maxSize}. Aanbevolen: {recommendedSize}. {note}"
 
-#: src/features/auth/flow/InviteHeader.tsx:90
-#: src/features/auth/flow/InviteHeader.tsx:135
-#: src/features/auth/flow/InviteHeader.tsx:249
+#: src/features/auth/flow/InviteHeader.tsx:94
+#: src/features/auth/flow/InviteHeader.tsx:139
+#: src/features/auth/flow/InviteHeader.tsx:253
 msgid "{formattedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{formattedMemberCount} {memberCount, plural, one {lid} other {leden}}"
 
-#: src/features/auth/flow/InviteHeader.tsx:84
-#: src/features/auth/flow/InviteHeader.tsx:234
+#: src/features/auth/flow/InviteHeader.tsx:88
+#: src/features/auth/flow/InviteHeader.tsx:238
 msgid "{formattedPresenceCount} online"
 msgstr "{formattedPresenceCount} online"
 
@@ -1562,7 +1562,7 @@ msgid "{paymentProviderName} will first verify that your card is eligible for lo
 msgstr "{paymentProviderName} zal eerst controleren of je kaart in aanmerking komt voor lokale prijzen, en je daarna doorsturen naar de betaling. Keer terug naar {productName} zodra je dit hebt voltooid."
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:53
+#: src/features/user/components/popouts/UserProfileBadges.tsx:46
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "{premiumProductFullName}-abonnee sinds {premiumSinceFormatted}"
 
@@ -1642,11 +1642,6 @@ msgstr "{productName}-logo"
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:16
 msgid "{productName} avoids sending push notifications to your mobile devices when you are at your computer. Choose how long you need to be inactive on desktop before you receive push notifications."
 msgstr "{productName} stuurt geen pushmeldingen naar je mobiele apparaten zolang je actief bent op je computer. Kies hoelang je op je computer inactief moet zijn voordat je pushmeldingen ontvangt."
-
-#. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:38
-msgid "{productName} Bug Hunter"
-msgstr "{productName}-bugjager"
 
 #. Inline notice body on Windows. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
 #. Inline notice body on macOS. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
@@ -1772,11 +1767,6 @@ msgstr "{productName} is nu te vinden op {host}. Installeer het vanaf daar en lo
 msgid "{productName} now lives at {host}. Install it from there."
 msgstr "{productName} is nu te vinden op {host}. Installeer het vanaf daar."
 
-#. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:33
-msgid "{productName} Partner"
-msgstr "{productName}-partner"
-
 #. Nagbar shown after the app restarts while the user was connected to a community voice channel. {productName} is Fluxer, {channelName} is the voice channel name, and {communityName} is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:24
 msgid "{productName} restarted while you were connected to the {channelName} channel in the {communityName} community."
@@ -1798,7 +1788,7 @@ msgid "{productName} spotted a possible raid here. Invites are paused — try ag
 msgstr "{productName} heeft hier een mogelijke raid gedetecteerd. Uitnodigingen zijn gepauzeerd — probeer het later opnieuw."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:28
+#: src/features/user/components/popouts/UserProfileBadges.tsx:31
 msgid "{productName} Staff"
 msgstr "{productName}-medewerker"
 
@@ -1808,12 +1798,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "{productName} gebruikt pushmeldingen wanneer het is geïnstalleerd als een mobiele PWA. Registreren zorgt ervoor dat de gateway je apparaat kan bereiken, zelfs wanneer de app op de achtergrond draait."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:48
+#: src/features/user/components/popouts/UserProfileBadges.tsx:41
 msgid "{productName} Visionary"
 msgstr "{productName} Visionary"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:43
+#: src/features/user/components/popouts/UserProfileBadges.tsx:36
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} Visionary sinds {premiumSinceFormatted}"
 
@@ -1856,8 +1846,8 @@ msgid "{remainingSlotCount} remaining"
 msgstr "Nog {remainingSlotCount} beschikbaar"
 
 #: src/features/channel/components/InviteEmbed.tsx:248
-#: src/features/channel/components/InviteEmbed.tsx:356
-#: src/features/channel/components/InviteEmbed.tsx:625
+#: src/features/channel/components/InviteEmbed.tsx:357
+#: src/features/channel/components/InviteEmbed.tsx:627
 msgid "{renderedMemberCount} {memberCount, plural, one {member} other {members}}"
 msgstr "{renderedMemberCount} {memberCount, plural, one {lid} other {leden}}"
 
@@ -23709,7 +23699,7 @@ msgid "Open community"
 msgstr "Community openen"
 
 #. Short label in the app layout guild header. Preserve {guildName}; it is inserted by code.
-#: src/features/app/components/layout/GuildHeader.tsx:33
+#: src/features/app/components/layout/GuildHeader.tsx:35
 msgid "Open community menu for {guildName}"
 msgstr "Communitymenu openen voor {guildName}"
 
@@ -24376,7 +24366,7 @@ msgid "Participants: {names}"
 msgstr "Deelnemers: {names}"
 
 #. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:17
+#: src/features/guild/components/GuildBadge.tsx:23
 msgid "Partnered community"
 msgstr "Partnercommunity"
 
@@ -31383,7 +31373,7 @@ msgstr "Er is iets misgegaan. Probeer het opnieuw."
 
 #. Community layout error-boundary body shown when rendering the community pane crashes. Keep plain and calm.
 #: src/features/app/components/layout/GuildLayout.tsx:96
-#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:203
+#: src/features/app/components/layout/sidebar_nav/GuildListItemTooltip.tsx:204
 msgid "Something went wrong. We're working on it."
 msgstr "Er is iets misgegaan. We werken eraan."
 
@@ -37251,12 +37241,12 @@ msgid "Verification failed"
 msgstr "Verificatie mislukt"
 
 #. Label in the community badge.
-#: src/features/guild/components/GuildBadge.tsx:13
+#: src/features/guild/components/GuildBadge.tsx:19
 msgid "Verified & partnered community"
 msgstr "Geverifieerde en partnercommunity"
 
 #. Short label in the community badge. Keep it concise.
-#: src/features/guild/components/GuildBadge.tsx:21
+#: src/features/guild/components/GuildBadge.tsx:27
 msgid "Verified community"
 msgstr "Geverifieerde community"
 
@@ -37861,7 +37851,7 @@ msgid "Visionary badge ID"
 msgstr "Visionary-badge-ID"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:58
+#: src/features/user/components/popouts/UserProfileBadges.tsx:51
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "Visionary-ID {visionaryIdLabel}"
 
@@ -39858,11 +39848,11 @@ msgid "You've arrived, {username}! Let's get started."
 msgstr "Je bent er, {username}! Laten we beginnen."
 
 #: src/features/auth/flow/InviteHeader.tsx:69
-#: src/features/auth/flow/InviteHeader.tsx:213
+#: src/features/auth/flow/InviteHeader.tsx:217
 msgid "You've been invited to join"
 msgstr "Je bent uitgenodigd om deel te nemen"
 
-#: src/features/auth/flow/InviteHeader.tsx:124
+#: src/features/auth/flow/InviteHeader.tsx:128
 msgid "You've been invited to join a group DM by"
 msgstr "Je bent uitgenodigd voor een groeps-DM door"
 

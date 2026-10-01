@@ -81,7 +81,8 @@ role_child_specs(RoleName, Role) ->
 role_specs(sessions, _Role) ->
     [
         child_spec(session_state_transfer, session_state_transfer),
-        child_spec(session_manager, session_manager)
+        child_spec(session_manager, session_manager),
+        child_spec(gateway_broadcast, gateway_broadcast)
     ];
 role_specs(presence, _Role) ->
     [

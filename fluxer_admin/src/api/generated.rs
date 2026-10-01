@@ -102,6 +102,7 @@ mod tests {
                 "deletion_public_reason": null,
                 "acls": ["MANAGE_USERS", "VIEW_AUDIT_LOG"],
                 "traits": ["STAFF"],
+                "badge_ids": [],
                 "has_totp": true,
                 "authenticator_types": [0],
                 "last_active_at": "2026-05-26T12:00:00.000Z",

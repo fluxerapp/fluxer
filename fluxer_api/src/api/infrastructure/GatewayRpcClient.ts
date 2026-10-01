@@ -59,6 +59,10 @@ export class GatewayRpcClient {
 		throw new Error('Unexpected gateway RPC retry failure');
 	}
 
+	publish(subject: string, payload: Record<string, unknown>): Promise<void> {
+		return this.transport.publish(subject, payload);
+	}
+
 	private async executeCall<T>(method: string, params: Record<string, unknown>): Promise<T> {
 		const result = await this.transport.call(method, params);
 		return result as T;

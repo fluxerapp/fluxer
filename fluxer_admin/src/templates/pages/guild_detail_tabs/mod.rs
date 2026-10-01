@@ -3,6 +3,7 @@
 pub mod applications;
 pub mod archives;
 pub mod audit_log;
+pub mod badges;
 pub mod emojis;
 pub mod features;
 pub mod members;

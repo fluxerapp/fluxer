@@ -32,6 +32,26 @@ reconnect_drain_casts_each_active_session_test() ->
     ),
     ok.
 
+broadcast_dispatch_casts_the_shared_payload_to_each_session_test() ->
+    Data = {pre_encoded, <<"{\"version\":1}">>},
+    State = #{
+        sessions => #{
+            <<"session-a">> => {self(), make_ref()},
+            <<"session-b">> => {self(), make_ref()}
+        }
+    },
+    ?assertEqual(
+        ok, session_manager_shard_drain:broadcast_dispatch(badges_update, Data, State)
+    ),
+    [
+        receive
+            {'$gen_cast', {dispatch, badges_update, Received}} -> ?assertEqual(Data, Received)
+        after 1000 -> ?assert(false)
+        end
+     || _ <- [a, b]
+    ],
+    ok.
+
 reconnect_drain_ignores_dead_sessions_test() ->
     TestPid = self(),
     LiveSessionPid = spawn(fun() -> reconnect_drain_test_session(TestPid) end),

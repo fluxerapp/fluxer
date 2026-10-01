@@ -12,6 +12,7 @@
 		"splash": null,
 		"embed_splash": null,
 		"features": ["COMMUNITY", "DISCOVERABLE"],
+		"badge_ids": [],
 		"verification_level": 1,
 		"mfa_level": 0,
 		"nsfw_level": 0,

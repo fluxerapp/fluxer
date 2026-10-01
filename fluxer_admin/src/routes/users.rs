@@ -9,7 +9,7 @@ use crate::{
     middleware::{auth::AuthContext, csrf::CsrfToken, flash, htmx},
     routes::user_tabs,
     state::AppState,
-    templates,
+    templates::{self, components::user_profile_badges::ProfileBadges},
     utils::forms::MultiValueForm,
 };
 use axum::{
@@ -122,7 +122,14 @@ async fn users_list(
             None
         }
     };
-    let (results, badge_name) = tokio::join!(results, badge);
+    let definitions = async {
+        if searching {
+            state.badges(&client).await
+        } else {
+            None
+        }
+    };
+    let (results, badge_name, definitions) = tokio::join!(results, badge, definitions);
     let result_users = results.as_ref().map(|r| r.0.as_slice());
     let has_more = results.as_ref().is_some_and(|r| r.1);
     let premium_badge_name = match result_users {
@@ -136,7 +143,10 @@ async fn users_list(
         result_users,
         has_more,
         can_view_email,
-        premium_badge_name.as_deref(),
+        ProfileBadges {
+            premium_name: premium_badge_name.as_deref(),
+            definitions: definitions.as_ref(),
+        },
         is_results_fragment,
     );
     Html(markup.into_string()).into_response()
@@ -187,14 +197,15 @@ async fn user_detail(
     let is_detail_fragment = htmx::targets(&headers, "main-content");
     let active_tab = query.tab.as_deref().unwrap_or("overview");
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let (user, badge_name) = tokio::join!(
+    let (user, badge_name, definitions) = tokio::join!(
         async {
             client
                 .get_user_by_id(&user_id)
                 .await
                 .log_error("load user detail")
         },
-        self_hosted_premium_badge_name(&state, &client)
+        self_hosted_premium_badge_name(&state, &client),
+        state.badges(&client)
     );
     let tq = to_tab_query(&query);
     let admin_acls = auth
@@ -219,7 +230,10 @@ async fn user_detail(
         &user_id,
         active_tab,
         tab_body,
-        premium_badge_name.as_deref(),
+        ProfileBadges {
+            premium_name: premium_badge_name.as_deref(),
+            definitions: definitions.as_ref(),
+        },
         is_detail_fragment,
     );
     Html(markup.into_string()).into_response()
@@ -321,14 +335,15 @@ async fn user_peek(
 ) -> Response {
     let config = state.config();
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let (user, badge_name) = tokio::join!(
+    let (user, badge_name, definitions) = tokio::join!(
         async {
             client
                 .get_user_by_id(&user_id)
                 .await
                 .log_error("load user peek")
         },
-        self_hosted_premium_badge_name(&state, &client)
+        self_hosted_premium_badge_name(&state, &client),
+        state.badges(&client)
     );
     let admin_acls = auth
         .0
@@ -342,7 +357,10 @@ async fn user_peek(
             config,
             u,
             admin_acls,
-            premium_badge_name.as_deref(),
+            ProfileBadges {
+                premium_name: premium_badge_name.as_deref(),
+                definitions: definitions.as_ref(),
+            },
         ),
         None => maud::html! {
             div class="p-4 text-red-600 text-sm" { "User not found." }

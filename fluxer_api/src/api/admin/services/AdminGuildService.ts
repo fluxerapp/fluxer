@@ -14,6 +14,7 @@ import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuild
 import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import type {InviteRepository} from '@app/api/invite/InviteRepository';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
@@ -29,6 +30,7 @@ interface AdminGuildServiceDeps {
 	entityAssetService: EntityAssetService;
 	auditService: AdminAuditService;
 	discoveryRepository: IGuildDiscoveryRepository;
+	instanceConfigRepository: InstanceConfigRepository;
 }
 
 export class AdminGuildService {
@@ -57,6 +59,7 @@ export class AdminGuildService {
 			entityAssetService: deps.entityAssetService,
 			auditService: deps.auditService,
 			updatePropagator: this.updatePropagator,
+			instanceConfigRepository: deps.instanceConfigRepository,
 		});
 		this.vanityService = new AdminGuildVanityService({
 			guildRepository: deps.guildRepository,

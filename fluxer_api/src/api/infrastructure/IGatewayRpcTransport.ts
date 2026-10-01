@@ -2,5 +2,6 @@
 
 export interface IGatewayRpcTransport {
 	call(method: string, params: Record<string, unknown>): Promise<unknown>;
+	publish(subject: string, payload: Record<string, unknown>): Promise<void>;
 	destroy(): Promise<void>;
 }

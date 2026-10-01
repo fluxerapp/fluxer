@@ -39,6 +39,15 @@ pub async fn render(
         .await
         .log_error("load guild tab guild")?;
     match tab {
+        "badges" => {
+            let badges = client
+                .get_public_badges()
+                .await
+                .log_error("load badges for guild")?;
+            Some(tabs::badges::badges_tab(
+                config, &guild, &badges, csrf_token, admin_acls,
+            ))
+        }
         "members" => {
             let page = query.members_page.unwrap_or(0);
             let limit: u32 = 50;

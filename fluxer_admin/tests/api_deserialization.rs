@@ -42,6 +42,7 @@ fn deserialize_admin_users_me_response() {
             "deletion_scheduled_at": null,
             "acls": ["super_admin"],
             "traits": ["beta_tester"],
+            "badge_ids": [],
             "has_totp": true,
             "authenticator_types": [1],
             "last_active_at": "2026-05-26T15:00:00.000Z",
@@ -86,7 +87,7 @@ fn deserialize_flags_as_string_and_number() {
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
             "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
             "deletion_scheduled_by": null, "deletion_scheduled_at": null,
-            "acls": [], "traits": [], "has_totp": false, "authenticator_types": [],
+            "acls": [], "traits": [], "badge_ids": [], "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
         }
@@ -119,6 +120,7 @@ fn deserialize_discriminator_int_and_string() {
             "pending_bulk_message_deletion_at": null, "deletion_reason_code": null,
             "deletion_public_reason": null, "deletion_audit_log_reason": null,
             "deletion_scheduled_by": null, "deletion_scheduled_at": null, "acls": [], "traits": [],
+            "badge_ids": [],
             "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -180,6 +182,7 @@ fn deserialize_search_users_response() {
                 "deletion_scheduled_at": null,
                 "acls": [],
                 "traits": [],
+                "badge_ids": [],
                 "has_totp": false,
                 "authenticator_types": [],
                 "last_active_at": null,
@@ -767,6 +770,7 @@ fn deserialize_lookup_guild_response() {
             "splash": null,
             "embed_splash": null,
             "features": [],
+            "badge_ids": [],
             "verification_level": 0,
             "mfa_level": 0,
             "nsfw_level": 0,
@@ -869,7 +873,7 @@ fn deserialize_user_mutation_response() {
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
             "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
             "deletion_scheduled_by": null, "deletion_scheduled_at": null,
-            "acls": [], "traits": [], "has_totp": false, "authenticator_types": [],
+            "acls": [], "traits": [], "badge_ids": [], "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
         }

@@ -94,6 +94,8 @@ pub struct AdminUser {
     pub acls: Vec<String>,
     #[serde(default)]
     pub traits: Vec<String>,
+    #[serde(default)]
+    pub badge_ids: Vec<String>,
     #[serde(default, deserialize_with = "deserialize_string_or_u64")]
     pub flags: u64,
     #[serde(default)]
@@ -148,6 +150,8 @@ pub struct GuildInfo {
     pub member_count: u64,
     #[serde(default)]
     pub features: Vec<String>,
+    #[serde(default)]
+    pub badge_ids: Vec<String>,
     pub nsfw_level: Option<i32>,
     pub nsfw: Option<bool>,
     pub content_warning_level: Option<i32>,
@@ -171,6 +175,8 @@ pub struct GuildDetailInfo {
     pub embed_splash: Option<String>,
     #[serde(default)]
     pub features: Vec<String>,
+    #[serde(default)]
+    pub badge_ids: Vec<String>,
     pub verification_level: Option<i32>,
     pub mfa_level: Option<i32>,
     pub nsfw_level: Option<i32>,
@@ -207,6 +213,7 @@ impl From<GuildDetailInfo> for GuildInfo {
             owner_discriminator: d.owner_discriminator,
             member_count: d.member_count,
             features: d.features,
+            badge_ids: d.badge_ids,
             nsfw_level: d.nsfw_level,
             nsfw: d.nsfw,
             content_warning_level: d.content_warning_level,

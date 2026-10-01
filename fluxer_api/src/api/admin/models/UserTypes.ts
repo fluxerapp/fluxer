@@ -71,6 +71,7 @@ export async function mapUserToAdminResponse(
 		deletion_scheduled_at: user.deletionScheduledAt?.toISOString() ?? null,
 		acls: user.acls ? Array.from(user.acls) : [],
 		traits: Array.from(user.traits).sort(),
+		badge_ids: Array.from(user.badgeIds, String),
 		has_totp: user.totpSecret !== null,
 		authenticator_types: user.authenticatorTypes ? Array.from(user.authenticatorTypes) : [],
 		last_active_at: user.lastActiveAt?.toISOString() ?? null,

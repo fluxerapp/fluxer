@@ -112,6 +112,8 @@ A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it 
 | [Call Delete](#call-delete) | A call ends or becomes unavailable | Call recipient |
 | [Guild Counts Update](#guild-counts-update) | Member and online counts are returned for connected guilds | Command response |
 | [Channel Member Counts Update](#channel-member-counts-update) | Per-channel member and online counts are returned for one guild | Command response |
+| [Badges Update](#badges-update) | The instance's badges or built-in badge icons change | Every session |
+| [User Badges Update](#user-badges-update) | The member's assigned badges were updated | The account's sessions and every session in its guilds |
 
 ## Session and current user
 
@@ -138,6 +140,7 @@ The initial session state. Sent once after a successful [Identify](/gateway/comm
 | favorite_memes | array[[meme](/http-api/memes/#meme-object) object] | Saved memes |
 | webauthn_credentials | array[[WebAuthn credential object](#webauthn-credential-object)] | Registered WebAuthn credentials |
 | rtc_regions | array[[RTC region object](#rtc-region-object)] | Voice regions, ordered nearest first |
+| badges_version | integer | Version of the instance [badges](/http-api/instance/#badges-object) |
 | country_code | string | Country resolved from the connecting address, `US` when the address resolves to none |
 | latitude? | string | Latitude resolved from the connecting address, rendered as a decimal string |
 | longitude? | string | Longitude resolved from the connecting address, rendered as a decimal string |
@@ -1075,3 +1078,26 @@ A channel the session cannot view, and a channel on which it lacks `VIEW_CHANNEL
 Every resource object named on this page has the representation defined by the [HTTP API](/http-api/). A Dispatch payload with a resource object has the same fields, with the guild-scoped events adding `guild_id` and the message and reaction events adding `member`.
 
 These reductions are specific to the Gateway and appear nowhere in the HTTP API. [Ready](#ready) strips `user` from each relationship and from each guild member and moves those accounts into its `users` array. The `member` added to a message event has its own `user` removed, and the account is in the message's `author`. A client MUST resolve those accounts from the surrounding payload.
+
+## Instance
+
+### <span id="badges-update"></span>BADGES_UPDATE
+
+The instance's [badges](/http-api/instance/#badges-object) have changed.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| version | integer | The new version of the badge configuration |
+| badges? | array[[badge](/http-api/instance/#badge-object) object] | Badges that were created or updated, if any |
+| deleted_badge_ids? | array[snowflake] | IDs of badges that were deleted, if any |
+| builtin_icons? | [built-in badge icons](/http-api/instance/#built-in-badge-icons-object) object | The built-in badge icons that changed, if any |
+
+
+### <span id="user-badges-update"></span>USER_BADGES_UPDATE
+
+A member's assigned badges have changed.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the account |
+| badges | array[snowflake] | IDs of the badges now assigned to the member |

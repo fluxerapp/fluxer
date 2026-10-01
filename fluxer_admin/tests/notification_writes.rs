@@ -313,6 +313,7 @@ fn admin_user() -> Value {
         "locale": "en-US",
         "acls": ["*"],
         "traits": [],
+        "badge_ids": [],
         "flags": "0",
         "premium_flags": 0,
         "bot": false,

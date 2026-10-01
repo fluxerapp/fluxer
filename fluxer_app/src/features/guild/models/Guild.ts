@@ -41,6 +41,7 @@ export class Guild {
 	readonly embedSplashWidth: number | null;
 	readonly embedSplashHeight: number | null;
 	readonly features: ReadonlySet<string>;
+	readonly badges: ReadonlyArray<string>;
 	readonly vanityURLCode: string | null;
 	readonly ownerId: string;
 	readonly systemChannelId: string | null;
@@ -80,6 +81,7 @@ export class Guild {
 		this.embedSplashWidth = this.normalizeEmbedSplashWidth(guild);
 		this.embedSplashHeight = this.normalizeEmbedSplashHeight(guild);
 		this.features = new Set(guild.features);
+		this.badges = guild.badges ?? [];
 		this.vanityURLCode = this.normalizeVanityUrlCode(guild);
 		this.ownerId = this.normalizeOwnerId(guild);
 		this.systemChannelId = this.normalizeSystemChannelId(guild);
@@ -303,6 +305,7 @@ export class Guild {
 			embed_splash_width: this.embedSplashWidth,
 			embed_splash_height: this.embedSplashHeight,
 			features: [...this.features],
+			badges: [...this.badges],
 			vanity_url_code: this.vanityURLCode,
 			owner_id: this.ownerId,
 			system_channel_id: this.systemChannelId,
@@ -344,6 +347,7 @@ export class Guild {
 				embedSplashWidth: guild.embed_splash_width ?? this.embedSplashWidth,
 				embedSplashHeight: guild.embed_splash_height ?? this.embedSplashHeight,
 				features: guild.features ? new Set(guild.features) : this.features,
+				badges: guild.badges ?? this.badges,
 				vanityURLCode: guild.vanity_url_code ?? this.vanityURLCode,
 				ownerId: guild.owner_id ?? this.ownerId,
 				systemChannelId: guild.system_channel_id ?? this.systemChannelId,
@@ -515,6 +519,7 @@ export class Guild {
 		if (this.messageHistoryCutoff !== other.messageHistoryCutoff) return false;
 		if (this.unavailable !== other.unavailable) return false;
 		if (this.memberCount !== other.memberCount) return false;
+		if (this.badges.join() !== other.badges.join()) return false;
 		if (this.features.size !== other.features.size) return false;
 		for (const feature of this.features) {
 			if (!other.features.has(feature)) return false;

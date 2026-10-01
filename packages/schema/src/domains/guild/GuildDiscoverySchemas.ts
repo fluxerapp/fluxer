@@ -12,6 +12,7 @@ import {
 	isValidDiscoveryTag,
 	normalizeDiscoveryTag,
 } from '@fluxer/constants/src/DiscoveryConstants';
+import {BadgeIdsResponse} from '@fluxer/schema/src/domains/badge/BadgeSchemas';
 import {NSFWLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
 import {SnowflakeStringType, SnowflakeType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
@@ -82,6 +83,7 @@ const DiscoveryGuildResponse = z.object({
 	member_count: z.number().describe('Approximate member count'),
 	online_count: z.number().describe('Approximate online member count'),
 	features: z.array(z.string()).describe('Guild feature flags'),
+	badges: BadgeIdsResponse.optional().describe('Guild custom badges'),
 	verification_level: z.number().describe('Verification level'),
 });
 

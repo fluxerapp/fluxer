@@ -186,6 +186,11 @@ handle_handoff_topology(TargetNodes, State) ->
     end.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
+handle_cast({broadcast_dispatch, Event, {pre_encoded, Encoded} = Data}, State) when
+    is_atom(Event), is_binary(Encoded)
+->
+    session_manager_shard_drain:broadcast_dispatch(Event, Data, State),
+    {noreply, State};
 handle_cast(_, State) ->
     {noreply, State}.
 

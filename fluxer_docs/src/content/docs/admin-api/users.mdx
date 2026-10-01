@@ -60,8 +60,9 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | deletion_audit_log_reason | ?string | The private reason stored with the pending deletion, and null without `audit_log:view` |
 | deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the pending deletion, or null when it was not recorded |
 | deletion_scheduled_at | ?ISO8601 timestamp | The time the pending deletion was scheduled, or null when it was not recorded |
-| acls<sup>8</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 111 entries |
+| acls<sup>8</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 117 entries |
 | traits<sup>9</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
+| badge_ids | array[snowflake] | The [badges](/admin-api/badges/) assigned to the account, with at most 25 entries |
 | has_totp<sup>10</sup> | boolean | Whether a TOTP authenticator is registered |
 | authenticator_types<sup>10</sup> <sup>13</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
 | last_active_at | ?ISO8601 timestamp | The time of the last recorded activity, or null when none is recorded |
@@ -1093,7 +1094,7 @@ A path naming the acting account fails with 403 `ACCESS_DENIED` before the accou
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 111 values |
+| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 117 values |
 
 <sup>1</sup> Required. A value outside the [ACL registry](/admin-api/#acl-registry) fails body validation, and a repeated value is collapsed
 
@@ -1212,6 +1213,47 @@ Additions are applied before removals, so a flag named in both arrays ends up cl
 [User Update](/gateway/events/#user-update) is emitted to the account's own sessions. A change to the account's public flags also sends [Guild Member Update](/gateway/events/#guild-member-update) to the account's guilds.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_flags`, target type `user`, and the metadata keys `add_flags`, `remove_flags`, and `new_flags`. An empty array is omitted from the metadata map.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Update user badges
+
+<RouteHeader method="PATCH" path="/v1/admin/users/{user_id}/badges" auditReason />
+
+Replaces the [badges](/admin-api/badges/) shown on the account's profile and returns the resulting account. Requires `user:update:badges`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| badge_ids | array[snowflake] | The complete replacement set of user badges, with at most 25 entries |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [Admin user](#admin-user-object) object | The resulting account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Badges were updated |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist, or `UNKNOWN_BADGE`, because a badge does not exist or is a guild badge |
+
+### Side effects
+
+The badges appear on the next [Get user profile](/http-api/users/#get-user-profile) response. [User Badges Update](/gateway/events/#user-badges-update) is emitted to the account's own sessions and to every guild the account is a member of.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_badges`, target type `user`, and the metadata key `badge_ids`.
 
 ### Rate limit
 

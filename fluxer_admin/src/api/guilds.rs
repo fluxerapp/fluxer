@@ -307,6 +307,7 @@ fn guild_admin_response(response: generated_types::GuildAdminResponse) -> ApiRes
         )
         .map_err(ApiError::Parse)?,
         features: response.features.into_iter().map(String::from).collect(),
+        badge_ids: Vec::new(),
         nsfw_level: response.nsfw_level.map(i32::from),
         nsfw: response.nsfw,
         content_warning_level: response.content_warning_level.map(i32::from),
@@ -336,6 +337,7 @@ fn guild_update_response(
             )
             .map_err(ApiError::Parse)?,
             features: guild.features.into_iter().map(String::from).collect(),
+            badge_ids: Vec::new(),
             nsfw_level: guild.nsfw_level.map(i32::from),
             nsfw: guild.nsfw,
             content_warning_level: guild.content_warning_level.map(i32::from),

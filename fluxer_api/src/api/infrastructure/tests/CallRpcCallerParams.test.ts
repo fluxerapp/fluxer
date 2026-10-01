@@ -19,6 +19,7 @@ function recordingService(recorded: Array<RecordedCall>): GatewayService {
 			recorded.push({method, params});
 			return null;
 		},
+		async publish(): Promise<void> {},
 		async destroy(): Promise<void> {},
 	};
 	GatewayRpcClient.createForTests(transport);

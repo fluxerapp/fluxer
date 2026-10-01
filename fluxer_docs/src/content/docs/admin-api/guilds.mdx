@@ -87,6 +87,7 @@ The full guild representation returned by [Get guild](#get-guild). It embeds eve
 | splash | ?string | The invite splash hash, or null when unset |
 | embed_splash | ?string | The embedded invite splash hash, or null when unset |
 | features | array[string] | The complete [guild feature](/http-api/guilds/#guild-features) set (at most 100) |
+| badge_ids | array[snowflake] | The [custom badges](/admin-api/badges/) assigned to the guild |
 | verification_level | integer | The [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level | integer | The [MFA level](/http-api/guilds/#mfa-levels) required of moderators |
 | nsfw_level | integer | The [NSFW level](/http-api/guilds/#nsfw-levels) |
@@ -339,6 +340,7 @@ A body with no field at all selects nothing, so an empty patch applies no change
 | new_owner_id?<sup>2</sup> | snowflake | The replacement owner |
 | add_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to add (at most 100) |
 | remove_features?<sup>3</sup> | array[string] | [Guild features](/http-api/guilds/#guild-features) to remove (at most 100) |
+| badge_ids? | array[snowflake] | The complete replacement set of guild [custom badges](/admin-api/badges/) (at most 25) |
 | fields?<sup>4</sup> | array[string] | Image fields to clear, each `icon`, `banner`, `splash`, or `embed_splash` (at most 10) |
 | verification_level? | integer | The replacement [verification level](/http-api/guilds/#verification-levels) |
 | mfa_level? | integer | The replacement [MFA level](/http-api/guilds/#mfa-levels) |
@@ -398,6 +400,7 @@ Each applied group records one Admin audit entry with the target type `guild` an
 - `clear_fields` records the cleared field names.
 - `update_settings` records each applied setting.
 - `update_features` records the added, removed, and resulting feature sets.
+- `update_badges` records the resulting badge IDs.
 - `update_name` records the old and new names.
 - `update_vanity` records the old and new codes.
 - `transfer_ownership` records the old and new owner IDs.

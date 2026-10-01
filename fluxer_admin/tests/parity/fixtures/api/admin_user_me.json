@@ -36,6 +36,7 @@
 		"deletion_scheduled_at": null,
 		"acls": ["*"],
 		"traits": [],
+		"badge_ids": [],
 		"has_totp": true,
 		"authenticator_types": [1],
 		"last_active_at": "2026-05-26T15:00:00.000Z",

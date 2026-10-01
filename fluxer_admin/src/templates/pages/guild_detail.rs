@@ -22,6 +22,7 @@ pub const GUILD_TABS: &[(&str, &str)] = &[
     ("members", "Members"),
     ("settings", "Settings"),
     ("features", "Features"),
+    ("badges", "Badges"),
     ("moderation", "Moderation"),
     ("archives", "Archives"),
     ("emojis", "Emojis"),
@@ -187,7 +188,7 @@ fn render_guild_header(config: &AdminConfig, guild: &GuildDetailInfo) -> Markup 
 
 fn guild_tab_visible(_config: &AdminConfig, tab_id: &str, admin_acls: &[String]) -> bool {
     match tab_id {
-        "overview" | "members" | "settings" | "features" | "moderation" => true,
+        "overview" | "members" | "settings" | "features" | "badges" | "moderation" => true,
         "reports" => acl::has_permission(admin_acls, acl::REPORT_VIEW),
         "emojis" | "stickers" => acl::has_permission(admin_acls, acl::ASSET_PURGE),
         "audit_logs" => acl::has_permission(admin_acls, acl::AUDIT_LOG_VIEW),

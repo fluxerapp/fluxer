@@ -75,7 +75,11 @@ export const GuildInviteHeader = observer(function GuildInviteHeader({invite}: G
 					<h2 className={styles.entityTitle} data-flx="auth.flow.invite-header.guild-invite-header.entity-title">
 						{guild.name}
 					</h2>
-					<GuildBadge features={features} data-flx="auth.flow.invite-header.guild-invite-header.guild-badge" />
+					<GuildBadge
+						features={features}
+						badges={guild.badges}
+						data-flx="auth.flow.invite-header.guild-invite-header.guild-badge"
+					/>
 				</div>
 				<div className={styles.entityStats} data-flx="auth.flow.invite-header.guild-invite-header.entity-stats">
 					<div className={styles.entityStat} data-flx="auth.flow.invite-header.guild-invite-header.entity-stat">

@@ -91,6 +91,16 @@ pub async fn dispatch(
                 "Failed to update user flags",
             )
         }
+        "update_badges" => DispatchOutcome::from_result(
+            client
+                .update_user_badges(
+                    user_id,
+                    &form.list_values_any(&["badge_ids[]", "badge_ids"]),
+                )
+                .await,
+            "User badges updated successfully",
+            "Failed to update user badges",
+        ),
         "update_premium_flags" => {
             if has_legacy_flag_delta_fields(form) {
                 let Ok(add) = form.parse_list_values::<i32>(&["add_flags[]", "add_flags"]) else {

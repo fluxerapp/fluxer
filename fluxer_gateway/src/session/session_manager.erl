@@ -12,6 +12,7 @@
     lookup/1,
     lookup_or_rehydrate/3,
     reconnect_drain/0,
+    broadcast_dispatch/2,
     transfer_sessions_to/1,
     transfer_sessions_to_topology/1,
     handoff_to_topology/1,
@@ -72,6 +73,10 @@ lookup_or_rehydrate(SessionId, Token, SocketPid) ->
 -spec reconnect_drain() -> {ok, non_neg_integer()} | {error, timeout | unavailable}.
 reconnect_drain() ->
     safe_gen_call(reconnect_drain).
+
+-spec broadcast_dispatch(atom(), {pre_encoded, binary()}) -> ok.
+broadcast_dispatch(Event, Data) ->
+    gen_server:cast(?MODULE, {broadcast_dispatch, Event, Data}).
 
 -spec transfer_sessions_to(node()) -> {ok, non_neg_integer()} | {error, timeout | unavailable}.
 transfer_sessions_to(TargetNode) ->
@@ -235,6 +240,9 @@ handle_transfer_to(TargetNode, State) ->
     {reply, {ok, Count}, NewState}.
 
 -spec handle_cast(term(), state()) -> {noreply, state()}.
+handle_cast({broadcast_dispatch, _Event, _Data} = Msg, #{shards := Shards} = State) ->
+    maps:foreach(fun(_Index, #{pid := Pid}) -> gen_server:cast(Pid, Msg) end, Shards),
+    {noreply, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
 

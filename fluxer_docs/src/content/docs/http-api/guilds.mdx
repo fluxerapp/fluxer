@@ -45,6 +45,7 @@ A guild object contains the guild's configuration. The operation that returns it
 | afk_channel_id | ?snowflake | Voice channel that inactive members are moved to |
 | afk_timeout | integer | AFK timeout in seconds (60-3600) |
 | features<sup>6</sup> | array[string] | [Guild features](#guild-features) |
+| badges | ?array[snowflake] | IDs of the [custom badges](/http-api/instance/#badge-object) assigned to the guild |
 | verification_level | integer | [Verification level](#verification-levels) |
 | mfa_level | integer | [MFA level](#mfa-levels) |
 | nsfw_level<sup>7</sup> | integer | [NSFW level](#nsfw-levels) |
@@ -150,6 +151,7 @@ A partial guild object is the smaller shape that appears inside invite payloads.
 | embed_splash_width<sup>3</sup> | ?integer | Embedded invite splash width in pixels |
 | embed_splash_height<sup>3</sup> | ?integer | Embedded invite splash height in pixels |
 | features<sup>5</sup> | array[string] | [Guild features](#guild-features) |
+| badges | ?array[snowflake] | IDs of the [custom badges](/http-api/instance/#badge-object) assigned to the guild |
 
 <sup>1</sup> An animated icon hash has the `a_` prefix, and that prefix is removed from the returned value while the guild lacks `ANIMATED_ICON`
 

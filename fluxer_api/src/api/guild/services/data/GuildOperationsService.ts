@@ -357,6 +357,7 @@ export class GuildOperationsService {
 			embed_splash_width: null,
 			embed_splash_height: null,
 			features: featuresSet,
+			badge_ids: null,
 			verification_level: templateSettings.verificationLevel,
 			mfa_level: 0,
 			nsfw_level: 0,

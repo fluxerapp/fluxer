@@ -7,6 +7,7 @@ import AccountManager from '@app/features/auth/state/AccountManager';
 import accountStorage from '@app/features/auth/state/AccountStorage';
 import Authentication from '@app/features/auth/state/Authentication';
 import AuthSession from '@app/features/auth/state/AuthSession';
+import Badges from '@app/features/badge/state/Badges';
 import ChannelPins from '@app/features/channel/state/ChannelPins';
 import Channels from '@app/features/channel/state/Channels';
 import UserConnection from '@app/features/connection/state/UserConnection';
@@ -74,6 +75,7 @@ interface ReadyPayload {
 	presences?: Array<PresenceRecord>;
 	auth_session_id_hash?: string;
 	rtc_regions?: Array<RtcRegionResponse>;
+	badges_version?: number;
 	webauthn_credentials?: Array<WebAuthnCredential>;
 }
 
@@ -131,6 +133,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	if (data.rtc_regions) {
 		RtcRegions.setRegions(data.rtc_regions);
 	}
+	void Badges.handleGatewayReady(data.badges_version);
 	ExperimentAssignments.start(data.user.id);
 	Users.handleGatewayReady(data.user);
 	if (data.users && data.users.length > 0) {

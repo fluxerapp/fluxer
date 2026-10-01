@@ -208,6 +208,7 @@ export class ApplicationService {
 			deletion_audit_log_reason: null,
 			acls: null,
 			traits: null,
+			badge_ids: null,
 			first_refund_at: null,
 			gift_inventory_server_seq: null,
 			gift_inventory_client_seq: null,
