@@ -363,6 +363,29 @@ function applyVideoQualityNormalisationMigration(parsed: Record<string, unknown>
 	return changed;
 }
 
+export function applyLegacyNoiseSuppressionNoneMigrationV1(parsed: Record<string, unknown>): boolean {
+	let changed = false;
+	if (
+		parsed.noiseSuppressionBackendPrefV1 == null &&
+		parsed.noiseSuppression === false &&
+		parsed.deepFilterNoiseSuppressionPrefV2 !== true
+	) {
+		parsed.noiseSuppressionBackendPrefV1 = 'none';
+		changed = true;
+	}
+	for (const key of [
+		'noiseSuppression',
+		'deepFilterNoiseSuppressionPrefV2',
+		'deepFilterNoiseSuppressionLevelPrefV2',
+		'noiseSuppressionStandardDefaultMigratedV1',
+	]) {
+		if (!(key in parsed)) continue;
+		delete parsed[key];
+		changed = true;
+	}
+	return changed;
+}
+
 function validateNoiseSuppressionBackend(value: unknown): VoiceNoiseSuppressionBackend | null {
 	return isVoiceNoiseSuppressionBackend(value) ? value : null;
 }
@@ -559,6 +582,7 @@ class VoiceSettings {
 			changed = applyScreenShareHevcOptOutMigrationV1(parsed) || changed;
 			changed = applyScreenShareSoftwareQualityRetiredMigrationV1(parsed) || changed;
 			changed = applyScreenShareBackupCodecModeRetiredMigrationV1(parsed) || changed;
+			changed = applyLegacyNoiseSuppressionNoneMigrationV1(parsed) || changed;
 			if (changed) {
 				AppStorage.setItem('VoiceSettings', JSON.stringify(parsed));
 			}

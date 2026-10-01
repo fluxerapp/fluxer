@@ -1753,7 +1753,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} को आपके डिवाइस दिखाने के लिए कैमरे का एक्सेस चाहिए।"
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:138
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:141
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} को आपके डिवाइस दिखाने के लिए माइक्रोफ़ोन का एक्सेस चाहिए।"
 
@@ -1865,6 +1865,10 @@ msgstr "{renderedMemberCount} {memberCount, plural, one {सदस्य} other 
 #: src/features/channel/components/InviteEmbed.tsx:83
 msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} ऑनलाइन"
+
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:103
+msgid "{requestedLabel} could not start. Using {effectiveLabel} instead."
+msgstr "{requestedLabel} शुरू नहीं हो सका। इसके बजाय {effectiveLabel} का उपयोग किया जा रहा है।"
 
 #. Compact stream info pill label. {resolution} is a technical token such as 1080p or 4K. {fps} is the frame rate. FPS is a technical token.
 #: src/features/voice/components/StreamInfoPill.tsx:14
@@ -2869,7 +2873,7 @@ msgid "Activity sharing"
 msgstr "गतिविधि शेयरिंग"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "गतिविधि थ्रेशोल्ड"
@@ -3337,7 +3341,7 @@ msgid "Address"
 msgstr "पता"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "हर सेटिंग खुद एडजस्ट करें: शोर दबाना, इको कैंसलेशन और गेन।"
 
@@ -3606,11 +3610,11 @@ msgstr "{everyoneMention} और {hereMention} की अनुमति दे�
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "{PRODUCT_NAME} को {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME} में अपने कैमरे का उपयोग करने की अनुमति दें।"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "{PRODUCT_NAME} को {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME} में अपने माइक्रोफ़ोन का उपयोग करने की अनुमति दें।"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "{PRODUCT_NAME} को अपने माइक्रोफ़ोन का इस्तेमाल करने की अनुमति दें। अपने ब्राउज़र के एड्रेस बार या सेटिंग्स में जाँच करें।"
 
@@ -3713,7 +3717,7 @@ msgstr "जिन सदस्यों के पास {readMessageHistoryPerm
 msgid "Allow mentions for this role"
 msgstr "इस रोल के लिए मेंशन की अनुमति दें"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:555
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
 msgid "Allow microphone"
 msgstr "माइक्रोफ़ोन का एक्सेस दें"
 
@@ -4777,7 +4781,7 @@ msgid "Audio preview"
 msgstr "ऑडियो प्रीव्यू"
 
 #. Voice settings modal title for microphone processing options.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:48
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Audio processing"
 msgstr "ऑडियो प्रोसेसिंग"
 
@@ -4987,8 +4991,8 @@ msgid "Auto-detect language"
 msgstr "भाषा अपने आप पहचानें"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
 msgid "Auto-set activity threshold"
 msgstr "गतिविधि थ्रेशोल्ड अपने आप सेट करें"
 
@@ -6069,7 +6073,7 @@ msgid "Built-in shortcuts"
 msgstr "बिल्ट-इन शॉर्टकट"
 
 #. Description for the standard noise suppression option, which uses the platform suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:16
 msgid "Built-in suppression from your browser or system."
 msgstr "आपके ब्राउज़र या सिस्टम का बिल्ट-इन नॉइज़ सप्रेशन।"
 
@@ -7841,7 +7845,7 @@ msgid "Clean link"
 msgstr "लिंक साफ़ करें"
 
 #. Description for the focused-voice option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:31
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:34
 msgid "Cleans up your mic for clear speech."
 msgstr "स्पष्ट बातचीत के लिए आपके माइक को साफ़ करता है।"
 
@@ -8985,7 +8989,7 @@ msgstr "कैमरा या वर्चुअल कैप्चर डि�
 msgid "Connect a display, then try again."
 msgstr "एक डिस्प्ले कनेक्ट करें, फिर दोबारा प्रयास करें।"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
 msgid "Connect a microphone and try again."
 msgstr "माइक्रोफ़ोन कनेक्ट करें और फिर से प्रयास करें।"
 
@@ -10672,8 +10676,8 @@ msgstr "कस्टम"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:39
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
 msgid "Custom"
@@ -10937,7 +10941,7 @@ msgid "Cut"
 msgstr "काटें"
 
 #. Description for the noise gate suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:34
 msgid "Cuts audio below a loudness threshold with minimal CPU usage."
 msgstr "बहुत कम CPU इस्तेमाल के साथ तय लाउडनेस थ्रेशोल्ड से नीचे का ऑडियो काट देता है।"
 
@@ -12757,7 +12761,7 @@ msgid "Download button"
 msgstr "डाउनलोड बटन"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
 msgid "Download desktop app"
 msgstr "डेस्कटॉप ऐप डाउनलोड करें"
 
@@ -13568,7 +13572,7 @@ msgid "Enable"
 msgstr "चालू करें"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:124
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
 msgid "Enable {permissionName} permission"
 msgstr "{permissionName} अनुमति चालू करें"
 
@@ -14220,7 +14224,7 @@ msgstr "पूरे सिस्टम का ऑडियो"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:310
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:189
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:192
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "एंट्रेंस साउंड"
@@ -14330,8 +14334,8 @@ msgstr "शाम का समय"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:173
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:60
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "यह आपके माइक्रोफ़ोन की आवाज़ को बराबर करता है ताकि आपकी आवाज़ बहुत धीमी न लगे।"
 
@@ -17360,7 +17364,7 @@ msgstr "मुझे कोई दूसरा तरीका चाहिए"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
 msgid "I understand"
 msgstr "मैं समझ गया/गई"
 
@@ -17792,7 +17796,7 @@ msgstr "चैनल"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "\"ऑपरेटिंग सिस्टम\" मोड में, ऊपर दी गई डिक्शनरी सिर्फ़ सलाह के तौर पर हैं। सपोर्ट होने पर {PRODUCT_NAME} ये भाषा टैग आपके OS स्पेलचेकर को भेजेगा। जिन टैग को वह नहीं पहचानता, उन्हें अनदेखा कर दिया जाता है।"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:307
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:322
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "ब्राउज़र में, पुश-टू-टॉक तभी काम करता है जब {PRODUCT_NAME} टैब फ़ोकस में हो। सिस्टम-वाइड पुश-टू-टॉक के लिए डेस्कटॉप ऐप इंस्टॉल करें।"
 
@@ -18083,7 +18087,7 @@ msgid "Input access was changed. Fully quit and restart {productName} so system-
 msgstr "इनपुट एक्सेस बदल दिया गया है। {productName} को पूरी तरह से बंद करें और फिर से शुरू करें ताकि सिस्टम-वाइड शॉर्टकट इसका उपयोग कर सकें।"
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:177
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 msgid "Input and output"
 msgstr "इनपुट और आउटपुट"
 
@@ -18950,7 +18954,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "इन्हें सुरक्षित रखें। फिर से जनरेट करने पर मौजूदा इंटिग्रेशन टूट जाएँगे।"
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:79
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
 msgid "Keep transmitting briefly after release."
 msgstr "रिलीज़ करने के बाद भी थोड़ी देर तक ट्रांसमिट करते रहें।"
 
@@ -19417,7 +19421,7 @@ msgid "Light theme"
 msgstr "लाइट थीम"
 
 #. Description for the Speex noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:33
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:38
 msgid "Lightweight classic filter that works on any device."
 msgstr "हल्का क्लासिक फ़िल्टर, किसी भी डिवाइस पर काम करता है।"
 
@@ -19782,7 +19786,7 @@ msgid "Look and feel"
 msgstr "दिखावट और अनुभव"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "लगता है आप {0} का उपयोग कर रहे हैं। {PRODUCT_NAME} की प्रोसेसिंग को इसके ऊपर रखने से पंपिंग या डिस्टॉर्शन हो सकता है। डायरेक्ट इनपुट आपके ऑडियो को बिना किसी बदलाव के पास करता है।"
 
@@ -21035,7 +21039,7 @@ msgstr "माइक"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:185
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "माइक टेस्ट"
@@ -22114,12 +22118,12 @@ msgid "Networking and performance"
 msgstr "नेटवर्किंग और परफ़ॉर्मेंस"
 
 #. Description for the enhanced (DeepFilterNet3) noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:12
 msgid "Neural filter that removes most background noise."
 msgstr "बैकग्राउंड का ज़्यादातर शोर हटाने वाला न्यूरल फ़िल्टर।"
 
 #. Description for the RNNoise noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:42
 msgid "Neural filter, full audio bandwidth."
 msgstr "न्यूरल फ़िल्टर, पूर्ण ऑडियो बैंडविड्थ।"
 
@@ -22690,7 +22694,7 @@ msgstr "कोई मिलान नहीं मिला"
 msgid "No mentions yet"
 msgstr "अभी तक कोई मेंशन नहीं है"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:525
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
 msgid "No microphone found"
 msgstr "कोई माइक्रोफ़ोन नहीं मिला"
 
@@ -22985,7 +22989,7 @@ msgid "Noise"
 msgstr "शोर"
 
 #. Noise suppression option label for the noise gate backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:24
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
 msgctxt "noise-suppression-option"
 msgid "Noise gate"
 msgstr "नॉइज़ गेट"
@@ -23022,7 +23026,7 @@ msgid "None"
 msgstr "कोई नहीं"
 
 #. Noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
 msgctxt "noise-suppression-option"
 msgid "None"
 msgstr "कोई नहीं"
@@ -25990,18 +25994,18 @@ msgid "Push to talk key"
 msgstr "पुश टू टॉक कुंजी"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:346
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
 #: src/features/voice/components/VoiceSettingsMenus.tsx:419
 msgid "Push-to-talk"
 msgstr "पुश-टू-टॉक"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
 msgid "Push-to-talk (limited)"
 msgstr "पुश-टू-टॉक (सीमित)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:676
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:701
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "सीधा इनपुट मोड में पुश-टू-टॉक को अनदेखा किया जाता है। इसे इस्तेमाल करने के लिए फ़ोकस्ड वॉइस या कस्टम पर स्विच करें।"
 
@@ -26011,12 +26015,12 @@ msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "पुश-टू-टॉक चालू है। बोलने के लिए {pushToTalkHint} दबाए रखें।"
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:132
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "{permissionName} सक्षम होने तक पुश-टू-टॉक केवल तभी काम करता है जब {productName} फ़ोकस में हो। अनुमति बदलने के बाद, {productName} को पूरी तरह से बंद करें और पुनरारंभ करें ताकि सिस्टम-व्यापी हॉटकी इसका उपयोग कर सकें।"
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:128
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "पुश-टू-टॉक तभी काम करता है जब ब्राउज़र टैब फ़ोकस में हो।"
 
@@ -26301,7 +26305,7 @@ msgid "Recommended"
 msgstr "सुझाया गया"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:83
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "सुझाया गया। स्पष्ट आवाज़ के लिए आपके माइक ऑडियो को साफ़ करता है।"
 
@@ -26561,7 +26565,7 @@ msgstr "रिलेटिव"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:75
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "रिलीज़ में देरी"
@@ -29287,7 +29291,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "वह खाता चुनें जिससे आप अपने नए डिवाइस पर साइन इन करना चाहते हैं।"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
 msgid "Select voice processing mode"
 msgstr "वॉइस प्रोसेसिंग मोड चुनें"
 
@@ -29607,22 +29611,22 @@ msgid "Sending messages is disabled in this community"
 msgstr "इस कम्युनिटी में मैसेज भेजना बंद है"
 
 #. Description for the stereo microphone switch in the voice settings.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:54
 msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
 msgstr "स्टीरियो माइक्रोफ़ोन के दोनों चैनल भेजता है। इसके लिए सभी प्रोसेसिंग बंद और 128 kbps या उससे अधिक का चैनल चाहिए।"
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:35
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38
 msgid "Sends raw mic audio with no processing."
 msgstr "बिना किसी प्रोसेसिंग के रॉ माइक ऑडियो भेजता है।"
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:87
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "आपका ऑडियो बिना किसी बदलाव के भेजता है। अगर आप बाहरी ऑडियो सॉफ़्टवेयर का उपयोग कर रहे हैं तो यह सबसे अच्छा है।"
 
 #. Description for the noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:25
 msgid "Sends your microphone audio with no suppression."
 msgstr "आपके माइक्रोफ़ोन का ऑडियो बिना किसी सप्रेशन के भेजता है।"
 
@@ -30136,7 +30140,7 @@ msgstr "शॉर्टकोड"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:376
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -31932,7 +31936,7 @@ msgid "Step 4"
 msgstr "चरण 4"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:45
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
 msgid "Stereo microphone"
 msgstr "स्टीरियो माइक्रोफ़ोन"
 
@@ -32204,7 +32208,7 @@ msgid "Stopped the member from hearing others in this community"
 msgstr "सदस्य को इस कम्युनिटी में दूसरों को सुनने से रोक दिया"
 
 #. Description for the echo cancellation toggle in the custom voice processing settings.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:56
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:59
 msgid "Stops your speakers from looping back into your mic."
 msgstr "आपके स्पीकर को आपके माइक में वापस लूप होने से रोकता है।"
 
@@ -32334,7 +32338,7 @@ msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sh
 msgstr "मध्यम CPU लागत पर बढ़िया क्वालिटी। स्क्रीन शेयरिंग के लिए अच्छा Chromium फ़ॉलबैक।"
 
 #. Description for the GTCRN noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:46
 msgid "Strongest neural filter for speech. Limits audio to the speech range."
 msgstr "स्पीच के लिए सबसे मज़बूत न्यूरल फ़िल्टर। ऑडियो को स्पीच रेंज तक सीमित करता है।"
 
@@ -32539,7 +32543,7 @@ msgstr "आरामदायक लेआउट पर स्विच कर�
 msgid "Switch to dense layout"
 msgstr "सघन लेआउट पर स्विच करें"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
 msgid "Switch to direct input"
 msgstr "सीधे इनपुट पर स्विच करें"
 
@@ -35126,7 +35130,7 @@ msgid "TTS speed"
 msgstr "TTS स्पीड"
 
 #. Description for the custom option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:44
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Tune the processing yourself."
 msgstr "प्रोसेसिंग को खुद ट्यून करें।"
 
@@ -37106,6 +37110,10 @@ msgstr "OS के सूचना केंद्र का उपयोग क�
 msgid "Uses:"
 msgstr "उपयोग:"
 
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:102
+msgid "Using {effectiveLabel} until {requestedLabel} is ready."
+msgstr "{effectiveLabel} तैयार होने तक {requestedLabel} का उपयोग किया जा रहा है।"
+
 #. Developer nagbar status: banner follows real account state.
 #: src/features/devtools/components/NagbarControls.ts:106
 msgid "Using actual account state"
@@ -38072,8 +38080,8 @@ msgid "Voice participants"
 msgstr "वॉइस प्रतिभागी"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:52
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "वॉइस प्रोसेसिंग"
 
@@ -38118,6 +38126,10 @@ msgstr "वॉइस अनडीफ़ेन"
 msgid "Voice unmute"
 msgstr "वॉइस अनम्यूट"
 
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+msgid "Voice uses your system output device in this browser. Change it in your system settings."
+msgstr "यह आवाज़ इस ब्राउज़र में आपके सिस्टम आउटपुट डिवाइस का उपयोग करती है। इसे अपनी सिस्टम सेटिंग में बदलें।"
+
 #. Billing invoice status for an invoice canceled before payment.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:29
 msgid "Void"
@@ -38128,7 +38140,7 @@ msgstr "रद्द किया गया"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:378
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:181
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -38801,7 +38813,7 @@ msgstr "कौन सी बातचीत"
 msgid "Which rule was broken?"
 msgstr "कौन सा नियम तोड़ा गया?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:355
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:370
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "जब तक पुश-टू-टॉक चालू है, आपका शॉर्टकट आपके माइक्रोफ़ोन को नियंत्रित करता है, इसलिए म्यूट बटन अक्षम है।"
 

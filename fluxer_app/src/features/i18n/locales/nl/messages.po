@@ -1753,7 +1753,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} heeft cameratoegang nodig om je apparaten weer te geven."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:138
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:141
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} heeft microfoontoegang nodig om je apparaten weer te geven."
 
@@ -1865,6 +1865,10 @@ msgstr "{renderedMemberCount} {memberCount, plural, one {lid} other {leden}}"
 #: src/features/channel/components/InviteEmbed.tsx:83
 msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} online"
+
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:103
+msgid "{requestedLabel} could not start. Using {effectiveLabel} instead."
+msgstr "{requestedLabel} kon niet starten. In plaats daarvan wordt {effectiveLabel} gebruikt."
 
 #. Compact stream info pill label. {resolution} is a technical token such as 1080p or 4K. {fps} is the frame rate. FPS is a technical token.
 #: src/features/voice/components/StreamInfoPill.tsx:14
@@ -2869,7 +2873,7 @@ msgid "Activity sharing"
 msgstr "Activiteit delen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Activiteitsdrempel"
@@ -3337,7 +3341,7 @@ msgid "Address"
 msgstr "Adres"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Pas elke instelling zelf aan: ruisonderdrukking, echo-onderdrukking en versterking."
 
@@ -3606,11 +3610,11 @@ msgstr "Sta {everyoneMention} en {hereMention} toe"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Sta {PRODUCT_NAME} toe om je camera te gebruiken in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Geef {PRODUCT_NAME} toegang tot je microfoon via {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Sta {PRODUCT_NAME} toe om je microfoon te gebruiken. Controleer de adresbalk of instellingen van je browser."
 
@@ -3713,7 +3717,7 @@ msgstr "Sta leden zonder de machtiging \"{readMessageHistoryPermissionLabel}\" t
 msgid "Allow mentions for this role"
 msgstr "Vermeldingen voor deze rol toestaan"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:555
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
 msgid "Allow microphone"
 msgstr "Microfoontoegang toestaan"
 
@@ -4777,7 +4781,7 @@ msgid "Audio preview"
 msgstr "Audiovoorbeeld"
 
 #. Voice settings modal title for microphone processing options.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:48
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Audio processing"
 msgstr "Audioverwerking"
 
@@ -4987,8 +4991,8 @@ msgid "Auto-detect language"
 msgstr "Taal automatisch detecteren"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
 msgid "Auto-set activity threshold"
 msgstr "Activiteitsdrempel automatisch instellen"
 
@@ -6069,7 +6073,7 @@ msgid "Built-in shortcuts"
 msgstr "Ingebouwde sneltoetsen"
 
 #. Description for the standard noise suppression option, which uses the platform suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:16
 msgid "Built-in suppression from your browser or system."
 msgstr "Ingebouwde ruisonderdrukking van je browser of systeem."
 
@@ -7841,7 +7845,7 @@ msgid "Clean link"
 msgstr "Link opschonen"
 
 #. Description for the focused-voice option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:31
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:34
 msgid "Cleans up your mic for clear speech."
 msgstr "Maakt je microfoongeluid helderder zodat je goed verstaanbaar bent."
 
@@ -8985,7 +8989,7 @@ msgstr "Sluit een camera of virtueel opnameapparaat aan en probeer het opnieuw."
 msgid "Connect a display, then try again."
 msgstr "Sluit een beeldscherm aan en probeer het opnieuw."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
 msgid "Connect a microphone and try again."
 msgstr "Sluit een microfoon aan en probeer het opnieuw."
 
@@ -10672,8 +10676,8 @@ msgstr "Aangepast"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:39
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
 msgid "Custom"
@@ -10937,7 +10941,7 @@ msgid "Cut"
 msgstr "Knippen"
 
 #. Description for the noise gate suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:34
 msgid "Cuts audio below a loudness threshold with minimal CPU usage."
 msgstr "Dempt geluid onder een volumedrempel met minimaal CPU-gebruik."
 
@@ -12757,7 +12761,7 @@ msgid "Download button"
 msgstr "Downloadknop"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
 msgid "Download desktop app"
 msgstr "Desktopapp downloaden"
 
@@ -13568,7 +13572,7 @@ msgid "Enable"
 msgstr "Inschakelen"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:124
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
 msgid "Enable {permissionName} permission"
 msgstr "Machtiging {permissionName} inschakelen"
 
@@ -14220,7 +14224,7 @@ msgstr "Volledige systeemaudio"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:310
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:189
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:192
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Binnenkomstgeluid"
@@ -14330,8 +14334,8 @@ msgstr "Avond"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:173
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:60
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Maakt je microfoonvolume gelijkmatiger zodat je niet te zacht klinkt."
 
@@ -17360,7 +17364,7 @@ msgstr "Ik heb een andere manier nodig"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
 msgid "I understand"
 msgstr "Ik begrijp het"
 
@@ -17792,7 +17796,7 @@ msgstr "In"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "In de modus \"Besturingssysteem\" zijn de hierboven vermelde woordenboeken alleen bedoeld als suggestie. {PRODUCT_NAME} geeft deze taaltags door aan de spellingcontrole van je besturingssysteem, als dat wordt ondersteund. Onbekende tags worden genegeerd."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:307
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:322
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "In een browser werkt push-to-talk alleen als het tabblad van {PRODUCT_NAME} actief is. Installeer de desktopapp voor systeembrede push-to-talk."
 
@@ -18083,7 +18087,7 @@ msgid "Input access was changed. Fully quit and restart {productName} so system-
 msgstr "De invoertoegang is gewijzigd. Sluit {productName} volledig af en start de app opnieuw op, zodat systeembrede sneltoetsen deze toegang kunnen gebruiken."
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:177
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 msgid "Input and output"
 msgstr "Invoer en uitvoer"
 
@@ -18950,7 +18954,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Bewaar deze goed. Als je ze opnieuw genereert, werken bestaande integraties niet meer."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:79
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
 msgid "Keep transmitting briefly after release."
 msgstr "Blijf kort uitzenden nadat de knop is losgelaten."
 
@@ -19417,7 +19421,7 @@ msgid "Light theme"
 msgstr "Licht thema"
 
 #. Description for the Speex noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:33
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:38
 msgid "Lightweight classic filter that works on any device."
 msgstr "Lichtgewicht klassiek filter dat op elk apparaat werkt."
 
@@ -19782,7 +19786,7 @@ msgid "Look and feel"
 msgstr "Uiterlijk"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Het lijkt erop dat je {0} gebruikt. Als je daar de audioverwerking van {PRODUCT_NAME} bovenop toepast, kan dit pompend geluid of vervorming veroorzaken. Directe invoer stuurt je audio onbewerkt door."
 
@@ -21035,7 +21039,7 @@ msgstr "Microfoon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:185
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Microfoontest"
@@ -22114,12 +22118,12 @@ msgid "Networking and performance"
 msgstr "Netwerk en prestaties"
 
 #. Description for the enhanced (DeepFilterNet3) noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:12
 msgid "Neural filter that removes most background noise."
 msgstr "Neuraal filter dat de meeste achtergrondruis verwijdert."
 
 #. Description for the RNNoise noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:42
 msgid "Neural filter, full audio bandwidth."
 msgstr "Neuraal filter met het volledige frequentiebereik voor audio."
 
@@ -22690,7 +22694,7 @@ msgstr "Geen resultaten gevonden"
 msgid "No mentions yet"
 msgstr "Nog geen vermeldingen"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:525
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
 msgid "No microphone found"
 msgstr "Geen microfoon gevonden"
 
@@ -22985,7 +22989,7 @@ msgid "Noise"
 msgstr "Ruis"
 
 #. Noise suppression option label for the noise gate backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:24
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
 msgctxt "noise-suppression-option"
 msgid "Noise gate"
 msgstr "Ruispoort"
@@ -23022,7 +23026,7 @@ msgid "None"
 msgstr "Geen"
 
 #. Noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
 msgctxt "noise-suppression-option"
 msgid "None"
 msgstr "Geen"
@@ -25990,18 +25994,18 @@ msgid "Push to talk key"
 msgstr "Push-to-talk-toets"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:346
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
 #: src/features/voice/components/VoiceSettingsMenus.tsx:419
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
 msgid "Push-to-talk (limited)"
 msgstr "Push-to-talk (beperkt)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:676
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:701
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Push-to-talk wordt genegeerd bij directe invoer. Schakel over naar gerichte spraak of aangepast om het te gebruiken."
 
@@ -26011,12 +26015,12 @@ msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Push-to-talk is ingeschakeld. Houd {pushToTalkHint} ingedrukt om te spreken."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:132
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "Push-to-talk werkt alleen als {productName} actief is totdat {permissionName} is ingeschakeld. Sluit {productName} na het wijzigen van de toestemming volledig af en start de app opnieuw op, zodat systeembrede sneltoetsen kunnen werken."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:128
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Push-to-talk werkt alleen als het browsertabblad is geselecteerd."
 
@@ -26301,7 +26305,7 @@ msgid "Recommended"
 msgstr "Aanbevolen"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:83
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Aanbevolen. Verbetert je microfoongeluid voor duidelijke spraak."
 
@@ -26561,7 +26565,7 @@ msgstr "Relatief"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:75
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Vertraging bij loslaten"
@@ -29287,7 +29291,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Selecteer het account waarmee je wilt inloggen op je nieuwe apparaat."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
 msgid "Select voice processing mode"
 msgstr "Selecteer spraakverwerkingsmodus"
 
@@ -29607,22 +29611,22 @@ msgid "Sending messages is disabled in this community"
 msgstr "Berichten versturen is uitgeschakeld in deze community"
 
 #. Description for the stereo microphone switch in the voice settings.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:54
 msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
 msgstr "Verstuurt beide kanalen van een stereomicrofoon. Vereist dat alle verwerking is uitgeschakeld en een kanaal van 128 kbps of hoger."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:35
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38
 msgid "Sends raw mic audio with no processing."
 msgstr "Verstuurt onbewerkte microfoonaudio zonder verwerking."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:87
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Verstuurt je audio onbewerkt. Het beste als je externe audiosoftware gebruikt."
 
 #. Description for the noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:25
 msgid "Sends your microphone audio with no suppression."
 msgstr "Verstuurt je microfoonaudio zonder ruisonderdrukking."
 
@@ -30136,7 +30140,7 @@ msgstr "Korte codes"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:376
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -31932,7 +31936,7 @@ msgid "Step 4"
 msgstr "Stap 4"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:45
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
 msgid "Stereo microphone"
 msgstr "Stereomicrofoon"
 
@@ -32204,7 +32208,7 @@ msgid "Stopped the member from hearing others in this community"
 msgstr "Ervoor gezorgd dat het lid anderen in deze community niet meer hoort"
 
 #. Description for the echo cancellation toggle in the custom voice processing settings.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:56
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:59
 msgid "Stops your speakers from looping back into your mic."
 msgstr "Voorkomt dat het geluid uit je luidsprekers weer door je microfoon wordt opgepikt."
 
@@ -32334,7 +32338,7 @@ msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sh
 msgstr "Goede kwaliteit bij gemiddeld CPU-gebruik. Een goed alternatief voor schermdelen in Chromium."
 
 #. Description for the GTCRN noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:46
 msgid "Strongest neural filter for speech. Limits audio to the speech range."
 msgstr "Sterkste neurale filter voor spraak, beperkt audio tot het spraakbereik."
 
@@ -32539,7 +32543,7 @@ msgstr "Overschakelen naar comfortabele lay-out"
 msgid "Switch to dense layout"
 msgstr "Overschakelen naar compacte lay-out"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
 msgid "Switch to direct input"
 msgstr "Overschakelen naar directe invoer"
 
@@ -35126,7 +35130,7 @@ msgid "TTS speed"
 msgstr "TTS-snelheid"
 
 #. Description for the custom option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:44
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Tune the processing yourself."
 msgstr "Pas de verwerking zelf aan."
 
@@ -37106,6 +37110,10 @@ msgstr "Gebruikt het meldingencentrum van het besturingssysteem. Klik voor inste
 msgid "Uses:"
 msgstr "Aantal keren gebruikt:"
 
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:102
+msgid "Using {effectiveLabel} until {requestedLabel} is ready."
+msgstr "{effectiveLabel} wordt gebruikt totdat {requestedLabel} klaar is."
+
 #. Developer nagbar status: banner follows real account state.
 #: src/features/devtools/components/NagbarControls.ts:106
 msgid "Using actual account state"
@@ -38072,8 +38080,8 @@ msgid "Voice participants"
 msgstr "Deelnemers spraakoproep"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:52
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Spraakverwerking"
 
@@ -38118,6 +38126,10 @@ msgstr "Geluid inschakelen"
 msgid "Voice unmute"
 msgstr "Microfoon inschakelen"
 
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+msgid "Voice uses your system output device in this browser. Change it in your system settings."
+msgstr "Spraak gebruikt in deze browser het uitvoerapparaat van je systeem. Wijzig dit in je systeeminstellingen."
+
 #. Billing invoice status for an invoice canceled before payment.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:29
 msgid "Void"
@@ -38128,7 +38140,7 @@ msgstr "Ongeldig"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:378
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:181
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -38801,7 +38813,7 @@ msgstr "Welke gesprekken"
 msgid "Which rule was broken?"
 msgstr "Welke regel is overtreden?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:355
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:370
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Zolang push-to-talk is ingeschakeld, bedient je sneltoets je microfoon. Daarom is de knop om te dempen uitgeschakeld."
 

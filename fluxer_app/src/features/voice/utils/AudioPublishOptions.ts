@@ -33,7 +33,7 @@ export function buildMicrophonePublishOptions(
 		},
 		dtx: false,
 		red: true,
-		forceStereo: sendsStereoMicrophone(maxBitrate, stereoCapture) ? undefined : false,
+		forceStereo: sendsStereoMicrophone(maxBitrate, stereoCapture),
 	};
 }
 

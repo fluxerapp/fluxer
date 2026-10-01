@@ -33,11 +33,13 @@ import {useMediaPermission} from '@app/features/user/components/modals/tabs/hook
 import styles from '@app/features/user/components/modals/tabs/UserVoiceTab.module.css';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {supportsVoiceOutputDeviceSelection} from '@app/features/voice/engine/VoiceSharedAudioContext';
 import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	type ExternalAudioProcessorMatch,
 	findExternalProcessorForDevice,
 } from '@app/features/voice/utils/ExternalAudioProcessor';
+import {prefetchDeepFilterAssets} from '@app/features/voice/utils/noise_suppression/DeepFilter';
 import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import {
 	getNoiseSuppressionChoiceValues,
@@ -48,6 +50,7 @@ import {
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChoices';
 import {
 	getNoiseSuppressionChoiceLabel,
+	getNoiseSuppressionFallbackMessage,
 	STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR,
 	STEREO_MICROPHONE_DESCRIPTOR,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionLabels';
@@ -245,7 +248,10 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 	const defaultPttCombo = getDefaultKeybind('voice_push_to_talk', i18n);
 	const inputHasLabels = hasDeviceLabels(inputDevices);
 	const effectiveInputDeviceId = resolveEffectiveDeviceId(inputDeviceId, inputDevices) ?? 'default';
-	const effectiveOutputDeviceId = resolveEffectiveDeviceId(outputDeviceId, outputDevices) ?? 'default';
+	const canSelectOutputDevice = supportsVoiceOutputDeviceSelection();
+	const effectiveOutputDeviceId = canSelectOutputDevice
+		? (resolveEffectiveDeviceId(outputDeviceId, outputDevices) ?? 'default')
+		: 'default';
 	const activeInputDevice = inputDevices.find((d) => d.deviceId === effectiveInputDeviceId) ?? null;
 	const activeInputLabel = activeInputDevice?.label || null;
 	const voiceProcessingMode = voiceSettings.getVoiceProcessingModeForDeviceLabel(activeInputLabel);
@@ -256,6 +262,9 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 	useEffect(() => {
 		if (pttReleaseDelay !== selectedPttReleaseDelay) Keybind.setPushToTalkReleaseDelay(selectedPttReleaseDelay);
 	}, [pttReleaseDelay, selectedPttReleaseDelay]);
+	useEffect(() => {
+		prefetchDeepFilterAssets();
+	}, [voiceProcessingMode]);
 	const handleInputDeviceChange = (value: string) => {
 		VoiceSettingsCommands.update({inputDeviceId: value});
 	};
@@ -267,8 +276,13 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 		[deviceState, i18n.locale],
 	);
 	const outputDeviceOptions = useMemo(
-		() => buildSettingsDeviceOptions(deviceState, 'audiooutput', i18n),
-		[deviceState, i18n.locale],
+		() =>
+			buildSettingsDeviceOptions(
+				canSelectOutputDevice ? deviceState : {...deviceState, outputDevices: []},
+				'audiooutput',
+				i18n,
+			),
+		[canSelectOutputDevice, deviceState, i18n.locale],
 	);
 	const resetSliderLabel = i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR);
 	const profileOptions: Array<RadioOption<VoiceProcessingMode>> = [
@@ -289,6 +303,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 		},
 	];
 	const noiseSuppressionChoice = getSelectedNoiseSuppressionChoice();
+	const noiseSuppressionFallbackMessage = getNoiseSuppressionFallbackMessage(i18n);
 	const noiseSuppressionOptions: Array<ComboboxOption<VoiceNoiseSuppressionBackend>> =
 		getNoiseSuppressionChoiceValues().map((backend) => ({
 			value: backend,
@@ -496,6 +511,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			)}
 			<CompactComboboxRow<VoiceNoiseSuppressionBackend>
 				label={i18n._(VOICE_NOISE_SUPPRESSION_DESCRIPTOR)}
+				description={noiseSuppressionFallbackMessage}
 				value={noiseSuppressionChoice}
 				options={noiseSuppressionOptions}
 				onChange={setNoiseSuppressionChoice}
@@ -569,8 +585,14 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 				/>
 				<CompactComboboxRow
 					label={i18n._(VOICE_OUTPUT_DEVICE_DESCRIPTOR)}
+					description={
+						!canSelectOutputDevice ? (
+							<Trans>Voice uses your system output device in this browser. Change it in your system settings.</Trans>
+						) : null
+					}
 					value={effectiveOutputDeviceId}
 					options={outputDeviceOptions}
+					disabled={!canSelectOutputDevice}
 					onChange={(value) => VoiceSettingsCommands.update({outputDeviceId: value})}
 					controlWidth="wide"
 					menuMinWidth={280}
@@ -660,6 +682,9 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							aria-label={i18n._(SELECT_VOICE_PROCESSING_DESCRIPTOR)}
 							data-flx="user.voice-tab.radio-group.voice-processing-mode-change"
 						/>
+						{voiceProcessingMode === 'voice' && noiseSuppressionFallbackMessage && (
+							<p className={styles.pttSettingDescription}>{noiseSuppressionFallbackMessage}</p>
+						)}
 						{voiceProcessingMode === 'voice' && (
 							<div className={styles.profileSubSection} data-flx="user.voice-tab.profile-sub-section">
 								{renderPttControls()}

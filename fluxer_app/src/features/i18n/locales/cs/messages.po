@@ -1753,7 +1753,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "Aplikace {productName} potřebuje přístup ke kameře, aby mohla zobrazit vaše zařízení."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:138
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:141
 msgid "{productName} needs microphone access to list your devices."
 msgstr "Aplikace {productName} potřebuje přístup k mikrofonu, aby mohla zobrazit vaše zařízení."
 
@@ -1865,6 +1865,10 @@ msgstr "{renderedMemberCount} {memberCount, plural, one {člen} few {členové} 
 #: src/features/channel/components/InviteEmbed.tsx:83
 msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} online"
+
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:103
+msgid "{requestedLabel} could not start. Using {effectiveLabel} instead."
+msgstr "{requestedLabel} se nemohl spustit. Používá se místo něj {effectiveLabel}."
 
 #. Compact stream info pill label. {resolution} is a technical token such as 1080p or 4K. {fps} is the frame rate. FPS is a technical token.
 #: src/features/voice/components/StreamInfoPill.tsx:14
@@ -2869,7 +2873,7 @@ msgid "Activity sharing"
 msgstr "Sdílení aktivit"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:473
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Práh aktivity"
@@ -3337,7 +3341,7 @@ msgid "Address"
 msgstr "Adresa"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Upravte si každé nastavení sami: potlačení šumu, potlačení ozvěny a zesílení."
 
@@ -3606,11 +3610,11 @@ msgstr "Povolit zmínky {everyoneMention} a {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Povolte aplikaci {PRODUCT_NAME} přístup k vaší kameře v {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Povolte aplikaci {PRODUCT_NAME} přístup k mikrofonu v: {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Povolte aplikaci {PRODUCT_NAME} přístup k mikrofonu. Zkontrolujte adresní řádek nebo nastavení prohlížeče."
 
@@ -3713,7 +3717,7 @@ msgstr "Povolit členům bez oprávnění {readMessageHistoryPermissionLabel} zo
 msgid "Allow mentions for this role"
 msgstr "Povolit zmínky pro tuto roli"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:555
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
 msgid "Allow microphone"
 msgstr "Povolit mikrofon"
 
@@ -4777,7 +4781,7 @@ msgid "Audio preview"
 msgstr "Náhled zvuku"
 
 #. Voice settings modal title for microphone processing options.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:48
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:51
 msgid "Audio processing"
 msgstr "Zpracování zvuku"
 
@@ -4987,8 +4991,8 @@ msgid "Auto-detect language"
 msgstr "Automaticky rozpoznat jazyk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:460
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
 msgid "Auto-set activity threshold"
 msgstr "Automaticky nastavit práh aktivity"
 
@@ -6069,7 +6073,7 @@ msgid "Built-in shortcuts"
 msgstr "Vestavěné zkratky"
 
 #. Description for the standard noise suppression option, which uses the platform suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:11
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:16
 msgid "Built-in suppression from your browser or system."
 msgstr "Vestavěné potlačení šumu v prohlížeči nebo systému."
 
@@ -7841,7 +7845,7 @@ msgid "Clean link"
 msgstr "Vyčistit odkaz"
 
 #. Description for the focused-voice option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:31
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:34
 msgid "Cleans up your mic for clear speech."
 msgstr "Vyčistí zvuk mikrofonu, aby vám bylo dobře rozumět."
 
@@ -8985,7 +8989,7 @@ msgstr "Připojte kameru nebo virtuální záznamové zařízení a zkuste to zn
 msgid "Connect a display, then try again."
 msgstr "Připojte displej a zkuste to znovu."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
 msgid "Connect a microphone and try again."
 msgstr "Připojte mikrofon a zkuste to znovu."
 
@@ -10672,8 +10676,8 @@ msgstr "Vlastní zdroj"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:91
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:39
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
 msgid "Custom"
@@ -10937,7 +10941,7 @@ msgid "Cut"
 msgstr "Vyjmout"
 
 #. Description for the noise gate suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:34
 msgid "Cuts audio below a loudness threshold with minimal CPU usage."
 msgstr "Potlačuje zvuk pod zvolenou úrovní hlasitosti s minimální zátěží procesoru."
 
@@ -12757,7 +12761,7 @@ msgid "Download button"
 msgstr "Tlačítko pro stažení"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
 msgid "Download desktop app"
 msgstr "Stáhnout desktopovou aplikaci"
 
@@ -13568,7 +13572,7 @@ msgid "Enable"
 msgstr "Zapnout"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:124
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
 msgid "Enable {permissionName} permission"
 msgstr "Povolit oprávnění {permissionName}"
 
@@ -14220,7 +14224,7 @@ msgstr "Veškerý zvuk systému"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:310
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:189
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:192
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Zvuk při vstupu"
@@ -14330,8 +14334,8 @@ msgstr "Večer"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:173
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:60
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Vyrovnává hlasitost mikrofonu, abyste nebyli příliš potichu."
 
@@ -17360,7 +17364,7 @@ msgstr "Potřebuji jiný způsob"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
 msgid "I understand"
 msgstr "Rozumím"
 
@@ -17792,7 +17796,7 @@ msgstr "V"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "V režimu „Operační systém“ slouží výše uvedené slovníky pouze jako doporučení. Aplikace {PRODUCT_NAME} předá tyto jazykové značky systémové kontrole pravopisu, pokud to podporuje. Značky, které nerozpozná, ignoruje."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:307
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:322
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "V prohlížeči funguje funkce Stisknutím mluvit pouze tehdy, když je karta {PRODUCT_NAME} aktivní. Pro použití této funkce v celém systému si nainstalujte desktopovou aplikaci."
 
@@ -18083,7 +18087,7 @@ msgid "Input access was changed. Fully quit and restart {productName} so system-
 msgstr "Přístup ke vstupním zařízením byl změněn. Aplikaci {productName} úplně ukončete a znovu spusťte, aby globální zkratky mohly toto oprávnění využít."
 
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:177
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
 msgid "Input and output"
 msgstr "Vstup a výstup"
 
@@ -18950,7 +18954,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Uchovávejte je v bezpečí. Opětovné vygenerování přeruší stávající integrace."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:79
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
 msgid "Keep transmitting briefly after release."
 msgstr "Udržovat vysílání krátce po uvolnění tlačítka."
 
@@ -19417,7 +19421,7 @@ msgid "Light theme"
 msgstr "Světlý motiv"
 
 #. Description for the Speex noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:33
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:38
 msgid "Lightweight classic filter that works on any device."
 msgstr "Nenáročný klasický filtr fungující na jakémkoli zařízení."
 
@@ -19782,7 +19786,7 @@ msgid "Look and feel"
 msgstr "Vzhled a ovládání"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Zdá se, že používáte {0}. Přidání dalšího zpracování zvuku v aplikaci {PRODUCT_NAME} může způsobit kolísání hlasitosti nebo zkreslení. Přímý vstup propouští zvuk beze změn."
 
@@ -21035,7 +21039,7 @@ msgstr "Mikrofon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:185
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Test mikrofonu"
@@ -22114,12 +22118,12 @@ msgid "Networking and performance"
 msgstr "Síť a výkon"
 
 #. Description for the enhanced (DeepFilterNet3) noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:7
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:12
 msgid "Neural filter that removes most background noise."
 msgstr "Neuronový filtr, který odstraní většinu okolního hluku."
 
 #. Description for the RNNoise noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:37
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:42
 msgid "Neural filter, full audio bandwidth."
 msgstr "Neuronový filtr s plným zvukovým pásmem."
 
@@ -22690,7 +22694,7 @@ msgstr "Nic nebylo nalezeno"
 msgid "No mentions yet"
 msgstr "Zatím žádné zmínky"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:525
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
 msgid "No microphone found"
 msgstr "Mikrofon nenalezen"
 
@@ -22985,7 +22989,7 @@ msgid "Noise"
 msgstr "Hluk"
 
 #. Noise suppression option label for the noise gate backend. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:24
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:29
 msgctxt "noise-suppression-option"
 msgid "Noise gate"
 msgstr "Šumová brána"
@@ -23022,7 +23026,7 @@ msgid "None"
 msgstr "Žádné"
 
 #. Noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:15
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
 msgctxt "noise-suppression-option"
 msgid "None"
 msgstr "Žádné"
@@ -25990,18 +25994,18 @@ msgid "Push to talk key"
 msgstr "Klávesa pro režim Stisknutím mluvit"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:112
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:346
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
 #: src/features/voice/components/VoiceSettingsMenus.tsx:419
 msgid "Push-to-talk"
 msgstr "Stisknutím mluvit"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
 msgid "Push-to-talk (limited)"
 msgstr "Stisknutím mluvit (omezená funkčnost)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:676
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:701
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "V režimu Přímý vstup se nastavení Stisknutím mluvit ignoruje. Chcete-li ho použít, přepněte na režim Hlas v popředí nebo Vlastní."
 
@@ -26011,12 +26015,12 @@ msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Režim Stisknutím mluvit je zapnutý. Chcete-li mluvit, podržte {pushToTalkHint}."
 
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:132
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "Dokud nepovolíte oprávnění {permissionName}, funguje režim Stisknutím mluvit jen při aktivním okně aplikace {productName}. Po změně oprávnění aplikaci {productName} zcela ukončete a znovu spusťte, aby oprávnění mohly využívat systémové klávesové zkratky."
 
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:128
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Režim Stisknutím mluvit funguje pouze při aktivní kartě prohlížeče."
 
@@ -26301,7 +26305,7 @@ msgid "Recommended"
 msgstr "Doporučeno"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:83
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Doporučeno. Upravuje zvuk mikrofonu pro srozumitelnou řeč."
 
@@ -26561,7 +26565,7 @@ msgstr "Relativní"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:75
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Prodleva uvolnění"
@@ -29287,7 +29291,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Vyberte účet, ke kterému se chcete přihlásit na novém zařízení."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
 msgid "Select voice processing mode"
 msgstr "Vyberte režim zpracování hlasu"
 
@@ -29607,22 +29611,22 @@ msgid "Sending messages is disabled in this community"
 msgstr "V této komunitě je odesílání zpráv zakázáno"
 
 #. Description for the stereo microphone switch in the voice settings.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:54
 msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
 msgstr "Odesílá oba kanály stereofonního mikrofonu. Vyžaduje vypnuté veškeré zpracování a kanál s rychlostí 128 kb/s nebo vyšší."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:35
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38
 msgid "Sends raw mic audio with no processing."
 msgstr "Odesílá nezpracovaný zvuk z mikrofonu bez úprav."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:87
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Odesílá váš zvuk beze změn. Nejlepší, pokud používáte externí zvukový software."
 
 #. Description for the noise suppression option that disables suppression.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:20
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:25
 msgid "Sends your microphone audio with no suppression."
 msgstr "Odesílá zvuk z mikrofonu bez potlačení šumu."
 
@@ -30136,7 +30140,7 @@ msgstr "Zkratky"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:376
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -31932,7 +31936,7 @@ msgid "Step 4"
 msgstr "Krok 4"
 
 #. Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:45
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:50
 msgid "Stereo microphone"
 msgstr "Stereofonní mikrofon"
 
@@ -32204,7 +32208,7 @@ msgid "Stopped the member from hearing others in this community"
 msgstr "Členovi bylo znemožněno slyšet ostatní v této komunitě"
 
 #. Description for the echo cancellation toggle in the custom voice processing settings.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:56
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:59
 msgid "Stops your speakers from looping back into your mic."
 msgstr "Zabrání tomu, aby se zvuk z reproduktorů vracel do mikrofonu."
 
@@ -32334,7 +32338,7 @@ msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sh
 msgstr "Vysoká kvalita při střední zátěži CPU. Dobrá záložní volba pro sdílení obrazovky v prohlížeči Chromium."
 
 #. Description for the GTCRN noise suppression option.
-#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:41
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:46
 msgid "Strongest neural filter for speech. Limits audio to the speech range."
 msgstr "Nejsilnější neuronový filtr pro řeč, omezuje zvuk na rozsah řeči."
 
@@ -32539,7 +32543,7 @@ msgstr "Přepnout na pohodlné rozvržení"
 msgid "Switch to dense layout"
 msgstr "Přepnout na zhuštěné rozvržení"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
 msgid "Switch to direct input"
 msgstr "Přepnout na přímý vstup"
 
@@ -35126,7 +35130,7 @@ msgid "TTS speed"
 msgstr "Rychlost převodu textu na řeč"
 
 #. Description for the custom option in the voice processing settings radio group.
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:44
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:47
 msgid "Tune the processing yourself."
 msgstr "Upravte si zpracování podle sebe."
 
@@ -37106,6 +37110,10 @@ msgstr "Používá oznamovací centrum OS. Pro nastavení oznámení pro jednotl
 msgid "Uses:"
 msgstr "Použití:"
 
+#: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:102
+msgid "Using {effectiveLabel} until {requestedLabel} is ready."
+msgstr "Používám {effectiveLabel}, dokud nebude {requestedLabel} připraveno."
+
 #. Developer nagbar status: banner follows real account state.
 #: src/features/devtools/components/NagbarControls.ts:106
 msgid "Using actual account state"
@@ -38072,8 +38080,8 @@ msgid "Voice participants"
 msgstr "Účastníci hlasového chatu"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:639
-#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:52
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Zpracování hlasu"
 
@@ -38118,6 +38126,10 @@ msgstr "Zapnutí zvuku hovoru"
 msgid "Voice unmute"
 msgstr "Zapnutí mikrofonu"
 
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+msgid "Voice uses your system output device in this browser. Change it in your system settings."
+msgstr "Hlas používá výchozí výstupní zařízení vašeho systému v tomto prohlížeči. Změňte jej v nastavení systému."
+
 #. Billing invoice status for an invoice canceled before payment.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:29
 msgid "Void"
@@ -38128,7 +38140,7 @@ msgstr "Zrušeno"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:378
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:181
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -38801,7 +38813,7 @@ msgstr "Které konverzace"
 msgid "Which rule was broken?"
 msgstr "Které pravidlo bylo porušeno?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:355
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:370
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Když je zapnutý režim Stisknutím mluvit, mikrofon ovládá klávesová zkratka, takže tlačítko ztlumení není dostupné."
 

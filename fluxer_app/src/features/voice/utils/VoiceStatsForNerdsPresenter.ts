@@ -71,6 +71,10 @@ export interface StatsForNerdsData {
 		echoCancellation: boolean;
 		autoGainControl: boolean;
 		noiseSuppressionBackend: VoiceNoiseSuppressionBackend;
+		requestedNoiseSuppressionBackend: VoiceNoiseSuppressionBackend;
+		browserNoiseSuppression: boolean;
+		voiceInputGraphUnavailable: boolean;
+		deepFilterLevels: {inputRms: number; outputRms: number; contextTime: number} | null;
 		processingMode: string;
 	};
 	screenShareSettings: {

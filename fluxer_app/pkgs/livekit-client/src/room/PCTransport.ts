@@ -410,6 +410,7 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 			if (placeholderMids.size > 0) {
 				conformBundledCodecFmtp(sdpParsed.media, (media) => placeholderMids.has(getMidString(media.mid!)));
 			}
+			sdpParsed.media.forEach(ensureOpusStereoReception);
 			if (this.latestOfferId > offerId) {
 				this.log.warn('latestOfferId mismatch', {
 					latestOfferId: this.latestOfferId,
@@ -828,6 +829,16 @@ export function ensureAudioNackAndStereo(
 			});
 		}
 	}
+}
+
+export function ensureOpusStereoReception(media: MediaDescription): void {
+	if (media.type !== 'audio' || media.port === 0 || media.direction === 'sendonly' || media.direction === 'inactive') {
+		return;
+	}
+	const opusPayload = getCodecPayload(media, 'opus');
+	if (opusPayload <= 0) return;
+	const fmtp = ensureFmtp(media, opusPayload);
+	fmtp.config = setFmtpParameter(fmtp.config, 'stereo', '1');
 }
 
 export function collectStereoMids(

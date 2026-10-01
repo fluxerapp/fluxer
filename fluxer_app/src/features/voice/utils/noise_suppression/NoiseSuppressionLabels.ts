@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import NoiseSuppressionAvailability from '@app/features/voice/utils/noise_suppression/NoiseSuppressionAvailability';
 import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import {
+	readEffectiveNoiseSuppressionBackend,
+	readRequestedNoiseSuppressionBackend,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -85,6 +90,17 @@ export function getNoiseSuppressionChoiceDescriptionDescriptor(
 	backend: VoiceNoiseSuppressionBackend,
 ): MessageDescriptor {
 	return DESCRIPTIONS[backend];
+}
+
+export function getNoiseSuppressionFallbackMessage(i18n: I18n): string | null {
+	const requested = readRequestedNoiseSuppressionBackend();
+	const fallback = NoiseSuppressionAvailability.getFallback(requested);
+	if (!fallback) return null;
+	const requestedLabel = getNoiseSuppressionChoiceLabel(i18n, requested);
+	const effectiveLabel = getNoiseSuppressionChoiceLabel(i18n, readEffectiveNoiseSuppressionBackend());
+	return fallback === 'loading'
+		? i18n._(msg`Using ${effectiveLabel} until ${requestedLabel} is ready.`)
+		: i18n._(msg`${requestedLabel} could not start. Using ${effectiveLabel} instead.`);
 }
 
 export {STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR, STEREO_MICROPHONE_DESCRIPTOR};

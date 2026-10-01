@@ -81,14 +81,6 @@ interface VoiceSettingsUpdateOptions {
 	refreshCameraBackground?: boolean;
 }
 
-const MICROPHONE_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
-	'inputDeviceId',
-	'echoCancellation',
-	'autoGainControl',
-	'noiseSuppressionBackend',
-	'stereoMicrophone',
-	'voiceProcessingMode',
-];
 const CAMERA_BACKGROUND_REFRESH_KEYS: Array<keyof VoiceSettingsPatch> = [
 	'backgroundImageId',
 	'backgroundImages',
@@ -102,10 +94,6 @@ const SCREEN_SHARE_CODEC_NEGOTIATION_REFRESH_KEYS: Array<keyof VoiceSettingsPatc
 	'screenShareHevcOptIn',
 	'screenShareEncoderMode',
 ];
-function refreshMicrophone(): void {
-	MediaEngine.refreshMicrophoneFromSettings();
-}
-
 function refreshCameraBackground(): void {
 	MediaEngine.refreshCameraBackgroundFromSettings();
 }
@@ -116,10 +104,6 @@ function refreshCameraCapture(): void {
 
 function refreshScreenShareCodecNegotiation(): void {
 	MediaEngine.refreshScreenShareCodecNegotiationFromSettings();
-}
-
-function shouldRefreshMicrophone(settings: VoiceSettingsPatch): boolean {
-	return MICROPHONE_REFRESH_KEYS.some((key) => settings[key] !== undefined);
 }
 
 function shouldRefreshCameraBackground(settings: VoiceSettingsPatch): boolean {
@@ -145,11 +129,7 @@ function shouldRefreshCameraCapture(
 	return CAMERA_CAPTURE_REFRESH_KEYS.some((key) => settings[key] !== undefined && before[key] !== after[key]);
 }
 
-function applyUpdatedVoiceSettings(
-	settings: VoiceSettingsPatch,
-	refreshInput: boolean,
-	options: VoiceSettingsUpdateOptions = {},
-): void {
+function applyUpdatedVoiceSettings(settings: VoiceSettingsPatch, options: VoiceSettingsUpdateOptions = {}): void {
 	const cameraCaptureBefore = readCameraCaptureRefreshValues();
 	VoiceSettings.updateSettings(settings);
 	if (settings.muteStreamAudio !== undefined) {
@@ -159,12 +139,6 @@ function applyUpdatedVoiceSettings(
 		if (MediaEngine.room) {
 			MediaEngine.applyAllLocalAudioPreferences();
 		}
-	}
-	if (settings.inputVolume !== undefined && !refreshInput) {
-		MediaEngine.applyLocalInputVolume();
-	}
-	if (refreshInput) {
-		refreshMicrophone();
 	}
 	if (options.refreshCameraBackground !== false && shouldRefreshCameraBackground(settings)) {
 		refreshCameraBackground();
@@ -179,24 +153,21 @@ function applyUpdatedVoiceSettings(
 
 export function setVoiceProcessingModeForDeviceLabel(label: string, mode: VoiceProcessingMode): void {
 	VoiceSettings.setVoiceProcessingModeForDeviceLabel(label, mode);
-	refreshMicrophone();
 }
 
 export function clearVoiceProcessingModeForDeviceLabel(label: string): void {
 	VoiceSettings.clearVoiceProcessingModeForDeviceLabel(label);
-	refreshMicrophone();
 }
 
 export function setActiveInputVoiceProcessingMode(mode: VoiceProcessingMode): void {
 	const label = getActiveInputDeviceLabel(VoiceSettings);
 	if (label) {
 		VoiceSettings.setVoiceProcessingModeForDeviceLabel(label, mode);
-		refreshMicrophone();
 	} else {
-		applyUpdatedVoiceSettings({voiceProcessingMode: mode}, true);
+		applyUpdatedVoiceSettings({voiceProcessingMode: mode});
 	}
 }
 
 export function update(settings: VoiceSettingsPatch, options?: VoiceSettingsUpdateOptions): void {
-	applyUpdatedVoiceSettings(settings, shouldRefreshMicrophone(settings), options);
+	applyUpdatedVoiceSettings(settings, options);
 }

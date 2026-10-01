@@ -34,7 +34,7 @@ import {
 import {VoiceDetailsPopout} from '@app/features/voice/components/voice_connection_status/VoiceDetailsPopout';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {readNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
+import {readEffectiveNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {VOICE_DISCONNECT_DESCRIPTOR, VOICE_IN_CHAT_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getActiveVoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 import {msg} from '@lingui/core/macro';
@@ -111,7 +111,7 @@ const ResolvedVoiceConnectionStatusInner = observer(function ResolvedVoiceConnec
 	const storeIsConnected = MediaEngine.connected;
 	const voiceSettings = VoiceSettings;
 	const processingMode = getActiveVoiceProcessingMode(voiceSettings);
-	const noiseSuppressionBackend = readNoiseSuppressionBackend();
+	const noiseSuppressionBackend = readEffectiveNoiseSuppressionBackend();
 	const isProcessingActive = isAudioProcessingActive(processingMode, noiseSuppressionBackend);
 	const showVoiceConnectionId = voiceSettings.showVoiceConnectionId;
 	const openNoiseSuppressionModal = useCallback(() => {

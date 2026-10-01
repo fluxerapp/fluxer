@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2024 LiveKit, Inc.
+//
+// SPDX-License-Identifier: Apache-2.0
 import {type AddTrackRequest, AudioTrackFeature, ParticipantPermission, TrackInfo} from '@livekit/protocol';
 import {EventEmitter} from 'events';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
@@ -6,6 +9,7 @@ import {publishDefaults, roomOptionDefaults} from '../defaults.ts';
 import {TrackEvent} from '../events.ts';
 import type RTCEngine from '../RTCEngine.ts';
 import LocalAudioTrack from '../track/LocalAudioTrack.ts';
+import type {AudioProcessorOptions, TrackProcessor} from '../track/processor/types.ts';
 import {Track} from '../track/Track.ts';
 import LocalParticipant from './LocalParticipant.ts';
 
@@ -124,4 +128,168 @@ describe('microphone publication stereo metadata', () => {
 			track.stop();
 		},
 	);
+});
+
+let nextTrackId = 0;
+
+class FakeMediaStreamTrack {
+	readonly id = `track-${nextTrackId++}`;
+	readonly kind = 'audio';
+	enabled = true;
+	muted = false;
+	readyState: MediaStreamTrackState = 'live';
+	appliedConstraints: MediaTrackConstraints = {};
+
+	constructor(private readonly settings: MediaTrackSettings = {}) {}
+
+	getConstraints(): MediaTrackConstraints {
+		return this.appliedConstraints;
+	}
+
+	getSettings(): MediaTrackSettings {
+		return this.settings;
+	}
+
+	async applyConstraints(): Promise<void> {}
+
+	addEventListener(): void {}
+
+	removeEventListener(): void {}
+
+	stop(): void {
+		this.readyState = 'ended';
+	}
+}
+
+class FakeProcessor implements TrackProcessor<Track.Kind.Audio, AudioProcessorOptions> {
+	name = 'fake-processor';
+	processedTrack?: MediaStreamTrack;
+	readonly contexts: Array<AudioContext | undefined> = [];
+	destroyed = 0;
+
+	constructor(private readonly failInit = false) {}
+
+	async init(opts: AudioProcessorOptions): Promise<void> {
+		this.contexts.push(opts.audioContext);
+		if (this.failInit) throw new Error('processor init failed');
+		this.processedTrack = new FakeMediaStreamTrack() as unknown as MediaStreamTrack;
+	}
+
+	async restart(): Promise<void> {}
+
+	async destroy(): Promise<void> {
+		this.destroyed++;
+	}
+}
+
+const audioContext = {state: 'running'} as unknown as AudioContext;
+const getUserMediaCalls: Array<MediaStreamConstraints> = [];
+let getUserMediaResult: (constraints: MediaStreamConstraints) => Promise<{getTracks: () => Array<MediaStreamTrack>}>;
+
+function createParticipant(): LocalParticipant {
+	const engine = {
+		on() {
+			return engine;
+		},
+		logContext: {},
+	};
+	const participant = new LocalParticipant(
+		'participant-sid',
+		'participant-identity',
+		engine as never,
+		{audioCaptureDefaults: {}, videoCaptureDefaults: {}} as never,
+		{} as never,
+		{} as never,
+		{} as never,
+		{} as never,
+	);
+	participant.setAudioContext(audioContext);
+	return participant;
+}
+
+function nextCapture(settings: MediaTrackSettings = {}): FakeMediaStreamTrack {
+	const track = new FakeMediaStreamTrack(settings);
+	getUserMediaResult = async (constraints) => {
+		track.appliedConstraints = typeof constraints.audio === 'object' ? constraints.audio : {};
+		return {getTracks: () => [track as unknown as MediaStreamTrack]};
+	};
+	return track;
+}
+
+describe('LocalParticipant microphone processor and device loss', () => {
+	beforeEach(() => {
+		getUserMediaCalls.length = 0;
+		vi.stubGlobal(
+			'MediaStream',
+			class {
+				constructor(readonly tracks: Array<MediaStreamTrack>) {}
+			},
+		);
+		vi.stubGlobal('MediaStreamTrack', FakeMediaStreamTrack);
+		vi.stubGlobal('navigator', {
+			mediaDevices: {
+				getUserMedia: (constraints: MediaStreamConstraints) => {
+					getUserMediaCalls.push(constraints);
+					return getUserMediaResult(constraints);
+				},
+			},
+		});
+	});
+
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('gives the audio processor the participant audio context when creating a microphone track', async () => {
+		nextCapture();
+		const processor = new FakeProcessor();
+		const [track] = await createParticipant().createTracks({audio: {processor}});
+		expect(processor.contexts).toEqual([audioContext]);
+		expect((track as LocalAudioTrack).getProcessor()).toBe(processor);
+		expect(track?.mediaStreamTrack).toBe(processor.processedTrack);
+	});
+
+	it('returns the unprocessed microphone track when the processor cannot start', async () => {
+		const raw = nextCapture();
+		const processor = new FakeProcessor(true);
+		const [track] = await createParticipant().createTracks({audio: {processor}});
+		expect((track as LocalAudioTrack).getProcessor()).toBeUndefined();
+		expect(track?.mediaStreamTrack).toBe(raw as unknown as MediaStreamTrack);
+		expect(processor.destroyed).toBeGreaterThan(0);
+	});
+
+	it('destroys the audio processor when the microphone cannot be captured', async () => {
+		getUserMediaResult = async () => {
+			throw new Error('NotReadableError');
+		};
+		const processor = new FakeProcessor();
+		await expect(createParticipant().createTracks({audio: {processor}})).rejects.toThrow('NotReadableError');
+		expect(processor.contexts).toEqual([]);
+		expect(processor.destroyed).toBe(1);
+	});
+
+	it('keeps echo cancellation, noise suppression, gain control and channels when the device is lost', async () => {
+		nextCapture({deviceId: 'usb-mic'});
+		const participant = createParticipant();
+		const [track] = await participant.createTracks({
+			audio: {
+				deviceId: 'usb-mic',
+				echoCancellation: false,
+				noiseSuppression: false,
+				autoGainControl: false,
+				channelCount: {ideal: 2},
+			},
+		});
+		getUserMediaCalls.length = 0;
+		nextCapture({deviceId: 'default'});
+		await (participant as unknown as {handleTrackEnded: (track: unknown) => Promise<void>}).handleTrackEnded(track);
+		expect(getUserMediaCalls).toHaveLength(1);
+		expect(getUserMediaCalls[0]?.audio).toMatchObject({
+			deviceId: 'default',
+			echoCancellation: false,
+			noiseSuppression: false,
+			autoGainControl: false,
+			channelCount: {ideal: 2},
+		});
+	});
 });

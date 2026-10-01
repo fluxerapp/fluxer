@@ -2,6 +2,8 @@
 
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {prefetchDeepFilterAssets} from '@app/features/voice/utils/noise_suppression/DeepFilter';
+import NoiseSuppressionAvailability from '@app/features/voice/utils/noise_suppression/NoiseSuppressionAvailability';
 import {
 	isNoiseSuppressionBackendSupported,
 	VOICE_NOISE_SUPPRESSION_BACKENDS,
@@ -26,7 +28,9 @@ export function getSelectedNoiseSuppressionChoice(): VoiceNoiseSuppressionBacken
 }
 
 export function setNoiseSuppressionChoice(backend: VoiceNoiseSuppressionBackend): void {
+	NoiseSuppressionAvailability.clearBackendFailure(backend);
 	VoiceSettingsCommands.update({noiseSuppressionBackend: backend});
+	prefetchDeepFilterAssets();
 }
 
 export function isStereoMicrophoneChoiceAvailable(deviceLabel: string | null): boolean {

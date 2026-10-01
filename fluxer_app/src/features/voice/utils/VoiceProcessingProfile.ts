@@ -2,6 +2,7 @@
 
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import NoiseSuppressionAvailability from '@app/features/voice/utils/noise_suppression/NoiseSuppressionAvailability';
 import {
 	getNoiseSuppressionBackendDescriptor,
 	type VoiceNoiseSuppressionBackend,
@@ -37,10 +38,14 @@ function resolveBaseVoiceProcessing(
 	settings: VoiceProcessingSettingsLike,
 	backend: VoiceNoiseSuppressionBackend,
 ): ResolvedVoiceProcessing {
+	const effectiveBackend =
+		settings.voiceProcessingMode === 'voice'
+			? NoiseSuppressionAvailability.resolveEffectiveBackend(resolveNoiseSuppressionBackend(null))
+			: backend;
 	const noiseSuppression = {
-		browserNoiseSuppression: getNoiseSuppressionBackendDescriptor(backend).browserNoiseSuppression,
-		deepFilter: backend === 'deep_filter',
-		noiseSuppressionBackend: backend,
+		browserNoiseSuppression: getNoiseSuppressionBackendDescriptor(effectiveBackend).browserNoiseSuppression,
+		deepFilter: effectiveBackend === 'deep_filter',
+		noiseSuppressionBackend: effectiveBackend,
 		stereoCapture: false,
 	};
 	switch (settings.voiceProcessingMode) {
@@ -104,7 +109,9 @@ function resolveVoiceProcessingFromStateForMode(
 			echoCancellation: store.echoCancellation,
 			autoGainControl: store.autoGainControl,
 		},
-		resolveNoiseSuppressionBackend(store.getNoiseSuppressionBackend()),
+		NoiseSuppressionAvailability.resolveEffectiveBackend(
+			resolveNoiseSuppressionBackend(store.getNoiseSuppressionBackend()),
+		),
 		store.getStereoMicrophone() === true,
 	);
 }

@@ -210,9 +210,6 @@ catalogs:
     combokeys:
       specifier: 3.0.1
       version: 3.0.1
-    deepfilternet3-noise-filter:
-      specifier: 1.3.0
-      version: 1.3.0
     emoji-regex:
       specifier: 11.0.0
       version: 11.0.0
@@ -1465,9 +1462,6 @@ importers:
       combokeys:
         specifier: 'catalog:'
         version: 3.0.1
-      deepfilternet3-noise-filter:
-        specifier: 'catalog:'
-        version: 1.3.0(livekit-client@fluxer_app+pkgs+livekit-client)
       eventemitter3:
         specifier: 'catalog:'
         version: 5.0.4
@@ -7553,12 +7547,6 @@ packages:
 
   deep-is@0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
-
-  deepfilternet3-noise-filter@1.3.0:
-    resolution: {integrity: sha512-yYFUlPuvPguqcd/R6/OSsr0noGqlqOE50JkCWYHogk+PjLj9qrNgwTt5zKraVkKnw0l4+eXJagkz2SUWtUl4sQ==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      livekit-client: ^2.0.0
 
   deepmerge@4.3.1:
     resolution: {integrity: sha512-3sUqbMEc77XqpdNO7FRyRog+eW3ph+GYCbj+rK+uYyRMuwsVy0rMiVtPn+QJlKFvWP/1PYpapqYn0Me2knFn+A==}
@@ -16517,10 +16505,6 @@ snapshots:
       character-entities: 2.0.2
 
   deep-is@0.1.4: {}
-
-  deepfilternet3-noise-filter@1.3.0(livekit-client@fluxer_app+pkgs+livekit-client):
-    dependencies:
-      livekit-client: link:fluxer_app/pkgs/livekit-client
 
   deepmerge@4.3.1: {}
 

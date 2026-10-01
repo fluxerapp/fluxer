@@ -3289,7 +3289,13 @@
         "msgid": "Used in Custom mode. The Gaming and Screen share presets set their own hint."
       },
       {
+        "msgid": "Using {effectiveLabel} until {requestedLabel} is ready."
+      },
+      {
         "msgid": "Virtual microphone"
+      },
+      {
+        "msgid": "Voice uses your system output device in this browser. Change it in your system settings."
       },
       {
         "msgid": "Volume sliders"
@@ -3995,6 +4001,9 @@
       },
       {
         "msgid": "{remaining, plural, one {+# more} other {+# more}}"
+      },
+      {
+        "msgid": "{requestedLabel} could not start. Using {effectiveLabel} instead."
       },
       {
         "msgctxt": "audit-log-member-profile",
