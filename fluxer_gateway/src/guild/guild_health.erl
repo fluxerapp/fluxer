@@ -6,7 +6,7 @@
 
 -export([
     start_link/0,
-    is_degraded/1,
+    is_overloaded/1,
     register_guild/1,
     put_session/2,
     remove_session/2,
@@ -19,19 +19,23 @@
 -define(DEGRADED_MS, 2000).
 -define(RECOVERED_MS, 500).
 -define(REMOTE_LOOKUP_TIMEOUT_MS, 250).
+-define(PROBE_TIMEOUT_MS, 5000).
+-define(STALE_PROBE_MS, (?PROBE_TIMEOUT_MS + 4 * ?INTERVAL_MS)).
 
 -spec start_link() -> gen_server:start_ret().
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
--spec is_degraded(pid()) -> boolean().
-is_degraded(Pid) when node(Pid) =:= node() ->
+-spec is_overloaded(pid()) -> boolean().
+is_overloaded(Pid) when node(Pid) =:= node() ->
     case lookup(Pid) of
-        {Pid, _GuildId, Degraded, _Targets, _Pending} -> Degraded;
-        undefined -> false
+        {Pid, _GuildId, _Degraded, _Targets, Pending} ->
+            overloaded(Pending, erlang:monotonic_time(millisecond));
+        undefined ->
+            false
     end;
-is_degraded(Pid) ->
-    try erpc:call(node(Pid), ?MODULE, is_degraded, [Pid], ?REMOTE_LOOKUP_TIMEOUT_MS) of
+is_overloaded(Pid) ->
+    try erpc:call(node(Pid), ?MODULE, is_overloaded, [Pid], ?REMOTE_LOOKUP_TIMEOUT_MS) of
         true -> true;
         _ -> false
     catch
@@ -119,14 +123,8 @@ handle_call(_, _, State) ->
 handle_cast({register, Pid}, State) when is_pid(Pid), node(Pid) =:= node() ->
     {noreply, track_guild(Pid, State)};
 handle_cast({pong, Pid, Ref, HandledAt}, State) when is_pid(Pid), is_integer(HandledAt) ->
-    case lookup(Pid) of
-        {Pid, GuildId, Degraded, Targets, {Ref, SentAt}} ->
-            NewDegraded = next_degraded(Degraded, max(0, HandledAt - SentAt)),
-            update({Pid, GuildId, Degraded, Targets, undefined}, NewDegraded),
-            {noreply, State};
-        _ ->
-            {noreply, State}
-    end;
+    ok = pong(Pid, Ref, HandledAt, erlang:monotonic_time(millisecond)),
+    {noreply, State};
 handle_cast({current, Pid, SessionPid}, State) when is_pid(Pid), is_pid(SessionPid) ->
     case lookup(Pid) of
         {Pid, GuildId, Degraded, _Targets, _Pending} ->
@@ -186,19 +184,48 @@ check_guild(Pid, Now) ->
     case lookup(Pid) of
         {Pid, GuildId, Degraded, Targets, undefined} ->
             case should_probe(Pid, Degraded) of
-                true ->
-                    Ref = make_ref(),
-                    ets:insert(?TABLE, {Pid, GuildId, Degraded, Targets, {Ref, Now}}),
-                    Pid ! {guild_health_probe, Ref},
-                    ok;
-                false ->
-                    ok
+                true -> update({Pid, GuildId, Degraded, Targets, probe(Pid, Now, 0)}, Degraded);
+                false -> ok
             end;
-        {Pid, _, Degraded, _, {_Ref, SentAt}} = Entry ->
+        {Pid, GuildId, Degraded, Targets, {_Ref, SentAt, Lag}} when
+            Now - SentAt >= ?PROBE_TIMEOUT_MS
+        ->
+            Pending = probe(Pid, Now, max(Lag, Now - SentAt)),
+            update({Pid, GuildId, Degraded, Targets, Pending}, true);
+        {Pid, _, Degraded, _, {_Ref, SentAt, _Lag}} = Entry ->
             update(Entry, Degraded orelse Now - SentAt > ?DEGRADED_MS);
         _ ->
             ok
     end.
+
+-spec pong(pid(), reference(), integer(), integer()) -> ok.
+pong(Pid, Ref, HandledAt, Now) ->
+    case lookup(Pid) of
+        {Pid, GuildId, Degraded, Targets, {Ref, SentAt, _Lag}} ->
+            Delay = max(0, HandledAt - SentAt),
+            NewDegraded = next_degraded(Degraded, Delay),
+            Pending = next_pending(Pid, NewDegraded, Delay, Now),
+            update({Pid, GuildId, Degraded, Targets, Pending}, NewDegraded);
+        _ ->
+            ok
+    end.
+
+-spec next_pending(pid(), boolean(), non_neg_integer(), integer()) ->
+    {reference(), integer(), non_neg_integer()} | undefined.
+next_pending(Pid, true, Delay, Now) -> probe(Pid, Now, Delay);
+next_pending(_Pid, false, _Delay, _Now) -> undefined.
+
+-spec probe(pid(), integer(), non_neg_integer()) -> {reference(), integer(), non_neg_integer()}.
+probe(Pid, Now, Lag) ->
+    Ref = make_ref(),
+    Pid ! {guild_health_probe, Ref},
+    {Ref, Now, Lag}.
+
+-spec overloaded(term(), integer()) -> boolean().
+overloaded({_Ref, SentAt, Lag}, Now) when Now - SentAt =< ?STALE_PROBE_MS ->
+    max(Lag, Now - SentAt) > ?DEGRADED_MS;
+overloaded(_Pending, _Now) ->
+    false.
 
 -spec should_probe(pid(), boolean()) -> boolean().
 should_probe(_Pid, true) ->
@@ -273,7 +300,7 @@ hysteresis_test() ->
 unreachable_remote_pid_is_unknown_test() ->
     Pid = binary_to_term(<<131, 88, 119, 12, "fake@nowhere", 1:32, 0:32, 1:32>>),
     ?assertNotEqual(node(), node(Pid)),
-    {ElapsedUs, Result} = timer:tc(?MODULE, is_degraded, [Pid]),
+    {ElapsedUs, Result} = timer:tc(?MODULE, is_overloaded, [Pid]),
     ?assertNot(Result),
     ?assert(ElapsedUs < 1000000).
 
@@ -291,23 +318,22 @@ pending_probe_is_bounded_and_recovers_only_after_fresh_reply_test() ->
     try
         Pid ! queued_work,
         check_guild(Pid, 100),
-        {Pid, 42, false, Targets, {Ref, 100}} = lookup(Pid),
+        {Pid, 42, false, Targets, {Ref, 100, 0}} = lookup(Pid),
         check_guild(Pid, 2201),
-        ?assert(is_degraded(Pid)),
+        {Pid, 42, true, Targets, {Ref, 100, 0}} = lookup(Pid),
         receive
             {'$gen_cast', {guild_health, 42, Pid, true}} -> ok
         after 100 -> ?assert(false)
         end,
         check_guild(Pid, 5000),
         ?assertEqual({message_queue_len, 2}, process_info(Pid, message_queue_len)),
-        {noreply, #{}} = handle_cast({pong, Pid, Ref, 5000}, #{}),
-        ?assert(is_degraded(Pid)),
-        check_guild(Pid, 5100),
-        {Pid, 42, true, Targets, {Ref2, 5100}} = lookup(Pid),
-        {noreply, #{}} = handle_cast({pong, Pid, Ref, 5110}, #{}),
-        ?assert(is_degraded(Pid)),
-        {noreply, #{}} = handle_cast({pong, Pid, Ref2, 5110}, #{}),
-        ?assertNot(is_degraded(Pid)),
+        ok = pong(Pid, Ref, 5000, 5000),
+        {Pid, 42, true, Targets, {Ref2, 5000, 4900}} = lookup(Pid),
+        ?assertEqual({message_queue_len, 3}, process_info(Pid, message_queue_len)),
+        ok = pong(Pid, Ref, 5110, 5110),
+        {Pid, 42, true, Targets, {Ref2, 5000, 4900}} = lookup(Pid),
+        ok = pong(Pid, Ref2, 5110, 5110),
+        ?assertEqual({Pid, 42, false, Targets, undefined}, lookup(Pid)),
         receive
             {'$gen_cast', {guild_health, 42, Pid, false}} -> ok
         after 100 -> ?assert(false)
@@ -317,6 +343,57 @@ pending_probe_is_bounded_and_recovers_only_after_fresh_reply_test() ->
         ets:delete(?TABLE, Pid),
         ets:delete(Targets)
     end.
+
+lost_pong_is_reprobed_and_the_guild_recovers_test() ->
+    ok = guild_ets_owner:ensure_table(?TABLE, [named_table, public, set]),
+    Targets = ets:new(health_lost_pong_targets, [set]),
+    ets:insert(Targets, {<<"session">>, self()}),
+    Pid = spawn(fun() ->
+        receive
+            stop -> ok
+        end
+    end),
+    ets:insert(?TABLE, {Pid, 44, false, Targets, undefined}),
+    try
+        Pid ! queued_work,
+        check_guild(Pid, 0),
+        {Pid, 44, false, Targets, {Lost, 0, 0}} = lookup(Pid),
+        check_guild(Pid, 2001),
+        receive
+            {'$gen_cast', {guild_health, 44, Pid, true}} -> ok
+        after 100 -> ?assert(false)
+        end,
+        check_guild(Pid, 4999),
+        ?assertEqual({message_queue_len, 2}, process_info(Pid, message_queue_len)),
+        check_guild(Pid, 5000),
+        {Pid, 44, true, Targets, {Fresh, 5000, 5000} = Pending} = lookup(Pid),
+        ?assertNotEqual(Lost, Fresh),
+        ?assertEqual({message_queue_len, 3}, process_info(Pid, message_queue_len)),
+        ?assert(overloaded(Pending, 5001)),
+        ok = pong(Pid, Fresh, 5020, 5020),
+        ?assertEqual({Pid, 44, false, Targets, undefined}, lookup(Pid)),
+        ?assertNot(is_overloaded(Pid)),
+        receive
+            {'$gen_cast', {guild_health, 44, Pid, false}} -> ok
+        after 100 -> ?assert(false)
+        end,
+        ok = pong(Pid, Lost, 5030, 5030),
+        ?assertEqual({Pid, 44, false, Targets, undefined}, lookup(Pid))
+    after
+        Pid ! stop,
+        ets:delete(?TABLE, Pid),
+        ets:delete(Targets)
+    end.
+
+shedding_needs_fresh_evidence_of_lag_test() ->
+    Ref = make_ref(),
+    ?assertNot(overloaded(undefined, 10000)),
+    ?assertNot(overloaded({Ref, 10000, 0}, 12000)),
+    ?assert(overloaded({Ref, 10000, 0}, 12001)),
+    ?assertNot(overloaded({Ref, 10000, 1500}, 10100)),
+    ?assert(overloaded({Ref, 10000, 2500}, 10100)),
+    ?assert(overloaded({Ref, 10000, 5000}, 10000 + ?STALE_PROBE_MS)),
+    ?assertNot(overloaded({Ref, 10000, 5000}, 10001 + ?STALE_PROBE_MS)).
 
 session_targets_follow_replacement_and_removal_test() ->
     Tab = ets:new(health_test_targets, [set]),
