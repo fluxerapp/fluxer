@@ -30849,6 +30849,10 @@
 					"emails_enabled": {
 						"type": "boolean",
 						"description": "Whether the instance sends emails (verification, password reset, etc.)"
+					},
+					"phone_verification_enabled": {
+						"type": "boolean",
+						"description": "Whether users can verify a phone number, so the very high guild verification level applies"
 					}
 				},
 				"required": [
@@ -30858,7 +30862,8 @@
 					"stripe_serviceable",
 					"self_hosted",
 					"presigned_attachment_uploads",
-					"emails_enabled"
+					"emails_enabled",
+					"phone_verification_enabled"
 				],
 				"additionalProperties": false,
 				"description": "Feature flags for this instance"

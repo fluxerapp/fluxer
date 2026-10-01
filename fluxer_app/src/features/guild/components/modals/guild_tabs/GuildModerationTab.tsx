@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildModerationTab.module.css';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -176,6 +177,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 	const canManageGuild = Permission.can(Permissions.MANAGE_GUILD, {guildId});
 	const isGuildOwner = guild?.ownerId === currentUser?.id;
 	const isDiscoverable = guild?.features.has(GuildFeatures.DISCOVERABLE) ?? false;
+	const phoneVerificationEnabled = RuntimeConfig.phoneVerificationEnabled;
 	const remoteValues: FormInputs = {
 		verification_level: guild?.verificationLevel ?? GuildVerificationLevel.NONE,
 		mfa_level: guild?.mfaLevel ?? GuildMFALevel.NONE,
@@ -258,7 +260,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		}
 		return;
 	};
-	const verificationLevelOptions: ReadonlyArray<RadioOption<number>> = [
+	const allVerificationLevelOptions: ReadonlyArray<RadioOption<number>> = [
 		{
 			value: GuildVerificationLevel.NONE,
 			name: i18n._(VERIFICATION_LEVEL_NONE_NAME_DESCRIPTOR),
@@ -286,6 +288,9 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 			desc: i18n._(VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR),
 		},
 	];
+	const verificationLevelOptions = phoneVerificationEnabled
+		? allVerificationLevelOptions
+		: allVerificationLevelOptions.filter((option) => option.value !== GuildVerificationLevel.VERY_HIGH);
 	const matureContentOptions: ReadonlyArray<ComboboxOption<string>> = [
 		{value: 'on', label: i18n._(MATURE_CONTENT_ON_DESCRIPTOR)},
 		{value: 'off', label: i18n._(MATURE_CONTENT_OFF_DESCRIPTOR)},
@@ -324,7 +329,11 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 							control={form.control}
 							render={({field}) => (
 								<RadioGroup
-									value={getEffectiveGuildVerificationLevel(field.value ?? GuildVerificationLevel.NONE, isDiscoverable)}
+									value={getEffectiveGuildVerificationLevel(
+										field.value ?? GuildVerificationLevel.NONE,
+										isDiscoverable,
+										phoneVerificationEnabled,
+									)}
 									onChange={field.onChange}
 									disabled={!canManageGuild}
 									options={verificationLevelOptions}

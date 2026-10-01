@@ -286,6 +286,7 @@ export interface MasterConfig {
 	};
 	instance: {
 		self_hosted: boolean;
+		phone_verification_enabled?: boolean;
 		auto_join_invite_code?: string;
 		visionaries_guild_id?: string;
 		visionaries_guild_visionary_role_id?: string;

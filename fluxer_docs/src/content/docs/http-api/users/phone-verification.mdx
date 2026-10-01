@@ -17,7 +17,7 @@ Every route here needs a non-bot user session, and each one admits a session wit
 - The account already holds a verified phone.
 - A TOTP [authenticator](/http-api/users/#authenticator-types) is enrolled on the account.
 - The stored suspicious activity bitfield is non-zero.
-- The account belongs to at least one guild whose [verification level](/http-api/guilds/#verification-levels) is `VERY_HIGH`.
+- The account belongs to at least one guild whose [verification level](/http-api/guilds/#verification-levels) is `VERY_HIGH`, and the [instance features](/http-api/instance/#instance-features-object) report `phone_verification_enabled` as true.
 
 An account satisfying none of them is refused with 403 `PHONE_ADD_NOT_ELIGIBLE`.
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -143,6 +144,7 @@ class GuildVerification {
 		const verificationLevel = getEffectiveGuildVerificationLevel(
 			guild.verificationLevel ?? GuildVerificationLevel.NONE,
 			guild.features.has(GuildFeatures.DISCOVERABLE),
+			RuntimeConfig.phoneVerificationEnabled,
 		);
 		if (verificationLevel === GuildVerificationLevel.NONE) {
 			return {canAccess: true};

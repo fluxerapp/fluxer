@@ -138,6 +138,7 @@ Deployment-wide switches a client reads before it offers a feature, plus whether
 | self_hosted | boolean | Whether this deployment identifies itself as self-hosted |
 | presigned_attachment_uploads | boolean | Whether a client can request presigned attachment upload URLs |
 | emails_enabled<sup>1</sup> | boolean | Whether the deployment sends email |
+| phone_verification_enabled<sup>5</sup> | boolean | Whether accounts can verify a phone number |
 
 <sup>1</sup> The value is true only when email is switched on and the transport is completely configured
 
@@ -146,6 +147,8 @@ Deployment-wide switches a client reads before it offers a feature, plus whether
 <sup>3</sup> Always true on a hosted deployment. A self-hosted deployment reports true only while its [premium mode](/admin-api/instance/#premium-modes) is `mirror`
 
 <sup>4</sup> On a hosted deployment, true while billing is switched on and a Stripe secret key is set. A self-hosted deployment reports true while a Stripe secret key is set and `premium_enabled` is true, even after billing is switched off
+
+<sup>5</sup> Defaults to true on a hosted deployment and false on a self-hosted one. While it is false, the `VERY_HIGH` [verification level](/http-api/guilds/#verification-levels) is evaluated as `HIGH`
 
 A deployment that reports `emails_enabled` as false sends no verification, password recovery, or IP authorisation message, and the flows that depend on one are unusable there. [Deployment availability](/http-api/deployment-availability/) states which routes a self-hosted deployment does not serve at all.
 

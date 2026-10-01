@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createRoleIDSet, createUserID, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
@@ -90,6 +91,7 @@ export function checkGuildVerificationWithGuildModel({
 		verificationLevel: getEffectiveGuildVerificationLevel(
 			guild.verificationLevel ?? GuildVerificationLevel.NONE,
 			guild.features.has(GuildFeatures.DISCOVERABLE),
+			Config.instance.phoneVerificationEnabled,
 		),
 		memberJoinedAt: member.joinedAt,
 		memberRoles: member.roleIds,
@@ -115,6 +117,7 @@ export function checkGuildVerificationWithResponse({
 		verificationLevel: getEffectiveGuildVerificationLevel(
 			guild.verification_level ?? GuildVerificationLevel.NONE,
 			(guild.features ?? []).includes(GuildFeatures.DISCOVERABLE),
+			Config.instance.phoneVerificationEnabled,
 		),
 		memberJoinedAt: member.joined_at,
 		memberRoles: createRoleIDSet(new Set(member.roles.map((roleId) => BigInt(roleId)))),

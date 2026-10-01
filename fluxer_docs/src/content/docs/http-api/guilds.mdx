@@ -290,7 +290,7 @@ A verification level gates member participation. Fluxer evaluates it when a memb
 
 <sup>2</sup> The membership age requirement is skipped when the join timestamp cannot be read, so the level behaves as MEDIUM
 
-<sup>3</sup> A verified phone number is the whole requirement at this level
+<sup>3</sup> A verified phone number is the whole requirement at this level. A deployment whose [instance features](/http-api/instance/#instance-features-object) report `phone_verification_enabled` as false evaluates a stored VERY_HIGH as HIGH. [Modify guild](#modify-guild) then rejects a change to VERY_HIGH with 400 `INVALID_FORM_BODY` and the field code `VALUE_MUST_BE_INTEGER_IN_RANGE`, and a [guild template](#guild-creation-template-object) value is clamped to HIGH
 
 The guild owner, a bot, and any member holding at least one role bypass the check at every level.
 
@@ -674,7 +674,7 @@ Every field is optional. An omitted field preserves its current value, and a fie
 
 <sup>5</sup> The channel must exist in this guild and be a voice channel, and is otherwise rejected with `AFK_CHANNEL_MUST_BE_IN_GUILD` or `AFK_CHANNEL_MUST_BE_VOICE`
 
-<sup>6</sup> A guild with `DISCOVERABLE` cannot be lowered below LOW and is rejected with the field code `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW`
+<sup>6</sup> A guild with `DISCOVERABLE` cannot be lowered below LOW and is rejected with the field code `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW`. A change to VERY_HIGH is rejected with the field code `VALUE_MUST_BE_INTEGER_IN_RANGE` when phone verification is unavailable, as [Verification levels](#verification-levels) states
 
 <sup>7</sup> Sending the value the guild already holds needs neither ownership nor sudo mode, and an owner without a configured second factor is rejected with the field code `MUST_ENABLE_2FA_BEFORE_REQUIRING_FOR_MODS`
 

@@ -2,6 +2,7 @@
 
 import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import {
 	type ChannelFollowerRemovalCopyMode,
@@ -480,6 +481,17 @@ export class GuildOperationsService {
 				'verification_level',
 				ValidationErrorCodes.DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW,
 			);
+		}
+		if (
+			data.verification_level === GuildVerificationLevel.VERY_HIGH &&
+			data.verification_level !== currentGuild.verificationLevel &&
+			!Config.instance.phoneVerificationEnabled
+		) {
+			throw InputValidationError.fromCode('verification_level', ValidationErrorCodes.VALUE_MUST_BE_INTEGER_IN_RANGE, {
+				name: 'verification_level',
+				minValue: GuildVerificationLevel.NONE,
+				maxValue: GuildVerificationLevel.HIGH,
+			});
 		}
 		const isMfaLevelChange = data.mfa_level !== undefined && data.mfa_level !== currentGuild.mfaLevel;
 		if (isMfaLevelChange) {
@@ -1177,7 +1189,12 @@ export class GuildOperationsService {
 
 	private sanitiseTemplateGuildSettings(template?: TemplateSerializedGuild): TemplateGuildSettings {
 		return {
-			verificationLevel: this.clampTemplateSetting(template?.verification_level, 0, 4, 0),
+			verificationLevel: this.clampTemplateSetting(
+				template?.verification_level,
+				GuildVerificationLevel.NONE,
+				Config.instance.phoneVerificationEnabled ? GuildVerificationLevel.VERY_HIGH : GuildVerificationLevel.HIGH,
+				GuildVerificationLevel.NONE,
+			),
 			explicitContentFilter: this.clampTemplateSetting(template?.explicit_content_filter, 0, 2, 0),
 			defaultMessageNotifications: this.clampTemplateSetting(template?.default_message_notifications, 0, 1, 0),
 			systemChannelFlags: (template?.system_channel_flags ?? 0) & SUPPORTED_SYSTEM_CHANNEL_FLAGS,

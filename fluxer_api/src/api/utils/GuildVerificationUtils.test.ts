@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {User} from '@app/api/models/User';
 import {checkGuildVerificationWithResponse} from '@app/api/utils/GuildVerificationUtils';
 import {GuildFeatures, GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import {ProfileFieldPrivacyFlags} from '@fluxer/constants/src/UserConstants';
 import {GuildEmailVerificationRequiredError} from '@fluxer/errors/src/domains/auth/EmailVerificationRequiredError';
 import {GuildPhoneVerificationRequiredError} from '@fluxer/errors/src/domains/auth/GuildPhoneVerificationRequiredError';
+import {GuildVerificationRequiredError} from '@fluxer/errors/src/domains/guild/GuildVerificationRequiredError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {describe, expect, it} from 'vitest';
@@ -177,5 +179,29 @@ describe('GuildVerificationUtils', () => {
 				member,
 			}),
 		).toThrow(GuildPhoneVerificationRequiredError);
+	});
+	it('treats very high as high when phone verification is unavailable', () => {
+		const saved = Config.instance.phoneVerificationEnabled;
+		Config.instance.phoneVerificationEnabled = false;
+		try {
+			const guild = createGuildResponse([]);
+			guild.verification_level = GuildVerificationLevel.VERY_HIGH;
+			expect(() =>
+				checkGuildVerificationWithResponse({
+					user: createUser({emailVerified: true, hasVerifiedPhone: false}),
+					guild,
+					member,
+				}),
+			).not.toThrow();
+			expect(() =>
+				checkGuildVerificationWithResponse({
+					user: createUser({emailVerified: true, hasVerifiedPhone: false}),
+					guild,
+					member: createMemberResponse(new Date().toISOString()),
+				}),
+			).toThrow(GuildVerificationRequiredError);
+		} finally {
+			Config.instance.phoneVerificationEnabled = saved;
+		}
 	});
 });
