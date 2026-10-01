@@ -272,6 +272,19 @@ const IMPORT_FOLDER_DESCRIPTOR = msg({
 	message: 'Import folder',
 	comment: 'Title of the native folder picker that imports a directory of theme files.',
 });
+const IMPORT_CSS_DESCRIPTOR = msg({
+	message: 'Import CSS',
+	comment:
+		'Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.',
+});
+const LINK_FILE_DESCRIPTOR = msg({
+	message: 'Link file',
+	comment: 'Title of the native file picker that links an existing theme to a CSS file on disk.',
+});
+const CSS_FILES_DESCRIPTOR = msg({
+	message: 'CSS files',
+	comment: 'Name of the file type filter in the native theme file picker, shown next to the *.css pattern.',
+});
 const UNREAD_MESSAGES_DESCRIPTOR = msg({
 	message: 'Unread messages',
 	comment:
@@ -384,6 +397,9 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.notifications.open': OPEN_NOTIFICATION_DESCRIPTOR,
 	'desktop.themes.addLocalFiles': ADD_LOCAL_FILES_DESCRIPTOR,
 	'desktop.themes.importFolder': IMPORT_FOLDER_DESCRIPTOR,
+	'desktop.themes.importCss': IMPORT_CSS_DESCRIPTOR,
+	'desktop.themes.linkFile': LINK_FILE_DESCRIPTOR,
+	'desktop.themes.cssFilesFilter': CSS_FILES_DESCRIPTOR,
 	'desktop.badge.unreadMessages': UNREAD_MESSAGES_DESCRIPTOR,
 	'desktop.badge.unreadMessagesCount': UNREAD_MESSAGES_COUNT_DESCRIPTOR,
 	'desktop.startup.failedTitle': FAILED_TO_START_DESCRIPTOR,

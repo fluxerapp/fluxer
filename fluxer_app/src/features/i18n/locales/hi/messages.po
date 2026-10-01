@@ -843,12 +843,12 @@ msgid "{appCount, plural, one {# app selected for access revocation} other {# ap
 msgstr "{appCount, plural, one {एक्सेस रद्द करने के लिए # ऐप चुना गया} other {एक्सेस रद्द करने के लिए # ऐप्स चुने गए}}"
 
 #. Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:295
+#: src/features/platform/utils/DesktopLocaleBridge.ts:308
 msgid "{appName} can't reach its servers. It will keep trying in the background."
 msgstr "{appName} अपने सर्वर तक नहीं पहुँच पा रहा है। यह बैकग्राउंड में कोशिश करता रहेगा।"
 
 #. Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:285
+#: src/features/platform/utils/DesktopLocaleBridge.ts:298
 msgid "{appName} failed to start"
 msgstr "{appName} शुरू नहीं हो सका"
 
@@ -2001,7 +2001,7 @@ msgid "{textChannelCount, plural, one {# text channel} other {# text channels}},
 msgstr "{textChannelCount, plural, one {# टेक्स्ट चैनल} other {# टेक्स्ट चैनल}}, {voiceChannelCount, plural, one {# वॉइस चैनल} other {# वॉइस चैनल}}, {categoryCount, plural, =0 {# श्रेणियाँ} one {# श्रेणी} other {# श्रेणियाँ}}, {roleCount, plural, one {# रोल} other {# रोल}}"
 
 #. Name given to the copy created by the Duplicate button in the Theme Studio theme library. {themeName} is the name of the theme being duplicated.
-#: src/features/theme/state/ThemeLibrary.ts:32
+#: src/features/theme/state/ThemeLibrary.ts:34
 msgid "{themeName} Copy"
 msgstr "{themeName} की कॉपी"
 
@@ -4998,7 +4998,7 @@ msgid "Authenticator code"
 msgstr "ऑथेंटिकेटर कोड"
 
 #. Short label in the theme studio library section. Keep it concise. Keep the tone plain and specific.
-#: src/features/theme_studio/sections/LibrarySection.tsx:109
+#: src/features/theme_studio/sections/LibrarySection.tsx:112
 msgid "Author"
 msgstr "लेखक"
 
@@ -6512,14 +6512,24 @@ msgid "Can't access that email?"
 msgstr "उस ईमेल को एक्सेस नहीं कर पा रहे हैं?"
 
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:290
+#: src/features/platform/utils/DesktopLocaleBridge.ts:303
 msgid "Can't connect"
 msgstr "कनेक्ट नहीं हो पा रहा है"
+
+#. Banner above a linked theme in the Theme Studio library when its CSS file was moved or deleted. {path} is the full path of the CSS file.
+#: src/features/theme_studio/sections/LibrarySection.tsx:166
+msgid "Can't find {path}. Using the last loaded version."
+msgstr "{path} नहीं मिला। अंतिम लोड किया गया संस्करण उपयोग किया जा रहा है।"
 
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:12
 msgid "Can't paste image here"
 msgstr "यहां इमेज पेस्ट नहीं कर सकते"
+
+#. Banner above a linked theme in the Theme Studio library when its CSS file exists but cannot be read, for example because it is too large or access was removed. {path} is the full path of the CSS file.
+#: src/features/theme_studio/sections/LibrarySection.tsx:171
+msgid "Can't read {path}. Using the last loaded version."
+msgstr "{path} को पढ़ा नहीं जा सकता। अंतिम लोड किए गए संस्करण का उपयोग किया जा रहा है।"
 
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:16
@@ -8609,7 +8619,7 @@ msgid "Coming soon"
 msgstr "जल्द आ रहा है"
 
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/theme_studio/sections/LibrarySection.tsx:121
+#: src/features/theme_studio/sections/LibrarySection.tsx:124
 msgid "comma, separated"
 msgstr "कॉमा से अलग किए गए"
 
@@ -10817,6 +10827,11 @@ msgstr "{percent}% क्रॉप हो रहा है"
 msgid "CSS"
 msgstr "CSS"
 
+#. Name of the file type filter in the native theme file picker, shown next to the *.css pattern.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:284
+msgid "CSS files"
+msgstr "CSS फ़ाइलें"
+
 #. Keyboard keycap label for Control on non-Mac platforms. Keep it short.
 #. Keyboard shortcut keycap label for Control on non-Mac platforms. Keep it short.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:18
@@ -11568,7 +11583,7 @@ msgstr "डेलावेयर"
 #: src/features/messaging/commands/MessageCommands.tsx:83
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
-#: src/features/theme_studio/sections/LibrarySection.tsx:514
+#: src/features/theme_studio/sections/LibrarySection.tsx:645
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
@@ -11794,12 +11809,12 @@ msgid "Delete the category \"{categoryName}\"? Can't be undone."
 msgstr "श्रेणी \"{categoryName}\" को हटाएँ? इसे पूर्ववत नहीं किया जा सकता है।"
 
 #. Button or menu action label in the theme studio library section. Keep it concise. Keep the tone plain and specific.
-#: src/features/theme_studio/sections/LibrarySection.tsx:59
+#: src/features/theme_studio/sections/LibrarySection.tsx:62
 msgid "Delete theme"
 msgstr "थीम मिटाएँ"
 
 #. Confirmation prompt in the theme studio library section. Keep the tone plain and specific.
-#: src/features/theme_studio/sections/LibrarySection.tsx:51
+#: src/features/theme_studio/sections/LibrarySection.tsx:54
 msgid "Delete theme?"
 msgstr "थीम मिटाएँ?"
 
@@ -13231,7 +13246,7 @@ msgstr "{regionName} में वयस्क सामग्री के क�
 msgid "Due to mature content laws in {regionName}, this media is not available from your current region."
 msgstr "{regionName} में वयस्क सामग्री के कानूनों के कारण, यह मीडिया आपके मौजूदा क्षेत्र में उपलब्ध नहीं है।"
 
-#: src/features/theme_studio/sections/LibrarySection.tsx:503
+#: src/features/theme_studio/sections/LibrarySection.tsx:634
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:220
 msgid "Duplicate"
 msgstr "डुप्लिकेट करें"
@@ -13858,7 +13873,7 @@ msgid "Enable {permissionName} permission"
 msgstr "{permissionName} अनुमति चालू करें"
 
 #. Accessible label for the switch that enables a saved theme file.
-#: src/features/theme_studio/sections/LibrarySection.tsx:101
+#: src/features/theme_studio/sections/LibrarySection.tsx:104
 msgid "Enable {themeName}"
 msgstr "{themeName} चालू करें"
 
@@ -14870,7 +14885,7 @@ msgid "Explore communities"
 msgstr "कम्युनिटी एक्सप्लोर करें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/theme_studio/sections/LibrarySection.tsx:494
+#: src/features/theme_studio/sections/LibrarySection.tsx:625
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:208
 msgid "Export"
 msgstr "एक्सपोर्ट करें"
@@ -14885,7 +14900,7 @@ msgstr "आपके द्वारा भेजे गए सभी मैस�
 msgid "Export GIF URLs"
 msgstr "GIF यूआरएल एक्सपोर्ट करें"
 
-#: src/features/theme_studio/sections/LibrarySection.tsx:376
+#: src/features/theme_studio/sections/LibrarySection.tsx:459
 msgid "Export library"
 msgstr "लाइब्रेरी एक्सपोर्ट करें"
 
@@ -18072,7 +18087,7 @@ msgid "Import {theOtherPlatform} template"
 msgstr "{theOtherPlatform} टेम्पलेट इंपोर्ट करें"
 
 #. Description text in the theme studio library section.
-#: src/features/theme_studio/sections/LibrarySection.tsx:97
+#: src/features/theme_studio/sections/LibrarySection.tsx:100
 msgid "Import a .css file to get started, or paste your own CSS in Quick CSS."
 msgstr "शुरू करने के लिए एक .css फ़ाइल इंपोर्ट करें या क्विक CSS में अपना CSS पेस्ट करें।"
 
@@ -18086,7 +18101,9 @@ msgstr "इंपोर्ट पूरा हुआ। {importedCount, plural, 
 msgid "Import complete. Added {importedCount, plural, one {# GIF} other {# GIFs}}."
 msgstr "इंपोर्ट पूरा हुआ। {importedCount, plural, one {# GIF जोड़ा गया} other {# GIF जोड़े गए}}।"
 
-#: src/features/theme_studio/sections/LibrarySection.tsx:337
+#. Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:275
+#: src/features/theme_studio/sections/LibrarySection.tsx:420
 #: src/features/theme_studio/sections/QuickCssSection.tsx:190
 msgid "Import CSS"
 msgstr "CSS इंपोर्ट करें"
@@ -18098,7 +18115,7 @@ msgstr "पसंदीदा GIF इंपोर्ट करें"
 
 #. Title of the native folder picker that imports a directory of theme files.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:271
-#: src/features/theme_studio/sections/LibrarySection.tsx:349
+#: src/features/theme_studio/sections/LibrarySection.tsx:432
 msgid "Import folder"
 msgstr "फ़ोल्डर इंपोर्ट करें"
 
@@ -18107,7 +18124,7 @@ msgstr "फ़ोल्डर इंपोर्ट करें"
 msgid "Import GIFs"
 msgstr "GIF इंपोर्ट करें"
 
-#: src/features/theme_studio/sections/LibrarySection.tsx:361
+#: src/features/theme_studio/sections/LibrarySection.tsx:444
 msgid "Import library"
 msgstr "लाइब्रेरी इंपोर्ट करें"
 
@@ -18150,13 +18167,13 @@ msgstr "ज़रूरी जानकारी:"
 
 #. Toast after importing one or more CSS files from a local theme folder.
 #. Toast after importing one or more CSS files into the theme library.
-#: src/features/theme_studio/sections/LibrarySection.tsx:64
-#: src/features/theme_studio/sections/LibrarySection.tsx:68
+#: src/features/theme_studio/sections/LibrarySection.tsx:67
+#: src/features/theme_studio/sections/LibrarySection.tsx:71
 msgid "Imported {length, plural, one {# theme file} other {# theme files}}."
 msgstr "{length, plural, one {# थीम फ़ाइल इंपोर्ट की गई} other {# थीम फ़ाइलें इंपोर्ट की गईं}}।"
 
 #. Toast after importing a Theme Studio library export file.
-#: src/features/theme_studio/sections/LibrarySection.tsx:72
+#: src/features/theme_studio/sections/LibrarySection.tsx:75
 msgid "Imported {themes, plural, one {# theme} other {# themes}} and {assets, plural, one {# asset} other {# assets}}."
 msgstr "{themes, plural, one {# थीम} other {# थीम}} और {assets, plural, one {# एसेट} other {# एसेट}} इंपोर्ट किए गए।"
 
@@ -18564,12 +18581,12 @@ msgid "Installing desktop update…"
 msgstr "डेस्कटॉप अपडेट इंस्टॉल हो रहा है…"
 
 #. Comment of the Linux .desktop entry. One-line app description shown as a tooltip in Linux launchers and software centres. VoIP is voice over IP; keep the term if it is used untranslated in your language.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:305
+#: src/features/platform/utils/DesktopLocaleBridge.ts:318
 msgid "Instant messaging and VoIP"
 msgstr "इंस्टेंट मैसेजिंग और VoIP"
 
 #. GenericName of the Linux .desktop entry. The category of app shown next to the name in GNOME Activities, KDE Kickoff and software centres. Use the generic term for a chat app in your language.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:300
+#: src/features/platform/utils/DesktopLocaleBridge.ts:313
 msgid "Instant Messenger"
 msgstr "इंस्टेंट मैसेंजर"
 
@@ -19903,6 +19920,13 @@ msgstr "अपनी {PRODUCT_NAME} प्रोफ़ाइल से बाह
 msgid "Link external accounts and domains to your profile"
 msgstr "अपनी प्रोफ़ाइल से बाहरी अकाउंट और डोमेन लिंक करें"
 
+#. Button in the Theme Studio library that links an existing theme to a CSS file on disk so saved changes to the file apply live.
+#. Title of the native file picker that links an existing theme to a CSS file on disk.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:280
+#: src/features/theme_studio/sections/LibrarySection.tsx:607
+msgid "Link file"
+msgstr "फ़ाइल लिंक करें"
+
 #. Replacement text for an invite URL while streaming privacy is active.
 #. Replacement text for an invite URL while streaming privacy is active.
 #. Replacement text for an invite URL while streaming privacy is active.
@@ -19965,6 +19989,11 @@ msgstr "अपनी प्रोफ़ाइल पर दिखाने क�
 msgid "Linked"
 msgstr "लिंक किया गया"
 
+#. Toast after importing CSS files or a folder on the desktop app. The themes stay linked to the files on disk and update when the file is saved.
+#: src/features/theme_studio/sections/LibrarySection.tsx:140
+msgid "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
+msgstr "लिंक की गई {length, plural, one {# थीम फ़ाइल} other {# थीम फ़ाइलें}}। इनमें किए गए बदलाव सेव करते ही लागू हो जाएंगे।"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:12
 msgid "Linked accounts"
@@ -19976,6 +20005,26 @@ msgstr "लिंक किए गए अकाउंट"
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:159
 msgid "Linked devices"
 msgstr "लिंक किए गए डिवाइस"
+
+#. Accessible label for the warning icon next to a linked theme in the Theme Studio library when its CSS file is missing or cannot be read.
+#: src/features/theme_studio/sections/LibrarySection.tsx:151
+msgid "Linked file unavailable"
+msgstr "लिंक की गई फ़ाइल उपलब्ध नहीं है"
+
+#. Banner above a linked theme in the Theme Studio library while the app is still checking its CSS file, or when this version of the desktop app cannot follow file changes. {path} is the full path of the CSS file on disk.
+#: src/features/theme_studio/sections/LibrarySection.tsx:161
+msgid "Linked to {path}."
+msgstr "{path} से लिंक किया गया।"
+
+#. Banner above a linked theme in the Theme Studio library. {path} is the full path of the CSS file on disk. The theme cannot be edited in the studio while linked.
+#: src/features/theme_studio/sections/LibrarySection.tsx:156
+msgid "Linked to {path}. Edit the file in any editor and saved changes apply here right away."
+msgstr "{path} से लिंक किया गया। किसी भी संपादक में फ़ाइल संपादित करें और सहेजे गए परिवर्तन तुरंत यहाँ लागू हो जाएँगे।"
+
+#. Accessible label for the icon next to a theme in the Theme Studio library that is linked to a CSS file on disk and updates live.
+#: src/features/theme_studio/sections/LibrarySection.tsx:146
+msgid "Linked to a file"
+msgstr "फ़ाइल से लिंक"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the markdown tab. Keep it concise.
@@ -22401,7 +22450,7 @@ msgstr "नैगबार ओवरराइड"
 #: src/features/expressions/components/modals/meme_form/MemeFormFields.tsx:24
 #: src/features/expressions/components/modals/sticker_form/StickerFormFields.tsx:28
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx:27
-#: src/features/theme_studio/sections/LibrarySection.tsx:105
+#: src/features/theme_studio/sections/LibrarySection.tsx:108
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:76
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:57
 #: src/features/webhook/components/FollowedChannelListItem.tsx:33
@@ -23343,17 +23392,17 @@ msgid "no text content"
 msgstr "कोई टेक्स्ट सामग्री नहीं"
 
 #. Empty-state text in the theme studio library section.
-#: src/features/theme_studio/sections/LibrarySection.tsx:129
+#: src/features/theme_studio/sections/LibrarySection.tsx:132
 msgid "No theme selected."
 msgstr "कोई थीम नहीं चुनी गई है।"
 
 #. Empty-state text in the theme studio library section.
-#: src/features/theme_studio/sections/LibrarySection.tsx:85
+#: src/features/theme_studio/sections/LibrarySection.tsx:88
 msgid "No themes match your search."
 msgstr "आपकी खोज से कोई थीम मेल नहीं खाती।"
 
 #. Empty-state text in the theme studio library section.
-#: src/features/theme_studio/sections/LibrarySection.tsx:89
+#: src/features/theme_studio/sections/LibrarySection.tsx:92
 msgid "No themes saved yet."
 msgstr "अभी तक कोई थीम सेव नहीं की गई है।"
 
@@ -25328,7 +25377,7 @@ msgid "Pick a reverse image search provider"
 msgstr "रिवर्स इमेज सर्च प्रोवाइडर चुनें"
 
 #. Description text in the theme studio library section.
-#: src/features/theme_studio/sections/LibrarySection.tsx:133
+#: src/features/theme_studio/sections/LibrarySection.tsx:136
 msgid "Pick a theme on the left to edit its name, metadata, and CSS. Or import a new one."
 msgstr "नाम, मेटाडेटा और CSS एडिट करने के लिए बाईं ओर से कोई थीम चुनें। या कोई नई थीम इंपोर्ट करें।"
 
@@ -27320,7 +27369,7 @@ msgstr "सेव किए गए मीडिया से हटाएँ"
 
 #. Button label in a popped-out voice window titlebar that unpins the window from staying above others.
 #. Button label in the Theme Studio popout titlebar that unpins the window from staying above others.
-#: src/features/theme_studio/ThemeStudioStandaloneApp.tsx:37
+#: src/features/theme_studio/ThemeStudioStandaloneApp.tsx:39
 #: src/features/voice/components/popout/PopoutTitlebar.tsx:18
 msgid "Remove from top"
 msgstr "सबसे ऊपर रखना बंद करें"
@@ -28959,7 +29008,7 @@ msgstr "आइकॉन सेव करें"
 msgid "Save some media from messages to get started!"
 msgstr "शुरू करने के लिए मैसेज से कुछ मीडिया सेव करें!"
 
-#: src/features/theme_studio/sections/LibrarySection.tsx:574
+#: src/features/theme_studio/sections/LibrarySection.tsx:754
 msgid "Save theme"
 msgstr "थीम सेव करें"
 
@@ -29537,7 +29586,7 @@ msgid "Search the web"
 msgstr "वेब पर खोजें"
 
 #. Button or menu action label in the theme studio library section. Keep it concise.
-#: src/features/theme_studio/sections/LibrarySection.tsx:81
+#: src/features/theme_studio/sections/LibrarySection.tsx:84
 msgid "Search themes…"
 msgstr "थीम खोजें…"
 
@@ -32504,7 +32553,7 @@ msgstr "फ़ोकस में न होने पर भी पूरी �
 
 #. Button label in a popped-out voice window titlebar that pins the window above other windows.
 #. Button label in the Theme Studio popout titlebar that pins the window above other windows.
-#: src/features/theme_studio/ThemeStudioStandaloneApp.tsx:33
+#: src/features/theme_studio/ThemeStudioStandaloneApp.tsx:35
 #: src/features/voice/components/popout/PopoutTitlebar.tsx:14
 msgid "Stay on top"
 msgstr "सबसे ऊपर रखें"
@@ -33463,7 +33512,7 @@ msgid "Tag"
 msgstr "टैग"
 
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/theme_studio/sections/LibrarySection.tsx:117
+#: src/features/theme_studio/sections/LibrarySection.tsx:120
 msgid "Tags"
 msgstr "टैग"
 
@@ -34140,7 +34189,7 @@ msgid "Theme color"
 msgstr "थीम का रंग"
 
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/theme_studio/sections/LibrarySection.tsx:125
+#: src/features/theme_studio/sections/LibrarySection.tsx:128
 msgid "Theme CSS"
 msgstr "थीम CSS"
 
@@ -34160,7 +34209,7 @@ msgid "Theme not found"
 msgstr "थीम नहीं मिली"
 
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/theme_studio/sections/LibrarySection.tsx:47
+#: src/features/theme_studio/sections/LibrarySection.tsx:50
 msgid "Theme saved."
 msgstr "थीम सेव हो गई।"
 
@@ -34892,7 +34941,7 @@ msgid "This refunds your most recent invoice and cancels any associated subscrip
 msgstr "इससे आपके सबसे हाल के इनवॉइस का रिफंड हो जाता है और उससे जुड़ी कोई भी सदस्यता रद्द हो जाती है। इसके बाद आप 30 दिन तक फिर से खुद रिफंड नहीं ले पाएंगे।"
 
 #. Confirmation text before deleting a saved local theme from Theme Studio.
-#: src/features/theme_studio/sections/LibrarySection.tsx:55
+#: src/features/theme_studio/sections/LibrarySection.tsx:58
 msgid "This removes \"{themeName}\" from this device."
 msgstr "यह \"{themeName}\" को इस डिवाइस से हटा देगा।"
 
@@ -35638,7 +35687,7 @@ msgid "Trusted domains cleared."
 msgstr "भरोसेमंद डोमेन हटा दिए गए हैं।"
 
 #. Description text in the theme studio library section.
-#: src/features/theme_studio/sections/LibrarySection.tsx:93
+#: src/features/theme_studio/sections/LibrarySection.tsx:96
 msgid "Try a different name or clear the search."
 msgstr "कोई दूसरा नाम आज़माएँ या खोज साफ़ करें।"
 
@@ -36496,6 +36545,11 @@ msgstr "unknown-mention"
 msgid "unknown-role"
 msgstr "unknown-role"
 
+#. Button in the Theme Studio library that stops a theme following its CSS file on disk and turns it back into an editable copy.
+#: src/features/theme_studio/sections/LibrarySection.tsx:681
+msgid "Unlink"
+msgstr "अनलिंक करें"
+
 #: src/features/channel/components/EmojiPicker.tsx:176
 #: src/features/channel/components/MobileEmojiPicker.tsx:212
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
@@ -36793,12 +36847,12 @@ msgid "Unread message badge"
 msgstr "न पढ़े गए मैसेज का बैज"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers, when there are unread messages but no exact count to show.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:275
+#: src/features/platform/utils/DesktopLocaleBridge.ts:288
 msgid "Unread messages"
 msgstr "अपठित मैसेज"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:280
+#: src/features/platform/utils/DesktopLocaleBridge.ts:293
 msgid "Unread messages: {count}"
 msgstr "अपठित मैसेज: {count}"
 
@@ -36807,7 +36861,7 @@ msgstr "अपठित मैसेज: {count}"
 msgid "Unreads"
 msgstr "अपठित"
 
-#: src/features/theme_studio/sections/LibrarySection.tsx:578
+#: src/features/theme_studio/sections/LibrarySection.tsx:758
 msgid "Unsaved changes"
 msgstr "सेव नहीं किए गए बदलाव"
 
@@ -38123,7 +38177,7 @@ msgid "Vermont"
 msgstr "वरमोंट"
 
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/theme_studio/sections/LibrarySection.tsx:113
+#: src/features/theme_studio/sections/LibrarySection.tsx:116
 msgid "Version"
 msgstr "वर्ज़न"
 
@@ -39034,7 +39088,7 @@ msgid "We couldn't forward the message at this time."
 msgstr "हम इस समय मैसेज फ़ॉरवर्ड नहीं कर पाए।"
 
 #. Error message in the theme studio library section.
-#: src/features/theme_studio/sections/LibrarySection.tsx:77
+#: src/features/theme_studio/sections/LibrarySection.tsx:80
 msgid "We couldn't import that theme library file."
 msgstr "हम उस थीम लाइब्रेरी फ़ाइल को इंपोर्ट नहीं कर पाए।"
 

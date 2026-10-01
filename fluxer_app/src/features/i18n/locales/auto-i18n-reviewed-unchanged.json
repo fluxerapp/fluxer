@@ -1609,7 +1609,16 @@
         "msgid": "By purchasing, you agreed to our {legalDocument}."
       },
       {
+        "msgid": "CSS files"
+      },
+      {
         "msgid": "Camera access is needed for device previews"
+      },
+      {
+        "msgid": "Can't find {path}. Using the last loaded version."
+      },
+      {
+        "msgid": "Can't read {path}. Using the last loaded version."
       },
       {
         "msgid": "Cancel price change"
@@ -2309,6 +2318,24 @@
       },
       {
         "msgid": "Link a new device"
+      },
+      {
+        "msgid": "Link file"
+      },
+      {
+        "msgid": "Linked file unavailable"
+      },
+      {
+        "msgid": "Linked to a file"
+      },
+      {
+        "msgid": "Linked to {path}."
+      },
+      {
+        "msgid": "Linked to {path}. Edit the file in any editor and saved changes apply here right away."
+      },
+      {
+        "msgid": "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
       },
       {
         "msgid": "Loading instance configuration"
@@ -3551,6 +3578,9 @@
       },
       {
         "msgid": "Unfollow {name}?"
+      },
+      {
+        "msgid": "Unlink"
       },
       {
         "msgid": "Unread channels"
