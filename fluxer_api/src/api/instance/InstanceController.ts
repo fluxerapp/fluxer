@@ -166,8 +166,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 			statusCode: 200,
 			security: [],
 			tags: ['Instance'],
-			description:
-				'Returns the badges defined on this instance and the overrides for built-in badge icons.',
+			description: 'Returns the badges defined on this instance and the overrides for built-in badge icons.',
 		}),
 		async (ctx) => {
 			const badges = await ctx.get('instanceConfigRepository').getBadgeConfig();

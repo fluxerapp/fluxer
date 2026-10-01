@@ -20,16 +20,7 @@ use crate::{
 };
 use maud::{Markup, PreEscaped, html};
 
-const BADGE_TYPES: [(&str, &str); 2] = [
-    (
-        "user",
-        "User badges"
-    ),
-    (
-        "guild",
-        "Community badges"
-    ),
-];
+const BADGE_TYPES: [(&str, &str); 2] = [("user", "User badges"), ("guild", "Community badges")];
 const BUILTIN_BADGES: [(&str, &str); 5] = [
     ("staff", "Staff"),
     ("premium", "Premium"),

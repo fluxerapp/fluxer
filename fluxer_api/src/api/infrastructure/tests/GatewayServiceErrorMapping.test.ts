@@ -91,6 +91,7 @@ describe('GatewayService gateway error mapping', () => {
 				calls += 1;
 				throw new GatewayRpcMethodError(GatewayRpcMethodErrorCodes.GUILD_OVERLOADED);
 			},
+			async publish(): Promise<void> {},
 			async destroy(): Promise<void> {},
 		});
 		await expect(client.call('guild.dispatch', {guild_id: '1'})).rejects.toMatchObject({

@@ -12,11 +12,7 @@ import {createStringType, SnowflakeType} from '@fluxer/schema/src/primitives/Sch
 import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {z} from 'zod';
 
-const BadgeIconType = z
-	.string()
-	.min(1)
-	.max(MAX_BADGE_ICON_INPUT_LENGTH)
-	.describe('SVG markup of the badge icon');
+const BadgeIconType = z.string().min(1).max(MAX_BADGE_ICON_INPUT_LENGTH).describe('SVG markup of the badge icon');
 const BadgePositionType = z.number().int().min(0).max(MAX_BADGES_PER_TYPE);
 
 export const CreateBadgeRequest = z.object({
@@ -32,7 +28,9 @@ export type CreateBadgeRequest = z.infer<typeof CreateBadgeRequest>;
 
 export const UpdateBadgeRequest = z.object({
 	name: createStringType(1, MAX_BADGE_NAME_LENGTH).optional().describe('The name of the badge'),
-	tooltip: createStringType(1, MAX_BADGE_TOOLTIP_LENGTH).optional().describe('The text shown when hovering over the badge'),
+	tooltip: createStringType(1, MAX_BADGE_TOOLTIP_LENGTH)
+		.optional()
+		.describe('The text shown when hovering over the badge'),
 	icon: BadgeIconType.optional(),
 	url: URLType.nullish().describe('The URL opened when the badge is clicked, or null to remove the URL'),
 	position: BadgePositionType.optional().describe('The display order of the badge'),

@@ -58,8 +58,7 @@ export function BadgeAdminController(app: HonoApp) {
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
-			description:
-				'Creates a user or guild badge. Creates audit log entry. Requires BADGE_CREATE permission.',
+			description: 'Creates a user or guild badge. Creates audit log entry. Requires BADGE_CREATE permission.',
 		}),
 		async (ctx) =>
 			ctx.json(

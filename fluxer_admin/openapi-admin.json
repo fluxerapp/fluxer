@@ -1224,7 +1224,7 @@
 						"in": "path",
 						"required": true,
 						"schema": {"allOf": [{"$ref": "#/components/schemas/BuiltinBadgeEnum"}]},
-						"description": "Built-in badge whose icon can be overridden"
+						"description": "Type of built-in icon override"
 					}
 				],
 				"requestBody": {
@@ -6293,7 +6293,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Replaces the badges shown on the user profile with the given user badges. Creates audit log entry. Requires USER_UPDATE_BADGES permission.",
+				"description": "Replaces the badges shown on the user profile with the given badges. Creates audit log entry. Requires USER_UPDATE_BADGES permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -10412,10 +10412,10 @@
 				"type": "object",
 				"properties": {
 					"badge_ids": {
-						"maxItems": 25,
+						"maxItems": 10,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "IDs of the badges to assign; replaces every badge currently assigned"
+						"description": "IDs of the badges to write to the account record"
 					}
 				},
 				"required": ["badge_ids"]
@@ -12198,10 +12198,10 @@
 						"items": {"allOf": [{"$ref": "#/components/schemas/GuildFeatureSchema"}]}
 					},
 					"badge_ids": {
-						"maxItems": 25,
+						"maxItems": 10,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"description": "IDs of the badges to assign; replaces every badge currently assigned"
+						"description": "IDs of the badges to write to the account record"
 					},
 					"fields": {
 						"maxItems": 10,
@@ -13149,24 +13149,14 @@
 				"type": "object",
 				"properties": {
 					"name": {"description": "The name of the badge", "type": "string"},
-					"tooltip": {"description": "The text shown when hovering the badge", "type": "string"},
-					"icon": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 65536,
-						"description": "SVG markup of the badge icon; sanitized before it is stored"
-					},
+					"tooltip": {"description": "The text shown when hovering over the badge", "type": "string"},
+					"icon": {"type": "string", "minLength": 1, "maxLength": 25600, "description": "SVG markup of the badge icon"},
 					"url": {
-						"description": "The URL opened when the badge is clicked, or null to remove it",
+						"description": "The URL opened when the badge is clicked, or null to remove the URL",
 						"nullable": true,
 						"type": "string"
 					},
-					"position": {
-						"description": "Sort order of the badge; lower values are shown first",
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 100
-					}
+					"position": {"description": "The display order of the badge", "type": "integer", "minimum": 0, "maximum": 10}
 				}
 			},
 			"BadgeMutationResponse": {
@@ -13183,13 +13173,13 @@
 						"description": "SVG markup of the badge icon, or null to restore the default icon",
 						"type": "string",
 						"minLength": 1,
-						"maxLength": 65536
+						"maxLength": 25600
 					}
 				},
 				"required": ["icon"]
 			},
 			"BuiltinBadgeEnum": {
-				"description": "Built-in badge whose icon can be overridden",
+				"description": "Type of built-in icon override",
 				"x-enumNames": ["Staff", "Premium", "Verified", "Partnered", "Discoverable"],
 				"x-enumDescriptions": [
 					"Staff member badge",
@@ -13212,27 +13202,17 @@
 				},
 				"required": ["staff", "premium", "verified", "partnered", "discoverable"],
 				"additionalProperties": false,
-				"description": "SVG markup overriding built-in badge icons, or null to use the default icon"
+				"description": "SVG markup to override the built-in badge with, or null to reset to default"
 			},
 			"CreateBadgeRequest": {
 				"type": "object",
 				"properties": {
 					"type": {"allOf": [{"$ref": "#/components/schemas/BadgeTypeEnum"}]},
 					"name": {"description": "The name of the badge", "type": "string"},
-					"tooltip": {"description": "The text shown when hovering the badge", "type": "string"},
-					"icon": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 65536,
-						"description": "SVG markup of the badge icon; sanitized before it is stored"
-					},
+					"tooltip": {"description": "The text shown when hovering over the badge", "type": "string"},
+					"icon": {"type": "string", "minLength": 1, "maxLength": 25600, "description": "SVG markup of the badge icon"},
 					"url": {"description": "The URL opened when the badge is clicked", "nullable": true, "type": "string"},
-					"position": {
-						"description": "Sort order of the badge; defaults to after every existing badge",
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 100
-					}
+					"position": {"description": "The display order of the badge", "type": "integer", "minimum": 0, "maximum": 10}
 				},
 				"required": ["type", "name", "tooltip", "icon"]
 			},
@@ -13816,21 +13796,21 @@
 					"id": {"description": "The ID of the badge", "allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]},
 					"type": {"allOf": [{"$ref": "#/components/schemas/BadgeTypeEnum"}]},
 					"name": {"type": "string", "description": "The name of the badge"},
-					"tooltip": {"type": "string", "description": "The text shown when hovering the badge"},
+					"tooltip": {"type": "string", "description": "The text shown when hovering over the badge"},
 					"icon": {"type": "string", "description": "SVG markup of the badge icon"},
 					"url": {"nullable": true, "description": "The URL opened when the badge is clicked", "type": "string"},
 					"position": {
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991,
-						"description": "Sort order of the badge; lower values are shown first"
+						"description": "Display order of the badge"
 					}
 				},
 				"required": ["id", "type", "name", "tooltip", "icon", "url", "position"],
 				"additionalProperties": false
 			},
 			"BadgeTypeEnum": {
-				"description": "Entity type a badge can be assigned to",
+				"description": "The target entity type of the badge",
 				"x-enumNames": ["User", "Guild"],
 				"x-enumDescriptions": ["Badge shown on user profiles", "Badge shown next to community names"],
 				"enum": ["user", "guild"],
@@ -15500,7 +15480,7 @@
 				]
 			},
 			"BadgeIdsResponse": {
-				"maxItems": 25,
+				"maxItems": 10,
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
 				"description": "IDs of the badges assigned to the entity"

@@ -21,6 +21,7 @@ describe('LookupGuildResponse', () => {
 		banner: null,
 		splash: null,
 		embed_splash: null,
+		badge_ids: [],
 		features: [],
 		verification_level: 0,
 		mfa_level: 0,

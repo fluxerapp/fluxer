@@ -2017,7 +2017,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Returns the badges defined on this instance and the overrides for built-in badge icons"
+				"description": "Returns the badges defined on this instance and the overrides for built-in badge icons."
 			}
 		},
 		"/channels/messages/bulk": {
@@ -27269,7 +27269,10 @@
 						"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
 						"description": "Array of guild feature flags"
 					},
-					"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"},
+					"badges": {
+						"description": "The IDs of the custom badges of the guild",
+						"$ref": "#/components/schemas/BadgeIdsResponse"
+					},
 					"verification_level": {
 						"$ref": "#/components/schemas/GuildVerificationLevel",
 						"description": "Required verification level for members to participate"
@@ -28528,7 +28531,7 @@
 								"member_count": {"type": "number", "description": "Approximate member count"},
 								"online_count": {"type": "number", "description": "Approximate online member count"},
 								"features": {"type": "array", "items": {"type": "string"}, "description": "Guild feature flags"},
-								"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"},
+								"badges": {"description": "Guild custom badges", "$ref": "#/components/schemas/BadgeIdsResponse"},
 								"verification_level": {"type": "number", "description": "Verification level"}
 							},
 							"required": [
@@ -30692,7 +30695,7 @@
 				},
 				"required": ["staff", "premium", "verified", "partnered", "discoverable"],
 				"additionalProperties": false,
-				"description": "SVG markup overriding built-in badge icons, or null to use the default icon"
+				"description": "SVG markup to override the built-in badge with, or null to reset to default"
 			},
 			"BadgeResponse": {
 				"type": "object",
@@ -30700,21 +30703,21 @@
 					"id": {"description": "The ID of the badge", "$ref": "#/components/schemas/SnowflakeStringType"},
 					"type": {"$ref": "#/components/schemas/BadgeTypeEnum"},
 					"name": {"type": "string", "description": "The name of the badge"},
-					"tooltip": {"type": "string", "description": "The text shown when hovering the badge"},
+					"tooltip": {"type": "string", "description": "The text shown when hovering over the badge"},
 					"icon": {"type": "string", "description": "SVG markup of the badge icon"},
 					"url": {"description": "The URL opened when the badge is clicked", "type": ["string", "null"]},
 					"position": {
 						"type": "integer",
 						"minimum": -9007199254740991,
 						"maximum": 9007199254740991,
-						"description": "Sort order of the badge; lower values are shown first"
+						"description": "Display order of the badge"
 					}
 				},
 				"required": ["id", "type", "name", "tooltip", "icon", "url", "position"],
 				"additionalProperties": false
 			},
 			"BadgeTypeEnum": {
-				"description": "Entity type a badge can be assigned to",
+				"description": "The target entity type of the badge",
 				"x-enumNames": ["User", "Guild"],
 				"x-enumDescriptions": ["Badge shown on user profiles", "Badge shown next to community names"],
 				"enum": ["user", "guild"],
@@ -31022,7 +31025,10 @@
 								"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
 								"description": "Array of guild feature flags"
 							},
-							"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"}
+							"badges": {
+								"description": "The IDs of the custom badges of the guild",
+								"$ref": "#/components/schemas/BadgeIdsResponse"
+							}
 						},
 						"description": "The guild this invite is for",
 						"$ref": "#/components/schemas/GuildPartialResponse"
@@ -31149,13 +31155,16 @@
 						"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
 						"description": "Array of guild feature flags"
 					},
-					"badges": {"$ref": "#/components/schemas/BadgeIdsResponse"}
+					"badges": {
+						"description": "The IDs of the custom badges of the guild",
+						"$ref": "#/components/schemas/BadgeIdsResponse"
+					}
 				},
 				"required": ["id", "name", "splash_card_alignment", "features"],
 				"additionalProperties": false
 			},
 			"BadgeIdsResponse": {
-				"maxItems": 25,
+				"maxItems": 10,
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/SnowflakeStringType"},
 				"description": "IDs of the badges assigned to the entity"
