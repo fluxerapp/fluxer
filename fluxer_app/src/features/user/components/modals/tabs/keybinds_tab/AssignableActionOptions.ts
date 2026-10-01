@@ -63,6 +63,22 @@ const CUSTOM_KEYBIND_ACTION_LABEL_DESCRIPTORS: Partial<Record<KeybindCommand, Me
 		message: 'Move item down',
 		comment: 'Label in the keybinds tab action dropdown. Distinguishes up from down.',
 	}),
+	message_reply_prev: msg({
+		message: 'Reply to message above',
+		comment: 'Label in the keybinds tab action dropdown. Distinguishes above from below.',
+	}),
+	message_reply_next: msg({
+		message: 'Reply to message below',
+		comment: 'Label in the keybinds tab action dropdown. Distinguishes above from below.',
+	}),
+	message_edit_prev: msg({
+		message: 'Edit your message above',
+		comment: 'Label in the keybinds tab action dropdown. Distinguishes above from below.',
+	}),
+	message_edit_next: msg({
+		message: 'Edit your message below',
+		comment: 'Label in the keybinds tab action dropdown. Distinguishes above from below.',
+	}),
 };
 
 export function getCustomKeybindActionLabel(i18n: I18n, action: KeybindCommand, fallbackLabel?: string): string {

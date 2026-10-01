@@ -1975,6 +1975,12 @@
         "msgid": "Edit published message?"
       },
       {
+        "msgid": "Edit your message above"
+      },
+      {
+        "msgid": "Edit your message below"
+      },
+      {
         "msgid": "Edit your messages above or below"
       },
       {
@@ -2672,6 +2678,12 @@
       },
       {
         "msgid": "Renamed the community from {oldName} to {newName}."
+      },
+      {
+        "msgid": "Reply to message above"
+      },
+      {
+        "msgid": "Reply to message below"
       },
       {
         "msgid": "Reply to messages above or below"

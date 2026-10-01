@@ -4,6 +4,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import styles from '@app/features/input/components/modals/KeyboardShortcutsCheatsheetModal.module.css';
 import Keybind, {type KeybindConfig, type KeybindSection} from '@app/features/input/state/InputKeybind';
+import {getSuppressedBuiltinActions} from '@app/features/input/state/KeybindResolution';
 import {formatKeyComboParts} from '@app/features/input/utils/KeybindUtils';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {
@@ -105,13 +106,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 	const {i18n} = useLingui();
 	const defaults = Keybind.getDefaults();
 	const customKeybinds = Keybind.getCustomKeybinds();
-	const customActions = useMemo(() => {
-		const result = new Set<string>();
-		for (const entry of customKeybinds) {
-			if (entry.action) result.add(entry.action);
-		}
-		return result;
-	}, [customKeybinds]);
+	const suppressedActions = useMemo(() => getSuppressedBuiltinActions(customKeybinds), [customKeybinds]);
 	const sectionLabels: Record<KeybindSection, string> = {
 		defaults: i18n._(DEFAULT_SHORTCUTS_DESCRIPTOR),
 		messages: i18n._(MESSAGES_DESCRIPTOR),
@@ -134,7 +129,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 		for (const sectionId of DEFAULT_KEYBIND_SECTIONS) {
 			const entries = defaults.filter((entry) => entry.section === sectionId && !entry.hideFromDefaults);
 			for (const entry of sortBySectionDisplayOrder(sectionId, entries)) {
-				const chipGroups = getShortcutChipGroups(i18n, entry, customActions.has(entry.action));
+				const chipGroups = getShortcutChipGroups(i18n, entry, suppressedActions.has(entry.action));
 				if (chipGroups.length === 0) continue;
 				result[sectionId].push({
 					action: entry.action,
@@ -144,7 +139,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 			}
 		}
 		return result;
-	}, [customActions, defaults, i18n, i18n.locale]);
+	}, [suppressedActions, defaults, i18n, i18n.locale]);
 	return (
 		<Modal.Root size="xlarge" data-flx="input.keyboard-shortcuts-cheatsheet-modal.modal-root">
 			<Modal.ScreenReaderLabel

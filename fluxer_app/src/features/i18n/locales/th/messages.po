@@ -33,7 +33,7 @@ msgid "(only visible to you)"
 msgstr "(คุณเท่านั้นที่เห็น)"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:26
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:27
 msgid "(unassigned)"
 msgstr "(ไม่ได้กำหนด)"
 
@@ -3067,7 +3067,7 @@ msgid "Add an extra layer of security to your account"
 msgstr "เพิ่มความปลอดภัยอีกขั้นให้กับบัญชีของคุณ"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:40
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:41
 msgid "Add another custom shortcut"
 msgstr "เพิ่มปุ่มลัดที่กำหนดเองอีก"
 
@@ -3222,7 +3222,7 @@ msgstr "เพิ่มบทบาท"
 msgid "Add search engine"
 msgstr "เพิ่มเครื่องมือค้นหา"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:155
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:160
 msgid "Add shortcut"
 msgstr "เพิ่มปุ่มลัด"
 
@@ -7378,9 +7378,9 @@ msgstr "เกินขีดจำกัดไป {remaining} ตัวอั�
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
 #. User settings tab for chat message, media, and input behavior.
-#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:41
+#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:15
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:39
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:40
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:115
 msgid "Chat"
 msgstr "แชท"
@@ -10933,7 +10933,7 @@ msgstr "ตัวเลือกทางลัดที่กำหนดเอ
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short heading in the keybinds tab.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:50
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:51
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:102
 msgid "Custom shortcuts"
 msgstr "ทางลัดกำหนดเอง"
@@ -11424,8 +11424,8 @@ msgstr "เครื่องมือค้นหาเริ่มต้น"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:25
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:23
+#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:26
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:24
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:130
 msgid "Default shortcuts"
 msgstr "ปุ่มลัดเริ่มต้น"
@@ -12287,7 +12287,7 @@ msgid "Disable backend premium perks"
 msgstr "ปิดสิทธิประโยชน์พรีเมียมของแบ็กเอนด์"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:32
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:33
 msgid "Disable built-in shortcut"
 msgstr "ปิดปุ่มลัดในตัว"
 
@@ -12297,7 +12297,7 @@ msgid "Disable built-in shortcuts"
 msgstr "ปิดการใช้งานปุ่มลัดในตัว"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:42
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:43
 msgid "Disable built-ins"
 msgstr "ปิดปุ่มลัดในตัว"
 
@@ -12382,8 +12382,10 @@ msgstr "ฟอร์มปิดการยืนยันตัวตนแบ
 msgid "Disable video locally"
 msgstr "ปิดวิดีโอเฉพาะฉัน"
 
+#. Status next to a built-in shortcut the user turned off in the keybinds tab.
 #. Summary value when a setup option is disabled.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:403
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:45
 msgid "Disabled"
 msgstr "ปิดใช้งานแล้ว"
 
@@ -13020,8 +13022,8 @@ msgstr "ฉบับร่าง"
 
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:37
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:35
+#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:38
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:36
 msgid "Drag and drop"
 msgstr "ลากและวาง"
 
@@ -13411,6 +13413,16 @@ msgstr "แก้ไขรูปโปรไฟล์บอท แท็ก ป�
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:34
 msgid "Edit translation provider"
 msgstr "แก้ไขผู้ให้บริการแปลภาษา"
+
+#. Label in the keybinds tab action dropdown. Distinguishes above from below.
+#: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:74
+msgid "Edit your message above"
+msgstr "แก้ไขข้อความของคุณด้านบน"
+
+#. Label in the keybinds tab action dropdown. Distinguishes above from below.
+#: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:78
+msgid "Edit your message below"
+msgstr "แก้ไขข้อความของคุณด้านล่าง"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:13
@@ -16623,7 +16635,7 @@ msgstr "โปรไฟล์ส่วนกลาง"
 
 #. Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:81
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:57
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:63
 msgid "Global shortcut"
 msgstr "ปุ่มลัดทั่วทั้งระบบ"
 
@@ -19242,7 +19254,7 @@ msgstr "แสดงปุ่มลัดแป้นพิมพ์ในคำ
 #. Modal title for the keyboard shortcuts cheatsheet.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:21
+#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:22
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:14
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:374
 msgid "Keyboard shortcuts"
@@ -21222,11 +21234,11 @@ msgstr "เลิกปักหมุดข้อความแล้ว"
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/channel/components/ChannelChatLayout.tsx:10
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:312
-#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:29
+#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:30
 #: src/features/theme_studio/sections/TokenGroups.ts:86
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:39
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:27
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:28
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:18
 msgid "Messages"
 msgstr "ข้อความ"
@@ -21427,8 +21439,8 @@ msgstr "สะท้อนระดับชั้น"
 
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:49
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:47
+#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:50
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:48
 msgid "Miscellaneous"
 msgstr "เบ็ดเตล็ด"
 
@@ -21656,7 +21668,7 @@ msgid "More options"
 msgstr "ตัวเลือกเพิ่มเติม"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:53
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:59
 msgid "More shortcut options"
 msgstr "ตัวเลือกทางลัดเพิ่มเติม"
 
@@ -22316,8 +22328,8 @@ msgstr "เลื่อนดูข้อความและการดำเ
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:33
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:31
+#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:34
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:32
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:30
 msgid "Navigation"
 msgstr "การนำทาง"
@@ -22801,11 +22813,11 @@ msgstr "ไม่มีแบนเนอร์คอมมูนิตี้"
 msgid "No connections yet"
 msgstr "ยังไม่มีการเชื่อมต่อ"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:184
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:189
 msgid "No custom shortcuts match that search."
 msgstr "ไม่มีปุ่มลัดที่กำหนดเองตรงกับการค้นหานั้น"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:180
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:185
 msgid "No custom shortcuts yet."
 msgstr "ยังไม่มีปุ่มลัดที่กำหนดเอง"
 
@@ -23109,7 +23121,7 @@ msgstr "ไม่พบการตั้งค่า"
 msgid "No shortcut set"
 msgstr "ไม่ได้ตั้งค่าปุ่มลัด"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:94
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:95
 msgid "No shortcuts match that search."
 msgstr "ไม่มีปุ่มลัดที่ตรงกับการค้นหานั้น"
 
@@ -24535,7 +24547,7 @@ msgstr "กลุ่มรูปโปรไฟล์ที่ซ้อนกั
 msgid "Overlays & menus"
 msgstr "โอเวอร์เลย์และเมนู"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:37
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:38
 msgid "Overridden"
 msgstr "ถูกแทนที่"
 
@@ -26428,6 +26440,11 @@ msgstr "ถูกจำกัดอัตรา"
 msgid "Raw embed JSON"
 msgstr "JSON ดิบของการฝัง"
 
+#. Button or menu action label in the keybinds tab. Turns a disabled built-in shortcut back on. Keep it concise.
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:50
+msgid "Re-enable built-in shortcut"
+msgstr "เปิดปุ่มลัดในตัวอีกครั้ง"
+
 #. Button label that discards the current recording and restarts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:73
 msgid "Re-record"
@@ -27520,6 +27537,16 @@ msgstr "การตั้งค่าการกล่าวถึงในก
 msgid "Reply to message"
 msgstr "ตอบกลับข้อความ"
 
+#. Label in the keybinds tab action dropdown. Distinguishes above from below.
+#: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:66
+msgid "Reply to message above"
+msgstr "ตอบกลับข้อความด้านบน"
+
+#. Label in the keybinds tab action dropdown. Distinguishes above from below.
+#: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:70
+msgid "Reply to message below"
+msgstr "ตอบกลับข้อความด้านล่าง"
+
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:29
 msgid "Reply to messages above or below"
@@ -27812,7 +27839,7 @@ msgid "Reset"
 msgstr "รีเซ็ต"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:44
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:45
 msgid "Reset \"{label}\" to built-in"
 msgstr "รีเซ็ต \"{label}\" เป็นค่าเริ่มต้น"
 
@@ -27840,7 +27867,7 @@ msgid "Reset all overrides"
 msgstr "รีเซ็ตระดับเสียงที่กำหนดเองทั้งหมด"
 
 #. Confirmation prompt in the keybinds tab.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:30
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:31
 msgid "Reset all shortcuts?"
 msgstr "รีเซ็ตทางลัดทั้งหมดหรือไม่"
 
@@ -27933,7 +27960,7 @@ msgid "Reset to actual values"
 msgstr "รีเซ็ตเป็นค่าจริง"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:36
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:37
 msgid "Reset to built-in"
 msgstr "รีเซ็ตเป็นค่าเริ่มต้น"
 
@@ -27948,8 +27975,8 @@ msgstr "รีเซ็ตระดับเสียงเป็นค่าเ
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:38
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:138
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:39
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:143
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:110
 msgid "Reset to defaults"
 msgstr "รีเซ็ตเป็นค่าเริ่มต้น"
@@ -30028,12 +30055,12 @@ msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "ตั้งค่าโดยค่าที่ตั้งไว้ล่วงหน้า {preset} การเลือกค่าที่นี่จะเปลี่ยนเป็นแบบกำหนดเอง"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:28
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:29
 msgid "Set custom shortcut"
 msgstr "ตั้งค่าปุ่มลัดเอง"
 
 #. Label in the keybinds tab. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:49
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:55
 msgid "Set custom shortcut for \"{label}\""
 msgstr "ตั้งค่าปุ่มลัดสำหรับ \"{label}\""
 
@@ -30471,7 +30498,7 @@ msgid "Shortcuts"
 msgstr "ปุ่มลัด"
 
 #. Short helper text in the keybinds tab.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:54
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:55
 msgid "Shortcuts are paused while recording."
 msgstr "ปุ่มลัดจะหยุดทำงานชั่วคราวระหว่างการบันทึก"
 
@@ -33027,7 +33054,7 @@ msgstr "ซิงค์การตั้งค่าลดการเคลื
 
 #. Label in the keybinds tab.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:46
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:47
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:118
 msgid "Sync shortcuts"
 msgstr "ซิงค์ปุ่มลัด"
@@ -34621,7 +34648,7 @@ msgid "This removes all trusted domains. You will see the external link warning 
 msgstr "การดำเนินการนี้จะลบโดเมนที่เชื่อถือได้ทั้งหมด คุณจะเห็นคำเตือนลิงก์ภายนอกสำหรับทุกโดเมนอีกครั้ง"
 
 #. Error message in the keybinds tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:34
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:35
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "การดำเนินการนี้จะลบปุ่มลัดที่กำหนดเองทั้งหมดและเปิดใช้งานปุ่มลัดในตัวทั้งหมดอีกครั้ง การดำเนินการนี้ไม่สามารถเลิกทำได้"
 
@@ -35857,7 +35884,7 @@ msgstr "ไม่สามารถแสดงตัวอย่าง URL ไ�
 
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:12
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:18
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:19
 msgid "Unassigned"
 msgstr "ไม่ได้กำหนด"
 
@@ -38331,8 +38358,8 @@ msgstr "อัปเดตการแชร์กิจกรรมเสีย
 
 #. Short heading in the keyboard shortcuts cheatsheet.
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:45
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:43
+#: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:46
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:44
 msgid "Voice and video"
 msgstr "เสียงและวิดีโอ"
 
