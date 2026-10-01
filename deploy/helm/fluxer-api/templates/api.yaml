@@ -1,0 +1,24 @@
+{{- range $name, $w := .Values.api }}
+{{- if not (kindIs "invalid" $w) }}
+{{- $ctx := dict "root" $ "name" $name "w" $w "component" "api" "probes" ($.Values.probes | default dict) }}
+{{ include "fluxer-api.deployment" $ctx }}
+{{ include "fluxer-api.hpa" $ctx }}
+{{ include "fluxer-api.pdb" $ctx }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-api.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer-api.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+{{- end }}
+{{- end }}

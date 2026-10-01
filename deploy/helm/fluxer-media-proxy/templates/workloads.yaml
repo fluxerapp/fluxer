@@ -1,0 +1,191 @@
+{{- range $name, $w := .Values.workloads }}
+{{- if not (kindIs "invalid" $w) }}
+{{- $ctx := dict "root" $ "name" $name "w" $w }}
+{{- $mode := include "fluxer-media-proxy.mode" $ctx }}
+{{- $sel := include "fluxer-media-proxy.selectorLabels" $ctx | fromYaml }}
+{{- $env := include "fluxer-media-proxy.mergeEnv" (list $.Values.env $w.env) | fromYaml }}
+{{- $extraEnv := concat ($.Values.extraEnv | default list) ($w.extraEnv | default list) }}
+{{- $envFrom := concat ($.Values.envFrom | default list) ($w.envFrom | default list) }}
+{{- $podAnnotations := merge (dict) ($w.podAnnotations | default dict) ($.Values.podAnnotations | default dict) }}
+{{- $probes := dict }}
+{{- range $k, $v := ($.Values.probes | default dict) }}
+{{- $_ := set $probes $k $v }}
+{{- end }}
+{{- range $k, $v := ($w.probes | default dict) }}
+{{- $_ := set $probes $k $v }}
+{{- end }}
+{{- $pick := dict "root" $ "w" $w }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-media-proxy.labels" $ctx | nindent 4 }}
+spec:
+  {{- if not $w.hpa }}
+  replicas: {{ ternary $w.replicas 1 (hasKey $w "replicas") | int64 }}
+  {{- end }}
+  {{- if not (kindIs "invalid" $w.minReadySeconds) }}
+  minReadySeconds: {{ $w.minReadySeconds | int64 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- toYaml $sel | nindent 6 }}
+  {{- with include "fluxer-media-proxy.pick" (set (deepCopy $pick) "key" "strategy") }}
+  strategy:
+    {{- . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      {{- with $podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "fluxer-media-proxy.labels" $ctx | nindent 8 }}
+    spec:
+      {{- with include "fluxer-media-proxy.pick" (set (deepCopy $pick) "key" "imagePullSecrets") }}
+      imagePullSecrets:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "fluxer-media-proxy.pick" (set (deepCopy $pick) "key" "podSecurityContext") }}
+      securityContext:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- if not (kindIs "invalid" $w.terminationGracePeriodSeconds) }}
+      terminationGracePeriodSeconds: {{ $w.terminationGracePeriodSeconds | int64 }}
+      {{- end }}
+      {{- with include "fluxer-media-proxy.pick" (set (deepCopy $pick) "key" "nodeSelector") }}
+      nodeSelector:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "fluxer-media-proxy.pick" (set (deepCopy $pick) "key" "tolerations") }}
+      tolerations:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "fluxer-media-proxy.pick" (set (deepCopy $pick) "key" "affinity") }}
+      affinity:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "fluxer-media-proxy.pick" (set (deepCopy $pick) "key" "topologySpreadConstraints") | fromYamlArray }}
+      topologySpreadConstraints:
+        {{- include "fluxer-media-proxy.topologySpreadConstraints" (dict "constraints" . "selector" $sel) | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "fluxer-media-proxy.image" $ctx }}
+          imagePullPolicy: {{ ($w.image | default dict).pullPolicy | default $.Values.image.pullPolicy }}
+          env:
+            {{- if not (kindIs "invalid" $w.buildVersion) }}
+            - name: BUILD_VERSION
+              value: {{ include "fluxer-media-proxy.envValue" $w.buildVersion | quote }}
+            {{- end }}
+            - name: FLUXER_MEDIA_PROXY_MODE
+              value: {{ $mode | quote }}
+            {{- range $k, $v := $env }}
+            - name: {{ $k }}
+              value: {{ include "fluxer-media-proxy.envValue" $v | quote }}
+            {{- end }}
+            {{- with $extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with $envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          {{- with $w.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- range $k := list "startup" "liveness" "readiness" }}
+          {{- with get $probes $k }}
+          {{ $k }}Probe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- with $w.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with include "fluxer-media-proxy.pick" (set (deepCopy $pick) "key" "securityContext") }}
+          securityContext:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- with $w.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with $w.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-media-proxy.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- toYaml $sel | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+{{- with include "fluxer-media-proxy.pdb" ($w.pdb | default dict) | fromYaml }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $name }}-pdb
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-media-proxy.labels" $ctx | nindent 4 }}
+spec:
+  {{- toYaml . | nindent 2 }}
+  selector:
+    matchLabels:
+      {{- toYaml $sel | nindent 6 }}
+{{- end }}
+{{- with $w.hpa }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-media-proxy.labels" $ctx | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $name }}
+  minReplicas: {{ required (printf "workloads.%s.hpa.minReplicas is required" $name) .minReplicas | int64 }}
+  maxReplicas: {{ required (printf "workloads.%s.hpa.maxReplicas is required" $name) .maxReplicas | int64 }}
+  {{- if not (kindIs "invalid" .targetCPUUtilizationPercentage) }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .targetCPUUtilizationPercentage | int64 }}
+  {{- end }}
+  {{- with .behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

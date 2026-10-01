@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fluxer-ingress
+description: Ingress routing for the public Fluxer endpoints.
+type: application
+version: 0.1.0
+appVersion: "v1"
