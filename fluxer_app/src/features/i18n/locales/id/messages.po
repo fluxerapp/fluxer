@@ -1612,7 +1612,7 @@ msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "{PAYMENT_PROVIDER_NAME} menangani pembayaran dengan aman."
 
 #. Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:198
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
 msgstr "{paymentProviderName} akan memverifikasi dulu bahwa kartumu memenuhi syarat untuk harga lokal, lalu membawamu ke pembayaran. Kembali ke {productName} setelah kamu menyelesaikannya."
 
@@ -2561,7 +2561,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "Pembaruan desktop untuk Linux tersedia. Pilih format paket untuk sistem ini dan {productName} akan menyimpannya secara lokal."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "Harga yang lebih rendah tersedia. Peralihan berlaku mulai <0>{listPriceEffectiveDate}</0> dan tidak mengubah hal lain."
 
@@ -2876,7 +2876,7 @@ msgstr "Tindakan"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:447
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:452
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
@@ -3587,19 +3587,19 @@ msgstr "Kontrol perataan hanya tersedia di layar yang lebih lebar"
 msgid "All"
 msgstr "Semua"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:582
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "Semua <0/> seharga <1>{effectiveMonthlyPrice}/bulan</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:604
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "Semua <0/> seharga <1>{effectiveYearlyPrice}/tahun</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:583
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:625
 msgid "All <0/> included with your subscription."
 msgstr "Semua <0/> sudah termasuk dalam langgananmu."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:530
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:572
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Semua <0/>, selamanya. Tanpa tagihan, tanpa perpanjangan."
 
@@ -5678,6 +5678,16 @@ msgstr "Paling baik dengan aplikasi desktop"
 msgid "Between 1 and 32 characters"
 msgstr "Antara 1 dan 32 karakter"
 
+#. Plutonium subscription card text for an App Store or Google Play subscription. {storeName} is the store brand name, App Store or Google Play, and must not be translated.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:535
+msgid "Billed through {storeName}."
+msgstr "Ditagih melalui {storeName}."
+
+#. Plutonium subscription card text for an App Store or Google Play subscription that will not renew. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {endDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:525
+msgid "Billed through {storeName}. Ends on <0>{endDate}</0>."
+msgstr "Ditagih melalui {storeName}. Berakhir pada <0>{endDate}</0>."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:27
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:202
@@ -6598,7 +6608,7 @@ msgid "Cancel import"
 msgstr "Batalkan impor"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:837
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:892
 msgid "Cancel price change"
 msgstr "Batalkan perubahan harga"
 
@@ -6613,26 +6623,26 @@ msgid "Cancel request"
 msgstr "Batalkan permintaan"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:845
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:900
 msgid "Cancel scheduled switch"
 msgstr "Batalkan perubahan terjadwal"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:915
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Batalkan langganan"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
 msgid "Cancel subscription?"
 msgstr "Batalkan langganan?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:663
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:705
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "Batalkan perubahan terjadwal untuk beralih ke harga saat ini."
 
@@ -6642,7 +6652,7 @@ msgid "Cancel upload"
 msgstr "Batalkan unggahan"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:841
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:896
 msgid "Cancel yearly upgrade"
 msgstr "Batalkan peningkatan tahunan"
 
@@ -6652,7 +6662,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "Batalkan permintaan pertemananmu ke {displayName}?"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:435
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:440
 msgid "Canceling"
 msgstr "Akan dibatalkan"
 
@@ -6661,7 +6671,7 @@ msgstr "Akan dibatalkan"
 msgid "Cancellation"
 msgstr "Pembatalan gema"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:517
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "Dibatalkan pada <0>{cancelDate}</0>. <1/> tetap aktif sampai saat itu."
 
@@ -6926,7 +6936,7 @@ msgid "Change password form"
 msgstr "Formulir ubah kata sandi"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:439
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:444
 msgid "Change scheduled"
 msgstr "Perubahan terjadwal"
 
@@ -7527,17 +7537,17 @@ msgid "Checkout"
 msgstr "Checkout"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
 msgid "Checkout is blocked for this account."
 msgstr "Pembayaran diblokir untuk akun ini."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Checkout diblokir untuk akun ini. Hubungi {supportEmail} jika kamu butuh bantuan."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
 msgid "Checkout unavailable"
 msgstr "Checkout tidak tersedia"
 
@@ -7716,7 +7726,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Pilih cara waktu ditampilkan di seluruh aplikasi"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:60
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Pilih cara kamu ingin membayar langganan ini."
 
@@ -7735,7 +7745,7 @@ msgid "Choose one verification method. Either method can clear this check."
 msgstr "Pilih salah satu metode verifikasi. Salah satu metode dapat menyelesaikan pemeriksaan ini."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:204
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
 msgid "Choose payment method"
 msgstr "Pilih metode pembayaran"
 
@@ -8938,7 +8948,7 @@ msgid "Complete one of the verification paths below to continue using {productNa
 msgstr "Selesaikan salah satu jalur verifikasi di bawah untuk terus menggunakan {productName}."
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:194
 msgid "Complete payment"
 msgstr "Selesaikan pembayaran"
 
@@ -9412,7 +9422,7 @@ msgid "Continue"
 msgstr "Lanjutkan"
 
 #. Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:89
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
 msgid "Continue to checkout"
 msgstr "Lanjutkan ke pembayaran"
 
@@ -10189,7 +10199,7 @@ msgstr "Tidak dapat membuka hasil pencarian"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:32
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10346,7 +10356,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Tidak dapat memulai otorisasi {blueskyProviderName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
 msgid "Couldn't start checkout"
 msgstr "Tidak dapat memulai pembayaran"
 
@@ -11094,7 +11104,7 @@ msgstr "Kustom…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:766
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "Portal pelanggan"
@@ -14152,17 +14162,17 @@ msgid "End date"
 msgstr "Tanggal akhir"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:927
 msgid "End grace now"
 msgstr "Akhiri masa tenggang sekarang"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
 msgid "End grace period"
 msgstr "Akhiri masa tenggang"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
 msgid "End grace period now?"
 msgstr "Akhiri masa tenggang sekarang?"
 
@@ -14771,7 +14781,7 @@ msgstr "Kedaluwarsa setelah"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:430
 #: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/invite/components/InviteListItem.tsx:32
 msgid "Expired"
@@ -14807,7 +14817,7 @@ msgstr "Kedaluwarsa pada {date}"
 msgid "Expired on {earliest}"
 msgstr "Kedaluwarsa pada {earliest}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:456
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:461
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "Kedaluwarsa pada <0>{expiredDate}</0>. <1/> tidak lagi aktif. Kamu bisa berlangganan kembali kapan saja."
 
@@ -16555,7 +16565,7 @@ msgstr "GIF tidak dapat dimuat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:450
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:294
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -16707,7 +16717,7 @@ msgstr "Hadiah: akan segera berakhir"
 msgid "Gift: grace period (still have access)"
 msgstr "Hadiah: masa tenggang (masih memiliki akses)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:502
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:544
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "Dihadiahkan <0/> hingga <1>{giftEndDate}</1>. Tidak diperpanjang secara otomatis. Tukarkan kode hadiah lainnya untuk memperpanjang."
 
@@ -16893,7 +16903,7 @@ msgid "Got it!"
 msgstr "Oke!"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:427
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
 msgid "Grace period"
 msgstr "Masa tenggang"
 
@@ -17198,7 +17208,7 @@ msgid "Hate speech"
 msgstr "Ujaran kebencian"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:299
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Punya kode hadiah? Tukarkan untuk membuka {PREMIUM_PRODUCT_NAME}."
 
@@ -19309,7 +19319,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Pertahankan tingkatan gratis dan premium. Anda dapat menyesuaikan tingkatan, menjual premium melalui Stripe, atau membagikan kode hadiah nanti dari panel admin."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:273
 msgid "Keep grace period"
 msgstr "Pertahankan masa tenggang"
 
@@ -19324,7 +19334,7 @@ msgid "Keep running"
 msgstr "Tetap berjalan"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:251
 msgid "Keep subscription"
 msgstr "Tetap berlangganan"
 
@@ -19691,8 +19701,8 @@ msgstr "Tombol kiri mouse"
 msgid "Left tooltip"
 msgstr "Tooltip kiri"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:597
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
 msgid "Legacy rate"
 msgstr "Harga lama"
 
@@ -19784,7 +19794,7 @@ msgstr "Pustaka: {count} dari {max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:448
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:22
 msgid "Lifetime"
 msgstr "Seumur hidup"
@@ -20124,7 +20134,7 @@ msgid "Localization"
 msgstr "Lokalisasi"
 
 #. Error modal body shown when the localized card pre-approval session cannot be started.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:200
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
 msgid "Localized card verification is not available right now. Try again later."
 msgstr "Verifikasi kartu lokal tidak tersedia saat ini. Coba lagi nanti."
 
@@ -21770,11 +21780,11 @@ msgstr "Bulanan"
 msgid "Monthly {monthlyPrice}"
 msgstr "Bulanan {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:689
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "Penagihan bulanan dimulai pada <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:640
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "Penagihan bulanan dimulai pada <0>{pendingChangeDate}</0>. Tagihan bulanan pertama: {pendingInitialPriceLabel}. Perpanjangan bulanan mendatang: {pendingRecurringPriceLabel}/bulan."
 
@@ -22702,12 +22712,12 @@ msgid "New password"
 msgstr "Kata sandi baru"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:611
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:653
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Harga baru dijadwalkan pada <0>{pendingChangeDate}</0>."
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:605
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "Harga baru dijadwalkan pada <0>{pendingChangeDate}</0>. Perpanjangan akan dikenakan biaya {pendingTargetPriceLabel} mulai saat itu."
 
@@ -23533,7 +23543,7 @@ msgstr "Tidak ditemukan"
 #. Short label in the Plutonium self serve refund section. Keep the tone plain and specific.
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:31
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:72
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
@@ -23794,7 +23804,7 @@ msgid "On"
 msgstr "Aktif"
 
 #. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:374
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:379
 msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
 msgstr "Pada <0>{listPriceEffectiveDate}</0> langgananmu akan berpindah dari {listPriceCurrentLabel} ke {listPriceNewLabel}. Tidak ada biaya yang dikenakan hari ini, dan sisa langgananmu tetap sama persis."
 
@@ -24642,7 +24652,7 @@ msgid "Other devices"
 msgstr "Perangkat lain"
 
 #. Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:73
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
 msgid "Other methods"
 msgstr "Metode lain"
 
@@ -25045,12 +25055,12 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "Bayar sekali dan dapatkan tautan hadiah untuk dibagikan. Hadiah tidak akan diperpanjang."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:40
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Bayar dengan {pixPaymentMethod} Automático untuk mengotorisasi tagihan berulang langsung dari bank Brasil kamu. Atau pilih \"Gunakan kartu\" untuk memasukkan kartu kredit di layar {paymentProviderName} berikutnya."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:50
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Bayar dengan {upiPaymentMethod} untuk menyiapkan e-mandate yang sesuai dengan RBI dari bank India kamu. Atau pilih \"Gunakan kartu\" untuk memasukkan kartu kredit di layar {paymentProviderName} berikutnya."
 
@@ -25157,7 +25167,7 @@ msgid "Perks"
 msgstr "Keuntungan"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:431
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:436
 msgid "Perks paused"
 msgstr "Keuntungan dijeda"
 
@@ -26002,7 +26012,7 @@ msgid "Pricing"
 msgstr "Harga"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
 msgid "Pricing is still loading."
 msgstr "Harga masih dimuat."
 
@@ -26399,17 +26409,17 @@ msgid "Purchased gifts"
 msgstr "Hadiah yang dibeli"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "Purchases are disabled for this account."
 msgstr "Pembelian dinonaktifkan untuk akun ini."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "Pembelian dinonaktifkan untuk akun ini. Hubungi {supportEmail} jika ini salah."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:136
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
 msgid "Purchases unavailable"
 msgstr "Pembelian tidak tersedia"
 
@@ -26670,7 +26680,7 @@ msgstr "Reaksi"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:817
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "Aktifkan lagi"
@@ -26900,8 +26910,8 @@ msgstr "Tukarkan untuk diri sendiri"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:790
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:309
 msgid "Redeem gift code"
 msgstr "Tukarkan kode hadiah"
 
@@ -27672,7 +27682,7 @@ msgstr "Ambang batas pembaruan (hari)"
 msgid "Renew window (days)"
 msgstr "Rentang pembaruan (hari)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "Diperpanjang pada <0>{renewalDate}.</0>"
 
@@ -28431,8 +28441,8 @@ msgstr "Pulihkan jendela"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:754
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:809
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:813
 msgid "Resubscribe"
 msgstr "Berlangganan lagi"
 
@@ -31871,7 +31881,7 @@ msgstr "Terjadi kesalahan saat memuat log aktivitas."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:36
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -31911,7 +31921,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Terjadi kesalahan saat mengirim email verifikasimu. Silakan coba lagi sebentar lagi."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:172
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Terjadi kesalahan saat memulai pembayaran. Silakan coba lagi sebentar lagi."
 
@@ -32973,7 +32983,7 @@ msgid "Subscription"
 msgstr "Langganan"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:125
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
 msgid "Subscription already exists"
 msgstr "Langganan sudah ada"
 
@@ -33125,12 +33135,12 @@ msgid "Switch device"
 msgstr "Ganti perangkat"
 
 #. Button confirming a move of an active subscription down to the current price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:65
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:68
 msgid "Switch price"
 msgstr "Ubah harga"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:822
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:877
 msgid "Switch to {listPriceNewLabel}"
 msgstr "Beralih ke {listPriceNewLabel}"
 
@@ -33154,13 +33164,13 @@ msgstr "Beralih ke input langsung"
 
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:60
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
 msgid "Switch to monthly"
 msgstr "Beralih ke bulanan"
 
 #. Billing confirmation title for changing an active subscription to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:49
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:52
 msgid "Switch to monthly billing?"
 msgstr "Beralih ke penagihan bulanan?"
 
@@ -33202,7 +33212,7 @@ msgid "Switch to single column"
 msgstr "Beralih ke satu kolom"
 
 #. Billing confirmation title for moving an active subscription down to the current price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:61
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:64
 msgid "Switch to the new price?"
 msgstr "Beralih ke harga baru?"
 
@@ -33223,13 +33233,13 @@ msgstr "Beralih ke dua kolom"
 
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:801
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
 msgid "Switch to yearly"
 msgstr "Beralih ke tahunan"
 
 #. Billing confirmation title for changing an active subscription to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:45
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:48
 msgid "Switch to yearly billing?"
 msgstr "Beralih ke penagihan tahunan?"
 
@@ -33469,23 +33479,23 @@ msgstr "Tag ({tagCount}/{tagLimit})"
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Tag harus terdiri dari 2 hingga {maxLength} karakter dan alfanumerik."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:293
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:298
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "Berlaku pada perpanjangan berikutnya. Kami akan menerapkan kredit {creditLabel} dari pembayaran bulananmu saat ini, jadi tagihan tahunan pertamamu adalah <0>{firstRenewalPriceLabel}</0>. Perpanjangan tahunan berikutnya adalah {renewalPrice}/tahun."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:302
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:307
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Berlaku pada perpanjangan berikutnya. Langgananmu tetap bulanan sampai saat itu, dan perpanjangan berikutnya adalah <0>{renewalPrice}/tahun</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:311
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:316
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Berlaku pada perpanjangan berikutnya. Langgananmu tetap tahunan sampai saat itu, dan perpanjangan berikutnya adalah <0>{renewalPrice}/bulan</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:330
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:335
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Berlaku segera. Penyesuaian prorata mungkin berlaku melalui {PAYMENT_PROVIDER_NAME}. Perpanjangan berikutnya adalah <0>{renewalPrice}/bulan</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:321
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:326
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Berlaku segera. Biaya prorata mungkin berlaku melalui {PAYMENT_PROVIDER_NAME}. Perpanjangan berikutnya adalah <0>{renewalPrice}/tahun</0>."
 
@@ -34865,7 +34875,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "Pemilih ini hanya tersedia di aplikasi desktop."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:178
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
 msgid "This plan isn't available. Contact support."
 msgstr "Paket ini tidak tersedia. Hubungi dukungan."
 
@@ -37214,7 +37224,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "Gunakan {everyoneMention}/{hereMention} dan {rolesMention}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:46
 msgid "Use {pixPaymentMethod}"
 msgstr "Gunakan {pixPaymentMethod}"
 
@@ -37229,7 +37239,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "Gunakan {query} di tempat teks yang akan diterjemahkan disisipkan."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:56
 msgid "Use {upiPaymentMethod}"
 msgstr "Gunakan {upiPaymentMethod}"
 
@@ -37263,7 +37273,7 @@ msgid "Use actual value"
 msgstr "Gunakan nilai sebenarnya"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:65
 msgid "Use alternative method"
 msgstr "Gunakan metode alternatif"
 
@@ -37304,7 +37314,7 @@ msgid "Use browser locale for time format"
 msgstr "Gunakan lokal browser untuk format waktu"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:220
 msgid "Use card"
 msgstr "Gunakan kartu"
 
@@ -37407,32 +37417,32 @@ msgid "Use light theme"
 msgstr "Gunakan tema terang"
 
 #. Modal primary button to start the localized card pre-approval verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:216
 msgid "Use local card"
 msgstr "Gunakan kartu lokal"
 
 #. Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:69
 msgid "Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "Gunakan kartu lokal untuk memverifikasi kartu yang diterbitkan di Brasil sebelum checkout BRL berbayar. Pilih metode lain jika kamu ingin mencoba {pixPaymentMethod} atau metode pembayaran lain yang ditawarkan {paymentProviderName} di layar berikutnya."
 
 #. Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:77
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
 msgid "Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "Gunakan kartu lokal untuk memverifikasi kartu yang diterbitkan di India sebelum checkout INR berbayar. Pilih metode lain jika kamu ingin mencoba {upiPaymentMethod} atau metode pembayaran lain yang ditawarkan {paymentProviderName} di layar berikutnya."
 
 #. Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:83
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
 msgid "Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead."
 msgstr "Gunakan kartu lokal untuk memverifikasi kartu yang diterbitkan di Polandia sebelum checkout PLN berbayar. {blikPaymentMethod} tidak mendukung langganan di checkout {paymentProviderName}, jadi lanjutkan hanya jika kamu ingin memakai layar pembayaran standar {paymentProviderName2} sebagai gantinya."
 
 #. Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:94
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
 msgid "Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen."
 msgstr "Gunakan kartu lokal untuk memverifikasi kartu yang diterbitkan di Turki sebelum checkout TRY berbayar. Tidak ada metode langganan lokal berbasis aplikasi di sini, jadi melanjutkan akan membawamu ke layar pembayaran standar {paymentProviderName}."
 
 #. Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:100
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
 msgid "Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen."
 msgstr "Gunakan kartu lokal untuk memverifikasi kartu yang diterbitkan di negara penagihanmu sebelum checkout berbayar. Pilih metode lain untuk memakai metode pembayaran lain yang ditawarkan {paymentProviderName} di layar berikutnya."
 
@@ -37946,7 +37956,7 @@ msgid "Verify"
 msgstr "Verifikasi"
 
 #. Modal title for the mobile checkout confirmation when opening the localized card verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
 msgid "Verify card"
 msgstr "Verifikasi kartu"
 
@@ -38045,7 +38055,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Verifikasi emailmu sebelum mengirim permintaan pertemanan."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:108
 msgid "Verify your email first"
 msgstr "Verifikasi emailmu terlebih dahulu"
 
@@ -38279,7 +38289,7 @@ msgid "View"
 msgstr "Lihat"
 
 #. Button label on the premium onboarding nagbar. Opens premium feature and subscription settings. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:59
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:61
 msgid "View {premiumProductName} features"
 msgstr "Lihat fitur {premiumProductName}"
 
@@ -38526,7 +38536,7 @@ msgstr "Virginia"
 msgid "Visibility"
 msgstr "Visibilitas"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:418
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:423
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -38546,7 +38556,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Bilah notifikasi 2FA Visionary"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:121
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Visionary sudah mencakup akses permanen, jadi langganan berulang tidak diperlukan. Kamu masih bisa membeli hadiah untuk orang lain."
 
@@ -39062,7 +39072,7 @@ msgid "We don't send verification texts to this country. Try a mobile number fro
 msgstr "Kami tidak mengirim SMS verifikasi ke negara ini. Coba nomor ponsel dari negara lain, atau hubungi dukungan."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:132
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Kami menemukan langganan {premiumProductFullName} yang sudah ada untuk akun ini. Kelola di portal penagihan yang aman untuk memperbarui detail pembayaran atau memeriksa status perpanjangan. Jika kamu baru saja membayar, tunggu sebentar dan buka kembali halaman ini."
 
@@ -39313,32 +39323,32 @@ msgid "Welcome to {channelDisplayName}"
 msgstr "Selamat datang di {channelDisplayName}"
 
 #. Premium onboarding nagbar body. {premiumProductFullName} is the full premium product name, such as Fluxer Plutonium. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:24
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:26
 msgid "Welcome to {premiumProductFullName}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Selamat datang di {premiumProductFullName}. Jelajahi keuntungan {premiumProductName} dan kelola langgananmu."
 
 #. Premium onboarding nagbar body for lifetime premium users. Visionary is the lifetime premium tier name. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:29
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:31
 msgid "Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. Explore your {premiumProductName} perks."
 msgstr "Selamat datang di {premiumProductFullName}. Kamu punya akses seumur hidup sebagai Visionary. Jelajahi keuntungan {premiumProductName}."
 
 #. Premium onboarding nagbar body for a gift subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:53
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:55
 msgid "Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. Explore your {premiumProductName} perks."
 msgstr "Selamat datang di {premiumProductFullName}. Langganan hadiahmu berlaku hingga {formattedDate}. Jelajahi keuntungan {premiumProductName}."
 
 #. Premium onboarding nagbar body for a monthly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:41
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:43
 msgid "Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Selamat datang di {premiumProductFullName}. Langganan bulananmu diperbarui pada {formattedDate}. Jelajahi keuntungan {premiumProductName} dan kelola langgananmu."
 
 #. Premium onboarding nagbar body for a subscription that will cancel. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:35
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:37
 msgid "Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Selamat datang di {premiumProductFullName}. Langgananmu aktif hingga {formattedDate}. Jelajahi keuntungan {premiumProductName} dan kelola langgananmu."
 
 #. Premium onboarding nagbar body for a yearly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:47
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:49
 msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Selamat datang di {premiumProductFullName}. Langganan tahunanmu diperbarui pada {formattedDate}. Jelajahi keuntungan {premiumProductName} dan kelola langgananmu."
 
@@ -39732,15 +39742,15 @@ msgstr "Tahunan {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "Hadiah tahunan"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:634
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:676
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Peningkatan tahunan dijadwalkan pada <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:661
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Peningkatan tahunan dijadwalkan pada <0>{pendingChangeDate}</0>. Tagihan tahunan pertama: {pendingInitialPriceLabel} setelah kredit {pendingCreditPriceLabel}. Perpanjangan tahunan berikutnya: {pendingRecurringPriceLabel}/tahun."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:626
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:668
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Peningkatan tahunan dijadwalkan pada <0>{pendingChangeDate}</0>. Tagihan tahunan pertama: {pendingInitialPriceLabel}. Perpanjangan tahunan berikutnya: {pendingRecurringPriceLabel}/tahun."
 
@@ -39813,7 +39823,7 @@ msgid "You are now a developer!"
 msgstr "Kamu sekarang seorang pengembang!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:195
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:203
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Kamu akan diarahkan ke {paymentProviderName} untuk menyelesaikan pembayaran. Kembali ke {productName} setelah selesai."
 
@@ -40220,12 +40230,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Kamu baru saja menekan Tab. Mode keyboard kini aktif sehingga kamu bisa menavigasi {productName} tanpa mouse."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:245
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Kamu tetap mendapat semua keuntungan hingga tanggal perpanjangan berikutnya. Aktifkan lagi langgananmu sebelum tanggal itu untuk mempertahankan riwayat langgananmu."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:266
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Kamu langsung kehilangan semua keuntungan {PREMIUM_PRODUCT_NAME} dan riwayat langgananmu diatur ulang. Ini tidak dapat dibatalkan."
 
@@ -40347,7 +40357,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Kamu perlu memverifikasi alamat emailmu sebelum bisa memulai pesan langsung."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:112
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Kamu perlu memverifikasi emailmu sebelum bisa membeli {premiumProductFullName}."
 
@@ -40449,7 +40459,7 @@ msgid "You're already friends with this user."
 msgstr "Kamu sudah berteman dengan pengguna ini."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:117
 msgid "You're already Visionary"
 msgstr "Kamu sudah menjadi Visionary"
 
@@ -40489,7 +40499,7 @@ msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Permintaanmu sedang dibatasi. Tunggu {duration} sebelum mencoba lagi."
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:176
 msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
 msgstr "Kamu sedang memakai langganan hadiah. Langganan ini tidak akan diperpanjang otomatis. Kamu bisa menukarkan kode hadiah lain untuk memperpanjangnya. Langganan berulang bisa dimulai setelah masa hadiahmu berakhir."
 
@@ -40553,12 +40563,12 @@ msgid "You're in the voice channel"
 msgstr "Kamu ada di saluran suara"
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:40
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:43
 msgid "You're on a legacy rate no longer available to new subscribers."
 msgstr "Kamu memakai tarif lama yang tidak lagi tersedia untuk pelanggan baru."
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price; current list price is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:35
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:38
 msgid "You're on a legacy rate. The current price for this plan is {currentSubscriptionListPriceLabel}."
 msgstr "Kamu memakai tarif lama. Harga paket ini saat ini adalah {currentSubscriptionListPriceLabel}."
 
@@ -40671,6 +40681,11 @@ msgstr "Kamu sudah terlalu banyak meminta email verifikasi. Tunggu sebentar lalu
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Kamu sudah melihat semua sebutan terbaru. Sebutan lain akan segera muncul di sini."
 
+#. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:138
+msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
+msgstr "Langganan {premiumProductFullName}-mu ditagih melalui {storeName}. Kelola di akun {storeName}-mu untuk mengubah paket atau memeriksa status perpanjangan."
+
 #. Plutonium page hero subtitle when a subscription has ended. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:62
 msgid "Your {premiumProductName} perks have ended. Subscribe again to bring them back."
@@ -40685,6 +40700,11 @@ msgstr "Langganan {premiumProductName} kamu telah berakhir. Kamu kehilangan semu
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Sesi {productName} kamu telah berakhir. Masuk lagi untuk melanjutkan otorisasi aplikasi ini."
+
+#. Plutonium subscription card text shown while a failed App Store or Google Play renewal payment is being retried. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:476
+msgid "Your {storeName} renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your {storeName} payment method before then to keep your subscription."
+msgstr "Pembayaran perpanjangan {storeName}-mu gagal, tetapi <0/> tetap aktif hingga <1>{graceDate}</1>. Perbarui metode pembayaran {storeName}-mu sebelum tanggal itu untuk mempertahankan langgananmu."
 
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:200
 msgid "Your account"
@@ -40986,7 +41006,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "Pendaftaranmu memerlukan pemeriksaan anti-spam tambahan sebelum kamu bisa melanjutkan."
 
 #. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:492
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "Pembayaran perpanjanganmu gagal, tetapi <0/> tetap aktif hingga <1>{graceDate}</1>. Perbarui metode pembayaranmu sebelum tanggal itu untuk mempertahankan langgananmu."
 
@@ -41016,7 +41036,7 @@ msgstr "Langganan Anda"
 msgid "Your subscription can't move to the new price right now."
 msgstr "Langgananmu tidak bisa beralih ke harga baru saat ini."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:508
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "Langgananmu berakhir, tetapi <0/> tetap aktif hingga <1>{graceDate}</1>. Berlangganan lagi sebelum tanggal itu untuk mempertahankan riwayat langgananmu."
 
@@ -41045,7 +41065,7 @@ msgstr "Langgananmu telah diubah ke penagihan bulanan."
 msgid "Your subscription has been switched to yearly billing."
 msgstr "Langgananmu telah diubah ke penagihan tahunan."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:528
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:570
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "Langgananmu aktif, tetapi keuntungannya dijeda sementara."
 
@@ -41065,7 +41085,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "Langgananmu akan beralih ke harga baru pada {effectiveDate}."
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:724
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "Langgananmu tetap berakhir pada <0>{cancelDate}</0>. Harga saat ini adalah {listPriceNewLabel}. Jika kamu mengaktifkannya kembali, kamu bisa beralih ke harga itu dari sini."
 

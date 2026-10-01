@@ -1612,7 +1612,7 @@ msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "A(z) {PAYMENT_PROVIDER_NAME} biztonságosan kezeli a fizetést."
 
 #. Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:198
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
 msgstr "{paymentProviderName} először ellenőrzi, hogy a kártyád alkalmas-e a helyi árakra, majd továbbít a fizetéshez. Ha elkészültél, térj vissza a(z) {productName} alkalmazásba."
 
@@ -2561,7 +2561,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "Elérhető egy frissítés az asztali Linux-alkalmazáshoz. Válaszd ki a rendszeredhez megfelelő csomagformátumot, és a(z) {productName} helyileg menti a csomagot."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "Alacsonyabb ár érhető el. A váltás ekkor lép életbe: <0>{listPriceEffectiveDate}</0>. Minden más változatlan marad."
 
@@ -2876,7 +2876,7 @@ msgstr "Műveletek"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:447
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:452
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
@@ -3587,19 +3587,19 @@ msgstr "Az igazítási vezérlők csak szélesebb képernyőkön érhetők el"
 msgid "All"
 msgstr "Összes"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:582
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "Az <0/> teljes köre <1>{effectiveMonthlyPrice}/hó</1> áron."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:604
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "Az <0/> teljes köre <1>{effectiveYearlyPrice}/év</1> áron."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:583
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:625
 msgid "All <0/> included with your subscription."
 msgstr "Az előfizetésed az <0/> teljes körét tartalmazza."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:530
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:572
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Az <0/> teljes köre, örökre. Nincs számlázás, nincs megújítás."
 
@@ -5678,6 +5678,16 @@ msgstr "Asztali alkalmazással a legjobb"
 msgid "Between 1 and 32 characters"
 msgstr "1 és 32 karakter között"
 
+#. Plutonium subscription card text for an App Store or Google Play subscription. {storeName} is the store brand name, App Store or Google Play, and must not be translated.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:535
+msgid "Billed through {storeName}."
+msgstr "Számlázás: {storeName}."
+
+#. Plutonium subscription card text for an App Store or Google Play subscription that will not renew. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {endDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:525
+msgid "Billed through {storeName}. Ends on <0>{endDate}</0>."
+msgstr "Számlázás: {storeName}. Megszűnik ekkor: <0>{endDate}</0>."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:27
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:202
@@ -6598,7 +6608,7 @@ msgid "Cancel import"
 msgstr "Importálás megszakítása"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:837
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:892
 msgid "Cancel price change"
 msgstr "Árváltozás visszavonása"
 
@@ -6613,26 +6623,26 @@ msgid "Cancel request"
 msgstr "Kérelem visszavonása"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:845
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:900
 msgid "Cancel scheduled switch"
 msgstr "Ütemezett váltás visszavonása"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:915
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Előfizetés lemondása"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
 msgid "Cancel subscription?"
 msgstr "Előfizetés lemondása?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:663
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:705
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "Vond vissza az ütemezett módosítást, hogy ehelyett az aktuális árra válthass."
 
@@ -6642,7 +6652,7 @@ msgid "Cancel upload"
 msgstr "Feltöltés megszakítása"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:841
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:896
 msgid "Cancel yearly upgrade"
 msgstr "Éves előfizetésre váltás visszavonása"
 
@@ -6652,7 +6662,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "Visszavonod a(z) {displayName} részére küldött ismerősjelölésedet?"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:435
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:440
 msgid "Canceling"
 msgstr "Lemondás folyamatban"
 
@@ -6661,7 +6671,7 @@ msgstr "Lemondás folyamatban"
 msgid "Cancellation"
 msgstr "Visszhangszűrés"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:517
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "Megszűnik ekkor: <0>{cancelDate}</0>. Az <1/> addig érvényben maradnak."
 
@@ -6926,7 +6936,7 @@ msgid "Change password form"
 msgstr "Jelszómódosítási űrlap"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:439
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:444
 msgid "Change scheduled"
 msgstr "Módosítás ütemezve"
 
@@ -7527,17 +7537,17 @@ msgid "Checkout"
 msgstr "Fizetés"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
 msgid "Checkout is blocked for this account."
 msgstr "A fiókod fizetési tranzakciói blokkolva vannak."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Ennél a fióknál le van tiltva a fizetés. Ha segítségre van szükséged, írj erre a címre: {supportEmail}."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
 msgid "Checkout unavailable"
 msgstr "A fizetés nem elérhető"
 
@@ -7716,7 +7726,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Válaszd ki, hogyan jelenjenek meg az időpontok az alkalmazásban"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:60
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Válaszd ki, hogyan szeretnéd kifizetni ezt az előfizetést."
 
@@ -7735,7 +7745,7 @@ msgid "Choose one verification method. Either method can clear this check."
 msgstr "Válassz egy ellenőrzési módszert. Bármelyikkel teljesítheted ezt az ellenőrzést."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:204
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
 msgid "Choose payment method"
 msgstr "Fizetési mód kiválasztása"
 
@@ -8938,7 +8948,7 @@ msgid "Complete one of the verification paths below to continue using {productNa
 msgstr "A(z) {productName} további használatához végezd el az alábbi ellenőrzési módok egyikét."
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:194
 msgid "Complete payment"
 msgstr "Fizetés befejezése"
 
@@ -9412,7 +9422,7 @@ msgid "Continue"
 msgstr "Folytatás"
 
 #. Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:89
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
 msgid "Continue to checkout"
 msgstr "Tovább a fizetéshez"
 
@@ -10189,7 +10199,7 @@ msgstr "Nem sikerült megnyitni a keresési eredményt"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:32
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10346,7 +10356,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Nem sikerült elindítani a(z) {blueskyProviderName} engedélyezési folyamatát"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
 msgid "Couldn't start checkout"
 msgstr "Nem sikerült elindítani a fizetést"
 
@@ -11094,7 +11104,7 @@ msgstr "Egyéni…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:766
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "Ügyfélportál"
@@ -14152,17 +14162,17 @@ msgid "End date"
 msgstr "Befejezés dátuma"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:927
 msgid "End grace now"
 msgstr "Türelmi időszak befejezése most"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
 msgid "End grace period"
 msgstr "Türelmi időszak befejezése"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
 msgid "End grace period now?"
 msgstr "Befejezed most a türelmi időszakot?"
 
@@ -14771,7 +14781,7 @@ msgstr "Lejárati idő"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:430
 #: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/invite/components/InviteListItem.tsx:32
 msgid "Expired"
@@ -14807,7 +14817,7 @@ msgstr "Lejárt ekkor: {date}"
 msgid "Expired on {earliest}"
 msgstr "Lejárt: {earliest}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:456
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:461
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "Lejárt ekkor: <0>{expiredDate}</0>. Az <1/> már nem érvényesek. Bármikor újra előfizethetsz."
 
@@ -16555,7 +16565,7 @@ msgstr "A GIF-ek nem töltődtek be"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:450
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:294
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -16707,7 +16717,7 @@ msgstr "Ajándék: hamarosan lejár"
 msgid "Gift: grace period (still have access)"
 msgstr "Ajándék: türelmi időszak (továbbra is hozzáférsz)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:502
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:544
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "Ajándékba kapott <0/> eddig: <1>{giftEndDate}</1>. Nem újul meg automatikusan. További ajándékkódok beváltásával meghosszabbítható."
 
@@ -16893,7 +16903,7 @@ msgid "Got it!"
 msgstr "Értettem!"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:427
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
 msgid "Grace period"
 msgstr "Türelmi időszak"
 
@@ -17198,7 +17208,7 @@ msgid "Hate speech"
 msgstr "Gyűlöletbeszéd"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:299
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Van ajándékkódod? Váltsd be, hogy feloldd a(z) {PREMIUM_PRODUCT_NAME} funkciót."
 
@@ -19309,7 +19319,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Tartsd meg az ingyenes és a prémium szinteket. Testre szabhatod a szinteket, prémiumot adhatsz el a Stripe-on keresztül, vagy később ajándékkódokat osztogathatsz az admin panelből."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:273
 msgid "Keep grace period"
 msgstr "Türelmi időszak megtartása"
 
@@ -19324,7 +19334,7 @@ msgid "Keep running"
 msgstr "Futtatás folytatása"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:251
 msgid "Keep subscription"
 msgstr "Előfizetés megtartása"
 
@@ -19691,8 +19701,8 @@ msgstr "Bal egérgomb"
 msgid "Left tooltip"
 msgstr "Bal oldali buboréksúgó"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:597
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
 msgid "Legacy rate"
 msgstr "Régi díjszabás"
 
@@ -19784,7 +19794,7 @@ msgstr "Könyvtár: {count}/{max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:448
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:22
 msgid "Lifetime"
 msgstr "Élethosszig tartó"
@@ -20124,7 +20134,7 @@ msgid "Localization"
 msgstr "Lokalizáció"
 
 #. Error modal body shown when the localized card pre-approval session cannot be started.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:200
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
 msgid "Localized card verification is not available right now. Try again later."
 msgstr "A helyi árazáshoz szükséges kártyaellenőrzés jelenleg nem érhető el. Próbáld újra később."
 
@@ -21770,11 +21780,11 @@ msgstr "Havi"
 msgid "Monthly {monthlyPrice}"
 msgstr "Havi {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:689
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "A havi számlázás ekkor kezdődik: <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:640
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "A havi számlázás ekkor kezdődik: <0>{pendingChangeDate}</0>. Első havi díj: {pendingInitialPriceLabel}. Jövőbeli havi megújítások: {pendingRecurringPriceLabel}/hó."
 
@@ -22702,12 +22712,12 @@ msgid "New password"
 msgstr "Új jelszó"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:611
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:653
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Új ár ütemezve: <0>{pendingChangeDate}</0>."
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:605
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "Új ár ütemezve: <0>{pendingChangeDate}</0>. A megújítások díja ettől kezdve {pendingTargetPriceLabel} lesz."
 
@@ -23533,7 +23543,7 @@ msgstr "Nem található"
 #. Short label in the Plutonium self serve refund section. Keep the tone plain and specific.
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:31
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:72
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
@@ -23794,7 +23804,7 @@ msgid "On"
 msgstr "Be"
 
 #. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:374
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:379
 msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
 msgstr "<0>{listPriceEffectiveDate}</0> napján az előfizetésed a(z) {listPriceCurrentLabel} árról a(z) {listPriceNewLabel} árra módosul. Ma nem számítunk fel díjat, és az előfizetésed többi része változatlan marad."
 
@@ -24642,7 +24652,7 @@ msgid "Other devices"
 msgstr "Egyéb eszközök"
 
 #. Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:73
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
 msgid "Other methods"
 msgstr "Egyéb módszerek"
 
@@ -25045,12 +25055,12 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "Fizess egyszer, és kapsz egy megosztható ajándék linket. Az ajándékok soha nem újulnak meg."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:40
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Fizess a(z) {pixPaymentMethod} Automático használatával, hogy brazil bankodon keresztül engedélyezd az ismétlődő terheléseket. Vagy válaszd a „Kártya használata” lehetőséget, hogy a(z) {paymentProviderName} következő képernyőjén megadd a hitelkártyád adatait."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:50
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Fizess a(z) {upiPaymentMethod} használatával, hogy az RBI előírásainak megfelelő elektronikus beszedési felhatalmazást adj indiai bankodon keresztül. Vagy válaszd a „Kártya használata” lehetőséget, hogy a(z) {paymentProviderName} következő képernyőjén megadd a hitelkártyád adatait."
 
@@ -25157,7 +25167,7 @@ msgid "Perks"
 msgstr "Előnyök"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:431
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:436
 msgid "Perks paused"
 msgstr "Előnyök szünetelnek"
 
@@ -26002,7 +26012,7 @@ msgid "Pricing"
 msgstr "Árazás"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
 msgid "Pricing is still loading."
 msgstr "Az árak még töltődnek."
 
@@ -26399,17 +26409,17 @@ msgid "Purchased gifts"
 msgstr "Megvásárolt ajándékok"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "Purchases are disabled for this account."
 msgstr "A vásárlások le vannak tiltva ennél a fióknál."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "A vásárlások le vannak tiltva ehhez a fiókhoz. Ha ez hibásnak tűnik, vedd fel a kapcsolatot a következő címen: {supportEmail}."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:136
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
 msgid "Purchases unavailable"
 msgstr "Vásárlások nem elérhetők"
 
@@ -26670,7 +26680,7 @@ msgstr "Reakciók"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:817
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "Újraaktiválás"
@@ -26900,8 +26910,8 @@ msgstr "Beváltás magadnak"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:790
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:309
 msgid "Redeem gift code"
 msgstr "Ajándékkód beváltása"
 
@@ -27672,7 +27682,7 @@ msgstr "Megújítási küszöb (nap)"
 msgid "Renew window (days)"
 msgstr "Megújítási ablak (nap)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "Megújul ekkor: <0>{renewalDate}.</0>"
 
@@ -28431,8 +28441,8 @@ msgstr "Ablak visszaállítása"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:754
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:809
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:813
 msgid "Resubscribe"
 msgstr "Újra előfizetek"
 
@@ -31871,7 +31881,7 @@ msgstr "Hiba történt a tevékenységnapló betöltése közben."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:36
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -31911,7 +31921,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Hiba történt a megerősítő e-mail elküldésekor. Próbáld újra egy kis idő múlva."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:172
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Hiba történt a fizetés elindításakor. Próbáld újra egy kis idő múlva."
 
@@ -32973,7 +32983,7 @@ msgid "Subscription"
 msgstr "Előfizetés"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:125
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
 msgid "Subscription already exists"
 msgstr "Az előfizetés már létezik"
 
@@ -33125,12 +33135,12 @@ msgid "Switch device"
 msgstr "Eszközváltás"
 
 #. Button confirming a move of an active subscription down to the current price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:65
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:68
 msgid "Switch price"
 msgstr "Ár váltása"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:822
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:877
 msgid "Switch to {listPriceNewLabel}"
 msgstr "Váltás erre: {listPriceNewLabel}"
 
@@ -33154,13 +33164,13 @@ msgstr "Váltás közvetlen bemenetre"
 
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:60
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
 msgid "Switch to monthly"
 msgstr "Váltás havi fizetésre"
 
 #. Billing confirmation title for changing an active subscription to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:49
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:52
 msgid "Switch to monthly billing?"
 msgstr "Havi számlázásra váltasz?"
 
@@ -33202,7 +33212,7 @@ msgid "Switch to single column"
 msgstr "Váltás egyoszlopos nézetre"
 
 #. Billing confirmation title for moving an active subscription down to the current price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:61
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:64
 msgid "Switch to the new price?"
 msgstr "Átváltasz az új árra?"
 
@@ -33223,13 +33233,13 @@ msgstr "Váltás két oszlopra"
 
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:801
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
 msgid "Switch to yearly"
 msgstr "Váltás éves fizetésre"
 
 #. Billing confirmation title for changing an active subscription to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:45
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:48
 msgid "Switch to yearly billing?"
 msgstr "Átváltás éves számlázásra?"
 
@@ -33469,23 +33479,23 @@ msgstr "Címkék ({tagCount}/{tagLimit})"
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "A címkéknek 2–{maxLength} karakter hosszúságúaknak és alfanumerikusaknak kell lenniük."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:293
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:298
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "A következő megújításkor lép életbe. A jelenlegi havi befizetésedből {creditLabel} összeget jóváírunk, így az első éves díj <0>{firstRenewalPriceLabel}</0> lesz. A további éves megújítások díja {renewalPrice}/év."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:302
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:307
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "A következő megújításkor lép életbe. Addig havi marad az előfizetésed, és a következő megújítás <0>{renewalPrice}/év</0> lesz."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:311
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:316
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "A következő megújításkor lép életbe. Addig az előfizetésed éves marad, a következő megújításkor pedig <0>{renewalPrice}/hó</0> lesz."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:330
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:335
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Azonnal életbe lép. A(z) {PAYMENT_PROVIDER_NAME} időarányos elszámolást alkalmazhat. A következő megújítás díja <0>{renewalPrice}/hó</0> lesz."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:321
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:326
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Azonnal életbe lép. Előfordulhat, hogy a(z) {PAYMENT_PROVIDER_NAME} arányos díjat számít fel. A következő megújítás <0>{renewalPrice}/év</0> lesz."
 
@@ -34865,7 +34875,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "Ez a választó csak az asztali alkalmazásban érhető el."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:178
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
 msgid "This plan isn't available. Contact support."
 msgstr "Ez a csomag nem elérhető. Vedd fel a kapcsolatot az ügyfélszolgálattal."
 
@@ -37214,7 +37224,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "{everyoneMention}/{hereMention} és {rolesMention} használata"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:46
 msgid "Use {pixPaymentMethod}"
 msgstr "{pixPaymentMethod} használata"
 
@@ -37229,7 +37239,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "A fordítandó szöveg beillesztési helyén használd a(z) {query} helyőrzőt."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:56
 msgid "Use {upiPaymentMethod}"
 msgstr "{upiPaymentMethod} használata"
 
@@ -37263,7 +37273,7 @@ msgid "Use actual value"
 msgstr "Tényleges érték használata"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:65
 msgid "Use alternative method"
 msgstr "Másik fizetési mód használata"
 
@@ -37304,7 +37314,7 @@ msgid "Use browser locale for time format"
 msgstr "Böngésző területi beállításainak használata az időformátumhoz"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:220
 msgid "Use card"
 msgstr "Kártya használata"
 
@@ -37407,32 +37417,32 @@ msgid "Use light theme"
 msgstr "Világos téma használata"
 
 #. Modal primary button to start the localized card pre-approval verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:216
 msgid "Use local card"
 msgstr "Helyi kártya használata"
 
 #. Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:69
 msgid "Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "A „Helyi kártya használata” lehetőséggel ellenőrizheted a Brazíliában kibocsátott kártyádat a BRL-ben történő fizetés előtt. Válassz más módszert, ha inkább a(z) {pixPaymentMethod} vagy a(z) {paymentProviderName} következő képernyőjén felkínált más fizetési módot használnád."
 
 #. Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:77
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
 msgid "Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "A „Helyi kártya használata” lehetőséggel ellenőrizheted az Indiában kibocsátott kártyádat az INR-ben történő fizetés előtt. Válassz más módszert, ha inkább a(z) {upiPaymentMethod} vagy a(z) {paymentProviderName} következő képernyőjén felkínált más fizetési módot használnád."
 
 #. Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:83
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
 msgid "Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead."
 msgstr "A „Helyi kártya használata” lehetőséggel ellenőrizheted a Lengyelországban kibocsátott kártyádat a PLN-ben történő fizetés előtt. A(z) {blikPaymentMethod} nem támogatja az előfizetéseket a(z) {paymentProviderName} fizetési felületén, ezért csak akkor folytasd, ha helyette a(z) {paymentProviderName2} szokásos fizetési képernyőjét szeretnéd használni."
 
 #. Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:94
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
 msgid "Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen."
 msgstr "A „Helyi kártya használata” lehetőséggel ellenőrizheted a Törökországban kibocsátott kártyádat a TRY-ban történő fizetés előtt. Itt nincs helyi alkalmazáson alapuló előfizetési mód, ezért a folytatás a(z) {paymentProviderName} szokásos fizetési képernyőjére visz."
 
 #. Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:100
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
 msgid "Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen."
 msgstr "A „Helyi kártya használata” lehetőséggel ellenőrizheted a számlázási országodban kibocsátott kártyádat a fizetés előtt. A(z) {paymentProviderName} következő képernyőjén kínált többi fizetési módhoz válassz más módszert."
 
@@ -37946,7 +37956,7 @@ msgid "Verify"
 msgstr "Ellenőrzés"
 
 #. Modal title for the mobile checkout confirmation when opening the localized card verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
 msgid "Verify card"
 msgstr "Kártya ellenőrzése"
 
@@ -38045,7 +38055,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Ismerősjelölések küldése előtt erősítsd meg az e-mail-címedet."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:108
 msgid "Verify your email first"
 msgstr "Előbb erősítsd meg az e-mail-címedet"
 
@@ -38279,7 +38289,7 @@ msgid "View"
 msgstr "Megtekintés"
 
 #. Button label on the premium onboarding nagbar. Opens premium feature and subscription settings. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:59
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:61
 msgid "View {premiumProductName} features"
 msgstr "A(z) {premiumProductName} funkcióinak megtekintése"
 
@@ -38526,7 +38536,7 @@ msgstr "Virginia"
 msgid "Visibility"
 msgstr "Láthatóság"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:418
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:423
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -38546,7 +38556,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2FA értesítősáv"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:121
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "A Visionary már tartalmazza az állandó hozzáférést, így nincs szükség ismétlődő előfizetésre. Továbbra is vásárolhatsz ajándékokat másoknak."
 
@@ -39062,7 +39072,7 @@ msgid "We don't send verification texts to this country. Try a mobile number fro
 msgstr "Nem küldünk ellenőrző SMS-eket ebbe az országba. Próbálkozz egy másik országból származó mobilszámmal, vagy lépj kapcsolatba az ügyfélszolgálattal."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:132
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "A fiókhoz már tartozik {premiumProductFullName} előfizetés. A biztonságos számlázási portálon módosíthatod a fizetési adatokat és ellenőrizheted a megújítás állapotát. Ha most fizettél, várj egy percet, majd nyisd meg újra ezt az oldalt."
 
@@ -39313,32 +39323,32 @@ msgid "Welcome to {channelDisplayName}"
 msgstr "Üdvözlünk a(z) {channelDisplayName} csatornán"
 
 #. Premium onboarding nagbar body. {premiumProductFullName} is the full premium product name, such as Fluxer Plutonium. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:24
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:26
 msgid "Welcome to {premiumProductFullName}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Üdv a(z) {premiumProductFullName} csomagban! Fedezd fel a(z) {premiumProductName} előnyeit, és kezeld az előfizetésedet."
 
 #. Premium onboarding nagbar body for lifetime premium users. Visionary is the lifetime premium tier name. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:29
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:31
 msgid "Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. Explore your {premiumProductName} perks."
 msgstr "Üdv a(z) {premiumProductFullName} csomagban! Visionary-tagként életre szóló hozzáférésed van. Fedezd fel a(z) {premiumProductName} előnyeit."
 
 #. Premium onboarding nagbar body for a gift subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:53
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:55
 msgid "Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. Explore your {premiumProductName} perks."
 msgstr "Üdv a(z) {premiumProductFullName} csomagban! Az ajándék-előfizetésed lejárata: {formattedDate}. Fedezd fel a(z) {premiumProductName} előnyeit."
 
 #. Premium onboarding nagbar body for a monthly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:41
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:43
 msgid "Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Üdv a(z) {premiumProductFullName} csomagban! A havi előfizetésed megújításának dátuma: {formattedDate}. Fedezd fel a(z) {premiumProductName} előnyeit, és kezeld az előfizetésedet."
 
 #. Premium onboarding nagbar body for a subscription that will cancel. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:35
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:37
 msgid "Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Üdv a(z) {premiumProductFullName} csomagban! Az előfizetésed eddig aktív: {formattedDate}. Fedezd fel a(z) {premiumProductName} előnyeit, és kezeld az előfizetésedet."
 
 #. Premium onboarding nagbar body for a yearly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:47
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:49
 msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Üdv a(z) {premiumProductFullName} csomagban! Az éves előfizetésed megújításának dátuma: {formattedDate}. Fedezd fel a(z) {premiumProductName} előnyeit, és kezeld az előfizetésedet."
 
@@ -39732,15 +39742,15 @@ msgstr "Éves {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "Éves ajándék"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:634
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:676
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Éves előfizetésre váltás ütemezve: <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:661
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Éves előfizetésre váltás ütemezve: <0>{pendingChangeDate}</0>. Az első éves díj {pendingInitialPriceLabel}, a(z) {pendingCreditPriceLabel} jóváírás után. A további éves megújítások díja {pendingRecurringPriceLabel}/év."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:626
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:668
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Éves előfizetésre váltás ütemezve: <0>{pendingChangeDate}</0>. Első éves díj: {pendingInitialPriceLabel}. A további éves megújítások díja {pendingRecurringPriceLabel}/év."
 
@@ -39813,7 +39823,7 @@ msgid "You are now a developer!"
 msgstr "Mostantól fejlesztő vagy!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:195
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:203
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Most átirányítunk a(z) {paymentProviderName} felületére a fizetés befejezéséhez. Ha végeztél, térj vissza a(z) {productName} alkalmazásba."
 
@@ -40220,12 +40230,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Megnyomtad a Tab billentyűt. Bekapcsolt a billentyűzetes mód, így egér nélkül is navigálhatsz a(z) {productName} alkalmazásban."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:245
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Az előnyöket a következő megújítási dátumig megtartod. Ha addig újraaktiválod az előfizetést, megőrzöd az előfizetői előzményeidet."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:266
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Azonnal elveszíted a(z) {PREMIUM_PRODUCT_NAME} összes előnyét, és az előfizetői előzményeid lenullázódnak. Ez nem vonható vissza."
 
@@ -40347,7 +40357,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Közvetlen beszélgetés indítása előtt meg kell erősítened az e-mail-címedet."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:112
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Az e-mail-címedet igazolnod kell, mielőtt megvásárolhatnád a(z) {premiumProductFullName} terméket."
 
@@ -40449,7 +40459,7 @@ msgid "You're already friends with this user."
 msgstr "Már ismerősök vagytok ezzel a felhasználóval."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:117
 msgid "You're already Visionary"
 msgstr "Már Visionary vagy"
 
@@ -40489,7 +40499,7 @@ msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Túl sok kérést küldtél. Újabb próbálkozásig hátralévő idő: {duration}."
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:176
 msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
 msgstr "Jelenleg ajándék-előfizetésed van. Ez nem fog megújulni. További ajándékkódokat válthatsz be a meghosszabbításához. Ismétlődő előfizetéseket az ajándékidőszak lejárta után indíthatsz."
 
@@ -40553,12 +40563,12 @@ msgid "You're in the voice channel"
 msgstr "Hangcsatornában vagy"
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:40
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:43
 msgid "You're on a legacy rate no longer available to new subscribers."
 msgstr "Régi díjszabás vonatkozik rád, amely új előfizetőknek már nem érhető el."
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price; current list price is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:35
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:38
 msgid "You're on a legacy rate. The current price for this plan is {currentSubscriptionListPriceLabel}."
 msgstr "Régi díjszabás vonatkozik rád. A csomag jelenlegi ára: {currentSubscriptionListPriceLabel}."
 
@@ -40671,6 +40681,11 @@ msgstr "Túl sok ellenőrző e-mailt kértél. Kérjük, várj egy kicsit, majd 
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Láttad az összes legutóbbi említésedet. Hamarosan újabbak jelennek meg itt."
 
+#. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:138
+msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
+msgstr "A(z) {premiumProductFullName} előfizetésed számlázása a(z) {storeName} szolgáltatáson keresztül történik. A(z) {storeName} fiókodban módosíthatod a csomagodat és ellenőrizheted a megújítás állapotát."
+
 #. Plutonium page hero subtitle when a subscription has ended. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:62
 msgid "Your {premiumProductName} perks have ended. Subscribe again to bring them back."
@@ -40685,6 +40700,11 @@ msgstr "Lejárt a(z) {premiumProductName} előfizetésed. Elvesztetted a(z) {pre
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Lejárt a(z) {productName} munkameneted. Jelentkezz be újra, hogy folytathasd az alkalmazás engedélyezését."
+
+#. Plutonium subscription card text shown while a failed App Store or Google Play renewal payment is being retried. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:476
+msgid "Your {storeName} renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your {storeName} payment method before then to keep your subscription."
+msgstr "A(z) {storeName} megújítási fizetés sikertelen volt, de a(z) <0/> továbbra is aktívak eddig: <1>{graceDate}</1>. Addig frissítsd a fizetési módodat a(z) {storeName} szolgáltatásban, hogy megtartsd az előfizetésedet."
 
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:200
 msgid "Your account"
@@ -40986,7 +41006,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "A regisztrációdhoz még egy spamellenőrzés szükséges, mielőtt folytathatnád."
 
 #. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:492
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "A megújítási fizetés sikertelen volt, de a(z) <0/> továbbra is aktívak eddig: <1>{graceDate}</1>. Addig frissítsd a fizetési módodat, hogy megtartsd az előfizetésedet."
 
@@ -41016,7 +41036,7 @@ msgstr "Előfizetésed"
 msgid "Your subscription can't move to the new price right now."
 msgstr "Az előfizetésed jelenleg nem váltható át az új árra."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:508
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "Az előfizetésed lejárt, de a(z) <0/> továbbra is aktívak eddig: <1>{graceDate}</1>. Fizess elő újra addig, hogy megőrizd az előfizetői előzményeidet."
 
@@ -41045,7 +41065,7 @@ msgstr "Előfizetésed havi számlázásra váltott."
 msgid "Your subscription has been switched to yearly billing."
 msgstr "Előfizetésedet éves számlázásra váltottuk."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:528
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:570
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "Az előfizetésed aktív, de az előnyök ideiglenesen szünetelnek."
 
@@ -41065,7 +41085,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "Az előfizetésed új ára ekkor lép életbe: {effectiveDate}."
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:724
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "Az előfizetésed továbbra is ekkor ér véget: <0>{cancelDate}</0>. A jelenlegi ár most {listPriceNewLabel}. Ha újraaktiválod, innen átválthatsz rá."
 

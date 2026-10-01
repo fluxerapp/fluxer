@@ -7,6 +7,8 @@ import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/
 import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
+import PremiumState from '@app/features/premium/state/PremiumState';
+import {getStoreOwnedSubscription} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
@@ -64,6 +66,8 @@ const VIEW_PREMIUM_FEATURES_DESCRIPTOR = msg({
 
 function useOnboardingMessage(i18n: I18n): string {
 	const user = Users.currentUser;
+	const storeSubscription =
+		user != null && PremiumState.loadedForUserId === user.id ? getStoreOwnedSubscription(PremiumState.state) : null;
 	return useMemo(() => {
 		const premiumProductFullName = PREMIUM_PRODUCT_FULL_NAME;
 		const premiumProductName = PREMIUM_PRODUCT_NAME;
@@ -71,9 +75,9 @@ function useOnboardingMessage(i18n: I18n): string {
 			return i18n._(PREMIUM_ONBOARDING_DEFAULT_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
 		}
 		const isVisionary = user.premiumType === UserPremiumTypes.LIFETIME;
-		const billingCycle = user.premiumBillingCycle;
+		const billingCycle = storeSubscription?.billing_cycle ?? user.premiumBillingCycle;
 		const premiumUntil = user.premiumUntil;
-		const willCancel = user.premiumWillCancel;
+		const willCancel = storeSubscription ? !storeSubscription.will_renew : user.premiumWillCancel;
 		if (isVisionary) {
 			return i18n._(PREMIUM_ONBOARDING_VISIONARY_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
 		}
@@ -109,7 +113,7 @@ function useOnboardingMessage(i18n: I18n): string {
 			});
 		}
 		return i18n._(PREMIUM_ONBOARDING_DEFAULT_MESSAGE_DESCRIPTOR, {premiumProductFullName, premiumProductName});
-	}, [i18n.locale, user]);
+	}, [i18n.locale, user, storeSubscription]);
 }
 
 export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar({isMobile}: {isMobile: boolean}) {

@@ -17,8 +17,10 @@ import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {CheckoutPaymentMethod, PriceIds} from '@app/features/premium/commands/PremiumCommands';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
+import PremiumState from '@app/features/premium/state/PremiumState';
 import {recordPremiumCheckoutReturnIntent} from '@app/features/premium/utils/PremiumCheckoutReturnIntent';
 import {MANAGE_SUBSCRIPTION_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {getStoreName} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -133,6 +135,12 @@ const EXISTING_SUBSCRIPTION_BODY_DESCRIPTOR = msg({
 	comment:
 		'Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.',
 });
+const EXISTING_STORE_SUBSCRIPTION_BODY_DESCRIPTOR = msg({
+	message:
+		'Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status.',
+	comment:
+		'Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.',
+});
 const PURCHASES_DISABLED_TITLE_DESCRIPTOR = msg({
 	message: 'Purchases unavailable',
 	comment: 'Modal title shown when purchases are disabled on this account (server-side enforcement).',
@@ -218,6 +226,17 @@ const logger = new Logger('useCheckoutActions');
 type Plan = 'monthly' | 'yearly' | 'gift_1_month' | 'gift_1_year';
 type CheckoutPromptKind = 'payment' | 'localized_card_preapproval';
 type PremiumPurchaseBlockedReason = 'lifetime' | 'existing_subscription' | 'purchase_disabled';
+
+function getPremiumPurchaseBlockedStoreProvider(body: unknown): 'app_store' | 'google_play' | null {
+	if (!body || typeof body !== 'object' || !('provider' in body)) {
+		return null;
+	}
+	const provider = body.provider;
+	if (provider === 'app_store' || provider === 'google_play') {
+		return provider;
+	}
+	return null;
+}
 
 function getPremiumPurchaseBlockedReason(body: unknown): PremiumPurchaseBlockedReason | null {
 	if (!body || typeof body !== 'object' || !('reason' in body)) {
@@ -387,6 +406,38 @@ export const useCheckoutActions = (
 										data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal"
 									/>
 								)),
+							);
+							return;
+						}
+						const storeProvider = getPremiumPurchaseBlockedStoreProvider(body);
+						if (reason === 'existing_subscription' && storeProvider) {
+							const store = PremiumState.state?.store;
+							const manageUrl = store?.provider === storeProvider ? store.manage_url : null;
+							const description = i18n._(EXISTING_STORE_SUBSCRIPTION_BODY_DESCRIPTOR, {
+								premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME,
+								storeName: getStoreName(storeProvider),
+							});
+							ModalCommands.push(
+								modal(() =>
+									manageUrl ? (
+										<ConfirmModal
+											title={i18n._(EXISTING_SUBSCRIPTION_TITLE_DESCRIPTOR)}
+											description={description}
+											primaryText={i18n._(MANAGE_SUBSCRIPTION_DESCRIPTOR)}
+											primaryVariant="primary"
+											secondaryText={i18n._(CLOSE_DESCRIPTOR)}
+											onPrimary={() => void openExternalUrl(manageUrl)}
+											data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal--5"
+										/>
+									) : (
+										<ConfirmModal
+											title={i18n._(EXISTING_SUBSCRIPTION_TITLE_DESCRIPTOR)}
+											description={description}
+											secondaryText={i18n._(CLOSE_DESCRIPTOR)}
+											data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal--5"
+										/>
+									),
+								),
 							);
 							return;
 						}

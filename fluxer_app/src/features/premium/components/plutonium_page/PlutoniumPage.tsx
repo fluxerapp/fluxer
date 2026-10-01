@@ -507,6 +507,7 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 									isVisionary={subscriptionStatus.isVisionary}
 									perksDisabled={subscriptionStatus.perksDisabled}
 									isGiftSubscription={subscriptionStatus.isGiftSubscription}
+									storeSubscription={subscriptionStatus.storeSubscription}
 									premiumUntil={subscriptionStatus.actualPremiumUntil}
 									billingCycle={subscriptionStatus.billingCycle}
 									monthlyPrice={monthlyPrice}
@@ -548,23 +549,25 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 									data-flx="premium.plutonium-page.manage.subscription-card"
 								/>
 								{purchasesAvailable && <PurchaseDisclaimer align="center" isPremium />}
-								{subscriptionStatus.hasEverPurchased && !billingUnavailable && (
-									<>
-										<PurchaseHistorySection
-											premiumState={premiumState}
-											loadingPortal={loadingPortal}
-											handleOpenCustomerPortal={handleOpenCustomerPortal}
-											data-flx="premium.plutonium-page.manage.purchase-history"
-										/>
-										{!RuntimeConfig.isSelfHosted() && (
-											<SelfServeRefundSection
-												eligibility={premiumState?.billing.refund_eligibility ?? null}
-												refreshPremiumState={() => PremiumCommands.refreshPremiumState(countryCode ?? undefined)}
-												data-flx="premium.plutonium-page.manage.self-serve-refund"
+								{subscriptionStatus.hasEverPurchased &&
+									!billingUnavailable &&
+									premiumState?.billing.stripe_customer_id != null && (
+										<>
+											<PurchaseHistorySection
+												premiumState={premiumState}
+												loadingPortal={loadingPortal}
+												handleOpenCustomerPortal={handleOpenCustomerPortal}
+												data-flx="premium.plutonium-page.manage.purchase-history"
 											/>
-										)}
-									</>
-								)}
+											{!RuntimeConfig.isSelfHosted() && (
+												<SelfServeRefundSection
+													eligibility={premiumState?.billing.refund_eligibility ?? null}
+													refreshPremiumState={() => PremiumCommands.refreshPremiumState(countryCode ?? undefined)}
+													data-flx="premium.plutonium-page.manage.self-serve-refund"
+												/>
+											)}
+										</>
+									)}
 							</div>
 						</section>
 					)}

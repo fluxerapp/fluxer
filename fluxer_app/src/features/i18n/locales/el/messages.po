@@ -1612,7 +1612,7 @@ msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "Το {PAYMENT_PROVIDER_NAME} διαχειρίζεται την πληρωμή με ασφάλεια."
 
 #. Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:198
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
 msgstr "Το {paymentProviderName} θα επαληθεύσει πρώτα ότι η κάρτα σας είναι κατάλληλη για τοπική τιμολόγηση και, στη συνέχεια, θα σας μεταφέρει στην πληρωμή. Επιστρέψτε στο {productName} μόλις ολοκληρώσετε τη διαδικασία."
 
@@ -2561,7 +2561,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "Υπάρχει διαθέσιμη ενημέρωση της εφαρμογής για Linux. Επιλέξτε τη μορφή πακέτου για αυτό το σύστημα και το {productName} θα την αποθηκεύσει τοπικά."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:700
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "Υπάρχει διαθέσιμη χαμηλότερη τιμή. Η αλλαγή τίθεται σε ισχύ στις <0>{listPriceEffectiveDate}</0> και δεν αλλάζει τίποτα άλλο."
 
@@ -2876,7 +2876,7 @@ msgstr "Ενέργειες"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:447
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:452
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
@@ -3587,19 +3587,19 @@ msgstr "Οι ρυθμίσεις στοίχισης είναι διαθέσιμε
 msgid "All"
 msgstr "Όλα"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:540
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:582
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "Όλα τα <0/> με <1>{effectiveMonthlyPrice}/μήνα</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:562
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:604
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "Όλα τα <0/> με <1>{effectiveYearlyPrice}/έτος</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:583
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:625
 msgid "All <0/> included with your subscription."
 msgstr "Όλα τα <0/> περιλαμβάνονται στη συνδρομή σας."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:530
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:572
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Όλα τα <0/>, για πάντα. Χωρίς χρέωση, χωρίς ανανεώσεις."
 
@@ -5678,6 +5678,16 @@ msgstr "Καλύτερα με την εφαρμογή υπολογιστή"
 msgid "Between 1 and 32 characters"
 msgstr "Μεταξύ 1 και 32 χαρακτήρων"
 
+#. Plutonium subscription card text for an App Store or Google Play subscription. {storeName} is the store brand name, App Store or Google Play, and must not be translated.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:535
+msgid "Billed through {storeName}."
+msgstr "Χρεώνεται μέσω {storeName}."
+
+#. Plutonium subscription card text for an App Store or Google Play subscription that will not renew. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {endDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:525
+msgid "Billed through {storeName}. Ends on <0>{endDate}</0>."
+msgstr "Χρεώνεται μέσω {storeName}. Λήγει στις <0>{endDate}</0>."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:27
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:202
@@ -6598,7 +6608,7 @@ msgid "Cancel import"
 msgstr "Ακύρωση εισαγωγής"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:837
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:892
 msgid "Cancel price change"
 msgstr "Ακύρωση αλλαγής τιμής"
 
@@ -6613,26 +6623,26 @@ msgid "Cancel request"
 msgstr "Ακύρωση αιτήματος"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:845
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:900
 msgid "Cancel scheduled switch"
 msgstr "Ακύρωση προγραμματισμένης αλλαγής"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:915
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Ακύρωση συνδρομής"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
 msgid "Cancel subscription?"
 msgstr "Ακύρωση συνδρομής;"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:663
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:705
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "Ακυρώστε την προγραμματισμένη αλλαγή για να μεταβείτε στην τρέχουσα τιμή."
 
@@ -6642,7 +6652,7 @@ msgid "Cancel upload"
 msgstr "Ακύρωση μεταφόρτωσης"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:841
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:896
 msgid "Cancel yearly upgrade"
 msgstr "Ακύρωση ετήσιας αναβάθμισης"
 
@@ -6652,7 +6662,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "Ακύρωση του αιτήματος φιλίας προς τον/την {displayName};"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:435
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:440
 msgid "Canceling"
 msgstr "Ακυρώνεται"
 
@@ -6661,7 +6671,7 @@ msgstr "Ακυρώνεται"
 msgid "Cancellation"
 msgstr "Ακύρωση ηχούς"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:517
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "Ακυρώνεται στις <0>{cancelDate}</0>. <1/> παραμένουν ενεργά μέχρι τότε."
 
@@ -6926,7 +6936,7 @@ msgid "Change password form"
 msgstr "Φόρμα αλλαγής κωδικού πρόσβασης"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:439
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:444
 msgid "Change scheduled"
 msgstr "Προγραμματισμένη αλλαγή"
 
@@ -7527,17 +7537,17 @@ msgid "Checkout"
 msgstr "Ολοκλήρωση αγοράς"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
 msgid "Checkout is blocked for this account."
 msgstr "Το ταμείο έχει αποκλειστεί για αυτόν τον λογαριασμό."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Η ολοκλήρωση αγοράς έχει αποκλειστεί για αυτόν τον λογαριασμό. Επικοινωνήστε με το {supportEmail} εάν χρειάζεστε βοήθεια."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
 msgid "Checkout unavailable"
 msgstr "Η ολοκλήρωση αγοράς δεν είναι διαθέσιμη"
 
@@ -7716,7 +7726,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Επιλέξτε πώς θα εμφανίζονται οι ώρες στην εφαρμογή"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:60
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Επίλεξε πώς θέλεις να πληρώσεις για αυτήν τη συνδρομή."
 
@@ -7735,7 +7745,7 @@ msgid "Choose one verification method. Either method can clear this check."
 msgstr "Επιλέξτε μία μέθοδο επαλήθευσης. Οποιαδήποτε μέθοδος μπορεί να ολοκληρώσει αυτόν τον έλεγχο."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:204
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
 msgid "Choose payment method"
 msgstr "Επιλέξτε τρόπο πληρωμής"
 
@@ -8938,7 +8948,7 @@ msgid "Complete one of the verification paths below to continue using {productNa
 msgstr "Ολοκληρώστε μία από τις παρακάτω διαδρομές επαλήθευσης για να συνεχίσετε να χρησιμοποιείτε το {productName}."
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:194
 msgid "Complete payment"
 msgstr "Ολοκλήρωση πληρωμής"
 
@@ -9412,7 +9422,7 @@ msgid "Continue"
 msgstr "Συνέχεια"
 
 #. Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:89
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
 msgid "Continue to checkout"
 msgstr "Συνέχεια στην πληρωμή"
 
@@ -10189,7 +10199,7 @@ msgstr "Δεν ήταν δυνατό το άνοιγμα του αποτελέσ
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:32
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10346,7 +10356,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Δεν ήταν δυνατή η έναρξη της εξουσιοδότησης {blueskyProviderName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
 msgid "Couldn't start checkout"
 msgstr "Δεν ήταν δυνατή η έναρξη της ολοκλήρωσης αγοράς"
 
@@ -11094,7 +11104,7 @@ msgstr "Προσαρμοσμένο…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:766
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "Πύλη πελατών"
@@ -14152,17 +14162,17 @@ msgid "End date"
 msgstr "Ημερομηνία λήξης"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:872
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:927
 msgid "End grace now"
 msgstr "Τερματισμός περιόδου χάριτος τώρα"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
 msgid "End grace period"
 msgstr "Τερματισμός περιόδου χάριτος"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
 msgid "End grace period now?"
 msgstr "Να τερματιστεί τώρα η περίοδος χάριτος;"
 
@@ -14771,7 +14781,7 @@ msgstr "Λήξη μετά από"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:430
 #: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/invite/components/InviteListItem.tsx:32
 msgid "Expired"
@@ -14807,7 +14817,7 @@ msgstr "Έληξε στις {date}"
 msgid "Expired on {earliest}"
 msgstr "Έληξε στις {earliest}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:456
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:461
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "Έληξε στις <0>{expiredDate}</0>. Τα <1/> δεν είναι πλέον ενεργά. Μπορείτε να εγγραφείτε ξανά ανά πάσα στιγμή."
 
@@ -16555,7 +16565,7 @@ msgstr "Δεν ήταν δυνατή η φόρτωση των GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:450
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:294
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -16707,7 +16717,7 @@ msgstr "Δώρο: λήγει σύντομα"
 msgid "Gift: grace period (still have access)"
 msgstr "Δώρο: περίοδος χάριτος (έχετε ακόμα πρόσβαση)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:502
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:544
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "Έχετε ως δώρο <0/> έως <1>{giftEndDate}</1>. Δεν ανανεώνεται αυτόματα. Εξαργυρώστε περισσότερους κωδικούς δώρου για παράταση."
 
@@ -16893,7 +16903,7 @@ msgid "Got it!"
 msgstr "Εντάξει!"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:427
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:432
 msgid "Grace period"
 msgstr "Περίοδος χάριτος"
 
@@ -17198,7 +17208,7 @@ msgid "Hate speech"
 msgstr "Ρητορική μίσους"
 
 #. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:296
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:299
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Έχετε κωδικό δώρου; Εξαργυρώστε τον για να ξεκλειδώσετε το {PREMIUM_PRODUCT_NAME}."
 
@@ -19309,7 +19319,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Διατήρησε δωρεάν και premium βαθμίδες. Μπορείς να προσαρμόσεις τις βαθμίδες, να πουλήσεις premium μέσω Stripe ή να διανείμεις κωδικούς δώρου αργότερα από τον πίνακα διαχειριστή."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:273
 msgid "Keep grace period"
 msgstr "Διατήρηση περιόδου χάριτος"
 
@@ -19324,7 +19334,7 @@ msgid "Keep running"
 msgstr "Παραμονή σε λειτουργία"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:251
 msgid "Keep subscription"
 msgstr "Διατήρηση συνδρομής"
 
@@ -19691,8 +19701,8 @@ msgstr "Αριστερό κουμπί ποντικιού"
 msgid "Left tooltip"
 msgstr "Αριστερή επεξήγηση εργαλείου"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:555
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:577
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:597
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
 msgid "Legacy rate"
 msgstr "Παλιά τιμή"
 
@@ -19784,7 +19794,7 @@ msgstr "Βιβλιοθήκη: {count} από {max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:448
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:22
 msgid "Lifetime"
 msgstr "Ισόβια"
@@ -20124,7 +20134,7 @@ msgid "Localization"
 msgstr "Γλώσσα και περιοχή"
 
 #. Error modal body shown when the localized card pre-approval session cannot be started.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:200
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
 msgid "Localized card verification is not available right now. Try again later."
 msgstr "Η επαλήθευση κάρτας για την περιοχή σας δεν είναι διαθέσιμη αυτήν τη στιγμή. Δοκιμάστε ξανά αργότερα."
 
@@ -21770,11 +21780,11 @@ msgstr "Μηνιαία"
 msgid "Monthly {monthlyPrice}"
 msgstr "Μηνιαία {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:689
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "Η μηνιαία χρέωση ξεκινά στις <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:640
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "Η μηνιαία χρέωση ξεκινά στις <0>{pendingChangeDate}</0>. Πρώτη μηνιαία χρέωση: {pendingInitialPriceLabel}. Μελλοντικές μηνιαίες ανανεώσεις: {pendingRecurringPriceLabel}/μήνα."
 
@@ -22702,12 +22712,12 @@ msgid "New password"
 msgstr "Νέος κωδικός πρόσβασης"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:611
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:653
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Νέα τιμή προγραμματισμένη για <0>{pendingChangeDate}</0>."
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:605
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "Νέα τιμή προγραμματισμένη για <0>{pendingChangeDate}</0>. Οι ανανεώσεις θα είναι {pendingTargetPriceLabel} από εκείνη την ημερομηνία και μετά."
 
@@ -23533,7 +23543,7 @@ msgstr "Δεν βρέθηκε"
 #. Short label in the Plutonium self serve refund section. Keep the tone plain and specific.
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:31
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:72
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:34
@@ -23794,7 +23804,7 @@ msgid "On"
 msgstr "Ενεργό"
 
 #. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:374
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:379
 msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
 msgstr "Στις <0>{listPriceEffectiveDate}</0> η συνδρομή σας αλλάζει από {listPriceCurrentLabel} σε {listPriceNewLabel}. Δεν χρεώνεστε τίποτα σήμερα και το υπόλοιπο της συνδρομής σας παραμένει ακριβώς όπως είναι."
 
@@ -24642,7 +24652,7 @@ msgid "Other devices"
 msgstr "Άλλες συσκευές"
 
 #. Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:73
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
 msgid "Other methods"
 msgstr "Άλλες μέθοδοι"
 
@@ -25045,12 +25055,12 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "Πληρώστε μία φορά και λάβετε έναν σύνδεσμο δώρου για να τον μοιραστείτε. Τα δώρα δεν ανανεώνονται ποτέ."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:40
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Πληρώστε με {pixPaymentMethod} Automático για να εξουσιοδοτήσετε επαναλαμβανόμενες χρεώσεις απευθείας από την τράπεζά σας στη Βραζιλία. Ή επιλέξτε «Χρήση κάρτας» για να εισαγάγετε μια πιστωτική κάρτα στην επόμενη οθόνη του {paymentProviderName}."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:50
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Πληρώστε με {upiPaymentMethod} για να ρυθμίσετε μια ηλεκτρονική εντολή πληρωμής (e-mandate) συμβατή με την RBI από την ινδική σας τράπεζα. Ή επιλέξτε «Χρήση κάρτας» για να εισαγάγετε μια πιστωτική κάρτα στην επόμενη οθόνη του {paymentProviderName}."
 
@@ -25157,7 +25167,7 @@ msgid "Perks"
 msgstr "Προνόμια"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:431
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:436
 msgid "Perks paused"
 msgstr "Προνόμια σε παύση"
 
@@ -26002,7 +26012,7 @@ msgid "Pricing"
 msgstr "Τιμολόγηση"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
 msgid "Pricing is still loading."
 msgstr "Οι τιμές φορτώνονται ακόμα."
 
@@ -26399,17 +26409,17 @@ msgid "Purchased gifts"
 msgstr "Αγορασμένα δώρα"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "Purchases are disabled for this account."
 msgstr "Οι αγορές έχουν απενεργοποιηθεί για αυτόν τον λογαριασμό."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "Οι αγορές έχουν απενεργοποιηθεί για αυτόν τον λογαριασμό. Επικοινωνήστε με το {supportEmail} αν πιστεύετε ότι πρόκειται για λάθος."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:136
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
 msgid "Purchases unavailable"
 msgstr "Οι αγορές δεν είναι διαθέσιμες"
 
@@ -26670,7 +26680,7 @@ msgstr "Αντιδράσεις"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:817
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "Ενεργοποίηση ξανά"
@@ -26900,8 +26910,8 @@ msgstr "Εξαργύρωση για εσάς"
 
 #. Billing button for entering a premium gift code.
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:735
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:306
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:790
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:309
 msgid "Redeem gift code"
 msgstr "Εξαργύρωση κωδικού δώρου"
 
@@ -27672,7 +27682,7 @@ msgstr "Όριο ανανέωσης (ημέρες)"
 msgid "Renew window (days)"
 msgstr "Παράθυρο ανανέωσης (ημέρες)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:762
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "Ανανεώνεται στις <0>{renewalDate}.</0>"
 
@@ -28431,8 +28441,8 @@ msgstr "Επαναφορά παραθύρου"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:754
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:758
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:809
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:813
 msgid "Resubscribe"
 msgstr "Επανεγγραφή"
 
@@ -31871,7 +31881,7 @@ msgstr "Κάτι πήγε στραβά κατά τη φόρτωση του αρ�
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:36
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -31911,7 +31921,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Κάτι πήγε στραβά κατά την αποστολή του email επαλήθευσης. Δοκιμάστε ξανά σε λίγο."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:172
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Κάτι πήγε στραβά κατά την έναρξη της ολοκλήρωσης αγοράς. Δοκιμάστε ξανά σε λίγο."
 
@@ -32973,7 +32983,7 @@ msgid "Subscription"
 msgstr "Συνδρομή"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:125
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
 msgid "Subscription already exists"
 msgstr "Η συνδρομή υπάρχει ήδη"
 
@@ -33125,12 +33135,12 @@ msgid "Switch device"
 msgstr "Αλλαγή συσκευής"
 
 #. Button confirming a move of an active subscription down to the current price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:65
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:68
 msgid "Switch price"
 msgstr "Αλλαγή τιμής"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:822
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:877
 msgid "Switch to {listPriceNewLabel}"
 msgstr "Μετάβαση στο {listPriceNewLabel}"
 
@@ -33154,13 +33164,13 @@ msgstr "Εναλλαγή σε απευθείας εισαγωγή"
 
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:805
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:60
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
 msgid "Switch to monthly"
 msgstr "Αλλαγή σε μηνιαία συνδρομή"
 
 #. Billing confirmation title for changing an active subscription to monthly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:49
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:52
 msgid "Switch to monthly billing?"
 msgstr "Να γίνει μηνιαία χρέωση;"
 
@@ -33202,7 +33212,7 @@ msgid "Switch to single column"
 msgstr "Εναλλαγή σε μονή στήλη"
 
 #. Billing confirmation title for moving an active subscription down to the current price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:61
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:64
 msgid "Switch to the new price?"
 msgstr "Αλλαγή στη νέα τιμή;"
 
@@ -33223,13 +33233,13 @@ msgstr "Εναλλαγή σε δύο στήλες"
 
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:801
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
 msgid "Switch to yearly"
 msgstr "Αλλαγή σε ετήσια συνδρομή"
 
 #. Billing confirmation title for changing an active subscription to yearly billing.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:45
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:48
 msgid "Switch to yearly billing?"
 msgstr "Να γίνει ετήσια χρέωση;"
 
@@ -33469,23 +33479,23 @@ msgstr "Ετικέτες ({tagCount}/{tagLimit})"
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Οι ετικέτες πρέπει να είναι 2 έως {maxLength} χαρακτήρες και να περιέχουν μόνο αλφαριθμητικούς χαρακτήρες."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:293
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:298
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "Θα τεθεί σε ισχύ στην επόμενη ανανέωσή σας. Θα εφαρμόσουμε μια πίστωση {creditLabel} από την τρέχουσα μηνιαία πληρωμή σας, οπότε η πρώτη ετήσια χρέωση θα είναι <0>{firstRenewalPriceLabel}</0>. Οι μελλοντικές ετήσιες ανανεώσεις θα είναι {renewalPrice}/έτος."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:302
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:307
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Θα τεθεί σε ισχύ στην επόμενη ανανέωσή σας. Η συνδρομή σας παραμένει μηνιαία μέχρι τότε και η επόμενη ανανέωσή σας θα είναι <0>{renewalPrice}/έτος</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:311
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:316
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Θα τεθεί σε ισχύ στην επόμενη ανανέωσή σας. Η συνδρομή σας παραμένει ετήσια μέχρι τότε και η επόμενη ανανέωσή σας θα είναι <0>{renewalPrice}/μήνα</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:330
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:335
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Ισχύει άμεσα. Ενδέχεται να εφαρμοστεί αναλογική προσαρμογή μέσω {PAYMENT_PROVIDER_NAME}. Η επόμενη ανανέωσή σας θα είναι <0>{renewalPrice}/μήνα</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:321
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:326
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Ισχύει άμεσα. Ενδέχεται να εφαρμοστεί αναλογική χρέωση μέσω {PAYMENT_PROVIDER_NAME}. Η επόμενη ανανέωσή σας θα είναι <0>{renewalPrice}/έτος</0>."
 
@@ -34865,7 +34875,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "Αυτός ο επιλογέας είναι διαθέσιμος μόνο στην εφαρμογή για υπολογιστές."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:178
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
 msgid "This plan isn't available. Contact support."
 msgstr "Αυτό το πρόγραμμα δεν είναι διαθέσιμο. Επικοινωνήστε με την υποστήριξη."
 
@@ -37214,7 +37224,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "Χρήση {everyoneMention}/{hereMention} και {rolesMention}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:46
 msgid "Use {pixPaymentMethod}"
 msgstr "Χρήση {pixPaymentMethod}"
 
@@ -37229,7 +37239,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "Χρησιμοποιήστε το {query} όπου θα πρέπει να εισαχθεί το κείμενο προς μετάφραση."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:56
 msgid "Use {upiPaymentMethod}"
 msgstr "Χρήση {upiPaymentMethod}"
 
@@ -37263,7 +37273,7 @@ msgid "Use actual value"
 msgstr "Χρήση πραγματικής τιμής"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:65
 msgid "Use alternative method"
 msgstr "Χρήση εναλλακτικής μεθόδου"
 
@@ -37304,7 +37314,7 @@ msgid "Use browser locale for time format"
 msgstr "Χρήση τοπικών ρυθμίσεων του προγράμματος περιήγησης για τη μορφή ώρας"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:220
 msgid "Use card"
 msgstr "Χρήση κάρτας"
 
@@ -37407,32 +37417,32 @@ msgid "Use light theme"
 msgstr "Χρήση φωτεινού θέματος"
 
 #. Modal primary button to start the localized card pre-approval verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:216
 msgid "Use local card"
 msgstr "Χρήση τοπικής κάρτας"
 
 #. Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:69
 msgid "Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "Χρησιμοποιήστε την τοπική κάρτα για να επαληθεύσετε μια κάρτα που έχει εκδοθεί στη Βραζιλία πριν από την πληρωμή σε BRL. Επιλέξτε άλλες μεθόδους αν προτιμάτε να δοκιμάσετε {pixPaymentMethod} ή άλλη μέθοδο πληρωμής που προσφέρει το {paymentProviderName} στην επόμενη οθόνη."
 
 #. Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:77
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
 msgid "Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "Χρησιμοποιήστε την τοπική κάρτα για να επαληθεύσετε μια κάρτα που έχει εκδοθεί στην Ινδία πριν από την πληρωμή σε INR. Επιλέξτε άλλες μεθόδους αν προτιμάτε να δοκιμάσετε {upiPaymentMethod} ή άλλη μέθοδο πληρωμής που προσφέρει το {paymentProviderName} στην επόμενη οθόνη."
 
 #. Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:83
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
 msgid "Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead."
 msgstr "Χρησιμοποιήστε την τοπική κάρτα για να επαληθεύσετε μια κάρτα που έχει εκδοθεί στην Πολωνία πριν από την πληρωμή σε PLN. Η μέθοδος {blikPaymentMethod} δεν υποστηρίζει συνδρομές στη διαδικασία πληρωμής του {paymentProviderName}, οπότε συνεχίστε μόνο αν θέλετε την τυπική οθόνη πληρωμής του {paymentProviderName2}."
 
 #. Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:94
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
 msgid "Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen."
 msgstr "Χρησιμοποιήστε την τοπική κάρτα για να επαληθεύσετε μια κάρτα που έχει εκδοθεί στην Τουρκία πριν από την πληρωμή σε TRY. Δεν υπάρχει εδώ τοπική μέθοδος συνδρομής μέσω εφαρμογής, οπότε αν συνεχίσετε θα μεταφερθείτε στην τυπική οθόνη πληρωμής του {paymentProviderName}."
 
 #. Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:100
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
 msgid "Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen."
 msgstr "Χρησιμοποιήστε την τοπική κάρτα για να επαληθεύσετε μια κάρτα που έχει εκδοθεί στη χώρα χρέωσής σας πριν από την πληρωμή. Επιλέξτε άλλες μεθόδους για οποιαδήποτε άλλη μέθοδο πληρωμής προσφέρει το {paymentProviderName} στην επόμενη οθόνη."
 
@@ -37946,7 +37956,7 @@ msgid "Verify"
 msgstr "Επαλήθευση"
 
 #. Modal title for the mobile checkout confirmation when opening the localized card verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
 msgid "Verify card"
 msgstr "Επαλήθευση κάρτας"
 
@@ -38045,7 +38055,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Επαληθεύστε το email σας πριν στείλετε αιτήματα φιλίας."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:108
 msgid "Verify your email first"
 msgstr "Επαληθεύστε πρώτα το email σας"
 
@@ -38279,7 +38289,7 @@ msgid "View"
 msgstr "Προβολή"
 
 #. Button label on the premium onboarding nagbar. Opens premium feature and subscription settings. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:59
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:61
 msgid "View {premiumProductName} features"
 msgstr "Δείτε τις δυνατότητες {premiumProductName}"
 
@@ -38526,7 +38536,7 @@ msgstr "Βιρτζίνια"
 msgid "Visibility"
 msgstr "Ορατότητα"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:418
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:423
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -38546,7 +38556,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Μπάρα ειδοποιήσεων 2FA Visionary"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:121
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Το Visionary περιλαμβάνει ήδη μόνιμη πρόσβαση, οπότε δεν χρειάζεται επαναλαμβανόμενη συνδρομή. Μπορείτε να αγοράσετε δώρα για άλλους."
 
@@ -39062,7 +39072,7 @@ msgid "We don't send verification texts to this country. Try a mobile number fro
 msgstr "Δεν στέλνουμε μηνύματα επαλήθευσης σε αυτήν τη χώρα. Δοκιμάστε έναν αριθμό κινητού από άλλη χώρα ή επικοινωνήστε με την υποστήριξη."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:132
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Βρήκαμε μια υπάρχουσα συνδρομή {premiumProductFullName} για αυτόν τον λογαριασμό. Διαχειριστείτε την στην ασφαλή πύλη χρεώσεων για να ενημερώσετε τα στοιχεία πληρωμής ή να ελέγξετε την κατάσταση ανανέωσης. Αν μόλις πληρώσατε, περιμένετε ένα λεπτό και ανοίξτε ξανά αυτήν τη σελίδα."
 
@@ -39313,32 +39323,32 @@ msgid "Welcome to {channelDisplayName}"
 msgstr "Καλώς ήρθατε στο {channelDisplayName}"
 
 #. Premium onboarding nagbar body. {premiumProductFullName} is the full premium product name, such as Fluxer Plutonium. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:24
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:26
 msgid "Welcome to {premiumProductFullName}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Καλώς ήρθατε στο {premiumProductFullName}. Ανακαλύψτε τα προνόμια του {premiumProductName} και διαχειριστείτε τη συνδρομή σας."
 
 #. Premium onboarding nagbar body for lifetime premium users. Visionary is the lifetime premium tier name. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:29
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:31
 msgid "Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. Explore your {premiumProductName} perks."
 msgstr "Καλώς ήρθατε στο {premiumProductFullName}. Έχετε ισόβια πρόσβαση ως Visionary. Ανακαλύψτε τα προνόμια του {premiumProductName}."
 
 #. Premium onboarding nagbar body for a gift subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:53
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:55
 msgid "Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. Explore your {premiumProductName} perks."
 msgstr "Καλώς ήρθατε στο {premiumProductFullName}. Η συνδρομή που λάβατε ως δώρο ισχύει έως τις {formattedDate}. Ανακαλύψτε τα προνόμια του {premiumProductName}."
 
 #. Premium onboarding nagbar body for a monthly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:41
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:43
 msgid "Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Καλώς ήρθατε στο {premiumProductFullName}. Η μηνιαία συνδρομή σας ανανεώνεται στις {formattedDate}. Ανακαλύψτε τα προνόμια του {premiumProductName} και διαχειριστείτε τη συνδρομή σας."
 
 #. Premium onboarding nagbar body for a subscription that will cancel. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:35
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:37
 msgid "Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Καλώς ήρθατε στο {premiumProductFullName}. Η συνδρομή σας ισχύει έως τις {formattedDate}. Ανακαλύψτε τα προνόμια του {premiumProductName} και διαχειριστείτε τη συνδρομή σας."
 
 #. Premium onboarding nagbar body for a yearly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:47
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:49
 msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Καλώς ήρθατε στο {premiumProductFullName}. Η ετήσια συνδρομή σας ανανεώνεται στις {formattedDate}. Ανακαλύψτε τα προνόμια του {premiumProductName} και διαχειριστείτε τη συνδρομή σας."
 
@@ -39732,15 +39742,15 @@ msgstr "Ετήσια {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "Ετήσιο δώρο"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:634
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:676
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Η αναβάθμιση σε ετήσια συνδρομή έχει προγραμματιστεί για <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:619
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:661
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Η ετήσια αναβάθμιση έχει προγραμματιστεί για <0>{pendingChangeDate}</0>. Πρώτη ετήσια χρέωση: {pendingInitialPriceLabel} μετά από πίστωση {pendingCreditPriceLabel}. Μελλοντικές ετήσιες ανανεώσεις: {pendingRecurringPriceLabel}/έτος."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:626
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:668
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Η ετήσια αναβάθμιση έχει προγραμματιστεί για <0>{pendingChangeDate}</0>. Πρώτη ετήσια χρέωση: {pendingInitialPriceLabel}. Μελλοντικές ετήσιες ανανεώσεις: {pendingRecurringPriceLabel}/έτος."
 
@@ -39813,7 +39823,7 @@ msgid "You are now a developer!"
 msgstr "Είστε πλέον προγραμματιστής!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:195
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:203
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Μεταβαίνετε τώρα στο {paymentProviderName} για να ολοκληρώσετε την πληρωμή. Επιστρέψτε στο {productName} μόλις την ολοκληρώσετε."
 
@@ -40220,12 +40230,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Μόλις πατήσατε Tab. Η λειτουργία πληκτρολογίου είναι πλέον ενεργή, ώστε να μπορείτε να περιηγηθείτε στο {productName} χωρίς ποντίκι."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:245
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Διατηρείτε τα προνόμιά σας μέχρι την επόμενη ημερομηνία ανανέωσης. Ενεργοποιήστε ξανά τη συνδρομή σας πριν από τότε για να διατηρήσετε το ιστορικό συνδρομών σας."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:266
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Χάνετε όλα τα προνόμια {PREMIUM_PRODUCT_NAME} αμέσως και το ιστορικό συνδρομών σας μηδενίζεται. Αυτό δεν μπορεί να αναιρεθεί."
 
@@ -40347,7 +40357,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Πρέπει να επαληθεύσετε τη διεύθυνση email σας πριν ξεκινήσετε μια απευθείας συνομιλία."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:112
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Πρέπει να επαληθεύσετε το email σας πριν μπορέσετε να αγοράσετε το {premiumProductFullName}."
 
@@ -40449,7 +40459,7 @@ msgid "You're already friends with this user."
 msgstr "Είστε ήδη φίλοι με αυτόν τον χρήστη."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:117
 msgid "You're already Visionary"
 msgstr "Είστε ήδη Visionary"
 
@@ -40489,7 +40499,7 @@ msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Έχετε υπερβεί το όριο αιτημάτων. Περιμένετε {duration} πριν προσπαθήσετε ξανά."
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:176
 msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
 msgstr "Έχετε συνδρομή δώρου. Δεν θα ανανεωθεί αυτόματα. Μπορείτε να εξαργυρώσετε κι άλλους κωδικούς δώρου για να την επεκτείνετε. Οι συνδρομές με αυτόματη ανανέωση μπορούν να ξεκινήσουν αφού λήξει η συνδρομή δώρου."
 
@@ -40553,12 +40563,12 @@ msgid "You're in the voice channel"
 msgstr "Είστε στο φωνητικό κανάλι"
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:40
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:43
 msgid "You're on a legacy rate no longer available to new subscribers."
 msgstr "Έχετε μια παλιά τιμή που δεν είναι πλέον διαθέσιμη σε νέους συνδρομητές."
 
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price; current list price is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:35
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:38
 msgid "You're on a legacy rate. The current price for this plan is {currentSubscriptionListPriceLabel}."
 msgstr "Έχετε μια παλιά τιμή. Η τρέχουσα τιμή για αυτό το πρόγραμμα είναι {currentSubscriptionListPriceLabel}."
 
@@ -40671,6 +40681,11 @@ msgstr "Έχετε ζητήσει πάρα πολλά email επαλήθευση
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Έχετε δει όλες τις πρόσφατες αναφορές σας. Σύντομα θα εμφανιστούν κι άλλες εδώ."
 
+#. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:138
+msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
+msgstr "Η συνδρομή σας {premiumProductFullName} χρεώνεται μέσω {storeName}. Διαχειριστείτε την από τον λογαριασμό σας στο {storeName} για να αλλάξετε πρόγραμμα ή να ελέγξετε την κατάσταση ανανέωσης."
+
 #. Plutonium page hero subtitle when a subscription has ended. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:62
 msgid "Your {premiumProductName} perks have ended. Subscribe again to bring them back."
@@ -40685,6 +40700,11 @@ msgstr "Η συνδρομή σας στο {premiumProductName} έληξε. Έχ�
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Η περίοδος λειτουργίας σας στο {productName} έληξε. Συνδεθείτε ξανά για να συνεχίσετε την εξουσιοδότηση αυτής της εφαρμογής."
+
+#. Plutonium subscription card text shown while a failed App Store or Google Play renewal payment is being retried. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:476
+msgid "Your {storeName} renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your {storeName} payment method before then to keep your subscription."
+msgstr "Η πληρωμή ανανέωσης μέσω {storeName} απέτυχε, αλλά τα <0/> παραμένουν ενεργά έως <1>{graceDate}</1>. Ενημερώστε τον τρόπο πληρωμής σας στο {storeName} πριν από τότε για να διατηρήσετε τη συνδρομή σας."
 
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:200
 msgid "Your account"
@@ -40986,7 +41006,7 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "Η εγγραφή σας χρειάζεται έναν επιπλέον έλεγχο κατά των ανεπιθύμητων μηνυμάτων πριν συνεχίσετε."
 
 #. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:492
 msgid "Your renewal payment failed but <0/> stay active until <1>{graceDate}</1>. Update your payment method before then to keep your subscription."
 msgstr "Η πληρωμή ανανέωσης απέτυχε, αλλά τα <0/> παραμένουν ενεργά έως <1>{graceDate}</1>. Ενημερώστε τον τρόπο πληρωμής σας πριν από τότε για να διατηρήσετε τη συνδρομή σας."
 
@@ -41016,7 +41036,7 @@ msgstr "Η συνδρομή σας"
 msgid "Your subscription can't move to the new price right now."
 msgstr "Η συνδρομή σας δεν μπορεί να μετακινηθεί στη νέα τιμή αυτήν τη στιγμή."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:508
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "Η συνδρομή σας έληξε, αλλά τα <0/> παραμένουν ενεργά έως <1>{graceDate}</1>. Κάντε επανεγγραφή πριν από τότε για να διατηρήσετε το ιστορικό συνδρομής σας."
 
@@ -41045,7 +41065,7 @@ msgstr "Η συνδρομή σας άλλαξε σε μηνιαία χρέωση
 msgid "Your subscription has been switched to yearly billing."
 msgstr "Η συνδρομή σας έχει αλλάξει σε ετήσια χρέωση."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:528
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:570
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "Η συνδρομή σας είναι ενεργή, αλλά τα προνόμια έχουν προσωρινά τεθεί σε παύση."
 
@@ -41065,7 +41085,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "Η συνδρομή σας μεταβαίνει στη νέα τιμή στις {effectiveDate}."
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:724
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "Η συνδρομή σας εξακολουθεί να λήγει στις <0>{cancelDate}</0>. Η τρέχουσα τιμή είναι τώρα {listPriceNewLabel}. Αν ενεργοποιήσετε ξανά τη συνδρομή, μπορείτε να περάσετε σε αυτήν την τιμή από εδώ."
 
