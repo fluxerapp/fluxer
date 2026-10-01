@@ -8279,13 +8279,13 @@ msgstr "Κλείσιμο αυτού του DM"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "Να κλείσει αυτή η ομαδική συνομιλία; Μπορείτε να την ανοίξετε ξανά ανά πάσα στιγμή."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
 msgid "Close to menu bar"
 msgstr "Κλείσιμο στη γραμμή μενού"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Close to tray"
 msgstr "Κλείσιμο στο tray"
 
@@ -14579,7 +14579,7 @@ msgstr "εξαίρεση μέρους ονόματος αρχείου συνημ
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:39
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Exit"
 msgstr "Έξοδος"
 
@@ -17347,7 +17347,7 @@ msgid "Hide preview thumbnail"
 msgstr "Απόκρυψη μικρογραφίας προεπισκόπησης"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "Απόκρυψη του παραθύρου κατά την ελαχιστοποίηση και άνοιγμα ξανά από την περιοχή ειδοποιήσεων"
 
@@ -19131,7 +19131,7 @@ msgid "Kansas"
 msgstr "Κάνσας"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
 msgid "Keep {productName} running when the window is closed"
 msgstr "Να παραμένει το {productName} σε λειτουργία όταν το παράθυρο είναι κλειστό"
 
@@ -19169,7 +19169,7 @@ msgid "Keep Neko still"
 msgstr "Κράτα το Neko ακίνητο"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Keep running"
 msgstr "Παραμονή σε λειτουργία"
 
@@ -20065,7 +20065,7 @@ msgstr "Προεπιλεγμένη συσκευή macOS"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:220
 msgid "macOS permissions"
 msgstr "Δικαιώματα macOS"
 
@@ -21376,12 +21376,12 @@ msgstr "24ωρη μορφή ώρας"
 msgid "Minimize"
 msgstr "Ελαχιστοποίηση"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 msgid "Minimize to menu bar"
 msgstr "Ελαχιστοποίηση στη γραμμή μενού"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Ελαχιστοποίηση στην περιοχή ειδοποιήσεων"
@@ -26386,7 +26386,7 @@ msgid "Quiet"
 msgstr "Αθόρυβη λειτουργία"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
 msgid "Quit"
 msgstr "Έξοδος"
 
@@ -26926,7 +26926,7 @@ msgstr "Απομνημόνευση αυτής της προτίμησης"
 msgid "Remember window"
 msgstr "Απομνημόνευση παραθύρου"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:182
 msgid "Remember window size and position"
 msgstr "Απομνημόνευση μεγέθους και θέσης παραθύρου"
 
@@ -30754,7 +30754,7 @@ msgstr "Εμφάνιση πληροφοριών πολυμέσων"
 msgid "Show members"
 msgstr "Εμφάνιση μελών"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show menu bar icon"
 msgstr "Εμφάνιση εικονιδίου γραμμής μενού"
 
@@ -30912,7 +30912,7 @@ msgstr "Εμφάνιση του διαγραμμένου κειμένου Markdo
 msgid "Show suppress embeds button"
 msgstr "Εμφάνιση κουμπιού απόκρυψης ενσωματώσεων"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "Εμφάνιση εικονιδίου στην περιοχή ειδοποιήσεων"
 
@@ -32119,9 +32119,20 @@ msgstr "Η ημερομηνία έναρξης πρέπει να είναι νω
 msgid "Start drag and drop"
 msgstr "Έναρξη μεταφοράς και απόθεσης"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+msgid "Start in the tray instead of opening the window when launched at login"
+msgstr "Εκκίνηση στο δίσκο συστήματος αντί για άνοιγμα παραθύρου κατά την εκκίνηση με τον υπολογιστή"
+
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:15
 msgid "Start mic test"
 msgstr "Έναρξη δοκιμής μικροφώνου"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+msgid "Start minimized"
+msgstr "Έναρξη ελαχιστοποιημένο"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
@@ -39112,6 +39123,14 @@ msgstr "Όταν η λήξη συνημμένων είναι απενεργοπ�
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "Όταν οι φίλοι σου είναι ενεργοί σε φωνητικά κανάλια, η δραστηριότητά τους θα εμφανίζεται εδώ."
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:168
+msgid "When launched at login, start in the menu bar instead of opening the window"
+msgstr "Όταν ξεκινά κατά τη σύνδεση, εμφάνιση στη γραμμή μενού αντί να ανοίξει το παράθυρο"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:170
+msgid "When launched at login, start in the system tray instead of opening the window"
+msgstr "Όταν ξεκινά κατά τη σύνδεση, ξεκίνα στη γραμμή συστήματος αντί να ανοίξεις το παράθυρο"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:51

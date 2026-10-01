@@ -8279,13 +8279,13 @@ msgstr "Fermer cette conversation privée"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "Fermer ce MP de groupe ? Vous pourrez le rouvrir à tout moment."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
 msgid "Close to menu bar"
 msgstr "Fermer dans la barre de menus"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Close to tray"
 msgstr "Fermer vers la zone de notification"
 
@@ -14579,7 +14579,7 @@ msgstr "exclure une partie d'un nom de fichier de pièce jointe"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:39
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Exit"
 msgstr "Quitter"
 
@@ -17347,7 +17347,7 @@ msgid "Hide preview thumbnail"
 msgstr "Masquer la miniature d’aperçu"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "Masquer la fenêtre lorsqu’elle est réduite et la rouvrir depuis la zone de notification"
 
@@ -19131,7 +19131,7 @@ msgid "Kansas"
 msgstr "Kansas"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
 msgid "Keep {productName} running when the window is closed"
 msgstr "Laisser {productName} en arrière-plan quand la fenêtre est fermée"
 
@@ -19169,7 +19169,7 @@ msgid "Keep Neko still"
 msgstr "Garder Neko immobile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Keep running"
 msgstr "Continuer à fonctionner"
 
@@ -20065,7 +20065,7 @@ msgstr "macOS (par défaut)"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:220
 msgid "macOS permissions"
 msgstr "Autorisations macOS"
 
@@ -21376,12 +21376,12 @@ msgstr "Format 24 heures"
 msgid "Minimize"
 msgstr "Réduire"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 msgid "Minimize to menu bar"
 msgstr "Réduire dans la barre de menus"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Réduire dans la zone de notification"
@@ -26386,7 +26386,7 @@ msgid "Quiet"
 msgstr "Silencieux"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
 msgid "Quit"
 msgstr "Quitter"
 
@@ -26926,7 +26926,7 @@ msgstr "Se souvenir de ce choix"
 msgid "Remember window"
 msgstr "Mémoriser la fenêtre"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:182
 msgid "Remember window size and position"
 msgstr "Mémoriser la taille et la position de la fenêtre"
 
@@ -30754,7 +30754,7 @@ msgstr "Afficher les informations du média"
 msgid "Show members"
 msgstr "Afficher les membres"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show menu bar icon"
 msgstr "Afficher l'icône dans la barre de menus"
 
@@ -30912,7 +30912,7 @@ msgstr "Afficher le texte barré en Markdown dans une couleur légèrement atté
 msgid "Show suppress embeds button"
 msgstr "Afficher le bouton « Masquer les contenus intégrés »"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "Afficher l’icône dans la zone de notification"
 
@@ -32119,9 +32119,20 @@ msgstr "La date de début doit être antérieure à la date de fin."
 msgid "Start drag and drop"
 msgstr "Démarrer le glisser-déposer"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+msgid "Start in the tray instead of opening the window when launched at login"
+msgstr "Démarrer dans la zone de notification au lieu d'ouvrir la fenêtre au lancement lors de la connexion"
+
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:15
 msgid "Start mic test"
 msgstr "Démarrer le test du micro"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+msgid "Start minimized"
+msgstr "Démarrer minimisé"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
@@ -39112,6 +39123,14 @@ msgstr "Lorsque l’expiration des pièces jointes est désactivée, les pièces
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "Lorsque vos amis sont actifs dans les salons vocaux, leur activité s'affiche ici."
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:168
+msgid "When launched at login, start in the menu bar instead of opening the window"
+msgstr "Au lancement à la connexion, démarrer dans la barre de menus au lieu d'ouvrir la fenêtre"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:170
+msgid "When launched at login, start in the system tray instead of opening the window"
+msgstr "Au lancement à la connexion, démarrer dans la zone de notification au lieu d'ouvrir la fenêtre"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:51

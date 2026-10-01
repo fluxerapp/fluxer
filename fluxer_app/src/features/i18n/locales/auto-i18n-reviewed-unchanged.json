@@ -3076,6 +3076,9 @@
         "msgid": "Something went wrong while publishing. Try again in a moment."
       },
       {
+        "msgid": "Start in the tray instead of opening the window when launched at login"
+      },
+      {
         "msgid": "Started displaying members with this role separately."
       },
       {
@@ -3512,6 +3515,12 @@
       },
       {
         "msgid": "What you're sharing isn't updating"
+      },
+      {
+        "msgid": "When launched at login, start in the menu bar instead of opening the window"
+      },
+      {
+        "msgid": "When launched at login, start in the system tray instead of opening the window"
       },
       {
         "msgid": "Who can join"
@@ -4228,10 +4237,10 @@
         "msgid": "{renderedOnlineCount} online"
       },
       {
-        "msgid": "{username} followed {name} into this channel. Messages published there will appear here."
+        "msgid": "{requestedLabel} could not start. Using {effectiveLabel} instead."
       },
       {
-        "msgid": "{requestedLabel} could not start. Using {effectiveLabel} instead."
+        "msgid": "{username} followed {name} into this channel. Messages published there will appear here."
       },
       {
         "msgctxt": "audit-log-member-profile",

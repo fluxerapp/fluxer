@@ -8279,13 +8279,13 @@ msgstr "關閉此私訊"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "要關閉這個群組私訊嗎？您可以隨時重新開啟。"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
 msgid "Close to menu bar"
 msgstr "關閉至選單列"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Close to tray"
 msgstr "關閉至系統匣"
 
@@ -14579,7 +14579,7 @@ msgstr "排除附件檔名的一部分"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:39
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Exit"
 msgstr "離開"
 
@@ -17347,7 +17347,7 @@ msgid "Hide preview thumbnail"
 msgstr "隱藏預覽縮圖"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "視窗最小化時隱藏，並可從系統匣重新開啟"
 
@@ -19131,7 +19131,7 @@ msgid "Kansas"
 msgstr "堪薩斯州"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
 msgid "Keep {productName} running when the window is closed"
 msgstr "關閉視窗時，讓 {productName} 保持執行"
 
@@ -19169,7 +19169,7 @@ msgid "Keep Neko still"
 msgstr "讓 Neko 保持不動"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Keep running"
 msgstr "繼續執行"
 
@@ -20065,7 +20065,7 @@ msgstr "macOS 預設值"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:220
 msgid "macOS permissions"
 msgstr "macOS 權限"
 
@@ -21376,12 +21376,12 @@ msgstr "24 小時制"
 msgid "Minimize"
 msgstr "最小化"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 msgid "Minimize to menu bar"
 msgstr "最小化到選單列"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "最小化到系統匣"
@@ -26386,7 +26386,7 @@ msgid "Quiet"
 msgstr "安靜"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
 msgid "Quit"
 msgstr "結束"
 
@@ -26926,7 +26926,7 @@ msgstr "記住此偏好設定"
 msgid "Remember window"
 msgstr "記住視窗"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:182
 msgid "Remember window size and position"
 msgstr "記住視窗大小和位置"
 
@@ -30754,7 +30754,7 @@ msgstr "顯示媒體資訊"
 msgid "Show members"
 msgstr "顯示成員"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show menu bar icon"
 msgstr "顯示選單列圖示"
 
@@ -30912,7 +30912,7 @@ msgstr "以稍微柔和的顏色顯示刪除線 Markdown 文字。"
 msgid "Show suppress embeds button"
 msgstr "顯示「隱藏嵌入內容」按鈕"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "顯示系統匣圖示"
 
@@ -32119,9 +32119,20 @@ msgstr "開始日期必須早於結束日期。"
 msgid "Start drag and drop"
 msgstr "開始拖放"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+msgid "Start in the tray instead of opening the window when launched at login"
+msgstr "登入時啟動，改為在系統匣中啟動，而非開啟視窗"
+
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:15
 msgid "Start mic test"
 msgstr "開始麥克風測試"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+msgid "Start minimized"
+msgstr "最小化啟動"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
@@ -39112,6 +39123,14 @@ msgstr "停用附件到期功能後，附件會保留，直到手動移除。"
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "當好友在語音頻道中活動時，他們的動態會顯示在這裡。"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:168
+msgid "When launched at login, start in the menu bar instead of opening the window"
+msgstr "登入時啟動，改為在選單列中啟動，而非開啟視窗"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:170
+msgid "When launched at login, start in the system tray instead of opening the window"
+msgstr "登入時啟動，改為從系統匣啟動，而非開啟視窗"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:51

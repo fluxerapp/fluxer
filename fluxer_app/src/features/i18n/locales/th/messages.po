@@ -8279,13 +8279,13 @@ msgstr "ปิดข้อความส่วนตัวนี้"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "ปิดแชทกลุ่มนี้ใช่หรือไม่ คุณสามารถเปิดใหม่ได้ทุกเมื่อ"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
 msgid "Close to menu bar"
 msgstr "ย่อไปที่แถบเมนู"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Close to tray"
 msgstr "ย่อไปที่ถาดระบบ"
 
@@ -14579,7 +14579,7 @@ msgstr "ไม่รวมส่วนหนึ่งของชื่อไฟ
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:39
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Exit"
 msgstr "ออก"
 
@@ -17347,7 +17347,7 @@ msgid "Hide preview thumbnail"
 msgstr "ซ่อนภาพตัวอย่าง"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "ซ่อนหน้าต่างเมื่อย่อขนาดและเปิดใหม่จากถาดระบบ"
 
@@ -19131,7 +19131,7 @@ msgid "Kansas"
 msgstr "แคนซัส"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
 msgid "Keep {productName} running when the window is closed"
 msgstr "ให้ {productName} ทำงานต่อเมื่อปิดหน้าต่าง"
 
@@ -19169,7 +19169,7 @@ msgid "Keep Neko still"
 msgstr "ตรึง Neko ไว้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Keep running"
 msgstr "ทำงานเบื้องหลัง"
 
@@ -20065,7 +20065,7 @@ msgstr "ค่าเริ่มต้นของ macOS"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:220
 msgid "macOS permissions"
 msgstr "สิทธิ์ของ macOS"
 
@@ -21376,12 +21376,12 @@ msgstr "รูปแบบ 24 ชั่วโมง"
 msgid "Minimize"
 msgstr "ย่อ"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 msgid "Minimize to menu bar"
 msgstr "ย่อไปที่แถบเมนู"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "ย่อไปที่ถาดระบบ"
@@ -26386,7 +26386,7 @@ msgid "Quiet"
 msgstr "ปิดเสียง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
 msgid "Quit"
 msgstr "ออก"
 
@@ -26926,7 +26926,7 @@ msgstr "จำการตั้งค่านี้"
 msgid "Remember window"
 msgstr "จดจำหน้าต่าง"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:182
 msgid "Remember window size and position"
 msgstr "จำขนาดและตำแหน่งหน้าต่าง"
 
@@ -30754,7 +30754,7 @@ msgstr "แสดงข้อมูลสื่อ"
 msgid "Show members"
 msgstr "แสดงสมาชิก"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show menu bar icon"
 msgstr "แสดงไอคอนแถบเมนู"
 
@@ -30912,7 +30912,7 @@ msgstr "แสดงข้อความ Markdown ที่ขีดฆ่า�
 msgid "Show suppress embeds button"
 msgstr "แสดงปุ่มซ่อนเนื้อหาที่ฝัง"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "แสดงไอคอนในถาดระบบ"
 
@@ -32119,9 +32119,20 @@ msgstr "วันที่เริ่มต้นต้องเร็วกว
 msgid "Start drag and drop"
 msgstr "เริ่มลากและวาง"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+msgid "Start in the tray instead of opening the window when launched at login"
+msgstr "เริ่มในถาดแทนการเปิดหน้าต่างเมื่อเปิดใช้งานขณะเข้าสู่ระบบ"
+
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:15
 msgid "Start mic test"
 msgstr "เริ่มทดสอบไมโครโฟน"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+msgid "Start minimized"
+msgstr "เริ่มแบบย่อ"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
@@ -39112,6 +39123,14 @@ msgstr "เมื่อปิดใช้งานการหมดอายุ
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "เมื่อเพื่อนของคุณกำลังใช้งานช่องเสียง กิจกรรมของพวกเขาจะแสดงที่นี่"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:168
+msgid "When launched at login, start in the menu bar instead of opening the window"
+msgstr "เมื่อเปิดใช้งานตอนเข้าสู่ระบบ ให้เริ่มที่แถบเมนูแทนการเปิดหน้าต่าง"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:170
+msgid "When launched at login, start in the system tray instead of opening the window"
+msgstr "เมื่อเปิดใช้งานตอนเข้าสู่ระบบ ให้เริ่มในถาดระบบแทนการเปิดหน้าต่าง"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:51

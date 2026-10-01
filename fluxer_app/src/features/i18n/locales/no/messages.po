@@ -8279,13 +8279,13 @@ msgstr "Lukk denne direktemeldingssamtalen"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "Lukke denne gruppechatten? Du kan åpne den igjen når som helst."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
 msgid "Close to menu bar"
 msgstr "Lukk til menylinjen"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Close to tray"
 msgstr "Lukk til systemstatusfelt"
 
@@ -14579,7 +14579,7 @@ msgstr "utelat en del av filnavnet til et vedlegg"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:39
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Exit"
 msgstr "Avslutt"
 
@@ -17347,7 +17347,7 @@ msgid "Hide preview thumbnail"
 msgstr "Skjul miniatyrbilde"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "Skjul vinduet når det er minimert, og åpne det igjen fra systemstatusfeltet"
 
@@ -19131,7 +19131,7 @@ msgid "Kansas"
 msgstr "Kansas"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
 msgid "Keep {productName} running when the window is closed"
 msgstr "Hold {productName} kjørende når vinduet er lukket"
 
@@ -19169,7 +19169,7 @@ msgid "Keep Neko still"
 msgstr "Hold Neko stille"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Keep running"
 msgstr "Fortsett å kjøre"
 
@@ -20065,7 +20065,7 @@ msgstr "macOS – standard"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:220
 msgid "macOS permissions"
 msgstr "macOS-tillatelser"
 
@@ -21376,12 +21376,12 @@ msgstr "24-timersklokke"
 msgid "Minimize"
 msgstr "Minimer"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 msgid "Minimize to menu bar"
 msgstr "Minimer til menylinjen"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Minimer til systemstatusfeltet"
@@ -26386,7 +26386,7 @@ msgid "Quiet"
 msgstr "Stille"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
 msgid "Quit"
 msgstr "Avslutt"
 
@@ -26926,7 +26926,7 @@ msgstr "Husk dette valget"
 msgid "Remember window"
 msgstr "Husk vindu"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:182
 msgid "Remember window size and position"
 msgstr "Husk vindusstørrelse og -posisjon"
 
@@ -30754,7 +30754,7 @@ msgstr "Vis medieinformasjon"
 msgid "Show members"
 msgstr "Vis medlemmer"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show menu bar icon"
 msgstr "Vis ikon på menylinjen"
 
@@ -30912,7 +30912,7 @@ msgstr "Vis gjennomstreket Markdown-tekst i en litt dempet farge."
 msgid "Show suppress embeds button"
 msgstr "Vis knapp for å skjule innebygd innhold"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "Vis ikon i systemstatusfeltet"
 
@@ -32119,9 +32119,20 @@ msgstr "Startdato må være tidligere enn sluttdato."
 msgid "Start drag and drop"
 msgstr "Start dra-og-slipp"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+msgid "Start in the tray instead of opening the window when launched at login"
+msgstr "Start i systemstatusfeltet i stedet for å åpne vinduet når det startes ved pålogging"
+
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:15
 msgid "Start mic test"
 msgstr "Start mikrofontest"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+msgid "Start minimized"
+msgstr "Start minimert"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
@@ -39112,6 +39123,14 @@ msgstr "Når utløp for vedlegg er slått av, er vedlegg tilgjengelige til de fj
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "Når venner er aktive i talekanaler, vises aktiviteten deres her."
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:168
+msgid "When launched at login, start in the menu bar instead of opening the window"
+msgstr "Når den startes ved innlogging, start i menylinjen i stedet for å åpne vinduet"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:170
+msgid "When launched at login, start in the system tray instead of opening the window"
+msgstr "Når startet ved pålogging, start i systemstatusfeltet i stedet for å åpne vinduet"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:51

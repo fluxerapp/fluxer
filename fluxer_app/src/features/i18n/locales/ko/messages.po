@@ -8279,13 +8279,13 @@ msgstr "이 DM 닫기"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "이 그룹 DM을 닫을까요? 언제든지 다시 열 수 있습니다."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
 msgid "Close to menu bar"
 msgstr "메뉴 막대로 닫기"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Close to tray"
 msgstr "트레이로 닫기"
 
@@ -14579,7 +14579,7 @@ msgstr "첨부 파일 이름의 일부 제외"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:39
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Exit"
 msgstr "종료"
 
@@ -17347,7 +17347,7 @@ msgid "Hide preview thumbnail"
 msgstr "미리보기 썸네일 숨기기"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "최소화 시 창 숨기기 및 트레이에서 다시 열기"
 
@@ -19131,7 +19131,7 @@ msgid "Kansas"
 msgstr "캔자스"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
 msgid "Keep {productName} running when the window is closed"
 msgstr "창을 닫아도 {productName} 계속 실행"
 
@@ -19169,7 +19169,7 @@ msgid "Keep Neko still"
 msgstr "네코 고정하기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Keep running"
 msgstr "계속 실행"
 
@@ -20065,7 +20065,7 @@ msgstr "macOS 기본값"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:220
 msgid "macOS permissions"
 msgstr "macOS 권한"
 
@@ -21376,12 +21376,12 @@ msgstr "24시간제"
 msgid "Minimize"
 msgstr "최소화"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 msgid "Minimize to menu bar"
 msgstr "메뉴 막대로 최소화"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "트레이로 최소화"
@@ -26386,7 +26386,7 @@ msgid "Quiet"
 msgstr "무음"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
 msgid "Quit"
 msgstr "앱 종료"
 
@@ -26926,7 +26926,7 @@ msgstr "이 환경설정 기억하기"
 msgid "Remember window"
 msgstr "창 기억하기"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:182
 msgid "Remember window size and position"
 msgstr "창 크기 및 위치 기억"
 
@@ -30754,7 +30754,7 @@ msgstr "미디어 정보 보기"
 msgid "Show members"
 msgstr "멤버 보기"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show menu bar icon"
 msgstr "메뉴 막대 아이콘 표시"
 
@@ -30912,7 +30912,7 @@ msgstr "취소선 마크다운 텍스트를 약간 흐린 색상으로 표시합
 msgid "Show suppress embeds button"
 msgstr "임베드 숨기기 버튼 표시"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "시스템 트레이 아이콘 표시"
 
@@ -32119,9 +32119,20 @@ msgstr "시작일은 종료일보다 빨라야 합니다."
 msgid "Start drag and drop"
 msgstr "끌어서 놓기 시작"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+msgid "Start in the tray instead of opening the window when launched at login"
+msgstr "로그인 시 시작할 때 창을 여는 대신 트레이에서 시작"
+
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:15
 msgid "Start mic test"
 msgstr "마이크 테스트 시작"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+msgid "Start minimized"
+msgstr "최소화하여 시작"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
@@ -39112,6 +39123,14 @@ msgstr "첨부 파일 만료가 비활성화되어 있으면 첨부 파일은 �
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "친구가 음성 채널에서 활동하면 여기에 표시됩니다."
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:168
+msgid "When launched at login, start in the menu bar instead of opening the window"
+msgstr "로그인 시 실행하면 창을 열지 않고 메뉴 표시줄에서 시작"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:170
+msgid "When launched at login, start in the system tray instead of opening the window"
+msgstr "로그인 시 실행하면 창을 열지 않고 시스템 트레이에서 시작"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:51

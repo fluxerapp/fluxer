@@ -67,6 +67,7 @@ export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;
+	startMinimized?: boolean;
 	useNativeTitleBar: boolean;
 	activeUseNativeTitleBar: boolean;
 	rememberWindowState: boolean;

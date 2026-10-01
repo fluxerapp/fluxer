@@ -8279,13 +8279,13 @@ msgstr "Közvetlen beszélgetés bezárása"
 msgid "Close this group DM? You can reopen it anytime."
 msgstr "Bezárod ezt a csoportos beszélgetést? Bármikor újra megnyithatod."
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
 msgid "Close to menu bar"
 msgstr "Bezárás a menüsávba"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:192
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:208
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Close to tray"
 msgstr "Bezárás az értesítési területre"
 
@@ -14579,7 +14579,7 @@ msgstr "mellékletfájlnév egy részének kizárása"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:39
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
 msgid "Exit"
 msgstr "Kilépés"
 
@@ -17347,7 +17347,7 @@ msgid "Hide preview thumbnail"
 msgstr "Előnézeti bélyegkép elrejtése"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
 msgid "Hide the window when minimized and reopen from the tray"
 msgstr "Az ablak elrejtése kis méretre állításkor, és újranyitása az értesítési területről"
 
@@ -19131,7 +19131,7 @@ msgid "Kansas"
 msgstr "Kansas"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:218
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:226
 msgid "Keep {productName} running when the window is closed"
 msgstr "A(z) {productName} futtatásának folytatása az ablak bezárása után"
 
@@ -19169,7 +19169,7 @@ msgid "Keep Neko still"
 msgstr "Tartsd mozdulatlanul Nekót"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:206
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
 msgid "Keep running"
 msgstr "Futtatás folytatása"
 
@@ -20065,7 +20065,7 @@ msgstr "macOS alapértelmezett"
 #. Title for the central macOS permissions modal.
 #: src/features/permissions/system/components/MacPermissionsSettingsRow.tsx:12
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:32
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:204
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:220
 msgid "macOS permissions"
 msgstr "macOS-engedélyek"
 
@@ -21376,12 +21376,12 @@ msgstr "24 órás időformátum"
 msgid "Minimize"
 msgstr "Kis méretre"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 msgid "Minimize to menu bar"
 msgstr "Minimalizálás a menüsorra"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:185
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:201
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:182
 msgid "Minimize to tray"
 msgstr "Kis méretre állítás az értesítési területre"
@@ -26386,7 +26386,7 @@ msgid "Quiet"
 msgstr "Csendes"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:214
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:222
 msgid "Quit"
 msgstr "Kilépés"
 
@@ -26926,7 +26926,7 @@ msgstr "Beállítás megjegyzése"
 msgid "Remember window"
 msgstr "Ablak megjegyzése"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:166
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:182
 msgid "Remember window size and position"
 msgstr "Ablakméret és -pozíció megjegyzése"
 
@@ -30754,7 +30754,7 @@ msgstr "Médiaadatok megjelenítése"
 msgid "Show members"
 msgstr "Tagok megjelenítése"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show menu bar icon"
 msgstr "Menüsor ikon megjelenítése"
 
@@ -30912,7 +30912,7 @@ msgstr "A Markdown áthúzott szöveg enyhén tompított színnel jelenjen meg."
 msgid "Show suppress embeds button"
 msgstr "Beágyazott tartalmak elrejtésére szolgáló gomb megjelenítése"
 
-#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:173
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:189
 msgid "Show system tray icon"
 msgstr "Ikon megjelenítése az értesítési területen"
 
@@ -32119,9 +32119,20 @@ msgstr "A kezdő dátumnak korábbinak kell lennie, mint a befejező dátum."
 msgid "Start drag and drop"
 msgstr "Húzás és ejtés indítása"
 
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:202
+msgid "Start in the tray instead of opening the window when launched at login"
+msgstr "Induláskor a tálcán induljon, ne az ablak megnyitásával"
+
 #: src/features/user/components/modals/tabs/components/MicTestSection.tsx:15
 msgid "Start mic test"
 msgstr "Mikrofonteszt indítása"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:165
+#: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:198
+msgid "Start minimized"
+msgstr "Indítás kis méretben"
 
 #: src/features/moderation/components/report/ReportStepDetails.tsx:326
 #: src/features/moderation/components/report/ReportStepEmail.tsx:97
@@ -39112,6 +39123,14 @@ msgstr "Ha a mellékletek lejárata ki van kapcsolva, a mellékletek manuális e
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:21
 msgid "When friends are active in voice channels, their activity will appear here."
 msgstr "Amikor az ismerősök aktívak a hangcsatornákon, a tevékenységük itt fog megjelenni."
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:168
+msgid "When launched at login, start in the menu bar instead of opening the window"
+msgstr "Amikor a bejelentkezéskor elindul, a menüsávban induljon el az ablak megnyitása helyett"
+
+#: src/features/user/components/modals/tabs/DesktopSettingsTab.tsx:170
+msgid "When launched at login, start in the system tray instead of opening the window"
+msgstr "Indításkor a bejelentkezéskor a rendszer-tálcán induljon el az ablak megnyitása helyett"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:51
