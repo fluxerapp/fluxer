@@ -57,6 +57,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import { Tooltip } from '@app/features/ui/tooltip/Tooltip';
 import {APP_PROTOCOL_PREFIX, APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {
@@ -71,7 +72,7 @@ import {ME} from '@fluxer/constants/src/AppConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react';
-import {CaretRightIcon, ChatTeardropIcon, LockIcon} from '@phosphor-icons/react';
+import {CaretRightIcon, ChatTeardropIcon, LockIcon, WarningIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -892,38 +893,56 @@ export const LinkRenderer = observer(function LinkRenderer({
 	}
 	const href = AttachmentUrlRefresher.fresh(url);
 	const warmAttachmentUrl = () => AttachmentUrlRefresher.warm(url);
+	const bShowTooltip = url && text && !(jumpTarget || settingsTarget || inviteCode || themeCode || userProfileId);
+	const tooltipContent = () => {
+		const parsed = new URL(url);
+		const isTrusted = TrustedDomain.isTrustedDomain(parsed.hostname);
+		if (bShowTooltip) {
+			return (
+				<span>
+					{!isTrusted && (
+						<WarningIcon size={12} weight='fill'/>
+					)}
+					{url}
+				</span>
+			);
+		}
+		return null;
+	}
 	return (
-		<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--2">
-			<a
-				href={href}
-				target={isInternal ? undefined : '_blank'}
-				rel={isInternal ? undefined : 'noopener noreferrer'}
-				onPointerEnter={warmAttachmentUrl}
-				onFocus={warmAttachmentUrl}
-				onClick={(e) => {
-					e.stopPropagation();
-					if (handleClick) {
-						handleClick(e);
-						return;
-					}
-					if (!isInternal) {
+		<Tooltip text={()=>tooltipContent()} position='bottom'>
+			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--2">
+				<a
+					href={href}
+					target={isInternal ? undefined : '_blank'}
+					rel={isInternal ? undefined : 'noopener noreferrer'}
+					onPointerEnter={warmAttachmentUrl}
+					onFocus={warmAttachmentUrl}
+					onClick={(e) => {
+						e.stopPropagation();
+						if (handleClick) {
+							handleClick(e);
+							return;
+						}
+						if (!isInternal) {
+							e.preventDefault();
+							void openExternalUrl(url);
+						}
+					}}
+					onAuxClick={(e) => {
+						if (e.button !== 1 || isInternal) {
+							return;
+						}
 						e.preventDefault();
-						void openExternalUrl(url);
-					}
-				}}
-				onAuxClick={(e) => {
-					if (e.button !== 1 || isInternal) {
-						return;
-					}
-					e.preventDefault();
-					e.stopPropagation();
-					openExternalUrlWithWarning(url);
-				}}
-				className={markupStyles.link}
-				data-flx="messaging.markdown.renderers.link-renderer.a"
-			>
-				{content}
-			</a>
-		</FocusRing>
+						e.stopPropagation();
+						openExternalUrlWithWarning(url);
+					}}
+					className={markupStyles.link}
+					data-flx="messaging.markdown.renderers.link-renderer.a"
+				>
+					{content}
+				</a>
+			</FocusRing>
+		</Tooltip>
 	);
 });
