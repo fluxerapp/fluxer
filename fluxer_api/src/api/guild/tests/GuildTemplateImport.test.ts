@@ -140,7 +140,7 @@ describe('Guild Template Import', () => {
 						},
 						{
 							id: '4102',
-							type: 5,
+							type: ChannelTypes.GUILD_ANNOUNCEMENT,
 							name: 'announcements',
 							parent_id: '4101',
 							position: 1,
@@ -170,7 +170,7 @@ describe('Guild Template Import', () => {
 		const mediaChannel = channels.find((channel) => channel.name === 'media-feed');
 		expect(categoryChannel).toBeDefined();
 		expect(announcementsChannel).toBeDefined();
-		expect(announcementsChannel?.type).toBe(ChannelTypes.GUILD_TEXT);
+		expect(announcementsChannel?.type).toBe(ChannelTypes.GUILD_ANNOUNCEMENT);
 		expect(announcementsChannel?.parent_id).toBe(categoryChannel?.id ?? null);
 		expect(stageChannel).toBeDefined();
 		expect(stageChannel?.type).toBe(ChannelTypes.GUILD_VOICE);

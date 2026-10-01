@@ -2,6 +2,7 @@
 
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {CrosspostWorkerService} from '@app/api/channel/services/message/CrosspostPropagation';
 import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {GuildMemberOperationsService} from '@app/api/guild/services/member/GuildMemberOperationsService';
@@ -37,6 +38,7 @@ function createMessageDeletionService(): UserMessageDeletionService {
 		gatewayService: unusable as IGatewayService,
 		storageService: unusable as IStorageService,
 		purgeQueue: unusable as IPurgeQueue,
+		workerService: unusable as CrosspostWorkerService,
 	});
 }
 

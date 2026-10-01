@@ -96,7 +96,10 @@ function getChannelLabel(placeholder: ChannelPlaceholder, i18n: I18n): string {
 	if (name == null) {
 		return placeholder.fallback === 'category' ? i18n._(DELETED_CATEGORY_LABEL) : `#${i18n._(DELETED_CHANNEL_LABEL)}`;
 	}
-	const hasHashPrefix = channel?.type === ChannelTypes.GUILD_TEXT || channel?.type === ChannelTypes.GUILD_LINK;
+	const hasHashPrefix =
+		channel?.type === ChannelTypes.GUILD_TEXT ||
+		channel?.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+		channel?.type === ChannelTypes.GUILD_LINK;
 	return hasHashPrefix ? `#${name}` : name;
 }
 

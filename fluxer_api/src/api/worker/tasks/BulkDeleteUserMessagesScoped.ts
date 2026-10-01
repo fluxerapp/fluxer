@@ -16,12 +16,13 @@ const bulkDeleteUserMessagesScoped: WorkerTaskHandler = async (payload, helpers)
 	const validated = PayloadSchema.parse(payload);
 	helpers.logger.debug({payload: validated}, 'Processing bulkDeleteUserMessagesScoped task');
 	const userId = createUserID(BigInt(validated.userId));
-	const {channelRepository, gatewayService, storageService, purgeQueue} = getWorkerDependencies();
+	const {channelRepository, gatewayService, storageService, purgeQueue, workerService} = getWorkerDependencies();
 	const deletionService = new UserMessageDeletionService({
 		channelRepository,
 		gatewayService,
 		storageService,
 		purgeQueue,
+		workerService,
 	});
 	const totalDeleted = await deletionService.deleteUserMessagesInScope(
 		userId,

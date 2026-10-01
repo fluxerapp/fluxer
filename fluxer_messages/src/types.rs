@@ -383,7 +383,8 @@ pub struct ApiMessageStickerResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiMessageReferenceResponse {
     pub channel_id: String,
-    pub message_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub message_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_id: Option<String>,
     #[serde(rename = "type")]
@@ -836,5 +837,31 @@ mod tests {
 
         let absent = serde_json::to_value(minimal_api_message(None)).expect("serialises");
         assert!(absent.get("referenced_message").is_none());
+    }
+
+    #[test]
+    fn message_reference_without_message_id_survives_json_and_msgpack() {
+        let mut message = minimal_api_message(None);
+        message.message_reference = Some(ApiMessageReferenceResponse {
+            channel_id: "5".to_string(),
+            message_id: None,
+            guild_id: Some("6".to_string()),
+            reference_type: 0,
+        });
+
+        let value = serde_json::to_value(&message).expect("serialises");
+        assert_eq!(
+            value["message_reference"],
+            json!({"channel_id": "5", "guild_id": "6", "type": 0})
+        );
+
+        let encoded = rmp_serde::to_vec_named(&message).expect("encodes to msgpack");
+        let decoded = rmp_serde::from_slice::<ApiMessageResponse>(&encoded)
+            .expect("decodes from msgpack")
+            .message_reference
+            .expect("reference survives");
+        assert_eq!(decoded.channel_id, "5");
+        assert_eq!(decoded.message_id, None);
+        assert_eq!(decoded.guild_id.as_deref(), Some("6"));
     }
 }

@@ -349,6 +349,9 @@
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -773,6 +776,9 @@
         "msgid": "{actor} banned {target}."
       },
       {
+        "msgid": "{actor} stopped following an announcement channel in {channel}"
+      },
+      {
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
       },
       {
@@ -804,6 +810,9 @@
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -1168,6 +1177,9 @@
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -1351,6 +1363,9 @@
         "msgid": "384 kbps voice quality"
       },
       {
+        "msgid": "<0/> followed {sourceComponent} into this channel. Messages published there will appear here."
+      },
+      {
         "msgid": "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
       },
       {
@@ -1460,6 +1475,15 @@
       },
       {
         "msgid": "Allowed {permissions}."
+      },
+      {
+        "msgid": "Announcement"
+      },
+      {
+        "msgid": "Announcement (mature)"
+      },
+      {
+        "msgid": "Announcement channel"
       },
       {
         "msgid": "Anyone can create an account."
@@ -1726,6 +1750,9 @@
         "msgid": "Choose the premium model"
       },
       {
+        "msgid": "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
+      },
+      {
         "msgid": "Clear command"
       },
       {
@@ -1759,6 +1786,9 @@
         "msgid": "Commands"
       },
       {
+        "msgid": "Communities and channels where you can't manage webhooks are hidden."
+      },
+      {
         "msgid": "Community model"
       },
       {
@@ -1786,6 +1816,18 @@
         "msgid": "Contact the administrators of this instance for help."
       },
       {
+        "msgid": "Convert"
+      },
+      {
+        "msgid": "Converted the channel to a text channel"
+      },
+      {
+        "msgid": "Converted the channel to an announcement channel"
+      },
+      {
+        "msgid": "Converting this channel to a text channel removes every channel that follows it."
+      },
+      {
         "msgid": "Copy emoji"
       },
       {
@@ -1801,7 +1843,22 @@
         "msgid": "Couldn't connect to voice. Please try again."
       },
       {
+        "msgid": "Couldn't convert this channel"
+      },
+      {
         "msgid": "Couldn't duplicate this channel"
+      },
+      {
+        "msgid": "Couldn't load this community. Try again in a moment."
+      },
+      {
+        "msgid": "Couldn't publish this message"
+      },
+      {
+        "msgid": "Couldn't save channel settings"
+      },
+      {
+        "msgid": "Couldn't unfollow this channel"
       },
       {
         "msgid": "Couldn't update passkey two-factor authentication"
@@ -1840,6 +1897,9 @@
         "msgid": "Delete prompt"
       },
       {
+        "msgid": "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
+      },
+      {
         "msgid": "Delete user"
       },
       {
@@ -1847,6 +1907,9 @@
       },
       {
         "msgid": "Deleted {duration} of the member's recent message history."
+      },
+      {
+        "msgid": "Delivered to #{targetChannelName}"
       },
       {
         "msgid": "Denied"
@@ -1903,7 +1966,19 @@
         "msgid": "Duplicate role"
       },
       {
+        "msgid": "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
+      },
+      {
+        "msgid": "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again later."
+      },
+      {
+        "msgid": "Edit published message?"
+      },
+      {
         "msgid": "Edit your messages above or below"
+      },
+      {
+        "msgid": "Editing limit reached"
       },
       {
         "msgid": "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
@@ -1960,6 +2035,9 @@
         "msgid": "Entrance sounds unavailable"
       },
       {
+        "msgid": "Every community that follows this channel gets a copy. If you edit or delete it later, the copies change too."
+      },
+      {
         "msgid": "Excluded search filter: {filter}"
       },
       {
@@ -1987,6 +2065,33 @@
         "msgid": "Focus window"
       },
       {
+        "msgid": "Follow"
+      },
+      {
+        "msgid": "Follow channel"
+      },
+      {
+        "msgid": "Follow limit reached"
+      },
+      {
+        "msgid": "Follow this channel"
+      },
+      {
+        "msgid": "Follow to get these announcements in a channel you choose."
+      },
+      {
+        "msgid": "Followed channel {currentName}"
+      },
+      {
+        "msgid": "Followed channels"
+      },
+      {
+        "msgid": "From {sourceGuildName}"
+      },
+      {
+        "msgid": "From {sourceGuildName} #{sourceChannelName}"
+      },
+      {
         "msgid": "Full user tag: {tag}"
       },
       {
@@ -2006,6 +2111,9 @@
       },
       {
         "msgid": "Go to {communityName}"
+      },
+      {
+        "msgid": "Got it!"
       },
       {
         "msgid": "Grant"
@@ -2119,6 +2227,9 @@
         "msgid": "Let the member hear others in this community again."
       },
       {
+        "msgid": "Lets other communities follow this channel and get copies of what you publish."
+      },
+      {
         "msgid": "Lightweight classic filter, works on any device."
       },
       {
@@ -2165,6 +2276,18 @@
       },
       {
         "msgid": "Message editing"
+      },
+      {
+        "msgid": "Message published"
+      },
+      {
+        "msgid": "Messages published in #{sourceName} will now appear in #{targetName}."
+      },
+      {
+        "msgid": "Messages published in these announcement channels are copied here."
+      },
+      {
+        "msgid": "Messages published in these announcement channels are copied into your channels."
       },
       {
         "msgid": "Microphone ({deviceLabel})"
@@ -2248,6 +2371,9 @@
         "msgid": "Not accepted"
       },
       {
+        "msgid": "Not sent to followers yet."
+      },
+      {
         "msgid": "Nothing to search for"
       },
       {
@@ -2308,6 +2434,9 @@
         "msgid": "Pause preview when Fluxer isn’t focused"
       },
       {
+        "msgid": "Paused. The person who followed this channel can no longer see it. Follow it again to resume."
+      },
+      {
         "msgid": "Per-device volume"
       },
       {
@@ -2345,6 +2474,9 @@
       },
       {
         "msgid": "Popped out"
+      },
+      {
+        "msgid": "Post to"
       },
       {
         "msgid": "Preferred screen share codec"
@@ -2390,6 +2522,21 @@
       },
       {
         "msgid": "Public registration is closed."
+      },
+      {
+        "msgid": "Publish"
+      },
+      {
+        "msgid": "Publish this message?"
+      },
+      {
+        "msgid": "Published"
+      },
+      {
+        "msgid": "Published to following communities"
+      },
+      {
+        "msgid": "Publishing limit reached"
       },
       {
         "msgid": "Purchases are disabled for this account."
@@ -2926,6 +3073,9 @@
         "msgid": "Something went wrong while changing your price. Please try again in a moment."
       },
       {
+        "msgid": "Something went wrong while publishing. Try again in a moment."
+      },
+      {
         "msgid": "Started displaying members with this role separately."
       },
       {
@@ -2945,6 +3095,9 @@
       },
       {
         "msgid": "Stop Neko from chasing your cursor while keeping it draggable and interactive."
+      },
+      {
+        "msgid": "Stop being an announcement channel?"
       },
       {
         "msgid": "Stop streaming"
@@ -3124,6 +3277,21 @@
         "msgid": "This browser has WebAssembly turned off, so animated images can't be cropped."
       },
       {
+        "msgid": "This channel can publish 10 messages in a row, then one more every 6 minutes. Try again in a few minutes."
+      },
+      {
+        "msgid": "This channel can publish 10 messages in a row, then one more every 6 minutes. Try again in {duration}."
+      },
+      {
+        "msgid": "This channel has a content warning. Updates can only go to channels with a content warning or an age restriction."
+      },
+      {
+        "msgid": "This community has published a lot of messages recently. Try again in a few minutes."
+      },
+      {
+        "msgid": "This community has published a lot of messages recently. Try again in {duration}."
+      },
+      {
         "msgid": "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
       },
       {
@@ -3148,6 +3316,9 @@
         "msgid": "This is a custom sticker from a community. Ask the author for an invite to use this sticker."
       },
       {
+        "msgid": "This is an age-restricted channel. Updates can only go to age-restricted channels."
+      },
+      {
         "msgid": "This is not available on your account right now. Ask the administrators of this instance to review it."
       },
       {
@@ -3170,6 +3341,9 @@
       },
       {
         "msgid": "This message can only be forwarded to age-restricted channels"
+      },
+      {
+        "msgid": "This message has already been published"
       },
       {
         "msgid": "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
@@ -3241,6 +3415,12 @@
         "msgid": "Unavailable"
       },
       {
+        "msgid": "Unfollow"
+      },
+      {
+        "msgid": "Unfollow {name}?"
+      },
+      {
         "msgid": "Unread channels"
       },
       {
@@ -3248,6 +3428,12 @@
       },
       {
         "msgid": "Update your passkey"
+      },
+      {
+        "msgid": "Updates are on their way!"
+      },
+      {
+        "msgid": "Updates from this channel will stop arriving here. Messages already delivered stay. You can follow it again from the announcement channel."
       },
       {
         "msgid": "Upload files and media in messages."
@@ -3349,6 +3535,9 @@
         "msgid": "You can still email {supportEmail} for a human review at any time."
       },
       {
+        "msgid": "You can't manage webhooks in any community. Ask an admin to follow this channel."
+      },
+      {
         "msgid": "You will leave {guildNames}. Nothing you posted is deleted, and you can join again later."
       },
       {
@@ -3368,6 +3557,9 @@
       },
       {
         "msgid": "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
+      },
+      {
+        "msgid": "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
       },
       {
         "msgid": "Your connection cannot keep up. Viewers get about {deliveredFrameRate} of {frameRate} FPS at {resolution}."
@@ -3413,6 +3605,9 @@
       },
       {
         "msgid": "Your video encoder stopped, so your stream switched to {codec}."
+      },
+      {
+        "msgid": "[Original message deleted]"
       },
       {
         "msgid": "deleted-category"
@@ -3490,6 +3685,9 @@
         "msgid": "{actor} banned {target}."
       },
       {
+        "msgid": "{actor} changed the permission overrides of the announcement channel {channel}"
+      },
+      {
         "msgid": "{actor} changed the permission overrides of the category {channel}."
       },
       {
@@ -3536,6 +3734,12 @@
       },
       {
         "msgid": "{actor} created a webhook."
+      },
+      {
+        "msgid": "{actor} created the announcement channel {channel}"
+      },
+      {
+        "msgid": "{actor} created the announcement channel {channel} in {category}"
       },
       {
         "msgid": "{actor} created the category {channel}."
@@ -3601,6 +3805,9 @@
         "msgid": "{actor} deleted some messages."
       },
       {
+        "msgid": "{actor} deleted the announcement channel {channel}"
+      },
+      {
         "msgid": "{actor} deleted the category {channel}."
       },
       {
@@ -3650,6 +3857,9 @@
       },
       {
         "msgid": "{actor} disconnected {target} from {channel}."
+      },
+      {
+        "msgid": "{actor} followed an announcement channel into {channel}"
       },
       {
         "msgid": "{actor} gave {target} the role {role}."
@@ -3763,6 +3973,9 @@
         "msgid": "{actor} removed their nickname {nick}."
       },
       {
+        "msgid": "{actor} renamed the announcement channel {oldName} to {newName}"
+      },
+      {
         "msgid": "{actor} renamed the community from {oldName} to {newName}."
       },
       {
@@ -3829,6 +4042,9 @@
         "msgid": "{actor} set their community pronouns to {text}."
       },
       {
+        "msgid": "{actor} stopped following an announcement channel in {channel}"
+      },
+      {
         "msgid": "{actor} stopped {target} from hearing others in this community."
       },
       {
@@ -3860,6 +4076,9 @@
       },
       {
         "msgid": "{actor} updated an emoji."
+      },
+      {
+        "msgid": "{actor} updated the announcement channel {channel}"
       },
       {
         "msgid": "{actor} updated the category {channel}."
@@ -3920,6 +4139,9 @@
       },
       {
         "msgid": "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
+      },
+      {
+        "msgid": "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
       },
       {
         "msgid": "{count, plural, one {# file} other {# files}}"
@@ -4001,6 +4223,12 @@
       },
       {
         "msgid": "{remaining, plural, one {+# more} other {+# more}}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
+        "msgid": "{username} followed {name} into this channel. Messages published there will appear here."
       },
       {
         "msgid": "{requestedLabel} could not start. Using {effectiveLabel} instead."
@@ -5705,6 +5933,9 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -6014,6 +6245,9 @@
       },
       {
         "msgid": "{productName} Desktop"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -6359,6 +6593,9 @@
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{zoomPercent}%"
@@ -7158,6 +7395,9 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -7671,6 +7911,9 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -7945,6 +8188,9 @@
       },
       {
         "msgid": "{presenceCount} online"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -8305,6 +8551,9 @@
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -8686,6 +8935,9 @@
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"

@@ -176,10 +176,11 @@ export function CompactAuthorPrefix({
 			<span className={styles.copyOnly} data-flx="channel.compact-message-layout.compact-author-prefix.copy-only">
 				{' '}
 			</span>
-			{author.bot && (
+			{(author.bot || message.isCrosspostCopy) && (
 				<UserTag
 					className={styles.userTagCompact}
 					system={author.system}
+					variant={message.isCrosspostCopy ? 'community' : undefined}
 					data-flx="channel.compact-message-layout.compact-author-prefix.user-tag-compact"
 				/>
 			)}

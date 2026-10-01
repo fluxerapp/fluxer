@@ -72,6 +72,7 @@ describe('WorkerLaneConfig', () => {
 			unfurl: [],
 			lifecycle: ['sendScheduledMessage'],
 			batch: [],
+			crosspost: [],
 		});
 		for (const lane of lanes) {
 			for (const task of lane.retiredTaskTypes) expect(lane.taskTypes).not.toContain(task);

@@ -6,6 +6,7 @@ import {
 	computeGuildChannelReorderPlan,
 	computePositionFromPrecedingSiblingId,
 	computePrecedingSiblingIdFromPosition,
+	sortChannelsForOrdering,
 } from '@fluxer/schema/src/domains/channel/GuildChannelOrdering';
 import {describe, expect, it} from 'vitest';
 
@@ -124,5 +125,19 @@ describe('GuildChannelOrdering', () => {
 		expect(result.ok).toBe(false);
 		if (result.ok) return;
 		expect(result.code).toBe('PRECEDING_PARENT_MISMATCH');
+	});
+	it('ranks announcement channels with text channels ahead of voice channels', () => {
+		const channels: Array<Ch> = [
+			{id: 'cat', parentId: null, type: ChannelTypes.GUILD_CATEGORY, position: 0},
+			{id: 'voice', parentId: 'cat', type: ChannelTypes.GUILD_VOICE, position: 1},
+			{id: 'announcements', parentId: 'cat', type: ChannelTypes.GUILD_ANNOUNCEMENT, position: 3},
+			{id: 'text', parentId: 'cat', type: ChannelTypes.GUILD_TEXT, position: 2},
+		];
+		expect(sortChannelsForOrdering<string, Ch>(channels).map((c) => c.id)).toEqual([
+			'cat',
+			'text',
+			'announcements',
+			'voice',
+		]);
 	});
 });

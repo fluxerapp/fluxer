@@ -108,6 +108,11 @@ export const GuildFeatureSchema = withOpenApiType(
 			[GuildFeatures.VISIONARY, 'VISIONARY', 'Guild is a visionary guild'],
 			[GuildFeatures.LARGE_GUILD_OVERRIDE, 'LARGE_GUILD_OVERRIDE', 'Guild has large guild overrides enabled'],
 			[GuildFeatures.VERY_LARGE_GUILD, 'VERY_LARGE_GUILD', 'Guild has increased member capacity enabled'],
+			[
+				GuildFeatures.ANNOUNCEMENT_CHANNELS_DISABLED,
+				'ANNOUNCEMENT_CHANNELS_DISABLED',
+				'Guild cannot publish announcement messages or gain new followers',
+			],
 		],
 		'A guild feature flag',
 	),

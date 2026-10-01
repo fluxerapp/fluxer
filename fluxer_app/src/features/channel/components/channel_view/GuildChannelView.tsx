@@ -2,6 +2,7 @@
 
 import {
 	AccountTooNewBarrier,
+	AnnouncementFollowBarrier,
 	NoPhoneNumberBarrier,
 	NotMemberLongEnoughBarrier,
 	SendMessageDisabledBarrier,
@@ -346,6 +347,23 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 		/>
 	) : null;
 	const passesVerification = channel.isPrivate() || GuildVerification.canAccessGuild(channel.guildId || '');
+	const renderComposer = (inputSuppressed: boolean) => {
+		if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT && !Permission.can(Permissions.SEND_MESSAGES, channel)) {
+			return (
+				<AnnouncementFollowBarrier
+					channelId={channel.id}
+					data-flx="channel.channel-view.guild-channel-view.render-composer.announcement-follow-barrier"
+				/>
+			);
+		}
+		return (
+			<ChannelTextarea
+				channel={channel}
+				inputSuppressed={inputSuppressed}
+				data-flx="channel.channel-view.guild-channel-view.render-composer.channel-textarea"
+			/>
+		);
+	};
 	const renderChatArea = (inputSuppressed = false) => {
 		if (DeveloperOptions.mockVerificationBarrier !== 'none' && !channel.isPrivate()) {
 			switch (DeveloperOptions.mockVerificationBarrier) {
@@ -381,11 +399,7 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 					);
 				default:
 					return passesVerification ? (
-						<ChannelTextarea
-							channel={channel}
-							inputSuppressed={inputSuppressed}
-							data-flx="channel.channel-view.guild-channel-view.render-chat-area.channel-textarea"
-						/>
+						renderComposer(inputSuppressed)
 					) : (
 						<VerificationBarrier
 							channel={channel}
@@ -395,11 +409,7 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 			}
 		}
 		return passesVerification ? (
-			<ChannelTextarea
-				channel={channel}
-				inputSuppressed={inputSuppressed}
-				data-flx="channel.channel-view.guild-channel-view.render-chat-area.channel-textarea--2"
-			/>
+			renderComposer(inputSuppressed)
 		) : (
 			<VerificationBarrier
 				channel={channel}

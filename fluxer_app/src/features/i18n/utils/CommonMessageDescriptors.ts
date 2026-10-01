@@ -236,6 +236,11 @@ export const TEXT_CHANNEL_DESCRIPTOR = msg({
 	message: 'Text channel',
 	comment: 'Generic label for a text channel type.',
 });
+export const ANNOUNCEMENT_CHANNEL_DESCRIPTOR = msg({
+	message: 'Announcement channel',
+	comment:
+		'Generic label for an announcement channel type. Other communities can follow an announcement channel to get its published messages in their own channels.',
+});
 export const STICKER_DESCRIPTOR = msg({
 	message: 'Sticker',
 	comment: 'Generic label for one sticker.',

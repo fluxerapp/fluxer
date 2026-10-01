@@ -3,6 +3,7 @@
 import {createHash, randomBytes, randomInt} from 'node:crypto';
 import type {ChannelID, GuildID, InviteCode, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
 import {
+	createAttachmentID,
 	createChannelID,
 	createGuildID,
 	createInviteCode,
@@ -48,7 +49,7 @@ import {ReportStatus, ReportType} from '@app/api/report/IReportRepository';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {InviteTypes, MessageFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -155,7 +156,7 @@ export class ReportService {
 			channelId,
 			messageId,
 		});
-		const reportedUserId = message.authorId;
+		const reportedUserId = await this.resolveReportedAuthorId(message);
 		if (reportedUserId == null) {
 			throw new UnknownMessageError();
 		}
@@ -164,7 +165,7 @@ export class ReportService {
 		}
 		const [reportedUser, messageContext] = await Promise.all([
 			this.userRepository.findUnique(reportedUserId),
-			this.gatherMessageContext(channelId, messageId, authChannel),
+			this.gatherMessageContext(channelId, messageId, authChannel, reportedUserId),
 		]);
 		if (!reportedUser) {
 			throw new UnknownUserError();
@@ -464,20 +465,21 @@ export class ReportService {
 		if (!channel) throw new UnknownChannelError();
 		const message = await this.channelRepository.getMessage(channelId, messageId);
 		if (!message) throw new UnknownMessageError();
-		if (message.authorId == null) {
+		const reportedAuthorId = await this.resolveReportedAuthorId(message);
+		if (reportedAuthorId == null) {
 			throw new UnknownUserError();
 		}
 		if (report.reported_user_tag) {
 			const tagged = await this.findUserByTag(report.reported_user_tag);
-			if (tagged.id !== message.authorId) {
+			if (tagged.id !== reportedAuthorId) {
 				throw new InvalidDsaReportTargetError();
 			}
 		}
-		const reportedUser = await this.userRepository.findUnique(message.authorId);
+		const reportedUser = await this.userRepository.findUnique(reportedAuthorId);
 		if (!reportedUser) {
 			throw new UnknownUserError();
 		}
-		const messageContext = await this.gatherMessageContext(channelId, messageId);
+		const messageContext = await this.gatherMessageContext(channelId, messageId, undefined, reportedAuthorId);
 		const guild = channel.guildId ? await this.guildRepository.findUnique(channel.guildId) : null;
 		const contentWarningSnapshot = await this.buildContentWarningSnapshot(guild, channel);
 		return {
@@ -491,7 +493,7 @@ export class ReportService {
 			report_type: ReportType.MESSAGE,
 			category: report.category,
 			additional_info: report.additional_info ?? null,
-			reported_user_id: message.authorId,
+			reported_user_id: reportedAuthorId,
 			reported_user_avatar_hash: reportedUser.avatarHash || null,
 			reported_guild_id: channel.guildId || null,
 			reported_guild_name: guild?.name ?? null,
@@ -635,6 +637,24 @@ export class ReportService {
 			channel: authChannel.channel,
 			message,
 		};
+	}
+
+	private async resolveReportedAuthorId(message: Message): Promise<UserID | null> {
+		if ((message.flags & MessageFlags.IS_CROSSPOST) === 0) {
+			return message.authorId;
+		}
+		if ((message.flags & MessageFlags.SOURCE_MESSAGE_DELETED) !== 0) {
+			return null;
+		}
+		const reference = message.reference;
+		if (!reference?.messageId) {
+			return null;
+		}
+		const source = await this.channelRepository.getMessage(reference.channelId, reference.messageId);
+		if (!source || (source.flags & MessageFlags.IS_CROSSPOST) !== 0) {
+			return null;
+		}
+		return source.authorId;
 	}
 
 	private async canAccessMessage(authChannel: AuthenticatedChannel, messageId: MessageID): Promise<boolean> {
@@ -879,6 +899,7 @@ export class ReportService {
 		channelId: ChannelID,
 		targetMessageId: MessageID,
 		authChannel?: AuthenticatedChannel,
+		targetAuthorId?: UserID,
 	): Promise<Array<IARMessageContextRow>> {
 		const messagesBefore = await this.channelRepository.listMessages(
 			channelId,
@@ -900,10 +921,13 @@ export class ReportService {
 			[...messagesBefore, targetMessage, ...messagesAfter],
 			authChannel,
 		);
+		const contextAuthorId = (msg: Message): UserID | null =>
+			msg.authorId ?? (msg.id === targetMessageId ? (targetAuthorId ?? null) : null);
 		const userIds = new Set<UserID>();
 		for (const msg of allMessages) {
-			if (msg.authorId) {
-				userIds.add(msg.authorId);
+			const authorId = contextAuthorId(msg);
+			if (authorId) {
+				userIds.add(authorId);
 			}
 		}
 		const users = new Map<UserID, User>();
@@ -915,15 +939,23 @@ export class ReportService {
 		}
 		const context: Array<IARMessageContextRow> = [];
 		for (const message of allMessages) {
-			const author = message.authorId != null ? users.get(message.authorId) : null;
-			if (!author) continue;
-			const clonedAttachments = message.attachments
-				? await this.cloneAttachmentsForReport(message.attachments, channelId)
-				: [];
+			const authorId = contextAuthorId(message);
+			const author = authorId != null ? users.get(authorId) : null;
+			if (!author || authorId == null) continue;
+			const clonedAttachments = [
+				...(message.attachments
+					? await this.cloneAttachmentsForReport(
+							message.attachments,
+							MessageHelpers.attachmentStorageChannelId(message),
+							channelId,
+						)
+					: []),
+				...(await this.cloneOwnedEmbedAttachmentsForReport(message, channelId)),
+			];
 			context.push({
 				message_id: message.id,
 				channel_id: channelId,
-				author_id: message.authorId!,
+				author_id: authorId,
 				author_username: author.username,
 				author_discriminator: author.discriminator,
 				author_avatar_hash: author.avatarHash || null,
@@ -966,6 +998,7 @@ export class ReportService {
 	private async cloneAttachmentsForReport(
 		attachments: Array<Attachment>,
 		sourceChannelId: ChannelID,
+		reportedChannelId: ChannelID,
 	): Promise<Array<MessageAttachment>> {
 		const clonedAttachments: Array<MessageAttachment> = [];
 		for (const attachment of attachments) {
@@ -975,7 +1008,7 @@ export class ReportService {
 					sourceBucket: Config.s3.buckets.cdn,
 					sourceKey,
 					destinationBucket: Config.s3.buckets.reports,
-					destinationKey: sourceKey,
+					destinationKey: MessageHelpers.makeAttachmentCdnKey(reportedChannelId, attachment.id, attachment.filename),
 					newContentType: attachment.contentType,
 				});
 				const clonedAttachment: MessageAttachment = {
@@ -1000,6 +1033,49 @@ export class ReportService {
 					{error, attachmentId: attachment.id, filename: attachment.filename, sourceChannelId},
 					'Failed to clone attachment for report',
 				);
+			}
+		}
+		return clonedAttachments;
+	}
+
+	private async cloneOwnedEmbedAttachmentsForReport(
+		message: Message,
+		reportedChannelId: ChannelID,
+	): Promise<Array<MessageAttachment>> {
+		const clonedAttachments: Array<MessageAttachment> = [];
+		for (const {key, media} of MessageHelpers.collectOwnedEmbedAttachments(message)) {
+			const [, , attachmentId, ...filenameParts] = key.split('/');
+			const filename = filenameParts.join('/');
+			try {
+				const metadata = await this.storageService.getObjectMetadata(Config.s3.buckets.cdn, key);
+				if (!metadata) continue;
+				const id = createAttachmentID(BigInt(attachmentId!));
+				const contentType = media.content_type ?? metadata.contentType;
+				await this.storageService.copyObject({
+					sourceBucket: Config.s3.buckets.cdn,
+					sourceKey: key,
+					destinationBucket: Config.s3.buckets.reports,
+					destinationKey: MessageHelpers.makeAttachmentCdnKey(reportedChannelId, id, filename),
+					newContentType: contentType,
+				});
+				clonedAttachments.push({
+					attachment_id: id,
+					filename,
+					size: BigInt(metadata.contentLength),
+					title: null,
+					description: media.description,
+					width: media.width,
+					height: media.height,
+					content_type: contentType,
+					content_hash: media.content_hash,
+					placeholder: media.placeholder,
+					flags: media.flags & ~MessageHelpers.EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
+					duration: media.duration,
+					nsfw: null,
+					waveform: null,
+				});
+			} catch (error) {
+				Logger.error({error, key, reportedChannelId}, 'Failed to clone embed attachment for report');
 			}
 		}
 		return clonedAttachments;

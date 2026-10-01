@@ -39,7 +39,7 @@ A guild object contains the guild's configuration. The operation that returns it
 | embed_splash_height<sup>3</sup> | ?integer | Embedded invite splash height in pixels |
 | vanity_url_code | ?string | Custom invite code |
 | owner_id | snowflake | The ID of the guild owner |
-| system_channel_id | ?snowflake | Text channel that receives system messages |
+| system_channel_id | ?snowflake | Text or announcement channel that receives system messages |
 | system_channel_flags | integer | [System channel flags](#system-channel-flags) |
 | rules_channel_id<sup>5</sup> | ?snowflake | The ID of the rules channel |
 | afk_channel_id | ?snowflake | Voice channel that inactive members are moved to |
@@ -189,7 +189,7 @@ A creation template describes the roles and channels that [Create guild](#create
 | verification_level?<sup>2</sup> | integer | [Verification level](#verification-levels), defaulting to 0 |
 | default_message_notifications?<sup>2</sup> | integer | [Default message notification level](#default-message-notification-levels), defaulting to 0 |
 | explicit_content_filter?<sup>2</sup> | integer | [Guild explicit content filter level](#guild-explicit-content-filter-levels), defaulting to 0 |
-| system_channel_id?<sup>3</sup> | ?decimal string \| integer | Template-local ID of the text channel that becomes the system channel |
+| system_channel_id?<sup>3</sup> | ?decimal string \| integer | Template-local ID of the text or announcement channel that becomes the system channel |
 | afk_timeout?<sup>2</sup> | integer | AFK timeout in seconds, clamped to 60-3600 and defaulting to 300 |
 | system_channel_flags?<sup>4</sup> | integer | [System channel flags](#system-channel-flags), defaulting to 0 |
 | roles<sup>5</sup> | array[[guild template role](#guild-template-role-object) object] | Template roles (max 250) |
@@ -199,7 +199,7 @@ A creation template describes the roles and channels that [Create guild](#create
 
 <sup>2</sup> The value is truncated to an integer and clamped into its registry range, and a missing value becomes the stated default. A non-numeric value fails validation and returns 400 `INVALID_FORM_BODY`
 
-<sup>3</sup> An identifier that resolves to no text channel in the same template, and an absent or null value, all fall back to the template's first text channel. A template with no text channel receives a root text channel named `general`, which becomes the system channel
+<sup>3</sup> An identifier that resolves to no text or announcement channel in the same template, and an absent or null value, all fall back to the template's first text or announcement channel. A template with neither receives a root text channel named `general`, which becomes the system channel
 
 <sup>4</sup> Every bit outside the registry is discarded
 
@@ -251,7 +251,7 @@ A creation template describes the roles and channels that [Create guild](#create
 
 <sup>1</sup> A duplicate identifier in the same template rejects creation with 400 `GUILD_TEMPLATE_INVALID`
 
-<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, and 4 a category. The value 5, the announcement channel type of another platform, creates a text channel. The value 13, the stage channel type of another platform, creates a voice channel. Fluxer skips every other value, so the channel is not created
+<sup>2</sup> The value 0 creates a text channel, 2 a voice channel, 4 a category, and 5 an announcement channel. The value 13, the stage channel type of another platform, creates a voice channel. Fluxer skips every other value, so the channel is not created
 
 <sup>3</sup> The identifier is applied only when it resolves to a category in the same template, and every other value leaves the channel at the guild root
 
@@ -377,6 +377,7 @@ Each value in the guild's `features` array is a capability or availability flag.
 | Value | Description |
 | --- | --- |
 | ANIMATED_ICON | Guild can use an animated icon |
+| ANNOUNCEMENT_CHANNELS_DISABLED<sup>8</sup> | Publishing from and following the guild's announcement channels is disabled |
 | ANIMATED_BANNER | Guild can use an animated banner |
 | AUDIO_BITRATE_128_KBPS<sup>6</sup> | Voice channel bitrate ceiling is raised to 128000 |
 | AUDIO_BITRATE_256_KBPS<sup>6</sup> | Voice channel bitrate ceiling is raised to 256000 |
@@ -423,6 +424,8 @@ Each value in the guild's `features` array is a capability or availability flag.
 <sup>6</sup> A guild holding none of the three caps a voice channel `bitrate` at 96000. The highest feature the guild holds wins, and a write above the cap is stored at the cap rather than rejected. A guild that loses the feature keeps the stored value, and the next write to `bitrate` lowers it to the cap
 
 <sup>7</sup> The feature is deprecated and changes no behaviour. Fluxer still returns it for a guild that already holds it, and [Modify guild](#modify-guild) can neither add nor remove it
+
+<sup>8</sup> Set by an instance administrator. [Crosspost message](/http-api/messages/#crosspost-message) and [Follow announcement channel](/http-api/channels/#follow-announcement-channel) return 403 `FEATURE_TEMPORARILY_DISABLED`, and copies of messages published earlier are no longer delivered or updated. Creating and converting announcement channels is unaffected
 
 :::caution[Expression cloning is opt-in]
 Cloning requires `CLONE_EMOJI_ENABLED` or `CLONE_STICKER_ENABLED`. A member with `MANAGE_GUILD` can enable them through [Modify guild](#modify-guild). The deprecated `CLONE_EMOJI_DISABLED` and `CLONE_STICKER_DISABLED` features have no effect.
@@ -665,7 +668,7 @@ Every field is optional. An omitted field preserves its current value, and a fie
 
 <sup>2</sup> The accepted encoding, byte ceiling, and format set are the ones listed by [Create guild](#create-guild). No guild feature gates an animated icon on write, but the `a_` prefix is stripped from the returned hash while the guild lacks `ANIMATED_ICON`
 
-<sup>3</sup> The channel must exist in this guild and be a text channel, and is otherwise rejected with `SYSTEM_CHANNEL_MUST_BE_IN_GUILD` or `SYSTEM_CHANNEL_MUST_BE_TEXT`
+<sup>3</sup> The channel must exist in this guild and be a text or announcement channel, and is otherwise rejected with `SYSTEM_CHANNEL_MUST_BE_IN_GUILD` or `SYSTEM_CHANNEL_MUST_BE_TEXT`
 
 <sup>4</sup> Every bit outside the registry is discarded
 

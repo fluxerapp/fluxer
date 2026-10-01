@@ -6,11 +6,14 @@ import ChannelDisplayName from '@app/features/channel/state/ChannelDisplayName';
 import {UNKNOWN_CHANNEL_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {compareChannelPosition} from '@app/features/messaging/utils/ChannelShared';
+import {AnnouncementChannelIcon} from '@app/features/ui/components/icons/AnnouncementChannelIcon';
 import {EncryptedVoiceChannelIcon} from '@app/features/ui/components/icons/EncryptedVoiceChannelIcon';
 import {LinkChannelIcon} from '@app/features/ui/components/icons/LinkChannelIcon';
+import {LockedAnnouncementChannelIcon} from '@app/features/ui/components/icons/LockedAnnouncementChannelIcon';
 import {LockedLinkChannelIcon} from '@app/features/ui/components/icons/LockedLinkChannelIcon';
 import {LockedTextChannelIcon} from '@app/features/ui/components/icons/LockedTextChannelIcon';
 import {LockedVoiceChannelIcon} from '@app/features/ui/components/icons/LockedVoiceChannelIcon';
+import {MatureAnnouncementChannelIcon} from '@app/features/ui/components/icons/MatureAnnouncementChannelIcon';
 import {MatureLinkChannelIcon} from '@app/features/ui/components/icons/MatureLinkChannelIcon';
 import {MatureTextChannelIcon} from '@app/features/ui/components/icons/MatureTextChannelIcon';
 import {MatureVoiceChannelIcon} from '@app/features/ui/components/icons/MatureVoiceChannelIcon';
@@ -43,6 +46,16 @@ const LINK_MATURE_DESCRIPTOR = msg({
 const LINK_DESCRIPTOR = msg({
 	message: 'Link',
 	comment: 'Channel type chip label for a linked external channel.',
+});
+const ANNOUNCEMENT_MATURE_DESCRIPTOR = msg({
+	message: 'Announcement (mature)',
+	comment:
+		'Channel type chip label for a mature-content announcement channel, whose messages can be published to channels that follow it.',
+});
+const ANNOUNCEMENT_DESCRIPTOR = msg({
+	message: 'Announcement',
+	comment:
+		'Channel type chip label for an announcement channel, whose messages can be published to channels that follow it.',
 });
 const TEXT_MATURE_DESCRIPTOR = msg({
 	message: 'Text (mature)',
@@ -77,6 +90,7 @@ function isChannelRoleRequired(channel: {
 		case ChannelTypes.GUILD_VOICE:
 			return (overwrite.deny & Permissions.CONNECT) === Permissions.CONNECT;
 		case ChannelTypes.GUILD_TEXT:
+		case ChannelTypes.GUILD_ANNOUNCEMENT:
 		case ChannelTypes.GUILD_LINK:
 			return (overwrite.deny & Permissions.VIEW_CHANNEL) === Permissions.VIEW_CHANNEL;
 		default:
@@ -102,6 +116,23 @@ export function getIcon(
 			if (roleRequired)
 				return <LockedTextChannelIcon data-flx="channel.channel-utils.get-icon.locked-text-channel-icon" {...props} />;
 			return <TextChannelIcon data-flx="channel.channel-utils.get-icon.text-channel-icon" {...props} />;
+		}
+		case ChannelTypes.GUILD_ANNOUNCEMENT: {
+			if (channel.nsfw)
+				return (
+					<MatureAnnouncementChannelIcon
+						data-flx="channel.channel-utils.get-icon.mature-announcement-channel-icon"
+						{...props}
+					/>
+				);
+			if (roleRequired)
+				return (
+					<LockedAnnouncementChannelIcon
+						data-flx="channel.channel-utils.get-icon.locked-announcement-channel-icon"
+						{...props}
+					/>
+				);
+			return <AnnouncementChannelIcon data-flx="channel.channel-utils.get-icon.announcement-channel-icon" {...props} />;
 		}
 		case ChannelTypes.GUILD_VOICE: {
 			if (options?.e2eeEncrypted)
@@ -147,6 +178,8 @@ export function getName(channel: Channel) {
 			return i18n._(CATEGORY_DESCRIPTOR);
 		case ChannelTypes.GUILD_LINK:
 			return channel.nsfw ? i18n._(LINK_MATURE_DESCRIPTOR) : i18n._(LINK_DESCRIPTOR);
+		case ChannelTypes.GUILD_ANNOUNCEMENT:
+			return channel.nsfw ? i18n._(ANNOUNCEMENT_MATURE_DESCRIPTOR) : i18n._(ANNOUNCEMENT_DESCRIPTOR);
 		default:
 			return channel.nsfw ? i18n._(TEXT_MATURE_DESCRIPTOR) : i18n._(TEXT_DESCRIPTOR);
 	}

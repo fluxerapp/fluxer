@@ -6,7 +6,7 @@ description: Channel objects, settings, recipients, permission overwrites, slowm
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A channel is where a conversation happens, in text or in voice. A [guild](/http-api/guilds/) owns text, voice, category and link channels. Outside a guild, a channel is a direct message, a group direct message, or the personal notes channel.
+A channel is where a conversation happens, in text or in voice. A [guild](/http-api/guilds/) owns text, announcement, voice, category and link channels. Outside a guild, a channel is a direct message, a group direct message, or the personal notes channel.
 
 [Messages](/http-api/messages/) defines message content, and [Guild channels](/http-api/guild-channels/) defines guild-scoped listing, creation and reordering. [Calls](/http-api/calls/) defines ringing, the region of a private call, and ending a call. [Streams](/http-api/streams/) defines the stream keys and previews of a Go Live screen share.
 
@@ -20,9 +20,9 @@ A channel object always has its identity and type. Every other field is present 
 | --- | --- | --- |
 | id | snowflake | The ID of the channel |
 | type | integer | The [type of the channel](#channel-types) |
-| guild_id? | snowflake | The ID of the guild, present only for a guild text, voice, category, or link channel |
+| guild_id? | snowflake | The ID of the guild, present only for a guild channel |
 | name?<sup>1</sup> | string | The name of the channel, present for a guild channel and for a group direct message |
-| topic? | ?string | The topic of the channel, present only for a guild text or voice channel |
+| topic? | ?string | The topic of the channel, present only for a guild text, announcement, or voice channel |
 | url? | ?string | The destination URL, present only for a guild link channel |
 | icon? | ?string | The icon hash, present only for a group direct message |
 | owner_id? | ?snowflake | The ID of the owner, present only for a group direct message |
@@ -40,7 +40,7 @@ A channel object always has its identity and type. Every other field is present 
 | nsfw_override?<sup>9</sup> | ?boolean | Whether this channel overrides the inherited age restriction, or null when it inherits |
 | content_warning_level?<sup>10</sup> | integer | The [content warning level](#content-warning-levels) stored on this channel, present only for a guild channel |
 | content_warning_text?<sup>10</sup> | ?string | The content warning text stored on this channel, or null when the channel inherits |
-| rate_limit_per_user?<sup>11</sup> | integer | The slowmode interval in seconds, present only for a guild text or voice channel |
+| rate_limit_per_user?<sup>11</sup> | integer | The slowmode interval in seconds, present only for a guild text, announcement, or voice channel |
 | nicks?<sup>12</sup> | map[snowflake, string] | The group direct message nicknames keyed by the decimal user ID (each 1-32 characters) |
 
 <sup>1</sup> Omitted when a group direct message stores no name, and never present on a direct message or on the personal notes channel
@@ -110,10 +110,13 @@ An age restriction and a content warning both resolve through this channel first
 | 2 | GUILD_VOICE | Guild voice channel, which also has messages, pins, and slowmode |
 | 3 | GROUP_DM | Group direct message channel |
 | 4 | GUILD_CATEGORY | Guild category, which owns no parent and no messages |
+| 5 | GUILD_ANNOUNCEMENT<sup>2</sup> | Guild text channel whose messages can be published to the channels that follow it |
 | 998 | GUILD_LINK | Guild link channel, which has a destination URL and no messages |
 | 999 | DM_PERSONAL_NOTES<sup>1</sup> | Personal notes channel |
 
 <sup>1</sup> Its channel ID is exactly the owning user ID, and it has no recipient and no name. Fluxer creates it on first authenticated access
+
+<sup>2</sup> It has the fields and the slowmode of a guild text channel. [Announcement channels](/topics/announcement-channels/) describes publishing and following
 
 ## Permission overwrite object
 
@@ -209,6 +212,46 @@ An RTC region names one voice routing target the deployment operates. Its identi
 }
 ```
 
+## Followed channel object
+
+A followed channel object names the announcement channel that was followed and the [channel follower webhook](/http-api/webhooks/#webhook-types) that now delivers its published messages.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the followed announcement channel |
+| webhook_id | snowflake | The ID of the channel follower webhook created in the target channel |
+
+### Example
+
+```json
+{
+  "channel_id": "1501314428688998182",
+  "webhook_id": "1501320000000000123"
+}
+```
+
+## Channel follower stats object
+
+The follower stats count the channels that follow one announcement channel and the guilds those channels belong to.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_count | integer | The number of channels that follow the announcement channel |
+| guild_count | integer | The number of distinct guilds those channels belong to |
+
+### Example
+
+```json
+{
+  "channel_count": 12,
+  "guild_count": 9
+}
+```
+
 ## Get channel
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}" bot />
@@ -221,7 +264,7 @@ Returns the [channel object](#channel-object) visible to the authenticated user.
 - A private channel requires current recipient access.
 - The personal notes channel requires ownership.
 
-Fluxer enforces age verification only for a guild text, voice, or link channel. Fluxer never requires age verification for a guild category, even when the category has the override its children inherit.
+Fluxer enforces age verification only for a guild text, announcement, voice, or link channel. Fluxer never requires age verification for a guild category, even when the category has the override its children inherit.
 
 ### Path parameters
 
@@ -354,7 +397,7 @@ The submitted array becomes the complete overwrite collection of the channel.
 
 ### JSON body
 
-The stored channel type selects the body variant, and a `type` field in the request is ignored. A direct message and the personal notes channel match no variant, and Fluxer rejects both with 400 `INVALID_FORM_BODY`.
+The stored channel type selects the body variant. A `type` field converts a guild text channel into an announcement channel or back, and a `type` equal to the stored type changes nothing. A direct message and the personal notes channel match no variant, and Fluxer rejects both with 400 `INVALID_FORM_BODY`.
 
 #### Guild channel body
 
@@ -362,6 +405,7 @@ Every field is optional, and an omitted field preserves its current value. The g
 
 | Field | Type | Description |
 | --- | --- | --- |
+| type?<sup>14</sup> | integer | The [channel type](#channel-types) to convert to, either `0` or `5` |
 | name?<sup>1</sup> | ?string | The name of the channel (1-100 characters after normalisation) |
 | topic?<sup>2</sup> | ?string | The topic of the channel (1-1,024 characters), or null to clear it |
 | url?<sup>3</sup> | ?string | The destination of a guild link channel (1-2,048 characters, `http` or `https`), or null to clear it |
@@ -374,10 +418,10 @@ Every field is optional, and an omitted field preserves its current value. The g
 | nsfw?<sup>8</sup> | ?boolean | Whether the channel is age restricted, a legacy switch superseded by `nsfw_override` |
 | content_warning_level?<sup>9</sup> | integer | The [content warning level](#content-warning-levels) to store on this channel |
 | content_warning_text?<sup>10</sup> | ?string | The content warning text (max 200 characters) |
-| rate_limit_per_user?<sup>11</sup> | ?integer | The slowmode interval in seconds (0-21,600) for a guild text or voice channel |
+| rate_limit_per_user?<sup>11</sup> | ?integer | The slowmode interval in seconds (0-21,600) for a guild text, announcement, or voice channel |
 | rtc_region?<sup>12</sup> | ?string | The ID of the RTC region (1-64 characters) for a guild voice channel, where null selects automatic routing |
 
-<sup>1</sup> An explicit null preserves the current name. In a guild without flexible channel names, Fluxer lowercases a guild text channel name, replaces its whitespace with hyphens, and removes disallowed punctuation
+<sup>1</sup> An explicit null preserves the current name. In a guild without flexible channel names, Fluxer lowercases a guild text or announcement channel name, replaces its whitespace with hyphens, and removes disallowed punctuation
 
 <sup>2</sup> An explicit null clears the stored topic
 
@@ -397,11 +441,15 @@ Every field is optional, and an omitted field preserves its current value. The g
 
 <sup>10</sup> Trimmed. A value empty after trimming, or an explicit null, clears the stored text
 
-<sup>11</sup> Applied only to a guild text or voice channel. An explicit null preserves the current interval
+<sup>11</sup> Applied only to a guild text, announcement, or voice channel. An explicit null preserves the current interval
 
 <sup>12</sup> Applied only to a guild voice channel. Supplying the field at all, including as null, requires [UPDATE_RTC_REGION](/http-api/permissions/)
 
 <sup>13</sup> The stored value is capped at 96,000 unless the guild holds an [audio bitrate feature](/http-api/guilds/#guild-features). A higher value is stored at the cap rather than rejected
+
+<sup>14</sup> Absent, null, or equal to the stored type keeps the type. Any other conversion returns 400 `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED`
+
+Converting a text channel into an announcement channel fails with 400 `CHANNEL_HAS_FOLLOWED_CHANNELS` while the text channel receives messages from any followed announcement channel. Delete its [channel follower webhooks](/http-api/webhooks/#webhook-types) first. Converting an announcement channel back into a text channel needs no preparation, and Fluxer removes every follow of it afterwards.
 
 A `url` that is not an absolute `http` or `https` URL with a host returns 400 `INVALID_FORM_BODY` with the code `INVALID_URL_FORMAT` on the path `url`.
 
@@ -441,6 +489,8 @@ Fluxer trims a stored nickname, and a value that is null or empty after trimming
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [channel](#channel-object) object | Channel was modified, or the submitted values already matched the stored state |
+| 400 | [error response](/http-api/#error-response) | The `type` conversion is not between `0` and `5`, returning `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED` |
+| 400 | [error response](/http-api/#error-response) | The text channel receives followed channels, returning `CHANNEL_HAS_FOLLOWED_CHANNELS` |
 | 403 | [error response](/http-api/#error-response) | A required permission, ownership, or permission bit authority is absent and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | A concurrent change removed the caller from the group direct message and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The guild exists but the caller's membership state cannot be resolved and the request returns `ACCESS_DENIED` |
@@ -448,6 +498,7 @@ Fluxer trims a stored nickname, and a value that is null or empty after trimming
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the caller is not a recipient of the group direct message, each returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The guild that owns the channel does not exist and the request returns `UNKNOWN_GUILD` |
 | 404 | [error response](/http-api/#error-response) | A referenced owner or nickname target is not a current recipient and the request returns `UNKNOWN_USER` |
+| 429 | [error response](/http-api/#error-response) | A concurrent follow holds the channel, returning `RESOURCE_LOCKED` |
 
 ### Side effects
 
@@ -455,7 +506,9 @@ A guild channel change emits [Channel Update](/gateway/events/#channel-update) t
 
 Changing `rate_limit_per_user` clears the remaining slowmode delay of every user in the channel, so each user's next message is checked against the new interval. Changing `rtc_region` on a guild voice channel moves its active voice connections to the selected region.
 
-A request that changes at least one field creates a channel update audit log entry with the supplied reason. Supplying `permission_overwrites` also creates one overwrite create, update, or delete audit log entry for each overwrite the array adds, changes, or removes.
+Converting an announcement channel into a text channel deletes every [channel follower webhook](/http-api/webhooks/#webhook-types) that follows it. The deletion runs in the background after the response, emits [Webhooks Update](/gateway/events/#webhooks-update) for each target channel, and writes no audit log entry. Copies already delivered stay in the target channels, and later edits and deletions of the published messages still reach them.
+
+A request that changes at least one field creates a channel update audit log entry with the supplied reason, and a conversion records the `type` change in it. Supplying `permission_overwrites` also creates one overwrite create, update, or delete audit log entry for each overwrite the array adds, changes, or removes.
 
 A group direct message change emits [Channel Update](/gateway/events/#channel-update) to every current recipient. A name or successful icon change creates a system message delivered with [Message Create](/gateway/events/#message-create), and replacing the icon permanently deletes the previous one. Ownership and nickname changes create no system message and no audit entry.
 
@@ -542,7 +595,7 @@ An account that stores no password, no TOTP secret, and no registered WebAuthn c
 
 Deleting a guild category first clears the `parent_id` of every child channel and emits [Channel Update](/gateway/events/#channel-update) for each one. The category itself is then deleted like any other guild channel.
 
-Deleting a guild channel permanently removes its messages, attachments, invites and webhooks. Guild subscribers receive [Channel Delete](/gateway/events/#channel-delete), and the deletion appears in the audit log. When the deleted channel is the guild's system, rules or AFK channel, Fluxer clears that guild setting and emits [Guild Update](/gateway/events/#guild-update).
+Deleting a guild channel permanently removes its messages, attachments, invites and webhooks. Deleting an announcement channel also deletes every [channel follower webhook](/http-api/webhooks/#webhook-types) that follows it and turns each copy of its published messages into a deleted-source placeholder, both in the background after the response. Guild subscribers receive [Channel Delete](/gateway/events/#channel-delete), and the deletion appears in the audit log. When the deleted channel is the guild's system, rules or AFK channel, Fluxer clears that guild setting and emits [Guild Update](/gateway/events/#guild-update).
 
 Closing a direct message marks the channel closed for the caller alone and emits [Channel Delete](/gateway/events/#channel-delete) to that caller. The channel, its messages, and the other recipient's view are untouched.
 
@@ -776,3 +829,97 @@ Fluxer emits [Channel Update](/gateway/events/#channel-update) to every session 
 ### Rate limit
 
 20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:update::channel_id` bucket.
+
+## Follow announcement channel
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/followers" bot auditReason />
+
+Follows an announcement channel into a guild text channel and returns a [followed channel object](#followed-channel-object). Fluxer creates a [channel follower webhook](/http-api/webhooks/#webhook-types) in the target channel, and every message later [published](/http-api/messages/#crosspost-message) in the announcement channel is copied into the target through it. [Announcement channels](/topics/announcement-channels/) describes delivery.
+
+### Limitations
+
+- The caller needs [VIEW_CHANNEL](/http-api/permissions/) on the announcement channel, and a satisfied age verification when it resolves to an age restriction.
+- The target must be a guild text channel in any guild, including the announcement channel's own guild.
+- The caller needs [MANAGE_WEBHOOKS](/http-api/permissions/) at guild level in the target guild, and `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` in the target channel.
+- A target channel follows one announcement channel at most once.
+- The guild that owns the announcement channel must not have [ANNOUNCEMENT_CHANNELS_DISABLED](/http-api/guilds/#guild-features).
+
+`MANAGE_WEBHOOKS` is an [elevated permission](/http-api/permissions/#elevated-permissions). In a target guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, a caller who is neither its owner nor enrolled in multi-factor authentication receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/).
+
+Fluxer resolves the age restriction and the content warning of both channels through the channel, then its parent category, and then its guild. An age-restricted announcement channel can only be followed into an age-restricted target. An announcement channel with a content warning can only be followed into a target that has a content warning or an age restriction.
+
+An announcement channel has no cap on its follows. The follower webhook takes one slot of the target's [`max_webhooks_per_channel`](/http-api/instance/#limit-keys) and `max_webhooks_per_guild` allowances, which default to 15 and 1000.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the announcement channel to follow |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| webhook_channel_id | snowflake | The ID of the guild text channel that receives published messages |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [followed channel](#followed-channel-object) object | The follow was created |
+| 400 | [error response](/http-api/#error-response) | The followed channel is not an announcement channel, returning `ANNOUNCEMENT_CHANNEL_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | The target is not a guild text channel, returning `INVALID_FOLLOW_TARGET_CHANNEL` |
+| 400 | [error response](/http-api/#error-response) | The target already follows this announcement channel, returning `CHANNEL_ALREADY_FOLLOWED` |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | The target does not meet the age restriction or content warning rule |
+| 400<sup>2</sup> | [error response](/http-api/#error-response) | The webhook allowance of the target is already reached |
+| 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
+| 403 | [error response](/http-api/#error-response) | A permission on either channel is absent, returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 403 | [error response](/http-api/#error-response) | The source guild has `ANNOUNCEMENT_CHANNELS_DISABLED`, returning `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The generated webhook name is blocked, returning `CONTENT_BLOCKED` |
+| 404 | [error response](/http-api/#error-response) | Either channel does not exist, returning `UNKNOWN_CHANNEL` |
+| 429 | [error response](/http-api/#error-response) | A concurrent follow or conversion holds the target channel, returning `RESOURCE_LOCKED` |
+
+<sup>1</sup> `FOLLOW_TARGET_NOT_AGE_RESTRICTED` for an age-restricted announcement channel, and `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED` for one with a content warning
+
+<sup>2</sup> `MAX_WEBHOOKS_PER_CHANNEL` or `MAX_WEBHOOKS_PER_GUILD`, each with the allowance that was reached
+
+### Side effects
+
+The follow creates a channel follower webhook in the target channel. Its name is the source guild name and the announcement channel name, as in `Fluxer #updates`, cut to 80 characters. When that name fails validation or the blocklist scan, Fluxer uses the channel name alone. The webhook avatar is a copy of the source guild icon at the time of the follow, or null when the source guild has no icon. It does not change when the source guild icon changes, and [Update webhook](/http-api/webhooks/#update-webhook) cannot replace it. A member who manages the target channel's webhooks can rename it later. Each copy uses the source guild icon at the time of delivery as its author avatar.
+
+It emits [Webhooks Update](/gateway/events/#webhooks-update) for the target channel, records a `WEBHOOK_CREATE` audit log entry in the target guild with the supplied reason, and posts a `CHANNEL_FOLLOW_ADD` [system message](/http-api/messages/#message-types) in the target channel through [Message Create](/gateway/events/#message-create). The follow takes effect for messages published after it, and earlier messages are never copied.
+
+[Delete webhook](/http-api/webhooks/#delete-webhook) on the follower webhook removes the follow.
+
+### Rate limit
+
+5 requests per 10 seconds for each authenticated user and channel ID, on the `channel:follow::channel_id` bucket.
+
+## Get channel follower stats
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/follower-stats" bot />
+
+Returns the [channel follower stats object](#channel-follower-stats-object) of an announcement channel. The caller needs the same access as [Get channel](#get-channel).
+
+The counts are cached for 60 seconds, so a follow or unfollow can take up to a minute to show.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the announcement channel |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [channel follower stats](#channel-follower-stats-object) object | Counts were returned |
+| 400 | [error response](/http-api/#error-response) | The channel is not an announcement channel, returning `ANNOUNCEMENT_CHANNEL_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | Caller is not a guild member or lacks `VIEW_CHANNEL`, each returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The resolved age restriction is not satisfied, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist, returning `UNKNOWN_CHANNEL` |
+
+### Rate limit
+
+10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:follower_stats::channel_id` bucket.

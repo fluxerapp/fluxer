@@ -32,6 +32,7 @@ fn channel_type_label(channel_type: i32) -> &'static str {
         0 => "Text",
         2 => "Voice",
         4 => "Category",
+        5 => "Announcement",
         13 => "Link",
         _ => "Unknown",
     }

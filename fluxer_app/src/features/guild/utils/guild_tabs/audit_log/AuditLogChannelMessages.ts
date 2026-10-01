@@ -7,10 +7,20 @@ export const CHANNEL_CREATE_TEXT_SUMMARY = msg({
 	comment:
 		'Activity log summary when a text channel was created. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the new channel, shown as a channel chip with its name.',
 });
+export const CHANNEL_CREATE_ANNOUNCEMENT_SUMMARY = msg({
+	message: '{actor} created the announcement channel {channel}',
+	comment:
+		'Activity log summary when an announcement channel was created. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the new channel, shown as a channel chip with its name.',
+});
 export const CHANNEL_CREATE_TEXT_IN_CATEGORY_SUMMARY = msg({
 	message: '{actor} created the text channel {channel} in {category}',
 	comment:
 		'Activity log summary when a text channel was created inside a category. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the new channel, shown as a channel chip with its name. {category} is the category that holds it, shown as a channel chip with its name.',
+});
+export const CHANNEL_CREATE_ANNOUNCEMENT_IN_CATEGORY_SUMMARY = msg({
+	message: '{actor} created the announcement channel {channel} in {category}',
+	comment:
+		'Activity log summary when an announcement channel was created inside a category. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the new channel, shown as a channel chip with its name. {category} is the category that holds it, shown as a channel chip with its name.',
 });
 export const CHANNEL_CREATE_VOICE_SUMMARY = msg({
 	message: '{actor} created the voice channel {channel}',
@@ -57,6 +67,16 @@ export const CHANNEL_TOPIC_SET_ROW = msg({
 	message: 'Set the topic to {text}',
 	comment:
 		'Activity log detail row under a created or updated channel, giving its new topic. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {text} is the topic, shown as boxed text.',
+});
+export const CHANNEL_CONVERTED_TO_ANNOUNCEMENT_ROW = msg({
+	message: 'Converted the channel to an announcement channel',
+	comment:
+		'Activity log detail row under an updated channel that was turned from a text channel into an announcement channel. Other communities can follow an announcement channel to get its published messages in their own channels. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
+});
+export const CHANNEL_CONVERTED_TO_TEXT_ROW = msg({
+	message: 'Converted the channel to a text channel',
+	comment:
+		'Activity log detail row under an updated channel that was turned from an announcement channel back into a normal text channel. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.',
 });
 export const CHANNEL_MARKED_MATURE_ROW = msg({
 	message: 'Marked the channel as containing mature content',
@@ -109,6 +129,11 @@ export const CHANNEL_RENAME_TEXT_SUMMARY = msg({
 	comment:
 		'Activity log summary when the only change to a text channel was its name. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {oldName} is the name before the change and {newName} the name after, both shown in bold. The app adds the bold, so do not add ** or <b>.',
 });
+export const CHANNEL_RENAME_ANNOUNCEMENT_SUMMARY = msg({
+	message: '{actor} renamed the announcement channel {oldName} to {newName}',
+	comment:
+		'Activity log summary when the only change to an announcement channel was its name. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {oldName} is the name before the change and {newName} the name after, both shown in bold. The app adds the bold, so do not add ** or <b>.',
+});
 export const CHANNEL_RENAME_VOICE_SUMMARY = msg({
 	message: '{actor} renamed the voice channel {oldName} to {newName}',
 	comment:
@@ -135,6 +160,11 @@ export const CHANNEL_OVERRIDES_CHANGED_TEXT_SUMMARY = msg({
 	comment:
 		'Activity log summary for an older entry that only recorded that the permission overrides of a text channel were changed, without saying which. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.',
 });
+export const CHANNEL_OVERRIDES_CHANGED_ANNOUNCEMENT_SUMMARY = msg({
+	message: '{actor} changed the permission overrides of the announcement channel {channel}',
+	comment:
+		'Activity log summary for an older entry that only recorded that the permission overrides of an announcement channel were changed, without saying which. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.',
+});
 export const CHANNEL_OVERRIDES_CHANGED_VOICE_SUMMARY = msg({
 	message: '{actor} changed the permission overrides of the voice channel {channel}',
 	comment:
@@ -160,6 +190,11 @@ export const CHANNEL_UPDATE_TEXT_SUMMARY = msg({
 	message: '{actor} updated the text channel {channel}',
 	comment:
 		'Activity log summary when settings of a text channel were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.',
+});
+export const CHANNEL_UPDATE_ANNOUNCEMENT_SUMMARY = msg({
+	message: '{actor} updated the announcement channel {channel}',
+	comment:
+		'Activity log summary when settings of an announcement channel were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.',
 });
 export const CHANNEL_UPDATE_VOICE_SUMMARY = msg({
 	message: '{actor} updated the voice channel {channel}',
@@ -292,6 +327,11 @@ export const CHANNEL_DELETE_TEXT_SUMMARY = msg({
 	message: '{actor} deleted the text channel {channel}',
 	comment:
 		'Activity log summary when a text channel was deleted. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the deleted channel, shown as a channel chip with the name it had.',
+});
+export const CHANNEL_DELETE_ANNOUNCEMENT_SUMMARY = msg({
+	message: '{actor} deleted the announcement channel {channel}',
+	comment:
+		'Activity log summary when an announcement channel was deleted. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the deleted channel, shown as a channel chip with the name it had.',
 });
 export const CHANNEL_DELETE_VOICE_SUMMARY = msg({
 	message: '{actor} deleted the voice channel {channel}',

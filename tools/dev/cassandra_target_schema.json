@@ -3545,6 +3545,68 @@
 			"options": ""
 		},
 		{
+			"name": "crosspost_sources_by_channel",
+			"columns": [
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((source_channel_id), source_message_id)",
+			"options": ""
+		},
+		{
+			"name": "crossposted_messages",
+			"columns": [
+				{
+					"name": "source_message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "webhook_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "state",
+					"type": "text"
+				},
+				{
+					"name": "reserved_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "source_fingerprint",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((source_message_id), webhook_id)",
+			"options": ""
+		},
+		{
 			"name": "data_service_search_index_files",
 			"columns": [
 				{
@@ -8525,6 +8587,14 @@
 					"type": "text"
 				},
 				{
+					"name": "source_guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
 					"name": "version",
 					"type": "int"
 				}
@@ -8560,6 +8630,25 @@
 				}
 			],
 			"primary_key": "((guild_id), webhook_id)",
+			"options": ""
+		},
+		{
+			"name": "webhooks_by_source_channel_id",
+			"columns": [
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "webhook_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((source_channel_id), webhook_id)",
 			"options": ""
 		}
 	],

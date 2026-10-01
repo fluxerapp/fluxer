@@ -11,7 +11,7 @@ These routes list recorded background jobs and request cancellation. Create jobs
 Reads require `jobs:view` and cancellation requires `jobs:cancel`. Every operation on this page shares the `admin:jobs:view` bucket. The three reads record no [Admin audit entry](/admin-api/#admin-audit-entry-object), and cancellation records one.
 
 :::note[Job updates vary by task]
-Mention processing, link previews, message delete audit log batching, payment reconciliation when a user connects, and every scheduled task except `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. Fluxer deletes a job record about 90 days after the job was queued. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
+Mention processing, link previews, announcement delivery and copy updates, message delete audit log batching, payment reconciliation when a user connects, and every scheduled task except `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. Fluxer deletes a job record about 90 days after the job was queued. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
 :::
 
 ## Admin job object
@@ -120,12 +120,13 @@ The queue drops a job 7 days after it was queued. A job still recorded as `queue
 | unfurl | Link previews |
 | lifecycle | Account, guild, moderation, archive and bulk work |
 | batch | Scheduled maintenance and index work |
+| crosspost | [Announcement channel](/topics/announcement-channels/) delivery, copy updates, and follower cleanup |
 
 ## Background job task types
 
 Use the returned `task_type` value to filter [List jobs](#list-jobs).
 
-The tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) are `bulkUpdateUserFlags`, `bulkUpdateSuspiciousActivityFlags`, `bulkUpdateGuildFeatures`, `bulkAddGuildMembers`, and `bulkScheduleUserDeletion`. `harvestUserData` and `harvestGuildData` build [archives](/admin-api/archives/), `sendSystemDm` delivers a [system DM broadcast](/admin-api/system-dms/), and `refreshSearchIndex` rebuilds a [search index](/admin-api/search-indexes/).
+The tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) are `bulkUpdateUserFlags`, `bulkUpdateSuspiciousActivityFlags`, `bulkUpdateGuildFeatures`, `bulkAddGuildMembers`, and `bulkScheduleUserDeletion`. `harvestUserData` and `harvestGuildData` build [archives](/admin-api/archives/), `sendSystemDm` delivers a [system DM broadcast](/admin-api/system-dms/), and `refreshSearchIndex` rebuilds a [search index](/admin-api/search-indexes/). `removeChannelFollowers` runs on the `crosspost` lane after an announcement channel is deleted or converted into a text channel, and removes the channel follower webhooks that follow it.
 
 ## List jobs
 

@@ -43,6 +43,12 @@ type BodyShape =
 	| {tag: 'form'; payload: FormData}
 	| {tag: 'opaque'; payload: XMLHttpRequestBodyInit};
 
+interface PacingEntry {
+	until: number;
+	note?: string;
+	code?: string;
+}
+
 interface RuntimeState {
 	baseUrl: string;
 	apiVersion: number;
@@ -51,7 +57,7 @@ interface RuntimeState {
 	authProvider: () => string | null;
 	sudo: SudoBindings | null;
 	globalIntercept?: RestInterceptor;
-	pacing: Map<string, {until: number; note?: string}>;
+	pacing: Map<string, PacingEntry>;
 }
 
 interface Plan {
@@ -344,7 +350,7 @@ function composePlan(
 		method,
 		path,
 		url,
-		rateLimitKey: path,
+		rateLimitKey: `${method} ${path}`,
 		body,
 		headers,
 		parse: options.parse ?? 'auto',
@@ -491,10 +497,7 @@ function inferContentType(body: BodyShape): string | null {
 	}
 }
 
-function consultPacing(
-	pacing: Map<string, {until: number; note?: string}>,
-	key: string,
-): {until: number; note?: string} | null {
+function consultPacing(pacing: Map<string, PacingEntry>, key: string): PacingEntry | null {
 	const entry = pacing.get(key);
 	if (!entry) return null;
 	if (entry.until <= Date.now()) {
@@ -505,11 +508,12 @@ function consultPacing(
 }
 
 function recordPacing(
-	pacing: Map<string, {until: number; note?: string}>,
+	pacing: Map<string, PacingEntry>,
 	key: string,
 	retryAfterSeconds: number | null,
 	headerMs: number | null,
 	note?: string,
+	code?: string,
 ): void {
 	const fallbackMs = 1000;
 	const ms =
@@ -518,10 +522,10 @@ function recordPacing(
 			: retryAfterSeconds !== null && retryAfterSeconds > 0
 				? retryAfterSeconds * 1000
 				: fallbackMs;
-	pacing.set(key, {until: Date.now() + ms, note});
+	pacing.set(key, {until: Date.now() + ms, note, code});
 }
 
-function synthesizePacingReply<T>(_plan: Plan, hit: {until: number; note?: string}): RestResponse<T> {
+function synthesizePacingReply<T>(_plan: Plan, hit: PacingEntry): RestResponse<T> {
 	const remaining = Math.max(0, hit.until - Date.now());
 	const headers: Record<string, string> = {
 		'retry-after': String(Math.ceil(remaining / 1000)),
@@ -531,6 +535,7 @@ function synthesizePacingReply<T>(_plan: Plan, hit: {until: number; note?: strin
 		message: hit.note ?? i18n._(TOO_MANY_REQUESTS_DESCRIPTOR),
 		retry_after: remaining / 1000,
 		global: false,
+		...(hit.code !== undefined ? {code: hit.code} : {}),
 	};
 	return {
 		ok: false,
@@ -682,7 +687,8 @@ function reactToRateLimit(state: RuntimeState, plan: Plan, reply: RestResponse):
 	const retryAfterSeconds = readRetryAfter(reply.headers['retry-after']);
 	const headerMs = readNumericHeader(reply.headers['x-ratelimit-reset-after']);
 	const note = extractMessage(reply.body);
-	recordPacing(state.pacing, plan.rateLimitKey, retryAfterSeconds, headerMs, note);
+	const code = extractCode(reply.body);
+	recordPacing(state.pacing, plan.rateLimitKey, retryAfterSeconds, headerMs, note, code);
 	if (plan.mode === 'silent') {
 		return {next: 'deliver', reply};
 	}
@@ -707,6 +713,12 @@ function readNumericHeader(raw: string | undefined): number | null {
 	if (!raw) return null;
 	const value = Number(raw);
 	return Number.isFinite(value) ? value * 1000 : null;
+}
+
+function extractCode(body: unknown): string | undefined {
+	if (typeof body !== 'object' || body === null) return undefined;
+	const c = (body as Record<string, unknown>).code;
+	return typeof c === 'string' ? c : undefined;
 }
 
 function extractMessage(body: unknown): string | undefined {

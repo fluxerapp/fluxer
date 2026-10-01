@@ -496,6 +496,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 		const editItem = itemById.get(ids.edit);
 		const replyItem = itemById.get(ids.reply);
 		const forwardItem = itemById.get(ids.forward);
+		const crosspostItem = itemById.get(ids.crosspost);
 		const copyMessageItem = itemById.get(ids.copyMessage);
 		const pinMessageItem = itemById.get(ids.pinMessage);
 		const bookmarkMessageItem = itemById.get(ids.bookmarkMessage);
@@ -578,12 +579,13 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 			);
 		};
 		const renderInteractionGroup = () => {
-			if (!editItem && !replyItem && !forwardItem) return null;
+			if (!editItem && !replyItem && !forwardItem && !crosspostItem) return null;
 			return (
 				<MenuGroup data-flx="ui.action-menu.message-context-menu.render-interaction-group.menu-group">
 					{editItem && renderDataMenuItem(editItem, 'edit')}
 					{replyItem && renderDataMenuItem(replyItem, 'reply')}
 					{forwardItem && renderDataMenuItem(forwardItem, 'forward')}
+					{crosspostItem && renderDataMenuItem(crosspostItem, 'crosspost')}
 				</MenuGroup>
 			);
 		};

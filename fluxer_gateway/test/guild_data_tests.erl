@@ -421,6 +421,57 @@ find_everyone_viewable_text_channel_skips_link_channel_test() ->
     ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
     ?assertEqual(null, ChannelId).
 
+find_everyone_viewable_text_channel_accepts_announcement_channel_test() ->
+    GuildId = 100,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"roles">> => [
+                #{
+                    <<"id">> => integer_to_binary(GuildId),
+                    <<"permissions">> => integer_to_binary(ViewPerm)
+                }
+            ]
+        }
+    },
+    Channels = [
+        #{
+            <<"id">> => <<"501">>,
+            <<"type">> => 2,
+            <<"position">> => 0,
+            <<"permission_overwrites">> => []
+        },
+        #{
+            <<"id">> => <<"502">>,
+            <<"type">> => 5,
+            <<"position">> => 1,
+            <<"permission_overwrites">> => []
+        }
+    ],
+    ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
+    ?assertEqual(502, ChannelId).
+
+sort_channels_for_ordering_places_announcement_channels_with_text_test() ->
+    Channels = [
+        #{<<"id">> => <<"1">>, <<"type">> => 2, <<"position">> => 0},
+        #{<<"id">> => <<"2">>, <<"type">> => 5, <<"position">> => 2},
+        #{<<"id">> => <<"3">>, <<"type">> => 0, <<"position">> => 1},
+        #{<<"id">> => <<"4">>, <<"type">> => 4, <<"position">> => 3},
+        #{
+            <<"id">> => <<"5">>,
+            <<"type">> => 2,
+            <<"position">> => 0,
+            <<"parent_id">> => <<"4">>
+        },
+        #{<<"id">> => <<"6">>, <<"type">> => 5, <<"position">> => 1, <<"parent_id">> => <<"4">>}
+    ],
+    Ordered = guild_data_channels:sort_channels_for_ordering(Channels),
+    ?assertEqual(
+        [<<"3">>, <<"2">>, <<"1">>, <<"4">>, <<"6">>, <<"5">>],
+        [maps:get(<<"id">>, C) || C <- Ordered]
+    ).
+
 voice_members_from_states_reads_embedded_member_test() ->
     EmbeddedMember = #{<<"user">> => #{<<"id">> => <<"300">>}, <<"roles">> => []},
     IndexedMember = #{<<"user">> => #{<<"id">> => <<"200">>}, <<"roles">> => []},

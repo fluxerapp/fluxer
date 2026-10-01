@@ -3,6 +3,11 @@
 import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
 import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import {
+	enqueueChannelFollowerRemoval,
+	scheduleDeletedChannelFollowerRemoval,
+	withChannelFollowLock,
+} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelAuthService} from '@app/api/channel/services/channel_data/ChannelAuthService';
 import type {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
@@ -31,13 +36,17 @@ import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {
 	ALL_PERMISSIONS,
+	ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES,
 	ChannelTypes,
 	GUILD_TEXT_BASED_CHANNEL_TYPES,
 	Permissions,
+	WebhookTypes,
 } from '@fluxer/constants/src/ChannelConstants';
 import {ContentWarningLevel, clampVoiceChannelBitrate, GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_CHANNELS_PER_CATEGORY} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {ChannelHasFollowedChannelsError} from '@fluxer/errors/src/domains/channel/ChannelHasFollowedChannelsError';
+import {ChannelTypeConversionNotSupportedError} from '@fluxer/errors/src/domains/channel/ChannelTypeConversionNotSupportedError';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {MaxCategoryChannelsError} from '@fluxer/errors/src/domains/channel/MaxCategoryChannelsError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
@@ -46,6 +55,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import {ChannelNameType} from '@fluxer/schema/src/primitives/ChannelValidators';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 export interface ChannelUpdateData {
@@ -89,6 +99,7 @@ export class ChannelOperationsService {
 		private guildRepository: IGuildRepositoryAggregate,
 		private limitConfigService: LimitConfigService,
 		private rateLimitService: IRateLimitService,
+		private cacheService: ICacheService,
 	) {}
 
 	async getChannel({
@@ -131,6 +142,7 @@ export class ChannelOperationsService {
 		clientFeatures,
 		requestCache,
 		auditLogReason,
+		typeConversion,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
@@ -138,6 +150,7 @@ export class ChannelOperationsService {
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
 		auditLogReason: string | null;
+		typeConversion?: ChannelTypeConversion | null;
 	}): Promise<Channel> {
 		const {channel, guild, checkPermission} = await this.channelAuthService.getChannelAuthenticated({
 			userId,
@@ -149,6 +162,7 @@ export class ChannelOperationsService {
 		}
 		if (!guild) throw new MissingPermissionsError();
 		await checkPermission(Permissions.MANAGE_CHANNELS);
+		const nextType = resolveNextChannelType(channel, typeConversion ?? null);
 		const guildIdValue = createGuildID(BigInt(guild.id));
 		contentModerationService.scanText(data.name ?? null, {
 			userId,
@@ -165,7 +179,7 @@ export class ChannelOperationsService {
 			surface: 'profile_field',
 		});
 		let channelName = data.name ?? channel.name;
-		if (data.name !== undefined && channel.type === ChannelTypes.GUILD_TEXT) {
+		if (data.name !== undefined && isTextNamedChannelType(channel.type)) {
 			const hasFlexibleNamesEnabled = guild.features?.includes(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES) ?? false;
 			if (!hasFlexibleNamesEnabled) {
 				channelName = ChannelNameType.parse(data.name);
@@ -262,6 +276,7 @@ export class ChannelOperationsService {
 		}
 		const updatedChannelData = {
 			...channel.toRow(),
+			type: nextType,
 			name: channelName,
 			topic: data.topic !== undefined ? data.topic : channel.topic,
 			url: data.url !== undefined && channel.type === ChannelTypes.GUILD_LINK ? data.url : channel.url,
@@ -293,7 +308,19 @@ export class ChannelOperationsService {
 				]),
 			),
 		};
-		const updatedChannel = await this.channelRepository.channelData.upsert(updatedChannelData);
+		const updatedChannel =
+			nextType === ChannelTypes.GUILD_ANNOUNCEMENT && channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT
+				? await withChannelFollowLock(this.cacheService, channelId, async () => {
+						const webhooks = await this.webhookRepository.listByChannel(channelId);
+						if (webhooks.some((webhook) => webhook.type === WebhookTypes.CHANNEL_FOLLOWER)) {
+							throw new ChannelHasFollowedChannelsError();
+						}
+						return await this.channelRepository.channelData.upsert(updatedChannelData);
+					})
+				: await this.channelRepository.channelData.upsert(updatedChannelData);
+		if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT && nextType !== ChannelTypes.GUILD_ANNOUNCEMENT) {
+			await enqueueChannelFollowerRemoval({sourceChannelId: channelId, reason: 'converted'});
+		}
 		if (
 			data.rate_limit_per_user !== undefined &&
 			GUILD_TEXT_BASED_CHANNEL_TYPES.has(channel.type) &&
@@ -401,6 +428,11 @@ export class ChannelOperationsService {
 					await this.channelUtilsService.dispatchChannelUpdate({channel: updatedChild, requestCache});
 				}
 			}
+			await scheduleDeletedChannelFollowerRemoval({
+				channel,
+				crossposts: this.channelRepository.crossposts,
+				copyMode: 'source_deleted',
+			});
 			const [channelInvites, channelWebhooks] = await Promise.all([
 				this.inviteRepository.listChannelInvites(channelId),
 				this.webhookRepository.listByChannel(channelId),
@@ -736,9 +768,33 @@ export class ChannelOperationsService {
 	}
 }
 
+export interface ChannelTypeConversion {
+	from: number;
+	to: number;
+}
+
+function resolveNextChannelType(channel: Channel, typeConversion: ChannelTypeConversion | null): number {
+	if (typeConversion === null || typeConversion.to === channel.type) {
+		return channel.type;
+	}
+	if (
+		typeConversion.from !== channel.type ||
+		!ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES.has(channel.type) ||
+		!ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES.has(typeConversion.to)
+	) {
+		throw new ChannelTypeConversionNotSupportedError();
+	}
+	return typeConversion.to;
+}
+
+function isTextNamedChannelType(type: number): boolean {
+	return type === ChannelTypes.GUILD_TEXT || type === ChannelTypes.GUILD_ANNOUNCEMENT;
+}
+
 function isWritableGuildChannel(type: number): boolean {
 	return (
 		type === ChannelTypes.GUILD_TEXT ||
+		type === ChannelTypes.GUILD_ANNOUNCEMENT ||
 		type === ChannelTypes.GUILD_VOICE ||
 		type === ChannelTypes.GUILD_LINK ||
 		type === ChannelTypes.GUILD_CATEGORY

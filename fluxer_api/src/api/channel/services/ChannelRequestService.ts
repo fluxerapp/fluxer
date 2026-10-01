@@ -3,6 +3,7 @@
 import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {ChannelTypeConversion} from '@app/api/channel/services/channel_data/ChannelOperationsService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
@@ -62,6 +63,7 @@ export class ChannelRequestService {
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
 		auditLogReason: string | null;
+		typeConversion?: ChannelTypeConversion | null;
 	}): Promise<ChannelResponse> {
 		const channel = await this.channelService.channelData.editChannel({
 			userId: params.userId,
@@ -70,6 +72,7 @@ export class ChannelRequestService {
 			clientFeatures: params.clientFeatures,
 			requestCache: params.requestCache,
 			auditLogReason: params.auditLogReason,
+			typeConversion: params.typeConversion,
 		});
 		return mapChannelToResponse({
 			channel,

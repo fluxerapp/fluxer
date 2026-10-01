@@ -82,6 +82,7 @@ An over-length string draws two entries for the one path.
 | chat_input? | [chat input settings](#chat-input-settings-object) object | Chat composer behaviour preferences |
 | save_camera_uploads_to_device?<sup>4</sup> | bool | Whether a camera upload is also written to the device |
 | double_tap_reaction? | [reaction emoji](#reaction-emoji-object) object | Emoji a double tap on a message adds as a reaction |
+| announcement_prompts? | [announcement prompts state](#announcement-prompts-state-object) object | Hidden announcement channel prompt state |
 
 <sup>1</sup> The entries live inside the snapshot, and the account [memes](/http-api/memes/) collection holds none of them
 
@@ -760,6 +761,16 @@ The `voice_prompts` field stores which voice confirmation prompts the account ha
 | --- | --- | --- |
 | skip_hide_own_camera_confirm | bool | Whether hiding the caller's own camera skips confirmation |
 | skip_hide_own_screenshare_confirm | bool | Whether hiding the caller's own screen share skips confirmation |
+
+## Announcement prompts state object
+
+The `announcement_prompts` field stores which announcement channel prompts the account has hidden.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| hide_publish_nudge | bool | Whether the prompt to publish a new message in an [announcement channel](/topics/announcement-channels/) is hidden |
 
 ## Sudo prompt state object
 

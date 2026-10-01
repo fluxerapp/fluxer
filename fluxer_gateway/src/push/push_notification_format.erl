@@ -20,6 +20,7 @@
 -define(CHANNEL_TYPE_GUILD_TEXT, 0).
 -define(CHANNEL_TYPE_GUILD_VOICE, 2).
 -define(CHANNEL_TYPE_GUILD_CATEGORY, 4).
+-define(CHANNEL_TYPE_GUILD_ANNOUNCEMENT, 5).
 -define(CHANNEL_TYPE_GUILD_LINK, 998).
 
 -spec build_content_preview(map()) -> binary().
@@ -332,6 +333,8 @@ is_copyable_channel_type(?CHANNEL_TYPE_GUILD_TEXT) ->
 is_copyable_channel_type(?CHANNEL_TYPE_GUILD_VOICE) ->
     true;
 is_copyable_channel_type(?CHANNEL_TYPE_GUILD_CATEGORY) ->
+    true;
+is_copyable_channel_type(?CHANNEL_TYPE_GUILD_ANNOUNCEMENT) ->
     true;
 is_copyable_channel_type(?CHANNEL_TYPE_GUILD_LINK) ->
     true;
@@ -697,6 +700,10 @@ a_null_snapshot_field_previews_nothing_test() ->
     ?assertEqual(
         <<>>, build_content_preview(#{<<"content">> => <<>>, <<"message_snapshots">> => null})
     ).
+
+announcement_channel_mentions_are_copyable_test() ->
+    ?assert(is_copyable_channel_type(5)),
+    ?assert(is_copyable_channel_mention(#{<<"type">> => 5})).
 
 build_url_dm_test() ->
     ?assertEqual(<<"/channels/@me/456/789">>, build_url(0, 456, 789)).

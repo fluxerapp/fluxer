@@ -70,7 +70,7 @@ export const ReplyPreview = observer(
 				});
 			}
 		}, [referenceChannelId, message.channelId, message.id, message.messageReference]);
-		if (!message.messageReference) return null;
+		if (!message.messageReference || message.isCrosspostCopy) return null;
 		if (resolution.state !== MessageReferenceState.LOADED) {
 			const isDeleted = resolution.state === MessageReferenceState.DELETED;
 			return (

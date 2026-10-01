@@ -31,13 +31,11 @@
 	inset-block-end: 0;
 	inset-inline: 0 1rem;
 	z-index: 1;
-	height: 1rem;
-	background: linear-gradient(to bottom, transparent, var(--messages-bottom-fade-fill));
 	pointer-events: none;
 }
 
 .bottomFadeStatusAtBottom {
-	height: var(--composer-status-safe-area);
+	height: 1rem;
 	background: linear-gradient(
 		to bottom,
 		transparent,
@@ -47,7 +45,7 @@
 }
 
 .bottomFadeStatusScrolled {
-	height: calc(var(--composer-status-safe-area) + 4rem);
+	height: 5rem;
 	background: linear-gradient(
 		to bottom,
 		transparent,

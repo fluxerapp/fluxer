@@ -11,6 +11,7 @@ import {Config} from '@app/api/Config';
 import {createApiContext} from '@app/api/CreateApiContext';
 import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {ChannelRequestService} from '@app/api/channel/services/ChannelRequestService';
+import {CrosspostSourceService} from '@app/api/channel/services/message/CrosspostSourceService';
 import {MessageRequestService} from '@app/api/channel/services/message/MessageRequestService';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {StreamService} from '@app/api/channel/services/StreamService';
@@ -79,6 +80,7 @@ import {
 	getGatewayRequestService,
 	getGifService,
 	getGuildAuditLogService,
+	getGuildDiscoveryRepository,
 	getGuildDiscoveryService,
 	getGuildRepository,
 	getInstanceConfigRepository,
@@ -135,6 +137,7 @@ import {UserRelationshipRequestService} from '@app/api/user/services/UserRelatio
 import {UserService} from '@app/api/user/services/UserService';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {VoiceService} from '@app/api/voice/VoiceService';
+import {ChannelFollowService} from '@app/api/webhook/ChannelFollowService';
 import {WebhookRequestService} from '@app/api/webhook/WebhookRequestService';
 import {WebhookService} from '@app/api/webhook/WebhookService';
 import {createMiddleware} from 'hono/factory';
@@ -238,6 +241,7 @@ class RequestServices implements RequestScopedServices {
 	private cachedUserContentRequestService: UserContentRequestService | undefined;
 	private cachedUserRelationshipRequestService: UserRelationshipRequestService | undefined;
 	private cachedWebhookService: WebhookService | undefined;
+	private cachedChannelFollowService: ChannelFollowService | undefined;
 	private cachedWebhookRequestService: WebhookRequestService | undefined;
 
 	constructor(
@@ -586,6 +590,12 @@ class RequestServices implements RequestScopedServices {
 		this.cachedMessageRequestService ??= new MessageRequestService(
 			this.channelService,
 			createMessageResponseDataService(),
+			new CrosspostSourceService(
+				this.requestGuildRepository,
+				getGuildDiscoveryRepository(),
+				this.gatewayService,
+				this.cacheService,
+			),
 		);
 		return this.cachedMessageRequestService;
 	}
@@ -871,6 +881,20 @@ class RequestServices implements RequestScopedServices {
 		return this.cachedWebhookService;
 	}
 
+	get channelFollowService(): ChannelFollowService {
+		this.cachedChannelFollowService ??= new ChannelFollowService(
+			this.webhookService,
+			getWebhookRepository(),
+			this.channelService,
+			getChannelRepository(),
+			this.guildService,
+			getAvatarService(),
+			getCacheService(),
+			getSnowflakeService(),
+		);
+		return this.cachedChannelFollowService;
+	}
+
 	get webhookRequestService(): WebhookRequestService {
 		this.cachedWebhookRequestService ??= new WebhookRequestService(
 			this.webhookService,
@@ -878,6 +902,7 @@ class RequestServices implements RequestScopedServices {
 			getUserCacheService(),
 			this.liveKitWebhookService ?? null,
 			getSweegoWebhookService(),
+			this.gatewayService,
 		);
 		return this.cachedWebhookRequestService;
 	}

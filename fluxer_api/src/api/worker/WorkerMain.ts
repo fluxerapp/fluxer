@@ -17,6 +17,7 @@ import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRep
 import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {startContentBlocklistCaches, stopContentBlocklistCaches} from '@app/api/middleware/ContentBlocklistCaches';
 import {
 	closeOwnedKVClient,
 	createSnowflakeService,
@@ -148,6 +149,7 @@ export async function startWorkerMain(): Promise<void> {
 			await jsConnectionManager?.drain();
 			jsConnectionManager = null;
 		});
+		await cleanupStep('content blocklist caches', stopContentBlocklistCaches);
 		await cleanupStep('worker dependencies', () => {
 			dependencies = null;
 			clearWorkerDependencies();
@@ -268,6 +270,8 @@ export async function startWorkerMain(): Promise<void> {
 		}
 		dependencies = await initializeWorkerDependencies(snowflakeService);
 		setWorkerDependencies(dependencies);
+		await startContentBlocklistCaches({kvClient: dependencies.kvClient, storageService: dependencies.storageService});
+		Logger.info('Content blocklist caches initialised for worker backend');
 		await queueBlocklistFeedStartupJobs(dependencies.kvClient, workerService, Config.blocklistFeeds.enabled);
 		setActivityProcessChannel('worker');
 		await startActivityEvents({

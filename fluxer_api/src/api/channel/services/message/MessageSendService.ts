@@ -15,6 +15,7 @@ import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/Messag
 import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {emitMessageCreated} from '@app/api/channel/services/message/MessageActivity';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import type {DmNsfwContext} from '@app/api/channel/services/message/MessageContentService';
@@ -26,12 +27,14 @@ import {
 	isOperationDisabled,
 	isPersonalNotesChannel,
 } from '@app/api/channel/services/message/MessageHelpers';
+import {assertMessageWithinHistoryCutoff} from '@app/api/channel/services/message/MessageHistoryCutoff';
 import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
 import type {MessageOperationsHelpers} from '@app/api/channel/services/message/MessageOperationsHelpers';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {MessageAttachment, MessageReference} from '@app/api/database/types/MessageTypes';
 import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
@@ -75,7 +78,6 @@ import {SlowmodeRateLimitError} from '@fluxer/errors/src/domains/core/SlowmodeRa
 import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 interface MessageSendServiceDeps {
@@ -97,6 +99,8 @@ interface MessageSendServiceDeps {
 	embedAttachmentResolver: MessageEmbedAttachmentResolver;
 	attachmentUploadTraceRepository: AttachmentUploadTraceRepository;
 	limitConfigService: LimitConfigService;
+	messageWriteLock: MessageWriteLock;
+	crosspostPropagation: CrosspostPropagation;
 }
 
 interface SendMessageResult {
@@ -360,8 +364,8 @@ export class MessageSendService {
 		if (data.message_reference && guild && !isForwardMessage) {
 			const hasReadHistory = await hasPermission(Permissions.READ_MESSAGE_HISTORY);
 			if (!hasReadHistory) {
-				this.assertReferencedMessageWithinCutoff({
-					referencedMessage,
+				assertMessageWithinHistoryCutoff({
+					message: referencedMessage,
 					guild,
 				});
 			}
@@ -722,27 +726,6 @@ export class MessageSendService {
 		return {attachmentsToProcess, favoriteMemeAttachment};
 	}
 
-	private assertReferencedMessageWithinCutoff({
-		referencedMessage,
-		guild,
-	}: {
-		referencedMessage: Message | null;
-		guild: GuildResponse;
-	}): void {
-		if (!referencedMessage) {
-			throw new UnknownMessageError();
-		}
-		const cutoff = guild.message_history_cutoff;
-		if (!cutoff) {
-			throw new UnknownMessageError();
-		}
-		const messageTimestamp = snowflakeToDate(referencedMessage.id).getTime();
-		const cutoffTimestamp = new Date(cutoff).getTime();
-		if (messageTimestamp < cutoffTimestamp) {
-			throw new UnknownMessageError();
-		}
-	}
-
 	private getMessageTypeForRequest(data: MessageRequest): number {
 		if (!data.message_reference) {
 			return MessageTypes.DEFAULT;
@@ -859,8 +842,8 @@ export class MessageSendService {
 		if (data.message_reference && guild && !isForwardMessage) {
 			const hasReadHistory = await hasPermission(Permissions.READ_MESSAGE_HISTORY);
 			if (!hasReadHistory) {
-				this.assertReferencedMessageWithinCutoff({
-					referencedMessage,
+				assertMessageWithinHistoryCutoff({
+					message: referencedMessage,
 					guild,
 				});
 			}
@@ -1276,16 +1259,30 @@ export class MessageSendService {
 				existingAttachments: existingMessage.attachments.map((att) => ({filename: att.filename})),
 			});
 		}
-		const {message: updatedMessage, enqueueDeferredEmbeds} = await this.deps.persistenceService.updateMessage({
-			message: existingMessage,
+		const attachmentUploadUserId = await this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments);
+		const {message: updatedMessage, enqueueDeferredEmbeds} = await this.deps.messageWriteLock.withFreshMessage(
+			channelId,
 			messageId,
-			data,
-			channel,
-			guild,
-			attachmentUploadUserId: await this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
-			allowEmbeds: true,
-		});
+			async (fresh) => {
+				if (!fresh) throw new UnknownMessageError();
+				if (fresh.webhookId !== webhook.id) {
+					throw new MissingPermissionsError();
+				}
+				return this.deps.crosspostPropagation.withPublishedEditBudget({fresh, actor: 'webhook'}, () =>
+					this.deps.persistenceService.updateMessage({
+						message: fresh,
+						messageId,
+						data,
+						channel,
+						guild,
+						attachmentUploadUserId,
+						allowEmbeds: true,
+					}),
+				);
+			},
+		);
 		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+		await this.deps.crosspostPropagation.propagateEdit(updatedMessage);
 		void enqueueDeferredEmbeds().catch((error) => {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction after edit');
 		});

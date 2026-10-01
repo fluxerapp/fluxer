@@ -1242,7 +1242,7 @@ Default `all_lanes`. Which lanes the worker runs. `all_lanes`, `single_lane`, or
 
 #### `FLUXER_API_WORKER_LANE`
 
-No default. Which lane, under `single_lane`. `realtime`, `unfurl`, `lifecycle`, or `batch`. Compose does not forward it.
+No default. Which lane, under `single_lane`. `realtime`, `unfurl`, `lifecycle`, `batch`, or `crosspost`. Compose does not forward it. A deployment that splits the worker by lane needs a `crosspost` worker, or published announcements are never delivered.
 
 #### `FLUXER_API_WORKER_TASK`
 
@@ -1254,7 +1254,7 @@ No default. Whether the cron scheduler runs. Compose sets `true`. Without it no 
 
 #### `FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES`
 
-No default. Per-lane concurrency. JSON object keyed by lane. Each value must be an integer of at least 1 or startup fails. Built-in concurrency is realtime 10, unfurl 20, lifecycle 8, batch 12. Compose forwards it from `.env`.
+No default. Per-lane concurrency. JSON object keyed by lane, `realtime`, `unfurl`, `lifecycle`, `batch`, or `crosspost`. Each value must be an integer of at least 1 or startup fails. Built-in concurrency is realtime 10, unfurl 20, lifecycle 8, batch 12, crosspost 8. Compose forwards it from `.env`.
 
 #### `FLUXER_NODE_EXTRA_CA_CERTS`
 

@@ -253,6 +253,45 @@ export class AvatarService {
 		});
 	}
 
+	async copyGuildIconToWebhookAvatar(params: {
+		guildId: bigint;
+		iconHash: string | null;
+		webhookId: bigint;
+	}): Promise<string | null> {
+		const {guildId, iconHash, webhookId} = params;
+		if (!iconHash) return null;
+		const key = this.stripAnimationPrefix(iconHash);
+		try {
+			await this.storageService.copyObject({
+				sourceBucket: Config.s3.buckets.cdn,
+				sourceKey: `icons/${guildId}/${key}`,
+				destinationBucket: Config.s3.buckets.cdn,
+				destinationKey: `avatars/${webhookId}/${key}`,
+			});
+		} catch (error) {
+			if (error instanceof Error && (error.name === 'NoSuchKey' || error.name === 'NotFound')) {
+				return null;
+			}
+			throw error;
+		}
+		return iconHash;
+	}
+
+	async ensureWebhookAvatarFromGuildIcon(params: {
+		guildId: bigint;
+		iconHash: string | null;
+		webhookId: bigint;
+	}): Promise<string | null> {
+		const {iconHash, webhookId} = params;
+		if (!iconHash) return null;
+		const existing = await this.storageService.getObjectMetadata(
+			Config.s3.buckets.cdn,
+			`avatars/${webhookId}/${this.stripAnimationPrefix(iconHash)}`,
+		);
+		if (existing) return iconHash;
+		return this.copyGuildIconToWebhookAvatar(params);
+	}
+
 	async processSticker(params: {errorPath: string; base64Image: string; guildFeatures: Iterable<string>}): Promise<{
 		imageBuffer: Uint8Array;
 		animated: boolean;

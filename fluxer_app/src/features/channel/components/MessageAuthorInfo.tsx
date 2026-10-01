@@ -103,10 +103,11 @@ export const MessageAuthorInfo = observer((props: MessageAuthorInfoProps) => {
 						<span className={styles.messageAuthorPart} data-flx="channel.message-author-info.message-author-part">
 							{timeoutIndicator}
 							{username}
-							{author.bot && (
+							{(author.bot || message.isCrosspostCopy) && (
 								<UserTag
 									className={styles.userTagOffset}
 									system={author.system}
+									variant={message.isCrosspostCopy ? 'community' : undefined}
 									data-flx="channel.message-author-info.user-tag-offset"
 								/>
 							)}

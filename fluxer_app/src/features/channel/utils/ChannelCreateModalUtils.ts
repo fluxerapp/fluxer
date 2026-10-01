@@ -37,6 +37,11 @@ export const channelTypeOptions: Array<ChannelTypeOption> = [
 		desc: 'Send messages, images, GIFs, and emoji',
 	},
 	{
+		value: ChannelTypes.GUILD_ANNOUNCEMENT,
+		name: 'Announcement Channel',
+		desc: 'Post updates that other communities can follow into their own channels',
+	},
+	{
 		value: ChannelTypes.GUILD_VOICE,
 		name: 'Voice Channel',
 		desc: 'Hang out together with voice, video, and screen share',

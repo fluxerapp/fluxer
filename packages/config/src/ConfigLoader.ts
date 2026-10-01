@@ -405,7 +405,7 @@ function validateApiWorkerConfig(config: MasterConfig): void {
 		assertOneOf(worker.mode, ['all_lanes', 'single_lane', 'single_task'], 'FLUXER_API_WORKER_MODE');
 	}
 	if (worker.lane !== undefined) {
-		assertOneOf(worker.lane, ['realtime', 'unfurl', 'lifecycle', 'batch'], 'FLUXER_API_WORKER_LANE');
+		assertOneOf(worker.lane, ['realtime', 'unfurl', 'lifecycle', 'batch', 'crosspost'], 'FLUXER_API_WORKER_LANE');
 	}
 	if (worker.mode === 'single_task') {
 		requireString(worker.task, 'FLUXER_API_WORKER_TASK');

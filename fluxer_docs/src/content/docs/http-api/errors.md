@@ -164,6 +164,10 @@ You've already completed age verification
 
 You're already friends with this user
 
+### `ANNOUNCEMENT_CHANNEL_REQUIRED`
+
+This action is only available in announcement channels
+
 ### `APPLICATION_NOT_OWNED`
 
 You don't own this application
@@ -288,6 +292,18 @@ Community ownership can't be transferred to a bot
 
 Verification required. Try again
 
+### `CHANNEL_ALREADY_FOLLOWED`
+
+This channel already receives updates from that announcement channel
+
+### `CHANNEL_HAS_FOLLOWED_CHANNELS`
+
+Remove the followed channels posting here before converting it to an announcement channel
+
+### `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED`
+
+Only text and announcement channels can be converted into each other
+
 ### `COMMUNICATION_DISABLED`
 
 Communication is disabled
@@ -403,6 +419,14 @@ This feature is temporarily disabled
 ### `FILE_SIZE_TOO_LARGE`
 
 File size is too large
+
+### `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED`
+
+Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction
+
+### `FOLLOW_TARGET_NOT_AGE_RESTRICTED`
+
+Updates from an age-restricted channel can only go to an age-restricted channel
 
 ### `FORBIDDEN`
 
@@ -535,6 +559,10 @@ Invalid DSA verification code
 ### `INVALID_FLAGS_FORMAT`
 
 Invalid flags format
+
+### `INVALID_FOLLOW_TARGET_CHANNEL`
+
+Followed channels can only post into text channels
 
 ### `INVALID_FORM_BODY`
 
@@ -704,6 +732,18 @@ You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}
 
 Media metadata error
 
+### `MESSAGE_ALREADY_CROSSPOSTED`
+
+This message has already been published
+
+### `MESSAGE_CROSSPOST_RATE_LIMITED`
+
+This channel has reached its publishing limit
+
+### `MESSAGE_NOT_CROSSPOSTABLE`
+
+This message cannot be published
+
 ### `METHOD_NOT_ALLOWED`
 
 Method not allowed
@@ -843,6 +883,10 @@ We couldn't process the request
 ### `PROFILE_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
+
+### `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`
+
+This published message has reached its editing limit
 
 ### `PURCHASE_EMAIL_VERIFICATION_REQUIRED`
 

@@ -47,7 +47,7 @@ A message object is the full stored form of one post in a channel.
 | stickers | array[[sticker item](#sticker-item-object) object] | The stickers sent with the message |
 | nsfw_emojis? | array[snowflake] | IDs of the custom emojis in the message that are classified as explicit |
 | reactions? | array[[reaction](#reaction-object) object] | Reaction summaries |
-| message_reference? | [message reference](#message-reference-object) object | Reply or forward reference |
+| message_reference? | [message reference](#message-reference-object) object | Reply, forward, or published message reference |
 | message_snapshots? | array[[message snapshot](#message-snapshot-object) object] | The immutable copies captured for a forward |
 | nonce?<sup>6</sup> | string | Caller-supplied message nonce, echoed to the sender as a string of 1 through 32 characters |
 | call? | [message call](#message-call-object) object | Call state attached to a call message |
@@ -65,7 +65,7 @@ A message object is the full stored form of one post in a channel.
 
 <sup>6</sup> Echoed only in the create message response and its originating [Message Create](/gateway/events/#message-create) Gateway Dispatch, and never stored on the message
 
-<sup>7</sup> The key is absent when the message has no reply reference, present and null when the reply target no longer resolves, and present with the message when it does. A client must tell absent apart from null by key presence
+<sup>7</sup> The key is absent when the message has no reply reference, present and null when the reply target no longer resolves, and present with the message when it does. It is always absent on a copy of a [published message](#crosspost-message). A client must tell absent apart from null by key presence
 
 A webhook-authored message has no stored author user. Fluxer builds its author from the webhook, with the webhook ID as `id`, the stored webhook name as `username`, the discriminator `0000`, the stored webhook avatar hash as `avatar`, and `bot` true. A message whose stored author ID no longer resolves to an account is served with a deleted-user placeholder. The placeholder has that ID, the discriminator `0000`, and no avatar.
 
@@ -115,17 +115,23 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 | 5 | CHANNEL_ICON_CHANGE | Group direct message icon-change system message |
 | 6 | CHANNEL_PINNED_MESSAGE<sup>2</sup> | Channel pin system message |
 | 7 | USER_JOIN<sup>2</sup> | User-join system message |
+| 12 | CHANNEL_FOLLOW_ADD<sup>2</sup> <sup>3</sup> | System message posted when a channel starts following an announcement channel |
 | 19 | REPLY<sup>1</sup> <sup>2</sup> | Message with a reply reference |
 
 <sup>1</sup> Only `DEFAULT` and `REPLY` can be modified, pinned, unpinned, or used as the target of a reply reference. Any other type rejects modification, pinning, and unpinning with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and rejects being replied to with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`
 
-<sup>2</sup> Only `DEFAULT`, `CHANNEL_PINNED_MESSAGE`, `USER_JOIN`, and `REPLY` can be deleted, and any other type rejects deletion with 403 `MISSING_PERMISSIONS`
+<sup>2</sup> Only `DEFAULT`, `CHANNEL_PINNED_MESSAGE`, `USER_JOIN`, `CHANNEL_FOLLOW_ADD`, and `REPLY` can be deleted, and any other type rejects deletion with 403 `MISSING_PERMISSIONS`
+
+<sup>3</sup> Its `content` is the name of the new [channel follower webhook](/http-api/webhooks/#webhook-types). Its `message_reference` names the followed announcement channel and its guild, has `type` `0`, and has no `message_id`. It never sends a push notification
 
 ## Message flags
 
 | Value | Name | Description |
 | --- | --- | --- |
+| 1 &lt;&lt; 0 | CROSSPOSTED<sup>3</sup> | Message was published to the channels that follow its announcement channel |
+| 1 &lt;&lt; 1 | IS_CROSSPOST<sup>3</sup> | Message is a copy delivered from a followed announcement channel |
 | 1 &lt;&lt; 2 | SUPPRESS_EMBEDS<sup>1</sup> | Suppress rendering of embeds |
+| 1 &lt;&lt; 3 | SOURCE_MESSAGE_DELETED<sup>3</sup> | The published message this copy came from was deleted |
 | 1 &lt;&lt; 12 | SUPPRESS_NOTIFICATIONS | Do not generate ordinary mention notifications |
 | 1 &lt;&lt; 13 | VOICE_MESSAGE<sup>2</sup> | Message has one voice recording attachment |
 
@@ -133,7 +139,9 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 
 <sup>2</sup> A message with this flag has the voice message restrictions listed under [Create message](#create-message)
 
-These bits are also the complete sendable set. A create masks the supplied value down to them, and a modify replaces only them and leaves every other stored bit untouched. A bit outside this table is discarded, and the request still succeeds.
+<sup>3</sup> Set by the server. [Announcement channels](/topics/announcement-channels/) describes when each is set
+
+`SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS`, and `VOICE_MESSAGE` are the complete sendable set. A create masks the supplied value down to them, and a modify replaces only them and leaves every other stored bit untouched. Any other bit in the request is discarded, and the request still succeeds.
 
 ## Message attachment object
 
@@ -281,27 +289,31 @@ Each message has at most the resolved `max_reactions_per_message` distinct group
 
 ## Message reference object
 
-A message reference names the message that a reply points at or that a forward was taken from.
+A message reference names the message that a reply points at, that a forward was taken from, or that a copy was published from.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | channel_id | snowflake | The ID of the referenced channel |
-| message_id | snowflake | The ID of the referenced message |
+| message_id?<sup>1</sup> | snowflake | The ID of the referenced message |
 | guild_id? | snowflake | The ID of the referenced guild, present only for a guild message |
 | type | integer | [Message reference type](#message-reference-types) |
+
+<sup>1</sup> Absent only on a `CHANNEL_FOLLOW_ADD` [system message](#message-types), whose reference names a channel and no message
 
 ## Message reference types
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | DEFAULT<sup>1</sup> | Reply reference |
+| 0 | DEFAULT<sup>1</sup> <sup>3</sup> | Reply reference, or the source of a published copy |
 | 1 | FORWARD<sup>2</sup> | Forward reference represented by snapshots |
 
 <sup>1</sup> The default when a create message request supplies `message_reference` without a `type`
 
 <sup>2</sup> Requires `channel_id` in the create message request, and the created message has `message_snapshots` and no `referenced_message`
+
+<sup>3</sup> On a message with the `IS_CROSSPOST` [flag](#message-flags), the reference names the published message in the announcement channel. The copy is not a reply and never has `referenced_message`
 
 ## Message reference input object
 
@@ -1302,6 +1314,9 @@ Modifies a message. Returns the updated [message](#message-object) object. Emits
 - A caller who does not hold the bit at all is treated as any other non-author and receives 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
 - Embeds require [EMBED_LINKS](/http-api/permissions/) and adding an upload requires [ATTACH_FILES](/http-api/permissions/).
 - A concurrent edit can fail with 429 `RESOURCE_LOCKED` and `Retry-After: 1`.
+- A [published](#crosspost-message) message has its own edit allowance, described below.
+
+Published messages: 3 edits in a row, then one every 20 minutes, code `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`. Edits by other members with Manage Messages are not limited. The allowance is kept for each message and counts author edits, [Edit webhook message](/http-api/webhooks/#edit-webhook-message) calls, and [Delete message attachment](#delete-message-attachment) calls.
 
 The body is read exactly as it is for [Create message](#create-message), so a `multipart/form-data` request is accepted with the same `payload_json` and `files[N]` fields. A file that is not uploaded directly must first be planned through [Request attachment upload URLs](#request-attachment-upload-urls) and then referenced by its `upload_filename`.
 
@@ -1350,6 +1365,7 @@ An `id` that names no attachment on the message is skipped, and the edit still s
 | 403 | [error response](/http-api/#error-response) | The caller is age restricted from the channel and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 403 | [error response](/http-api/#error-response) | Message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist |
+| 429 | [error response](/http-api/#error-response) | The published message edit allowance is used up, returning `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` |
 
 ### Side effects
 
@@ -1357,9 +1373,127 @@ The operation updates the message, advances its edit timestamp when `content` ch
 
 It emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. It writes no audit log entry, even for a moderator edit.
 
+An edit of a published message, including a moderator edit, reaches every copy of it in the background. Fluxer batches the edits of one message into 10-second windows and copies the latest state once per window. A moderator in a following channel can set `SUPPRESS_EMBEDS` on a copy, and the next copied edit of the published message overwrites it.
+
 ### Rate limit
 
 20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:message:update::channel_id` bucket.
+
+## Crosspost message
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/{message_id}/crosspost" bot />
+
+Publishes a message in an announcement channel to every channel that follows it, and returns the updated [message](#message-object) object with the `CROSSPOSTED` [flag](#message-flags). Emits a [Message Update](/gateway/events/#message-update) Gateway event. The copies are delivered in the background after the response. [Announcement channels](/topics/announcement-channels/) describes what is copied.
+
+### Limitations
+
+- The channel must be an announcement channel, and the caller needs [VIEW_CHANNEL](/http-api/permissions/) and [SEND_MESSAGES](/http-api/permissions/) in it.
+- The author can publish their own message, and a timed-out author is refused with 403 `COMMUNICATION_DISABLED`.
+- Publishing another member's message, or a webhook's, also requires [MANAGE_MESSAGES](/http-api/permissions/).
+- A caller who publishes another member's message without [READ_MESSAGE_HISTORY](/http-api/permissions/) can publish only a message newer than the guild's message history cutoff.
+- Only a `DEFAULT` message with no `message_snapshots` can be published. A reply, a forward, a system message, and a copy of a published message cannot.
+- A message is published once.
+- Content, rich embed text, and attachment hashes that match the instance blocklists are refused with 403 `CONTENT_BLOCKED`.
+
+`MANAGE_MESSAGES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who holds it with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
+
+Each announcement channel can publish 10 messages in a row, then one every 6 minutes. The allowance is shared by every member, and Fluxer counts a publish only after every other check passes. A denial returns 429 `MESSAGE_CROSSPOST_RATE_LIMITED` with `X-RateLimit-Scope: shared`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the announcement channel |
+| message_id | snowflake | The ID of the message to publish |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [message](#message-object) object | Message was published |
+| 400 | [error response](/http-api/#error-response) | The channel is not an announcement channel, returning `ANNOUNCEMENT_CHANNEL_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | The message type or shape cannot be published, returning `MESSAGE_NOT_CROSSPOSTABLE` |
+| 400 | [error response](/http-api/#error-response) | The message was already published, returning `MESSAGE_ALREADY_CROSSPOSTED` |
+| 403 | [error response](/http-api/#error-response) | A required permission is absent, returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The author is timed out, returning `COMMUNICATION_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The message matches an instance blocklist, returning `CONTENT_BLOCKED` |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Publishing is disabled for the guild, returning `FEATURE_TEMPORARILY_DISABLED` |
+| 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or is older than the caller's history cutoff |
+| 429<sup>2</sup> | [error response](/http-api/#error-response) | The channel publish allowance is used up |
+| 429 | [error response](/http-api/#error-response) | A concurrent change holds the message, returning `RESOURCE_LOCKED` |
+| 503 | [error response](/http-api/#error-response) | The delivery queue is full, returning `SERVICE_UNAVAILABLE` |
+
+<sup>1</sup> Returned when message sending is disabled for the guild, or the guild has [ANNOUNCEMENT_CHANNELS_DISABLED](/http-api/guilds/#guild-features)
+
+<sup>2</sup> `MESSAGE_CROSSPOST_RATE_LIMITED`, with the [rate limit response](/topics/rate-limits/#rate-limit-response-object) members
+
+A 503 leaves the message unpublished, and the publish it counted stays counted.
+
+### Side effects
+
+The operation sets `CROSSPOSTED` on the message without changing its `edited_timestamp`, and emits [Message Update](/gateway/events/#message-update) in the announcement channel. Fluxer then creates one copy in each following channel through its [channel follower webhook](/http-api/webhooks/#webhook-types), each announced by [Message Create](/gateway/events/#message-create) in that channel. A copy has the `IS_CROSSPOST` flag, a `DEFAULT` `message_reference` to the published message, and no mentions.
+
+Publishing writes no audit log entry.
+
+### Rate limit
+
+5 requests per 5 seconds for each authenticated user and channel ID, on the `channel:message:crosspost::channel_id` bucket. The channel publish allowance above applies on top of it.
+
+## Get message crosspost source
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/messages/{message_id}/crosspost-source" bot />
+
+Returns the public profile of the guild a copy of a published message came from, as a [crosspost source](#crosspost-source-object) object. Clients use it to show the source guild of a copy to a reader who is not a member of that guild. Requires [VIEW_CHANNEL](/http-api/permissions/) in the channel of the copy.
+
+### Limitations
+
+- The caller needs the same access as [Get message](#get-message), so a message outside the caller's message history cutoff is reported as 404 `UNKNOWN_MESSAGE`.
+- The message must be a copy with the `IS_CROSSPOST` [flag](#message-flags), or the `CHANNEL_FOLLOW_ADD` [system message](#message-types) posted when the channel followed an announcement channel. Any other message returns 404 `UNKNOWN_MESSAGE`.
+- The response never says whether the caller is a member of the source guild, and it names no channel of that guild.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel that holds the copy |
+| message_id | snowflake | The ID of the copy or of the `CHANNEL_FOLLOW_ADD` message |
+
+### Crosspost source object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild | [crosspost source guild](#crosspost-source-guild-object) object | The guild the message was published from |
+
+### Crosspost source guild object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the source guild |
+| name | string | The name of the source guild |
+| icon | ?string | The hash of the source guild icon |
+| banner | ?string | The hash of the source guild banner |
+| description | ?string | The discovery description of the source guild, or null when the guild is not listed in discovery |
+| features | array of strings | The badge [features](/http-api/guilds/#guild-features) of the source guild, limited to `VERIFIED`, `PARTNERED`, and `DISCOVERABLE` |
+| approximate_member_count | ?integer | Approximate member count, or null when Fluxer cannot count the guild right now |
+| approximate_presence_count | ?integer | Approximate online member count, or null when Fluxer cannot count the guild right now |
+| discoverable | boolean | Whether the caller can join the guild through [Join discovery guild](/http-api/discovery/#join-discovery-guild) |
+
+`discoverable` is true when discovery is on for the instance, the guild is listed in discovery, and its invites are not disabled. The counts are cached for 60 seconds per guild.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [crosspost source](#crosspost-source-object) object | The source guild was returned |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL`, returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks age verification for the channel, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller cannot see it, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | Message does not exist, is outside the caller's history cutoff, or is not eligible, returning `UNKNOWN_MESSAGE` |
+| 404 | [error response](/http-api/#error-response) | The source guild was deleted, returning `UNKNOWN_GUILD` |
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:message:crosspost_source::channel_id` bucket.
 
 ## Clear channel read state
 
@@ -1431,6 +1565,8 @@ There is no grace period and no restore operation.
 
 The operation permanently deletes the message, its reactions, and its attachments and removes it from search.
 
+Deleting a [published](#crosspost-message) message keeps each copy of it in the following channels and turns it into a placeholder in the background. The content of the placeholder is `[Original message deleted]`, its attachments, embeds, and stickers are removed, its `edited_timestamp` is set, and it has the `SOURCE_MESSAGE_DELETED` [flag](#message-flags). Deleting a copy removes that copy alone.
+
 It emits [Message Delete](/gateway/events/#message-delete) to every session that can see the channel. When the message was pinned, it also removes the channel pin entry and emits [Channel Pins Update](/gateway/events/#channel-pins-update) with the channel's unchanged last-pin timestamp.
 
 Every deletion in a guild channel writes one `MESSAGE_DELETE` guild audit log entry with the supplied reason, including deletion of the caller's own message.
@@ -1473,7 +1609,7 @@ The response is 204 whether the message survives or is deleted, so the emitted G
 
 ### Side effects
 
-The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removed attachment was the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message instead, with the complete [Delete message](#delete-message) effect set, including its Dispatches and guild audit log entry.
+The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. On a [published](#crosspost-message) message it counts toward the published message edit allowance described under [Modify message](#modify-message), and a denial returns 429 `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removed attachment was the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message instead, with the complete [Delete message](#delete-message) effect set, including its Dispatches and guild audit log entry.
 
 ### Rate limit
 

@@ -4,6 +4,7 @@ import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
@@ -13,25 +14,19 @@ import type {MessagePersistenceService} from '@app/api/channel/services/message/
 import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
 import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
 import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {ThrottledError} from '@fluxer/errors/src/domains/core/ThrottledError';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
-import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-
-const MESSAGE_LOCK_TTL_SECONDS = 5;
-const MESSAGE_LOCK_ACQUIRE_ATTEMPTS = 6;
-const MESSAGE_LOCK_RETRY_DELAY_MS = 50;
 
 interface EditMessageResult {
 	message: Message;
@@ -41,7 +36,6 @@ interface EditMessageResult {
 interface MessageEditServiceDeps {
 	channelRepository: IChannelRepositoryAggregate;
 	userRepository: IUserRepository;
-	cacheService: ICacheService;
 	validationService: MessageValidationService;
 	persistenceService: MessagePersistenceService;
 	channelAuthService: MessageChannelAuthService;
@@ -50,6 +44,8 @@ interface MessageEditServiceDeps {
 	searchService: MessageSearchService;
 	embedAttachmentResolver: MessageEmbedAttachmentResolver;
 	mentionService: MessageMentionService;
+	messageWriteLock: MessageWriteLock;
+	crosspostPropagation: CrosspostPropagation;
 }
 
 export class MessageEditService {
@@ -113,7 +109,7 @@ export class MessageEditService {
 			attachments: data.attachments,
 			existingAttachments: message.attachments.map((att) => ({filename: att.filename})),
 		});
-		const referencedMessage = message.reference
+		const referencedMessage = message.reference?.messageId
 			? await this.deps.channelRepository.messages.getMessage(channelId, message.reference.messageId)
 			: null;
 		const effectiveAllowedMentions = this.getEffectiveAllowedMentionsForEdit({message, referencedMessage, data});
@@ -138,9 +134,10 @@ export class MessageEditService {
 			});
 		}
 		if (message.authorId !== userId) {
-			const editedMessage = await this.withMessageLock(channelId, messageId, () =>
-				this.deps.processingService.handleNonAuthorEdit({
-					message,
+			const editedMessage = await this.deps.messageWriteLock.withFreshMessage(channelId, messageId, (fresh) => {
+				if (!fresh) throw new UnknownMessageError();
+				return this.deps.processingService.handleNonAuthorEdit({
+					message: fresh,
 					messageId,
 					data,
 					guild,
@@ -149,26 +146,30 @@ export class MessageEditService {
 					requestCache,
 					persistenceService: this.deps.persistenceService,
 					dispatchService: this.deps.dispatchService,
-				}),
-			);
+				});
+			});
+			await this.deps.crosspostPropagation.propagateEdit(editedMessage);
 			return {message: editedMessage, authChannel};
 		}
 		const isBugHunterBot = !!user?.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
-		const updateResult = await this.withMessageLock(channelId, messageId, () =>
-			this.deps.persistenceService.updateMessage({
-				message,
-				messageId,
-				data,
-				channel,
-				guild,
-				member,
-				attachmentUploadUserId: userId,
-				allowEmbeds: canEmbedLinks,
-				isBot: user?.isBot,
-				isBugHunterBot,
-				locale: user?.locale,
-			}),
-		);
+		const updateResult = await this.deps.messageWriteLock.withFreshMessage(channelId, messageId, async (fresh) => {
+			if (!fresh) throw new UnknownMessageError();
+			return this.deps.crosspostPropagation.withPublishedEditBudget({fresh, actor: 'author'}, () =>
+				this.deps.persistenceService.updateMessage({
+					message: fresh,
+					messageId,
+					data,
+					channel,
+					guild,
+					member,
+					attachmentUploadUserId: userId,
+					allowEmbeds: canEmbedLinks,
+					isBot: user?.isBot,
+					isBugHunterBot,
+					locale: user?.locale,
+				}),
+			);
+		});
 		let updatedMessage = updateResult.message;
 		if (data.content !== undefined || data.allowed_mentions !== undefined || data.embeds !== undefined) {
 			const mentionResult = await this.deps.processingService.handleMentions({
@@ -186,6 +187,7 @@ export class MessageEditService {
 			}
 		}
 		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+		await this.deps.crosspostPropagation.propagateEdit(updatedMessage);
 		void updateResult.enqueueDeferredEmbeds().catch((error) => {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction after edit');
 		});
@@ -217,27 +219,5 @@ export class MessageEditService {
 			return null;
 		}
 		return {replied_user: false};
-	}
-
-	private async withMessageLock<T>(channelId: ChannelID, messageId: MessageID, fn: () => Promise<T>): Promise<T> {
-		const lockKey = `message:${channelId}:${messageId}:write`;
-		let lockToken: string | null = null;
-		for (let attempt = 0; attempt < MESSAGE_LOCK_ACQUIRE_ATTEMPTS; attempt++) {
-			lockToken = await this.deps.cacheService.acquireLock(lockKey, MESSAGE_LOCK_TTL_SECONDS);
-			if (lockToken) break;
-			await new Promise((resolve) => setTimeout(resolve, MESSAGE_LOCK_RETRY_DELAY_MS * (attempt + 1)));
-		}
-		if (!lockToken) {
-			throw new ThrottledError({
-				code: APIErrorCodes.RESOURCE_LOCKED,
-				retryAfterSeconds: 1,
-				data: {retry_after: 1},
-			});
-		}
-		try {
-			return await fn();
-		} finally {
-			await this.deps.cacheService.releaseLock(lockKey, lockToken).catch(() => {});
-		}
 	}
 }

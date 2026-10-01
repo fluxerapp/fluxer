@@ -137,6 +137,15 @@ const ChannelCreateTextRequest = ChannelCreateCommon.extend({
 	name: GeneralChannelNameType.describe('The name of the channel'),
 });
 
+const ChannelCreateAnnouncementRequest = ChannelCreateCommon.extend({
+	type: createNamedLiteral(
+		ChannelTypes.GUILD_ANNOUNCEMENT,
+		'GUILD_ANNOUNCEMENT',
+		'Channel type (announcement channel)',
+	),
+	name: GeneralChannelNameType.describe('The name of the channel'),
+});
+
 const ChannelCreateVoiceRequest = ChannelCreateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_VOICE, 'GUILD_VOICE', 'Channel type (voice channel)'),
 	name: GeneralChannelNameType.describe('The name of the channel'),
@@ -154,6 +163,7 @@ const ChannelCreateLinkRequest = ChannelCreateCommon.extend({
 
 export const ChannelCreateRequest = z.discriminatedUnion('type', [
 	ChannelCreateTextRequest,
+	ChannelCreateAnnouncementRequest,
 	ChannelCreateVoiceRequest,
 	ChannelCreateCategoryRequest,
 	ChannelCreateLinkRequest,
@@ -163,6 +173,15 @@ export type ChannelCreateRequest = z.infer<typeof ChannelCreateRequest>;
 
 const ChannelUpdateTextRequest = ChannelUpdateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'Channel type (text channel)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+});
+
+const ChannelUpdateAnnouncementRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(
+		ChannelTypes.GUILD_ANNOUNCEMENT,
+		'GUILD_ANNOUNCEMENT',
+		'Channel type (announcement channel)',
+	),
 	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
 });
 
@@ -193,6 +212,7 @@ const ChannelUpdateGroupDmRequest = z.object({
 
 export const ChannelUpdateRequest = z.discriminatedUnion('type', [
 	ChannelUpdateTextRequest,
+	ChannelUpdateAnnouncementRequest,
 	ChannelUpdateVoiceRequest,
 	ChannelUpdateCategoryRequest,
 	ChannelUpdateLinkRequest,
@@ -201,8 +221,20 @@ export const ChannelUpdateRequest = z.discriminatedUnion('type', [
 
 export type ChannelUpdateRequest = z.infer<typeof ChannelUpdateRequest>;
 
+const ChannelTypeConversionField = z
+	.union([z.literal(ChannelTypes.GUILD_TEXT), z.literal(ChannelTypes.GUILD_ANNOUNCEMENT)])
+	.optional()
+	.describe('Convert between text (0) and announcement (5). Other conversions are rejected.');
+
+const CONVERTIBLE_UPDATE_REQUESTS = new Set<z.ZodObject>([ChannelUpdateTextRequest, ChannelUpdateAnnouncementRequest]);
+
 export const ChannelUpdateRequestBody = z.union(
-	ChannelUpdateRequest.options.map(({shape: {type, ...shape}}) => z.object(shape)),
+	ChannelUpdateRequest.options.map((option) => {
+		const {type, ...shape} = option.shape;
+		return CONVERTIBLE_UPDATE_REQUESTS.has(option)
+			? z.object({...shape, type: ChannelTypeConversionField})
+			: z.object(shape);
+	}),
 );
 
 export const PermissionOverwriteCreateRequest = z.object({

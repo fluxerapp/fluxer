@@ -57,7 +57,14 @@ import type {
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowBendUpRightIcon, CaretRightIcon, HashIcon, NotePencilIcon, SpeakerHighIcon} from '@phosphor-icons/react';
+import {
+	ArrowBendUpRightIcon,
+	CaretRightIcon,
+	HashIcon,
+	MegaphoneSimpleIcon,
+	NotePencilIcon,
+	SpeakerHighIcon,
+} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -125,7 +132,7 @@ const SpoileredUrlEmbed = observer(function SpoileredUrlEmbed({
 const ForwardedFromSource = observer(({message}: {message: Message}) => {
 	const {sourceChannel, sourceGuild, sourceUser, hasAccessToSource, displayName} = useForwardedMessageContext(message);
 	const handleJumpToOriginal = useCallback(() => {
-		if (message.messageReference && sourceChannel) {
+		if (message.messageReference?.message_id && sourceChannel) {
 			goToMessage(message.messageReference.channel_id, message.messageReference.message_id, {
 				returnToMessageId: message.id,
 				returnChannelId: message.channelId,
@@ -181,6 +188,16 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 					weight="fill"
 					size={iconSize}
 					data-flx="channel.message-attachments.render-channel-icon.forwarded-source-icon--2"
+				/>
+			);
+		}
+		if (sourceChannel.type === ChannelTypes.GUILD_ANNOUNCEMENT) {
+			return (
+				<MegaphoneSimpleIcon
+					className={styles.forwardedSourceIcon}
+					weight="bold"
+					size={iconSize}
+					data-flx="channel.message-attachments.render-channel-icon.forwarded-source-icon--4"
 				/>
 			);
 		}

@@ -16,6 +16,7 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import * as WebhookCommands from '@app/features/webhook/commands/WebhookCommands';
+import {FollowedChannelListItem} from '@app/features/webhook/components/FollowedChannelListItem';
 import {WebhookListItem} from '@app/features/webhook/components/WebhookListItem';
 import {useWebhookUpdates} from '@app/features/webhook/hooks/useWebhookUpdates';
 import type {Webhook} from '@app/features/webhook/models/Webhook';
@@ -65,6 +66,8 @@ const ChannelWebhooksTab: React.FC<{channelId: string}> = observer(({channelId})
 				.map((ch) => ({id: ch.id, label: ch.name ?? i18n._(UNKNOWN_CHANNEL_DESCRIPTOR)})),
 		[guildChannels, i18n.locale],
 	);
+	const incomingWebhooks = useMemo(() => (webhooks ?? []).filter((webhook) => !webhook.isChannelFollower), [webhooks]);
+	const followerWebhooks = useMemo(() => (webhooks ?? []).filter((webhook) => webhook.isChannelFollower), [webhooks]);
 	const refreshWebhooks = useCallback(async () => {
 		if (!guildId) return;
 		try {
@@ -164,9 +167,9 @@ const ChannelWebhooksTab: React.FC<{channelId: string}> = observer(({channelId})
 					data-flx="channel.channel-tabs.channel-webhooks-tab.status-slate"
 				/>
 			)}
-			{fetchStatus === 'success' && webhooks && webhooks.length > 0 && (
+			{fetchStatus === 'success' && incomingWebhooks.length > 0 && (
 				<div className={styles.webhooksList} data-flx="channel.channel-tabs.channel-webhooks-tab.webhooks-list">
-					{webhooks.map((webhook: Webhook) => (
+					{incomingWebhooks.map((webhook: Webhook) => (
 						<WebhookListItem
 							key={webhook.id}
 							webhook={webhook}
@@ -182,7 +185,7 @@ const ChannelWebhooksTab: React.FC<{channelId: string}> = observer(({channelId})
 					))}
 				</div>
 			)}
-			{fetchStatus === 'success' && (!webhooks || webhooks.length === 0) && (
+			{fetchStatus === 'success' && incomingWebhooks.length === 0 && (
 				<StatusSlate
 					Icon={RobotIcon}
 					title={<Trans>No webhooks</Trans>}
@@ -203,9 +206,44 @@ const ChannelWebhooksTab: React.FC<{channelId: string}> = observer(({channelId})
 								]
 							: undefined
 					}
-					fullHeight={true}
+					fullHeight={followerWebhooks.length === 0}
 					data-flx="channel.channel-tabs.channel-webhooks-tab.status-slate--2"
 				/>
+			)}
+			{fetchStatus === 'success' && followerWebhooks.length > 0 && (
+				<section
+					className={styles.followedSection}
+					data-flx="channel.channel-tabs.channel-webhooks-tab.followed-section"
+				>
+					<div data-flx="channel.channel-tabs.channel-webhooks-tab.followed-header">
+						<h3 className={styles.sectionTitle} data-flx="channel.channel-tabs.channel-webhooks-tab.followed-title">
+							<Trans comment="Section heading in the channel webhook settings that lists announcement channels this channel follows.">
+								Followed channels
+							</Trans>
+						</h3>
+						<p
+							className={styles.sectionDescription}
+							data-flx="channel.channel-tabs.channel-webhooks-tab.followed-description"
+						>
+							<Trans comment="Description of the followed channels section in the channel webhook settings.">
+								Messages published in these announcement channels are copied here.
+							</Trans>
+						</p>
+					</div>
+					<div className={styles.webhooksList} data-flx="channel.channel-tabs.channel-webhooks-tab.followed-list">
+						{followerWebhooks.map((webhook: Webhook) => (
+							<FollowedChannelListItem
+								key={webhook.id}
+								webhook={webhook}
+								onUpdate={handleUpdate}
+								isExpanded={expandedIds.has(webhook.id)}
+								onExpandedChange={(open) => setExpanded(webhook.id, open)}
+								formVersion={formVersion}
+								data-flx="channel.channel-tabs.channel-webhooks-tab.followed-channel-list-item"
+							/>
+						))}
+					</div>
+				</section>
 			)}
 		</div>
 	);

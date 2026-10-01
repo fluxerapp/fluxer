@@ -3,8 +3,10 @@
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import styles from '@app/features/channel/components/barriers/BarrierComponents.module.css';
+import {openChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
 import wrapperStyles from '@app/features/channel/components/textarea/InputWrapper.module.css';
 import textareaStyles from '@app/features/channel/components/textarea/TextareaInput.module.css';
+import {FOLLOW_DESCRIPTOR} from '@app/features/channel/utils/ChannelFollowUtils';
 import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {unblockUser} from '@app/features/relationship/utils/RelationshipActionUtils';
@@ -20,6 +22,7 @@ import {
 	ClockIcon,
 	EnvelopeSimpleIcon,
 	InfoIcon,
+	MegaphoneSimpleIcon,
 	PhoneIcon,
 	ProhibitIcon,
 	ShieldWarningIcon,
@@ -309,6 +312,36 @@ export const TimeoutBarrier = observer(({initialTimeRemaining = 0}: TimedBarrier
 				) : null
 			}
 			data-flx="channel.barriers.barrier-components.timeout-barrier.barrier-base"
+		/>
+	);
+});
+export const AnnouncementFollowBarrier = observer(({channelId}: {channelId: string}) => {
+	const {i18n} = useLingui();
+	return (
+		<BarrierBase
+			message={
+				<Trans comment="Shown instead of the message composer in an announcement channel where the user cannot send messages.">
+					Follow to get these announcements in a channel you choose.
+				</Trans>
+			}
+			icon={
+				<MegaphoneSimpleIcon
+					size={remFromPx(18)}
+					weight="fill"
+					data-flx="channel.barriers.barrier-components.announcement-follow-barrier.megaphone-simple-icon"
+				/>
+			}
+			action={
+				<Button
+					variant="secondary"
+					small={true}
+					onClick={() => openChannelFollowModal(channelId)}
+					data-flx="channel.barriers.barrier-components.announcement-follow-barrier.button.follow"
+				>
+					{i18n._(FOLLOW_DESCRIPTOR)}
+				</Button>
+			}
+			data-flx="channel.barriers.barrier-components.announcement-follow-barrier.barrier-base"
 		/>
 	);
 });

@@ -82,6 +82,11 @@ export const INVITE_EXPIRES_ON_ROW = msg({
 	comment:
 		'Activity log detail under a deleted invite link. It records the date the invite would have stopped working. The invite was deleted and may never have reached that date, so do not say it expired. {date} is that scheduled expiry, shown as a formatted date and time.',
 });
+export const WEBHOOK_CHANNEL_FOLLOW_CREATE_SUMMARY = msg({
+	message: '{actor} followed an announcement channel into {channel}',
+	comment:
+		'Activity log summary when a member followed an announcement channel, so messages published there are now copied into a channel of this community. {actor} is the member who followed it, shown as a clickable user chip, or the word System. {channel} is the channel in this community that receives the copies, shown as a channel chip.',
+});
 export const WEBHOOK_CREATE_IN_CHANNEL_SUMMARY = msg({
 	message: '{actor} created the webhook {name} in {channel}',
 	comment:
@@ -136,6 +141,11 @@ export const WEBHOOK_AVATAR_REMOVED_ROW = msg({
 	message: 'Removed the avatar',
 	comment:
 		'Activity log detail under a changed webhook whose avatar image was removed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. It has no placeholders.',
+});
+export const WEBHOOK_CHANNEL_FOLLOW_DELETE_SUMMARY = msg({
+	message: '{actor} stopped following an announcement channel in {channel}',
+	comment:
+		'Activity log summary when a member removed a followed announcement channel, so its published messages are no longer copied into a channel of this community. {actor} is the member who removed it, shown as a clickable user chip, or the word System. {channel} is the channel in this community that received the copies, shown as a channel chip.',
 });
 export const WEBHOOK_DELETE_FROM_CHANNEL_SUMMARY = msg({
 	message: '{actor} deleted the webhook {name} from {channel}',
