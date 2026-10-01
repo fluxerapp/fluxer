@@ -334,6 +334,12 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		return isVoiceSpeakPermissionDenied(connection?.guildId ?? null, channelId);
 	}
 
+	private isMicrophoneHeldByVoiceState(channelId: string | null): boolean {
+		if (this.isSpeakPermissionDenied(channelId)) return false;
+		const audioState = this.getEffectiveAudioState();
+		return audioState.serverMute || audioState.serverDeaf;
+	}
+
 	private transitionMediaState(event: VoiceMediaEvent): void {
 		this.update(() => {
 			const nextSnapshot = transitionVoiceMediaSnapshot(this.mediaStateSnapshot, event);
@@ -563,7 +569,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 				return;
 			}
 		}
-		this.setAudioPublicationsMuted(room, false, 'voice state update');
+		this.setAudioPublicationsMuted(room, this.shouldMuteMicrophonePublication(), 'voice state update');
 		this.syncLocalSpeakingOverride(room);
 	}
 
@@ -898,6 +904,10 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		channelId: string | null,
 		options: VoiceEngineV2MicrophoneOptions,
 	): Promise<void> {
+		if (this.isMicrophoneHeldByVoiceState(channelId)) {
+			logger.debug('Skipping microphone enable: muted or deafened by the server');
+			return;
+		}
 		this.transitionMediaState({
 			type: 'microphone.enable.request',
 			hasPublication: this.hasMicrophonePublication(room),

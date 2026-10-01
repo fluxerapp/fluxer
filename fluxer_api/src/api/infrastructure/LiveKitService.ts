@@ -7,7 +7,7 @@ import {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import {Logger} from '@app/api/Logger';
 import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
-import {AccessToken, RoomServiceClient, TrackSource} from 'livekit-server-sdk';
+import {AccessToken, RoomServiceClient, type TrackInfo, TrackSource} from 'livekit-server-sdk';
 
 interface CreateTokenParams {
 	userId: UserID;
@@ -47,6 +47,16 @@ interface DisconnectParticipantParams {
 	serverId: string;
 }
 
+interface MuteMicrophoneTrackParams {
+	userId: UserID;
+	guildId?: GuildID;
+	channelId: ChannelID;
+	connectionId: string;
+	regionId: string;
+	serverId: string;
+	trackSid: string;
+}
+
 interface UpdateParticipantPermissionsParams {
 	userId: UserID;
 	guildId?: GuildID;
@@ -75,6 +85,8 @@ interface LiveKitPublishPermissions {
 }
 
 export const VOICE_TOKEN_TTL_SECONDS = 60 * 10;
+
+export const SERVER_MUTE_ATTRIBUTE = 'server_mute';
 
 export function computeLiveKitPublishSources(permissions: LiveKitPublishPermissions): Array<TrackSource> {
 	const sources: Array<TrackSource> = [];
@@ -202,8 +214,10 @@ export class LiveKitService extends ILiveKitService {
 			if (!participant) {
 				return;
 			}
-			if (mute !== undefined && participant.tracks) {
-				for (const track of participant.tracks) {
+			if (mute !== undefined) {
+				const tracks =
+					(await this.setServerMuteAttribute(server, roomName, participantIdentity, mute)) ?? participant.tracks;
+				for (const track of tracks) {
 					if (track.source === TrackSource.MICROPHONE && track.sid) {
 						await server.roomServiceClient.mutePublishedTrack(roomName, participantIdentity, track.sid, mute);
 					}
@@ -274,6 +288,39 @@ export class LiveKitService extends ILiveKitService {
 			Logger.debug({participantIdentity, roomName, canSpeak, canStream, canVideo}, 'Updated participant permissions');
 		} catch (error) {
 			Logger.error({error}, 'Error updating LiveKit participant permissions');
+		}
+	}
+
+	private async setServerMuteAttribute(
+		server: ServerClientConfig,
+		roomName: string,
+		participantIdentity: string,
+		mute: boolean,
+	): Promise<Array<TrackInfo> | null> {
+		try {
+			const updated = await server.roomServiceClient.updateParticipant(roomName, participantIdentity, {
+				attributes: {[SERVER_MUTE_ATTRIBUTE]: mute ? 'true' : ''},
+			});
+			return updated.tracks;
+		} catch (error) {
+			Logger.warn({error, participantIdentity, roomName}, 'Failed to record server mute on LiveKit participant');
+			return null;
+		}
+	}
+
+	async muteMicrophoneTrack(params: MuteMicrophoneTrackParams): Promise<void> {
+		const {userId, guildId, channelId, connectionId, regionId, serverId, trackSid} = params;
+		const roomName = this.getRoomName(guildId, channelId);
+		const participantIdentity = this.getParticipantIdentity(userId, connectionId);
+		const server = this.tryResolveServerClient(regionId, serverId);
+		if (server === null) {
+			Logger.debug({regionId, serverId, participantIdentity, roomName}, 'LiveKit track mute skipped: unknown server');
+			return;
+		}
+		try {
+			await server.roomServiceClient.mutePublishedTrack(roomName, participantIdentity, trackSid, true);
+		} catch (error) {
+			Logger.error({error, participantIdentity, roomName, trackSid}, 'Error muting LiveKit microphone track');
 		}
 	}
 
