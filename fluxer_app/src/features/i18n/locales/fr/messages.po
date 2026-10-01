@@ -1560,6 +1560,11 @@ msgstr "{minutes, plural, one {# minute} other {# minutes}} et {seconds, plural,
 msgid "{minutes, plural, one {Your invite link expires in # minute.} other {Your invite link expires in # minutes.}}"
 msgstr "{minutes, plural, one {Votre lien d’invitation expire dans # minute.} other {Votre lien d’invitation expire dans # minutes.}}"
 
+#. Compact monthly price on the Plutonium page hero. Preserve the monthlyPrice placeholder exactly.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:5
+msgid "{monthlyPrice}/mo"
+msgstr "{monthlyPrice}/mois"
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:44
 msgid "{months, plural, one {# month} other {# months}}"
@@ -1612,7 +1617,7 @@ msgid "{paymentProviderName} will first verify that your card is eligible for lo
 msgstr "{paymentProviderName} vérifiera d’abord si votre carte permet de bénéficier des tarifs régionaux, puis vous redirigera vers le paiement. Revenez à {productName} une fois le paiement terminé."
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:53
+#: src/features/user/components/popouts/UserProfileBadges.tsx:54
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "Abonné à {premiumProductFullName} depuis le {premiumSinceFormatted}"
 
@@ -1630,6 +1635,11 @@ msgstr "{premiumProductName} coûte moins cher maintenant. Passez de {currentPri
 #: src/features/premium/config/PriceAnnouncementCampaign.ts:19
 msgid "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
 msgstr "{premiumProductName} coûte moins cher maintenant. Passez de {currentPrice} à {newPrice} par an à partir du {effectiveDate}, et rien ne vous sera facturé aujourd'hui."
+
+#. Accessible label of the Plutonium page region. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:247
+msgid "{premiumProductName} page"
+msgstr "Page {premiumProductName}"
 
 #. Link label that opens the premium perks list. premiumProductName is the premium plan name.
 #: src/features/app/components/dialogs/components/PerksButton.tsx:10
@@ -1694,7 +1704,7 @@ msgid "{productName} avoids sending push notifications to your mobile devices wh
 msgstr "{productName} évite d’envoyer des notifications push à vos appareils mobiles lorsque vous êtes devant votre ordinateur. Choisissez la durée pendant laquelle vous devez être inactif sur l’ordinateur avant de recevoir les notifications push."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:38
+#: src/features/user/components/popouts/UserProfileBadges.tsx:39
 msgid "{productName} Bug Hunter"
 msgstr "Chasseur de bugs {productName}"
 
@@ -1823,7 +1833,7 @@ msgid "{productName} now lives at {host}. Install it from there."
 msgstr "{productName} est maintenant disponible sur {host}. Installez-le à partir de là."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:33
+#: src/features/user/components/popouts/UserProfileBadges.tsx:34
 msgid "{productName} Partner"
 msgstr "Partenaire {productName}"
 
@@ -1848,7 +1858,7 @@ msgid "{productName} spotted a possible raid here. Invites are paused — try ag
 msgstr "{productName} a détecté une attaque potentielle ici. Les invitations sont suspendues. Réessayez plus tard."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:28
+#: src/features/user/components/popouts/UserProfileBadges.tsx:29
 msgid "{productName} Staff"
 msgstr "Équipe {productName}"
 
@@ -1858,12 +1868,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "{productName} utilise les notifications push lorsqu'il est installé en tant que PWA mobile. L'enregistrement garantit que la passerelle peut atteindre votre appareil même lorsque l'application est en arrière-plan."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:48
+#: src/features/user/components/popouts/UserProfileBadges.tsx:49
 msgid "{productName} Visionary"
 msgstr "Visionary {productName}"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:43
+#: src/features/user/components/popouts/UserProfileBadges.tsx:44
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "Visionary {productName} depuis le {premiumSinceFormatted}"
 
@@ -2107,6 +2117,11 @@ msgstr "{username} a retiré quelqu'un du groupe."
 msgid "{username} started a call."
 msgstr "{username} a démarré un appel."
 
+#. Compact yearly price on the Plutonium page hero. Preserve the yearlyPrice placeholder exactly.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:9
+msgid "{yearlyPrice}/yr"
+msgstr "{yearlyPrice}/an"
+
 #. Short label in the channel and chat embed you tube. Keep it concise. Preserve {youtubeProviderName}; it is inserted by code.
 #: src/features/channel/components/embeds/media/EmbedYouTube.tsx:37
 msgid "{youtubeProviderName} video"
@@ -2236,8 +2251,10 @@ msgstr "1 minute"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Fixed duration label for a one-month interval. Used as a standalone label in duration text or option lists.
+#. Gift purchase dialog option for a one-month gift.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:98
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:40
+#: src/features/premium/components/modals/GiftPlutoniumModal.tsx:31
 msgid "1 month"
 msgstr "1 mois"
 
@@ -2268,7 +2285,9 @@ msgid "1 week"
 msgstr "1 semaine"
 
 #. Duration label component for an elapsed call. Shown when the call lasted about one year.
+#. Gift purchase dialog option for a one-year gift.
 #: src/features/channel/components/CallMessage.tsx:31
+#: src/features/premium/components/modals/GiftPlutoniumModal.tsx:35
 msgid "1 year"
 msgstr "1 an"
 
@@ -2380,7 +2399,7 @@ msgstr "2FA"
 msgid "2FA backup"
 msgstr "Codes de secours 2FA"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:460
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:469
 msgid "2FA requirement"
 msgstr "Exigence de la 2FA"
 
@@ -2566,6 +2585,11 @@ msgstr "Un nouveau code de vérification a été envoyé."
 msgid "a poll"
 msgstr "un sondage"
 
+#. Plutonium page perk card title about profile customization.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:91
+msgid "A profile that stands out"
+msgstr "Un profil qui sort du lot"
+
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
 msgid "A redirect_uri is required when the bot scope is not the only scope."
@@ -2579,6 +2603,11 @@ msgstr "Un composant réutilisable pour les états vides, les erreurs et les mes
 #: src/features/search/utils/SearchUtils.ts:29
 msgid "a rich embed or link preview (not an uploaded file)"
 msgstr "un contenu intégré enrichi ou un aperçu de lien (pas un fichier envoyé)"
+
+#. Plutonium page comparison row label for per-community profiles.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:173
+msgid "A separate profile for each community"
+msgstr "Un profil distinct pour chaque communauté"
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:166
 msgid "A sign-in request was made for your account. Only approve if you initiated it."
@@ -4058,6 +4087,11 @@ msgstr "Animer lors de l'interaction"
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "Le format animé {avifFormatLabel} n'est pas pris en charge"
 
+#. Plutonium page comparison row label for animated avatars and banners.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:225
+msgid "Animated avatar and profile banner"
+msgstr "Avatar animé et bannière de profil"
+
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:192
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are exclusively available to {PREMIUM_PRODUCT_NAME} subscribers."
 msgstr "Les avatars animés ({ANIMATED_AVATAR_FORMATS}) sont réservés aux abonnés {PREMIUM_PRODUCT_NAME}."
@@ -5180,7 +5214,7 @@ msgstr "Supprime automatiquement les paramètres de suivi (comme utm_source, fbc
 msgid "Automatically remove tracking parameters from URLs in messages you send"
 msgstr "Supprimer automatiquement les paramètres de suivi des URL dans les messages que vous envoyez"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:346
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:355
 msgid "Automatically screen messages for explicit content in channels not marked for mature content."
 msgstr "Analyser automatiquement les messages à la recherche de contenu explicite dans les salons qui ne sont pas marqués comme réservés aux adultes."
 
@@ -5236,6 +5270,8 @@ msgid "AV1 (requires opt-in)"
 msgstr "AV1 (nécessite une activation)"
 
 #. Label for the available desktop version in the Linux update modal.
+#. Screen reader text for a check mark in the Plutonium page comparison table.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:130
 #: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "Available"
 msgstr "Disponible"
@@ -5305,6 +5341,7 @@ msgstr "Absent"
 msgid "Away right now"
 msgstr "Absent(e) pour le moment"
 
+#. Accessible label of the back button on the Plutonium page in the mobile layout.
 #. Accessible label on the mobile back button in the channel header. Returns to the previous screen.
 #. Button that moves to the previous setup wizard step.
 #. Footer button in the IAR modal that returns to the previous step.
@@ -5321,6 +5358,7 @@ msgstr "Absent(e) pour le moment"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:398
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:251
 #: src/features/user/components/modals/PhoneAddModal.tsx:417
 #: src/features/user/components/modals/PhoneAddModal.tsx:436
 msgid "Back"
@@ -6049,6 +6087,11 @@ msgstr "Aperçu de l'élément graphique de la marque"
 msgid "Brightness"
 msgstr "Luminosité"
 
+#. Plutonium page perk card body about global emojis and stickers.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:87
+msgid "Bring custom emojis and stickers from any of your communities into every chat and community you're in."
+msgstr "Apportez des emojis et des stickers personnalisés de toutes vos communautés dans chaque discussion et communauté où vous êtes."
+
 #. Title of the modal shown when the browser autoplay policy blocks voice audio until the user interacts.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:8
 msgid "Browser audio required"
@@ -6578,11 +6621,13 @@ msgstr "Annuler le changement programmé"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:860
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Résilier l’abonnement"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
 msgid "Cancel subscription?"
 msgstr "Résilier l’abonnement ?"
 
@@ -7186,7 +7231,7 @@ msgid "Channel access"
 msgstr "Accès aux salons"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:118
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
 msgid "Channel access denied"
 msgstr "Accès au salon refusé"
 
@@ -7251,7 +7296,7 @@ msgstr "ID du salon copié dans le presse-papiers"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:87
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "lien de salon"
@@ -7373,6 +7418,11 @@ msgstr "Salons que je modère"
 #: src/features/ui/character_counter/CharacterCountMessages.ts:21
 msgid "Character limit exceeded by {remaining}"
 msgstr "Limite de caractères dépassée de {remaining}"
+
+#. Plutonium page comparison row label for the message length limit.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:189
+msgid "Characters in a single message"
+msgstr "Caractères dans un seul message"
 
 #. Advanced settings category tag.
 #. Short heading in the keyboard shortcuts cheatsheet.
@@ -7727,7 +7777,7 @@ msgstr "Choisissez ce que {clientLabel} peut faire dans votre communauté. Déco
 msgid "Choose what friends see in their active now panel"
 msgstr "Choisissez ce que vos amis voient dans leur panneau « Actif en ce moment »"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:306
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
 msgid "Choose what members must have before they can post or DM community members."
 msgstr "Choisissez les conditions à remplir pour publier ou envoyer des messages privés aux membres de la communauté."
 
@@ -7847,6 +7897,16 @@ msgstr "Finalisez votre inscription en ajoutant une adresse e-mail et un mot de 
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "Finalisez votre inscription pour accéder aux fonctionnalités de sécurité comme l’authentification à deux facteurs et les clés d’accès."
+
+#. Plutonium page note under disabled buttons for unclaimed accounts. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:237
+msgid "Claim your account to buy {premiumProductName}."
+msgstr "Réclamez votre compte pour acheter {premiumProductName}."
+
+#. Note in the gift purchase dialog for unclaimed accounts.
+#: src/features/premium/components/modals/GiftPlutoniumModal.tsx:51
+msgid "Claim your account to buy gifts."
+msgstr "Réclamez votre compte pour acheter des cadeaux."
 
 #. Tooltip on the channel header voice call button for guest accounts. Prompts account claim.
 #: src/features/channel/components/channel_header_components/CallButtons.tsx:54
@@ -8590,17 +8650,22 @@ msgstr "Communautés"
 msgid "Communities and channels where you can't manage webhooks are hidden."
 msgstr "Les communautés et chaînes où vous ne pouvez pas gérer les webhooks sont masquées."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:356
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:365
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Les communautés présentes dans Découverte doivent analyser les messages de tous les membres. Ce paramètre ne peut pas être modifié tant que Découverte est activée."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:315
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:320
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Les communautés présentes dans Découverte doivent exiger au minimum la vérification de l’adresse e-mail. L’option « Aucun » ne peut pas être sélectionnée tant que Découverte est activée."
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:46
 msgid "Communities with over 250 people are forced onto the \"mentions only\" setting. Your original setting is preserved and will be restored if the community drops below 250 members."
 msgstr "Les communautés de plus de 250 personnes sont automatiquement réglées sur \" Mentions seulement \". Votre réglage d'origine est conservé et sera restauré si la communauté compte moins de 250 membres."
+
+#. Plutonium page comparison row label for the community limit.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:185
+msgid "Communities you can join"
+msgstr "Communautés que vous pouvez rejoindre"
 
 #. Audit log target-type filter label. Filters entries to community-level actions.
 #. Community settings sidebar category grouping discovery and the vanity URL.
@@ -8822,7 +8887,7 @@ msgstr "Niveau des badges de non-lu de la communauté"
 #. Audit log entry label. Past-tense action describing that the community settings were changed.
 #. Short label in the guild overview tab utils helper. Keep it concise.
 #: src/features/app/config/AuditLogConstants.ts:8
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:213
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:215
 #: src/features/guild/utils/guild_tabs/GuildOverviewTabUtils.tsx:35
 msgid "Community updated"
 msgstr "Communauté mise à jour"
@@ -8851,6 +8916,11 @@ msgstr "Boutons compacts avec juste une icône, parfaits pour les barres d'outil
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:302
 msgid "Compact mode"
 msgstr "Mode compact"
+
+#. Heading of the comparison table on the Plutonium page. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:118
+msgid "Compare Free and {premiumProductName}"
+msgstr "Comparer Gratuit et {premiumProductName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:141
@@ -9284,7 +9354,7 @@ msgstr "Créateur de contenu"
 msgid "Content filter"
 msgstr "Filtrage du contenu"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:340
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:349
 msgid "Content filtering"
 msgstr "Filtrage du contenu"
 
@@ -10970,6 +11040,11 @@ msgstr "Tags personnalisés"
 msgid "Custom themes"
 msgstr "Thèmes personnalisés"
 
+#. Plutonium page comparison row label for custom themes.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:233
+msgid "Custom themes for the app"
+msgstr "Thèmes personnalisés pour l’application"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:142
 msgid "Custom title bar"
@@ -11008,7 +11083,7 @@ msgstr "Traitement vocal personnalisé"
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Textarea label in the community moderation settings tab for the custom content warning shown to members.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:45
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:148
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:149
 msgid "Custom warning text"
 msgstr "Texte d'avertissement personnalisé"
 
@@ -12076,13 +12151,13 @@ msgstr "État du développeur"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Outils de développement"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:150
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Les outils de développement sont accessibles depuis le badge du personnel dans l'en-tête du salon."
 
@@ -12228,7 +12303,7 @@ msgstr "Aperçus des messages privés"
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:375
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:629
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:630
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
 msgid "Direct messages"
@@ -12495,8 +12570,10 @@ msgid "Discoverable community"
 msgstr "Communauté présente dans Découverte"
 
 #. Join source label on the community members page. Shown when the member found the community via the Discovery surface.
+#. Name of the Discovery page, shown in an inline chat link that opens it.
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:56
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:328
+#: src/features/navigation/utils/AppPageLinks.ts:26
 msgid "Discovery"
 msgstr "Découverte"
 
@@ -12851,6 +12928,11 @@ msgstr "Ne pas afficher les indicateurs de saisie dans la liste des salons"
 msgid "Don't suggest {deviceName} again"
 msgstr "Ne plus suggérer {deviceName}"
 
+#. Link text in the Plutonium page donation hint. Opens the donation page on the website.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:22
+msgid "Donate instead"
+msgstr "Faire un don plutôt"
+
 #. Footer button in the IAR modal on the final / success screen. Closes the modal.
 #. Primary button in the favorite GIF import modal after a completed import.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
@@ -13182,7 +13264,9 @@ msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try
 msgstr "Chaque message publié autorise 3 modifications rapides, puis 1 toutes les 20 minutes. Réessayez plus tard."
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
+#. Plutonium page comparison row label for early access.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:75
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:229
 msgid "Early access to new features"
 msgstr "Accès anticipé aux nouvelles fonctionnalités"
 
@@ -13774,7 +13858,7 @@ msgid "Enable /tts speech playback"
 msgstr "Activer la lecture vocale /tts"
 
 #. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the owner has not enabled 2FA on their own account.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:42
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:43
 msgid "Enable 2FA on your account to change this setting"
 msgstr "Activez l'authentification à deux facteurs sur votre compte pour modifier ce paramètre"
 
@@ -14073,10 +14157,12 @@ msgid "End grace now"
 msgstr "Mettre fin à la période de grâce"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
 msgid "End grace period"
 msgstr "Mettre fin à la période de grâce"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 msgid "End grace period now?"
 msgstr "Mettre fin à la période de grâce maintenant ?"
 
@@ -14759,7 +14845,7 @@ msgid "Expires:"
 msgstr "Expire :"
 
 #. Accessible label for the explicit content filter radio group in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:127
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:128
 msgid "Explicit content filter setting"
 msgstr "Paramètre du filtre de contenu explicite"
 
@@ -15286,7 +15372,9 @@ msgstr "Favoris"
 msgid "Favorites"
 msgstr "Favoris"
 
+#. Column header for perk names in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:172
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:122
 msgid "Feature"
 msgstr "Fonctionnalité"
 
@@ -15438,14 +15526,14 @@ msgstr "Filtrer par utilisateur"
 
 #. Activity log value for the explicit content filter setting that filters messages from every member.
 #. Explicit content filter option in the community moderation settings tab. Filters messages from every member regardless of role.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:117
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:118
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 msgid "Filter everyone"
 msgstr "Filtrer tout le monde"
 
 #. Activity log value for the explicit content filter setting that filters messages from members who have no roles.
 #. Explicit content filter option in the community moderation settings tab. Filters messages from members who have no roles assigned.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:107
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:108
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:77
 msgid "Filter members without roles"
 msgstr "Filtrer les membres sans rôle"
@@ -15684,6 +15772,11 @@ msgstr "Polices"
 #: src/features/expressions/utils/UnicodeEmojis.ts:30
 msgid "Food & drink"
 msgstr "Nourriture et boissons"
+
+#. Screen reader label for the asterisk that jumps to the custom tag footnote on the Plutonium page.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:148
+msgid "Footnote about custom tags"
+msgstr "Note sur les tags personnalisés"
 
 #. Time window preset label phrased as a duration ("For X hours"). Used in option lists for timed actions.
 #: src/features/app/config/TimeWindowPresets.ts:70
@@ -15947,7 +16040,9 @@ msgstr "Les fréquences d'images supérieures à 30 FPS nécessitent {premiumPro
 msgid "France"
 msgstr "France"
 
+#. Column header for the free tier in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:177
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:126
 msgid "Free"
 msgstr "Gratuit"
 
@@ -16360,6 +16455,16 @@ msgstr "Obtenez {premiumProductName} pour personnaliser votre tag"
 msgid "Get {premiumProductName} to customize your tag or keep it when changing your username"
 msgstr "Obtenez {premiumProductName} pour personnaliser votre tag ou le conserver lorsque vous changez de nom d'utilisateur"
 
+#. Plutonium page perk card body about profile perks. footnote is a clickable asterisk that points to a footnote about tags. Keep it directly after the word for username.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:95
+msgid "Get an animated avatar and banner, a subscriber badge, the four-digit tag you want after your username{footnote}, and a separate profile for each community."
+msgstr "Obtenez un avatar et une bannière animés, un badge d'abonné, le tag à quatre chiffres que vous souhaitez après votre nom d'utilisateur{footnote}, et un profil séparé pour chaque communauté."
+
+#. Secondary Plutonium page button that starts a monthly subscription checkout.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:30
+msgid "Get monthly"
+msgstr "Obtenir mensuellement"
+
 #. Button in the required-action modal. Requests a new inbound SMS challenge code.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:202
 #: src/features/user/components/modals/PhoneAddModal.tsx:424
@@ -16390,6 +16495,11 @@ msgstr "Télécharger l’application de bureau"
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
 msgid "Get the new {productName} app"
 msgstr "Obtenez la nouvelle application {productName}"
+
+#. Primary Plutonium page button that starts a yearly subscription checkout.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:26
+msgid "Get yearly"
+msgstr "Obtenir l'abonnement annuel"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -16451,10 +16561,17 @@ msgstr "Impossible de charger les GIF"
 msgid "Gift"
 msgstr "Cadeau"
 
+#. Plutonium page button that opens the gift purchase dialog. premiumProductName is the paid tier name.
 #. Premium gift purchase section title. premiumProductName is the short paid product name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:38
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:36
 msgid "Gift {premiumProductName}"
 msgstr "Offrir {premiumProductName}"
+
+#. Body of the closing call to action on the Plutonium page for members. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:164
+msgid "Gift {premiumProductName} to a friend for a month or a whole year. Gifts never renew."
+msgstr "Offrez {premiumProductName} à un ami pour un mois ou une année entière. Les cadeaux ne sont jamais renouvelés."
 
 #. Title for gift claim or redemption errors when the gift code was already claimed.
 #: src/features/gift/utils/GiftMessageDescriptors.ts:9
@@ -16513,6 +16630,11 @@ msgstr "Parcours de l’inventaire des cadeaux"
 #: src/features/devtools/components/NagbarControls.ts:56
 msgid "Gift inventory nagbar"
 msgstr "Bannière d'inventaire de cadeaux"
+
+#. Accessible label of the gift length options in the gift purchase dialog.
+#: src/features/premium/components/modals/GiftPlutoniumModal.tsx:43
+msgid "Gift length"
+msgstr "Durée du cadeau"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -16595,6 +16717,11 @@ msgstr "Les <0/> vous sont offerts jusqu’au <1>{giftEndDate}</1>. Le cadeau ne
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:94
 msgid "Gifts"
 msgstr "Cadeaux"
+
+#. Message in the gift purchase dialog when gifts cannot be bought.
+#: src/features/premium/components/modals/GiftPlutoniumModal.tsx:47
+msgid "Gifts aren't available right now."
+msgstr "Les cadeaux ne sont pas disponibles pour le moment."
 
 #. Description for the everyone-is-premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:350
@@ -17075,6 +17202,11 @@ msgstr "Discours haineux"
 msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
 msgstr "Vous avez un code cadeau ? Échangez-le pour débloquer {PREMIUM_PRODUCT_NAME}."
 
+#. Plutonium page hero text on an instance where the paid tier cannot be bought, only redeemed. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:74
+msgid "Have a gift code? Redeem it to unlock {premiumProductName}."
+msgstr "Vous avez un code cadeau ? Échangez-le pour débloquer {premiumProductName}."
+
 #. Friendly tagline shown on a Fluxer-branded button or upsell.
 #: src/features/ui/state/Modal.ts:13
 msgid "Having fun?"
@@ -17393,7 +17525,7 @@ msgstr "Masquer votre partage d'écran ?"
 
 #. Activity log value naming the high member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:74
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:75
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:65
 msgid "High"
 msgstr "Élevé"
@@ -18632,7 +18764,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Le lien d'invitation est masqué pendant le partage :"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:162
 msgid "Invite link masked while sharing"
 msgstr "Lien d’invitation masqué pendant le partage d’écran"
 
@@ -19046,7 +19178,7 @@ msgid "Jump to {displayName}"
 msgstr "Aller à {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:101
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
 msgid "Jump to {labelText}"
 msgstr "Aller à {labelText}"
 
@@ -19103,12 +19235,12 @@ msgid "Jump to the current call"
 msgstr "Afficher l’appel en cours"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:105
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:112
 msgid "Jump to the linked channel"
 msgstr "Accéder au salon lié"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:104
 msgid "Jump to the linked message"
 msgstr "Aller au message lié"
 
@@ -19118,7 +19250,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Aller au message de {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:92
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:99
 msgid "Jump to the message in {labelText}"
 msgstr "Aller au message dans {labelText}"
 
@@ -19130,6 +19262,11 @@ msgstr "Aller au plus ancien message non lu"
 #: src/features/voice/components/alerts/VoiceConnectionConfirmModal.tsx:82
 msgid "Just join (keep other connections)"
 msgstr "Rejoindre (garder les autres connexions)"
+
+#. Hint under the Plutonium page hero buttons. productName is the app name. donateLink is a link whose text is "Donate instead".
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:17
+msgid "Just want to support {productName}'s open source development? {donateLink}."
+msgstr "Vous souhaitez simplement soutenir le développement open source de {productName} ? {donateLink}."
 
 #: src/features/input/utils/KeybindUtils.ts:110
 msgctxt "keyboard-key-name"
@@ -19172,6 +19309,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Conservez les niveaux gratuit et premium. Vous pourrez personnaliser les niveaux, vendre des abonnements premium via Stripe, ou distribuer des codes cadeaux plus tard depuis le panneau d'administration."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
 msgid "Keep grace period"
 msgstr "Conserver la période de grâce"
 
@@ -19186,6 +19324,7 @@ msgid "Keep running"
 msgstr "Continuer à fonctionner"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
 msgid "Keep subscription"
 msgstr "Garder l'abonnement"
 
@@ -19334,6 +19473,11 @@ msgstr "Grande"
 msgid "Large file threshold (MB)"
 msgstr "Seuil de taille des fichiers volumineux (Mo)"
 
+#. Plutonium page comparison row label for the upload size limit.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:197
+msgid "Largest file you can upload"
+msgstr "Fichier le plus volumineux que vous pouvez téléverser"
+
 #. Account switcher metadata showing when a saved account was last used.
 #: src/features/auth/components/accounts/AccountListItem.tsx:65
 msgid "Last active {lastActive}"
@@ -19431,6 +19575,11 @@ msgstr "En savoir plus sur les aperçus du partage d’écran"
 #: src/features/app/components/layout/app_layout/nagbars/ScheduledMaintenanceNagbar.tsx:49
 msgid "Learn more"
 msgstr "En savoir plus"
+
+#. Link text in the Plutonium page tag footnote. Opens the Visionary help article.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:144
+msgid "Learn more about Visionary"
+msgstr "En savoir plus sur Visionary"
 
 #. IAR modal: quick-action card button label.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:417
@@ -19596,7 +19745,7 @@ msgid "Let screen readers announce new messages as they arrive in the open chann
 msgstr "Les lecteurs d'écran annoncent les nouveaux messages dès leur arrivée dans le salon ouvert. Les sons de notification ne sont pas affectés."
 
 #. Helper text for the "Off" explicit content filter option in the community moderation settings tab. Means leave moderation to members.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:102
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:103
 msgid "Let the community self-moderate"
 msgstr "Laisser la communauté s'auto-modérer"
 
@@ -19781,7 +19930,7 @@ msgid "Link styling"
 msgstr "Style des liens"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:154
 msgid "Link unavailable"
 msgstr "Lien indisponible"
 
@@ -20053,7 +20202,7 @@ msgstr "Louisiane"
 
 #. Activity log value naming the low member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:56
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:57
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:57
 msgid "Low"
 msgstr "Faible"
@@ -20247,6 +20396,8 @@ msgid "Manage roles"
 msgstr "Gérer les rôles"
 
 #. Billing action that opens subscription management or the customer billing portal.
+#. Plutonium page hero button that scrolls to the subscription management panel.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:46
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:13
 msgid "Manage subscription"
 msgstr "Gérer l'abonnement"
@@ -20467,13 +20618,13 @@ msgstr "Communauté réservée aux adultes"
 #. Select label in the community moderation settings tab. Sensitive setting; keep neutral tone.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:90
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:131
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:132
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:296
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:180
 msgid "Mature content"
 msgstr "Contenu pour adultes"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:399
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:408
 msgid "Mature content & content warnings"
 msgstr "Contenu pour adultes et avertissements"
 
@@ -20584,7 +20735,7 @@ msgid "Maximum lifetime (days)"
 msgstr "Durée de vie maximale (jours)"
 
 #. Helper text under the "Filter everyone" explicit content filter option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:122
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:123
 msgid "Maximum protection for family-friendly spaces"
 msgstr "Protection maximale pour les espaces familiaux"
 
@@ -20659,6 +20810,11 @@ msgstr "Affichage des médias"
 msgid "Media filter"
 msgstr "Filtre des médias"
 
+#. Plutonium page comparison row label for the saved media limit.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:201
+msgid "Media items you can save for later"
+msgstr "Éléments multimédias que vous pouvez enregistrer pour plus tard"
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:72
 msgid "Media loading state"
@@ -20709,7 +20865,7 @@ msgstr "Arrêter la lecture"
 #. Activity log value naming the medium member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #. Short label in the selections tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:65
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:66
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:61
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:49
 msgid "Medium"
@@ -20794,12 +20950,12 @@ msgstr "Bannissement du membre levé"
 msgid "Member updated"
 msgstr "Membre mis à jour"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:299
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:304
 msgid "Member verification"
 msgstr "Vérification des membres"
 
 #. Accessible label for the member verification level radio group in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:93
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:94
 msgid "Member verification level"
 msgstr "Niveau de vérification des membres"
 
@@ -20833,7 +20989,7 @@ msgstr "Les membres sont retirés de la communauté lorsqu’ils passent hors li
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Les membres disposant de la permission « {pinMessagesPermissionLabel} » peuvent épingler des messages pour tout le monde."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:309
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:314
 msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
 msgstr "Les membres avec des rôles peuvent contourner ces vérifications. Pour les espaces publics, nous recommandons d'activer la vérification."
 
@@ -21137,7 +21293,7 @@ msgid "Message layout"
 msgstr "Disposition des messages"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:82
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:89
 msgid "message link"
 msgstr "lien du message"
 
@@ -21283,6 +21439,11 @@ msgstr "Les messages publiés dans ces canaux d'annonces sont copiés ici."
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:197
 msgid "Messages published in these announcement channels are copied into your channels."
 msgstr "Les messages publiés dans ces canaux d'annonce sont copiés dans vos canaux."
+
+#. Plutonium page comparison row label for the bookmark limit.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:193
+msgid "Messages you can bookmark"
+msgstr "Messages que vous pouvez mettre en favori"
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:282
 msgid "Messaging is temporarily paused in this community."
@@ -22650,7 +22811,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Permission {sendMessagesPermission} manquante"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
 msgid "No access"
 msgstr "Accès refusé"
 
@@ -23224,7 +23385,7 @@ msgid "No users found"
 msgstr "Aucun utilisateur trouvé"
 
 #. Helper text for the "None" member verification level option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:52
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:53
 msgid "No verification is required."
 msgstr "Aucune vérification n'est requise."
 
@@ -23284,7 +23445,7 @@ msgstr "Sans conversion"
 #. Short label in the visual tab. Keep it concise.
 #. Summary row value on the confirm step when no items in the category were selected.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:41
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:47
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:48
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:52
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:37
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:146
@@ -23342,7 +23503,9 @@ msgid "Not accepted"
 msgstr "Non accepté"
 
 #. Fallback value when a saved billing payment method has no expiration date.
+#. Screen reader text for a cross in the Plutonium page comparison table.
 #: src/features/app/components/dialogs/components/plutonium/PaymentMethodList.tsx:18
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:134
 msgid "Not available"
 msgstr "Non disponible"
 
@@ -23576,8 +23739,8 @@ msgstr "Objets"
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:98
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:140
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:73
 msgid "Off"
 msgstr "Désactivé"
@@ -23626,7 +23789,7 @@ msgstr "Du plus ancien au plus récent"
 #. On state suffix appended to the reply bar mention toggle label.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:135
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:136
 msgid "On"
 msgstr "Activé"
 
@@ -23763,7 +23926,7 @@ msgid "Only speakers"
 msgstr "Haut-parleurs seulement"
 
 #. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the viewer is not the owner. Plain explanatory tone.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:37
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:38
 msgid "Only the community owner can change this setting"
 msgstr "Seul le propriétaire de la communauté peut modifier ce paramètre"
 
@@ -23843,8 +24006,13 @@ msgstr "Ouvrez {host} dans Safari."
 msgid "Open {host} in your browser."
 msgstr "Ouvrez {host} dans votre navigateur."
 
+#. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
+msgid "Open {labelText}"
+msgstr "Ouvrir {labelText}"
+
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:116
 msgid "Open {labelText} in settings"
 msgstr "Ouvrir {labelText} dans les paramètres"
 
@@ -23857,6 +24025,11 @@ msgstr "Ouvrir {landmarkName}"
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:27
 msgid "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} → {macosScreenRecordingPermissionName}, then allow {productName}. If {productName2} is already enabled, fully quit and restart {productName3} so macOS applies the permission."
 msgstr "Ouvrez « {macosSystemSettingsName} » → « {macosPrivacyAndSecuritySettingsName} » → « {macosScreenRecordingPermissionName} », puis autorisez {productName}. Si {productName2} est déjà activé, quittez complètement et redémarrez {productName3} pour que macOS applique l’autorisation."
+
+#. Button on the settings card that opens the Plutonium page. premiumProductFullName is the full paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageLinkCard.tsx:15
+msgid "Open {premiumProductFullName}"
+msgstr "Ouvrir {premiumProductFullName}"
 
 #. Button label that opens the desktop app. productName is the app name.
 #. Button that hands SSO sign-in back to the mobile app. productName is the app name.
@@ -24382,10 +24555,12 @@ msgstr "Services facultatifs"
 msgid "Options"
 msgstr "Options"
 
+#. Compact conjunction between the monthly and yearly price on the Plutonium page hero.
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:15
 #: src/features/connection/components/modals/AddConnectionModal.tsx:318
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:30
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:13
 msgid "or"
 msgstr "ou"
 
@@ -24611,6 +24786,11 @@ msgstr "Page {currentPage} sur {totalPages}"
 msgctxt "keyboard-key-name"
 msgid "Page down"
 msgstr "Page suiv."
+
+#. Role description announced for an inline chat link pill that opens an app page. Lowercase.
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
+msgid "page link"
+msgstr "lien de page"
 
 #: src/features/input/utils/KeybindUtils.ts:77
 msgctxt "keyboard-key-name"
@@ -24858,6 +25038,11 @@ msgstr "Invitations suspendues"
 #: src/features/webhook/components/FollowedChannelListItem.tsx:167
 msgid "Paused. The person who followed this channel can no longer see it. Follow it again to resume."
 msgstr "En pause. La personne qui a suivi ce canal ne peut plus y accéder. Suivez-le à nouveau pour reprendre."
+
+#. Description at the top of the gift purchase dialog.
+#: src/features/premium/components/modals/GiftPlutoniumModal.tsx:27
+msgid "Pay once and get a gift link to share. Gifts never renew."
+msgstr "Payez une fois et recevez un lien cadeau à partager. Les cadeaux ne sont jamais renouvelés."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
@@ -25122,6 +25307,11 @@ msgstr "Vérification du téléphone requise"
 msgid "Photo"
 msgstr "Photo"
 
+#. Body of the closing call to action on the Plutonium page for people without the paid tier.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:156
+msgid "Pick a plan and your perks switch on the moment checkout finishes."
+msgstr "Choisissez un forfait et vos avantages s'activent dès la fin du paiement."
+
 #. Title of the picker modal when choosing a reverse image search provider.
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:19
 msgid "Pick a reverse image search provider"
@@ -25156,6 +25346,11 @@ msgstr "Sélectionnez au moins un type de conversation à inclure."
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:135
 msgid "Pick one or more dictionaries. Words from any selected dictionary are accepted, which is useful for multilingual chats."
 msgstr "Choisissez un ou plusieurs dictionnaires. Les mots de tous les dictionnaires sélectionnés sont acceptés, ce qui est utile pour les discussions multilingues."
+
+#. Plutonium page comparison row label for the custom username tag perk.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:169
+msgid "Pick the 4-digit number after your username"
+msgstr "Choisissez le numéro à 4 chiffres après votre nom d’utilisateur"
 
 #. Setup wizard body for choosing the initial account theme.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:67
@@ -25341,6 +25536,11 @@ msgstr "Texte brut"
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:23
 msgid "Plan"
 msgstr "Forfait"
+
+#. Text on the card in settings that links to the Plutonium page.
+#: src/features/premium/components/plutonium_page/PlutoniumPageLinkCard.tsx:11
+msgid "Plans, perks, gifts and your subscription all live on one page."
+msgstr "Abonnements, avantages, cadeaux et votre souscription sont regroupés sur une seule page."
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:174
 msgid "Platform"
@@ -26536,7 +26736,9 @@ msgstr "Vitesse de lecture"
 msgid "Ready to buy a gift?"
 msgstr "Prêt(e) à offrir un cadeau ?"
 
+#. Heading of the closing call to action on the Plutonium page for people without the paid tier.
 #: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:50
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:152
 msgid "Ready to upgrade?"
 msgstr "Prêt à passer à la version supérieure ?"
 
@@ -26679,6 +26881,11 @@ msgstr "Utiliser"
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:10
 msgid "Redeem a gift"
 msgstr "Utiliser un cadeau"
+
+#. Plutonium page link that opens the gift code redemption settings.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:42
+msgid "Redeem a gift code"
+msgstr "Utiliser un code cadeau"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:30
@@ -27662,7 +27869,7 @@ msgid "Requests"
 msgstr "Demandes"
 
 #. Switch label in the community moderation settings tab. Requires moderators to have two-factor auth enabled before they can ban, kick, time out, or delete messages. Security-sensitive; keep tone plain.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:156
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:157
 msgid "Require 2FA for moderation actions"
 msgstr "Exiger la 2FA pour les actions de modération"
 
@@ -27692,7 +27899,7 @@ msgstr "Exiger le flux OAuth2 avec code d’autorisation"
 msgid "Require passkey"
 msgstr "Exiger une clé d'accès"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:466
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:475
 msgid "Require two-factor authentication for moderators before they can ban, kick, time out, or remove messages."
 msgstr "Exiger l’authentification à deux facteurs pour les modérateurs avant qu’ils puissent bannir ou expulser des membres, leur appliquer une restriction temporaire ou supprimer des messages."
 
@@ -27757,22 +27964,22 @@ msgid "Requires a redirect URI and an authorization code when inviting this bot.
 msgstr "Nécessite une URI de redirection et un code d'autorisation lors de l'invitation de ce bot."
 
 #. Helper text for the "Medium" member verification level option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:70
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:71
 msgid "Requires a verified email address and an account that's at least 5 minutes old."
 msgstr "Nécessite une adresse e-mail vérifiée et un compte créé il y a au moins 5 minutes."
 
 #. Helper text for the "Low" member verification level option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:61
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:62
 msgid "Requires a verified email address."
 msgstr "Nécessite une adresse e-mail vérifiée."
 
 #. Helper text for the "Very high" member verification level option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:89
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:90
 msgid "Requires a verified phone number."
 msgstr "Nécessite un numéro de téléphone vérifié."
 
 #. Helper text for the "High" member verification level option in the community moderation settings tab. "Medium" refers to the matching level option.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:79
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:80
 msgid "Requires everything in medium, plus being a member of the community for at least 10 minutes."
 msgstr "Exige les conditions du niveau moyen, ainsi qu’une présence dans la communauté depuis au moins 10 minutes."
 
@@ -28678,6 +28885,13 @@ msgstr "Saturation"
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
 msgstr "Enregistrer"
+
+#. Badge on the one-year option in the gift purchase dialog. percent is a whole number such as 17.
+#. Badge on the yearly Plutonium button. percent is a whole number such as 17.
+#: src/features/premium/components/modals/GiftPlutoniumModal.tsx:39
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:34
+msgid "Save {percent}%"
+msgstr "Économisez {percent} %"
 
 #. Price badge comparing a one-year gift to monthly gifts.
 #. Price badge comparing yearly billing to monthly billing.
@@ -29798,6 +30012,11 @@ msgstr "Envoyer le signalement DSA"
 msgid "Send file messages in order"
 msgstr "Envoyer les messages de fichiers dans l'ordre"
 
+#. Plutonium page perk card title about upload size. size is a formatted size such as 500 MB.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:109
+msgid "Send files up to {size}"
+msgstr "Envoyez des fichiers jusqu'à {size}"
+
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
@@ -30272,7 +30491,7 @@ msgid "Settings"
 msgstr "Réglages"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:114
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
 msgid "settings link"
 msgstr "lien vers les paramètres"
 
@@ -30321,6 +30540,11 @@ msgstr "Partager le thème personnalisé actif"
 msgid "Share active theme"
 msgstr "Partager le thème actif"
 
+#. Plutonium page perk card body about upload size. freeSize is a formatted size such as 25 MB.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:113
+msgid "Share full-length videos and big files without shrinking them first. Free accounts can send up to {freeSize}."
+msgstr "Partagez des vidéos en entier et des fichiers volumineux sans les compresser au préalable. Les comptes gratuits peuvent envoyer jusqu'à {freeSize}."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:46
 msgid "Share gift"
@@ -30345,6 +30569,11 @@ msgstr "Partager le son de la diffusion"
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:40
 msgid "Share the {premiumProductName} experience with your friends by purchasing a gift subscription."
 msgstr "Offrez l'expérience {premiumProductName} à vos amis en leur achetant un abonnement cadeau."
+
+#. Heading of the closing call to action on the Plutonium page for members.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:160
+msgid "Share the perks"
+msgstr "Partagez les avantages"
 
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:348
 msgid "Share theme"
@@ -30376,6 +30605,11 @@ msgstr "Partager votre écran"
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:325
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Partagez votre écran en haute définition (1080p), en Quad HD (1440p) ou dans la résolution source native, jusqu'à 60 FPS."
+
+#. Plutonium page perk card body about stream quality.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:105
+msgid "Share your screen or camera in up to 4K at 60 frames per second. Free accounts stream in up to 720p at 30."
+msgstr "Partagez votre écran ou votre caméra en 4K jusqu'à 60 images par seconde. Les comptes gratuits diffusent jusqu'à 720 p à 30 images par seconde."
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #: src/features/theme/components/modals/ShareThemeModal.tsx:39
@@ -30534,7 +30768,7 @@ msgid "Show a {productName} icon in the system tray or menu bar"
 msgstr "Afficher une icône {productName} dans la zone de notification ou la barre de menus"
 
 #. Switch label in the community moderation settings tab. Toggles a consent prompt before entering any channel.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:143
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:144
 msgid "Show a content warning"
 msgstr "Afficher un avertissement de contenu"
 
@@ -31568,6 +31802,11 @@ msgstr "Certains fichiers que vous essayez d'envoyer dépassent la limite de tai
 msgid "Some users can't be added"
 msgstr "Certains utilisateurs ne peuvent pas être ajoutés"
 
+#. Plutonium page hero subtitle for gifted members. date is a formatted calendar date.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:58
+msgid "Someone gifted you {premiumProductName}. Your perks stay active until {date}."
+msgstr "Quelqu'un vous a offert {premiumProductName}. Vos avantages resteront actifs jusqu'au {date}."
+
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:248
@@ -32585,6 +32824,11 @@ msgstr "Diffusion terminée"
 msgid "Stream hidden"
 msgstr "Diffusion masquée"
 
+#. Plutonium page perk card title about stream quality.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:101
+msgid "Stream in 4K at 60 FPS"
+msgstr "Diffusion 4K à 60 IPS"
+
 #. Aria label for the small thumbnail preview on the screen-share hover card.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
@@ -32711,6 +32955,11 @@ msgstr "Envoyer la candidature"
 msgid "Submitting"
 msgstr "Envoi en cours"
 
+#. Plutonium page comparison row label for the subscriber badge.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:177
+msgid "Subscriber badge on your profile"
+msgstr "Badge d'abonné sur votre profil"
+
 #. Field label in the voice connection status popout. Shows technical WebRTC subscriber ICE transport details.
 #: src/features/voice/components/voice_connection_status/shared.ts:132
 msgid "Subscriber transport:"
@@ -32750,7 +32999,7 @@ msgid "Success"
 msgstr "Succès"
 
 #. Helper text under the "Filter members without roles" explicit content filter option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:112
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:113
 msgid "Suggested for most communities"
 msgstr "Suggéré pour la plupart des communautés"
 
@@ -32770,6 +33019,11 @@ msgstr "Suggestions"
 #: src/features/devtools/components/debug/DebugModal.tsx:90
 msgid "Summary"
 msgstr "Résumé"
+
+#. Plutonium page hero subtitle for people without the paid tier.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:70
+msgid "Support an independent communication platform and unlock some sweet perks."
+msgstr "Soutenez une plateforme de communication indépendante et débloquez des avantages sympas."
 
 #. Switch label in the community notification settings modal. Suppresses @everyone and @here notifications in this community. The two placeholders render the literal @everyone and @here tokens and must not be translated.
 #. Toggle label that suppresses @everyone and @here mentions; placeholders are the localized mention tags.
@@ -34237,7 +34491,7 @@ msgstr "Cette connexion n'a pas été vérifiée."
 #. Label in the content warning utils helper. Keep the tone plain and specific.
 #. Placeholder example shown in the custom content warning textarea in the community moderation settings tab.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:30
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:152
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:153
 #: src/features/messaging/utils/ContentWarningUtils.ts:11
 msgid "This contains sensitive content."
 msgstr "Ce contenu est sensible."
@@ -34495,7 +34749,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Ce salon de lien est réservé aux adultes et peut ouvrir du contenu inapproprié pour certains utilisateurs."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:158
 msgid "This link is not available for your account."
 msgstr "Ce lien n'est pas disponible pour votre compte."
 
@@ -36615,10 +36869,20 @@ msgstr "Comportements, commentaires ou demandes à caractère sexuel non désir�
 msgid "Up to {DISCOVERY_MAX_TAGS} tags help people find your community. They show up in Discovery search."
 msgstr "Jusqu'à {DISCOVERY_MAX_TAGS} tags aident les gens à trouver votre communauté. Ils apparaissent dans la recherche Découverte."
 
+#. Plutonium page comparison value for paid video quality. Keep 4K and FPS as written.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:221
+msgid "Up to 4K at 60 FPS"
+msgstr "Jusqu'à 4K à 60 FPS"
+
 #. Feature comparison table value label. Shown in the restricted or stock column for a text-valued perk. Format includes a resolution token (4K) and a framerate token that should not be translated.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:83
 msgid "Up to 4K/60fps"
 msgstr "Jusqu’à 4K à 60 FPS"
+
+#. Plutonium page comparison value for free video quality. Keep 720p and FPS as written.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:217
+msgid "Up to 720p at 30 FPS"
+msgstr "Jusqu'à 720p à 30 IPS"
 
 #. Message placeholder shown when the app cannot render a newer message type.
 #: src/features/channel/components/UnknownMessage.tsx:23
@@ -37022,6 +37286,11 @@ msgstr "Utilisez une adresse e-mail différente de celle que vous utilisez actue
 msgid "Use animated emojis"
 msgstr "Utiliser les emojis animés"
 
+#. Plutonium page comparison row label for animated emoji use.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:205
+msgid "Use animated emojis in messages"
+msgstr "Utiliser des emojis animés dans les messages"
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop scrolling toggle.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAccessibilityControls.tsx:39
@@ -37048,6 +37317,11 @@ msgstr "Utiliser les paramètres par défaut de la catégorie"
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx:42
 msgid "Use coal theme (pitch-black surfaces)"
 msgstr "Utiliser le thème charbon (surfaces noir de jais)"
+
+#. Plutonium page comparison row label for global emojis and stickers.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:209
+msgid "Use custom emojis and stickers in any community"
+msgstr "Utilisez des emojis et des autocollants personnalisés dans n'importe quelle communauté"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
@@ -37780,6 +38054,16 @@ msgstr "Vérifiez d'abord votre adresse e-mail"
 msgid "Verify your email or phone to continue using {productName}."
 msgstr "Vérifiez votre e-mail ou votre numéro de téléphone pour continuer à utiliser {productName}."
 
+#. Plutonium page note under disabled buttons for unverified accounts. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:242
+msgid "Verify your email to buy {premiumProductName}."
+msgstr "Vérifiez votre e-mail pour acheter {premiumProductName}."
+
+#. Note in the gift purchase dialog for accounts without a verified email.
+#: src/features/premium/components/modals/GiftPlutoniumModal.tsx:55
+msgid "Verify your email to buy gifts."
+msgstr "Vérifiez votre e-mail pour acheter des cadeaux."
+
 #. Label in the username section.
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:25
 msgid "Verify your email to change your username"
@@ -37835,7 +38119,7 @@ msgstr "Version"
 
 #. Activity log value naming the highest member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:84
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:85
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
 msgid "Very high"
 msgstr "Très élevé"
@@ -37877,6 +38161,16 @@ msgstr "Vidéo"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:199
 msgid "Video call"
 msgstr "Appel vidéo"
+
+#. Plutonium page comparison row label for video quality.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:213
+msgid "Video call and screen share quality"
+msgstr "Qualité des appels vidéo et du partage d'écran"
+
+#. Plutonium page comparison row label for saved video call backgrounds.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:181
+msgid "Video call backgrounds you can save"
+msgstr "Arrière-plans d'appel vidéo que vous pouvez enregistrer"
 
 #. Title of the modal shown when the video call action is blocked.
 #: src/features/channel/components/channel_header_components/CallButtons.tsx:62
@@ -37985,7 +38279,7 @@ msgid "View"
 msgstr "Afficher"
 
 #. Button label on the premium onboarding nagbar. Opens premium feature and subscription settings. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:57
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:59
 msgid "View {premiumProductName} features"
 msgstr "Voir les fonctionnalités {premiumProductName}"
 
@@ -38267,7 +38561,7 @@ msgid "Visionary badge ID"
 msgstr "ID du badge Visionary"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:58
+#: src/features/user/components/popouts/UserProfileBadges.tsx:59
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "ID Visionary {visionaryIdLabel}"
 
@@ -38683,6 +38977,11 @@ msgstr "Le xdg-desktop-portal de Wayland gère le sélecteur et affiche toutes l
 msgid "We could not confirm your card right now. Refresh this page or return to {productName} and try again."
 msgstr "Nous n'avons pas pu confirmer votre carte pour le moment. Actualisez cette page ou retournez à {productName} et réessayez."
 
+#. Plutonium page hero subtitle while a failed renewal is in its grace period.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:66
+msgid "We could not renew your subscription. Update your payment method to keep your perks."
+msgstr "Nous n'avons pas pu renouveler votre abonnement. Mettez à jour votre mode de paiement pour conserver vos avantages."
+
 #. Error message in the theme accept modal.
 #. Error message in the theme settings commands.
 #: src/features/theme/commands/ThemeCommands.tsx:18
@@ -39014,32 +39313,32 @@ msgid "Welcome to {channelDisplayName}"
 msgstr "Bienvenue sur {channelDisplayName}"
 
 #. Premium onboarding nagbar body. {premiumProductFullName} is the full premium product name, such as Fluxer Plutonium. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:22
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:24
 msgid "Welcome to {premiumProductFullName}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Bienvenue sur {premiumProductFullName}. Découvrez vos avantages {premiumProductName} et gérez votre abonnement."
 
 #. Premium onboarding nagbar body for lifetime premium users. Visionary is the lifetime premium tier name. {premiumProductFullName} is the full premium product name. {premiumProductName} is the short product name.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:27
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:29
 msgid "Welcome to {premiumProductFullName}. You have lifetime access as a Visionary. Explore your {premiumProductName} perks."
 msgstr "Bienvenue dans {premiumProductFullName}. En tant que membre Visionary, vous bénéficiez d’un accès à vie. Découvrez vos avantages {premiumProductName}."
 
 #. Premium onboarding nagbar body for a gift subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:51
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:53
 msgid "Welcome to {premiumProductFullName}. Your gift subscription runs until {formattedDate}. Explore your {premiumProductName} perks."
 msgstr "Bienvenue sur {premiumProductFullName}. Votre abonnement cadeau est valable jusqu’au {formattedDate}. Découvrez vos avantages {premiumProductName}."
 
 #. Premium onboarding nagbar body for a monthly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:39
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:41
 msgid "Welcome to {premiumProductFullName}. Your monthly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Bienvenue sur {premiumProductFullName}. Votre abonnement mensuel sera renouvelé le {formattedDate}. Découvrez vos avantages {premiumProductName} et gérez votre abonnement."
 
 #. Premium onboarding nagbar body for a subscription that will cancel. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:33
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:35
 msgid "Welcome to {premiumProductFullName}. Your subscription is active until {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Bienvenue sur {premiumProductFullName}. Votre abonnement est actif jusqu’au {formattedDate}. Découvrez vos avantages {premiumProductName} et gérez votre abonnement."
 
 #. Premium onboarding nagbar body for a yearly subscription. {premiumProductFullName} is the full premium product name, {premiumProductName} is the short product name, and {formattedDate} is already localized.
-#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:45
+#: src/features/app/components/layout/app_layout/nagbars/PremiumOnboardingNagbar.tsx:47
 msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {formattedDate}. Explore your {premiumProductName} perks and manage your subscription."
 msgstr "Bienvenue sur {premiumProductFullName}. Votre abonnement annuel sera renouvelé le {formattedDate}. Découvrez vos avantages {premiumProductName} et gérez votre abonnement."
 
@@ -39587,6 +39886,11 @@ msgstr "Vous ne pouvez ajouter que {maxTags} tags."
 msgid "You can only have one custom background on the free tier. Picking a new one will replace your existing background."
 msgstr "Vous ne pouvez avoir qu’un seul arrière-plan personnalisé sur la version gratuite. Le choix d’un nouvel arrière-plan remplacera l’arrière-plan existant."
 
+#. Footnote on the Plutonium page about custom username tags. Keep Mina#4821, mina#4821 and #0000 unchanged. visionaryLink is a link whose text is "Learn more about Visionary".
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:138
+msgid "You can only pick a tag that nobody else with the same username already has. Usernames aren't case sensitive, so Mina#4821 and mina#4821 count as the same. The #0000 tag is reserved for {productName} Visionary members. {visionaryLink}."
+msgstr "Vous ne pouvez choisir qu'un tag que personne d'autre avec le même nom d'utilisateur n'a déjà. Les noms d'utilisateur ne sont pas sensibles à la casse, donc Mina#4821 et mina#4821 comptent comme identiques. Le tag #0000 est réservé aux membres Visionary de {productName}. {visionaryLink}."
+
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:189
 msgid "You can refund again after {cooldownEndsOn}. Contact support for billing issues."
 msgstr "Vous pourrez demander un autre remboursement après le {cooldownEndsOn}. Contactez l’assistance pour les problèmes de facturation."
@@ -39819,7 +40123,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Vous avez changé votre tag alors que vous étiez abonné à {PREMIUM_PRODUCT_NAME}. Il sera modifié aléatoirement à l'expiration de votre abonnement {PREMIUM_PRODUCT_NAME}, sauf s'il est renouvelé."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:122
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Vous n'avez pas accès au salon où ce message a été envoyé."
 
@@ -39916,10 +40220,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Vous venez d'appuyer sur Tab. Le mode clavier est maintenant activé pour que vous puissiez naviguer dans {productName} sans souris."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Vous conservez vos avantages jusqu’à la date de votre prochain renouvellement. Réactivez votre abonnement avant cette date pour conserver votre historique d’abonné."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Vous perdez immédiatement tous les avantages {PREMIUM_PRODUCT_NAME} et votre historique d’abonné est réinitialisé. Cette action est irréversible."
 
@@ -40107,6 +40413,16 @@ msgstr "Vous devrez vous reconnecter sur tous les appareils déconnectés"
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "Vous aurez besoin de l'une de vos clés d'accès pour vous connecter sur un nouvel appareil. Si vous perdez toutes vos clés d'accès, vous risquez de perdre définitivement l'accès à votre compte. Des codes de secours seront enregistrés pour vous, afin qu'il vous reste un moyen d'accéder à votre compte."
+
+#. Plutonium page hero subtitle for members. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:50
+msgid "You're a {premiumProductName} member. Thanks for supporting an independent communication platform."
+msgstr "Vous êtes membre {premiumProductName}. Merci de soutenir une plateforme de communication indépendante."
+
+#. Plutonium page hero subtitle for lifetime Visionary members.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:54
+msgid "You're a Visionary. Your perks never expire, and gifts for friends are always available."
+msgstr "Vous êtes Visionnaire. Vos avantages n'expirent jamais et les cadeaux pour vos amis sont toujours disponibles."
 
 #. Privacy > Active now: confirmation modal body when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:41
@@ -40355,6 +40671,11 @@ msgstr "Vous avez demandé trop d’e-mails de vérification. Veuillez patienter
 msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Vous avez vu toutes vos mentions récentes. D'autres apparaîtront bientôt ici."
 
+#. Plutonium page hero subtitle when a subscription has ended. premiumProductName is the paid tier name.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:62
+msgid "Your {premiumProductName} perks have ended. Subscribe again to bring them back."
+msgstr "Vos avantages {premiumProductName} ont expiré. Abonnez-vous à nouveau pour les retrouver."
+
 #. Nagbar body shown when a premium subscription has expired. {premiumProductName} is the premium product name.
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:19
 msgid "Your {premiumProductName} subscription has expired. You have lost all {premiumProductName} perks. Reactivate your subscription to regain access."
@@ -40492,6 +40813,11 @@ msgstr "Votre adresse e-mail n'a pas pu recevoir de messages. Mettez-la à jour 
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:97
 msgid "Your email has been verified. You can now sign in to your account."
 msgstr "Votre adresse e-mail a été vérifiée. Vous pouvez maintenant vous connecter à votre compte."
+
+#. Plutonium page perk card title about using custom emojis and stickers in every community.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:83
+msgid "Your emojis, everywhere"
+msgstr "Vos emojis, partout"
 
 #. Description text in the sounds.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:42
@@ -40679,6 +41005,11 @@ msgstr "Votre partage d'écran n'a pas pu être publié avec un codec vidéo com
 #: src/features/voice/components/voice_participant_tile/shared.ts:64
 msgid "Your stream is still live"
 msgstr "Votre diffusion est toujours en direct"
+
+#. Heading of the subscription management panel on the Plutonium page.
+#: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:79
+msgid "Your subscription"
+msgstr "Votre abonnement"
 
 #. Toast error shown when the server refuses to move a Plutonium subscription down to the current price, whatever the reason.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:106

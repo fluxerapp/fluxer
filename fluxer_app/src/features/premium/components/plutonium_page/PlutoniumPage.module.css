@@ -1,0 +1,997 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.root {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	isolation: isolate;
+	container-name: plutonium-page;
+	container-type: size;
+	background-color: #0a0822;
+	color: #fff;
+	font-family: 'Radio Canada Big', var(--font-sans);
+	-webkit-font-smoothing: auto;
+	-moz-osx-font-smoothing: auto;
+}
+
+.scroller {
+	--brand-solid: #4641d9;
+	--brand-primary-light: #b0adff;
+	--stars-far: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='577'%20height='577'%3E%3Ccircle%20cx='186.9'%20cy='87.0'%20r='0.71'%20fill='rgb(255,255,255)'%20fill-opacity='0.24'/%3E%3Ccircle%20cx='54.3'%20cy='336.3'%20r='0.81'%20fill='rgb(255,255,255)'%20fill-opacity='0.29'/%3E%3Ccircle%20cx='250.2'%20cy='40.3'%20r='0.49'%20fill='rgb(255,255,255)'%20fill-opacity='0.36'/%3E%3Ccircle%20cx='71.4'%20cy='128.8'%20r='0.70'%20fill='rgb(255,255,255)'%20fill-opacity='0.53'/%3E%3Ccircle%20cx='337.9'%20cy='28.6'%20r='0.54'%20fill='rgb(255,255,255)'%20fill-opacity='0.40'/%3E%3Ccircle%20cx='167.1'%20cy='83.2'%20r='0.50'%20fill='rgb(255,255,255)'%20fill-opacity='0.32'/%3E%3Ccircle%20cx='104.3'%20cy='335.6'%20r='0.71'%20fill='rgb(255,255,255)'%20fill-opacity='0.34'/%3E%3Ccircle%20cx='410.9'%20cy='325.6'%20r='0.70'%20fill='rgb(255,255,255)'%20fill-opacity='0.38'/%3E%3Ccircle%20cx='246.7'%20cy='181.3'%20r='0.68'%20fill='rgb(255,255,255)'%20fill-opacity='0.37'/%3E%3Ccircle%20cx='143.3'%20cy='103.7'%20r='0.76'%20fill='rgb(255,255,255)'%20fill-opacity='0.25'/%3E%3Ccircle%20cx='303.0'%20cy='505.0'%20r='0.74'%20fill='rgb(255,255,255)'%20fill-opacity='0.32'/%3E%3Ccircle%20cx='68.1'%20cy='241.3'%20r='0.75'%20fill='rgb(255,255,255)'%20fill-opacity='0.27'/%3E%3Ccircle%20cx='243.3'%20cy='555.1'%20r='0.48'%20fill='rgb(255,255,255)'%20fill-opacity='0.40'/%3E%3Ccircle%20cx='196.3'%20cy='202.1'%20r='0.65'%20fill='rgb(255,255,255)'%20fill-opacity='0.48'/%3E%3Ccircle%20cx='484.7'%20cy='545.1'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.44'/%3E%3Ccircle%20cx='421.9'%20cy='178.6'%20r='0.68'%20fill='rgb(255,255,255)'%20fill-opacity='0.44'/%3E%3Ccircle%20cx='164.2'%20cy='222.6'%20r='0.72'%20fill='rgb(255,255,255)'%20fill-opacity='0.23'/%3E%3Ccircle%20cx='205.1'%20cy='352.5'%20r='0.65'%20fill='rgb(255,255,255)'%20fill-opacity='0.29'/%3E%3Ccircle%20cx='74.6'%20cy='142.9'%20r='0.61'%20fill='rgb(255,255,255)'%20fill-opacity='0.51'/%3E%3Ccircle%20cx='96.0'%20cy='231.7'%20r='0.56'%20fill='rgb(255,255,255)'%20fill-opacity='0.27'/%3E%3Ccircle%20cx='498.5'%20cy='160.6'%20r='0.62'%20fill='rgb(255,255,255)'%20fill-opacity='0.34'/%3E%3Ccircle%20cx='552.6'%20cy='87.1'%20r='0.52'%20fill='rgb(255,255,255)'%20fill-opacity='0.30'/%3E%3Ccircle%20cx='7.0'%20cy='479.5'%20r='0.52'%20fill='rgb(255,255,255)'%20fill-opacity='0.31'/%3E%3Ccircle%20cx='241.7'%20cy='213.1'%20r='0.68'%20fill='rgb(255,255,255)'%20fill-opacity='0.53'/%3E%3Ccircle%20cx='495.8'%20cy='548.3'%20r='0.71'%20fill='rgb(255,255,255)'%20fill-opacity='0.46'/%3E%3Ccircle%20cx='519.0'%20cy='450.0'%20r='0.80'%20fill='rgb(255,255,255)'%20fill-opacity='0.48'/%3E%3Ccircle%20cx='229.7'%20cy='227.4'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.35'/%3E%3Ccircle%20cx='38.9'%20cy='120.5'%20r='0.51'%20fill='rgb(255,255,255)'%20fill-opacity='0.33'/%3E%3Ccircle%20cx='59.1'%20cy='327.0'%20r='0.66'%20fill='rgb(255,255,255)'%20fill-opacity='0.53'/%3E%3Ccircle%20cx='14.7'%20cy='504.5'%20r='0.70'%20fill='rgb(255,255,255)'%20fill-opacity='0.27'/%3E%3Ccircle%20cx='551.3'%20cy='347.5'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.26'/%3E%3Ccircle%20cx='573.0'%20cy='268.9'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.25'/%3E%3Ccircle%20cx='432.6'%20cy='427.2'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='13.3'%20cy='548.7'%20r='0.66'%20fill='rgb(255,255,255)'%20fill-opacity='0.27'/%3E%3Ccircle%20cx='527.5'%20cy='437.4'%20r='0.57'%20fill='rgb(255,255,255)'%20fill-opacity='0.43'/%3E%3Ccircle%20cx='401.7'%20cy='150.7'%20r='0.60'%20fill='rgb(255,255,255)'%20fill-opacity='0.28'/%3E%3Ccircle%20cx='307.3'%20cy='449.5'%20r='0.58'%20fill='rgb(255,255,255)'%20fill-opacity='0.29'/%3E%3Ccircle%20cx='465.1'%20cy='472.2'%20r='0.75'%20fill='rgb(255,255,255)'%20fill-opacity='0.29'/%3E%3C/svg%3E");
+	--stars-near: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='947'%20height='947'%3E%3Ccircle%20cx='641.2'%20cy='743.3'%20r='3.80'%20fill='rgb(255,255,255)'%20fill-opacity='0.056'/%3E%3Ccircle%20cx='641.2'%20cy='743.3'%20r='1.19'%20fill='rgb(255,255,255)'%20fill-opacity='0.46'/%3E%3Ccircle%20cx='501.2'%20cy='553.7'%20r='3.93'%20fill='rgb(255,255,255)'%20fill-opacity='0.040'/%3E%3Ccircle%20cx='501.2'%20cy='553.7'%20r='1.23'%20fill='rgb(255,255,255)'%20fill-opacity='0.33'/%3E%3Ccircle%20cx='253.7'%20cy='101.9'%20r='1.08'%20fill='rgb(255,255,255)'%20fill-opacity='0.40'/%3E%3Ccircle%20cx='832.6'%20cy='871.6'%20r='3.08'%20fill='rgb(255,255,255)'%20fill-opacity='0.053'/%3E%3Ccircle%20cx='832.6'%20cy='871.6'%20r='0.96'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='93.3'%20cy='15.9'%20r='1.22'%20fill='rgb(255,255,255)'%20fill-opacity='0.44'/%3E%3Ccircle%20cx='936.8'%20cy='540.5'%20r='1.18'%20fill='rgb(255,255,255)'%20fill-opacity='0.35'/%3E%3Ccircle%20cx='220.5'%20cy='516.4'%20r='4.17'%20fill='rgb(255,255,255)'%20fill-opacity='0.067'/%3E%3Ccircle%20cx='220.5'%20cy='516.4'%20r='1.30'%20fill='rgb(255,255,255)'%20fill-opacity='0.56'/%3E%3Ccircle%20cx='127.5'%20cy='467.2'%20r='1.20'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='562.6'%20cy='492.6'%20r='1.35'%20fill='rgb(255,255,255)'%20fill-opacity='0.46'/%3E%3Ccircle%20cx='820.2'%20cy='843.3'%20r='1.03'%20fill='rgb(255,255,255)'%20fill-opacity='0.31'/%3E%3Ccircle%20cx='640.0'%20cy='617.9'%20r='1.41'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='696.4'%20cy='436.6'%20r='3.41'%20fill='rgb(255,255,255)'%20fill-opacity='0.062'/%3E%3Ccircle%20cx='696.4'%20cy='436.6'%20r='1.07'%20fill='rgb(255,255,255)'%20fill-opacity='0.52'/%3E%3Ccircle%20cx='294.8'%20cy='913.9'%20r='1.13'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='621.7'%20cy='15.3'%20r='3.65'%20fill='rgb(255,255,255)'%20fill-opacity='0.047'/%3E%3Ccircle%20cx='621.7'%20cy='15.3'%20r='1.14'%20fill='rgb(255,255,255)'%20fill-opacity='0.39'/%3E%3C/svg%3E");
+	--space-gradient: linear-gradient(to bottom, #07061a 0%, #0c0a28 50%, #110d35 100%);
+	--pl-gutter: 1.25rem;
+	--pl-flow: 0.75rem;
+	--pl-stack: 1.25rem;
+	--pl-group: 2rem;
+	--pl-section: 2.75rem;
+	--pl-pagetop: 1.5rem;
+	--pl-measure: 34rem;
+	--pl-text-display: clamp(2.375rem, 1.15rem + 5.1cqw, 4rem);
+	--pl-text-display-line-height: 1.06;
+	--pl-text-display-letter-spacing: -0.02em;
+	--pl-text-title: clamp(1.75rem, 1.35rem + 1.7cqw, 2.75rem);
+	--pl-text-title-line-height: 1.14;
+	--pl-text-title-letter-spacing: -0.01em;
+	--pl-text-heading: clamp(1.25rem, 1.15rem + 0.45cqw, 1.5rem);
+	--pl-text-lead: clamp(1.0625rem, 1rem + 0.32cqw, 1.25rem);
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 0;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	isolation: isolate;
+	background-color: #0a0822;
+	background-image: var(--stars-far), var(--stars-near), var(--space-gradient);
+	background-size:
+		577px 577px,
+		947px 947px,
+		100% 100%;
+	background-repeat: repeat, repeat, no-repeat;
+	background-attachment: local;
+	color: #fff;
+	font-size: 1rem;
+	line-height: 1.5;
+	scrollbar-color: rgb(255 255 255 / 0.2) transparent;
+	scrollbar-width: thin;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.scroller {
+		--pl-gutter: 2rem;
+		--pl-section: 6rem;
+		--pl-pagetop: 4rem;
+	}
+}
+
+@container plutonium-page (min-width: 64rem) {
+	.scroller {
+		--pl-gutter: 3rem;
+	}
+}
+
+@container plutonium-page (min-width: 80rem) {
+	.scroller {
+		--pl-gutter: 4rem;
+	}
+}
+
+:global(:root:is(:lang(de), :lang(fr), :lang(fi), :lang(el), :lang(ru), :lang(uk), :lang(pl), :lang(hu))) .scroller {
+	--pl-text-display: clamp(1.875rem, 0.95rem + 3.9cqw, 3.5rem);
+}
+
+:global(:root:is(:lang(th), :lang(hi), :lang(vi), :lang(ja), :lang(ko), :lang(zh-CN), :lang(zh-TW))) .scroller {
+	--pl-text-display: clamp(1.875rem, 0.95rem + 3.9cqw, 3.5rem);
+	--pl-text-title: clamp(1.5rem, 1.2rem + 1.3cqw, 2.5rem);
+	--pl-text-display-line-height: 1.3;
+	--pl-text-display-letter-spacing: 0;
+	--pl-text-title-line-height: 1.3;
+	--pl-text-title-letter-spacing: 0;
+}
+
+:global(:root:lang(ja)) .scroller {
+	line-break: strict;
+}
+
+:global(:root:lang(ko)) .scroller {
+	word-break: keep-all;
+}
+
+.starfield {
+	display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+	@media (prefers-reduced-motion: no-preference) and (pointer: fine) {
+		.scroller {
+			background-image: var(--space-gradient);
+			background-size: 100% 100%;
+			background-repeat: no-repeat;
+			scroll-timeline: --plutonium-stars block;
+		}
+
+		.starfield {
+			position: sticky;
+			top: 0;
+			z-index: -1;
+			display: block;
+			height: 100cqh;
+			margin-bottom: -100cqh;
+			overflow: clip;
+			pointer-events: none;
+		}
+
+		.starfield::before,
+		.starfield::after {
+			position: absolute;
+			inset-inline: 0;
+			top: 0;
+			background-repeat: repeat;
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-timeline: --plutonium-stars;
+			will-change: transform;
+			content: '';
+		}
+
+		.starfield::before {
+			height: calc(100cqh + 577px);
+			background-image: var(--stars-far);
+			background-size: 577px 577px;
+			animation-name: plutonium-star-parallax-far;
+			animation-iteration-count: 8;
+			animation-range: 0px 23080px;
+		}
+
+		.starfield::after {
+			height: calc(100cqh + 947px);
+			background-image: var(--stars-near);
+			background-size: 947px 947px;
+			animation-name: plutonium-star-parallax-near;
+			animation-iteration-count: 10;
+			animation-range: 0px 21044px;
+		}
+	}
+}
+
+@keyframes plutonium-star-parallax-far {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+
+	to {
+		transform: translate3d(0, -577px, 0);
+	}
+}
+
+@keyframes plutonium-star-parallax-near {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+
+	to {
+		transform: translate3d(0, -947px, 0);
+	}
+}
+
+.mobileBar {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	display: flex;
+	align-items: center;
+	padding: 0.5rem var(--pl-gutter) 0;
+}
+
+.backButton {
+	display: inline-flex;
+	width: 2.75rem;
+	height: 2.75rem;
+	align-items: center;
+	justify-content: center;
+	margin-inline-start: -0.75rem;
+	border: 0;
+	border-radius: 999px;
+	background: transparent;
+	color: #fff;
+	cursor: pointer;
+}
+
+.backButton:hover {
+	background-color: rgb(255 255 255 / 0.08);
+}
+
+.backIcon {
+	width: 1.5rem;
+	height: 1.5rem;
+}
+
+:global(html[dir='rtl']) .backIcon {
+	transform: scaleX(-1);
+}
+
+.hero {
+	padding: var(--pl-pagetop) var(--pl-gutter) var(--pl-group);
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.hero {
+		padding-bottom: 4rem;
+	}
+}
+
+.heroInner {
+	max-width: 56rem;
+	margin-inline: auto;
+	text-align: center;
+}
+
+.crownWrap {
+	display: flex;
+	justify-content: center;
+	margin-bottom: var(--pl-stack);
+}
+
+.crown {
+	display: block;
+	width: 10rem;
+	height: auto;
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.crown {
+		width: 15rem;
+	}
+}
+
+.displayHeading {
+	margin: 0;
+	color: #fff;
+	font-size: var(--pl-text-display);
+	font-weight: 700;
+	line-height: var(--pl-text-display-line-height);
+	letter-spacing: var(--pl-text-display-letter-spacing);
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.displayHeading {
+		font-size: 4.5rem;
+		line-height: 1.04;
+	}
+}
+
+:global(
+		:root:is(
+			:lang(de),
+			:lang(fi),
+			:lang(el),
+			:lang(ru),
+			:lang(uk),
+			:lang(pl),
+			:lang(hu),
+			:lang(nl),
+			:lang(da),
+			:lang(no),
+			:lang(sv-SE),
+			:lang(cs),
+			:lang(hr),
+			:lang(lt),
+			:lang(bg),
+			:lang(ro),
+			:lang(tr),
+			:lang(pt-BR)
+		)
+	)
+	:is(.displayHeading, .titleHeading, .perkTitle) {
+	hyphens: auto;
+}
+
+.heroLead {
+	max-width: 42rem;
+	margin: var(--pl-stack) auto 0;
+	color: rgb(255 255 255 / 0.85);
+	font-size: var(--pl-text-lead);
+	line-height: 1.55;
+	text-wrap: pretty;
+}
+
+.priceLine {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem 0.75rem;
+	margin: var(--pl-group) 0 0;
+}
+
+.price {
+	color: #fff;
+	font-size: var(--pl-text-heading);
+	font-weight: 700;
+	line-height: 1.25;
+}
+
+.priceOr {
+	color: rgb(255 255 255 / 0.6);
+	font-size: 1rem;
+	line-height: 1.6;
+}
+
+.actions {
+	display: grid;
+	gap: var(--pl-flow);
+}
+
+@container plutonium-page (min-width: 40rem) {
+	.actions {
+		grid-auto-flow: column;
+		justify-content: center;
+	}
+}
+
+.heroActions {
+	margin-top: var(--pl-group);
+	justify-content: center;
+}
+
+.button {
+	display: flex;
+	width: 100%;
+	min-height: 3rem;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0.625rem 1.25rem;
+	border: 0;
+	border-radius: 0.75rem;
+	font-family: inherit;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.3;
+	text-align: center;
+	text-decoration: none;
+	text-wrap: balance;
+	cursor: pointer;
+	transition:
+		background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+		color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@container plutonium-page (min-width: 40rem) {
+	.button {
+		width: auto;
+	}
+}
+
+.button:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.buttonPrimary {
+	background-color: #fff;
+	color: var(--brand-solid);
+}
+
+.buttonSecondary {
+	border: 1px solid rgb(255 255 255 / 0.38);
+	background-color: #24233e;
+	color: #fff;
+}
+
+.buttonSecondary:not(:disabled):hover {
+	background-color: #2e2d4b;
+}
+
+.buttonIcon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+}
+
+:global(html[dir='rtl']) .buttonIconDirectional {
+	transform: scaleX(-1);
+}
+
+.buttonBadge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.125rem 0.5rem;
+	border-radius: 999px;
+	background-color: rgb(70 65 217 / 0.12);
+	color: var(--brand-solid);
+	font-size: 0.8125rem;
+	font-weight: 700;
+	line-height: 1.45;
+	white-space: nowrap;
+}
+
+.buttonSpinner {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	border: 2px solid currentColor;
+	border-inline-end-color: transparent;
+	border-radius: 999px;
+	animation: plutonium-button-spin 0.7s linear infinite;
+}
+
+@keyframes plutonium-button-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.secondaryLinks {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem 1.25rem;
+	margin-top: var(--pl-stack);
+}
+
+.textButton {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: rgb(255 255 255 / 0.85);
+	font-family: inherit;
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.5;
+	cursor: pointer;
+	transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.textButton:hover {
+	color: #fff;
+}
+
+.textButtonIcon {
+	width: 1.125rem;
+	height: 1.125rem;
+	color: var(--brand-primary-light);
+}
+
+.meta {
+	max-width: var(--pl-measure);
+	margin: var(--pl-stack) auto 0;
+	color: rgb(255 255 255 / 0.65);
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	text-wrap: pretty;
+}
+
+.notice {
+	max-width: var(--pl-measure);
+	margin: var(--pl-stack) auto 0;
+	color: rgb(255 255 255 / 0.85);
+	font-size: 0.9375rem;
+	font-weight: 600;
+	line-height: 1.5;
+	text-wrap: pretty;
+}
+
+.inlineLink {
+	position: relative;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: inherit;
+	font: inherit;
+	text-decoration-line: underline;
+	text-decoration-color: rgb(255 255 255 / 0.4);
+	text-underline-offset: 4px;
+	cursor: pointer;
+	transition:
+		color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+		text-decoration-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.inlineLink:hover {
+	color: #fff;
+	text-decoration-color: #fff;
+}
+
+.inlineLink::after,
+.footnoteMarker::after {
+	position: absolute;
+	inset-block-start: 50%;
+	inset-inline: -0.5rem;
+	block-size: 2.75rem;
+	transform: translateY(-50%);
+	content: '';
+}
+
+.sections {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding: 0 var(--pl-gutter) var(--pl-section);
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.sections {
+		gap: 2rem;
+	}
+}
+
+.glassPanel {
+	width: 100%;
+	max-width: 80rem;
+	box-sizing: border-box;
+	margin-inline: auto;
+	border: 1px solid rgb(255 255 255 / 0.1);
+	border-radius: 1.75rem;
+	background-color: rgb(255 255 255 / 0.03);
+	background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.012));
+	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+	@media (pointer: fine) {
+		.glassPanel {
+			-webkit-backdrop-filter: blur(12px);
+			backdrop-filter: blur(12px);
+		}
+	}
+}
+
+@media (prefers-reduced-transparency: reduce) {
+	.glassPanel {
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+}
+
+.glassPanelBrand {
+	border-color: rgb(167 159 251 / 0.3);
+	background-color: rgb(70 65 217 / 0.14);
+	background-image: linear-gradient(to bottom, rgb(99 94 233 / 0.34), rgb(70 65 217 / 0.08));
+}
+
+.managePanel {
+	padding: 1.25rem;
+	scroll-margin-top: 1rem;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.managePanel {
+		padding: 3rem;
+	}
+}
+
+.manageHeading {
+	margin: 0 0 var(--pl-stack);
+	color: #fff;
+	font-size: var(--pl-text-heading);
+	font-weight: 700;
+	line-height: 1.25;
+	text-wrap: balance;
+}
+
+.manageSurface {
+	font-family: var(--font-sans);
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding: 1.25rem;
+	border-radius: 1rem;
+	background-color: var(--background-primary);
+	color: var(--text-primary);
+	text-align: start;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.manageSurface {
+		padding: 1.5rem;
+	}
+}
+
+.perkRow {
+	display: grid;
+	align-items: center;
+	gap: 2rem;
+	padding: 1.25rem;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.perkRow {
+		grid-template-columns: 7fr 5fr;
+		gap: 4rem;
+		padding: 3rem;
+	}
+
+	.perkRowFlipped {
+		grid-template-columns: 5fr 7fr;
+	}
+}
+
+.perkArtColumn {
+	order: 1;
+	min-width: 0;
+}
+
+.perkTextColumn {
+	order: 2;
+	max-width: var(--pl-measure);
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.perkRowFlipped .perkArtColumn {
+		order: 2;
+	}
+
+	.perkRowFlipped .perkTextColumn {
+		order: 1;
+	}
+}
+
+.perkTitle {
+	margin: 0;
+	color: #fff;
+	font-size: var(--pl-text-heading);
+	font-weight: 700;
+	line-height: 1.25;
+	text-wrap: balance;
+	overflow-wrap: break-word;
+}
+
+.perkBody {
+	margin: var(--pl-stack) 0 0;
+	color: rgb(255 255 255 / 0.8);
+	font-size: var(--pl-text-lead);
+	line-height: 1.55;
+	text-wrap: pretty;
+}
+
+.footnoteMarker {
+	position: relative;
+	color: var(--brand-primary-light);
+	text-decoration-line: underline;
+	text-underline-offset: 2px;
+	transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+}
+
+.footnoteMarker:hover {
+	color: #fff;
+}
+
+.perkArt {
+	position: relative;
+}
+
+.perkArtImage {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+.perkOverlay {
+	position: absolute;
+	display: block;
+	max-width: none;
+	object-fit: contain;
+	pointer-events: none;
+	user-select: none;
+}
+
+.perkOverlaySvg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.perkOverlaySvg image {
+		display: none;
+	}
+}
+
+.comparison {
+	padding: 1.5rem;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.comparison {
+		padding: 3rem;
+	}
+}
+
+.titleHeading {
+	margin: 0;
+	color: #fff;
+	font-size: var(--pl-text-title);
+	font-weight: 700;
+	line-height: var(--pl-text-title-line-height);
+	letter-spacing: var(--pl-text-title-letter-spacing);
+	text-align: center;
+	text-wrap: balance;
+	overflow-wrap: break-word;
+}
+
+.perkCards {
+	display: flex;
+	flex-direction: column;
+	gap: var(--pl-flow);
+	margin: var(--pl-group) 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.perkCards {
+		display: none;
+	}
+}
+
+.perkCard {
+	padding: 0.875rem;
+	border: 1px solid rgb(255 255 255 / 0.08);
+	border-radius: 1rem;
+	background-color: rgb(255 255 255 / 0.02);
+}
+
+.perkCardHead {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+}
+
+.perkCardIcon {
+	width: 1.25rem;
+	height: 1.25rem;
+	flex-shrink: 0;
+	margin-top: 0.125rem;
+	color: var(--brand-primary-light);
+}
+
+.perkCardLabel {
+	min-width: 0;
+	color: #fff;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.6;
+}
+
+.perkCardValues {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.5rem;
+	margin: 0.625rem 0 0;
+}
+
+.perkCell {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	padding: 0.5rem 0.75rem;
+	border: 1px solid rgb(255 255 255 / 0.08);
+	border-radius: 0.75rem;
+}
+
+.perkCellPremium {
+	border-color: rgb(167 159 251 / 0.35);
+	background-color: rgb(99 94 233 / 0.14);
+}
+
+.perkCellTerm {
+	color: rgb(255 255 255 / 0.55);
+	font-size: 0.9375rem;
+	line-height: 1.5;
+}
+
+.perkCellPremium .perkCellTerm {
+	color: var(--brand-primary-light);
+}
+
+.perkCellValue {
+	margin: 0;
+	color: rgb(255 255 255 / 0.7);
+	font-size: 1rem;
+	line-height: 1.6;
+}
+
+.perkCellPremium .perkCellValue {
+	color: #fff;
+	font-weight: 600;
+}
+
+.tableWrap {
+	display: none;
+	margin-top: var(--pl-group);
+	overflow-x: auto;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.tableWrap {
+		display: block;
+	}
+}
+
+.table {
+	width: 100%;
+	margin: 0;
+	border-collapse: collapse;
+	table-layout: fixed;
+}
+
+.tableHead {
+	padding: 1rem;
+	vertical-align: middle;
+	border: 0 solid rgb(255 255 255 / 0.1);
+	border-bottom-width: 1px;
+	color: rgb(255 255 255 / 0.7);
+	font-size: 1.0625rem;
+	font-weight: 600;
+	line-height: 1.35;
+	text-align: center;
+}
+
+.tableHeadFeature {
+	width: 50%;
+	text-align: start;
+}
+
+.tableHeadTier {
+	width: 25%;
+}
+
+.tableHeadPremium {
+	color: var(--brand-primary-light);
+}
+
+.tableRow {
+	vertical-align: middle;
+	border: 0 solid rgb(255 255 255 / 0.1);
+	border-bottom-width: 1px;
+}
+
+.tableRow:last-child {
+	border-bottom-width: 0;
+}
+
+.tableRowHead {
+	padding: 1.25rem 1rem;
+	vertical-align: middle;
+	color: #fff;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.6;
+	text-align: start;
+}
+
+.tableRowLabel {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.tableRowIcon {
+	width: 1.5rem;
+	height: 1.5rem;
+	flex-shrink: 0;
+	color: var(--brand-primary-light);
+}
+
+.tableCell {
+	padding: 1.25rem 1rem;
+	vertical-align: middle;
+	color: rgb(255 255 255 / 0.6);
+	font-size: 1.0625rem;
+	line-height: 1.35;
+	text-align: center;
+}
+
+.tableCellPremium {
+	color: #fff;
+	font-weight: 600;
+}
+
+.booleanIcon {
+	display: inline-block;
+	width: 1.5rem;
+	height: 1.5rem;
+	margin-inline-start: -0.125rem;
+	vertical-align: middle;
+}
+
+.booleanIconHighlighted {
+	color: var(--brand-primary-light);
+}
+
+.booleanIconMuted {
+	color: rgb(255 255 255 / 0.6);
+}
+
+.booleanIconMissing {
+	color: rgb(255 255 255 / 0.3);
+}
+
+.comparisonActions {
+	margin-top: var(--pl-group);
+	justify-content: center;
+}
+
+.closing {
+	padding: 4rem 1.5rem;
+	text-align: center;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.closing {
+		padding-block: 7rem;
+	}
+}
+
+.closingInner {
+	max-width: 56rem;
+	margin-inline: auto;
+}
+
+.closingBody {
+	max-width: 42rem;
+	margin: var(--pl-stack) auto var(--pl-group);
+	color: rgb(255 255 255 / 0.85);
+	font-size: var(--pl-text-lead);
+	line-height: 1.55;
+	text-wrap: pretty;
+}
+
+@container plutonium-page (min-width: 48rem) {
+	.closingBody {
+		font-size: 1.375rem;
+		line-height: 1.625;
+	}
+}
+
+.closingActions {
+	justify-content: center;
+}
+
+.footnote {
+	max-width: var(--pl-measure);
+	margin: 0 auto;
+	color: rgb(255 255 255 / 0.65);
+	font-size: 0.9375rem;
+	line-height: 1.5;
+	text-align: center;
+	text-wrap: pretty;
+	scroll-margin-top: 1rem;
+}
+
+.srOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+	border-width: 0;
+}

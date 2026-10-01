@@ -28691,7 +28691,10 @@
 					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50},
 					"assignments": {
 						"type": "object",
-						"properties": {"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"}},
+						"properties": {
+							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
+							"plutonium_page": {"$ref": "#/components/schemas/PlutoniumPageAssignmentResponse"}
+						},
 						"additionalProperties": false
 					}
 				},
@@ -32671,6 +32674,12 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
+			"PlutoniumPageAssignmentResponse": {
+				"type": "object",
+				"properties": {"enabled": {"type": "boolean"}},
+				"required": ["enabled"],
+				"additionalProperties": false
+			},
 			"DomainMigrationAssignmentResponse": {
 				"type": "object",
 				"properties": {"enabled": {"type": "boolean"}},

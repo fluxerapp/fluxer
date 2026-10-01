@@ -1,0 +1,46 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	width: 100%;
+}
+
+.optionName {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--text-primary);
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+}
+
+.optionPrice {
+	color: var(--text-primary);
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+	white-space: nowrap;
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.0625rem 0.5rem;
+	border-radius: 999px;
+	background-color: color-mix(in srgb, var(--brand-primary) 18%, transparent);
+	color: var(--text-link);
+	font-size: 0.75rem;
+	font-weight: 700;
+	line-height: 1.125rem;
+}
+
+.note {
+	margin: 0;
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}

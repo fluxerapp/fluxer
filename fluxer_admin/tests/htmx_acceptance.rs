@@ -467,6 +467,7 @@ async fn mutating_admin_pages_render_usable_csrf_tokens() {
                 "/instance-config?action=update_gateway_rollout",
                 "/instance-config?action=update_sso",
                 "/instance-config?action=update_domain_migration",
+                "/instance-config?action=update_plutonium_page",
                 "/instance-config?action=update_experiment_delivery",
             ][..],
         ),
@@ -1192,6 +1193,14 @@ fn instance_config() -> Value {
             "excluded_user_ids": [],
             "anonymous_rollout_basis_points": 0,
             "standalone_forwarding": false
+        },
+        "plutonium_page": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_salt": "plutonium-page-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": []
         },
         "experiment_delivery": {
             "poll_interval_seconds": 300,

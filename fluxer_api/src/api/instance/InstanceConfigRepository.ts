@@ -52,6 +52,10 @@ import {
 	StoredBillingConfigSchema,
 } from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
 import {
+	type PlutoniumPageConfig,
+	PlutoniumPageConfigSchema,
+} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
+import {
 	type LegacyPushServiceDeliveryWire,
 	type PushRelayConfig,
 	PushRelayConfigSchema,
@@ -78,6 +82,7 @@ import {z} from 'zod';
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const PUSH_RELAY_CONFIG_KEY = 'push_service_delivery_config';
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
+const PLUTONIUM_PAGE_CONFIG_KEY = 'plutonium_page_config';
 const CAPTCHA_CONFIG_KEY = 'captcha_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
@@ -407,6 +412,7 @@ type StoredConfigSection =
 	| 'gateway rollout'
 	| 'push relay'
 	| 'domain migration'
+	| 'plutonium page'
 	| 'captcha'
 	| 'experiment delivery'
 	| 'instance policy'
@@ -566,6 +572,10 @@ function toPushRelayConfig(wire: LegacyPushServiceDeliveryWire): PushRelayConfig
 
 function parseStoredDomainMigrationConfig(raw: string | null): DomainMigrationConfig {
 	return parseStoredConfigOrDefault(DomainMigrationConfigSchema, raw, 'domain migration');
+}
+
+function parseStoredPlutoniumPageConfig(raw: string | null): PlutoniumPageConfig {
+	return parseStoredConfigOrDefault(PlutoniumPageConfigSchema, raw, 'plutonium page');
 }
 
 function parseStoredCaptchaConfig(raw: string | null): CaptchaConfig {
@@ -1234,6 +1244,7 @@ export class InstanceConfigRepository {
 		);
 		parseStoredPushRelayConfig(snapshot.get(PUSH_RELAY_CONFIG_KEY) ?? null);
 		parseStoredDomainMigrationConfig(snapshot.get(DOMAIN_MIGRATION_CONFIG_KEY) ?? null);
+		parseStoredPlutoniumPageConfig(snapshot.get(PLUTONIUM_PAGE_CONFIG_KEY) ?? null);
 		parseStoredCaptchaConfig(snapshot.get(CAPTCHA_CONFIG_KEY) ?? null);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
@@ -1345,6 +1356,23 @@ export class InstanceConfigRepository {
 				update(parseStoredDomainMigrationConfig(raw)),
 				'domain migration',
 			),
+		);
+	}
+
+	async getPlutoniumPageConfig(): Promise<PlutoniumPageConfig> {
+		const raw = await this.getConfig(PLUTONIUM_PAGE_CONFIG_KEY);
+		return parseStoredPlutoniumPageConfig(raw);
+	}
+
+	async setPlutoniumPageConfig(config: PlutoniumPageConfig): Promise<void> {
+		await this.updatePlutoniumPageConfig(() => config);
+	}
+
+	updatePlutoniumPageConfig(
+		update: (current: PlutoniumPageConfig) => PlutoniumPageConfig,
+	): Promise<PlutoniumPageConfig> {
+		return this.updateStoredConfig(PLUTONIUM_PAGE_CONFIG_KEY, (raw) =>
+			validateStoredConfig(PlutoniumPageConfigSchema, update(parseStoredPlutoniumPageConfig(raw)), 'plutonium page'),
 		);
 	}
 

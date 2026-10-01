@@ -5,6 +5,8 @@ import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
+import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
@@ -116,6 +118,10 @@ export const PremiumOnboardingNagbar = observer(function PremiumOnboardingNagbar
 	const handleOpenPremiumSettings = useCallback(() => {
 		NagbarCommands.dismissNagbar('premiumOnboardingDismissed');
 		void UserCommands.update({has_dismissed_premium_onboarding: true});
+		if (PlutoniumPageRollout.enabled) {
+			PlutoniumPageCommands.openPlutoniumPage();
+			return;
+		}
 		ModalCommands.push(
 			modal(() => (
 				<UserSettingsModal
