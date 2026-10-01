@@ -279,6 +279,7 @@ const ERROR_I18N_FR_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Les messages privés et les demandes d'ami sont désactivés sur cette instance.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Les destinataires en double ne sont pas autorisés.",
 	"friends_and_dms.friend_request_blocked": "L'utilisateur n'accepte pas les demandes d'ami pour le moment.",
+	"friends_and_dms.new_conversations_limited": "Vous ne pouvez pas démarrer de nouvelles conversations pour le moment. Réessayez plus tard.",
 	"friends_and_dms.not_friends": "Cet utilisateur ne figure pas dans votre liste d’amis.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Les identifiants de destinataire ne peuvent pas être vides.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Les identifiants de destinataire doivent être des chaînes de caractères.",

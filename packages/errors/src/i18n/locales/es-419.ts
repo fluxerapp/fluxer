@@ -279,6 +279,7 @@ const ERROR_I18N_ES_419_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Los mensajes directos y las solicitudes de amistad están deshabilitados en esta instancia.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "No se permiten destinatarios repetidos.",
 	"friends_and_dms.friend_request_blocked": "El usuario no acepta solicitudes de amistad ahora mismo.",
+	"friends_and_dms.new_conversations_limited": "No puedes iniciar nuevas conversaciones en este momento. Inténtalo de nuevo más tarde.",
 	"friends_and_dms.not_friends": "No tienes a este usuario como amigo.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Los ID de destinatario no pueden estar vacíos.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Los ID de destinatario deben ser cadenas.",

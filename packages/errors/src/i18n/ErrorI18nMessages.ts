@@ -309,6 +309,7 @@ export const ERROR_I18N_MESSAGES = {
 	'feature_flags.feature_temporarily_disabled': 'This feature is temporarily disabled.',
 	'friends_and_dms.already_friends': "You're already friends with this user.",
 	'friends_and_dms.direct_messages_disabled': 'Direct messages and friend requests are disabled on this instance.',
+	'friends_and_dms.new_conversations_limited': "You can't start new conversations right now. Please try again later.",
 	'friends_and_dms.at_least_one_recipient_required': 'At least one recipient is required.',
 	'friends_and_dms.at_least_one_recipient_required_to_seed_private_channels':
 		'At least one recipient is required to seed private channels.',

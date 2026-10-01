@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "Личные сообщения и запросы в друзья отключены на этом экземпляре.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Повторяющиеся получатели запрещены.",
 	"friends_and_dms.friend_request_blocked": "Пользователь временно не принимает запросы в друзья.",
+	"friends_and_dms.new_conversations_limited": "Сейчас ты не можешь начинать новые чаты. Попробуй ещё раз позже.",
 	"friends_and_dms.not_friends": "Ты не дружишь с этим пользователем.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID получателей не могут быть пустыми.",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID получателей должны быть строками.",

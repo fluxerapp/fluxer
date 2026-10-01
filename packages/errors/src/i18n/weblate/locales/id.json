@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "DM dan permintaan pertemanan dinonaktifkan di instance ini.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Penerima ganda tidak diizinkan.",
 	"friends_and_dms.friend_request_blocked": "Pengguna ini tidak menerima permintaan pertemanan saat ini.",
+	"friends_and_dms.new_conversations_limited": "Kamu tidak dapat memulai percakapan baru saat ini. Coba lagi nanti.",
 	"friends_and_dms.not_friends": "Kamu tidak berteman dengan pengguna ini.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID penerima tidak boleh kosong.",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID penerima harus string.",

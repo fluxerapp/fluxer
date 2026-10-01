@@ -279,6 +279,7 @@ const ERROR_I18N_NO_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Direktemeldinger og venneforespørsler er deaktivert på denne instansen.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Dupliserte mottakere er ikke tillatt.",
 	"friends_and_dms.friend_request_blocked": "Brukeren godtar ikke venneforespørsler akkurat nå.",
+	"friends_and_dms.new_conversations_limited": "Du kan ikke starte nye samtaler akkurat nå. Prøv igjen senere.",
 	"friends_and_dms.not_friends": "Du er ikke venn med denne brukeren.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Mottaker-ID-er kan ikke være tomme.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Mottaker-ID-er må være strenger.",

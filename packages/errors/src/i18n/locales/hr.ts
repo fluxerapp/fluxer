@@ -279,6 +279,7 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Izravne poruke i zahtjevi za prijateljstvo onemogućeni su na ovoj instanci.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplicirani primatelji nisu dopušteni.",
 	"friends_and_dms.friend_request_blocked": "Korisnik trenutno ne prihvaća zahtjeve za prijateljstvo.",
+	"friends_and_dms.new_conversations_limited": "Trenutačno ne možeš započeti nove razgovore. Pokušaj ponovno kasnije.",
 	"friends_and_dms.not_friends": "Nisi prijatelj s ovim korisnikom.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID-ovi primatelja ne mogu biti prazni.",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID-ovi primatelja moraju biti nizovi znakova.",

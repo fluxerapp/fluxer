@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "此实例已禁用私信和好友请求。",
 	"friends_and_dms.duplicate_recipients_not_allowed": "不允许重复添加接收者。",
 	"friends_and_dms.friend_request_blocked": "该用户当前不接受好友请求。",
+	"friends_and_dms.new_conversations_limited": "你目前无法发起新的对话。请稍后重试。",
 	"friends_and_dms.not_friends": "你与该用户还不是好友。",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "接收者 ID 不得为空。",
 	"friends_and_dms.recipient_ids_must_be_strings": "接收者 ID 必须为字符串类型。",

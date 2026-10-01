@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {type ChannelID, createGuildID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
+import {emitMessageUpdated} from '@app/api/channel/services/message/MessageActivity';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
@@ -19,6 +20,8 @@ import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {assertMayStartConversation, oneToOneDmRecipient} from '@app/api/user/NewConversationLimit';
+import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
@@ -151,6 +154,16 @@ export class MessageEditService {
 			await this.deps.crosspostPropagation.propagateEdit(editedMessage);
 			return {message: editedMessage, authChannel};
 		}
+		const dmRecipientId = oneToOneDmRecipient(channel, userId);
+		if (user && dmRecipientId !== null) {
+			await assertMayStartConversation({
+				user,
+				targetId: dmRecipientId,
+				users: this.deps.userRepository,
+				messages: this.deps.channelRepository.messages,
+				channel,
+			});
+		}
 		const isBugHunterBot = !!user?.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
 		const updateResult = await this.deps.messageWriteLock.withFreshMessage(channelId, messageId, async (fresh) => {
 			if (!fresh) throw new UnknownMessageError();
@@ -188,6 +201,19 @@ export class MessageEditService {
 		}
 		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
 		await this.deps.crosspostPropagation.propagateEdit(updatedMessage);
+		if (user && ((data.content !== undefined && data.content !== message.content) || hasNewAttachments)) {
+			emitMessageUpdated({
+				user,
+				message: updatedMessage,
+				channel,
+				guildId: guild?.id ? createGuildID(BigInt(guild.id)) : null,
+				guildOwnerId: guild?.owner_id ? createUserID(BigInt(guild.owner_id)) : null,
+				dmRecipientId,
+				channelHadMessages: true,
+				delivered: !(dmRecipientId !== null && isDirectDeliverySuppressed(user)),
+				userRepository: this.deps.userRepository,
+			});
+		}
 		void updateResult.enqueueDeferredEmbeds().catch((error) => {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction after edit');
 		});

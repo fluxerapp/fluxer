@@ -15,6 +15,7 @@ import type {UserRow} from '@app/api/database/types/UserTypes';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import {Logger} from '@app/api/Logger';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import {mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
 import {resolveAssignedTraits} from '@app/api/user/UserTraits';
 import {getIpAddressReverse, getLocationLabelFromIp} from '@app/api/utils/IpUtils';
@@ -143,6 +144,10 @@ export class AdminUserSecurityService {
 			},
 			user.toRow(),
 		);
+		const trusted = (newFlags & UserFlags.NOT_SUSPICIOUS) !== 0n && (user.flags & UserFlags.NOT_SUSPICIOUS) === 0n;
+		if (trusted || (user.flags & ~newFlags) !== 0n) {
+			await clearNewConversationLimit(userId, {cache: cacheService});
+		}
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		await auditService.createAuditLog({
 			adminUserId,
@@ -470,6 +475,9 @@ export class AdminUserSecurityService {
 			},
 			user.toRow(),
 		);
+		if ((currentFlags & ~newFlags) !== 0) {
+			await clearNewConversationLimit(userId, {cache: cacheService});
+		}
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		await auditService.createAuditLog({
 			adminUserId,

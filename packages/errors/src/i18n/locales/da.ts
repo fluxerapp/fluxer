@@ -279,6 +279,7 @@ const ERROR_I18N_DA_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Direkte beskeder og venneanmodninger er deaktiveret på denne instans.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplikerede modtagere er ikke tilladt.",
 	"friends_and_dms.friend_request_blocked": "Brugeren accepterer ikke venneanmodninger på nuværende tidspunkt.",
+	"friends_and_dms.new_conversations_limited": "Du kan ikke starte nye samtaler lige nu. Prøv igen senere.",
 	"friends_and_dms.not_friends": "Du er ikke venner med denne bruger.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Modtager-ID'er kan ikke være tomme.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Modtager-ID'er skal være strenge.",

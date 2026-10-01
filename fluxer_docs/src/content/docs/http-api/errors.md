@@ -304,6 +304,10 @@ Remove the followed channels posting here before converting it to an announcemen
 
 Only text and announcement channels can be converted into each other
 
+### `NEW_CONVERSATIONS_LIMITED`
+
+You can't start new conversations right now. Please try again later
+
 ### `COMMUNICATION_DISABLED`
 
 Communication is disabled

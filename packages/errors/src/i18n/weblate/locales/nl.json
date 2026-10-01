@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "Directe berichten en vriendschapsverzoeken zijn uitgeschakeld op deze instantie.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Dubbele ontvangers zijn niet toegestaan.",
 	"friends_and_dms.friend_request_blocked": "Gebruiker accepteert op dit moment geen vriendschapsverzoeken.",
+	"friends_and_dms.new_conversations_limited": "Je kunt op dit moment geen nieuwe gesprekken starten. Probeer het later opnieuw.",
 	"friends_and_dms.not_friends": "Je bent niet bevriend met deze gebruiker.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Ontvanger-ID's kunnen niet leeg zijn.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Ontvanger-ID's moeten tekstreeksen zijn.",

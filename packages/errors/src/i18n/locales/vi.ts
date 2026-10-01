@@ -279,6 +279,7 @@ const ERROR_I18N_VI_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Tin nhắn trực tiếp và lời mời kết bạn đã bị tắt trên phiên bản này.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Không được có người nhận trùng lặp.",
 	"friends_and_dms.friend_request_blocked": "Người dùng này hiện không nhận lời mời kết bạn.",
+	"friends_and_dms.new_conversations_limited": "Hiện bạn không thể bắt đầu cuộc trò chuyện mới. Vui lòng thử lại sau.",
 	"friends_and_dms.not_friends": "Bạn không phải là bạn bè với người dùng này.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID của người nhận không được để trống.",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID của người nhận phải là chuỗi.",

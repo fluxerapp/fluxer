@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "Přímé zprávy a žádosti o přátelství jsou na této instanci zakázány.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplicitní příjemci nejsou přípustní.",
 	"friends_and_dms.friend_request_blocked": "Uživatel právě teď nepřijímá žádosti o přátelství.",
+	"friends_and_dms.new_conversations_limited": "Momentálně nemůžete zahajovat nové konverzace. Zkuste to znovu později.",
 	"friends_and_dms.not_friends": "Tohoto uživatele nemáte mezi přáteli.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID příjemců nesmí být prázdná.",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID příjemců musí být řetězce.",

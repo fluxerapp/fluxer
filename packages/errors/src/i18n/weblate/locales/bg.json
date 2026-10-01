@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "Директните съобщения и поканите за приятелство са изключени в тази инстанция.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Не се допускат повтарящи се получатели.",
 	"friends_and_dms.friend_request_blocked": "Потребителят в момента не приема покани за приятелство.",
+	"friends_and_dms.new_conversations_limited": "В момента не можеш да започваш нови разговори. Опитай отново по-късно.",
 	"friends_and_dms.not_friends": "Не си приятел с този потребител.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID-тата на получателите не могат да са празни.",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID-тата на получателите трябва да са низове.",

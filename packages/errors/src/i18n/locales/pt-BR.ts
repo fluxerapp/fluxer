@@ -279,6 +279,7 @@ const ERROR_I18N_PT_BR_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "As mensagens diretas e os pedidos de amizade estão desativados nesta instância.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Destinatários duplicados não são permitidos.",
 	"friends_and_dms.friend_request_blocked": "O usuário não está aceitando pedidos de amizade agora.",
+	"friends_and_dms.new_conversations_limited": "Você não pode iniciar novas conversas agora. Tente novamente mais tarde.",
 	"friends_and_dms.not_friends": "Você e este usuário não são amigos.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Os IDs dos destinatários não podem estar vazios.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Os IDs dos destinatários devem ser strings.",

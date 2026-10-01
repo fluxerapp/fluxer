@@ -10,6 +10,7 @@ import {
 	effectsConsumer,
 } from '@app/api/infrastructure/activity/Contract.generated';
 import {User} from '@app/api/models/User';
+import {NEW_CONVERSATION_LIMIT_MAX_MS} from '@app/api/user/NewConversationLimit';
 import type {AccountStateDeps} from '@app/api/user/services/AccountStateApplier';
 import {
 	type AccountActionDeps,
@@ -26,6 +27,17 @@ import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 const USER_ID = '1174109840998400001';
 const NOW = 1_759_000_000_000;
 const NATS_URL = process.env.FLUXER_TEST_ACTIVITY_NATS_URL;
+
+function flagEnvelope(overrides: Partial<Extract<ActionEnvelope, {type: 'set_suspicious_flags'}>> = {}) {
+	return envelope<'set_suspicious_flags'>({
+		type: 'set_suspicious_flags',
+		user_id: USER_ID,
+		set: 1,
+		clear: 0,
+		if_current: null,
+		...overrides,
+	});
+}
 
 function envelope<T extends ActionEnvelope['type']>(
 	body: Omit<Extract<ActionEnvelope, {type: T}>, 'v' | 'id' | 'key' | 'issued_at_ms' | 'expires_at_ms'> &
@@ -80,6 +92,7 @@ class FakeUsers {
 
 interface Harness {
 	users: FakeUsers;
+	cached: Map<string, unknown>;
 	presence: Array<unknown>;
 	contactLogs: Array<unknown>;
 	bans: Array<{ip: string; ttl: number}>;
@@ -89,14 +102,21 @@ interface Harness {
 
 function harness(): Harness {
 	const users = new FakeUsers();
-	const h: Harness = {users, presence: [], contactLogs: [], bans: [], refreshes: 0, deps: null as never};
+	const h: Harness = {
+		users,
+		cached: new Map(),
+		presence: [],
+		contactLogs: [],
+		bans: [],
+		refreshes: 0,
+		deps: null as never,
+	};
 	const state: AccountStateDeps = {
 		users: users as unknown as AccountStateDeps['users'],
 		dispatch: {
 			userUpdated: async (user) => {
 				h.presence.push(user.id);
 			},
-			memberProfilesUpdated: async () => {},
 		},
 		contactChangeLog: {
 			recordDiff: async (params) => {
@@ -112,6 +132,13 @@ function harness(): Harness {
 		cache: {
 			publish: async () => {
 				h.refreshes++;
+			},
+			get: async (key: string) => h.cached.get(key) ?? null,
+			set: async (key: string, value: unknown) => {
+				h.cached.set(key, value);
+			},
+			delete: async (key: string) => {
+				h.cached.delete(key);
 			},
 		} as unknown as AccountStateDeps['cache'],
 		now: () => NOW,
@@ -144,6 +171,7 @@ describe('account action apply', () => {
 			status: 'applied',
 			detail: null,
 			observed: {flags: '0', suspicious_flags: 1, has_verified_phone: false, deleted: false},
+			user_id: USER_ID,
 		});
 		expect(h.users.current().suspiciousActivityFlags).toBe(1);
 		expect(h.presence).toHaveLength(1);
@@ -197,35 +225,80 @@ describe('account action apply', () => {
 
 	it('treats missing, deleted and bot accounts as ineligible', async () => {
 		h.users.rows.clear();
-		const missing = await applyAction(
-			h.deps,
-			envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true}),
-		);
+		const missing = await applyAction(h.deps, flagEnvelope());
 		expect(missing).toMatchObject({status: 'ineligible', observed: null});
 		h.users.put({bot: true});
-		const bot = await applyAction(h.deps, envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true}));
+		const bot = await applyAction(h.deps, flagEnvelope());
 		expect(bot.status).toBe('ineligible');
 		h.users.put({flags: UserFlags.DELETED});
-		const deleted = await applyAction(
-			h.deps,
-			envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true}),
-		);
+		const deleted = await applyAction(h.deps, flagEnvelope());
 		expect(deleted).toMatchObject({status: 'ineligible', observed: {deleted: true}});
 	});
 
-	it('sets and clears the SPAMMER flag idempotently', async () => {
-		const on = envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true});
-		expect((await applyAction(h.deps, on)).status).toBe('applied');
-		expect(h.users.current().flags & UserFlags.SPAMMER).toBe(UserFlags.SPAMMER);
+	it('limits new conversations until the requested time and lifts the limit once', async () => {
+		const on = envelope<'limit_new_conversations'>({
+			type: 'limit_new_conversations',
+			user_id: USER_ID,
+			on: true,
+			until_ms: NOW + 86_400_000,
+		});
+		expect(await applyAction(h.deps, on)).toMatchObject({status: 'applied', user_id: USER_ID});
+		expect([...h.cached.values()]).toEqual([{until_ms: NOW + 86_400_000, applied_at_ms: NOW}]);
 		expect((await applyAction(h.deps, on)).status).toBe('noop');
-		const off = envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: false});
+		const off = envelope<'limit_new_conversations'>({
+			type: 'limit_new_conversations',
+			user_id: USER_ID,
+			on: false,
+			until_ms: NOW,
+		});
 		expect((await applyAction(h.deps, off)).status).toBe('applied');
-		expect(h.users.current().flags & UserFlags.SPAMMER).toBe(0n);
+		expect(h.cached.size).toBe(0);
+		expect((await applyAction(h.deps, off)).status).toBe('noop');
+	});
+
+	it('caps a limit at the maximum duration and skips one that already ended', async () => {
+		const far = envelope<'limit_new_conversations'>({
+			type: 'limit_new_conversations',
+			user_id: USER_ID,
+			on: true,
+			until_ms: NOW + 2 * NEW_CONVERSATION_LIMIT_MAX_MS,
+		});
+		expect((await applyAction(h.deps, far)).status).toBe('applied');
+		expect([...h.cached.values()]).toMatchObject([{until_ms: NOW + NEW_CONVERSATION_LIMIT_MAX_MS}]);
+		h.cached.clear();
+		const past = envelope<'limit_new_conversations'>({
+			type: 'limit_new_conversations',
+			user_id: USER_ID,
+			on: true,
+			until_ms: NOW,
+		});
+		expect((await applyAction(h.deps, past)).status).toBe('noop');
+		expect(h.cached.size).toBe(0);
+	});
+
+	it('never limits staff, trusted, bot or deleted accounts', async () => {
+		const on = envelope<'limit_new_conversations'>({
+			type: 'limit_new_conversations',
+			user_id: USER_ID,
+			on: true,
+			until_ms: NOW + 86_400_000,
+		});
+		for (const overrides of [{flags: UserFlags.STAFF}, {flags: UserFlags.NOT_SUSPICIOUS}] satisfies Array<
+			Partial<UserRow>
+		>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, on)).status).toBe('exempt');
+		}
+		for (const overrides of [{bot: true}, {flags: UserFlags.DELETED}] satisfies Array<Partial<UserRow>>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, on)).status).toBe('ineligible');
+		}
+		expect(h.cached.size).toBe(0);
 	});
 
 	it('attaches a verified phone once and logs the contact change once', async () => {
 		h.users.put({
-			flags: UserFlags.SPAMMER,
+			flags: UserFlags.HAS_SESSION_STARTED,
 			suspicious_activity_flags:
 				SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL,
 		});
@@ -239,7 +312,7 @@ describe('account action apply', () => {
 		const user = h.users.current();
 		expect(user.hasVerifiedPhone).toBe(true);
 		expect(user.suspiciousActivityFlags).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL);
-		expect(user.flags & UserFlags.SPAMMER).toBe(UserFlags.SPAMMER);
+		expect(user.flags).toBe(UserFlags.HAS_SESSION_STARTED);
 		expect((await applyAction(h.deps, action)).status).toBe('noop');
 		expect(h.contactLogs).toHaveLength(1);
 	});
@@ -304,22 +377,13 @@ describe('account action apply', () => {
 	});
 
 	it('answers expired actions and unknown shapes without touching the account', async () => {
-		const expired = await applyAction(
-			h.deps,
-			envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true, expires_at_ms: NOW}),
-		);
+		const expired = await applyAction(h.deps, flagEnvelope({expires_at_ms: NOW}));
 		expect(expired.status).toBe('expired');
-		const future = await applyAction(h.deps, {
-			...envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true}),
-			v: 2,
-		});
+		const future = await applyAction(h.deps, {...flagEnvelope(), v: 2});
 		expect(future.status).toBe('unsupported');
-		const unknown = await applyAction(h.deps, {
-			...envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true}),
-			type: 'future_type',
-		} as unknown as ActionEnvelope);
+		const unknown = await applyAction(h.deps, {...flagEnvelope(), type: 'future_type'} as unknown as ActionEnvelope);
 		expect(unknown).toMatchObject({status: 'unsupported', action_type: 'future_type'});
-		expect(h.users.current().flags).toBe(0n);
+		expect(h.users.current().suspiciousActivityFlags).toBe(0);
 	});
 });
 
@@ -356,7 +420,7 @@ describe('account action messages', () => {
 		h.deps.publishOutcome = async (_key, outcome) => {
 			outcomes.push(outcome);
 		};
-		const good = fakeMsg(JSON.stringify(envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true})), 1);
+		const good = fakeMsg(JSON.stringify(flagEnvelope()), 1);
 		await handleActionMessage(h.deps, good.msg);
 		expect(outcomes.map((outcome) => outcome.status)).toEqual(['applied']);
 		expect(good.state.acked).toBe(1);
@@ -376,7 +440,7 @@ describe('account action messages', () => {
 		h.deps.publishOutcome = async (_key, outcome) => {
 			outcomes.push(outcome);
 		};
-		const data = JSON.stringify(envelope<'set_spammer'>({type: 'set_spammer', user_id: USER_ID, on: true}));
+		const data = JSON.stringify(flagEnvelope());
 		const early = fakeMsg(data, 3);
 		await handleActionMessage(h.deps, early.msg);
 		expect(early.state.naks).toEqual([3000]);
@@ -422,30 +486,12 @@ describe.skipIf(!NATS_URL)('account action consumer against JetStream', () => {
 		h.deps.retryDelayMs = 200;
 		const js = jetstream(nc);
 		const expires = Date.now() + 60_000;
+		await js.publish('act.07', JSON.stringify(flagEnvelope({id: 'a:07:1:0', expires_at_ms: expires})), {
+			msgID: 'a:07:1:0',
+		});
 		await js.publish(
 			'act.07',
-			JSON.stringify(
-				envelope<'set_spammer'>({
-					type: 'set_spammer',
-					id: 'a:07:1:0',
-					user_id: USER_ID,
-					on: true,
-					expires_at_ms: expires,
-				}),
-			),
-			{msgID: 'a:07:1:0'},
-		);
-		await js.publish(
-			'act.07',
-			JSON.stringify(
-				envelope<'set_spammer'>({
-					type: 'set_spammer',
-					id: 'a:07:2:0',
-					user_id: USER_ID,
-					on: false,
-					expires_at_ms: expires,
-				}),
-			),
+			JSON.stringify(flagEnvelope({id: 'a:07:2:0', set: 0, clear: 1, expires_at_ms: expires})),
 			{msgID: 'a:07:2:0'},
 		);
 		startAccountActionConsumer(h.deps);
@@ -457,7 +503,7 @@ describe.skipIf(!NATS_URL)('account action consumer against JetStream', () => {
 			['a:07:1:0', 'applied'],
 			['a:07:2:0', 'applied'],
 		]);
-		expect(h.users.current().flags & UserFlags.SPAMMER).toBe(0n);
+		expect(h.users.current().suspiciousActivityFlags).toBe(0);
 		const info = await (await jetstreamManager(nc)).consumers.info(ACTIONS_STREAM, effectsConsumer(7));
 		expect(info.num_ack_pending).toBe(0);
 		expect(info.num_pending).toBe(0);

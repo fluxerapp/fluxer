@@ -279,6 +279,7 @@ const ERROR_I18N_PL_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Wiadomości prywatne i zaproszenia do znajomych są wyłączone w tej instancji.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplikowanie odbiorców jest niedozwolone.",
 	"friends_and_dms.friend_request_blocked": "Użytkownik nie akceptuje obecnie zaproszeń do znajomych.",
+	"friends_and_dms.new_conversations_limited": "Nie możesz teraz rozpoczynać nowych rozmów. Spróbuj ponownie później.",
 	"friends_and_dms.not_friends": "Ten użytkownik nie jest na Twojej liście znajomych.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID odbiorców nie mogą być puste.",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID odbiorców muszą być ciągami znaków.",

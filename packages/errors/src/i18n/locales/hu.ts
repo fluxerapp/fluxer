@@ -279,6 +279,7 @@ const ERROR_I18N_HU_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "A közvetlen üzenetek és az ismerősjelölések le vannak tiltva ezen a példányon.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Ugyanaz a címzett nem szerepelhet többször.",
 	"friends_and_dms.friend_request_blocked": "A felhasználó jelenleg nem fogad ismerősjelölést.",
+	"friends_and_dms.new_conversations_limited": "Jelenleg nem kezdhetsz új beszélgetést. Próbáld újra később.",
 	"friends_and_dms.not_friends": "Nem vagytok ismerősök ezzel a felhasználóval.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "A címzettazonosítók nem lehetnek üresek.",
 	"friends_and_dms.recipient_ids_must_be_strings": "A címzettazonosítóknak karakterláncoknak kell lenniük.",

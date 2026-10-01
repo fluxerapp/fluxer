@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "I messaggi diretti e le richieste di amicizia sono disabilitati su questa istanza.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Non sono consentiti destinatari duplicati.",
 	"friends_and_dms.friend_request_blocked": "Questo utente non accetta richieste di amicizia in questo momento.",
+	"friends_and_dms.new_conversations_limited": "Al momento non puoi iniziare nuove conversazioni. Riprova più tardi.",
 	"friends_and_dms.not_friends": "Non sei amico di questo utente.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Gli ID dei destinatari non possono essere vuoti.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Gli ID dei destinatari devono essere stringhe.",

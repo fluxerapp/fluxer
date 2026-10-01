@@ -279,6 +279,7 @@ const ERROR_I18N_HI_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "इस इंस्टेंस पर डायरेक्ट मैसेज और फ्रेंड रिक्वेस्ट डिसेबल हैं।",
 	"friends_and_dms.duplicate_recipients_not_allowed": "डुप्लीकेट रिसीपिएंट की अनुमति नहीं है।",
 	"friends_and_dms.friend_request_blocked": "यूज़र इस समय फ्रेंड रिक्वेस्ट स्वीकार नहीं कर रहा है।",
+	"friends_and_dms.new_conversations_limited": "आप अभी नई बातचीत शुरू नहीं कर सकते हैं। कृपया बाद में फिर से कोशिश करें।",
 	"friends_and_dms.not_friends": "आप इस यूज़र के दोस्त नहीं हैं।",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "रिसीपिएंट IDs खाली नहीं होनी चाहिए।",
 	"friends_and_dms.recipient_ids_must_be_strings": "रिसीपिएंट IDs स्ट्रिंग होनी चाहिए।",

@@ -279,6 +279,7 @@ const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Mesajele directe și cererile de prietenie sunt dezactivate pe această instanță.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Nu sunt permiși destinatari duplicați.",
 	"friends_and_dms.friend_request_blocked": "Utilizatorul nu acceptă cereri de prietenie în acest moment.",
+	"friends_and_dms.new_conversations_limited": "Nu poți începe conversații noi acum. Încearcă din nou mai târziu.",
 	"friends_and_dms.not_friends": "Nu ești prieten cu acest utilizator.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID-urile destinatarilor nu pot fi goale.",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID-urile destinatarilor trebuie să fie șiruri.",

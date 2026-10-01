@@ -279,6 +279,7 @@ const ERROR_I18N_EN_GB_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Direct messages and friend requests are disabled on this instance.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Duplicate recipients aren't allowed.",
 	"friends_and_dms.friend_request_blocked": "User does not accept friend requests at this time.",
+	"friends_and_dms.new_conversations_limited": "You can't start new conversations right now. Please try again later.",
 	"friends_and_dms.not_friends": "You're not friends with this user.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Recipient IDs can't be empty.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Recipient IDs must be strings.",

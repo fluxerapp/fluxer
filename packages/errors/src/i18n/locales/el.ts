@@ -279,6 +279,7 @@ const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Τα άμεσα μηνύματα και τα αιτήματα φιλίας είναι απενεργοποιημένα σε αυτήν την εγκατάσταση.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Δεν επιτρέπονται διπλοί παραλήπτες.",
 	"friends_and_dms.friend_request_blocked": "Αυτός ο χρήστης δεν δέχεται αιτήματα φιλίας αυτή τη στιγμή.",
+	"friends_and_dms.new_conversations_limited": "Δεν μπορείς να ξεκινήσεις νέες συνομιλίες αυτή τη στιγμή. Δοκίμασε ξανά αργότερα.",
 	"friends_and_dms.not_friends": "Δεν είσαι φίλος με αυτόν τον χρήστη.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Τα αναγνωριστικά παραληπτών δεν μπορούν να είναι κενά.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Τα αναγνωριστικά παραληπτών πρέπει να είναι συμβολοσειρές.",

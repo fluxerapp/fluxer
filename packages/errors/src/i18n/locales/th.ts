@@ -279,6 +279,7 @@ const ERROR_I18N_TH_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "ข้อความส่วนตัวและคำขอเป็นเพื่อนถูกปิดใช้งานบนอินสแตนซ์นี้",
 	"friends_and_dms.duplicate_recipients_not_allowed": "ไม่อนุญาตให้มีผู้รับซ้ำกัน",
 	"friends_and_dms.friend_request_blocked": "ผู้ใช้ไม่รับคำขอเป็นเพื่อนในขณะนี้",
+	"friends_and_dms.new_conversations_limited": "ไม่สามารถเริ่มการสนทนาใหม่ได้ในขณะนี้ โปรดลองอีกครั้งในภายหลัง",
 	"friends_and_dms.not_friends": "คุณไม่ได้เป็นเพื่อนกับผู้ใช้นี้",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "ID ผู้รับไม่สามารถเป็นค่าว่างได้",
 	"friends_and_dms.recipient_ids_must_be_strings": "ID ผู้รับต้องเป็นสตริง",

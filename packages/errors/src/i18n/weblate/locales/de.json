@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "Direktnachrichten und Freundschaftsanfragen sind auf dieser Instanz deaktiviert.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Doppelte Empfänger sind nicht erlaubt.",
 	"friends_and_dms.friend_request_blocked": "Der Benutzer akzeptiert derzeit keine Freundschaftsanfragen.",
+	"friends_and_dms.new_conversations_limited": "Du kannst gerade keine neuen Unterhaltungen starten. Versuche es später erneut.",
 	"friends_and_dms.not_friends": "Du bist nicht mit diesem Benutzer befreundet.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Empfänger-IDs können nicht leer sein.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Empfänger-IDs müssen Zeichenketten sein.",

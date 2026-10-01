@@ -24,6 +24,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
+import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
@@ -164,6 +165,12 @@ export class UserChannelService {
 		if (userId === recipientId) {
 			throw InputValidationError.fromCode('recipient_id', ValidationErrorCodes.CANNOT_DM_YOURSELF);
 		}
+		await assertMayStartConversation({
+			user: callingUser,
+			targetId: recipientId,
+			users: this.userRepository,
+			messages: this.channelRepository,
+		});
 		const suppressed = isDirectDeliverySuppressed(callingUser);
 		const channel = await this.openOneToOneDMChannel({userId, recipientId, suppressed, userCacheService, requestCache});
 		if (!callingUser.isSystem) {

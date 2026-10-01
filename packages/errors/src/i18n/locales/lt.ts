@@ -279,6 +279,7 @@ const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Asmeninės žinutės ir draugystės užklausos šioje instancijoje išjungtos.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Pasikartojantys gavėjai neleidžiami.",
 	"friends_and_dms.friend_request_blocked": "Naudotojas šiuo metu nepriima draugystės užklausų.",
+	"friends_and_dms.new_conversations_limited": "Šiuo metu negali pradėti naujų pokalbių. Pabandyk dar kartą vėliau.",
 	"friends_and_dms.not_friends": "Su šiuo naudotoju nedraugauji.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Gavėjų ID negali būti palikti tušti.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Gavėjų ID turi būti eilutės.",

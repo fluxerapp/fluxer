@@ -279,6 +279,7 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "הודעות פרטיות ובקשות חברות מושבתות במופע זה.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "נמענים כפולים אינם מותרים.",
 	"friends_and_dms.friend_request_blocked": "משתמש זה אינו מקבל בקשות חברות כרגע.",
+	"friends_and_dms.new_conversations_limited": "לא ניתן להתחיל שיחות חדשות כרגע. ניתן לנסות שוב מאוחר יותר.",
 	"friends_and_dms.not_friends": "אתם לא חברים עם המשתמש הזה.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "מזהי נמענים אינם יכולים להיות ריקים.",
 	"friends_and_dms.recipient_ids_must_be_strings": "מזהי נמענים חייבים להיות מחרוזות.",

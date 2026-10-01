@@ -279,6 +279,7 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Suorat viestit ja kaveripyynnöt on poistettu käytöstä tässä instanssissa.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Samaa vastaanottajaa ei saa lisätä useasti.",
 	"friends_and_dms.friend_request_blocked": "Käyttäjä ei hyväksy kaveripyyntöjä tällä hetkellä.",
+	"friends_and_dms.new_conversations_limited": "Et voi aloittaa uusia keskusteluja juuri nyt. Yritä uudelleen myöhemmin.",
 	"friends_and_dms.not_friends": "Et ole tämän käyttäjän kaveri.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Vastaanottajien tunnukset eivät voi olla tyhjiä.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Vastaanottajien tunnusten on oltava merkkijonoja.",

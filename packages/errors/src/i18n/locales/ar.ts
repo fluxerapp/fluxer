@@ -279,6 +279,7 @@ const ERROR_I18N_AR_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "الرسائل المباشرة وطلبات الصداقة معطلة في هذا المثيل.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "لا يُسمح بتكرار المستلمين.",
 	"friends_and_dms.friend_request_blocked": "المستخدم لا يقبل طلبات الصداقة في الوقت الحالي.",
+	"friends_and_dms.new_conversations_limited": "لا يمكنك بدء محادثات جديدة في الوقت الحالي. حاول مجددًا لاحقًا.",
 	"friends_and_dms.not_friends": "لست صديقًا لهذا المستخدم.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "لا يمكن أن تكون معرفات المستلمين فارغة.",
 	"friends_and_dms.recipient_ids_must_be_strings": "يجب أن تكون معرفات المستلمين سلاسل نصية.",

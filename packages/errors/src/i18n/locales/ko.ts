@@ -279,6 +279,7 @@ const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "이 인스턴스에서는 DM과 친구 요청이 비활성화되어 있어요.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "중복된 수신자는 추가할 수 없어요.",
 	"friends_and_dms.friend_request_blocked": "이 사용자는 현재 친구 요청을 수락하지 않아요.",
+	"friends_and_dms.new_conversations_limited": "지금은 새 대화를 시작할 수 없어요. 나중에 다시 시도해 주세요.",
 	"friends_and_dms.not_friends": "이 사용자와 친구가 아니에요.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "수신자 ID는 비워둘 수 없어요.",
 	"friends_and_dms.recipient_ids_must_be_strings": "수신자 ID는 문자열이어야 해요.",

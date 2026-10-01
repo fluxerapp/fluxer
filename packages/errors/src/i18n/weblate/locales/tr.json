@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "Bu kurulumda DM'ler ve arkadaşlık istekleri devre dışı.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Yinelenen alıcılara izin verilmez.",
 	"friends_and_dms.friend_request_blocked": "Kullanıcı şu anda arkadaşlık isteklerini kabul etmiyor.",
+	"friends_and_dms.new_conversations_limited": "Şu anda yeni sohbet başlatamazsın. Lütfen daha sonra tekrar dene.",
 	"friends_and_dms.not_friends": "Bu kullanıcıyla arkadaş değilsin.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Alıcı kimlikleri boş olamaz.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Alıcı kimlikleri dize olmalı.",

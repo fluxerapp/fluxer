@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "Direktmeddelanden och vänförfrågningar är inaktiverade på den här instansen.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Dubbletter av mottagare är inte tillåtna.",
 	"friends_and_dms.friend_request_blocked": "Användaren accepterar inte vänförfrågningar just nu.",
+	"friends_and_dms.new_conversations_limited": "Du kan inte starta nya konversationer just nu. Försök igen senare.",
 	"friends_and_dms.not_friends": "Du är inte vän med den här användaren.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Mottagar-ID:n får inte vara tomma.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Mottagar-ID:n måste vara strängar.",

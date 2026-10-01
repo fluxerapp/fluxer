@@ -275,6 +275,7 @@
 	"friends_and_dms.direct_messages_disabled": "此實例已停用私訊和好友邀請。",
 	"friends_and_dms.duplicate_recipients_not_allowed": "不允許重複成員。",
 	"friends_and_dms.friend_request_blocked": "此使用者目前不接受好友邀請。",
+	"friends_and_dms.new_conversations_limited": "你目前無法開始新的對話。請稍後再試。",
 	"friends_and_dms.not_friends": "你不是此使用者的好友。",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "成員 ID 不能為空。",
 	"friends_and_dms.recipient_ids_must_be_strings": "成員 ID 必須是字串。",

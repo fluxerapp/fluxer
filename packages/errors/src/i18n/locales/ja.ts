@@ -279,6 +279,7 @@ const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "このインスタンスでは、ダイレクトメッセージと友だち申請は無効になっています。",
 	"friends_and_dms.duplicate_recipients_not_allowed": "重複する受信者は許可されていません。",
 	"friends_and_dms.friend_request_blocked": "このユーザーは現在、友だち申請を受け付けていません。",
+	"friends_and_dms.new_conversations_limited": "現在、新しい会話を開始することはできません。後でもう一度お試しください。",
 	"friends_and_dms.not_friends": "このユーザーとは友だちではありません。",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "受信者IDを空にすることはできません。",
 	"friends_and_dms.recipient_ids_must_be_strings": "受信者IDは文字列である必要があります。",

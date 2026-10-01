@@ -279,6 +279,7 @@ const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"friends_and_dms.direct_messages_disabled": "Особисті повідомлення та запити в друзі вимкнено на цьому екземплярі.",
 	"friends_and_dms.duplicate_recipients_not_allowed": "Одержувачі не можуть повторюватися.",
 	"friends_and_dms.friend_request_blocked": "Користувач наразі не приймає запити в друзі.",
+	"friends_and_dms.new_conversations_limited": "Зараз ти не можеш починати нові чати. Спробуй пізніше.",
 	"friends_and_dms.not_friends": "Ти не дружиш з цим користувачем.",
 	"friends_and_dms.recipient_ids_cannot_be_empty": "Ідентифікатори одержувачів не можуть бути порожніми.",
 	"friends_and_dms.recipient_ids_must_be_strings": "Ідентифікатори одержувачів мають бути рядками.",
