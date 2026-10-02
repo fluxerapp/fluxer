@@ -7763,9 +7763,9 @@ msgstr "Επίλεξε τι μπορεί να κάνει το {clientLabel} στ
 msgid "Choose what friends see in their active now panel"
 msgstr "Επιλέξτε τι βλέπουν οι φίλοι στην ενότητα «Ενεργοί τώρα»"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Επιλέξτε τι πρέπει να έχουν τα μέλη πριν δημοσιεύσουν ή στείλουν DM σε μέλη της κοινότητας."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Επιλέξτε τι πρέπει να έχουν τα μέλη πριν μπορούν να δημοσιεύουν ή να στέλνουν απευθείας μηνύματα σε μέλη της κοινότητας. Τα μέλη με ρόλους μπορούν να παρακάμψουν αυτούς τους ελέγχους. Για δημόσιους χώρους, συνιστούμε την ενεργοποίηση της επαλήθευσης."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Οι κοινότητες και τα κανάλια όπου δεν μ�
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Οι κοινότητες που εμφανίζονται στην Ανακάλυψη πρέπει να σαρώνουν τα μηνύματα από όλα τα μέλη. Αυτή η ρύθμιση δεν μπορεί να αλλάξει όσο είναι ενεργοποιημένη η Ανακάλυψη."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Οι κοινότητες που εμφανίζονται στην Ανακάλυψη απαιτούν τουλάχιστον επαληθευμένο email. Η επιλογή \"Καμία\" δεν είναι διαθέσιμη όσο η Ανακάλυψη είναι ενεργοποιημένη."
 
@@ -20843,10 +20843,6 @@ msgstr "Τα μέλη αφαιρούνται όταν είναι εκτός σύ
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Τα μέλη με το δικαίωμα \"{pinMessagesPermissionLabel}\" μπορούν να καρφιτσώνουν μηνύματα για όλους."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Τα μέλη με ρόλους μπορούν να παρακάμψουν αυτούς τους ελέγχους. Για δημόσιους χώρους, συνιστούμε την ενεργοποίηση της επαλήθευσης."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

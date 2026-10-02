@@ -7763,9 +7763,9 @@ msgstr "{clientLabel} がコミュニティでできることを選択してく�
 msgid "Choose what friends see in their active now panel"
 msgstr "友達の「オンライン中」パネルに表示される内容を選択"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "メンバーが投稿やコミュニティメンバーへのDMを行うために必要な条件を選択してください。"
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "コミュニティのメンバーが投稿したり、他のメンバーにダイレクトメッセージを送信したりする前に、満たす必要がある条件を選択します。ロールを持つメンバーはこれらのチェックをスキップできます。公開スペースでは、認証を有効にすることをお勧めします。"
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Webhookを管理できないコミュニティやチャンネルは非�
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "「見つける」に掲載されているコミュニティは、すべてのメンバーのメッセージをスキャンする必要があります。「見つける」が有効な間は、この設定を変更できません。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "「見つける」に掲載されているコミュニティには、少なくともメールアドレスの認証が必要です。「見つける」が有効な間は「なし」を選択できません。"
 
@@ -20843,10 +20843,6 @@ msgstr "ロールが付与されていない限り、オフラインになると
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "「{pinMessagesPermissionLabel}」の権限を持つメンバーは、すべてのユーザー向けにメッセージをピン留めできます。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "ロールを持つメンバーはこれらのチェックをバイパスできます。公開スペースでは、認証を有効にすることをおすすめします。"
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

@@ -7763,9 +7763,9 @@ msgstr "Velg hva {clientLabel} kan gjøre i fellesskapet ditt. Fjern avmerkingen
 msgid "Choose what friends see in their active now panel"
 msgstr "Velg hva venner ser i panelet «Aktiv nå»"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Velg hva medlemmer må ha før de kan legge ut innlegg eller sende direktemeldinger til fellesskapsmedlemmer."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Velg hva medlemmer må ha før de kan poste eller sende direktemeldinger til fellesskapsmedlemmer. Medlemmer med roller kan omgå disse sjekkene. For offentlige rom anbefaler vi å aktivere verifisering."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Fellesskap og kanaler der du ikke kan administrere webhooks, er skjult."
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Fellesskap som er oppført under Oppdag, må skanne meldinger fra alle medlemmer. Denne innstillingen kan ikke endres mens Oppdag er aktivert."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Fellesskap som er oppført under Oppdag, krever minst bekreftet e-postadresse. «Ingen» kan ikke velges mens Oppdag er aktivert."
 
@@ -20843,10 +20843,6 @@ msgstr "Medlemmer fjernes når de er frakoblet, med mindre de har fått en rolle
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Medlemmer med «{pinMessagesPermissionLabel}» kan feste meldinger for alle."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Medlemmer med roller kan omgå disse kontrollene. For offentlige fellesskap anbefaler vi å aktivere verifisering."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

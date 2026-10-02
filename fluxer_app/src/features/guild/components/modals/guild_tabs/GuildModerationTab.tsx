@@ -284,27 +284,27 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 						<h3 className={styles.sectionTitle} data-flx="guild.guild-tabs.guild-moderation-tab.section-title">
 							<Trans>Member verification</Trans>
 						</h3>
-						<div
-							className={styles.sectionDescriptionMultiline}
-							data-flx="guild.guild-tabs.guild-moderation-tab.section-description-multiline"
+						<p
+							className={styles.sectionDescription}
+							data-flx="guild.guild-tabs.guild-moderation-tab.section-description--verification"
 						>
-							<p data-flx="guild.guild-tabs.guild-moderation-tab.p">
-								<Trans>Choose what members must have before they can post or DM community members.</Trans>
-							</p>
-							<p data-flx="guild.guild-tabs.guild-moderation-tab.p--2">
+							<Trans>
+								Choose what members must have before they can post or DM community members. Members with roles can
+								bypass these checks. For public spaces, we recommend enabling verification.
+							</Trans>
+						</p>
+						{isDiscoverable && (
+							<p
+								className={styles.sectionDescription}
+								style={{fontStyle: 'italic'}}
+								data-flx="guild.guild-tabs.guild-moderation-tab.section-description--verification-discovery"
+							>
 								<Trans>
-									Members with roles can bypass these checks. For public spaces, we recommend enabling verification.
+									Communities listed in Discovery require at least email verification. None cannot be selected while
+									Discovery is enabled.
 								</Trans>
 							</p>
-							{isDiscoverable && (
-								<p data-flx="guild.guild-tabs.guild-moderation-tab.p--3">
-									<Trans>
-										Communities listed in Discovery require at least email verification. None cannot be selected while
-										Discovery is enabled.
-									</Trans>
-								</p>
-							)}
-						</div>
+						)}
 						<Controller
 							name="verification_level"
 							control={form.control}

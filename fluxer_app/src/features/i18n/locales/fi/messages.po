@@ -7763,9 +7763,9 @@ msgstr "Valitse, mitä {clientLabel} voi tehdä yhteisössäsi. Poista valinta k
 msgid "Choose what friends see in their active now panel"
 msgstr "Valitse, mitä kaverit näkevät Aktiiviset nyt -paneelissaan"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Valitse, mitä jäsenillä on oltava, ennen kuin he voivat julkaista tai lähettää yksityisviestejä yhteisön jäsenille."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Valitse, mitä jäsenillä on oltava ennen kuin he voivat lähettää viestejä tai lähettää yksityisviestejä yhteisön jäsenille. Roolien jäsenet voivat ohittaa nämä tarkistukset. Julkisia tiloja varten suosittelemme vahvistuksen käyttöönottoa."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Yhteisöt ja kanavat, joissa et voi hallita webhookeja, on piilotettu."
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Löydä-osiossa listattujen yhteisöjen on tarkistettava kaikkien jäsenten viestit. Tätä asetusta ei voi muuttaa, kun Löydä-osio on käytössä."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Löydä-osiossa listatut yhteisöt edellyttävät vähintään sähköpostin vahvistamista. Vaihtoehtoa \"Ei mitään\" ei voi valita, kun Löydä-osio on käytössä."
 
@@ -20843,10 +20843,6 @@ msgstr "Jäsenet poistetaan, kun he ovat offline-tilassa, ellei heille ole annet
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Jäsenet, joilla on oikeus \"{pinMessagesPermissionLabel}\", voivat kiinnittää viestejä kaikkien nähtäville."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Jäsenet, joilla on rooli, voivat ohittaa nämä tarkistukset. Julkisissa tiloissa suosittelemme ottamaan vahvistuksen käyttöön."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

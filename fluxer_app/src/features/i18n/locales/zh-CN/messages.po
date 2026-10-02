@@ -7763,9 +7763,9 @@ msgstr "选择 {clientLabel} 在你的社区中可以执行的操作。取消勾
 msgid "Choose what friends see in their active now panel"
 msgstr "选择好友在“正在活跃”面板中看到的内容"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "选择成员在发帖或私信社区成员前必须满足的条件。"
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "选择成员在发布帖子或向社区成员发送私信前必须满足的条件。拥有角色的成员可以绕过这些检查。对于公开频道，我们建议启用验证。"
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "无法管理入站 webhook 的社群和频道已隐藏。"
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "列入社区发现的社区必须扫描所有成员的消息。启用社区发现后，无法更改此设置。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "列入社区发现的社区至少需要邮箱验证。启用社区发现后，无法选择“无”。"
 
@@ -20843,10 +20843,6 @@ msgstr "成员离线时会被移除，除非为其分配了身份组。"
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "拥有“{pinMessagesPermissionLabel}”权限的成员可以为所有人置顶消息。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "拥有身份组的成员可以绕过这些检查。对于公共空间，我们建议启用验证。"
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

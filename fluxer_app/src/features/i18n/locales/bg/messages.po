@@ -7763,9 +7763,9 @@ msgstr "Избери какво може да прави {clientLabel} в общ
 msgid "Choose what friends see in their active now panel"
 msgstr "Избери какво виждат приятелите ти в панела „Активни сега“"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Избери какво трябва да имат членовете, преди да могат да публикуват или да изпращат DM на членове на общността."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Изберете какво трябва да имат членовете, преди да могат да публикуват или да изпращат лични съобщения до членове на общността. Членовете с роли могат да заобиколят тези проверки. За публични пространства препоръчваме да активирате верификация."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Общности и канали, където не можете да у
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Общностите, включени в Откриване, трябва да сканират съобщенията от всички членове. Тази настройка не може да се променя, докато Откриване е включено."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Общностите, включени в Откриване, изискват поне потвърждение на имейл. Докато Откриване е включено, не може да се избере „Няма“."
 
@@ -20843,10 +20843,6 @@ msgstr "Членовете се премахват, когато излязат 
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Членовете с „{pinMessagesPermissionLabel}“ могат да закачат съобщения за всички."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Членовете с роли могат да заобиколят тези проверки. За публични пространства препоръчваме да включиш потвърждението."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

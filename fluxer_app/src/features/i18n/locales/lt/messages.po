@@ -7763,9 +7763,9 @@ msgstr "Pasirinkite, ką „{clientLabel}“ gali daryti jūsų bendruomenėje. 
 msgid "Choose what friends see in their active now panel"
 msgstr "Pasirinkite, ką draugai mato savo aktyvumo skydelyje"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Pasirinkite, ką nariai turi turėti, kad galėtų rašyti žinutes ar siųsti tiesiogines žinutes bendruomenės nariams."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Pasirinkite, ką nariai turi turėti prieš galėdami skelbti ar siųsti tiesioginius pranešimus bendruomenės nariams. Nariai, turintys vaidmenis, gali praleisti šiuos patikrinimus. Viešoms erdvėms rekomenduojame įjungti patvirtinimą."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Bendruomenės ir kanalai, kuriuose negalite tvarkyti webhookų, yra pasl
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Į Atradimą įtrauktos bendruomenės privalo tikrinti visų narių žinutes. Šio nustatymo negalima keisti, kol įjungtas Atradimas."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Į Atradimą įtrauktoms bendruomenėms būtinas bent el. pašto patvirtinimas. Kol įjungtas Atradimas, negalima pasirinkti „Nėra“."
 
@@ -20844,10 +20844,6 @@ msgstr "Nariai pašalinami, kai yra neprisijungę, nebent jiems priskirtas vaidm
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Nariai, turintys leidimą „{pinMessagesPermissionLabel}“, gali prisegti žinutes visiems."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Nariai, turintys vaidmenis, gali apeiti šiuos patikrinimus. Viešosioms erdvėms rekomenduojame įjungti patvirtinimą."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

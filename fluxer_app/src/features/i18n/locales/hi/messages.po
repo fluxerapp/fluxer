@@ -7763,9 +7763,9 @@ msgstr "चुनें कि {clientLabel} आपकी कम्युनि�
 msgid "Choose what friends see in their active now panel"
 msgstr "चुनें कि दोस्त अपने अभी सक्रिय पैनल में क्या देखें"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "चुनें कि सदस्यों को पोस्ट करने या कम्युनिटी के सदस्यों को DM करने से पहले क्या करना होगा।"
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "सदस्य पोस्ट करने या समुदाय के सदस्यों को सीधे संदेश भेजने से पहले उनके पास क्या होना चाहिए, उसे चुनें। भूमिकाओं वाले सदस्य इन जांचों को बायपास कर सकते हैं। सार्वजनिक स्थानों के लिए, हम सत्यापन सक्षम करने की सलाह देते हैं।"
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "जिन समुदायों और चैनलों में �
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "डिस्कवरी में लिस्ट की गई कम्युनिटी के लिए सभी सदस्यों के मैसेज स्कैन करना ज़रूरी है। डिस्कवरी चालू होने पर यह सेटिंग बदली नहीं जा सकती।"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "डिस्कवरी में लिस्ट की गई कम्युनिटी के लिए कम से कम ईमेल वेरिफ़िकेशन ज़रूरी है। डिस्कवरी चालू रहने तक \"कोई नहीं\" नहीं चुना जा सकता।"
 
@@ -20843,10 +20843,6 @@ msgstr "सदस्यों को ऑफ़लाइन होने पर �
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "जिन सदस्यों के पास \"{pinMessagesPermissionLabel}\" है, वे सभी के लिए मैसेज पिन कर सकते हैं।"
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "रोल वाले सदस्य इन जाँचों को बायपास कर सकते हैं। सार्वजनिक जगहों के लिए, हम वेरिफ़िकेशन चालू करने की सलाह देते हैं।"
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

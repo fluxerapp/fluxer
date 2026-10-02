@@ -7763,9 +7763,9 @@ msgstr "Виберіть, що {clientLabel} може робити у вашій
 msgid "Choose what friends see in their active now panel"
 msgstr "Виберіть, що друзі бачитимуть на панелі «Активні зараз»"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Виберіть, що повинні мати учасники, перш ніж вони зможуть писати в каналах або надсилати особисті повідомлення учасникам спільноти."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Виберіть, що учасники повинні мати, перш ніж вони зможуть публікувати дописи або надсилати особисті повідомлення учасникам спільноти. Учасники з ролями можуть обійти ці перевірки. Для публічних просторів рекомендуємо ввімкнути верифікацію."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Спільноти та канали, де ви не можете кер
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Спільноти в Discovery мають перевіряти повідомлення від усіх учасників. Цей параметр не можна змінити, доки Discovery ввімкнено."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Спільноти в Discovery потребують щонайменше підтвердження електронної пошти. Поки Discovery ввімкнено, не можна вибрати «Немає»."
 
@@ -20843,10 +20843,6 @@ msgstr "Учасники вилучаються, коли вони офлайн,
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Учасники з дозволом «{pinMessagesPermissionLabel}» можуть закріплювати повідомлення для всіх."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Учасники з ролями можуть обходити ці перевірки. Для публічних просторів радимо ввімкнути перевірку."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

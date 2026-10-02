@@ -7763,9 +7763,9 @@ msgstr "Elige qué puede hacer {clientLabel} en tu comunidad. Desmarca los permi
 msgid "Choose what friends see in their active now panel"
 msgstr "Elige lo que ven tus amigos en su panel de actividad actual"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Elige qué deben tener los miembros antes de que puedan publicar o enviar mensajes directos a los miembros de la comunidad."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Elige qué deben tener los miembros antes de poder publicar o enviar mensajes directos a otros miembros de la comunidad. Los miembros con roles pueden omitir estas comprobaciones. Para espacios públicos, recomendamos activar la verificación."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Las comunidades y canales donde no puedes administrar webhooks están oc
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Las comunidades que aparecen en Descubrir deben analizar los mensajes de todos los miembros. Este ajuste no se puede cambiar mientras Descubrir esté activado."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Las comunidades que aparecen en Descubrir requieren al menos un correo electrónico verificado. No se puede seleccionar Ninguno mientras Descubrir esté activado."
 
@@ -20843,10 +20843,6 @@ msgstr "Los miembros se eliminan al desconectarse a menos que se les asigne un r
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Los miembros con el permiso \"{pinMessagesPermissionLabel}\" pueden fijar mensajes para todos."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Los miembros con roles pueden omitir estas comprobaciones. Para espacios públicos, recomendamos activar la verificación."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

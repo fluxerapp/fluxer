@@ -7763,9 +7763,9 @@ msgstr "Alege ce poate face {clientLabel} în comunitatea ta. Debifează permisi
 msgid "Choose what friends see in their active now panel"
 msgstr "Alege ce văd prietenii în panoul lor „Activ acum”"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Alege ce trebuie să aibă membrii înainte de a putea posta sau de a trimite DM-uri membrilor comunității."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Alege ce trebuie să aibă membrii înainte de a putea posta sau trimite mesaje directe membrilor comunității. Membrii cu roluri pot ocoli aceste verificări. Pentru spațiile publice, recomandăm activarea verificării."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Comunitățile și canalele unde nu poți gestiona webhook-uri sunt ascu
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Comunitățile listate în Discovery trebuie să scaneze mesajele tuturor membrilor. Această setare nu poate fi modificată cât timp Discovery este activat."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Comunitățile listate în Discovery necesită cel puțin verificarea adresei de e-mail. Opțiunea „Niciunul” nu poate fi selectată cât timp Discovery este activat."
 
@@ -20843,10 +20843,6 @@ msgstr "Membrii sunt eliminați când sunt offline, dacă nu li se atribuie un r
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Membrii cu „{pinMessagesPermissionLabel}” pot fixa mesaje pentru toată lumea."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Membrii cu roluri pot ocoli aceste verificări. Pentru spațiile publice, recomandăm activarea verificării."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

@@ -7763,9 +7763,9 @@ msgstr "Välj vad {clientLabel} får göra i din community. Avmarkera behörighe
 msgid "Choose what friends see in their active now panel"
 msgstr "Välj vad vänner ser i sin panel för aktiva nu"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Välj vad medlemmar måste ha innan de kan skriva inlägg eller skicka direktmeddelanden till communitymedlemmar."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Välj vad medlemmar måste ha innan de kan posta eller skicka direktmeddelanden till community-medlemmar. Medlemmar med roller kan kringgå dessa kontroller. För publika utrymmen rekommenderar vi att aktivera verifiering."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Sammanslutningar och kanaler där du inte kan hantera webhooks är dolda
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Communities som listas i Upptäck måste granska meddelanden från alla medlemmar. Den här inställningen kan inte ändras medan Upptäck är aktiverat."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Communities som listas i Upptäck måste kräva minst e-postverifiering. ”Ingen” kan inte väljas medan Upptäck är aktiverat."
 
@@ -20843,10 +20843,6 @@ msgstr "Medlemmar tas bort när de är offline om de inte har tilldelats en roll
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Medlemmar med behörigheten \"{pinMessagesPermissionLabel}\" kan fästa meddelanden åt alla."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Medlemmar med roller kan kringgå dessa kontroller. För offentliga utrymmen rekommenderar vi att du aktiverar verifiering."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

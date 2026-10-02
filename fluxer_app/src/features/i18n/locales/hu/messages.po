@@ -7763,9 +7763,9 @@ msgstr "Válaszd ki, mit tehet a(z) {clientLabel} a közösségedben. Töröld a
 msgid "Choose what friends see in their active now panel"
 msgstr "Válaszd ki, mit lássanak az ismerőseid a „Most aktívak” panelen"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Válaszd ki, hogy a tagoknak mivel kell rendelkezniük, mielőtt bejegyzéseket tehetnek közzé vagy közvetlen üzenetet küldhetnek a közösség tagjainak."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Válaszd ki, hogy a tagoknak mi legyen meg, mielőtt bejegyzést írhatnak vagy privát üzenetet küldhetnek a közösség tagjainak. A szerepkörrel rendelkező tagok átugorhatják ezeket az ellenőrzéseket. Nyilvános helyek esetén javasoljuk az ellenőrzés engedélyezését."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "A közösségek és csatornák, ahol nem tudsz webhookokat kezelni, el v
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "A Felfedezésben szereplő közösségekben minden tag üzeneteit ellenőrizni kell. Ez a beállítás nem módosítható, amíg a Felfedezés engedélyezve van."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "A Felfedezésben szereplő közösségekben legalább az e-mail-cím megerősítését meg kell követelni. A „Nincs” lehetőség nem választható, amíg a Felfedezés engedélyezve van."
 
@@ -20843,10 +20843,6 @@ msgstr "A tagok eltávolításra kerülnek, ha offline állapotban vannak, kivé
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Azok a tagok, akik rendelkeznek a(z) „{pinMessagesPermissionLabel}” jogosultsággal, üzeneteket rögzíthetnek mindenki számára."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "A szerepkörrel rendelkező tagok megkerülhetik ezeket az ellenőrzéseket. Nyilvános terek esetén javasoljuk az ellenőrzés engedélyezését."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

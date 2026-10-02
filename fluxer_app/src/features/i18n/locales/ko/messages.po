@@ -7763,9 +7763,9 @@ msgstr "{clientLabel}이(가) 내 커뮤니티에서 수행할 작업을 선택�
 msgid "Choose what friends see in their active now panel"
 msgstr "친구의 활동 중 패널에 표시되는 내용을 선택하세요"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "멤버가 게시하거나 커뮤니티 멤버에게 DM을 보내려면 갖춰야 할 조건을 선택하세요."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "커뮤니티 멤버가 글을 쓰거나 DM을 보내기 전에 반드시 갖춰야 할 조건을 선택하세요. 역할이 있는 멤버는 이 검사를 건너뛸 수 있습니다. 공개 공간의 경우 인증을 활성화하는 것이 좋습니다."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "웹훅을 관리할 수 없는 커뮤니티 및 채널은 숨겨집니�
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "디스커버리에 등록된 커뮤니티는 모든 멤버의 메시지를 스캔해야 합니다. 디스커버리가 활성화된 동안에는 이 설정을 변경할 수 없습니다."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "디스커버리에 등록된 커뮤니티는 이메일 인증이 필수입니다. 디스커버리가 활성화된 동안에는 \"없음\"을 선택할 수 없습니다."
 
@@ -20843,10 +20843,6 @@ msgstr "역할이 부여되지 않으면 오프라인 시 멤버가 제거됩니
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "\"{pinMessagesPermissionLabel}\" 권한이 있는 멤버는 모두가 볼 수 있도록 메시지를 고정할 수 있습니다."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "역할이 있는 멤버는 이 검사를 우회할 수 있습니다. 공개 공간의 경우, 인증 활성화를 권장합니다."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

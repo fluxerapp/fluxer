@@ -7763,9 +7763,9 @@ msgstr "Wähle aus, was {clientLabel} in deiner Community tun darf. Deaktiviere 
 msgid "Choose what friends see in their active now panel"
 msgstr "Wähle aus, was Freunde in ihrem Bereich „Jetzt aktiv“ sehen"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Lege fest, welche Voraussetzungen Mitglieder erfüllen müssen, bevor sie Nachrichten posten oder Community-Mitgliedern DMs senden können."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Lege fest, was Mitglieder haben müssen, bevor sie in der Community posten oder Mitglieder per Direktnachricht kontaktieren können. Mitglieder mit Rollen können diese Prüfungen umgehen. Für öffentliche Bereiche empfehlen wir, die Verifizierung zu aktivieren."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Communities und Kanäle, in denen du keine Webhooks verwalten kannst, we
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Unter „Entdecken“ aufgeführte Communitys müssen die Nachrichten aller Mitglieder prüfen. Diese Einstellung kann nicht geändert werden, solange „Entdecken“ aktiviert ist."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Unter „Entdecken“ aufgeführte Communitys erfordern mindestens eine verifizierte E-Mail-Adresse. „Keine“ kann nicht ausgewählt werden, solange „Entdecken“ aktiviert ist."
 
@@ -20843,10 +20843,6 @@ msgstr "Mitglieder werden entfernt, wenn sie offline sind, es sei denn, sie habe
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Mit \"{pinMessagesPermissionLabel}\" können Mitglieder Nachrichten für alle anheften."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Mitglieder mit Rollen können diese Prüfungen umgehen. Für öffentliche Bereiche empfehlen wir, die Verifizierung zu aktivieren."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

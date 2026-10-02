@@ -7763,9 +7763,9 @@ msgstr "{clientLabel} uygulamasının topluluğunuzda neler yapabileceğini seç
 msgid "Choose what friends see in their active now panel"
 msgstr "Arkadaşlarınızın şu an aktif panelinde neler göreceğini seçin"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Üyelerin mesaj gönderebilmek veya topluluk üyelerine DM gönderebilmek için nelere sahip olması gerektiğini seçin."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Topluluk üyelerinin gönderi yapmadan veya topluluk üyilerine DM atmadan önce sahip olması gerekenleri seçin. Rolü olan üyeler bu kontrolleri atlayabilir. Genel alanlar için doğrulamayı etkinleştirmenizi öneririz."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Webhook'ları yönetemediğiniz topluluklar ve kanallar gizlenir."
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Keşfet'te listelenen toplulukların tüm üyelerden gelen mesajları taraması gerekir. Keşfet etkinken bu ayar değiştirilemez."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Keşfet'te listelenen topluluklarda en az e-posta doğrulaması gerekir. Keşfet etkinken \"Hiçbiri\" seçilemez."
 
@@ -20843,10 +20843,6 @@ msgstr "Çevrimdışı olduklarında bir rol atanmadığı sürece üyeler kald�
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "\"{pinMessagesPermissionLabel}\" iznine sahip üyeler, herkes için mesaj sabitleyebilir."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Rolü olan üyeler bu kontrolleri atlayabilir. Herkese açık alanlar için doğrulamayı etkinleştirmenizi öneririz."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

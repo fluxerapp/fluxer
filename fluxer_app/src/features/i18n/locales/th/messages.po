@@ -7763,9 +7763,9 @@ msgstr "เลือกสิ่งที่ {clientLabel} ทำได้ใน
 msgid "Choose what friends see in their active now panel"
 msgstr "เลือกสิ่งที่เพื่อนเห็นในแผงกำลังใช้งานอยู่ตอนนี้"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "เลือกสิ่งที่สมาชิกต้องมีก่อนที่จะโพสต์หรือส่งข้อความส่วนตัวถึงสมาชิกในคอมมูนิตี้ได้"
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "เลือกว่าสมาชิกต้องมีอะไรบ้างก่อนที่จะโพสต์หรือส่งข้อความส่วนตัวถึงสมาชิกในชุมชน สมาชิกที่มีบทบาทสามารถข้ามการตรวจสอบเหล่านี้ได้ สำหรับพื้นที่สาธารณะ เราแนะนำให้เปิดใช้งานการยืนยัน"
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "ชุมชนและช่องทางที่คุณไม่
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "คอมมูนิตี้ที่อยู่ใน Discovery ต้องสแกนข้อความจากสมาชิกทุกคน การตั้งค่านี้เปลี่ยนแปลงไม่ได้ขณะที่เปิดใช้งาน Discovery"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "คอมมูนิตี้ที่อยู่ใน Discovery ต้องมีการยืนยันอีเมลเป็นอย่างน้อย จะเลือก \"ไม่มี\" ไม่ได้ขณะที่เปิดใช้งาน Discovery"
 
@@ -20843,10 +20843,6 @@ msgstr "สมาชิกจะถูกนำออกเมื่อออฟ
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "สมาชิกที่มีสิทธิ์ \"{pinMessagesPermissionLabel}\" สามารถปักหมุดข้อความให้ทุกคนเห็นได้"
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "สมาชิกที่มีบทบาทสามารถข้ามการตรวจสอบเหล่านี้ได้ สำหรับพื้นที่สาธารณะ เราแนะนำให้เปิดใช้งานการยืนยัน"
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

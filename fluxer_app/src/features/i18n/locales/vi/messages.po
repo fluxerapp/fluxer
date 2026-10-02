@@ -7763,9 +7763,9 @@ msgstr "Chọn những gì {clientLabel} có thể làm trong cộng đồng c�
 msgid "Choose what friends see in their active now panel"
 msgstr "Chọn những gì bạn bè thấy trong mục Đang hoạt động của họ"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
-msgid "Choose what members must have before they can post or DM community members."
-msgstr "Chọn những gì thành viên phải có trước khi họ có thể đăng bài hoặc nhắn tin trực tiếp cho thành viên cộng đồng."
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:291
+msgid "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+msgstr "Chọn những gì thành viên phải có trước khi họ có thể đăng bài hoặc gửi tin nhắn trực tiếp cho các thành viên cộng đồng. Thành viên có vai trò có thể bỏ qua các kiểm tra này. Đối với các không gian công khai, chúng tôi khuyên bạn nên bật xác minh."
 
 #. Scope option (radio) that lets the user pick conversation kinds and exclude specific communities.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:71
@@ -8638,7 +8638,7 @@ msgstr "Cộng đồng và kênh mà bạn không thể quản lý webhook sẽ 
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "Các cộng đồng được liệt kê trong Khám phá bắt buộc phải quét tin nhắn từ tất cả thành viên. Bạn không thể thay đổi cài đặt này khi Khám phá đang bật."
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:302
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "Các cộng đồng được liệt kê trong Khám phá bắt buộc phải có ít nhất mức xác minh email. Không thể chọn \"Không\" khi Khám phá đang bật."
 
@@ -20843,10 +20843,6 @@ msgstr "Thành viên sẽ bị xóa khỏi cộng đồng khi ngoại tuyến tr
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "Thành viên có quyền \"{pinMessagesPermissionLabel}\" có thể ghim tin nhắn cho mọi người."
-
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
-msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
-msgstr "Thành viên có vai trò có thể bỏ qua các kiểm tra này. Đối với không gian công cộng, chúng tôi khuyên bạn nên bật xác minh."
 
 #. Helper text under the Allow mentions switch in the role editor. {mentionEveryonePermissionLabel} is the localized name of the Mention Everyone permission and should match its label exactly.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47

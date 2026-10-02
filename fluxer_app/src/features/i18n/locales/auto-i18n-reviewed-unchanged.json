@@ -1771,6 +1771,9 @@
         "msgid": "Choose the premium model"
       },
       {
+        "msgid": "Choose what members must have before they can post or DM community members. Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
+      },
+      {
         "msgid": "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
       },
       {
