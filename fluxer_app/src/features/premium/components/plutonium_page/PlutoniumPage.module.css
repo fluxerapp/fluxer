@@ -11,7 +11,7 @@
 	isolation: isolate;
 	container-name: plutonium-page;
 	container-type: size;
-	background-color: #0a0822;
+	background-color: #080811;
 	color: #fff;
 	font-family: 'Radio Canada Big', var(--font-sans);
 	-webkit-font-smoothing: auto;
@@ -21,9 +21,26 @@
 .scroller {
 	--brand-solid: #4641d9;
 	--brand-primary-light: #b0adff;
-	--stars-far: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='577'%20height='577'%3E%3Ccircle%20cx='186.9'%20cy='87.0'%20r='0.71'%20fill='rgb(255,255,255)'%20fill-opacity='0.24'/%3E%3Ccircle%20cx='54.3'%20cy='336.3'%20r='0.81'%20fill='rgb(255,255,255)'%20fill-opacity='0.29'/%3E%3Ccircle%20cx='250.2'%20cy='40.3'%20r='0.49'%20fill='rgb(255,255,255)'%20fill-opacity='0.36'/%3E%3Ccircle%20cx='71.4'%20cy='128.8'%20r='0.70'%20fill='rgb(255,255,255)'%20fill-opacity='0.53'/%3E%3Ccircle%20cx='337.9'%20cy='28.6'%20r='0.54'%20fill='rgb(255,255,255)'%20fill-opacity='0.40'/%3E%3Ccircle%20cx='167.1'%20cy='83.2'%20r='0.50'%20fill='rgb(255,255,255)'%20fill-opacity='0.32'/%3E%3Ccircle%20cx='104.3'%20cy='335.6'%20r='0.71'%20fill='rgb(255,255,255)'%20fill-opacity='0.34'/%3E%3Ccircle%20cx='410.9'%20cy='325.6'%20r='0.70'%20fill='rgb(255,255,255)'%20fill-opacity='0.38'/%3E%3Ccircle%20cx='246.7'%20cy='181.3'%20r='0.68'%20fill='rgb(255,255,255)'%20fill-opacity='0.37'/%3E%3Ccircle%20cx='143.3'%20cy='103.7'%20r='0.76'%20fill='rgb(255,255,255)'%20fill-opacity='0.25'/%3E%3Ccircle%20cx='303.0'%20cy='505.0'%20r='0.74'%20fill='rgb(255,255,255)'%20fill-opacity='0.32'/%3E%3Ccircle%20cx='68.1'%20cy='241.3'%20r='0.75'%20fill='rgb(255,255,255)'%20fill-opacity='0.27'/%3E%3Ccircle%20cx='243.3'%20cy='555.1'%20r='0.48'%20fill='rgb(255,255,255)'%20fill-opacity='0.40'/%3E%3Ccircle%20cx='196.3'%20cy='202.1'%20r='0.65'%20fill='rgb(255,255,255)'%20fill-opacity='0.48'/%3E%3Ccircle%20cx='484.7'%20cy='545.1'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.44'/%3E%3Ccircle%20cx='421.9'%20cy='178.6'%20r='0.68'%20fill='rgb(255,255,255)'%20fill-opacity='0.44'/%3E%3Ccircle%20cx='164.2'%20cy='222.6'%20r='0.72'%20fill='rgb(255,255,255)'%20fill-opacity='0.23'/%3E%3Ccircle%20cx='205.1'%20cy='352.5'%20r='0.65'%20fill='rgb(255,255,255)'%20fill-opacity='0.29'/%3E%3Ccircle%20cx='74.6'%20cy='142.9'%20r='0.61'%20fill='rgb(255,255,255)'%20fill-opacity='0.51'/%3E%3Ccircle%20cx='96.0'%20cy='231.7'%20r='0.56'%20fill='rgb(255,255,255)'%20fill-opacity='0.27'/%3E%3Ccircle%20cx='498.5'%20cy='160.6'%20r='0.62'%20fill='rgb(255,255,255)'%20fill-opacity='0.34'/%3E%3Ccircle%20cx='552.6'%20cy='87.1'%20r='0.52'%20fill='rgb(255,255,255)'%20fill-opacity='0.30'/%3E%3Ccircle%20cx='7.0'%20cy='479.5'%20r='0.52'%20fill='rgb(255,255,255)'%20fill-opacity='0.31'/%3E%3Ccircle%20cx='241.7'%20cy='213.1'%20r='0.68'%20fill='rgb(255,255,255)'%20fill-opacity='0.53'/%3E%3Ccircle%20cx='495.8'%20cy='548.3'%20r='0.71'%20fill='rgb(255,255,255)'%20fill-opacity='0.46'/%3E%3Ccircle%20cx='519.0'%20cy='450.0'%20r='0.80'%20fill='rgb(255,255,255)'%20fill-opacity='0.48'/%3E%3Ccircle%20cx='229.7'%20cy='227.4'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.35'/%3E%3Ccircle%20cx='38.9'%20cy='120.5'%20r='0.51'%20fill='rgb(255,255,255)'%20fill-opacity='0.33'/%3E%3Ccircle%20cx='59.1'%20cy='327.0'%20r='0.66'%20fill='rgb(255,255,255)'%20fill-opacity='0.53'/%3E%3Ccircle%20cx='14.7'%20cy='504.5'%20r='0.70'%20fill='rgb(255,255,255)'%20fill-opacity='0.27'/%3E%3Ccircle%20cx='551.3'%20cy='347.5'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.26'/%3E%3Ccircle%20cx='573.0'%20cy='268.9'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.25'/%3E%3Ccircle%20cx='432.6'%20cy='427.2'%20r='0.64'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='13.3'%20cy='548.7'%20r='0.66'%20fill='rgb(255,255,255)'%20fill-opacity='0.27'/%3E%3Ccircle%20cx='527.5'%20cy='437.4'%20r='0.57'%20fill='rgb(255,255,255)'%20fill-opacity='0.43'/%3E%3Ccircle%20cx='401.7'%20cy='150.7'%20r='0.60'%20fill='rgb(255,255,255)'%20fill-opacity='0.28'/%3E%3Ccircle%20cx='307.3'%20cy='449.5'%20r='0.58'%20fill='rgb(255,255,255)'%20fill-opacity='0.29'/%3E%3Ccircle%20cx='465.1'%20cy='472.2'%20r='0.75'%20fill='rgb(255,255,255)'%20fill-opacity='0.29'/%3E%3C/svg%3E");
-	--stars-near: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='947'%20height='947'%3E%3Ccircle%20cx='641.2'%20cy='743.3'%20r='3.80'%20fill='rgb(255,255,255)'%20fill-opacity='0.056'/%3E%3Ccircle%20cx='641.2'%20cy='743.3'%20r='1.19'%20fill='rgb(255,255,255)'%20fill-opacity='0.46'/%3E%3Ccircle%20cx='501.2'%20cy='553.7'%20r='3.93'%20fill='rgb(255,255,255)'%20fill-opacity='0.040'/%3E%3Ccircle%20cx='501.2'%20cy='553.7'%20r='1.23'%20fill='rgb(255,255,255)'%20fill-opacity='0.33'/%3E%3Ccircle%20cx='253.7'%20cy='101.9'%20r='1.08'%20fill='rgb(255,255,255)'%20fill-opacity='0.40'/%3E%3Ccircle%20cx='832.6'%20cy='871.6'%20r='3.08'%20fill='rgb(255,255,255)'%20fill-opacity='0.053'/%3E%3Ccircle%20cx='832.6'%20cy='871.6'%20r='0.96'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='93.3'%20cy='15.9'%20r='1.22'%20fill='rgb(255,255,255)'%20fill-opacity='0.44'/%3E%3Ccircle%20cx='936.8'%20cy='540.5'%20r='1.18'%20fill='rgb(255,255,255)'%20fill-opacity='0.35'/%3E%3Ccircle%20cx='220.5'%20cy='516.4'%20r='4.17'%20fill='rgb(255,255,255)'%20fill-opacity='0.067'/%3E%3Ccircle%20cx='220.5'%20cy='516.4'%20r='1.30'%20fill='rgb(255,255,255)'%20fill-opacity='0.56'/%3E%3Ccircle%20cx='127.5'%20cy='467.2'%20r='1.20'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='562.6'%20cy='492.6'%20r='1.35'%20fill='rgb(255,255,255)'%20fill-opacity='0.46'/%3E%3Ccircle%20cx='820.2'%20cy='843.3'%20r='1.03'%20fill='rgb(255,255,255)'%20fill-opacity='0.31'/%3E%3Ccircle%20cx='640.0'%20cy='617.9'%20r='1.41'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='696.4'%20cy='436.6'%20r='3.41'%20fill='rgb(255,255,255)'%20fill-opacity='0.062'/%3E%3Ccircle%20cx='696.4'%20cy='436.6'%20r='1.07'%20fill='rgb(255,255,255)'%20fill-opacity='0.52'/%3E%3Ccircle%20cx='294.8'%20cy='913.9'%20r='1.13'%20fill='rgb(255,255,255)'%20fill-opacity='0.45'/%3E%3Ccircle%20cx='621.7'%20cy='15.3'%20r='3.65'%20fill='rgb(255,255,255)'%20fill-opacity='0.047'/%3E%3Ccircle%20cx='621.7'%20cy='15.3'%20r='1.14'%20fill='rgb(255,255,255)'%20fill-opacity='0.39'/%3E%3C/svg%3E");
-	--space-gradient: linear-gradient(to bottom, #07061a 0%, #0c0a28 50%, #110d35 100%);
+	--flux-light: 176 173 255;
+	--flux-glow-light: 129 124 255;
+	--flux-glow-indigo: 99 94 233;
+	--space-panel: 12 12 24;
+	--space-deep-rgb: 8 8 17;
+	--flux-line-dir: 90deg;
+	--flux-gradient-dir: 100deg;
+	--flux-gradient-fallback: #4641d9;
+	--flux-gradient: linear-gradient(
+		var(--flux-gradient-dir),
+		#5a55e6 0%,
+		var(--flux-gradient-fallback) 55%,
+		#322cb0 100%
+	);
+	--flux-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='128'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='128' height='128' filter='url(%23n)'/%3E%3C/svg%3E");
+	--flux-waves: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='640'%3E%3Cg fill='none' stroke='%23fff' opacity='.075'%3E%3Cpath d='M0 27C40 31 80 34 120 34C160 33 200 27 240 25C280 23 320 22 360 23C400 23 440 28 480 28C520 29 560 27 600 25C640 23 680 19 720 16C760 14 800 11 840 9C880 7 920 3 960 3C1000 3 1040 5 1080 9C1120 13 1160 23 1200 27' stroke-opacity='1'/%3E%3Cpath d='M0 69C40 73 80 75 120 75C160 76 200 72 240 71C280 69 320 67 360 65C400 63 440 60 480 58C520 56 560 55 600 55C640 55 680 59 720 59C760 58 800 56 840 54C880 51 920 44 960 44C1000 43 1040 47 1080 51C1120 55 1160 65 1200 69' stroke-opacity='0.97'/%3E%3Cpath d='M0 106C40 108 80 111 120 113C160 115 200 118 240 117C280 116 320 111 360 106C400 102 440 92 480 89C520 86 560 87 600 88C640 89 680 96 720 97C760 98 800 97 840 96C880 95 920 91 960 91C1000 92 1040 95 1080 97C1120 99 1160 103 1200 106' stroke-opacity='0.87'/%3E%3Cpath d='M0 141C40 142 80 147 120 149C160 152 200 158 240 157C280 156 320 149 360 144C400 140 440 131 480 127C520 124 560 125 600 125C640 126 680 129 720 131C760 133 800 134 840 137C880 139 920 142 960 144C1000 145 1040 145 1080 144C1120 144 1160 141 1200 141' stroke-opacity='0.72'/%3E%3Cpath d='M0 182C40 181 80 185 120 186C160 187 200 189 240 188C280 187 320 183 360 181C400 178 440 175 480 172C520 170 560 167 600 166C640 164 680 162 720 164C760 166 800 173 840 178C880 183 920 191 960 193C1000 195 1040 192 1080 190C1120 188 1160 183 1200 182' stroke-opacity='0.55'/%3E%3Cpath d='M0 228C40 226 80 224 120 222C160 219 200 216 240 215C280 214 320 216 360 217C400 217 440 219 480 218C520 216 560 210 600 208C640 205 680 202 720 204C760 207 800 215 840 220C880 226 920 232 960 235C1000 237 1040 235 1080 233C1120 232 1160 230 1200 228' stroke-opacity='0.38'/%3E%3Cpath d='M0 274C40 271 80 262 120 257C160 252 200 247 240 246C280 245 320 251 360 253C400 255 440 258 480 258C520 258 560 253 600 253C640 252 680 252 720 253C760 255 800 259 840 262C880 264 920 267 960 269C1000 272 1040 275 1080 276C1120 277 1160 277 1200 274' stroke-opacity='0.23'/%3E%3Cpath d='M0 313C40 310 80 299 120 295C160 290 200 286 240 285C280 283 320 286 360 288C400 289 440 291 480 293C520 295 560 298 600 300C640 302 680 305 720 305C760 306 800 302 840 302C880 302 920 302 960 304C1000 306 1040 313 1080 315C1120 316 1160 316 1200 313' stroke-opacity='0.13'/%3E%3Cpath d='M0 345C40 343 80 339 120 336C160 334 200 331 240 329C280 327 320 323 360 323C400 323 440 325 480 329C520 333 560 343 600 347C640 351 680 354 720 354C760 353 800 347 840 345C880 343 920 342 960 343C1000 343 1040 348 1080 348C1120 349 1160 347 1200 345' stroke-opacity='0.1'/%3E%3Cpath d='M0 375C40 375 80 379 120 379C160 378 200 376 240 374C280 371 320 364 360 364C400 363 440 367 480 371C520 375 560 385 600 389C640 393 680 395 720 395C760 396 800 392 840 391C880 389 920 387 960 385C1000 383 1040 380 1080 378C1120 376 1160 375 1200 375' stroke-opacity='0.13'/%3E%3Cpath d='M0 408C40 409 80 416 120 417C160 418 200 417 240 416C280 415 320 411 360 411C400 412 440 415 480 417C520 419 560 423 600 426C640 428 680 431 720 433C760 435 800 438 840 437C880 436 920 431 960 426C1000 422 1040 412 1080 409C1120 406 1160 407 1200 408' stroke-opacity='0.23'/%3E%3Cpath d='M0 445C40 446 80 449 120 451C160 453 200 454 240 457C280 459 320 462 360 464C400 465 440 465 480 464C520 464 560 461 600 461C640 462 680 467 720 469C760 472 800 478 840 477C880 476 920 469 960 464C1000 460 1040 451 1080 447C1120 444 1160 445 1200 445' stroke-opacity='0.38'/%3E%3Cpath d='M0 486C40 484 80 482 120 484C160 486 200 493 240 498C280 503 320 511 360 513C400 515 440 512 480 510C520 508 560 503 600 502C640 501 680 505 720 506C760 507 800 509 840 508C880 507 920 503 960 501C1000 498 1040 495 1080 492C1120 490 1160 487 1200 486' stroke-opacity='0.55'/%3E%3Cpath d='M0 528C40 525 80 522 120 524C160 527 200 535 240 540C280 546 320 552 360 555C400 557 440 555 480 553C520 552 560 550 600 548C640 546 680 544 720 542C760 539 800 536 840 535C880 534 920 536 960 537C1000 537 1040 539 1080 538C1120 536 1160 530 1200 528' stroke-opacity='0.72'/%3E%3Cpath d='M0 573C40 572 80 572 120 573C160 575 200 579 240 582C280 584 320 587 360 589C400 592 440 595 480 596C520 597 560 597 600 594C640 591 680 582 720 577C760 572 800 567 840 566C880 565 920 571 960 573C1000 575 1040 578 1080 578C1120 578 1160 573 1200 573' stroke-opacity='0.87'/%3E%3Cpath d='M0 620C40 622 80 625 120 625C160 626 200 622 240 622C280 622 320 622 360 624C400 626 440 633 480 635C520 636 560 636 600 633C640 630 680 619 720 615C760 610 800 606 840 605C880 603 920 606 960 608C1000 609 1040 611 1080 613C1120 615 1160 618 1200 620' stroke-opacity='0.97'/%3E%3C/g%3E%3C/svg%3E");
+	--flux-aurora:
+		radial-gradient(64rem 30rem at 10% -8rem, rgb(var(--flux-glow-light) / 0.2), transparent 70%),
+		radial-gradient(56rem 32rem at 92% -6rem, rgb(var(--flux-glow-indigo) / 0.3), transparent 72%);
+	--flux-ink: linear-gradient(to bottom, hsl(242 32% 4%) 0%, hsl(242 32% 6%) 45%, hsl(242 32% 8.5%) 100%);
 	--pl-gutter: 1.25rem;
 	--pl-flow: 0.75rem;
 	--pl-stack: 1.25rem;
@@ -46,13 +63,15 @@
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	isolation: isolate;
-	background-color: #0a0822;
-	background-image: var(--stars-far), var(--stars-near), var(--space-gradient);
+	background-color: #080811;
+	background-image: var(--flux-grain), var(--flux-aurora), var(--flux-waves), var(--flux-ink);
 	background-size:
-		577px 577px,
-		947px 947px,
+		128px 128px,
+		100% 100%,
+		100% 100%,
+		1200px 640px,
 		100% 100%;
-	background-repeat: repeat, repeat, no-repeat;
+	background-repeat: repeat, no-repeat, no-repeat, repeat, no-repeat;
 	background-attachment: local;
 	color: #fff;
 	font-size: 1rem;
@@ -94,6 +113,14 @@
 	--pl-text-title-letter-spacing: 0;
 }
 
+:global(html[dir='rtl']) .scroller {
+	--flux-line-dir: 270deg;
+	--flux-gradient-dir: 260deg;
+	--flux-aurora:
+		radial-gradient(64rem 30rem at 90% -8rem, rgb(var(--flux-glow-light) / 0.2), transparent 70%),
+		radial-gradient(56rem 32rem at 8% -6rem, rgb(var(--flux-glow-indigo) / 0.3), transparent 72%);
+}
+
 :global(:root:lang(ja)) .scroller {
 	line-break: strict;
 }
@@ -109,10 +136,14 @@
 @supports (animation-timeline: scroll()) {
 	@media (prefers-reduced-motion: no-preference) and (pointer: fine) {
 		.scroller {
-			background-image: var(--space-gradient);
-			background-size: 100% 100%;
-			background-repeat: no-repeat;
-			scroll-timeline: --plutonium-stars block;
+			background-image: var(--flux-grain), var(--flux-aurora), var(--flux-ink);
+			background-size:
+				128px 128px,
+				100% 100%,
+				100% 100%,
+				100% 100%;
+			background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+			scroll-timeline: --plutonium-waves block;
 		}
 
 		.starfield {
@@ -126,56 +157,33 @@
 			pointer-events: none;
 		}
 
-		.starfield::before,
-		.starfield::after {
+		.starfield::before {
 			position: absolute;
 			inset-inline: 0;
 			top: 0;
+			height: calc(100cqh + 640px);
+			background-image: var(--flux-waves);
+			background-size: 1200px 640px;
 			background-repeat: repeat;
+			animation-name: plutonium-flux-parallax;
 			animation-timing-function: linear;
 			animation-fill-mode: both;
-			animation-timeline: --plutonium-stars;
+			animation-iteration-count: 12;
+			animation-range: 0px 23040px;
+			animation-timeline: --plutonium-waves;
 			will-change: transform;
 			content: '';
 		}
-
-		.starfield::before {
-			height: calc(100cqh + 577px);
-			background-image: var(--stars-far);
-			background-size: 577px 577px;
-			animation-name: plutonium-star-parallax-far;
-			animation-iteration-count: 8;
-			animation-range: 0px 23080px;
-		}
-
-		.starfield::after {
-			height: calc(100cqh + 947px);
-			background-image: var(--stars-near);
-			background-size: 947px 947px;
-			animation-name: plutonium-star-parallax-near;
-			animation-iteration-count: 10;
-			animation-range: 0px 21044px;
-		}
 	}
 }
 
-@keyframes plutonium-star-parallax-far {
+@keyframes plutonium-flux-parallax {
 	from {
 		transform: translate3d(0, 0, 0);
 	}
 
 	to {
-		transform: translate3d(0, -577px, 0);
-	}
-}
-
-@keyframes plutonium-star-parallax-near {
-	from {
-		transform: translate3d(0, 0, 0);
-	}
-
-	to {
-		transform: translate3d(0, -947px, 0);
+		transform: translate3d(0, -640px, 0);
 	}
 }
 
@@ -216,7 +224,34 @@
 }
 
 .hero {
+	position: relative;
+	isolation: isolate;
 	padding: var(--pl-pagetop) var(--pl-gutter) var(--pl-group);
+}
+
+.hero::before {
+	position: absolute;
+	inset-inline: 0;
+	inset-block: 0 -6rem;
+	z-index: -1;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 760' preserveAspectRatio='none'%3E%3Cdefs%3E%3ClinearGradient id='g'%3E%3Cstop offset='0' stop-color='%23b0adff' stop-opacity='0'/%3E%3Cstop offset='.25' stop-color='%23b0adff'/%3E%3Cstop offset='.6' stop-color='%23635ee9'/%3E%3Cstop offset='1' stop-color='%234641d9' stop-opacity='.25'/%3E%3C/linearGradient%3E%3Cpath id='a' d='M0 623.9068531556543C48 626 96 632 144 630C192 627 240 621 288 608C336 595 384 574 432 551C480 528 528 497 576 470C624 442 672 411 720 386C768 362 816 340 864 325C912 310 960 302 1008 298C1056 294 1104 298 1152 301C1200 304 1248 312 1296 315C1344 317 1392 314 1440 314'/%3E%3Cpath id='b' d='M0 693.9068531556543C48 696 96 703 144 701C192 698 240 693 288 680C336 667 384 647 432 624C480 601 528 571 576 544C624 517 672 485 720 461C768 438 816 415 864 401C912 387 960 379 1008 375C1056 372 1104 376 1152 379C1200 382 1248 391 1296 394C1344 396 1392 394 1440 394'/%3E%3C/defs%3E%3Cg fill='none' stroke='url(%23g)' stroke-linecap='round'%3E%3Cuse href='%23a' stroke-width='120' stroke-opacity='.07'/%3E%3Cuse href='%23b' stroke-width='120' stroke-opacity='.07'/%3E%3Cuse href='%23a' stroke-width='36' stroke-opacity='.12'/%3E%3Cuse href='%23b' stroke-width='36' stroke-opacity='.12'/%3E%3Cuse href='%23a' stroke-width='2' stroke-opacity='.75'/%3E%3Cuse href='%23b' stroke-width='2' stroke-opacity='.75'/%3E%3C/g%3E%3C/svg%3E");
+	background-size: 100% min(100%, 46rem);
+	background-position: bottom;
+	background-repeat: no-repeat;
+	pointer-events: none;
+	mask-image: linear-gradient(to bottom, transparent 0, transparent 82%, #000 96%);
+	content: '';
+}
+
+:global(html[dir='rtl']) .hero::before {
+	transform: scaleX(-1);
+}
+
+@container plutonium-page (max-width: 48rem) {
+	.hero::before {
+		background-size: max(100%, 64rem) min(100%, 46rem);
+		background-position: bottom right;
+	}
 }
 
 @container plutonium-page (min-width: 48rem) {
@@ -321,7 +356,7 @@
 }
 
 .priceOr {
-	color: rgb(255 255 255 / 0.6);
+	color: rgb(255 255 255 / 0.8);
 	font-size: 1rem;
 	line-height: 1.6;
 }
@@ -380,18 +415,39 @@
 }
 
 .buttonPrimary {
-	background-color: #fff;
-	color: var(--brand-solid);
+	border: 1px solid rgb(var(--flux-light) / 0.35);
+	border-radius: 0.625rem;
+	background-color: var(--flux-gradient-fallback);
+	background-image: var(--flux-gradient);
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 0.18),
+		0 12px 32px -16px rgb(var(--flux-glow-light) / 0.6);
+	color: #fff;
+	transition:
+		filter 0.15s ease,
+		border-color 0.15s ease,
+		box-shadow 0.15s ease,
+		opacity 0.15s ease;
+}
+
+.buttonPrimary:not(:disabled):hover {
+	border-color: rgb(var(--flux-light) / 0.7);
+	box-shadow:
+		inset 0 1px 0 rgb(255 255 255 / 0.22),
+		0 14px 36px -14px rgb(var(--flux-glow-light) / 0.8);
+	filter: brightness(1.06);
 }
 
 .buttonSecondary {
-	border: 1px solid rgb(255 255 255 / 0.38);
-	background-color: #24233e;
+	border: 1px solid rgb(255 255 255 / 0.4);
+	border-radius: 0.625rem;
+	background-color: rgb(var(--space-deep-rgb) / 0.4);
 	color: #fff;
 }
 
 .buttonSecondary:not(:disabled):hover {
-	background-color: #2e2d4b;
+	border-color: rgb(255 255 255 / 0.5);
+	background-color: rgb(255 255 255 / 0.06);
 }
 
 .buttonIcon {
@@ -409,8 +465,8 @@
 	align-items: center;
 	padding: 0.125rem 0.5rem;
 	border-radius: 999px;
-	background-color: rgb(70 65 217 / 0.12);
-	color: var(--brand-solid);
+	background-color: rgb(255 255 255 / 0.16);
+	color: #fff;
 	font-size: 0.8125rem;
 	font-weight: 700;
 	line-height: 1.45;
@@ -533,15 +589,31 @@
 }
 
 .glassPanel {
+	position: relative;
 	width: 100%;
 	max-width: 80rem;
 	box-sizing: border-box;
 	margin-inline: auto;
-	border: 1px solid rgb(255 255 255 / 0.1);
-	border-radius: 1.75rem;
-	background-color: rgb(255 255 255 / 0.03);
-	background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.012));
-	box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+	border: 1px solid rgb(255 255 255 / 0.09);
+	border-radius: 1.125rem;
+	background-color: rgb(var(--space-panel) / 0.5);
+	box-shadow: 0 24px 48px -32px rgb(0 0 0 / 0.8);
+}
+
+.glassPanel::before {
+	position: absolute;
+	inset-block-start: -1px;
+	inset-inline: 1.5rem;
+	height: 1px;
+	background-image: linear-gradient(
+		var(--flux-line-dir),
+		transparent,
+		rgb(var(--flux-light) / 0.7) 20%,
+		rgb(129 124 255 / 0.7) 70%,
+		transparent
+	);
+	pointer-events: none;
+	content: '';
 }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -561,9 +633,47 @@
 }
 
 .glassPanelBrand {
-	border-color: rgb(167 159 251 / 0.3);
-	background-color: rgb(70 65 217 / 0.14);
-	background-image: linear-gradient(to bottom, rgb(99 94 233 / 0.34), rgb(70 65 217 / 0.08));
+	border-color: rgb(var(--flux-light) / 0.2);
+	background-color: rgb(var(--space-panel));
+	background-image:
+		var(--flux-grain),
+		radial-gradient(
+			46rem 22rem at 0% 0%,
+			rgb(var(--flux-glow-indigo) / 0.2),
+			rgb(var(--flux-glow-indigo) / 0.08) 40%,
+			transparent 70%
+		),
+		radial-gradient(
+			52rem 26rem at 100% 100%,
+			rgb(var(--flux-glow-light) / 0.18),
+			rgb(var(--flux-glow-light) / 0.07) 40%,
+			transparent 70%
+		),
+		var(--flux-waves);
+	background-size:
+		128px 128px,
+		100% 100%,
+		100% 100%,
+		1200px 640px;
+	background-repeat: repeat, no-repeat, no-repeat, repeat;
+}
+
+:global(html[dir='rtl']) .glassPanelBrand {
+	background-image:
+		var(--flux-grain),
+		radial-gradient(
+			46rem 22rem at 100% 0%,
+			rgb(var(--flux-glow-indigo) / 0.2),
+			rgb(var(--flux-glow-indigo) / 0.08) 40%,
+			transparent 70%
+		),
+		radial-gradient(
+			52rem 26rem at 0% 100%,
+			rgb(var(--flux-glow-light) / 0.18),
+			rgb(var(--flux-glow-light) / 0.07) 40%,
+			transparent 70%
+		),
+		var(--flux-waves);
 }
 
 .managePanel {
@@ -607,17 +717,34 @@
 }
 
 .perkRow {
+	position: relative;
 	display: grid;
+	width: 100%;
+	max-width: 80rem;
+	box-sizing: border-box;
 	align-items: center;
 	gap: 2rem;
-	padding: 1.25rem;
+	margin-inline: auto;
+	padding-block: 2.5rem;
+	border-block-start: 1px solid rgb(255 255 255 / 0.08);
+}
+
+.perkRow::before {
+	position: absolute;
+	inset-block-start: -1px;
+	inset-inline-start: 0;
+	inline-size: min(14rem, 45%);
+	block-size: 1px;
+	background-image: linear-gradient(var(--flux-line-dir), rgb(var(--flux-light) / 0.9), transparent);
+	pointer-events: none;
+	content: '';
 }
 
 @container plutonium-page (min-width: 48rem) {
 	.perkRow {
 		grid-template-columns: 7fr 5fr;
 		gap: 4rem;
-		padding: 3rem;
+		padding-block: 4rem;
 	}
 
 	.perkRowFlipped {
@@ -795,8 +922,9 @@
 }
 
 .perkCellPremium {
-	border-color: rgb(167 159 251 / 0.35);
-	background-color: rgb(99 94 233 / 0.14);
+	border-color: rgb(var(--flux-light) / 0.35);
+	background-color: rgb(var(--flux-glow-light) / 0.06);
+	box-shadow: inset 0 1px 0 rgb(var(--flux-light) / 0.3);
 }
 
 .perkCellTerm {
@@ -994,4 +1122,18 @@
 	clip-path: inset(50%);
 	white-space: nowrap;
 	border-width: 0;
+}
+
+@media (forced-colors: active) {
+	.hero::before,
+	.starfield::before,
+	.glassPanel::before,
+	.perkRow::before {
+		display: none;
+	}
+
+	.scroller,
+	.glassPanelBrand {
+		background-image: none;
+	}
 }

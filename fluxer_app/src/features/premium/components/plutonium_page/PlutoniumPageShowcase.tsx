@@ -254,7 +254,7 @@ export function PlutoniumPageShowcase({
 				return (
 					<article
 						key={card.id}
-						className={clsx(styles.glassPanel, styles.perkRow, flipped && styles.perkRowFlipped)}
+						className={clsx(styles.perkRow, flipped && styles.perkRowFlipped)}
 						data-flx={`premium.plutonium-page.perk-row.${card.id}`}
 					>
 						<div className={styles.perkArtColumn} data-flx="premium.plutonium-page.perk-row.art-column">
