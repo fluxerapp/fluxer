@@ -153,7 +153,7 @@ continue_handoff_to_topology(_TargetNodes, [], State, _Iteration, AccResult) ->
 continue_handoff_to_topology(TargetNodes, GuildIds, State, Iteration, AccResult) ->
     run_and_continue(
         GuildIds,
-        topology_owner_resolver(TargetNodes),
+        topology_owner_resolver(),
         AccResult,
         State,
         fun(S1, I, M, B) ->
@@ -162,10 +162,10 @@ continue_handoff_to_topology(TargetNodes, GuildIds, State, Iteration, AccResult)
         Iteration
     ).
 
--spec topology_owner_resolver([node()]) -> fun((guild_id()) -> node()).
-topology_owner_resolver(TargetNodes) ->
+-spec topology_owner_resolver() -> fun((guild_id()) -> term()).
+topology_owner_resolver() ->
     fun(GId) ->
-        gateway_node_router:select_guild_owner_node(GId, TargetNodes)
+        gateway_node_router:owner_node_result(GId, guilds)
     end.
 
 -spec run_and_continue(
@@ -300,14 +300,19 @@ mark_handoff_success(#{attempted := Attempted, handed_off := HandedOff}) ->
 
 topology_handoff_keeps_a_guild_pinned_to_this_node_test() ->
     GuildId = 1100000000000000001,
-    Resolver = topology_owner_resolver(['guilds_a@h', 'guilds_b@h']),
-    ?assertMatch({handoff, _}, resolve_handoff_target(GuildId, node(), Resolver)),
-    application:set_env(fluxer_gateway, guild_owner_pins, #{GuildId => node()}),
+    Peers = ['guilds_a@h', 'guilds_b@h'],
+    Resolver = topology_owner_resolver(),
+    persistent_term:put({gateway_cluster_membership, members}, [node() | Peers]),
+    persistent_term:put({gateway_cluster_membership, members_by_role}, #{guilds => Peers}),
     try
+        ?assertMatch({handoff, _}, resolve_handoff_target(GuildId, node(), Resolver)),
+        application:set_env(fluxer_gateway, guild_owner_pins, #{GuildId => node()}),
         ?assertEqual(skip, resolve_handoff_target(GuildId, node(), Resolver)),
         ?assertMatch({handoff, _}, resolve_handoff_target(GuildId + 1, node(), Resolver))
     after
-        application:unset_env(fluxer_gateway, guild_owner_pins)
+        application:unset_env(fluxer_gateway, guild_owner_pins),
+        persistent_term:erase({gateway_cluster_membership, members}),
+        persistent_term:erase({gateway_cluster_membership, members_by_role})
     end.
 
 -endif.

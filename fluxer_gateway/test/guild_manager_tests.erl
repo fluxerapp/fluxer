@@ -69,6 +69,35 @@ handoff_guild_ids_counts_attempts_and_successes_test() ->
     ?assertEqual(#{attempted => 2, handed_off => 1}, Result),
     ?assertEqual(3, maps:get(shard_count, FinalState)).
 
+handoff_to_topology_keeps_guild_the_router_owns_here_test() ->
+    GuildId = 77,
+    ShardPid = spawn(fun() -> local_ids_stub_loop([GuildId]) end),
+    State = #{shards => #{0 => #{pid => ShardPid, ref => make_ref()}}, shard_count => 1},
+    persistent_term:put({gateway_cluster_membership, members}, [node()]),
+    persistent_term:put({gateway_cluster_membership, members_by_role}, #{guilds => [node()]}),
+    try
+        {Result, _State} = guild_manager_handoff:perform_handoff_to_topology(
+            ['gateway_b@127.0.0.1'], State
+        ),
+        ?assertEqual(#{attempted => 0, handed_off => 0}, Result)
+    after
+        ShardPid ! stop,
+        persistent_term:erase({gateway_cluster_membership, members}),
+        persistent_term:erase({gateway_cluster_membership, members_by_role})
+    end.
+
+local_ids_stub_loop(GuildIds) ->
+    receive
+        stop ->
+            ok;
+        {'$gen_call', From, get_local_guild_ids} ->
+            gen_server:reply(From, {ok, GuildIds}),
+            local_ids_stub_loop(GuildIds);
+        {'$gen_call', From, _Request} ->
+            gen_server:reply(From, {error, not_found}),
+            local_ids_stub_loop(GuildIds)
+    end.
+
 find_shard_by_ref_found_test() ->
     Ref = make_ref(),
     Shards = #{0 => #{pid => self(), ref => Ref}},
