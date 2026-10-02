@@ -239,7 +239,7 @@
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	right: var(--member-list-width, 16.5rem);
+	right: var(--layout-member-list-width);
 	width: 0.0625rem;
 	background: var(--user-area-divider-color);
 	pointer-events: none;
