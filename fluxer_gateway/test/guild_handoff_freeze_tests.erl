@@ -22,7 +22,8 @@ transfer_test_() ->
         instantiate(fun sessions_stay_behind_when_not_transferred/1),
         instantiate(fun cast_during_source_terminate_reaches_target/1),
         instantiate(fun monitor_flush_in_source_terminate_loses_no_cast/1),
-        instantiate(fun connect_worker_results_stay_with_the_source/1)
+        instantiate(fun connect_worker_results_stay_with_the_source/1),
+        instantiate(fun abort_after_forwarding_reports_the_forwarded_count/1)
     ]}.
 
 instantiate(Test) ->
@@ -162,6 +163,18 @@ connect_worker_results_stay_with_the_source(#{src := Src, src_shard := SrcShard}
     {ok, #{new_pid := NewPid}} = Result,
     ?assertEqual([a, b], gen_server:call(NewPid, get_log)).
 
+abort_after_forwarding_reports_the_forwarded_count(#{src := Src, src_shard := SrcShard}) ->
+    BeforeStart = fun() ->
+        gen_server:cast(Src, crash),
+        wait_mailbox(Src, 1)
+    end,
+    Result = guild_handoff_freeze:transfer(
+        ?GUILD_ID, Src, SrcShard, node(), #{before_start => BeforeStart}
+    ),
+    ?assertMatch(
+        {error, #{phase := target_died, abort := #{forwarded := 1, thaw := ok}}}, Result
+    ).
+
 export_drops_only_keys_the_importer_rebuilds_test() ->
     Raw = #{
         <<"guild">> => #{<<"id">> => <<"4242">>},
@@ -289,7 +302,9 @@ handle_call({append_call, Item}, _From, #{role := guild} = State) ->
     {reply, {ok, self()}, append(Item, State)}.
 
 handle_cast({append, Item}, #{role := guild} = State) ->
-    {noreply, append(Item, State)}.
+    {noreply, append(Item, State)};
+handle_cast(crash, #{role := guild} = State) ->
+    {stop, crashed, State}.
 
 handle_info({'EXIT', _Pid, Reason}, #{role := guild} = State) ->
     {stop, Reason, State};

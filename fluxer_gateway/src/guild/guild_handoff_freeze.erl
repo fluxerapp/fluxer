@@ -229,12 +229,37 @@ run_after_start(NewPid, #{opts := Opts} = Ctx) ->
 run_commit(NewPid, #{src := SrcPid, opts := Opts} = Ctx) ->
     case forward_rounds(SrcPid, NewPid, maps:get(forward_rounds, Opts), 0, [], Opts) of
         {ok, Seen, Rounds} ->
-            commit_final(NewPid, Seen, put_report(rounds, lists:reverse(Rounds), Ctx));
-        {error, {capture_failed, noproc}, Rounds} ->
-            source_gone(NewPid, put_report(rounds, lists:reverse(Rounds), Ctx));
-        {error, Reason, Rounds} ->
-            abort(forward, Reason, put_report(rounds, lists:reverse(Rounds), Ctx))
+            commit_final(NewPid, Seen, rounds_report(Rounds, Ctx));
+        {error, {capture_failed, noproc}, _Seen, Rounds} ->
+            source_gone(NewPid, rounds_report(Rounds, Ctx));
+        {error, {capture_failed, _} = Reason, Seen, Rounds} ->
+            Ctx1 = put_report(rounds_stopped, Reason, rounds_report(Rounds, Ctx)),
+            commit_final(NewPid, Seen, Ctx1);
+        {error, Reason, _Seen, Rounds} ->
+            abort(forward, Reason, rounds_report(Rounds, Ctx))
     end.
+
+-spec rounds_report([map()], map()) -> map().
+rounds_report(Rounds, Ctx) ->
+    Forwarded = lists:foldl(fun(Round, Acc) -> Acc + forwarded_count(Round) end, 0, Rounds),
+    add_forwarded(Forwarded, put_report(rounds, lists:reverse(Rounds), Ctx)).
+
+-spec add_forwarded(non_neg_integer(), map()) -> map().
+add_forwarded(Count, Ctx) ->
+    Ctx#{forwarded => maps:get(forwarded, Ctx, 0) + Count}.
+
+-spec forwarded_count(map()) -> non_neg_integer().
+forwarded_count(Stats) ->
+    lists:foldl(
+        fun(Kind, Acc) ->
+            case maps:get(Kind, Stats, 0) of
+                Count when is_integer(Count), Count > 0 -> Acc + Count;
+                _ -> Acc
+            end
+        end,
+        0,
+        [call, cast, presence_repair, voice_cleanup]
+    ).
 
 -spec commit_final(pid(), non_neg_integer(), map()) -> result().
 commit_final(NewPid, Seen, #{src := SrcPid} = Ctx) ->
@@ -308,14 +333,18 @@ drain_alive(NewPid, Seen, #{stop := ok} = Drain, #{src := SrcPid, opts := Opts} 
         false -> timer:sleep(?DRAIN_POLL_MS)
     end,
     drain(NewPid, Seen, Drain, Ctx);
-drain_alive(_NewPid, _Seen, #{stop := Reason}, Ctx) ->
-    abort(stop, Reason, Ctx).
+drain_alive(_NewPid, _Seen, #{stop := Reason} = Drain, Ctx) ->
+    abort_drain(stop, Reason, Drain, Ctx).
+
+-spec abort_drain(atom(), term(), map(), map()) -> result().
+abort_drain(Phase, Reason, Drain, Ctx) ->
+    abort(Phase, Reason, add_forwarded(forwarded_count(maps:get(stats, Drain)), Ctx)).
 
 -spec drain_unknown(pid(), term(), map(), map()) -> result().
 drain_unknown(NewPid, Reason, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
     case source_alive(SrcPid, Opts) of
         false -> drained(NewPid, Drain, Ctx);
-        _ -> abort(stop, {capture_failed, Reason, maps:get(stop, Drain)}, Ctx)
+        _ -> abort_drain(stop, {capture_failed, Reason, maps:get(stop, Drain)}, Drain, Ctx)
     end.
 
 -spec drained(pid(), map(), map()) -> result().
@@ -370,7 +399,12 @@ abort(Phase, Reason, #{opts := Opts} = Ctx) ->
     {error, Report#{
         phase => Phase,
         reason => Reason,
-        abort => #{routes => Routes, target => Target, thaw => Thaw},
+        abort => #{
+            routes => Routes,
+            target => Target,
+            thaw => Thaw,
+            forwarded => maps:get(forwarded, Ctx, 0)
+        },
         total_ms => now_ms() - maps:get(t0, Ctx)
     }}.
 
@@ -511,13 +545,13 @@ start_on(GuildId, Target, Export, Timeout) ->
     end.
 
 -spec forward_rounds(pid(), pid(), non_neg_integer(), non_neg_integer(), [map()], opts()) ->
-    {ok, non_neg_integer(), [map()]} | {error, term(), [map()]}.
+    {ok, non_neg_integer(), [map()]} | {error, term(), non_neg_integer(), [map()]}.
 forward_rounds(_SrcPid, _NewPid, 0, Seen, Rounds, _Opts) ->
     {ok, Seen, Rounds};
 forward_rounds(SrcPid, NewPid, Left, Seen, Rounds, Opts) ->
     case capture(SrcPid, Seen, Opts) of
         {ok, Len, _New} when Len < Seen ->
-            {error, mailbox_shrank, Rounds};
+            {error, mailbox_shrank, Seen, Rounds};
         {ok, _Len, []} ->
             {ok, Seen, Rounds};
         {ok, _Len, New} ->
@@ -531,7 +565,7 @@ forward_rounds(SrcPid, NewPid, Left, Seen, Rounds, Opts) ->
                 SrcPid, NewPid, Left - 1, Seen + length(New), [Round | Rounds], Opts
             );
         {error, Reason} ->
-            {error, {capture_failed, Reason}, Rounds}
+            {error, {capture_failed, Reason}, Seen, Rounds}
     end.
 
 -spec forward([term()], pid(), rounds | final) -> map().
