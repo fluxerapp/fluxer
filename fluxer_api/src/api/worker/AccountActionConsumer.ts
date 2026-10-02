@@ -14,8 +14,8 @@ import {
 import {Logger} from '@app/api/Logger';
 import {
 	type AccountStateDeps,
+	applyLimitNewConversations,
 	applyPhoneVerified,
-	applySpammer,
 	applySuspiciousFlags,
 	applyTempBanIp,
 	outcomeOf,
@@ -67,12 +67,12 @@ export function applyAction(deps: AccountActionDeps, env: ActionEnvelope): Promi
 	switch (env.type) {
 		case 'set_suspicious_flags':
 			return applySuspiciousFlags(deps.state, env);
-		case 'set_spammer':
-			return applySpammer(deps.state, env);
 		case 'phone_verified':
 			return applyPhoneVerified(deps.state, env);
 		case 'temp_ban_ip':
 			return applyTempBanIp(deps.state, env);
+		case 'limit_new_conversations':
+			return applyLimitNewConversations(deps.state, env);
 		default:
 			return Promise.resolve(outcomeOf(env as ActionEnvelope, 'unsupported'));
 	}

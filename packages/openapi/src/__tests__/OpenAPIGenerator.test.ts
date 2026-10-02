@@ -17,9 +17,13 @@ describe('OpenAPI generation from API controllers', () => {
 			content: {'application/json': {schema: {$ref: '#/components/schemas/ChannelUpdateRequestBody'}}},
 		});
 		const options = document.components.schemas.ChannelUpdateRequestBody.anyOf;
-		expect(options).toHaveLength(5);
+		expect(options).toHaveLength(6);
+		const withType = (options ?? []).filter((option) => option.properties && 'type' in option.properties);
+		expect(withType).toHaveLength(2);
+		for (const option of withType) {
+			expect(option.properties?.type).toMatchObject({anyOf: [{const: 0}, {const: 5}]});
+		}
 		for (const option of options ?? []) {
-			expect(option.properties).not.toHaveProperty('type');
 			expect(option.required).toBeUndefined();
 		}
 	});

@@ -168,12 +168,17 @@ export async function verifyMfaCode(ctx: ApiContext, params: VerifyMfaCodeParams
 	return false;
 }
 
+type CredentialTransport = 'usb' | 'nfc' | 'ble' | 'internal' | 'cable' | 'hybrid';
+
+const ALL_CREDENTIAL_TRANSPORTS: Array<CredentialTransport> = ['internal', 'hybrid', 'usb', 'nfc', 'ble'];
+
 function toCredentialDescriptor(credential: WebAuthnCredential) {
 	return {
 		id: credential.credentialId,
-		transports: credential.transports
-			? (Array.from(credential.transports) as Array<'usb' | 'nfc' | 'ble' | 'internal' | 'cable' | 'hybrid'>)
-			: undefined,
+		transports:
+			credential.transports && credential.transports.size > 0
+				? (Array.from(credential.transports) as Array<CredentialTransport>)
+				: ALL_CREDENTIAL_TRANSPORTS,
 	};
 }
 

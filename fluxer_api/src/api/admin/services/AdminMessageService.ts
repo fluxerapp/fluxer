@@ -13,6 +13,10 @@ import {
 	type UserID,
 } from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {
+	enqueueCrosspostFamilyPurgeFromCopies,
+	enqueueCrosspostSourceRemoval,
+} from '@app/api/channel/services/message/CrosspostPropagation';
 import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	createMessageResponseDataService,
@@ -127,15 +131,13 @@ export class AdminMessageService {
 
 	async deleteMessage(data: DeleteMessageRequest, adminUserId: UserID, auditLogReason: string | null) {
 		const {channelRepository, auditService} = this.deps;
-		const {gateway: gatewayService} = this.deps.apiContext.services;
+		const {gateway: gatewayService, worker: workerService} = this.deps.apiContext.services;
 		const channelId = createChannelID(data.channel_id);
 		const messageId = createMessageID(data.message_id);
 		const channel = await channelRepository.findUnique(channelId);
 		const message = await channelRepository.getMessage(channelId, messageId);
 		if (message) {
-			if (message.attachments.length > 0) {
-				await purgeMessageAttachments(message, getStorageService(), getPurgeQueue());
-			}
+			await purgeMessageAttachments(message, getStorageService(), getPurgeQueue());
 			await channelRepository.deleteMessage(
 				channelId,
 				messageId,
@@ -166,6 +168,8 @@ export class AdminMessageService {
 				}
 			}
 			await deleteMessageSearchDocuments([messageId], {context: {source: 'admin_message_delete'}});
+			await enqueueCrosspostSourceRemoval(workerService, {messages: [message], mode: 'purge'});
+			await enqueueCrosspostFamilyPurgeFromCopies(workerService, {messages: [message]});
 		}
 		await auditService.createAuditLog({
 			adminUserId,

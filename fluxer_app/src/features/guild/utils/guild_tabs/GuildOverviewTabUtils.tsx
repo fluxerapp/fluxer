@@ -135,7 +135,9 @@ export function useGuildOverviewData(guildId: string) {
 		return channels.filter((channel) => channel.type === ChannelTypes.GUILD_VOICE);
 	}, [channels]);
 	const textChannels = useMemo(() => {
-		return channels.filter((channel) => channel.type === ChannelTypes.GUILD_TEXT);
+		return channels.filter(
+			(channel) => channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_ANNOUNCEMENT,
+		);
 	}, [channels]);
 	const defaultValues: FormInputs = guild
 		? {

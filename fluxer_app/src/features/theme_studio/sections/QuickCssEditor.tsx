@@ -127,81 +127,96 @@ export interface QuickCssEditorProps {
 	baseTheme: ThemeStudioBaseTheme;
 	className?: string;
 	onChange: (value: string) => void;
+	readOnly?: boolean;
 	value: string;
 }
 
-const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(({ariaLabel, baseTheme, className, onChange, value}) => {
-	const containerRef = useRef<HTMLDivElement | null>(null);
-	const viewRef = useRef<EditorView | null>(null);
-	const onChangeRef = useRef(onChange);
-	onChangeRef.current = onChange;
-	const useSmoothScrolling = Accessibility.useSmoothScrolling;
+const QuickCssEditor: React.FC<QuickCssEditorProps> = observer(
+	({ariaLabel, baseTheme, className, onChange, readOnly, value}) => {
+		const containerRef = useRef<HTMLDivElement | null>(null);
+		const viewRef = useRef<EditorView | null>(null);
+		const onChangeRef = useRef(onChange);
+		onChangeRef.current = onChange;
+		const useSmoothScrolling = Accessibility.useSmoothScrolling;
 
-	const themeCompartment = useMemo(() => new Compartment(), []);
-	const contentAttributesCompartment = useMemo(() => new Compartment(), []);
-	const initialDocumentRef = useRef(value);
-	const initialAriaLabelRef = useRef(ariaLabel);
-	const initialBaseThemeRef = useRef(baseTheme);
+		const themeCompartment = useMemo(() => new Compartment(), []);
+		const contentAttributesCompartment = useMemo(() => new Compartment(), []);
+		const readOnlyCompartment = useMemo(() => new Compartment(), []);
+		const initialDocumentRef = useRef(value);
+		const initialReadOnlyRef = useRef(Boolean(readOnly));
+		const initialAriaLabelRef = useRef(ariaLabel);
+		const initialBaseThemeRef = useRef(baseTheme);
 
-	useEffect(() => {
-		const parent = containerRef.current;
-		if (!parent) return;
-		const state = EditorState.create({
-			doc: initialDocumentRef.current,
-			extensions: [
-				Prec.highest(keymap.of([indentWithTab])),
-				basicSetup,
-				css(),
-				cssLanguage.data.of({autocomplete: themeTokenCompletionSource}),
-				EditorView.lineWrapping,
-				contentAttributesCompartment.of(EditorView.contentAttributes.of({'aria-label': initialAriaLabelRef.current})),
-				themeCompartment.of([buildEditorTheme(initialBaseThemeRef.current), syntaxHighlighting(buildHighlightStyle())]),
-				EditorView.updateListener.of((update) => {
-					if (update.docChanged) {
-						onChangeRef.current(update.state.doc.toString());
-					}
-				}),
-			],
-		});
-		const view = new EditorView({state, parent});
-		viewRef.current = view;
-		return () => {
-			view.destroy();
-			viewRef.current = null;
-		};
-	}, [contentAttributesCompartment, themeCompartment]);
+		useEffect(() => {
+			const parent = containerRef.current;
+			if (!parent) return;
+			const state = EditorState.create({
+				doc: initialDocumentRef.current,
+				extensions: [
+					Prec.highest(keymap.of([indentWithTab])),
+					basicSetup,
+					css(),
+					cssLanguage.data.of({autocomplete: themeTokenCompletionSource}),
+					EditorView.lineWrapping,
+					contentAttributesCompartment.of(EditorView.contentAttributes.of({'aria-label': initialAriaLabelRef.current})),
+					readOnlyCompartment.of(EditorState.readOnly.of(initialReadOnlyRef.current)),
+					themeCompartment.of([
+						buildEditorTheme(initialBaseThemeRef.current),
+						syntaxHighlighting(buildHighlightStyle()),
+					]),
+					EditorView.updateListener.of((update) => {
+						if (update.docChanged) {
+							onChangeRef.current(update.state.doc.toString());
+						}
+					}),
+				],
+			});
+			const view = new EditorView({state, parent});
+			viewRef.current = view;
+			return () => {
+				view.destroy();
+				viewRef.current = null;
+			};
+		}, [contentAttributesCompartment, readOnlyCompartment, themeCompartment]);
 
-	useEffect(() => {
-		const view = viewRef.current;
-		if (!view) return;
-		view.dispatch({
-			effects: themeCompartment.reconfigure([buildEditorTheme(baseTheme), syntaxHighlighting(buildHighlightStyle())]),
-		});
-	}, [baseTheme, themeCompartment]);
+		useEffect(() => {
+			const view = viewRef.current;
+			if (!view) return;
+			view.dispatch({
+				effects: themeCompartment.reconfigure([buildEditorTheme(baseTheme), syntaxHighlighting(buildHighlightStyle())]),
+			});
+		}, [baseTheme, themeCompartment]);
 
-	useEffect(() => {
-		const view = viewRef.current;
-		if (!view) return;
-		view.dispatch({
-			effects: contentAttributesCompartment.reconfigure(EditorView.contentAttributes.of({'aria-label': ariaLabel})),
-		});
-	}, [ariaLabel, contentAttributesCompartment]);
+		useEffect(() => {
+			const view = viewRef.current;
+			if (!view) return;
+			view.dispatch({
+				effects: contentAttributesCompartment.reconfigure(EditorView.contentAttributes.of({'aria-label': ariaLabel})),
+			});
+		}, [ariaLabel, contentAttributesCompartment]);
 
-	useEffect(() => {
-		const view = viewRef.current;
-		if (!view) return;
-		const current = view.state.doc.toString();
-		if (current === value) return;
-		view.dispatch({changes: {from: 0, to: current.length, insert: value}});
-	}, [value]);
+		useEffect(() => {
+			const view = viewRef.current;
+			if (!view) return;
+			view.dispatch({effects: readOnlyCompartment.reconfigure(EditorState.readOnly.of(Boolean(readOnly)))});
+		}, [readOnly, readOnlyCompartment]);
 
-	useEffect(() => {
-		const view = viewRef.current;
-		if (!view) return;
-		view.scrollDOM.style.scrollBehavior = useSmoothScrolling ? 'smooth' : 'auto';
-	}, [useSmoothScrolling]);
+		useEffect(() => {
+			const view = viewRef.current;
+			if (!view) return;
+			const current = view.state.doc.toString();
+			if (current === value) return;
+			view.dispatch({changes: {from: 0, to: current.length, insert: value}});
+		}, [value]);
 
-	return <div ref={containerRef} className={className} data-flx="theme-studio.quick-css-editor.div" />;
-});
+		useEffect(() => {
+			const view = viewRef.current;
+			if (!view) return;
+			view.scrollDOM.style.scrollBehavior = useSmoothScrolling ? 'smooth' : 'auto';
+		}, [useSmoothScrolling]);
+
+		return <div ref={containerRef} className={className} data-flx="theme-studio.quick-css-editor.div" />;
+	},
+);
 
 export default QuickCssEditor;

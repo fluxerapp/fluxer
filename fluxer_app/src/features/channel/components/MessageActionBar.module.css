@@ -84,8 +84,17 @@
 	display: none;
 }
 
+.button.disabled {
+	color: var(--text-chat-muted);
+	cursor: default;
+}
+
+.button.disabled .actionBarIcon {
+	opacity: 0.5;
+}
+
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.button:not(.active):not(.danger):hover {
+	.button:not(.active):not(.danger):not(.disabled):hover {
 	color: var(--text-primary);
 	background: var(--message-action-bar-hover-background);
 }

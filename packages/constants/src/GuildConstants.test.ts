@@ -3,6 +3,8 @@
 import {
 	clampVoiceChannelBitrate,
 	GuildFeatures,
+	GuildVerificationLevel,
+	getEffectiveGuildVerificationLevel,
 	getMaxVoiceChannelBitrate,
 	resolveVoiceChannelBitrate,
 } from '@fluxer/constants/src/GuildConstants';
@@ -57,5 +59,35 @@ describe('resolveVoiceChannelBitrate', () => {
 	it('clamps a stored bitrate to what the guild currently holds', () => {
 		expect(resolveVoiceChannelBitrate(384000, [])).toBe(96000);
 		expect(resolveVoiceChannelBitrate(384000, [GuildFeatures.AUDIO_BITRATE_256_KBPS])).toBe(256000);
+	});
+});
+
+describe('getEffectiveGuildVerificationLevel', () => {
+	it('returns the stored level when phone verification is available', () => {
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.VERY_HIGH, false, true)).toBe(
+			GuildVerificationLevel.VERY_HIGH,
+		);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, false, true)).toBe(
+			GuildVerificationLevel.NONE,
+		);
+	});
+	it('treats very high as high when phone verification is unavailable', () => {
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.VERY_HIGH, false, false)).toBe(
+			GuildVerificationLevel.HIGH,
+		);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.VERY_HIGH, true, false)).toBe(
+			GuildVerificationLevel.HIGH,
+		);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.MEDIUM, false, false)).toBe(
+			GuildVerificationLevel.MEDIUM,
+		);
+	});
+	it('raises a discoverable guild to at least low', () => {
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, true, true)).toBe(
+			GuildVerificationLevel.LOW,
+		);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, true, false)).toBe(
+			GuildVerificationLevel.LOW,
+		);
 	});
 });

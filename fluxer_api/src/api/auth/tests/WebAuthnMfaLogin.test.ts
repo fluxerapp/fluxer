@@ -65,6 +65,7 @@ describe('WebAuthn MFA login', () => {
 		expect(mfaOptions.userVerification).toBe('discouraged');
 		expect(mfaOptions.allowCredentials).toBeTruthy();
 		expect(mfaOptions.allowCredentials!.length).toBeGreaterThan(0);
+		expect(mfaOptions.allowCredentials![0]!.transports).toEqual(['internal']);
 		if (mfaOptions.rpId) {
 			device.rpId = mfaOptions.rpId;
 		}
@@ -86,6 +87,48 @@ describe('WebAuthn MFA login', () => {
 			.get('/users/@me')
 			.execute();
 		expect(userInfo.id).toBe(account.userId);
+	});
+	it('offers every transport for a passkey registered without transports', async () => {
+		const account = await createTestAccount(harness);
+		const device = createWebAuthnDevice();
+		device.transports = null;
+		const secret = createTotpSecret();
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mfa/totp/enable')
+			.body({secret, code: generateTotpCode(secret), password: account.password})
+			.execute();
+		await registerWebAuthnCredential(harness, account.token, device, () => ({
+			mfa_method: 'totp',
+			mfa_code: generateTotpCode(secret),
+		}));
+		await setWebAuthnTwoFactor(harness, account.token, true, {
+			mfa_method: 'totp',
+			mfa_code: generateTotpCode(secret),
+		});
+		const loginResp = (await loginUser(harness, {
+			email: account.email,
+			password: account.password,
+		})) as LoginMfaResponse;
+		const mfaOptions = await createBuilderWithoutAuth<WebAuthnAuthenticationOptions>(harness)
+			.post('/auth/login/mfa/webauthn/authentication-options')
+			.body({ticket: loginResp.ticket})
+			.execute();
+		expect(mfaOptions.allowCredentials).toEqual([
+			{
+				id: device.credentialId.toString('base64url'),
+				type: 'public-key',
+				transports: ['internal', 'hybrid', 'usb', 'nfc', 'ble'],
+			},
+		]);
+		const webauthnMfaLogin = await createBuilderWithoutAuth<{token: string}>(harness)
+			.post('/auth/login/mfa/webauthn')
+			.body({
+				response: createAuthenticationResponse(device, mfaOptions),
+				challenge: mfaOptions.challenge,
+				ticket: loginResp.ticket,
+			})
+			.execute();
+		expect(webauthnMfaLogin.token).toBeTruthy();
 	});
 	it('issues a session token instead of an MFA ticket when passkey two-factor is left off', async () => {
 		const account = await createTestAccount(harness);

@@ -103,6 +103,7 @@ export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;
+	startMinimized: boolean;
 	useNativeTitleBar: boolean;
 	activeUseNativeTitleBar: boolean;
 	rememberWindowState: boolean;
@@ -132,6 +133,14 @@ export interface ThemeDirectoryCssFile {
 	fileName: string;
 	path: string;
 	css: string;
+}
+
+export type ThemeLinkedFileError = 'not_allowed' | 'missing' | 'not_file' | 'too_large' | 'too_many' | 'read_failed';
+
+export interface ThemeLinkedFileChange {
+	path: string;
+	css?: string;
+	error?: ThemeLinkedFileError;
 }
 
 export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
@@ -647,6 +656,9 @@ export interface ElectronAPI {
 	readThemeLocalFiles: (paths: Array<string>) => Promise<Array<ThemeLocalFileReadResult>>;
 	clearThemeLocalFiles: () => Promise<void>;
 	importThemeDirectory: () => Promise<Array<ThemeDirectoryCssFile>>;
+	pickThemeLinkedFiles: (options?: {multiple?: boolean}) => Promise<Array<ThemeDirectoryCssFile>>;
+	watchThemeLinkedFiles: (paths: Array<string>) => Promise<void>;
+	onThemeLinkedFileChange: (callback: (change: ThemeLinkedFileChange) => void) => () => void;
 	cacheVoiceBackgroundMedia: (options: VoiceBackgroundMediaCacheRequest) => Promise<VoiceBackgroundMediaCacheResult>;
 	readVoiceBackgroundMedia: (id: string) => Promise<VoiceBackgroundMediaReadResult | null>;
 	deleteVoiceBackgroundMedia: (id: string) => Promise<void>;

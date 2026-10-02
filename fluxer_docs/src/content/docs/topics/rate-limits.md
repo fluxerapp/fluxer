@@ -57,7 +57,7 @@ The denial body has the members of the ordinary [error response](/http-api/#erro
 | global | boolean | Whether the global bucket produced the denial, present and false on a route denial |
 | retry_after<sup>3</sup> | number | The delay in fractional seconds before another request is admitted |
 
-<sup>1</sup> A limit enforced outside the route bucket middleware can reuse this body with its own code. [Send phone verification](/http-api/users/phone-verification/#send-phone-verification) is the only live one, reporting `PHONE_RATE_LIMIT_EXCEEDED`
+<sup>1</sup> A limit enforced outside the route bucket middleware can reuse this body with its own code. [Allowances answering 429](#allowances-answering-429) and [Announcement channel allowances](#announcement-channel-allowances) list every live one
 
 <sup>2</sup> The locale [resolved](/topics/locales/#negotiation) for the request, which the account setting selects ahead of [Accept-Language](/http-api/#standard-request-headers)
 
@@ -88,9 +88,11 @@ The `X-RateLimit-Scope` header is the scope that produced a denial.
 | global | The denial came from the global bucket |
 | shared<sup>1</sup> | The denial came from an allowance that several accounts can exhaust for each other |
 
-<sup>1</sup> No route bucket declares a scope of its own, so every route bucket denial reports `user`. [Send phone verification](/http-api/users/phone-verification/#send-phone-verification) is the only live source of `shared`
+<sup>1</sup> No route bucket declares a scope of its own, so every route bucket denial reports `user`. Phone verification and the announcement channel allowances are the live sources of `shared`
 
 Phone verification reports `shared` when the per-number send allowance or a number-scoped provider cooldown produced the denial. Both are keyed by the submitted number, so two accounts sending to one number share the allowance.
+
+[Crosspost message](/http-api/messages/#crosspost-message) reports `shared` for its channel publish allowance, and an edit of a published message reports it for the per-message edit allowance. Every member who publishes or edits draws on the same allowance.
 
 ## Rate limit headers
 
@@ -131,7 +133,7 @@ An allowance enforced inside a handler is keyed independently of the route bucke
 
 The `disable_rate_limits` deployment switch turns off the login allowances along with both buckets. `relax_registration_rate_limits` turns off the registration allowances. Every other allowance below is enforced on every deployment.
 
-A denial takes one of the shapes below. An allowance in [Allowances answering 429](#allowances-answering-429) answers 429 with the [rate limit response object](#rate-limit-response-object) and the [rate limit headers](#rate-limit-headers) minus `X-RateLimit-Bucket`. An allowance in [Allowances answering 400](#allowances-answering-400) answers 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `code` names the exhausted allowance.
+A denial takes one of the shapes below. An allowance in [Allowances answering 429](#allowances-answering-429) or [Announcement channel allowances](#announcement-channel-allowances) answers 429 with the [rate limit response object](#rate-limit-response-object) and the [rate limit headers](#rate-limit-headers) minus `X-RateLimit-Bucket`. An allowance in [Allowances answering 400](#allowances-answering-400) answers 400 `INVALID_FORM_BODY` with one [validation error](/http-api/#validation-error-object) entry whose `code` names the exhausted allowance.
 
 The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Retry-After` header. The remaining delay appears only in the entry's localised `message`.
 
@@ -163,6 +165,17 @@ The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Re
 SMS provider throttling can impose an additional cooldown. It returns `PHONE_RATE_LIMIT_EXCEEDED` with the remaining delay.
 
 The Resend IP authorisation cooldown has no `X-RateLimit-*` header. It has a `Retry-After` header in whole seconds, and the body reports that delay again as a top-level `resend_available_in` and `retry_after`. A second resend on one ticket returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`. The allowance never refills, and the ticket expires 15 minutes after it was issued.
+
+### Announcement channel allowances
+
+These allowances answer 429 the same way as the ones above, with `X-RateLimit-Scope` set to `shared`.
+
+| Allowance | Code |
+| --- | --- |
+| Publishes from one announcement channel through [Crosspost message](/http-api/messages/#crosspost-message), 10 in a row, then one every 6 minutes | `MESSAGE_CROSSPOST_RATE_LIMITED` |
+| Edits of one published message through [Modify message](/http-api/messages/#modify-message) and the other edit routes, 3 in a row, then one every 20 minutes | `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` |
+
+Each is a leaky bucket like the route buckets. It admits a burst of its full size and then refills one slot at the stated interval, so a caller that waits one interval can act once more. A moderator edit of another member's published message draws on no allowance. [Announcement channels](/topics/announcement-channels/#limits) lists them with the other announcement channel limits.
 
 ### Allowances answering 400
 

@@ -2,7 +2,12 @@
 
 import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {
+	type ChannelFollowerRemovalCopyMode,
+	scheduleDeletedChannelFollowerRemoval,
+} from '@app/api/channel/services/ChannelFollowers';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
 import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
@@ -162,8 +167,11 @@ function setsEqual(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 
 const TEMPLATE_AFK_TIMEOUT_MIN_SECONDS = 60;
 const TEMPLATE_AFK_TIMEOUT_MAX_SECONDS = 3600;
-const THE_OTHER_PLATFORM_GUILD_ANNOUNCEMENT_CHANNEL_TYPE = 5;
 const THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE = 13;
+
+function isSystemChannelType(type: number): boolean {
+	return type === ChannelTypes.GUILD_TEXT || type === ChannelTypes.GUILD_ANNOUNCEMENT;
+}
 
 export class GuildOperationsService {
 	constructor(
@@ -474,6 +482,17 @@ export class GuildOperationsService {
 				ValidationErrorCodes.DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW,
 			);
 		}
+		if (
+			data.verification_level === GuildVerificationLevel.VERY_HIGH &&
+			data.verification_level !== currentGuild.verificationLevel &&
+			!Config.instance.phoneVerificationEnabled
+		) {
+			throw InputValidationError.fromCode('verification_level', ValidationErrorCodes.VALUE_MUST_BE_INTEGER_IN_RANGE, {
+				name: 'verification_level',
+				minValue: GuildVerificationLevel.NONE,
+				maxValue: GuildVerificationLevel.HIGH,
+			});
+		}
 		const isMfaLevelChange = data.mfa_level !== undefined && data.mfa_level !== currentGuild.mfaLevel;
 		if (isMfaLevelChange) {
 			const isOwner = guildData.owner_id === userId.toString();
@@ -525,7 +544,7 @@ export class GuildOperationsService {
 						ValidationErrorCodes.SYSTEM_CHANNEL_MUST_BE_IN_GUILD,
 					);
 				}
-				if (systemChannel.type !== ChannelTypes.GUILD_TEXT) {
+				if (!isSystemChannelType(systemChannel.type)) {
 					throw InputValidationError.fromCode('system_channel_id', ValidationErrorCodes.SYSTEM_CHANNEL_MUST_BE_TEXT);
 				}
 				patch.system_channel_id = systemChannelId;
@@ -735,17 +754,21 @@ export class GuildOperationsService {
 		if (!guildData || guildData.owner_id !== user.id.toString()) {
 			throw new MissingPermissionsError();
 		}
-		await this.performGuildDeletion(guildId);
+		await this.performGuildDeletion(guildId, 'source_deleted');
 	}
 
 	async deleteGuildById(guildId: GuildID): Promise<void> {
-		await this.performGuildDeletion(guildId);
+		await this.performGuildDeletion(guildId, 'purge');
 	}
 
-	private async performGuildDeletion(guildId: GuildID): Promise<void> {
+	private async performGuildDeletion(guildId: GuildID, copyMode: ChannelFollowerRemovalCopyMode): Promise<void> {
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) {
 			throw new UnknownGuildError();
+		}
+		const channels = await this.channelRepository.listGuildChannels(guildId);
+		for (const channel of channels) {
+			await scheduleDeletedChannelFollowerRemoval({channel, crossposts: this.channelRepository.crossposts, copyMode});
 		}
 		const members = await this.guildRepository.listMembers(guildId);
 		await this.gatewayService.dispatchGuild({
@@ -776,12 +799,13 @@ export class GuildOperationsService {
 		await Promise.all(invites.map((invite) => this.inviteRepository.delete(invite.code)));
 		const webhooks = await this.webhookRepository.listByGuild(guildId);
 		await Promise.all(webhooks.map((webhook) => this.webhookRepository.delete(webhook.id)));
-		const channels = await this.channelRepository.listGuildChannels(guildId);
+		for (const channel of channels) {
+			await this.channelService.attachments.purgeChannelAttachments(channel);
+		}
 		await Promise.all(channels.map((channel) => this.channelRepository.deleteAllChannelMessages(channel.id)));
 		await Promise.all(
 			channels.map((channel) => deleteChannelMessageSearchDocuments(channel.id, {context: {source: 'guild_delete'}})),
 		);
-		await Promise.all(channels.map((channel) => this.channelService.attachments.purgeChannelAttachments(channel)));
 		const discoveryRow = await this.discoveryRepository.findByGuildId(guildId);
 		if (discoveryRow) {
 			await this.discoveryRepository.deleteByGuildId(guildId, discoveryRow.status, discoveryRow.applied_at);
@@ -1032,7 +1056,7 @@ export class GuildOperationsService {
 					permissionOverwrites = null;
 				}
 			}
-			if (fluxerType === ChannelTypes.GUILD_TEXT && !firstTextChannelId) {
+			if (isSystemChannelType(fluxerType) && !firstTextChannelId) {
 				firstTextChannelId = channelId;
 			}
 			batch.addPrepared(
@@ -1078,7 +1102,7 @@ export class GuildOperationsService {
 		if (template.system_channel_id != null) {
 			const templateSystemChannelKey = this.getTemplateEntityKey(template.system_channel_id);
 			const templateSystemChannelType = channelTypeMap.get(templateSystemChannelKey);
-			if (templateSystemChannelType === ChannelTypes.GUILD_TEXT) {
+			if (templateSystemChannelType !== undefined && isSystemChannelType(templateSystemChannelType)) {
 				systemChannelId = channelIdMap.get(templateSystemChannelKey) ?? null;
 			}
 		}
@@ -1151,13 +1175,11 @@ export class GuildOperationsService {
 	private mapOtherPlatformTemplateChannelTypeToFluxer(channelType: number): number | null {
 		if (
 			channelType === ChannelTypes.GUILD_TEXT ||
+			channelType === ChannelTypes.GUILD_ANNOUNCEMENT ||
 			channelType === ChannelTypes.GUILD_VOICE ||
 			channelType === ChannelTypes.GUILD_CATEGORY
 		) {
 			return channelType;
-		}
-		if (channelType === THE_OTHER_PLATFORM_GUILD_ANNOUNCEMENT_CHANNEL_TYPE) {
-			return ChannelTypes.GUILD_TEXT;
 		}
 		if (channelType === THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE) {
 			return ChannelTypes.GUILD_VOICE;
@@ -1167,7 +1189,12 @@ export class GuildOperationsService {
 
 	private sanitiseTemplateGuildSettings(template?: TemplateSerializedGuild): TemplateGuildSettings {
 		return {
-			verificationLevel: this.clampTemplateSetting(template?.verification_level, 0, 4, 0),
+			verificationLevel: this.clampTemplateSetting(
+				template?.verification_level,
+				GuildVerificationLevel.NONE,
+				Config.instance.phoneVerificationEnabled ? GuildVerificationLevel.VERY_HIGH : GuildVerificationLevel.HIGH,
+				GuildVerificationLevel.NONE,
+			),
 			explicitContentFilter: this.clampTemplateSetting(template?.explicit_content_filter, 0, 2, 0),
 			defaultMessageNotifications: this.clampTemplateSetting(template?.default_message_notifications, 0, 1, 0),
 			systemChannelFlags: (template?.system_channel_flags ?? 0) & SUPPORTED_SYSTEM_CHANNEL_FLAGS,

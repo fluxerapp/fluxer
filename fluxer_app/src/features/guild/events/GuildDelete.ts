@@ -32,6 +32,7 @@ interface GuildDeletePayload {
 }
 
 export function handleGuildDelete(data: GuildDeletePayload, _context: GatewayHandlerContext): void {
+	GuildAvailability.setGuildDegraded(data.id, false);
 	GuildAvailability.handleGuildAvailability(data.id, data.unavailable, data.unavailable_hidden);
 	Guilds.handleGuildDelete({guildId: data.id, unavailable: data.unavailable});
 	GuildList.handleGuildDelete(data.id, data.unavailable);

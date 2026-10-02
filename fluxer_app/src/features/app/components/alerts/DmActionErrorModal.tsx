@@ -7,7 +7,7 @@ import {
 	RATE_LIMITED_ERROR_TITLE_DESCRIPTOR,
 } from '@app/features/app/components/alerts/CommonErrorModalDescriptors';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -66,8 +66,16 @@ const GENERIC_TITLE_DESCRIPTOR = msg({
 	comment: 'Title of the generic fallback error modal shown when opening or creating a DM fails.',
 });
 
-export function resolveDmActionErrorContent(code: string | undefined): {title: string; message: string} {
+export function resolveDmActionErrorContent(
+	code: string | undefined,
+	apiMessage?: string,
+): {title: string; message: string} {
 	switch (code) {
+		case APIErrorCodes.NEW_CONVERSATIONS_LIMITED:
+			return {
+				title: i18nGlobal._(GENERIC_TITLE_DESCRIPTOR),
+				message: apiMessage || i18nGlobal._(GENERIC_ERROR_BODY_DESCRIPTOR),
+			};
 		case APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER:
 			return {
 				title: i18nGlobal._(CANNOT_MESSAGE_USER_TITLE_DESCRIPTOR),
@@ -113,9 +121,10 @@ export function resolveDmActionErrorContent(code: string | undefined): {title: s
 
 export function showDmActionErrorModal(error: unknown): void {
 	const code = failureCode(error);
+	const apiMessage = failureMessage(error);
 	ModalCommands.push(
 		modal(() => {
-			const {title, message} = resolveDmActionErrorContent(code);
+			const {title, message} = resolveDmActionErrorContent(code, apiMessage);
 			return (
 				<GenericErrorModal title={title} message={message} data-flx="app.dm-action-error-modal.generic-error-modal" />
 			);

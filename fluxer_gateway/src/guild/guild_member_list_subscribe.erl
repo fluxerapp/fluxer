@@ -9,7 +9,9 @@
     send_member_list_update_to_sessions/5,
     dispatch_sync_to_subscribed_list/7,
     dispatch_sync_to_subscribed_sessions/6,
-    handle_sync_item_cache_timeout/1
+    handle_sync_item_cache_timeout/1,
+    sync_cache_find/1,
+    sync_cache_store/2
 ]).
 
 -type guild_state() :: map().
@@ -270,13 +272,37 @@ encode_sync_payload(Payload) ->
 -spec encode_sync_payload_cached(map(), list()) -> {pre_encoded, binary()}.
 encode_sync_payload_cached(Payload, Ops) ->
     {TimerRef, Current, Previous} = sync_item_cache(),
-    {FragmentOps, {Current1, Previous1}} =
-        lists:mapfoldl(fun fragment_op/2, {Current, Previous}, Ops),
+    Key = sync_payload_key(Payload, Ops),
+    {Encoded, {Current1, Previous1}} =
+        case Current of
+            #{Key := {Payload, Cached}} ->
+                {Cached, {Current, Previous}};
+            _ ->
+                encode_sync_payload_fragments(Key, Payload, Ops, {Current, Previous})
+        end,
     _ = erlang:put(?SYNC_ITEM_CACHE_KEY, {TimerRef, Current1, Previous1}),
+    Encoded.
+
+-spec encode_sync_payload_fragments(term(), map(), list(), {map(), map()}) ->
+    {{pre_encoded, binary()}, {map(), map()}}.
+encode_sync_payload_fragments(Key, Payload, Ops, Generations) ->
+    {FragmentOps, Generations1} = lists:mapfoldl(fun fragment_op/2, Generations, Ops),
     WirePayload = eqwalizer:dynamic_cast(
         guild_data_wire:payload(Payload#{<<"ops">> => FragmentOps})
     ),
-    {pre_encoded, iolist_to_binary(json:encode(WirePayload, fun encode_fragment_value/2))}.
+    Encoded =
+        {pre_encoded, iolist_to_binary(json:encode(WirePayload, fun encode_fragment_value/2))},
+    {Encoded, cache_fragment(Key, {Payload, Encoded}, Generations1)}.
+
+-spec sync_payload_key(map(), list()) -> term().
+sync_payload_key(Payload, Ops) ->
+    {sync_payload, maps:get(<<"id">>, Payload, undefined), [op_range(Op) || Op <- Ops]}.
+
+-spec op_range(term()) -> term().
+op_range(#{<<"range">> := Range}) ->
+    Range;
+op_range(_Op) ->
+    undefined.
 
 -spec fragment_op(term(), {map(), map()}) -> {term(), {map(), map()}}.
 fragment_op(#{<<"items">> := Items} = Op, Generations) when is_list(Items) ->
@@ -309,8 +335,7 @@ previous_or_encoded_fragment(Id, Item, Previous) ->
             {json_fragment, iolist_to_binary(json:encode(guild_data_wire:payload(Item)))}
     end.
 
--spec cache_fragment(term(), {term(), {json_fragment, binary()}}, {map(), map()}) ->
-    {map(), map()}.
+-spec cache_fragment(term(), {term(), term()}, {map(), map()}) -> {map(), map()}.
 cache_fragment(Id, Entry, {Current, _Previous}) when
     map_size(Current) >= ?SYNC_ITEM_CACHE_MAX_ENTRIES
 ->
@@ -323,6 +348,26 @@ encode_fragment_value({json_fragment, Encoded}, _Encode) ->
     Encoded;
 encode_fragment_value(Value, Encode) ->
     json:encode_value(Value, Encode).
+
+-spec sync_cache_find(term()) -> {ok, term()} | error.
+sync_cache_find(Key) ->
+    case {sync_item_cache_enabled(), erlang:get(?SYNC_ITEM_CACHE_KEY)} of
+        {true, {_TimerRef, #{Key := Value}, _Previous}} -> {ok, Value};
+        {true, {_TimerRef, _Current, #{Key := Value}}} -> {ok, Value};
+        _ -> error
+    end.
+
+-spec sync_cache_store(term(), term()) -> ok.
+sync_cache_store(Key, Value) ->
+    case sync_item_cache_enabled() of
+        true ->
+            {TimerRef, Current, Previous} = sync_item_cache(),
+            {Current1, Previous1} = cache_fragment(Key, Value, {Current, Previous}),
+            _ = erlang:put(?SYNC_ITEM_CACHE_KEY, {TimerRef, Current1, Previous1}),
+            ok;
+        false ->
+            ok = erase_sync_item_cache()
+    end.
 
 -spec sync_item_cache() -> {reference(), map(), map()}.
 sync_item_cache() ->
@@ -528,6 +573,7 @@ sync_item_cache_keeps_entries_touched_each_generation_test() ->
         ?assertEqual(8, map_size(previous_entries())),
         assert_matches_uncached(Payload),
         ?assertEqual(8, map_size(current_entries())),
+        ?assertEqual(1, map_size(payload_entries())),
         rotate_now(),
         ?assertEqual(8, map_size(previous_entries())),
         rotate_now(),
@@ -568,6 +614,52 @@ dispatch_sync_group_sends_uncached_bytes_test() ->
         ok = dispatch_sync_group([{0, 99}], [self()], 7, SyncFun),
         ok = dispatch_sync_group([{0, 99}], [self()], 7, SyncFun),
         ?assertEqual([Expected, Expected], received_dispatches())
+    end).
+
+sync_payload_equal_content_reuses_encoded_bytes_test() ->
+    with_clean_cache(fun() ->
+        Members = [test_member(N) || N <- lists:seq(1, 30)],
+        Payload = sync_payload(<<"500">>, [{0, 99}], Members),
+        assert_matches_uncached(Payload),
+        [Key] = maps:keys(payload_entries()),
+        Sentinel = {pre_encoded, <<"sentinel">>},
+        {TimerRef, Current, Previous} = erlang:get(?SYNC_ITEM_CACHE_KEY),
+        _ = erlang:put(
+            ?SYNC_ITEM_CACHE_KEY, {TimerRef, Current#{Key => {Payload, Sentinel}}, Previous}
+        ),
+        Copy = binary_to_term(term_to_binary(Payload)),
+        ?assertEqual(Sentinel, encode_sync_payload(Copy)),
+        [First | Rest] = Members,
+        Afk = put_in(First, [<<"member">>, <<"presence">>, <<"afk">>], true),
+        assert_matches_uncached(sync_payload(<<"500">>, [{0, 99}], [Afk | Rest])),
+        ?assertEqual([Key], maps:keys(payload_entries()))
+    end).
+
+sync_payload_cache_is_keyed_by_list_and_ranges_test() ->
+    with_clean_cache(fun() ->
+        Members = [test_member(N) || N <- lists:seq(1, 40)],
+        Payloads = [
+            sync_payload(<<"500">>, [{0, 99}], Members),
+            sync_payload(<<"600">>, [{0, 99}], Members),
+            sync_payload(<<"500">>, [{0, 19}], Members),
+            sync_payload(<<"500">>, [{0, 19}, {20, 39}], Members)
+        ],
+        [assert_matches_uncached(P) || P <- Payloads ++ lists:reverse(Payloads)],
+        ?assertEqual(4, map_size(payload_entries())),
+        Header = (hd(Payloads))#{<<"online_count">> => 1},
+        assert_matches_uncached(Header),
+        ?assertEqual(4, map_size(payload_entries()))
+    end).
+
+sync_payload_flag_off_ignores_cached_payload_test() ->
+    with_clean_cache(fun() ->
+        Payload = sync_payload(<<"500">>, [{0, 99}], [test_member(N) || N <- lists:seq(1, 5)]),
+        assert_matches_uncached(Payload),
+        ?assertEqual(1, map_size(payload_entries())),
+        with_cache_flag(false, fun() ->
+            assert_matches_uncached(Payload),
+            ?assertEqual(#{}, payload_entries())
+        end)
     end).
 
 assert_matches_uncached(Payload) ->
@@ -686,13 +778,22 @@ flush_rotation_timers() ->
 
 current_entries() ->
     case erlang:get(?SYNC_ITEM_CACHE_KEY) of
-        {_, Current, _} -> Current;
+        {_, Current, _} -> fragment_entries(Current);
         _ -> #{}
     end.
 
 previous_entries() ->
     case erlang:get(?SYNC_ITEM_CACHE_KEY) of
-        {_, _, Previous} -> Previous;
+        {_, _, Previous} -> fragment_entries(Previous);
+        _ -> #{}
+    end.
+
+fragment_entries(Generation) ->
+    maps:filter(fun(Key, _) -> is_binary(Key) end, Generation).
+
+payload_entries() ->
+    case erlang:get(?SYNC_ITEM_CACHE_KEY) of
+        {_, Current, _} -> maps:filter(fun(Key, _) -> not is_binary(Key) end, Current);
         _ -> #{}
     end.
 

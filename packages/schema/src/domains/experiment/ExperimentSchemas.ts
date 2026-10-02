@@ -4,6 +4,10 @@ import {
 	DomainMigrationAssignmentResponse,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {
+	INERT_PLUTONIUM_PAGE_ASSIGNMENT,
+	PlutoniumPageAssignmentResponse,
+} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
 import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
@@ -42,6 +46,7 @@ export type ExperimentDeliveryConfigResponse = z.infer<typeof ExperimentDelivery
 
 const ExperimentAssignmentsSchema = z.object({
 	domain_migration: DomainMigrationAssignmentResponse.optional(),
+	plutonium_page: PlutoniumPageAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -62,4 +67,8 @@ export function readDomainMigrationAssignment(
 	response: ExperimentAssignmentsResponse,
 ): DomainMigrationAssignmentResponse {
 	return response.assignments.domain_migration ?? INERT_DOMAIN_MIGRATION_ASSIGNMENT;
+}
+
+export function readPlutoniumPageAssignment(response: ExperimentAssignmentsResponse): PlutoniumPageAssignmentResponse {
+	return response.assignments.plutonium_page ?? INERT_PLUTONIUM_PAGE_ASSIGNMENT;
 }

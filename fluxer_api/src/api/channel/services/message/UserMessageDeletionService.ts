@@ -3,6 +3,10 @@
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {
+	type CrosspostWorkerService,
+	enqueueCrosspostSourceRemoval,
+} from '@app/api/channel/services/message/CrosspostPropagation';
 import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
 import {
 	isChannelEligible,
@@ -26,6 +30,7 @@ interface UserMessageDeletionServiceDeps {
 	gatewayService: IGatewayService;
 	storageService: IStorageService;
 	purgeQueue: IPurgeQueue;
+	workerService: CrosspostWorkerService;
 }
 
 interface DeleteUserMessagesScope {
@@ -232,6 +237,11 @@ export class UserMessageDeletionService {
 			);
 			await this.deps.channelRepository.bulkDeleteMessages(channelId, messageIds);
 			await this.eventDispatcher.dispatchBulkDelete(channel, messageIds);
+			await enqueueCrosspostSourceRemoval(this.deps.workerService, {
+				messages: messageObjects,
+				mode: 'source_deleted',
+				channel,
+			});
 			await deleteMessageSearchDocuments(messageIds, {context: {source: 'bulk_user_message_delete'}});
 			deleted += batch.length;
 		}

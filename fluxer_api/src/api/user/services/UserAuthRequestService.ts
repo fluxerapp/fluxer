@@ -76,11 +76,13 @@ export class UserAuthRequestService {
 		if (user.suspiciousActivityFlags !== 0) {
 			return;
 		}
-		const guildIds = await this.userRepository.getUserGuildIds(user.id);
-		if (guildIds.length > 0) {
-			const guilds = await this.guildRepository.listGuilds(guildIds);
-			if (guilds.some((g) => g.verificationLevel >= GuildVerificationLevel.VERY_HIGH)) {
-				return;
+		if (this.apiContext.services.config.instance.phoneVerificationEnabled) {
+			const guildIds = await this.userRepository.getUserGuildIds(user.id);
+			if (guildIds.length > 0) {
+				const guilds = await this.guildRepository.listGuilds(guildIds);
+				if (guilds.some((g) => g.verificationLevel >= GuildVerificationLevel.VERY_HIGH)) {
+					return;
+				}
 			}
 		}
 		throw new PhoneAddNotEligibleError();

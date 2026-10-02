@@ -92,7 +92,7 @@ export interface MasterConfig {
 			app_origin_aliases: Array<string>;
 			worker?: {
 				mode?: 'all_lanes' | 'single_lane' | 'single_task';
-				lane?: 'realtime' | 'unfurl' | 'lifecycle' | 'batch';
+				lane?: 'realtime' | 'unfurl' | 'lifecycle' | 'batch' | 'crosspost';
 				task?: string;
 				enable_cron_scheduler?: boolean;
 				lane_concurrency_overrides?: {
@@ -100,6 +100,7 @@ export interface MasterConfig {
 					unfurl?: number;
 					lifecycle?: number;
 					batch?: number;
+					crosspost?: number;
 				};
 			};
 			storage_change_feed?: {
@@ -285,6 +286,7 @@ export interface MasterConfig {
 	};
 	instance: {
 		self_hosted: boolean;
+		phone_verification_enabled?: boolean;
 		auto_join_invite_code?: string;
 		visionaries_guild_id?: string;
 		visionaries_guild_visionary_role_id?: string;

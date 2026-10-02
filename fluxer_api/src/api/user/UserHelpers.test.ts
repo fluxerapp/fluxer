@@ -7,9 +7,11 @@ import {
 	checkIsPremium,
 	getEffectivePremiumUntil,
 	getEffectiveSuspiciousFlags,
+	getPremiumPaymentRecoveryGraceMs,
 	getRequiredActions,
 	isSignInRefused,
 	isTemporarilyBanned,
+	PREMIUM_GRACE_PERIOD_MS,
 } from '@app/api/user/UserHelpers';
 import {
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
@@ -287,5 +289,19 @@ describe('account standing', () => {
 	it('accepts an account in good standing', () => {
 		expect(isSignInRefused(standing(0n))).toBe(false);
 		expect(canOwnerRunBots(standing(0n))).toBe(true);
+	});
+});
+
+describe('premium grace lengths', () => {
+	it('maps billing cycles to payment recovery grace', () => {
+		const day = 24 * 60 * 60 * 1000;
+		expect(getPremiumPaymentRecoveryGraceMs('monthly')).toBe(7 * day);
+		expect(getPremiumPaymentRecoveryGraceMs('yearly')).toBe(14 * day);
+		expect(getPremiumPaymentRecoveryGraceMs(null)).toBe(7 * day);
+		expect(getPremiumPaymentRecoveryGraceMs(undefined)).toBe(7 * day);
+	});
+
+	it('keeps the fallback grace at 3 days', () => {
+		expect(PREMIUM_GRACE_PERIOD_MS).toBe(3 * 24 * 60 * 60 * 1000);
 	});
 });

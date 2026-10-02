@@ -51,6 +51,7 @@ message SyncedPreferences {
   optional bool save_camera_uploads_to_device = 113;
   ReactionEmoji double_tap_reaction = 114;
   ChannelFrecencyState channel_frecency = 115;
+  AnnouncementPromptsState announcement_prompts = 116;
 
 }
 
@@ -220,6 +221,10 @@ message InputMonitoringPromptsState {
 message VoicePromptsState {
   bool skip_hide_own_camera_confirm = 1;
   bool skip_hide_own_screenshare_confirm = 2;
+}
+
+message AnnouncementPromptsState {
+  bool hide_publish_nudge = 1;
 }
 
 message SudoPromptState {

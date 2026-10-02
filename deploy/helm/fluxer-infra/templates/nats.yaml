@@ -1,0 +1,71 @@
+{{- with .Values.nats }}
+{{- $ctx := dict "root" $ "w" . "name" "nats" "component" "messaging" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-config
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-infra.labels" $ctx | nindent 4 }}
+data:
+  nats.conf: {{ include "fluxer-infra.natsConf" $ | toJson }}
+{{- include "fluxer-infra.pdb" $ctx }}
+{{- include "fluxer-infra.service" (merge (dict "svcName" "nats" "ports" (list (list "client" 4222))) $ctx) }}
+{{- include "fluxer-infra.service" (merge (dict "svcName" "nats-headless" "headless" true "ports" (list (list "client" 4222) (list "cluster" 6222) (list "monitor" 8222))) $ctx) }}
+{{- $mounts := list (dict "name" "config" "mountPath" "/etc/nats") }}
+{{- $env := list }}
+{{- if .jetstream.enabled }}
+{{- $mounts = append $mounts (dict "name" "data" "mountPath" "/data") }}
+{{- $env = append $env (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name"))) }}
+{{- end }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nats
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-infra.labels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ include "fluxer-infra.replicas" $ctx }}
+  serviceName: nats-headless
+  {{- with include "fluxer-infra.statefulSetSpec" $ctx | trim }}
+  {{- . | nindent 2 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fluxer-infra.selectorLabels" $ctx | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer-infra.labels" $ctx | nindent 8 }}
+      {{- with include "fluxer-infra.podAnnotations" (merge (dict "extra" (dict "checksum/config" (include "fluxer-infra.natsConf" $ | sha256sum))) $ctx) | trim }}
+      {{- . | nindent 6 }}
+      {{- end }}
+    spec:
+      {{- include "fluxer-infra.podSpec" $ctx | trim | nindent 6 }}
+      containers:
+        - name: nats
+          {{- include "fluxer-infra.containerCommon" (merge (dict "env" $env "mounts" $mounts) $ctx) | trim | nindent 10 }}
+          args:
+            - -c
+            - /etc/nats/nats.conf
+          ports:
+            - name: client
+              containerPort: 4222
+            - name: cluster
+              containerPort: 6222
+            - name: monitor
+              containerPort: 8222
+      volumes:
+        - name: config
+          configMap:
+            name: nats-config
+        {{- with .extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+  {{- if .jetstream.enabled }}
+  volumeClaimTemplates:
+    {{- include "fluxer-infra.volumeClaim" .jetstream.storage | nindent 4 }}
+  {{- end }}
+{{- end }}

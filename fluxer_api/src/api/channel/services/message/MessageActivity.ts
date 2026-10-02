@@ -2,6 +2,7 @@
 
 import {createInviteCode, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {AttachmentMeta} from '@app/api/infrastructure/activity/Contract.generated';
 import {Logger} from '@app/api/Logger';
 import {getGuildRepository, getInviteRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
@@ -71,7 +72,18 @@ export interface MessageCreatedActivity {
 	userRepository: Pick<IUserRepository, 'getRelationship'>;
 }
 
-async function buildAndEmit(params: MessageCreatedActivity): Promise<void> {
+function attachmentMeta(message: Message): Array<AttachmentMeta> {
+	return message.attachments.slice(0, LIST_MAX).map((attachment) => ({
+		size: Number(attachment.size),
+		content_type: attachment.contentType || null,
+		hash: attachment.contentHash ? attachment.contentHash.toLowerCase() : null,
+	}));
+}
+
+async function buildAndEmit(
+	kind: 'message_created' | 'message_updated',
+	params: MessageCreatedActivity,
+): Promise<void> {
 	const {user, message, channel, guildId, dmRecipientId} = params;
 	const content = Array.from(message.content ?? '')
 		.slice(0, CONTENT_MAX_CHARS)
@@ -87,7 +99,7 @@ async function buildAndEmit(params: MessageCreatedActivity): Promise<void> {
 		? (await params.userRepository.getRelationship(user.id, dmRecipientId, RelationshipTypes.FRIEND)) !== null
 		: false;
 	await emitActivity(
-		'message_created',
+		kind,
 		user.id.toString(),
 		{
 			user_id: user.id.toString(),
@@ -102,6 +114,7 @@ async function buildAndEmit(params: MessageCreatedActivity): Promise<void> {
 			content,
 			attachment_count: message.attachments.length,
 			attachment_names: message.attachments.slice(0, LIST_MAX).map((attachment) => attachment.filename),
+			attachments: attachmentMeta(message),
 			link_domains: domains,
 			invite_codes: inviteCodes,
 			invite_guild_ids: targets.map((target) => target.guildId),
@@ -114,12 +127,20 @@ async function buildAndEmit(params: MessageCreatedActivity): Promise<void> {
 			delivered: params.delivered,
 		},
 		null,
-		message.id.toString(),
+		kind === 'message_created'
+			? message.id.toString()
+			: `${message.id}:${message.editedTimestamp?.getTime() ?? Date.now()}`,
 	);
 }
 
 export function emitMessageCreated(params: MessageCreatedActivity): void {
-	void buildAndEmit(params).catch((error: unknown) => {
+	void buildAndEmit('message_created', params).catch((error: unknown) => {
+		Logger.debug({error}, 'Message activity event could not be built');
+	});
+}
+
+export function emitMessageUpdated(params: MessageCreatedActivity): void {
+	void buildAndEmit('message_updated', params).catch((error: unknown) => {
 		Logger.debug({error}, 'Message activity event could not be built');
 	});
 }

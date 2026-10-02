@@ -129,6 +129,10 @@ import {
 	CHANNELS_BY_GUILD_COLUMNS,
 	type ChannelRow,
 	type ChannelsByGuildRow,
+	CROSSPOST_SOURCE_BY_CHANNEL_COLUMNS,
+	CROSSPOSTED_MESSAGE_COLUMNS,
+	type CrosspostedMessageRow,
+	type CrosspostSourceByChannelRow,
 	DM_STATE_COLUMNS,
 	type DmStateRow,
 	INVITE_COLUMNS,
@@ -136,7 +140,9 @@ import {
 	PRIVATE_CHANNEL_COLUMNS,
 	type PrivateChannelRow,
 	WEBHOOK_COLUMNS,
+	WEBHOOKS_BY_SOURCE_CHANNEL_COLUMNS,
 	type WebhookRow,
+	type WebhooksBySourceChannelRow,
 } from '@app/api/database/types/ChannelTypes';
 import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
 import {
@@ -1088,6 +1094,36 @@ export const WebhooksByGuild = defineTable<WebhooksByGuildRow, 'guild_id' | 'web
 	name: 'webhooks_by_guild_id',
 	columns: WEBHOOKS_BY_GUILD_COLUMNS,
 	primaryKey: ['guild_id', 'webhook_id'],
+});
+export const WebhooksBySourceChannel = defineTable<
+	WebhooksBySourceChannelRow,
+	'source_channel_id' | 'webhook_id',
+	'source_channel_id'
+>({
+	name: 'webhooks_by_source_channel_id',
+	columns: WEBHOOKS_BY_SOURCE_CHANNEL_COLUMNS,
+	primaryKey: ['source_channel_id', 'webhook_id'],
+	partitionKey: ['source_channel_id'],
+});
+export const CrosspostedMessages = defineTable<
+	CrosspostedMessageRow,
+	'source_message_id' | 'webhook_id',
+	'source_message_id'
+>({
+	name: 'crossposted_messages',
+	columns: CROSSPOSTED_MESSAGE_COLUMNS,
+	primaryKey: ['source_message_id', 'webhook_id'],
+	partitionKey: ['source_message_id'],
+});
+export const CrosspostSourcesByChannel = defineTable<
+	CrosspostSourceByChannelRow,
+	'source_channel_id' | 'source_message_id',
+	'source_channel_id'
+>({
+	name: 'crosspost_sources_by_channel',
+	columns: CROSSPOST_SOURCE_BY_CHANNEL_COLUMNS,
+	primaryKey: ['source_channel_id', 'source_message_id'],
+	partitionKey: ['source_channel_id'],
 });
 export const InstanceConfiguration = defineTable<InstanceConfigurationRow, 'key'>({
 	name: 'instance_configuration',

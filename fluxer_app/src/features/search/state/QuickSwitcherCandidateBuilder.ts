@@ -120,7 +120,8 @@ export function buildChannelCandidate(
 				sortWeight,
 			};
 		}
-		case ChannelTypes.GUILD_TEXT: {
+		case ChannelTypes.GUILD_TEXT:
+		case ChannelTypes.GUILD_ANNOUNCEMENT: {
 			if (!channel.guildId) return null;
 			const guild = getGuild(channel.guildId);
 			const title = channel.name ? channel.name : i18n._(UNKNOWN_CHANNEL_DESCRIPTOR);

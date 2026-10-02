@@ -24,6 +24,10 @@ import {
 	InstanceBillingResponse,
 	InstanceBillingUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
+import {
+	PlutoniumPageConfigResponse,
+	PlutoniumPageConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
 import {PushRelayConfigResponse, PushRelayConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {
 	ExperimentDeliveryConfigResponse,
@@ -638,6 +642,7 @@ export const InstanceConfigResponse = z.object({
 	gateway_rollout: GatewayRolloutConfigResponse,
 	push_relay: PushRelayConfigResponse,
 	domain_migration: DomainMigrationConfigResponse,
+	plutonium_page: PlutoniumPageConfigResponse,
 	captcha: CaptchaConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
@@ -671,6 +676,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	push_relay: PushRelayConfigUpdateRequest.nullish(),
 	domain_migration: DomainMigrationConfigUpdateRequest.nullish(),
+	plutonium_page: PlutoniumPageConfigUpdateRequest.nullish(),
 	captcha: CaptchaConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
@@ -861,19 +867,31 @@ export const LimitConfigUpdateRequest = z.object({
 
 export type LimitConfigUpdateRequest = z.infer<typeof LimitConfigUpdateRequest>;
 
-export const SendSystemDmRequest = z.object({
-	content: z.string().min(1).max(4000).describe('Message content to send to each recipient'),
-	user_ids: z
-		.array(SnowflakeType)
-		.min(1)
-		.max(10000)
-		.describe('Recipient user IDs. Each receives the same content as a system DM.'),
-});
+export const SendSystemDmRequest = z
+	.object({
+		content: z.string().min(1).max(4000).describe('Message content to send to each recipient'),
+		user_ids: z
+			.array(SnowflakeType)
+			.min(1)
+			.max(10000)
+			.optional()
+			.describe('Recipient user IDs. Each receives the same content as a system DM.'),
+		all_users: z
+			.boolean()
+			.optional()
+			.describe('Send to every user account, skipping bots, system accounts, and deleted or disabled accounts'),
+	})
+	.refine((value) => (value.all_users === true) !== (value.user_ids !== undefined), {
+		error: 'Provide either user_ids or all_users, not both',
+		path: ['user_ids'],
+	});
 
 export type SendSystemDmRequest = z.infer<typeof SendSystemDmRequest>;
 
 export const SendSystemDmResponse = z.object({
-	recipient_count: Int32Type.describe('Number of recipients the worker job was queued to deliver to'),
+	recipient_count: Int32Type.nullable().describe(
+		'Number of recipients the worker job was queued to deliver to, or null when sending to all users',
+	),
 });
 
 export type SendSystemDmResponse = z.infer<typeof SendSystemDmResponse>;

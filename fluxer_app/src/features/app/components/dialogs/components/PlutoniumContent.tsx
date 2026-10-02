@@ -135,8 +135,7 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 					title={<Trans>Cancel subscription?</Trans>}
 					description={
 						<Trans>
-							You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep
-							your subscriber history.
+							You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history.
 						</Trans>
 					}
 					primaryText={<Trans>Cancel subscription</Trans>}
@@ -226,6 +225,7 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 						isVisionary={subscriptionStatus.isVisionary}
 						perksDisabled={subscriptionStatus.perksDisabled}
 						isGiftSubscription={subscriptionStatus.isGiftSubscription}
+						storeSubscription={subscriptionStatus.storeSubscription}
 						premiumUntil={subscriptionStatus.actualPremiumUntil}
 						billingCycle={subscriptionStatus.billingCycle}
 						monthlyPrice={monthlyPrice}
@@ -273,23 +273,25 @@ export const PlutoniumContent = observer(({defaultGiftMode = false}: PlutoniumCo
 					)}
 				</section>
 			)}
-			{subscriptionStatus.hasEverPurchased && !billingUnavailable && (
-				<>
-					<PurchaseHistorySection
-						premiumState={premiumState}
-						loadingPortal={loadingPortal}
-						handleOpenCustomerPortal={handleOpenCustomerPortal}
-						data-flx="app.plutonium-content.purchase-history-section"
-					/>
-					{!RuntimeConfig.isSelfHosted() && (
-						<SelfServeRefundSection
-							eligibility={premiumState?.billing.refund_eligibility ?? null}
-							refreshPremiumState={() => PremiumCommands.refreshPremiumState(countryCode ?? undefined)}
-							data-flx="app.plutonium-content.self-serve-refund-section"
+			{subscriptionStatus.hasEverPurchased &&
+				!billingUnavailable &&
+				premiumState?.billing.stripe_customer_id != null && (
+					<>
+						<PurchaseHistorySection
+							premiumState={premiumState}
+							loadingPortal={loadingPortal}
+							handleOpenCustomerPortal={handleOpenCustomerPortal}
+							data-flx="app.plutonium-content.purchase-history-section"
 						/>
-					)}
-				</>
-			)}
+						{!RuntimeConfig.isSelfHosted() && (
+							<SelfServeRefundSection
+								eligibility={premiumState?.billing.refund_eligibility ?? null}
+								refreshPremiumState={() => PremiumCommands.refreshPremiumState(countryCode ?? undefined)}
+								data-flx="app.plutonium-content.self-serve-refund-section"
+							/>
+						)}
+					</>
+				)}
 			{!purchasesAvailable ? (
 				!subscriptionStatus.shouldShowPremiumCard && (
 					<section className={styles.redeemSection} data-flx="app.plutonium-content.redeem-section">

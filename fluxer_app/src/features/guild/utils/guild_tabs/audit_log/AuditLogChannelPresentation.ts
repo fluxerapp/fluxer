@@ -11,6 +11,10 @@ import {
 	CHANNEL_CONTENT_WARNING_TEXT_CHANGED_ROW,
 	CHANNEL_CONTENT_WARNING_TEXT_REMOVED_ROW,
 	CHANNEL_CONTENT_WARNING_TEXT_SET_ROW,
+	CHANNEL_CONVERTED_TO_ANNOUNCEMENT_ROW,
+	CHANNEL_CONVERTED_TO_TEXT_ROW,
+	CHANNEL_CREATE_ANNOUNCEMENT_IN_CATEGORY_SUMMARY,
+	CHANNEL_CREATE_ANNOUNCEMENT_SUMMARY,
 	CHANNEL_CREATE_CATEGORY_SUMMARY,
 	CHANNEL_CREATE_GENERIC_IN_CATEGORY_SUMMARY,
 	CHANNEL_CREATE_GENERIC_SUMMARY,
@@ -20,6 +24,7 @@ import {
 	CHANNEL_CREATE_TEXT_SUMMARY,
 	CHANNEL_CREATE_VOICE_IN_CATEGORY_SUMMARY,
 	CHANNEL_CREATE_VOICE_SUMMARY,
+	CHANNEL_DELETE_ANNOUNCEMENT_SUMMARY,
 	CHANNEL_DELETE_CATEGORY_SUMMARY,
 	CHANNEL_DELETE_GENERIC_SUMMARY,
 	CHANNEL_DELETE_LINK_SUMMARY,
@@ -35,6 +40,7 @@ import {
 	CHANNEL_MOVED_INTO_CATEGORY_ROW,
 	CHANNEL_MOVED_OUT_OF_CATEGORY_ROW,
 	CHANNEL_NAME_CHANGED_ROW,
+	CHANNEL_OVERRIDES_CHANGED_ANNOUNCEMENT_SUMMARY,
 	CHANNEL_OVERRIDES_CHANGED_CATEGORY_SUMMARY,
 	CHANNEL_OVERRIDES_CHANGED_GENERIC_SUMMARY,
 	CHANNEL_OVERRIDES_CHANGED_LINK_SUMMARY,
@@ -54,6 +60,7 @@ import {
 	CHANNEL_OVERWRITE_UPDATE_EVERYONE_SUMMARY,
 	CHANNEL_OVERWRITE_UPDATE_MEMBER_SUMMARY,
 	CHANNEL_OVERWRITE_UPDATE_ROLE_SUMMARY,
+	CHANNEL_RENAME_ANNOUNCEMENT_SUMMARY,
 	CHANNEL_RENAME_CATEGORY_SUMMARY,
 	CHANNEL_RENAME_GENERIC_SUMMARY,
 	CHANNEL_RENAME_LINK_SUMMARY,
@@ -65,6 +72,7 @@ import {
 	CHANNEL_TOPIC_CHANGED_ROW,
 	CHANNEL_TOPIC_REMOVED_ROW,
 	CHANNEL_TOPIC_SET_ROW,
+	CHANNEL_UPDATE_ANNOUNCEMENT_SUMMARY,
 	CHANNEL_UPDATE_CATEGORY_SUMMARY,
 	CHANNEL_UPDATE_GENERIC_SUMMARY,
 	CHANNEL_UPDATE_LINK_SUMMARY,
@@ -98,6 +106,7 @@ import {
 	readSnowflake,
 	readString,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
 	VOICE_CHANNEL_BITRATE_DEFAULT,
 	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
@@ -115,6 +124,7 @@ const BITS_PER_KILOBIT = 1000;
 
 const CREATE_SUMMARIES: Record<Exclude<ChannelNoun, 'category'>, MessageDescriptor> = {
 	text: CHANNEL_CREATE_TEXT_SUMMARY,
+	announcement: CHANNEL_CREATE_ANNOUNCEMENT_SUMMARY,
 	voice: CHANNEL_CREATE_VOICE_SUMMARY,
 	link: CHANNEL_CREATE_LINK_SUMMARY,
 	generic: CHANNEL_CREATE_GENERIC_SUMMARY,
@@ -122,6 +132,7 @@ const CREATE_SUMMARIES: Record<Exclude<ChannelNoun, 'category'>, MessageDescript
 
 const CREATE_IN_CATEGORY_SUMMARIES: Record<Exclude<ChannelNoun, 'category'>, MessageDescriptor> = {
 	text: CHANNEL_CREATE_TEXT_IN_CATEGORY_SUMMARY,
+	announcement: CHANNEL_CREATE_ANNOUNCEMENT_IN_CATEGORY_SUMMARY,
 	voice: CHANNEL_CREATE_VOICE_IN_CATEGORY_SUMMARY,
 	link: CHANNEL_CREATE_LINK_IN_CATEGORY_SUMMARY,
 	generic: CHANNEL_CREATE_GENERIC_IN_CATEGORY_SUMMARY,
@@ -129,6 +140,7 @@ const CREATE_IN_CATEGORY_SUMMARIES: Record<Exclude<ChannelNoun, 'category'>, Mes
 
 const RENAME_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 	text: CHANNEL_RENAME_TEXT_SUMMARY,
+	announcement: CHANNEL_RENAME_ANNOUNCEMENT_SUMMARY,
 	voice: CHANNEL_RENAME_VOICE_SUMMARY,
 	link: CHANNEL_RENAME_LINK_SUMMARY,
 	category: CHANNEL_RENAME_CATEGORY_SUMMARY,
@@ -137,6 +149,7 @@ const RENAME_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 
 const OVERRIDES_CHANGED_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 	text: CHANNEL_OVERRIDES_CHANGED_TEXT_SUMMARY,
+	announcement: CHANNEL_OVERRIDES_CHANGED_ANNOUNCEMENT_SUMMARY,
 	voice: CHANNEL_OVERRIDES_CHANGED_VOICE_SUMMARY,
 	link: CHANNEL_OVERRIDES_CHANGED_LINK_SUMMARY,
 	category: CHANNEL_OVERRIDES_CHANGED_CATEGORY_SUMMARY,
@@ -145,6 +158,7 @@ const OVERRIDES_CHANGED_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 
 const UPDATE_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 	text: CHANNEL_UPDATE_TEXT_SUMMARY,
+	announcement: CHANNEL_UPDATE_ANNOUNCEMENT_SUMMARY,
 	voice: CHANNEL_UPDATE_VOICE_SUMMARY,
 	link: CHANNEL_UPDATE_LINK_SUMMARY,
 	category: CHANNEL_UPDATE_CATEGORY_SUMMARY,
@@ -153,6 +167,7 @@ const UPDATE_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 
 const DELETE_SUMMARIES: Record<ChannelNoun, MessageDescriptor> = {
 	text: CHANNEL_DELETE_TEXT_SUMMARY,
+	announcement: CHANNEL_DELETE_ANNOUNCEMENT_SUMMARY,
 	voice: CHANNEL_DELETE_VOICE_SUMMARY,
 	link: CHANNEL_DELETE_LINK_SUMMARY,
 	category: CHANNEL_DELETE_CATEGORY_SUMMARY,
@@ -245,11 +260,12 @@ function createSummary(entry: GuildAuditLogEntryResponse, noun: ChannelNoun): Au
 function createRows(entry: GuildAuditLogEntryResponse, noun: ChannelNoun): Array<AuditLogDetailRow> {
 	const created = (key: string): unknown => readChange(entry, key)?.newValue;
 	const isVoice = noun === 'voice';
+	const isTextLike = noun === 'text' || noun === 'announcement';
 	const url = noun === 'link' ? readString(created('url')) : null;
-	const topic = noun === 'text' || isVoice || noun === 'link' ? readString(created('topic')) : null;
+	const topic = isTextLike || isVoice || noun === 'link' ? readString(created('topic')) : null;
 	const nsfw = readBoolean(created('nsfw'));
 	const warningLevel = noun === 'category' ? null : readNumber(created('content_warning_level'));
-	const slowmode = noun === 'text' || isVoice ? readNumber(created('rate_limit_per_user')) : null;
+	const slowmode = isTextLike || isVoice ? readNumber(created('rate_limit_per_user')) : null;
 	const bitrate = isVoice ? readNumber(created('bitrate')) : null;
 	const userLimit = isVoice ? readNumber(created('user_limit')) : null;
 	const connectionLimit = isVoice ? readNumber(created('voice_connection_limit')) : null;
@@ -398,6 +414,18 @@ function slowmodeRow(entry: GuildAuditLogEntryResponse): AuditLogDetailRow | nul
 	return null;
 }
 
+function channelTypeRow(entry: GuildAuditLogEntryResponse): AuditLogDetailRow | null {
+	const type = readTransition(entry, 'type', readNumber);
+	if (type?.kind !== 'changed') return null;
+	if (type.after === ChannelTypes.GUILD_ANNOUNCEMENT) {
+		return row('type', 'neutral', CHANNEL_CONVERTED_TO_ANNOUNCEMENT_ROW);
+	}
+	if (type.after === ChannelTypes.GUILD_TEXT && type.before === ChannelTypes.GUILD_ANNOUNCEMENT) {
+		return row('type', 'neutral', CHANNEL_CONVERTED_TO_TEXT_ROW);
+	}
+	return null;
+}
+
 function bitrateRow(entry: GuildAuditLogEntryResponse): AuditLogDetailRow | null {
 	const bitrate = readTransition(entry, 'bitrate', readNumber);
 	if (bitrate?.kind !== 'changed' || bitrate.before <= 0 || bitrate.after <= 0) return null;
@@ -450,6 +478,7 @@ export function presentChannelUpdate(entry: GuildAuditLogEntryResponse): AuditLo
 	const name = readTransition(entry, 'name', readString);
 	const rows = compactRows([
 		nameRow(name),
+		channelTypeRow(entry),
 		parentRow(entry),
 		urlRow(entry),
 		topicRow(entry),

@@ -23,7 +23,11 @@
 -type guild_id() :: integer().
 
 -define(CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, [
-    <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
+    <<"members">>,
+    members_normalized,
+    <<"member_role_index">>,
+    members_sorted_ids,
+    member_list_revision
 ]).
 -define(CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS, [active_guilds, user_roles, viewable_channels]).
 

@@ -2,6 +2,7 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import Keybind from '@app/features/input/state/InputKeybind';
+import {isBuiltinDisableMarker} from '@app/features/input/state/KeybindResolution';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {RetryIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {Button} from '@app/features/ui/button/Button';
@@ -57,7 +58,11 @@ const SHORTCUTS_ARE_PAUSED_WHILE_RECORDING_DESCRIPTOR = msg({
 });
 export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({searchQuery}) => {
 	const {i18n} = useLingui();
-	const customKeybinds = Keybind.getCustomKeybinds();
+	const allCustomKeybinds = Keybind.getCustomKeybinds();
+	const customKeybinds = useMemo(
+		() => allCustomKeybinds.filter((entry) => !isBuiltinDisableMarker(entry)),
+		[allCustomKeybinds],
+	);
 	const syncAcrossDevices = Keybind.getSyncAcrossDevices();
 	const disableBuiltinKeybinds = Keybind.getDisableBuiltinKeybinds();
 	const labelByAction = getCustomKeybindActionLabelMap(i18n, Keybind.getDefaults());
@@ -110,7 +115,7 @@ export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({se
 			)),
 		);
 	};
-	const hasAnyOverrides = customKeybinds.length > 0 || disableBuiltinKeybinds;
+	const hasAnyOverrides = allCustomKeybinds.length > 0 || disableBuiltinKeybinds;
 	return (
 		<div className={styles.customSection} data-flx="user.keybinds-tab.custom-keybinds-list.custom-section">
 			<div className={styles.customHeader} data-flx="user.keybinds-tab.custom-keybinds-list.custom-header">

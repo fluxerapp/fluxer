@@ -48,6 +48,9 @@ export function handleGuildCreate(data: GuildReadyData, _context: GatewayHandler
 		return;
 	}
 	GuildAvailability.setGuildAvailable(data.id);
+	if (!isSync || data.degraded !== undefined) {
+		GuildAvailability.setGuildDegraded(data.id, data.degraded === true);
+	}
 	Guilds.handleGuildCreate(data);
 	GuildCount.handleGuildCreate(data);
 	if (!isSync) {

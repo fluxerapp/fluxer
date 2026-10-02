@@ -8,6 +8,7 @@ import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {JsMsg} from '@nats-io/jetstream';
 import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
 
@@ -71,11 +72,11 @@ function createWorkerDependencies() {
 	return {sentChannelIds, sentUserIds};
 }
 
-function createJobMessage() {
+function createJobMessage(recipients: Record<string, unknown> = {user_ids: ['11', '12', '13']}) {
 	const envelope = {
 		payload: {
 			content: 'scheduled maintenance tonight',
-			user_ids: ['11', '12', '13'],
+			...recipients,
 			__jobId: LEDGER_JOB_ID.toString(),
 		},
 		max_attempts: 5,
@@ -163,5 +164,62 @@ describe('System DM cancellation', () => {
 		await expect(runner.runJob(TASK_TYPE, msg as unknown as JsMsg)).resolves.toBe(true);
 
 		expect(deps.sentUserIds).toEqual([0n, 0n, 0n]);
+	});
+
+	it('broadcasts to every eligible user when all_users is set', async () => {
+		const user = (id: bigint, extra: Record<string, unknown> = {}) => ({
+			id,
+			isBot: false,
+			isSystem: false,
+			flags: 0n,
+			...extra,
+		});
+		const pages = [
+			{users: [user(0n, {isSystem: true}), user(21n), user(22n, {isBot: true})], pageState: 'page-2'},
+			{
+				users: [user(23n, {flags: UserFlags.DELETED}), user(24n), user(25n, {flags: UserFlags.DISABLED})],
+				pageState: null,
+			},
+		];
+		const kv = new Map<string, string>();
+		const kvClient = {
+			get: async (key: string) => kv.get(key) ?? null,
+			setex: async (key: string, _ttl: number, value: string) => {
+				kv.set(key, value);
+			},
+			del: async (key: string) => (kv.delete(key) ? 1 : 0),
+		};
+		const recipientIds: Array<bigint> = [];
+		const systemUser = {id: 0n, username: 'Fluxer', bot: true, system: true};
+		const userRepository = {
+			findUnique: async () => systemUser,
+			findUniqueAssert: async () => systemUser,
+			findExistingDmState: async (_userId: bigint, recipientId: bigint) => {
+				recipientIds.push(recipientId);
+				return {id: 500n};
+			},
+			isDmChannelOpen: async () => true,
+			scanAllUsersPage: async (_limit: number, pageState: string | null) =>
+				pageState === 'page-2' ? pages[1] : pages[0],
+		} as unknown as UserRepository;
+		const channelService = {
+			messages: {send: {sendMessage: async () => {}}},
+		} as unknown as ChannelService;
+		setWorkerDependenciesForTest({userRepository, channelService, kvClient} as never);
+		const {ledger, markSucceeded} = createLedgerStub(Number.POSITIVE_INFINITY);
+		const runner = new TestWorkerRunner({
+			tasks: {[TASK_TYPE]: sendSystemDm},
+			queue: queueStub,
+			consumerName: 'workers_batch',
+			laneName: 'batch',
+			ledger,
+			concurrency: 1,
+		});
+
+		await expect(runner.runJob(TASK_TYPE, createJobMessage({all_users: true}) as unknown as JsMsg)).resolves.toBe(true);
+
+		expect(recipientIds).toEqual([21n, 24n]);
+		expect(markSucceeded).toHaveBeenCalledWith(LEDGER_JOB_ID, {sent_count: 2, failed_count: 0});
+		expect(kv.size).toBe(0);
 	});
 });

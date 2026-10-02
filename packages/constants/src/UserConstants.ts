@@ -41,6 +41,9 @@ export const UserPremiumTypes = {
 
 export type UserPremiumType = ValueOf<typeof UserPremiumTypes>;
 
+export const PREMIUM_GRACE_PERIOD_DAYS = 3;
+export const PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS = {monthly: 7, yearly: 14} as const;
+
 export const UserPremiumTypesDescriptions: Record<keyof typeof UserPremiumTypes, string> = {
 	NONE: 'No premium subscription',
 	SUBSCRIPTION: 'Active premium subscription',

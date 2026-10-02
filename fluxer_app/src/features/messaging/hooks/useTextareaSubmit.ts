@@ -502,15 +502,17 @@ export const useTextareaSubmit = ({
 					return;
 				}
 				if (canSubmitEmptyMessageEdit(editingMessage)) {
-					finishMobileEdit();
-					void MessageCommands.edit(
-						channelId,
-						editingMessage.id,
-						'',
-						undefined,
-						editingMessage._allowedMentions,
-						buildExistingAttachmentEditReferences(editingMessage),
-					);
+					MessageCommands.confirmPublishedMessageEdit(i18n, editingMessage, () => {
+						finishMobileEdit();
+						void MessageCommands.edit(
+							channelId,
+							editingMessage.id,
+							'',
+							undefined,
+							editingMessage._allowedMentions,
+							buildExistingAttachmentEditReferences(editingMessage),
+						);
+					});
 					return;
 				}
 				MessageCommands.showDeleteConfirmation(i18n, {
@@ -524,14 +526,16 @@ export const useTextareaSubmit = ({
 			if (checkCustomEmojiAvailability(resolvedContent)) {
 				return;
 			}
-			finishMobileEdit();
-			void MessageCommands.edit(
-				channelId,
-				editingMessage.id,
-				resolvedContent,
-				undefined,
-				editingMessage._allowedMentions,
-			);
+			MessageCommands.confirmPublishedMessageEdit(i18n, editingMessage, () => {
+				finishMobileEdit();
+				void MessageCommands.edit(
+					channelId,
+					editingMessage.id,
+					resolvedContent,
+					undefined,
+					editingMessage._allowedMentions,
+				);
+			});
 			return;
 		}
 		if (!canSubmitMessage(resolvedContent, uploadAttachmentsLength > 0 || hasPendingSticker)) {
@@ -542,13 +546,15 @@ export const useTextareaSubmit = ({
 			if (lastMessage) {
 				const newContent = ReplaceCommandUtils.executeReplaceCommand(lastMessage.content, replaceCommand);
 				if (newContent !== lastMessage.content) {
-					MessageCommands.edit(
-						lastMessage.channelId,
-						lastMessage.id,
-						newContent,
-						undefined,
-						lastMessage._allowedMentions,
-					);
+					MessageCommands.confirmPublishedMessageEdit(i18n, lastMessage, () => {
+						void MessageCommands.edit(
+							lastMessage.channelId,
+							lastMessage.id,
+							newContent,
+							undefined,
+							lastMessage._allowedMentions,
+						);
+					});
 				}
 			}
 			setValue('');

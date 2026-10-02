@@ -300,7 +300,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['http-api/guilds.mdx', {'table-fit': 1, 'table-identifier': 4}],
 	['http-api/instance.mdx', {'table-identifier': 6}],
 	['http-api/invites.mdx', {'table-cell': 6}],
-	['http-api/messages.mdx', {'table-fit': 1, 'table-cell': 20}],
+	['http-api/messages.mdx', {'table-fit': 1, 'table-cell': 20, 'table-identifier': 1}],
 	['http-api/permissions.mdx', {'table-cell': 8}],
 	['http-api/premium.mdx', {'table-identifier': 5}],
 	['http-api/read-states.mdx', {'table-cell': 2}],

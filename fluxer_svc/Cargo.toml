@@ -30,3 +30,6 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt", "jso
 [features]
 default = []
 scylla = ["dep:scylla"]
+
+[dev-dependencies]
+tokio = { version = "1.53.1", features = ["test-util"] }

@@ -569,6 +569,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 						canDeleteAttachment: true,
 						canPinMessage: true,
 						canForwardMessage: true,
+						canCrosspostMessage: false,
 						canSuppressEmbeds: true,
 						shouldRenderSuppressEmbeds: false,
 					}
@@ -716,7 +717,11 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					data-flx-author-self={message.author.id === Users.currentUserId ? 'true' : undefined}
 					data-flx-author-bot={message.author.bot ? 'true' : undefined}
 					data-flx-author-webhook={message.webhookId != null ? 'true' : undefined}
-					data-flx-reply={message.type === MessageTypes.REPLY || message.messageReference != null ? 'true' : undefined}
+					data-flx-reply={
+						message.type === MessageTypes.REPLY || (message.messageReference != null && !message.isCrosspostCopy)
+							? 'true'
+							: undefined
+					}
 					data-flx-blocked={message.blocked ? 'true' : undefined}
 					data-flx-pinned={message.pinned ? 'true' : undefined}
 					data-flx-call={message.type === MessageTypes.CALL ? 'true' : undefined}
@@ -764,6 +769,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 									canDeleteMessage: true,
 									canPinMessage: true,
 									canForwardMessage: true,
+									canCrosspostMessage: false,
 									shouldRenderSuppressEmbeds: true,
 								}}
 								developerMode={false}

@@ -994,6 +994,10 @@ Defaults to the inverse of `FLUXER_SELF_HOSTED`. Off by default on a self-hosted
 
 With feeds off, Fluxer checks none of this data. The first worker start with feeds off removes the URL feed file and every `malware_bazaar` file-SHA ban that no Admin added. File-SHA bans added through the Admin API stay. Turning feeds back on downloads the URLs within six hours and the hashes within twelve. Compose forwards it from `.env`.
 
+#### `FLUXER_PHONE_VERIFICATION_ENABLED`
+
+Defaults to the inverse of `FLUXER_SELF_HOSTED`. Phone verification needs an external responder on the `rpc.phone.v1` NATS subjects, and none ships with Fluxer. With it off, the `VERY_HIGH` guild verification level is evaluated as `HIGH`, the guild settings stop offering it, and the API rejects it. Turn it on only when your own responder answers those subjects. Compose forwards it from `.env`.
+
 #### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
 
 Defaults to the inverse of `FLUXER_SELF_HOSTED`. Breached password rejection. Sends the first five characters of the password's SHA-1 hash to `api.pwnedpasswords.com`. Off by default on a self-hosted instance. Compose forwards it from `.env`.
@@ -1078,7 +1082,7 @@ Default `development`. The runtime mode. `development`, `production`, or `test`.
 
 #### `FLUXER_SELF_HOSTED`
 
-Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, and turns blocklist feeds off.
+Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, and turns blocklist feeds and phone verification off.
 
 `/_metrics` on `api`, `media-proxy`, `gateway`, and `push`, plus the Gateway's `/_health/ready`, `/_health/drain`, and `/_health/undrain`, are gated to loopback peers, so no proxy reaches them. The probes that work from outside are `/api/_health`, `/gateway/_health`, `/media/_health`, and the edge's own `/_health`.
 
@@ -1242,7 +1246,7 @@ Default `all_lanes`. Which lanes the worker runs. `all_lanes`, `single_lane`, or
 
 #### `FLUXER_API_WORKER_LANE`
 
-No default. Which lane, under `single_lane`. `realtime`, `unfurl`, `lifecycle`, or `batch`. Compose does not forward it.
+No default. Which lane, under `single_lane`. `realtime`, `unfurl`, `lifecycle`, `batch`, or `crosspost`. Compose does not forward it. A deployment that splits the worker by lane needs a `crosspost` worker, or published announcements are never delivered.
 
 #### `FLUXER_API_WORKER_TASK`
 
@@ -1254,7 +1258,7 @@ No default. Whether the cron scheduler runs. Compose sets `true`. Without it no 
 
 #### `FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES`
 
-No default. Per-lane concurrency. JSON object keyed by lane. Each value must be an integer of at least 1 or startup fails. Built-in concurrency is realtime 10, unfurl 20, lifecycle 8, batch 12. Compose forwards it from `.env`.
+No default. Per-lane concurrency. JSON object keyed by lane, `realtime`, `unfurl`, `lifecycle`, `batch`, or `crosspost`. Each value must be an integer of at least 1 or startup fails. Built-in concurrency is realtime 10, unfurl 20, lifecycle 8, batch 12, crosspost 8. Compose forwards it from `.env`.
 
 #### `FLUXER_NODE_EXTRA_CA_CERTS`
 
@@ -1833,6 +1837,10 @@ Default `1536MiB`. The heap ceiling the Go runtime collects against. Go cannot s
 #### `FLUXER_SEAWEEDFS_TELEMETRY`
 
 Default `false`. Becomes the `-master.telemetry` flag of `seaweedfs`, which reports usage to the SeaweedFS project when on.
+
+#### `FLUXER_SEAWEEDFS_VOLUME_GROWTH`
+
+Default `1`. Becomes `WEED_MASTER_VOLUME_GROWTH_COPY_1`, the number of volumes SeaweedFS creates at once when a bucket runs out of room. Each volume reserves a 1 GB slot of free disk, and the stack writes to four buckets. SeaweedFS's own default of 7 needs about 28 GB free before every bucket has a volume, so on a smaller disk the first bucket takes every slot and uploads fail with `No writable volumes and no free volumes left`.
 
 #### `FLUXER_SEAWEEDFS_INIT_MEMORY_LIMIT`
 

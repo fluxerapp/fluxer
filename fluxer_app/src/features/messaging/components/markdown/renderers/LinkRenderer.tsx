@@ -34,6 +34,13 @@ import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import type {LinkNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {
+	type AppPageId,
+	getAppPageIcon,
+	getAppPageLabel,
+	navigateToAppPage,
+	parseAppPageLink,
+} from '@app/features/navigation/utils/AppPageLinks';
+import {
 	handleDeepLinkUrl,
 	isInternalChannelHost,
 	navigateToLinkedUserProfile,
@@ -110,6 +117,15 @@ const OPEN_SETTINGS_SECTION_DESCRIPTOR = msg({
 	message: 'Open {labelText} in settings',
 	comment:
 		'Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.',
+});
+const OPEN_APP_PAGE_DESCRIPTOR = msg({
+	message: 'Open {labelText}',
+	comment:
+		'Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.',
+});
+const PAGE_LINK_DESCRIPTOR = msg({
+	message: 'page link',
+	comment: 'Role description announced for an inline chat link pill that opens an app page. Lowercase.',
 });
 const SETTINGS_LINK_DESCRIPTOR = msg({
 	message: 'settings link',
@@ -630,6 +646,83 @@ function SettingsJumpLinkMention({target, url, i18n, interactive = true}: Settin
 	);
 }
 
+interface AppPageJumpLinkMentionProps {
+	page: AppPageId;
+	url: string;
+	i18n: I18n;
+	interactive?: boolean;
+}
+
+function AppPageJumpLinkMention({page, url, i18n, interactive = true}: AppPageJumpLinkMentionProps) {
+	const handleClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			event.preventDefault();
+			event.stopPropagation();
+			navigateToAppPage(page);
+		},
+		[interactive, page],
+	);
+	const handleAuxClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			if (event.button !== 1) return;
+			event.preventDefault();
+			event.stopPropagation();
+			void openExternalUrl(url);
+		},
+		[interactive, url],
+	);
+	const handleContextMenu = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
+				<SettingsLinkContextMenu
+					url={url}
+					i18n={i18n}
+					onClose={onClose}
+					data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.context-menu"
+				/>
+			));
+		},
+		[interactive, i18n, url],
+	);
+	const label = getAppPageLabel(i18n, page);
+	const PageIcon = getAppPageIcon(page);
+	const Component = interactive ? 'button' : 'span';
+	return (
+		<Component
+			data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.component.click"
+			{...(interactive ? {type: 'button'} : {})}
+			className={clsx(markupStyles.mention, interactive && markupStyles.interactive, jumpLinkStyles.jumpLinkButton)}
+			onClick={handleClick}
+			onAuxClick={handleAuxClick}
+			onContextMenu={handleContextMenu}
+			aria-label={i18n._(OPEN_APP_PAGE_DESCRIPTOR, {labelText: label})}
+			{...(interactive ? {'aria-roledescription': i18n._(PAGE_LINK_DESCRIPTOR)} : {})}
+			tabIndex={interactive ? 0 : -1}
+		>
+			<span
+				className={jumpLinkStyles.part}
+				data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.part"
+			>
+				<PageIcon
+					className={jumpLinkStyles.icon}
+					weight="fill"
+					aria-hidden="true"
+					data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.icon"
+				/>
+				<span
+					className={jumpLinkStyles.name}
+					data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.name"
+				>
+					{label}
+				</span>
+			</span>
+		</Component>
+	);
+}
+
 export const LinkRenderer = observer(function LinkRenderer({
 	node,
 	id,
@@ -648,6 +741,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const jumpChannel = jumpTarget ? (Channels.getChannel(jumpTarget.channelId) ?? null) : null;
 	const jumpGuild = jumpChannel?.guildId ? (Guilds.getGuild(jumpChannel.guildId) ?? null) : null;
 	const settingsTarget = isAppProtocolUrl(url) ? parseUserSettingsDeepLink(url) : null;
+	const appPage = settingsTarget ? null : parseAppPageLink(url);
 	const isInlineReplyContext = isRestrictedInlineContext(options.context);
 	const shouldDisableInteractions = options.disableInteractions === true;
 	if (inviteCode && StreamerMode.shouldHideInviteLinks) {
@@ -671,6 +765,24 @@ export const LinkRenderer = observer(function LinkRenderer({
 			mention
 		) : (
 			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--settings">
+				{mention}
+			</FocusRing>
+		);
+	}
+	if (appPage && !text) {
+		const mention = (
+			<AppPageJumpLinkMention
+				page={appPage}
+				url={url}
+				i18n={i18n}
+				interactive={!isInlineReplyContext && !shouldDisableInteractions}
+				data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention"
+			/>
+		);
+		return shouldDisableInteractions || isInlineReplyContext ? (
+			mention
+		) : (
+			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--app-page">
 				{mention}
 			</FocusRing>
 		);
@@ -772,6 +884,13 @@ export const LinkRenderer = observer(function LinkRenderer({
 					)),
 				);
 			}
+		};
+		isInternal = true;
+	} else if (appPage) {
+		handleClick = (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			navigateToAppPage(appPage);
 		};
 		isInternal = true;
 	} else if (isAppProtocolUrl(url)) {

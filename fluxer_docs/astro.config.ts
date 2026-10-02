@@ -168,6 +168,7 @@ export default defineConfig({
 					items: [
 						'http-api/errors',
 						'topics/rate-limits',
+						'topics/announcement-channels',
 						'http-api/permissions',
 						'topics/captcha',
 						'topics/uploads',

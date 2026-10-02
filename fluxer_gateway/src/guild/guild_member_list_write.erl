@@ -221,15 +221,17 @@ fold_connection_change_lists(GuildId, UserId, Mark, State, SubsTab) ->
 dispatch_user_change_to_subscribed_lists(
     UserId, OldMember, NewMember, SubsTab, State
 ) ->
-    lists:foldl(
-        fun(ListId, AccState) ->
-            dispatch_user_change_to_subscribed_list(
-                UserId, OldMember, NewMember, ListId, AccState
-            )
-        end,
-        State,
-        guild_member_list_subs:list_ids(SubsTab)
-    ).
+    guild_member_list_read:with_member_item_memo(fun() ->
+        lists:foldl(
+            fun(ListId, AccState) ->
+                dispatch_user_change_to_subscribed_list(
+                    UserId, OldMember, NewMember, ListId, AccState
+                )
+            end,
+            State,
+            guild_member_list_subs:list_ids(SubsTab)
+        )
+    end).
 
 -spec dispatch_user_change_to_subscribed_list(
     user_id(),

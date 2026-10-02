@@ -4,7 +4,10 @@ import type {ChannelID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
 import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import {ChannelAuthService} from '@app/api/channel/services/channel_data/ChannelAuthService';
-import type {ChannelUpdateData} from '@app/api/channel/services/channel_data/ChannelOperationsService';
+import type {
+	ChannelTypeConversion,
+	ChannelUpdateData,
+} from '@app/api/channel/services/channel_data/ChannelOperationsService';
 import {ChannelOperationsService} from '@app/api/channel/services/channel_data/ChannelOperationsService';
 import {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
 import {GroupDmUpdateService} from '@app/api/channel/services/channel_data/GroupDmUpdateService';
@@ -28,6 +31,7 @@ import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilitySer
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelUpdateRequest} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 
 type GuildChannelUpdateRequest = Exclude<
@@ -63,6 +67,7 @@ export class ChannelDataService {
 		webhookRepository: IWebhookRepository,
 		limitConfigService: LimitConfigService,
 		rateLimitService: IRateLimitService,
+		cacheService: ICacheService,
 	) {
 		this.utils = new ChannelUtilsService(
 			channelRepository,
@@ -87,6 +92,7 @@ export class ChannelDataService {
 			guildRepository,
 			limitConfigService,
 			rateLimitService,
+			cacheService,
 		);
 		this.groupDmUpdate = new GroupDmUpdateService(
 			channelRepository,
@@ -105,6 +111,7 @@ export class ChannelDataService {
 		clientFeatures,
 		requestCache,
 		auditLogReason,
+		typeConversion,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
@@ -112,6 +119,7 @@ export class ChannelDataService {
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
 		auditLogReason: string | null;
+		typeConversion?: ChannelTypeConversion | null;
 	}): Promise<Channel> {
 		const {channel} = await this.auth.getChannelAuthenticated({userId, channelId, skipNsfwValidation: true});
 		if (channel.type === ChannelTypes.GROUP_DM) {
@@ -185,6 +193,7 @@ export class ChannelDataService {
 			clientFeatures,
 			requestCache,
 			auditLogReason,
+			typeConversion,
 		});
 	}
 }

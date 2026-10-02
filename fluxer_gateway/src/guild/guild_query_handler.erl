@@ -19,21 +19,31 @@
 -spec call(pid(), {atom(), map()}, pos_integer()) -> term().
 call(GuildPid, {Tag, Request}, Timeout) ->
     Deadline = os:system_time(millisecond) + Timeout,
-    gen_server:call(GuildPid, {Tag, Request#{deadline => Deadline}}, Timeout).
+    MonotonicDeadline = erlang:monotonic_time(millisecond) + Timeout,
+    gen_server:call(
+        GuildPid,
+        {Tag, Request#{deadline => Deadline, deadline_monotonic => MonotonicDeadline}},
+        Timeout
+    ).
 
 -spec handle_call(term(), gen_server:from(), guild_state()) ->
     {reply, term(), guild_state()}
     | {noreply, guild_state()}.
 handle_call(Msg, From, State) ->
-    case is_expired(Msg) of
+    case is_expired(Msg, From) of
         true -> {noreply, State};
         false -> handle_query(Msg, From, State)
     end.
 
--spec is_expired(term()) -> boolean().
-is_expired({_Tag, #{deadline := Deadline}}) when is_integer(Deadline) ->
-    os:system_time(millisecond) > Deadline;
-is_expired(_Msg) ->
+-spec is_expired(term(), gen_server:from()) -> boolean().
+is_expired({_Tag, #{deadline_monotonic := Deadline}}, {Caller, _ReplyTag}) when
+    is_integer(Deadline)
+->
+    case gateway_clock_offset:offset(node(Caller)) of
+        undefined -> false;
+        Offset -> erlang:monotonic_time(millisecond) > Deadline - Offset
+    end;
+is_expired(_Msg, _From) ->
     false.
 
 -spec handle_query(term(), gen_server:from(), guild_state()) ->
@@ -455,3 +465,36 @@ resolve_data_payload(#{<<"members">> := _} = State) ->
     State;
 resolve_data_payload(_State) ->
     undefined.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+monotonic_deadline_ignores_the_legacy_wall_clock_test() ->
+    From = {self(), make_ref()},
+    Now = erlang:monotonic_time(millisecond),
+    ?assertNot(
+        is_expired({get_data, #{deadline => 0, deadline_monotonic => Now + 5000}}, From)
+    ),
+    ?assert(
+        is_expired(
+            {get_data, #{deadline => 9999999999999, deadline_monotonic => Now - 1}}, From
+        )
+    ),
+    ?assertNot(is_expired({get_data, #{deadline => 0}}, From)).
+
+call_keeps_the_legacy_deadline_and_adds_a_monotonic_deadline_test() ->
+    Guild = spawn(fun() ->
+        receive
+            {'$gen_call', From, {get_data, Request}} -> gen_server:reply(From, Request)
+        end
+    end),
+    WallBefore = os:system_time(millisecond),
+    MonotonicBefore = erlang:monotonic_time(millisecond),
+    #{deadline := WallDeadline, deadline_monotonic := MonotonicDeadline} =
+        call(Guild, {get_data, #{}}, 2000),
+    ?assert(WallDeadline >= WallBefore + 2000),
+    ?assert(WallDeadline =< os:system_time(millisecond) + 2000),
+    ?assert(MonotonicDeadline >= MonotonicBefore + 2000),
+    ?assert(MonotonicDeadline =< erlang:monotonic_time(millisecond) + 2000).
+
+-endif.

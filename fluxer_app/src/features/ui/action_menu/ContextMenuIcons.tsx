@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {AnnouncementChannelIcon} from '@app/features/ui/components/icons/AnnouncementChannelIcon';
 import {
 	ArrowBendUpLeftIcon,
 	ArrowBendUpRightIcon,
@@ -110,6 +111,12 @@ export const ForwardIcon: React.FC<IconProps> = observer(({size = 16}) => (
 		size={remFromPx(size)}
 		weight="fill"
 		data-flx="ui.action-menu.context-menu-icons.forward-icon.arrow-bend-up-right-icon"
+	/>
+));
+export const CrosspostIcon: React.FC<IconProps> = observer(({size = 16}) => (
+	<AnnouncementChannelIcon
+		size={remFromPx(size)}
+		data-flx="ui.action-menu.context-menu-icons.crosspost-icon.announcement-channel-icon"
 	/>
 ));
 export const EditIcon: React.FC<IconProps> = observer(({size = 16, weight = 'fill'}) => (

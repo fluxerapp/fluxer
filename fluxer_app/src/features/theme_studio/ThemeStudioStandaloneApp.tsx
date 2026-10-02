@@ -7,6 +7,8 @@ import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {usePlatformClasses} from '@app/features/app/hooks/usePlatformClasses';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Theme from '@app/features/theme/state/Theme';
+import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
 import {THEME_STUDIO_DESCRIPTOR, ThemeStudio} from '@app/features/theme_studio/ThemeStudio';
 import styles from '@app/features/theme_studio/ThemeStudio.module.css';
 import {
@@ -59,6 +61,13 @@ export const ThemeStudioStandaloneApp: React.FC = observer(() => {
 			html.classList.remove(`theme-${effectiveTheme}`);
 		};
 	}, [effectiveTheme]);
+	useEffect(
+		() =>
+			ThemeLibrary.startLinkedFileSync({
+				onThemesChanged: () => broadcastThemeStudioMessage({type: 'themeLibrary', revision: ThemeLibrary.revision}),
+			}),
+		[],
+	);
 	useEffect(() => {
 		setStandaloneDefaultVariables(readThemeStudioComputedDefaultVariables(fallbackDefaultVariables));
 	}, [fallbackDefaultVariables, effectiveTheme]);

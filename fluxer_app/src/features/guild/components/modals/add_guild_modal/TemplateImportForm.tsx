@@ -267,7 +267,9 @@ export const TemplateImportForm = observer(() => {
 		const channelTypes = templateData.channels
 			.map((channel) => mapTemplateChannelTypeToFluxer(channel.type))
 			.filter((channelType): channelType is number => channelType !== null);
-		const textChannels = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_TEXT).length;
+		const textChannels = channelTypes.filter(
+			(channelType) => channelType === ChannelTypes.GUILD_TEXT || channelType === ChannelTypes.GUILD_ANNOUNCEMENT,
+		).length;
 		const voiceChannels = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_VOICE).length;
 		const categories = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_CATEGORY).length;
 		const roles = templateData.roles.filter((role) => !isTemplateEveryoneRole(role)).length;

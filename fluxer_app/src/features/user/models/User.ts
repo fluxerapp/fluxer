@@ -3,6 +3,7 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
+import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {
 	type MentionReplyPreference,
@@ -10,7 +11,6 @@ import {
 	PublicUserFlags,
 	UserPremiumTypes,
 } from '@fluxer/constants/src/UserConstants';
-import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import type {
 	RequiredAction,
@@ -543,10 +543,8 @@ export class User {
 	private isPremiumExpiredLocally(): boolean {
 		const premiumUntil = this._premiumUntil;
 		if (!premiumUntil) return false;
-		const t = premiumUntil.getTime();
-		if (Number.isNaN(t)) return false;
-		const gracePeriodMs = 3 * MS_PER_DAY;
-		return Date.now() > t + gracePeriodMs;
+		if (Number.isNaN(premiumUntil.getTime())) return false;
+		return Date.now() > getPremiumGraceEndDate(premiumUntil, this._premiumGraceEndsAt).getTime();
 	}
 
 	get maxGuilds(): number {

@@ -296,6 +296,9 @@ export class GatewayService {
 			if (error.code === GatewayRpcMethodErrorCodes.TIMEOUT) {
 				return new GatewayTimeoutError();
 			}
+			if (error.code === GatewayRpcMethodErrorCodes.GUILD_OVERLOADED) {
+				return new ServiceUnavailableError({headers: {'Retry-After': '1'}});
+			}
 			if (error.code === GatewayRpcMethodErrorCodes.OVERLOADED) {
 				return new ServiceUnavailableError();
 			}

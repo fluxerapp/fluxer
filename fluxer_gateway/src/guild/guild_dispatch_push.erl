@@ -590,7 +590,8 @@ send_compact_scanned_push(MessageData, GuildId, Scan, State) ->
 
 -spec compact_format_data(map(), map()) -> map().
 compact_format_data(Data, FormatMembers) ->
-    Data#{
+    WithoutRevision = maps:remove(member_list_revision, Data),
+    WithoutRevision#{
         <<"members">> => FormatMembers,
         members_normalized => FormatMembers,
         members_sorted_ids => lists:sort(maps:keys(FormatMembers)),
@@ -1904,9 +1905,14 @@ compact_push_carries_large_guild_metadata_test() ->
     end.
 
 compact_format_data_restricts_member_map_test() ->
-    Data = #{<<"guild">> => #{}, <<"members">> => #{1 => #{}, 2 => #{}, 3 => #{}}},
+    Data = #{
+        <<"guild">> => #{},
+        <<"members">> => #{1 => #{}, 2 => #{}, 3 => #{}},
+        member_list_revision => make_ref()
+    },
     FormatMembers = #{2 => #{<<"roles">> => [<<"200">>]}},
     Result = compact_format_data(Data, FormatMembers),
+    ?assertNot(maps:is_key(member_list_revision, Result)),
     ?assertEqual(FormatMembers, maps:get(<<"members">>, Result)),
     ?assertEqual(FormatMembers, maps:get(members_normalized, Result)),
     ?assertEqual([2], maps:get(members_sorted_ids, Result)),

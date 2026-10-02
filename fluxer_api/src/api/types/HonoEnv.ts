@@ -76,6 +76,7 @@ import type {UserContentRequestService} from '@app/api/user/services/UserContent
 import type {UserRelationshipRequestService} from '@app/api/user/services/UserRelationshipRequestService';
 import type {UserService} from '@app/api/user/services/UserService';
 import type {ClientIpResolution} from '@app/api/utils/RequestClientIp';
+import type {ChannelFollowService} from '@app/api/webhook/ChannelFollowService';
 import type {SweegoWebhookService} from '@app/api/webhook/SweegoWebhookService';
 import type {WebhookRequestService} from '@app/api/webhook/WebhookRequestService';
 import type {WebhookService} from '@app/api/webhook/WebhookService';
@@ -174,6 +175,7 @@ export interface HonoEnv {
 		userRelationshipRequestService: UserRelationshipRequestService;
 		sweegoWebhookService: SweegoWebhookService;
 		webhookService: WebhookService;
+		channelFollowService: ChannelFollowService;
 		webhookRequestService: WebhookRequestService;
 		workerService: IWorkerService<WorkerTaskName>;
 		stripeService: StripeService;

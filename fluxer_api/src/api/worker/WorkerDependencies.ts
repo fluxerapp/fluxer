@@ -107,6 +107,7 @@ import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
 import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
@@ -149,6 +150,7 @@ export interface WorkerDependencies {
 	emailService: IEmailService;
 	instanceConfigRepository: InstanceConfigRepository;
 	inviteService: InviteService;
+	webhookRepository: WebhookRepository;
 	workerService: IWorkerService<WorkerTaskName>;
 	unfurlerService: IUnfurlerService;
 	embedService: EmbedService;
@@ -305,6 +307,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		emailService,
 		instanceConfigRepository,
 		inviteService,
+		webhookRepository,
 		workerService,
 		unfurlerService,
 		embedService,

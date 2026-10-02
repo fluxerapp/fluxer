@@ -294,8 +294,15 @@ export default () => {
 					},
 				},
 				{
+					test: /[\\/]src[\\/].+\.worklet\.js$/,
+					type: 'asset/resource',
+					generator: {
+						filename: isProduction ? 'assets/[contenthash:16].worklet.js' : 'assets/[name].[hash].worklet.js',
+					},
+				},
+				{
 					test: /\.(tsx|ts|jsx|js)$/,
-					exclude: /node_modules/,
+					exclude: [/node_modules/, /\.worklet\.js$/],
 					type: 'javascript/auto',
 					parser: {
 						dynamicImport: true,
@@ -384,6 +391,13 @@ export default () => {
 					},
 				},
 				{
+					test: /[\\/]deepfilternet3[\\/][^\\/]+\.tar\.gz$/,
+					type: 'asset/resource',
+					generator: {
+						filename: isProduction ? 'assets/[contenthash:16].tar.gz' : 'assets/[name].[hash].tar.gz',
+					},
+				},
+				{
 					test: /\.onnx$/,
 					type: 'asset/resource',
 					generator: {
@@ -391,7 +405,7 @@ export default () => {
 					},
 				},
 				{
-					test: /\.(png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|eot|mp3|wav|ogg|mp4|webm)$/,
+					test: /\.(png|jpg|jpeg|gif|webp|avif|ico|woff|woff2|ttf|eot|mp3|wav|ogg|mp4|webm)$/,
 					type: 'asset/resource',
 					generator: {
 						filename: isProduction ? 'assets/[contenthash:16][ext]' : 'assets/[name].[hash][ext]',

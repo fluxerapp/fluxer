@@ -79,6 +79,15 @@ export function createVoiceEngineV2AppAudioSettingsSnapshot(): VoiceEngineV2AppA
 	};
 }
 
+export function hasVoiceEngineV2MicrophonePublishSettingsChanged(
+	previous: VoiceEngineV2AppAudioSettingsSnapshot,
+	current: VoiceEngineV2AppAudioSettingsSnapshot,
+): boolean {
+	assertAudioSettingsSnapshot(previous, 'previous');
+	assertAudioSettingsSnapshot(current, 'current');
+	return previous.stereoCapture !== current.stereoCapture;
+}
+
 export function hasVoiceEngineV2MicrophoneCaptureSettingsChanged(
 	previous: VoiceEngineV2AppAudioSettingsSnapshot,
 	current: VoiceEngineV2AppAudioSettingsSnapshot,
@@ -86,12 +95,10 @@ export function hasVoiceEngineV2MicrophoneCaptureSettingsChanged(
 	assertAudioSettingsSnapshot(previous, 'previous');
 	assertAudioSettingsSnapshot(current, 'current');
 	if (previous.effectiveInputDeviceId !== current.effectiveInputDeviceId) return true;
-	if (previous.processingMode !== current.processingMode) return true;
 	if (previous.echoCancellation !== current.echoCancellation) return true;
 	if (previous.browserNoiseSuppression !== current.browserNoiseSuppression) return true;
 	if (previous.autoGainControl !== current.autoGainControl) return true;
 	if (previous.contentHint !== current.contentHint) return true;
-	if (previous.stereoCapture !== current.stereoCapture) return true;
 	return false;
 }
 
@@ -101,9 +108,11 @@ export function hasVoiceEngineV2InputProcessorSettingsChanged(
 ): boolean {
 	assertAudioSettingsSnapshot(previous, 'previous');
 	assertAudioSettingsSnapshot(current, 'current');
-	if (previous.deepFilter !== current.deepFilter) return true;
+	if (previous.noiseSuppressionBackend !== current.noiseSuppressionBackend) return true;
 	if (previous.voiceActivityGate !== current.voiceActivityGate) return true;
 	if (previous.vadAutoSensitivity !== current.vadAutoSensitivity) return true;
-	if (previous.noiseSuppressionBackend !== current.noiseSuppressionBackend) return true;
+	if (previous.vadThreshold !== current.vadThreshold) return true;
+	if (previous.inputVolume !== current.inputVolume) return true;
+	if (previous.processingMode !== current.processingMode) return true;
 	return false;
 }

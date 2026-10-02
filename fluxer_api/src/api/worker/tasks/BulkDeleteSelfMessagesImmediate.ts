@@ -48,6 +48,7 @@ const bulkDeleteSelfMessagesImmediate: WorkerTaskHandler = async (payload, helpe
 		gatewayService,
 		storageService,
 		purgeQueue,
+		workerService,
 	});
 	const result = await deletionService.deleteUserMessagesFiltered(
 		userId,

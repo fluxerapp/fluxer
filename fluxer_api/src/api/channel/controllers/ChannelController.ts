@@ -11,6 +11,8 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {CLIENT_FEATURES_HEADER, parseClientFeaturesHeader} from '@app/api/utils/featureUtils';
 import {Validator} from '@app/api/Validator';
+import {ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypeConversionNotSupportedError} from '@fluxer/errors/src/domains/channel/ChannelTypeConversionNotSupportedError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {
@@ -136,7 +138,19 @@ export function ChannelController(app: HonoApp) {
 					throw new UnknownChannelError();
 				}
 				const body = isPlainObject(raw) ? raw : {};
-				return {...body, type: channelType};
+				const requestedType = body.type;
+				if (
+					requestedType === undefined ||
+					requestedType === null ||
+					requestedType === channelType ||
+					!ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES.has(channelType)
+				) {
+					return {...body, type: channelType};
+				}
+				if (typeof requestedType !== 'number' || !ANNOUNCEMENT_CONVERTIBLE_CHANNEL_TYPES.has(requestedType)) {
+					throw new ChannelTypeConversionNotSupportedError();
+				}
+				return {...body, type: requestedType};
 			},
 		}),
 		OpenAPI({
@@ -154,6 +168,9 @@ export function ChannelController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const data = ctx.req.valid('json');
+			const existingType = ctx.get('channelUpdateType');
+			const typeConversion =
+				existingType !== undefined && data.type !== existingType ? {from: existingType, to: data.type} : null;
 			const clientFeatures = parseClientFeaturesHeader(ctx.req.header(CLIENT_FEATURES_HEADER));
 			const requestCache = ctx.get('requestCache');
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
@@ -166,6 +183,7 @@ export function ChannelController(app: HonoApp) {
 					clientFeatures,
 					requestCache,
 					auditLogReason,
+					typeConversion,
 				}),
 			);
 		},

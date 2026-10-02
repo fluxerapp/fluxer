@@ -98,6 +98,7 @@ handle_user_offline(UserId, State) ->
 remove_member_presence(UserId, State) ->
     Tab = maps:get(member_presence, State),
     ets:delete(Tab, UserId),
+    ok = guild_member_list_read:note_presence_write(UserId),
     State.
 
 -spec maybe_send_cached_presence(user_id(), guild_state()) -> guild_state().

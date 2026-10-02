@@ -257,6 +257,18 @@ export class Message {
 		return this.hasFlag(MessageFlags.SUPPRESS_NOTIFICATIONS);
 	}
 
+	get isCrossposted(): boolean {
+		return this.hasFlag(MessageFlags.CROSSPOSTED);
+	}
+
+	get isCrosspostCopy(): boolean {
+		return this.hasFlag(MessageFlags.IS_CROSSPOST);
+	}
+
+	get isCrosspostSourceDeleted(): boolean {
+		return this.hasFlag(MessageFlags.IS_CROSSPOST) && this.hasFlag(MessageFlags.SOURCE_MESSAGE_DELETED);
+	}
+
 	isUserMessage(): boolean {
 		return (
 			this.type === MessageTypes.DEFAULT || this.type === MessageTypes.REPLY || this.type === MessageTypes.CLIENT_SYSTEM

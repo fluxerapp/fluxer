@@ -13,6 +13,7 @@ import type {MessageService} from '@app/api/channel/services/MessageService';
 import {
 	assertAttachmentFileSizesWithinLimit,
 	getContentType,
+	isCrosspostCopy,
 	isMessageEmpty,
 	isOperationDisabled,
 	makeAttachmentCdnKey,
@@ -385,19 +386,45 @@ export class AttachmentUploadService {
 			});
 			return;
 		}
-		const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
-		await this.storageService.deleteObject(Config.s3.buckets.cdn, cdnKey);
-		const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
-		await this.purgeQueue.addUrls([cdnUrl]);
-		const updatedAttachments = message.attachments.filter((a: Attachment) => a.id !== attachmentId);
-		const updatedRowData = {
-			...message.toRow(),
-			edited_timestamp: new Date(),
-			attachments:
-				updatedAttachments.length > 0 ? updatedAttachments.map((a: Attachment) => a.toMessageAttachment()) : null,
-		};
-		const updatedMessage = await this.channelRepository.messages.upsertMessage(updatedRowData, message.toRow());
+		const updatedMessage = await this.messageService.writeLock.withFreshMessage(channelId, messageId, async (fresh) => {
+			if (!fresh || fresh.authorId !== userId) {
+				throw new UnknownMessageError();
+			}
+			const freshAttachment = fresh.attachments.find((a: Attachment) => a.id === attachmentId);
+			if (!freshAttachment) {
+				throw new UnknownMessageError();
+			}
+			const updatedAttachments = fresh.attachments.filter((a: Attachment) => a.id !== attachmentId);
+			if (updatedAttachments.length === 0 && isMessageEmpty(fresh, true)) {
+				return null;
+			}
+			const updatedRowData = {
+				...fresh.toRow(),
+				edited_timestamp: new Date(),
+				attachments:
+					updatedAttachments.length > 0 ? updatedAttachments.map((a: Attachment) => a.toMessageAttachment()) : null,
+			};
+			return this.messageService.crosspostPropagation.withPublishedEditBudget({fresh, actor: 'author'}, () =>
+				this.channelRepository.messages.upsertMessage(updatedRowData, fresh.toRow()),
+			);
+		});
+		if (!updatedMessage) {
+			await this.messageService.deletion.deleteMessage({
+				userId,
+				channelId,
+				messageId,
+				requestCache,
+			});
+			return;
+		}
+		if (!isCrosspostCopy(updatedMessage)) {
+			const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
+			await this.storageService.deleteObject(Config.s3.buckets.cdn, cdnKey);
+			const cdnUrl = makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
+			await this.purgeQueue.addUrls([cdnUrl]);
+		}
 		await this.messageInteractionService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
+		await this.messageService.crosspostPropagation.propagateEdit(updatedMessage);
 	}
 
 	async purgeChannelAttachments(channel: Channel): Promise<void> {

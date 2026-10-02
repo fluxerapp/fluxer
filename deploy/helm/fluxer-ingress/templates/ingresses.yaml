@@ -1,0 +1,58 @@
+{{- $v := .Values }}
+{{- $presets := $v.annotationPresets | default dict }}
+{{- $issuer := $v.clusterIssuer | default dict }}
+{{- range $name, $spec := ($v.ingresses | default dict) }}
+{{- if not (kindIs "invalid" $spec) }}
+{{- $ann := deepCopy ($v.commonAnnotations | default dict) }}
+{{- range ($spec.presets | default list) }}
+{{- $ann = mergeOverwrite $ann (deepCopy (required (printf "unknown annotation preset %s" .) (index $presets .))) }}
+{{- end }}
+{{- if and $spec.tls $issuer.enabled }}
+{{- $_ := set $ann "cert-manager.io/cluster-issuer" (required "clusterIssuer.name is required" $issuer.name) }}
+{{- end }}
+{{- $ann = mergeOverwrite $ann (deepCopy ($spec.annotations | default dict)) }}
+{{- range $k, $val := $ann }}
+{{- if kindIs "invalid" $val }}
+{{- $_ := unset $ann $k }}
+{{- end }}
+{{- end }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-ingress.labels" $ | nindent 4 }}
+  {{- with $ann }}
+  annotations:
+    {{- range $k, $val := . }}
+    {{ include "fluxer-ingress.annotationKey" (dict "key" $k "prefix" $v.annotationPrefix) }}: {{ include "fluxer-ingress.string" $val | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- with $spec.ingressClassName | default $v.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  {{- with $spec.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range $rule := required (printf "ingress %s needs rules" $name) $spec.rules }}
+    - host: {{ required (printf "ingress %s has a rule without a host" $name) $rule.host | quote }}
+      http:
+        paths:
+          {{- range $p := $rule.paths | default (list dict) }}
+          {{- $p = $p | default dict }}
+          - path: {{ $p.path | default "/" | quote }}
+            pathType: {{ $p.pathType | default "Prefix" }}
+            backend:
+              service:
+                name: {{ required (printf "ingress %s host %s needs a service" $name $rule.host) ($p.service | default $rule.service) }}
+                port:
+                  number: {{ required (printf "ingress %s host %s needs a port or servicePort" $name $rule.host) ($p.port | default $rule.port | default $v.servicePort) | int64 }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}

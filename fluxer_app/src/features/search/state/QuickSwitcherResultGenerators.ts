@@ -142,7 +142,11 @@ function collectChannelResults(
 }
 
 function isUnreadInCurrentCommunity(channel: Channel): boolean {
-	if (channel.type !== ChannelTypes.GUILD_TEXT || !isChannelVisible(channel)) return false;
+	if (
+		(channel.type !== ChannelTypes.GUILD_TEXT && channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT) ||
+		!isChannelVisible(channel)
+	)
+		return false;
 	if (UserGuildSettings.isMutedAtAnyLevel(channel.guildId ?? null, channel.id)) return false;
 	if (!ReadStates.hasUnread(channel.id)) return false;
 	const unreadLevel = UserGuildSettings.resolvedGuildUnreadBadgesLevel({

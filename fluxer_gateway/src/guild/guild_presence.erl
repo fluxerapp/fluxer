@@ -380,6 +380,7 @@ find_member_by_user_id(UserId, State) ->
 store_member_presence(UserId, PresenceMap, State) ->
     Tab = maps:get(member_presence, State),
     ets:insert(Tab, {UserId, PresenceMap}),
+    ok = guild_member_list_read:note_presence_write(UserId),
     State.
 
 -ifdef(TEST).

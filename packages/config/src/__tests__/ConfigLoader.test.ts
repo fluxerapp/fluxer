@@ -343,6 +343,22 @@ describe('ConfigLoader', () => {
 		expect(config.services.gateway).not.toHaveProperty('push_enabled');
 	});
 
+	test('accepts the crosspost worker lane', async () => {
+		stubMinimalEnv({
+			FLUXER_API_WORKER_MODE: 'single_lane',
+			FLUXER_API_WORKER_LANE: 'crosspost',
+			FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES: '{"crosspost":4}',
+		});
+		const config = await loadConfig();
+		expect(config.services.api.worker?.lane).toBe('crosspost');
+		expect(config.services.api.worker?.lane_concurrency_overrides?.crosspost).toBe(4);
+	});
+
+	test('rejects an unknown worker lane', async () => {
+		stubMinimalEnv({FLUXER_API_WORKER_MODE: 'single_lane', FLUXER_API_WORKER_LANE: 'publishing'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_WORKER_LANE');
+	});
+
 	test('rejects single task worker mode without task env', async () => {
 		stubMinimalEnv({FLUXER_API_WORKER_MODE: 'single_task'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_API_WORKER_TASK');

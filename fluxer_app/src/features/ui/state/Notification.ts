@@ -315,14 +315,15 @@ class NotificationState {
 		let subtitle: string | undefined;
 		switch (channel.type) {
 			case ChannelTypes.GUILD_TEXT:
+			case ChannelTypes.GUILD_ANNOUNCEMENT:
 			case ChannelTypes.GUILD_VOICE:
 				if (message.type === MessageTypes.DEFAULT) {
 					if (useMacOSNotificationPresentation) {
 						const guild = channel.guildId ? Guilds.getGuild(channel.guildId) : null;
-						const channelPrefix = channel.type === ChannelTypes.GUILD_TEXT ? '#' : '';
+						const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
 						subtitle = guild ? `${guild.name} ${channelPrefix}${channel.name}` : `${channelPrefix}${channel.name}`;
 					} else {
-						const channelPrefix = channel.type === ChannelTypes.GUILD_TEXT ? '#' : '';
+						const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
 						title = `${title} (${channelPrefix}${channel.name})`;
 					}
 				} else {
@@ -330,10 +331,10 @@ class NotificationState {
 					if (guild) {
 						if (useMacOSNotificationPresentation) {
 							title = guild.name;
-							const channelPrefix = channel.type === ChannelTypes.GUILD_TEXT ? '#' : '';
+							const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
 							subtitle = `${channelPrefix}${channel.name}`;
 						} else {
-							const channelPrefix = channel.type === ChannelTypes.GUILD_TEXT ? '#' : '';
+							const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
 							title = `${guild.name} (${channelPrefix}${channel.name})`;
 						}
 					}

@@ -18,14 +18,17 @@ import {
 	MANAGE_SUBSCRIPTION_DESCRIPTOR,
 	PREMIUM_SUBSCRIPTION_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
+import {getStoreName} from '@app/features/premium/utils/PremiumUtils';
 import {formatMinorUnitPrice} from '@app/features/premium/utils/PricingUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import Users from '@app/features/user/state/Users';
 import {getFormattedLongDate} from '@fluxer/date_utils/src/DateFormatting';
 import type {PendingSubscriptionChangeResponse} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
+import type {PremiumStoreSubscriptionState} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -76,6 +79,7 @@ interface SubscriptionCardProps {
 	isVisionary: boolean;
 	perksDisabled: boolean;
 	isGiftSubscription: boolean;
+	storeSubscription: PremiumStoreSubscriptionState | null;
 	premiumUntil: Date | null;
 	billingCycle: string | null;
 	monthlyPrice: string;
@@ -144,6 +148,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 		isVisionary,
 		perksDisabled,
 		isGiftSubscription,
+		storeSubscription,
 		premiumUntil,
 		billingCycle,
 		monthlyPrice,
@@ -197,10 +202,10 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 			billingCycle === 'monthly' && currentSubscriptionPriceLabel ? currentSubscriptionPriceLabel : monthlyPrice;
 		const effectiveYearlyPrice =
 			billingCycle === 'yearly' && currentSubscriptionPriceLabel ? currentSubscriptionPriceLabel : yearlyPrice;
-		const hasPendingSubscriptionChange = pendingSubscriptionChange != null && !premiumWillCancel;
+		const hasPendingSubscriptionChange = pendingSubscriptionChange != null && !premiumWillCancel && !storeSubscription;
 		const currentUserId = Users.currentUser?.id;
 		const listPriceSwitch =
-			currentUserId != null && PremiumState.loadedForUserId === currentUserId
+			!storeSubscription && currentUserId != null && PremiumState.loadedForUserId === currentUserId
 				? (PremiumState.state?.billing.list_price_switch ?? null)
 				: null;
 		const listPriceNewLabel = listPriceSwitch
@@ -463,6 +468,39 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 										</Trans>
 									);
 								})()
+							) : storeSubscription && gracePeriodInfo.isPaymentRecovery ? (
+								(() => {
+									const graceDate = graceEndDate ? getFormattedLongDate(graceEndDate, locale) : undefined;
+									const storeName = getStoreName(storeSubscription.provider);
+									return (
+										<Trans comment="Plutonium subscription card text shown while a failed App Store or Google Play renewal payment is being retried. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {graceDate} is a date already formatted and localized by code; never write a date into the translation.">
+											Your {storeName} renewal payment failed but{' '}
+											<PerksButton
+												onClick={scrollToPerks}
+												data-flx="app.plutonium.subscription-card.perks-button.scroll-to-perks--10"
+											/>{' '}
+											stay active until{' '}
+											<strong data-flx="app.plutonium.subscription-card.strong--17">{graceDate}</strong>. Update your{' '}
+											{storeName} payment method before then to keep your subscription.
+										</Trans>
+									);
+								})()
+							) : gracePeriodInfo.isPaymentRecovery ? (
+								(() => {
+									const graceDate = graceEndDate ? getFormattedLongDate(graceEndDate, locale) : undefined;
+									return (
+										<Trans comment="Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.">
+											Your renewal payment failed but{' '}
+											<PerksButton
+												onClick={scrollToPerks}
+												data-flx="app.plutonium.subscription-card.perks-button.scroll-to-perks--9"
+											/>{' '}
+											stay active until{' '}
+											<strong data-flx="app.plutonium.subscription-card.strong--16">{graceDate}</strong>. Update your
+											payment method before then to keep your subscription.
+										</Trans>
+									);
+								})()
 							) : isInGracePeriod ? (
 								(() => {
 									const graceDate = graceEndDate ? getFormattedLongDate(graceEndDate, locale) : undefined;
@@ -476,6 +514,26 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 											stay active until{' '}
 											<strong data-flx="app.plutonium.subscription-card.strong--2">{graceDate}</strong>. Resubscribe
 											before then to keep your subscriber history.
+										</Trans>
+									);
+								})()
+							) : storeSubscription && premiumWillCancel && premiumUntil ? (
+								(() => {
+									const storeName = getStoreName(storeSubscription.provider);
+									const endDate = getFormattedLongDate(premiumUntil, locale);
+									return (
+										<Trans comment="Plutonium subscription card text for an App Store or Google Play subscription that will not renew. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {endDate} is a date already formatted and localized by code; never write a date into the translation.">
+											Billed through {storeName}. Ends on{' '}
+											<strong data-flx="app.plutonium.subscription-card.strong--18">{endDate}</strong>.
+										</Trans>
+									);
+								})()
+							) : storeSubscription ? (
+								(() => {
+									const storeName = getStoreName(storeSubscription.provider);
+									return (
+										<Trans comment="Plutonium subscription card text for an App Store or Google Play subscription. {storeName} is the store brand name, App Store or Google Play, and must not be translated.">
+											Billed through {storeName}.
 										</Trans>
 									);
 								})()
@@ -695,7 +753,10 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 							!isFullyExpired &&
 							!isGiftSubscription &&
 							(() => {
-								const renewalDate = getFormattedLongDate(premiumUntil, locale);
+								const renewalDate = getFormattedLongDate(
+									storeSubscription ? new Date(storeSubscription.expires_at) : premiumUntil,
+									locale,
+								);
 								return (
 									<div className={styles.renewalInfo} data-flx="app.plutonium.subscription-card.renewal-info">
 										<Trans>
@@ -706,7 +767,17 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 							})()}
 					</div>
 					<div className={styles.actions} data-flx="app.plutonium.subscription-card.actions">
-						{isGiftSubscription || billingUnavailable ? (
+						{storeSubscription ? (
+							<Button
+								variant={isInGracePeriod || premiumWillCancel ? 'primary' : 'secondary'}
+								onClick={() => void openExternalUrl(storeSubscription.manage_url)}
+								small
+								className={styles.actionButton}
+								data-flx="app.plutonium.subscription-card.action-button.open-store-subscription"
+							>
+								{i18n._(MANAGE_SUBSCRIPTION_DESCRIPTOR)}
+							</Button>
+						) : isGiftSubscription || billingUnavailable ? (
 							wrapIfDisabled(
 								<Button
 									variant="primary"
@@ -844,7 +915,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 										<Trans comment="Billing button that starts subscription cancellation.">Cancel subscription</Trans>
 									</Button>
 								)}
-								{isInGracePeriod && (
+								{isInGracePeriod && !gracePeriodInfo.isPaymentRecovery && (
 									<Button
 										variant="danger"
 										onClick={handleEndPremiumGracePeriod}

@@ -3,6 +3,7 @@
 import type {DiscoveryGuild} from '@app/features/discovery/commands/DiscoveryCommands';
 import {DiscoveryGuildPreviewModal} from '@app/features/discovery/components/modals/DiscoveryGuildPreviewModal';
 import styles from '@app/features/discovery/discovery/DiscoveryGuildCard.module.css';
+import {resolveBannerTintClassName} from '@app/features/discovery/utils/DiscoveryBannerTint';
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import {DiscoveryGuildContextMenu} from '@app/features/ui/action_menu/DiscoveryGuildContextMenu';
@@ -36,24 +37,6 @@ const PREVIEW_NAMED_COMMUNITY_DESCRIPTOR = msg({
 
 const DISCOVERY_NAME_BADGE_IGNORED_FEATURES = new Set<string>([GuildFeatures.DISCOVERABLE]);
 const CARD_ICON_SIZE_PX = 56;
-
-const BANNER_TINT_CLASS_NAMES = [
-	styles.bannerTintViolet,
-	styles.bannerTintBlue,
-	styles.bannerTintTeal,
-	styles.bannerTintGreen,
-	styles.bannerTintLime,
-	styles.bannerTintAmber,
-	styles.bannerTintCoral,
-	styles.bannerTintRose,
-	styles.bannerTintMagenta,
-	styles.bannerTintIndigo,
-] as const;
-
-function resolveBannerTintClassName(guildId: string): string {
-	const tintCount = BigInt(BANNER_TINT_CLASS_NAMES.length);
-	return BANNER_TINT_CLASS_NAMES[Number(BigInt(guildId) % tintCount)];
-}
 
 interface DiscoveryGuildCardProps {
 	guild: DiscoveryGuild;

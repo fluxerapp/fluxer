@@ -112,6 +112,10 @@
 	user-select: none;
 }
 
+.inputGroupDisabled .input {
+	cursor: not-allowed;
+}
+
 .inputDefault {
 	font-size: 0.875rem;
 	line-height: 1.25rem;
@@ -461,6 +465,9 @@
 .itemRendered .itemText {
 	box-sizing: border-box;
 	width: 100%;
+}
+
+.itemRendered:has(.itemIndicator:not(.itemIndicatorHidden)) .itemText {
 	padding-inline-end: 1.5rem;
 }
 

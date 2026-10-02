@@ -34,6 +34,7 @@ export const Routes = {
 	CONNECTION_CALLBACK: '/connection-callback',
 	USER_PROFILE: '/users/:userId',
 	THEME_STUDIO: '/theme-studio',
+	PLUTONIUM: '/plutonium',
 	terms: () => marketingUrl('terms'),
 	privacy: () => marketingUrl('privacy'),
 	guidelines: () => marketingUrl('guidelines'),
@@ -69,6 +70,7 @@ export const Routes = {
 	isDMRoute: (pathname: string) => pathname.startsWith('/channels/@me'),
 	isFavoritesRoute: (pathname: string) => pathname.startsWith('/channels/@favorites'),
 	isDiscoverRoute: (pathname: string) => pathname.startsWith('/channels/@discover'),
+	isPlutoniumRoute: (pathname: string) => pathname === '/plutonium',
 	isChannelRoute: (pathname: string) => pathname.startsWith('/channels/'),
 	isGuildChannelRoute: (pathname: string) =>
 		pathname.startsWith('/channels/') &&

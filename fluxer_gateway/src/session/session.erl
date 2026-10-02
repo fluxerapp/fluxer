@@ -48,6 +48,7 @@
     offline_timer => {reference(), reference()} | undefined,
     guilds => #{guild_id() => guild_ref()},
     active_guilds => sets:set(guild_id()),
+    guild_health => #{guild_id() => {pid(), boolean()}},
     calls => #{channel_id() => call_ref()},
     channels => #{channel_id() => map()},
     ready => map() | undefined,
@@ -161,6 +162,10 @@ handle_cast_presences(Presences, State) ->
 
 -spec handle_cast_guild_or_lifecycle(term(), session_state()) ->
     {noreply, session_state()} | {stop, normal, session_state()}.
+handle_cast_guild_or_lifecycle({guild_health, GuildId, GuildPid, Degraded}, State) when
+    is_integer(GuildId), is_pid(GuildPid), is_boolean(Degraded)
+->
+    session_guild_health:handle_update(GuildId, GuildPid, Degraded, State);
 handle_cast_guild_or_lifecycle(handoff_fence, State) ->
     session_lifecycle:handle_handoff_fence(State);
 handle_cast_guild_or_lifecycle({reconnect_drain, SocketPid}, State) when

@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration`.
+An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration` and `plutonium_page`.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -33,6 +33,7 @@ One entry per experiment. The envelope reports this object even when it is empty
 | Field | Type | Description |
 | --- | --- | --- |
 | domain_migration? | [domain migration assignment](#domain-migration-assignment-object) object | The caller's web domain migration assignment |
+| plutonium_page? | [Plutonium page assignment](#plutonium-page-assignment-object) object | The caller's Plutonium page assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
@@ -49,6 +50,20 @@ One resolution of the instance web domain migration rollout against one account.
 A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
 
 Only the official web client acts on this assignment, and only on its legacy origins. Every other client ignores it. The logged-out share and the instance-wide switch are published in the [instance discovery document](/http-api/instance/#domain-migration-object) instead, because a client that holds no credential cannot read this route.
+
+## Plutonium page assignment object
+
+One resolution of the instance Plutonium page rollout against one account. This server version writes the key on every response.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the caller's client shows the full Plutonium page in place of the Plutonium settings tab |
+
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+
+The assignment only changes what the client shows. A selected client replaces the Plutonium settings tab with a full Plutonium page, makes app pages linkable in chat, and uses a minimal gift purchase modal. The server applies no part of it on its own.
 
 ## Get experiment assignments
 

@@ -1,0 +1,48 @@
+{{- range $name, $w := .Values.deployments }}
+{{- if not (kindIs "invalid" $w) }}
+{{- $ctx := dict "root" $ "name" $name "component" $w.role "w" $w }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "gateway.labels" $ctx | nindent 4 }}
+spec:
+  {{- if not $w.hpa }}
+  replicas: {{ include "gateway.replicas" $ctx }}
+  {{- end }}
+  {{- if not (kindIs "invalid" $w.minReadySeconds) }}
+  minReadySeconds: {{ $w.minReadySeconds }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "gateway.selectorLabels" $ctx | nindent 6 }}
+  {{- with include "gateway.pick" (dict "root" $ "w" $w "key" "strategy") }}
+  strategy:
+    {{- . | nindent 4 }}
+  {{- end }}
+  template:
+    {{- include "gateway.pod" $ctx | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "gateway.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: http
+  selector:
+    {{- include "gateway.selectorLabels" $ctx | nindent 4 }}
+{{- include "gateway.hpa" $ctx }}
+{{- include "gateway.pdb" $ctx }}
+{{- end }}
+{{- end }}

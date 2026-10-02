@@ -338,6 +338,7 @@ function formatWindowBehavior(settings: DesktopWindowBehaviorSettings): string {
 		`showTrayIcon=${settings.showTrayIcon}`,
 		`minimizeToTray=${settings.minimizeToTray}`,
 		`closeToTray=${settings.closeToTray}`,
+		`startMinimized=${settings.startMinimized}`,
 		`useNativeTitleBar=${settings.useNativeTitleBar}`,
 		`rememberWindowState=${settings.rememberWindowState}`,
 		`allowTransparency=${settings.allowTransparency}`,

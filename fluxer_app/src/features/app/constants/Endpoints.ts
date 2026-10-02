@@ -68,6 +68,10 @@ export const Endpoints = {
 	CHANNEL_MESSAGE_ATTACHMENT: (channelId: string, messageId: string, attachmentId: string) =>
 		`/channels/${channelId}/messages/${messageId}/attachments/${attachmentId}`,
 	CHANNEL_MESSAGE_ACK: (channelId: string, messageId: string) => `/channels/${channelId}/messages/${messageId}/ack`,
+	CHANNEL_MESSAGE_CROSSPOST: (channelId: string, messageId: string) =>
+		`/channels/${channelId}/messages/${messageId}/crosspost`,
+	CHANNEL_MESSAGE_CROSSPOST_SOURCE: (channelId: string, messageId: string) =>
+		`/channels/${channelId}/messages/${messageId}/crosspost-source`,
 	CHANNEL_MESSAGE_REACTION: (channelId: string, messageId: string, emoji: string) =>
 		`/channels/${channelId}/messages/${messageId}/reactions/${emoji}`,
 	CHANNEL_MESSAGE_REACTION_USERS: (channelId: string, messageId: string, emoji: string) =>
@@ -82,6 +86,8 @@ export const Endpoints = {
 	CHANNEL_PINS_ACK: (channelId: string) => `/channels/${channelId}/pins/ack`,
 	CHANNEL_TYPING: (channelId: string) => `/channels/${channelId}/typing`,
 	CHANNEL_WEBHOOKS: (channelId: string) => `/channels/${channelId}/webhooks`,
+	CHANNEL_FOLLOWERS: (channelId: string) => `/channels/${channelId}/followers`,
+	CHANNEL_FOLLOWER_STATS: (channelId: string) => `/channels/${channelId}/follower-stats`,
 	CHANNEL_RTC_REGIONS: (channelId: string) => `/channels/${channelId}/rtc-regions`,
 	CHANNEL_SLOWMODE: (channelId: string) => `/channels/${channelId}/slowmode`,
 	CHANNEL_CALL: (channelId: string) => `/channels/${channelId}/call`,

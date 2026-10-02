@@ -47,6 +47,7 @@ import {
 } from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
 import {
 	SlackWebhookResponse,
+	WebhookCreateResponse,
 	WebhookListResponse,
 	WebhookResponse,
 	WebhookTokenResponse,
@@ -180,7 +181,7 @@ export function WebhookController(app: HonoApp) {
 			summary: 'Create webhook',
 			description:
 				'Creates a new webhook in the specified channel with the provided name and optional avatar. Returns the newly created webhook object including its ID and token.',
-			responseSchema: WebhookResponse,
+			responseSchema: WebhookCreateResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Webhooks'],

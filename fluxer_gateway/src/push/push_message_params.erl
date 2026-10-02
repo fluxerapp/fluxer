@@ -233,7 +233,7 @@ context_rejects_every_non_authored_message_type_test() ->
                 context(params_with_message_type(Type))
             )
         end,
-        [1, 2, 3, 4, 5, 6, 7, 99]
+        [1, 2, 3, 4, 5, 6, 7, 12, 99]
     ).
 
 context_treats_a_missing_message_type_as_pushable_test() ->

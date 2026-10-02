@@ -235,7 +235,7 @@ select_first_viewable(Channel, GuildId, BasePerms) ->
 -spec check_viewable(integer() | undefined, integer() | undefined, map(), integer(), integer()) ->
     integer() | null.
 check_viewable(ChannelType, ChannelId, Channel, GuildId, BasePerms) when
-    is_integer(ChannelId), ChannelType =:= 0 orelse ChannelType =:= 2
+    is_integer(ChannelId), ChannelType =:= 0 orelse ChannelType =:= 2 orelse ChannelType =:= 5
 ->
     case permission_bits:has(BasePerms, constants:administrator_permission()) of
         true -> ChannelId;

@@ -1857,6 +1857,8 @@ export function createSubscriptionDeletedEvent(options: {
 	subscriptionId?: string;
 	customerId?: string;
 	endedAt?: number;
+	cancellationReason?: 'cancellation_requested' | 'payment_disputed' | 'payment_failed';
+	interval?: 'month' | 'year';
 }): StripeWebhookEventData {
 	const nowSeconds = Math.floor(Date.now() / 1000);
 	return {
@@ -1869,6 +1871,15 @@ export function createSubscriptionDeletedEvent(options: {
 				status: 'canceled',
 				canceled_at: nowSeconds,
 				ended_at: options.endedAt ?? nowSeconds,
+				...(options.cancellationReason ? {cancellation_details: {reason: options.cancellationReason}} : {}),
+				...(options.interval
+					? {
+							items: {
+								object: 'list',
+								data: [{object: 'subscription_item', price: {recurring: {interval: options.interval}}}],
+							},
+						}
+					: {}),
 			},
 		},
 	};

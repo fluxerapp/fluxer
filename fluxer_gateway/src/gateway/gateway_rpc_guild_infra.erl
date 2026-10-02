@@ -6,6 +6,7 @@
 
 -export([
     with_guild/2, with_guild/3,
+    with_guild_unchecked/2,
     with_voice_server/2,
     ensure_guild_pid/1,
     get_guild_pid/1,
@@ -47,7 +48,29 @@ with_guild(GuildId, Fun, NotFoundError) ->
 -spec run_with_guild_pid(integer(), pid(), fun((pid()) -> T), binary()) -> T when
     T :: term().
 run_with_guild_pid(GuildId, Pid, Fun, NotFoundError) ->
-    run_with_guild_pid_guard(GuildId, Pid, fun() -> Fun(Pid) end, Fun, NotFoundError).
+    Checked = fun(CurrentPid) ->
+        ensure_responsive(CurrentPid),
+        Fun(CurrentPid)
+    end,
+    run_with_guild_pid_guard(GuildId, Pid, fun() -> Checked(Pid) end, Checked, NotFoundError).
+
+-spec with_guild_unchecked(integer(), fun((pid()) -> T)) -> T when T :: term().
+with_guild_unchecked(GuildId, Fun) ->
+    case ensure_guild_pid(GuildId) of
+        {ok, Pid} ->
+            run_with_guild_pid_guard(
+                GuildId, Pid, fun() -> Fun(Pid) end, Fun, <<"guild_not_found">>
+            );
+        error ->
+            gateway_rpc_error:raise(<<"guild_not_found">>)
+    end.
+
+-spec ensure_responsive(pid()) -> ok.
+ensure_responsive(Pid) ->
+    case guild_health:is_degraded(Pid) of
+        true -> gateway_rpc_error:raise(<<"guild_overloaded">>);
+        false -> ok
+    end.
 
 -spec with_voice_server(integer(), fun((pid(), pid()) -> T)) -> T when T :: term().
 with_voice_server(GuildId, Fun) ->
@@ -352,6 +375,7 @@ safe_gen_server_call(Pid, Request, Timeout) ->
 -spec safe_guild_call(integer(), pid(), {atom(), map()}, pos_integer()) ->
     {ok, term()} | error.
 safe_guild_call(GuildId, Pid, Request, Timeout) ->
+    ensure_responsive(Pid),
     try guild_query_handler:call(Pid, Request, Timeout) of
         Reply -> {ok, Reply}
     catch
@@ -385,6 +409,7 @@ retry_guild_call(GuildId, Request, Timeout) ->
 -spec retry_guild_call_pid(integer(), pid(), {atom(), map()}, pos_integer()) ->
     {ok, term()} | error.
 retry_guild_call_pid(GuildId, NewPid, Request, Timeout) ->
+    ensure_responsive(NewPid),
     try guild_query_handler:call(NewPid, Request, Timeout) of
         Reply -> {ok, Reply}
     catch
@@ -400,6 +425,29 @@ retry_guild_call_pid(GuildId, NewPid, Request, Timeout) ->
     end.
 
 -ifdef(TEST).
+
+overloaded_guild_is_rejected_before_enqueuing_work_test() ->
+    ok = guild_ets_owner:ensure_table(guild_health_status, [named_table, public, set]),
+    Pid = spawn(fun() ->
+        receive
+            stop -> ok
+        end
+    end),
+    true = ets:insert(guild_health_status, {Pid, 42, true, undefined, undefined}),
+    try
+        ?assertError(
+            {gateway_rpc_error, <<"guild_overloaded">>},
+            safe_guild_call(42, Pid, {get_viewer_counts, #{user_id => 200}}, 4000)
+        ),
+        ?assertError(
+            {gateway_rpc_error, <<"guild_overloaded">>},
+            retry_guild_call_pid(42, Pid, {get_viewer_counts, #{user_id => 200}}, 4000)
+        ),
+        ?assertEqual({message_queue_len, 0}, process_info(Pid, message_queue_len))
+    after
+        ets:delete(guild_health_status, Pid),
+        Pid ! stop
+    end.
 
 guild_start_backoff_delay_exponential_test() ->
     Delay1 = guild_start_backoff_delay(1),

@@ -19,6 +19,7 @@ import {server} from '@app/api/test/msw/server';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {getPremiumPaymentRecoveryGraceMs, PREMIUM_GRACE_PERIOD_MS} from '@app/api/user/UserHelpers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {HttpResponse, http} from 'msw';
@@ -26,6 +27,7 @@ import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
+	yearlyUsd: 'price_yearly_usd',
 };
 
 describe('Stripe Webhook Subscription Lifecycle', () => {
@@ -258,6 +260,80 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(updatedUser?.premiumUntil?.toISOString()).toBe(existingPremiumUntil.toISOString());
 			expect(updatedUser?.stripeSubscriptionId).toBe(subscriptionId);
 			expect(updatedUser?.stripeCustomerId).toBe('cus_test_past_due');
+		});
+		async function seedPastDueUser(subscriptionId: string, premiumUntil: Date) {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const sessionId = `cs_${subscriptionId}_${Date.now()}`;
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: userId,
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'completed',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await paymentRepository.updatePayment({
+				checkout_session_id: sessionId,
+				subscription_id: subscriptionId,
+				stripe_customer_id: 'cus_test_past_due',
+				status: 'completed',
+			});
+			await userRepository.patchUpsert(
+				userId,
+				{
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					premium_until: premiumUntil,
+					premium_will_cancel: false,
+					premium_billing_cycle: 'monthly',
+					stripe_subscription_id: subscriptionId,
+					stripe_customer_id: 'cus_test_past_due',
+					premium_since: new Date(),
+				},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			return userId;
+		}
+		function pastDueEvent(subscriptionId: string, periodStartSeconds: number, periodEndSeconds: number) {
+			const eventData = createSubscriptionUpdatedEvent({
+				subscriptionId,
+				customerId: 'cus_test_past_due',
+				status: 'past_due',
+				cancelAtPeriodEnd: false,
+			});
+			eventData.data.object.cancel_at = null;
+			eventData.data.object.items = {
+				data: [{current_period_start: periodStartSeconds, current_period_end: periodEndSeconds}],
+			};
+			return eventData;
+		}
+		test('records the payment recovery deadline when past_due arrives before the failed invoice', async () => {
+			const subscriptionId = 'sub_test_past_due_first';
+			const renewalSeconds = Math.floor(Date.now() / 1000) - 60 * 60;
+			const renewalAt = new Date(renewalSeconds * 1000);
+			const userId = await seedPastDueUser(subscriptionId, renewalAt);
+			const result = await sendWebhook(
+				pastDueEvent(subscriptionId, renewalSeconds, renewalSeconds + 30 * 24 * 60 * 60),
+			);
+			expect(result.received).toBe(true);
+			const updatedUser = await userRepository.findUnique(userId);
+			expect(updatedUser?.premiumUntil?.getTime()).toBe(renewalAt.getTime());
+			expect(updatedUser?.premiumGraceEndsAt?.getTime()).toBe(
+				renewalAt.getTime() + getPremiumPaymentRecoveryGraceMs('monthly'),
+			);
+		});
+		test('does not move premium back to the period start for a mid-period past_due', async () => {
+			const subscriptionId = 'sub_test_past_due_mid_period';
+			const periodStartSeconds = Math.floor(Date.now() / 1000) - 20 * 24 * 60 * 60;
+			const periodEndSeconds = periodStartSeconds + 30 * 24 * 60 * 60;
+			const paidThrough = new Date(periodEndSeconds * 1000);
+			const userId = await seedPastDueUser(subscriptionId, paidThrough);
+			const result = await sendWebhook(pastDueEvent(subscriptionId, periodStartSeconds, periodEndSeconds));
+			expect(result.received).toBe(true);
+			const updatedUser = await userRepository.findUnique(userId);
+			expect(updatedUser?.premiumUntil?.getTime()).toBe(paidThrough.getTime());
+			expect(updatedUser?.premiumGraceEndsAt).toBeNull();
 		});
 		test('does not clear premium when period end is missing', async () => {
 			const account = await createTestAccount(harness);
@@ -501,7 +577,7 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
 			expect(checkHasActivePaidPremium(afterUser!)).toBe(false);
 		});
-		test('grants standard grace when the subscription is cancelled at the end of its paid period', async () => {
+		test('ends premium without grace when the subscription is cancelled at the end of its paid period', async () => {
 			const account = await createTestAccount(harness);
 			const userId = createUserID(BigInt(account.userId));
 			const subscriptionId = 'sub_test_cancel_natural';
@@ -523,8 +599,113 @@ describe('Stripe Webhook Subscription Lifecycle', () => {
 			expect(result.received).toBe(true);
 			const afterUser = await userRepository.findUnique(userId);
 			expect(afterUser?.premiumUntil?.getTime()).toBe(premiumUntil.getTime());
-			expect(afterUser?.premiumGraceEndsAt).not.toBeNull();
-			expect(afterUser!.premiumGraceEndsAt!.getTime()).toBe(endedAt * 1000 + 3 * 24 * 60 * 60 * 1000);
+			expect(afterUser?.premiumGraceEndsAt?.getTime()).toBe(endedAt * 1000);
+			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
+			expect(checkHasActivePaidPremium(afterUser!)).toBe(false);
+		});
+		test('keeps the payment recovery deadline when Stripe cancels for non-payment', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const subscriptionId = 'sub_test_cancel_non_payment';
+			const sessionId = `cs_test_non_payment_${Date.now()}`;
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: userId,
+				price_id: MOCK_PRICES.monthlyUsd,
+				product_type: ProductType.MONTHLY_SUBSCRIPTION,
+				status: 'completed',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await paymentRepository.updatePayment({
+				checkout_session_id: sessionId,
+				subscription_id: subscriptionId,
+				stripe_customer_id: 'cus_test_1',
+				status: 'completed',
+			});
+			const lapseStart = new Date(Math.floor((Date.now() - 5 * 24 * 60 * 60 * 1000) / 1000) * 1000);
+			const recoveryDeadline = new Date(lapseStart.getTime() + 7 * 24 * 60 * 60 * 1000);
+			await userRepository.patchUpsert(
+				userId,
+				{
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					stripe_subscription_id: subscriptionId,
+					stripe_customer_id: 'cus_test_1',
+					premium_since: new Date(),
+					premium_until: lapseStart,
+					premium_billing_cycle: 'monthly',
+					premium_will_cancel: true,
+					premium_grace_ends_at: recoveryDeadline,
+				},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			const endedAt = Math.floor(Date.now() / 1000);
+			const eventData = createSubscriptionDeletedEvent({
+				subscriptionId,
+				endedAt,
+				cancellationReason: 'payment_failed',
+				interval: 'month',
+			});
+			const result = await sendWebhook(eventData);
+			expect(result.received).toBe(true);
+			const afterUser = await userRepository.findUnique(userId);
+			expect(afterUser?.premiumType).toBe(UserPremiumTypes.SUBSCRIPTION);
+			expect(afterUser?.premiumUntil?.getTime()).toBe(lapseStart.getTime());
+			expect(afterUser?.premiumGraceEndsAt?.getTime()).toBe(recoveryDeadline.getTime());
+			expect(afterUser?.premiumGraceEndsAt?.getTime()).not.toBe(endedAt * 1000 + PREMIUM_GRACE_PERIOD_MS);
+			expect(afterUser?.stripeSubscriptionId).toBeNull();
+			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
+			expect(checkHasActivePaidPremium(afterUser!)).toBe(true);
+		});
+		test('records the recovery deadline from the payload cycle when none was recorded', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			const subscriptionId = 'sub_test_cancel_non_payment_yearly';
+			const sessionId = `cs_test_non_payment_yearly_${Date.now()}`;
+			await paymentRepository.createPayment({
+				checkout_session_id: sessionId,
+				user_id: userId,
+				price_id: MOCK_PRICES.yearlyUsd,
+				product_type: ProductType.YEARLY_SUBSCRIPTION,
+				status: 'completed',
+				is_gift: false,
+				created_at: new Date(),
+			});
+			await paymentRepository.updatePayment({
+				checkout_session_id: sessionId,
+				subscription_id: subscriptionId,
+				stripe_customer_id: 'cus_test_1',
+				status: 'completed',
+			});
+			const lapseStart = new Date(Math.floor((Date.now() - 10 * 24 * 60 * 60 * 1000) / 1000) * 1000);
+			await userRepository.patchUpsert(
+				userId,
+				{
+					premium_type: UserPremiumTypes.SUBSCRIPTION,
+					stripe_subscription_id: subscriptionId,
+					stripe_customer_id: 'cus_test_1',
+					premium_since: new Date(),
+					premium_until: lapseStart,
+					premium_billing_cycle: null,
+					premium_grace_ends_at: null,
+				},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+			const endedAt = Math.floor(Date.now() / 1000);
+			const eventData = createSubscriptionDeletedEvent({
+				subscriptionId,
+				endedAt,
+				cancellationReason: 'payment_failed',
+				interval: 'year',
+			});
+			const result = await sendWebhook(eventData);
+			expect(result.received).toBe(true);
+			const afterUser = await userRepository.findUnique(userId);
+			expect(afterUser?.premiumUntil?.getTime()).toBe(lapseStart.getTime());
+			expect(afterUser?.premiumGraceEndsAt?.getTime()).toBe(
+				lapseStart.getTime() + getPremiumPaymentRecoveryGraceMs('yearly'),
+			);
+			expect(afterUser?.premiumGraceEndsAt?.getTime()).toBe(lapseStart.getTime() + 14 * 24 * 60 * 60 * 1000);
 			const {checkHasActivePaidPremium} = await import('@app/api/user/UserHelpers');
 			expect(checkHasActivePaidPremium(afterUser!)).toBe(true);
 		});

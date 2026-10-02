@@ -26,7 +26,7 @@ import {
 	LATENCY_GRAPH_DESCRIPTOR,
 } from '@app/features/voice/components/voice_connection_status/shared';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {readNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
+import {readEffectiveNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {
 	VOICE_DISCONNECT_DESCRIPTOR,
 	VOICE_IN_CHAT_DESCRIPTOR,
@@ -53,7 +53,7 @@ export const MockedVoiceConnectionStatus = observer(() => {
 	const {i18n} = useLingui();
 	const voiceSettings = VoiceSettings;
 	const processingMode = getActiveVoiceProcessingMode(voiceSettings);
-	const noiseSuppressionBackend = readNoiseSuppressionBackend();
+	const noiseSuppressionBackend = readEffectiveNoiseSuppressionBackend();
 	const isProcessingActive = isAudioProcessingActive(processingMode, noiseSuppressionBackend);
 	const showVoiceConnectionId = voiceSettings.showVoiceConnectionId;
 	const openNoiseSuppressionModal = useCallback(() => {

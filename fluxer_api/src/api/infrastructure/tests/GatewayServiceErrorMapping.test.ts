@@ -8,6 +8,7 @@ import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTran
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {afterEach, describe, expect, it} from 'vitest';
 
@@ -69,5 +70,31 @@ describe('GatewayService gateway error mapping', () => {
 		expect(error).toBeInstanceOf(BadRequestError);
 		expect((error as BadRequestError).status).toBe(400);
 		expect((error as BadRequestError).code).toBe(APIErrorCodes.INVALID_FORM_BODY);
+	});
+
+	it('returns 503 with Retry-After for an overloaded guild', async () => {
+		const service = serviceRaising(GatewayRpcMethodErrorCodes.GUILD_OVERLOADED);
+		const error = await service
+			.getUserPermissions({guildId: createGuildID(1n), userId: createUserID(2n)})
+			.catch((raised: unknown) => raised);
+		expect(error).toBeInstanceOf(ServiceUnavailableError);
+		const response = (error as ServiceUnavailableError).getResponse();
+		expect(response.status).toBe(503);
+		expect(response.headers.get('Retry-After')).toBe('1');
+	});
+
+	it('does not retry a guild overload response', async () => {
+		let calls = 0;
+		const client = GatewayRpcClient.createForTests({
+			async call(): Promise<unknown> {
+				calls += 1;
+				throw new GatewayRpcMethodError(GatewayRpcMethodErrorCodes.GUILD_OVERLOADED);
+			},
+			async destroy(): Promise<void> {},
+		});
+		await expect(client.call('guild.dispatch', {guild_id: '1'})).rejects.toMatchObject({
+			code: GatewayRpcMethodErrorCodes.GUILD_OVERLOADED,
+		});
+		expect(calls).toBe(1);
 	});
 });

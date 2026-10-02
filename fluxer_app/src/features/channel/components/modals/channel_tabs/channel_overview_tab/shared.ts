@@ -10,6 +10,7 @@ export interface FormInputs {
 	topic?: string;
 	url?: string;
 	slowmode?: number;
+	announcement?: boolean;
 	nsfw_override: boolean | null;
 	content_warning_level: number;
 	content_warning_text: string;

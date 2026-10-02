@@ -422,6 +422,17 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "anonymous_rollout_basis_points": 100,
             "standalone_forwarding": true
         },
+        "plutonium_page": {
+            "enabled": true,
+            "config_version": 3,
+            "rollout_basis_points": 500,
+            "rollout_salt": "plutonium-page-v1",
+            "included_user_ids": ["1500000000000000001"],
+            "excluded_user_ids": ["1500000000000000002"],
+            "included_guild_ids": ["1500000000000000005"],
+            "include_premium_users": true,
+            "future_plutonium_page_knob": true
+        },
         "captcha": {
             "enabled": true,
             "cost": 5000,
@@ -578,6 +589,14 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
     assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
     assert!(resp.domain_migration.standalone_forwarding);
+    assert!(resp.plutonium_page.enabled);
+    assert_eq!(resp.plutonium_page.config_version, 3);
+    assert_eq!(resp.plutonium_page.rollout_basis_points, 500);
+    assert_eq!(*resp.plutonium_page.rollout_salt, "plutonium-page-v1");
+    assert_eq!(resp.plutonium_page.included_user_ids.len(), 1);
+    assert_eq!(resp.plutonium_page.excluded_user_ids.len(), 1);
+    assert_eq!(resp.plutonium_page.included_guild_ids.len(), 1);
+    assert!(resp.plutonium_page.include_premium_users);
     assert!(resp.push_relay.relay_consent_accepted);
     assert!(resp.captcha.enabled);
     assert_eq!(resp.captcha.max_counter, 1000);

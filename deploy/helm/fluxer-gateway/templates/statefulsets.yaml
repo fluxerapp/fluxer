@@ -1,0 +1,29 @@
+{{- range $name, $w := .Values.statefulsets }}
+{{- if not (kindIs "invalid" $w) }}
+{{- $ctx := dict "root" $ "name" $name "component" $w.role "w" $w }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "gateway.labels" $ctx | nindent 4 }}
+spec:
+  replicas: {{ include "gateway.replicas" $ctx }}
+  {{- if not (kindIs "invalid" $w.minReadySeconds) }}
+  minReadySeconds: {{ $w.minReadySeconds }}
+  {{- end }}
+  serviceName: {{ include "gateway.headlessName" $ }}
+  selector:
+    matchLabels:
+      {{- include "gateway.selectorLabels" $ctx | nindent 6 }}
+  {{- with include "gateway.pick" (dict "root" $ "w" $w "key" "updateStrategy") }}
+  updateStrategy:
+    {{- . | nindent 4 }}
+  {{- end }}
+  template:
+    {{- include "gateway.pod" $ctx | nindent 4 }}
+{{- include "gateway.pdb" $ctx }}
+{{- end }}
+{{- end }}

@@ -2688,6 +2688,134 @@
 				}
 			}
 		},
+		"/channels/{channel_id}/follower-stats": {
+			"get": {
+				"operationId": "get_channel_follower_stats",
+				"summary": "Get announcement channel follower stats",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ChannelFollowerStatsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns how many channels and distinct guilds follow an announcement channel. Requires View Channel on the announcement channel.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/followers": {
+			"post": {
+				"operationId": "follow_channel",
+				"summary": "Follow an announcement channel",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/FollowedChannelResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Follows an announcement channel into a text channel. Creates a channel follower webhook in the target channel that receives every message published in the announcement channel. Requires Manage Webhooks in the target channel and View Channel on the announcement channel.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ChannelFollowRequest"}}}
+				}
+			}
+		},
 		"/channels/{channel_id}/invites": {
 			"post": {
 				"operationId": "create_channel_invite",
@@ -3659,6 +3787,144 @@
 						"required": true,
 						"schema": {"description": "The ID of the attachment", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the attachment"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/messages/{message_id}/crosspost": {
+			"post": {
+				"operationId": "crosspost_message",
+				"summary": "Publish a message to following channels",
+				"tags": ["Channels", "Messages"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MessageResponseSchema"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Publishes a message in an announcement channel to every channel that follows it. The author needs Send Messages. Anyone else needs Send Messages and Manage Messages. Only default messages that are not replies, forwards or copies can be published, and each message can be published once. Copies are delivered asynchronously. Publishing is limited per channel (10 in a row, then one every 6 minutes) and per community (30 in a row, then one every 2 minutes). Returns the updated message with the CROSSPOSTED flag set.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/messages/{message_id}/crosspost-source": {
+			"get": {
+				"operationId": "get_message_crosspost_source",
+				"summary": "Get the source community of a published message copy",
+				"tags": ["Channels", "Messages"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/CrosspostSourceResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the public profile of the community a message copy was published from. Works on copies delivered to a following channel and on the system message posted when a channel starts following. Needs the same access as fetching the message. The response holds the community name, icon, banner, badge features, approximate counts and whether it can be joined through discovery.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
 					}
 				]
 			}
@@ -5044,7 +5310,7 @@
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/WebhookResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/WebhookCreateResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -21501,8 +21767,8 @@
 										"$ref": "#/components/schemas/SnowflakeStringType"
 									},
 									"message_id": {
-										"description": "The ID of the referenced message",
-										"$ref": "#/components/schemas/SnowflakeStringType"
+										"description": "The ID of the referenced message, absent on a channel follow system message",
+										"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 									},
 									"guild_id": {
 										"description": "The ID of the guild containing the referenced message",
@@ -21510,7 +21776,7 @@
 									},
 									"type": {"$ref": "#/components/schemas/MessageReferenceType"}
 								},
-								"required": ["channel_id", "message_id", "type"],
+								"required": ["channel_id", "type"],
 								"additionalProperties": false
 							},
 							{"type": "null"}
@@ -21664,8 +21930,8 @@
 														"$ref": "#/components/schemas/SnowflakeStringType"
 													},
 													"message_id": {
-														"description": "The ID of the referenced message",
-														"$ref": "#/components/schemas/SnowflakeStringType"
+														"description": "The ID of the referenced message, absent on a channel follow system message",
+														"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 													},
 													"guild_id": {
 														"description": "The ID of the guild containing the referenced message",
@@ -21673,7 +21939,7 @@
 													},
 													"type": {"$ref": "#/components/schemas/MessageReferenceType"}
 												},
-												"required": ["channel_id", "message_id", "type"],
+												"required": ["channel_id", "type"],
 												"additionalProperties": false
 											},
 											{"type": "null"}
@@ -22442,9 +22708,10 @@
 					},
 					"name": {"type": "string", "description": "The display name of the webhook"},
 					"avatar": {"description": "The hash of the webhook avatar image", "type": ["string", "null"]},
+					"type": {"$ref": "#/components/schemas/WebhookType"},
 					"token": {"type": "string", "description": "The secure token used to execute the webhook"}
 				},
-				"required": ["id", "guild_id", "channel_id", "name", "token"],
+				"required": ["id", "guild_id", "channel_id", "name", "type", "token"],
 				"additionalProperties": false
 			},
 			"WebhookUpdateRequest": {
@@ -22478,13 +22745,50 @@
 					},
 					"name": {"type": "string", "description": "The display name of the webhook"},
 					"avatar": {"description": "The hash of the webhook avatar image", "type": ["string", "null"]},
-					"token": {"type": "string", "description": "The secure token used to execute the webhook"},
+					"type": {"$ref": "#/components/schemas/WebhookType"},
+					"token": {
+						"description": "The secure token used to execute the webhook, omitted for channel follower webhooks",
+						"type": "string"
+					},
 					"user": {
 						"description": "The user who created the webhook",
 						"$ref": "#/components/schemas/UserPartialResponse"
+					},
+					"source_guild": {
+						"description": "The guild of the followed announcement channel, present on channel follower webhooks while the creator can view it",
+						"type": "object",
+						"properties": {
+							"id": {
+								"description": "The ID of the guild that owns the followed announcement channel",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"name": {
+								"type": "string",
+								"description": "The name of the guild that owns the followed announcement channel"
+							},
+							"icon": {
+								"description": "The icon hash of the guild that owns the followed announcement channel",
+								"type": ["string", "null"]
+							}
+						},
+						"required": ["id", "name"],
+						"additionalProperties": false
+					},
+					"source_channel": {
+						"description": "The followed announcement channel, present on channel follower webhooks while the creator can view it",
+						"type": "object",
+						"properties": {
+							"id": {
+								"description": "The ID of the followed announcement channel",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"name": {"type": "string", "description": "The name of the followed announcement channel"}
+						},
+						"required": ["id", "name"],
+						"additionalProperties": false
 					}
 				},
-				"required": ["id", "guild_id", "channel_id", "name", "token", "user"],
+				"required": ["id", "guild_id", "channel_id", "name", "type", "user"],
 				"additionalProperties": false
 			},
 			"EntranceSoundPlayRequest": {
@@ -22729,7 +23033,7 @@
 						"description": "The sequence number for lifetime premium subscribers"
 					},
 					"premium_grace_ends_at": {
-						"description": "ISO8601 timestamp at which the post-cancel grace period ends. Set when the subscription is fully canceled in Stripe; perks remain active and the original premium_since is restored on resubscribe until this timestamp passes. Null when not in grace.",
+						"description": "ISO8601 timestamp at which grace access ends after premium_until passes: after a failed renewal payment (7 days from the renewal for monthly plans, 14 for yearly), after a subscription ends (3 days), or during an App Store or Google Play grace period. Perks stay active and the original premium_since is kept on resubscribe until this timestamp passes. Null when no grace is recorded, in which case access lasts 3 days after premium_until.",
 						"type": ["string", "null"]
 					},
 					"premium_discriminator": {
@@ -28047,6 +28351,7 @@
 			"ChannelCreateRequest": {
 				"oneOf": [
 					{"$ref": "#/components/schemas/GuildTextChannelCreateRequest"},
+					{"$ref": "#/components/schemas/GuildAnnouncementChannelCreateRequest"},
 					{"$ref": "#/components/schemas/GuildVoiceChannelCreateRequest"},
 					{"$ref": "#/components/schemas/GuildCategoryChannelCreateRequest"},
 					{"$ref": "#/components/schemas/GuildLinkChannelCreateRequest"}
@@ -28386,7 +28691,10 @@
 					"poll_jitter_percent": {"type": "integer", "minimum": 0, "maximum": 50},
 					"assignments": {
 						"type": "object",
-						"properties": {"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"}},
+						"properties": {
+							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
+							"plutonium_page": {"$ref": "#/components/schemas/PlutoniumPageAssignmentResponse"}
+						},
 						"additionalProperties": false
 					}
 				},
@@ -28531,6 +28839,33 @@
 				},
 				"required": ["name"]
 			},
+			"WebhookCreateResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for the webhook",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"guild_id": {
+						"description": "The ID of the guild this webhook belongs to",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"channel_id": {
+						"description": "The ID of the channel this webhook posts to",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"name": {"type": "string", "description": "The display name of the webhook"},
+					"avatar": {"description": "The hash of the webhook avatar image", "type": ["string", "null"]},
+					"type": {"$ref": "#/components/schemas/WebhookType"},
+					"token": {"type": "string", "description": "The secure token used to execute the webhook"},
+					"user": {
+						"description": "The user who created the webhook",
+						"$ref": "#/components/schemas/UserPartialResponse"
+					}
+				},
+				"required": ["id", "guild_id", "channel_id", "name", "type", "token", "user"],
+				"additionalProperties": false
+			},
 			"ChannelSlowmodeStateResponse": {
 				"type": "object",
 				"properties": {
@@ -28615,6 +28950,47 @@
 					}
 				},
 				"required": ["name"]
+			},
+			"CrosspostSourceResponse": {
+				"type": "object",
+				"properties": {
+					"guild": {
+						"properties": {
+							"id": {
+								"description": "The ID of the source community",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"name": {"type": "string", "description": "The name of the source community"},
+							"icon": {"description": "The hash of the source community icon", "type": ["string", "null"]},
+							"banner": {"description": "The hash of the source community banner", "type": ["string", "null"]},
+							"description": {
+								"description": "The discovery description of the source community, or null when it is not listed in discovery",
+								"type": ["string", "null"]
+							},
+							"features": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
+								"description": "The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only"
+							},
+							"approximate_member_count": {
+								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+								"description": "Approximate number of members in the source community, or null when unavailable"
+							},
+							"approximate_presence_count": {
+								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+								"description": "Approximate number of online members in the source community, or null when unavailable"
+							},
+							"discoverable": {
+								"type": "boolean",
+								"description": "Whether the source community can be joined through discovery"
+							}
+						},
+						"description": "The community the message was published from",
+						"$ref": "#/components/schemas/CrosspostSourceGuildResponse"
+					}
+				},
+				"required": ["guild"],
+				"additionalProperties": false
 			},
 			"MessageAckRequest": {
 				"type": "object",
@@ -28797,6 +29173,46 @@
 					{"$ref": "#/components/schemas/GroupDmInviteMetadataResponse"}
 				]
 			},
+			"ChannelFollowRequest": {
+				"type": "object",
+				"properties": {
+					"webhook_channel_id": {
+						"description": "The ID of the text channel that receives published messages",
+						"$ref": "#/components/schemas/SnowflakeType"
+					}
+				},
+				"required": ["webhook_channel_id"]
+			},
+			"FollowedChannelResponse": {
+				"type": "object",
+				"properties": {
+					"channel_id": {
+						"description": "The ID of the followed announcement channel",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"webhook_id": {
+						"description": "The ID of the channel follower webhook created in the target channel",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					}
+				},
+				"required": ["channel_id", "webhook_id"],
+				"additionalProperties": false
+			},
+			"ChannelFollowerStatsResponse": {
+				"type": "object",
+				"properties": {
+					"channel_count": {
+						"description": "The number of channels following this announcement channel",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"guild_count": {
+						"description": "The number of distinct guilds following this announcement channel",
+						"$ref": "#/components/schemas/Int32Type"
+					}
+				},
+				"required": ["channel_count", "guild_count"],
+				"additionalProperties": false
+			},
 			"CallRingBodySchema": {
 				"type": "object",
 				"properties": {
@@ -28966,7 +29382,103 @@
 								"description": "Voice region ID for the voice channel (1-64 characters)",
 								"type": ["string", "null"]
 							},
-							"name": {"description": "The name of the channel", "type": ["string", "null"]}
+							"name": {"description": "The name of the channel", "type": ["string", "null"]},
+							"type": {
+								"description": "Convert between text (0) and announcement (5). Other conversions are rejected.",
+								"anyOf": [{"type": "number", "const": 0}, {"type": "number", "const": 5}]
+							}
+						}
+					},
+					{
+						"type": "object",
+						"properties": {
+							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+							"parent_id": {
+								"description": "ID of the parent category for this channel",
+								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+							},
+							"bitrate": {
+								"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+								"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+							},
+							"user_limit": {
+								"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+							},
+							"voice_connection_limit": {
+								"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+								"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+							},
+							"permission_overwrites": {
+								"description": "Permission overwrites for roles and members",
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"description": "The ID of the role or user to overwrite permissions for",
+											"$ref": "#/components/schemas/SnowflakeType"
+										},
+										"type": {
+											"description": "The type of overwrite (0 = role, 1 = member)",
+											"x-enumNames": ["ROLE", "MEMBER"],
+											"enum": [0, 1],
+											"type": "integer"
+										},
+										"allow": {
+											"description": "Bitwise value of allowed permissions",
+											"$ref": "#/components/schemas/UnsignedInt64Type"
+										},
+										"deny": {
+											"description": "Bitwise value of denied permissions",
+											"$ref": "#/components/schemas/UnsignedInt64Type"
+										}
+									},
+									"required": ["id", "type"]
+								}
+							},
+							"rate_limit_per_user": {
+								"description": "Slowmode delay in seconds (0-21600)",
+								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+							},
+							"nsfw": {
+								"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
+								"type": ["boolean", "null"]
+							},
+							"nsfw_override": {
+								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+								"type": ["boolean", "null"]
+							},
+							"content_warning_level": {
+								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+								"$ref": "#/components/schemas/ContentWarningLevelInput"
+							},
+							"content_warning_text": {
+								"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+								"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+							},
+							"icon": {
+								"description": "Base64-encoded icon image for group DM channels",
+								"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+							},
+							"owner_id": {
+								"description": "ID of the new owner for group DM channels",
+								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+							},
+							"nicks": {
+								"description": "Custom nicknames for users in this channel",
+								"$ref": "#/components/schemas/ChannelNicknameOverrides"
+							},
+							"rtc_region": {
+								"description": "Voice region ID for the voice channel (1-64 characters)",
+								"type": ["string", "null"]
+							},
+							"name": {"description": "The name of the channel", "type": ["string", "null"]},
+							"type": {
+								"description": "Convert between text (0) and announcement (5). Other conversions are rejected.",
+								"anyOf": [{"type": "number", "const": 0}, {"type": "number", "const": 5}]
+							}
 						}
 					},
 					{
@@ -30340,6 +30852,10 @@
 					"emails_enabled": {
 						"type": "boolean",
 						"description": "Whether the instance sends emails (verification, password reset, etc.)"
+					},
+					"phone_verification_enabled": {
+						"type": "boolean",
+						"description": "Whether users can verify a phone number, so the very high guild verification level applies"
 					}
 				},
 				"required": [
@@ -30349,7 +30865,8 @@
 					"stripe_serviceable",
 					"self_hosted",
 					"presigned_attachment_uploads",
-					"emails_enabled"
+					"emails_enabled",
+					"phone_verification_enabled"
 				],
 				"additionalProperties": false,
 				"description": "Feature flags for this instance"
@@ -31044,7 +31561,7 @@
 				"additionalProperties": false
 			},
 			"GuildFeatureSchema": {
-				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD (other values allowed)",
+				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED (other values allowed)",
 				"x-enumNames": [
 					"ANIMATED_ICON",
 					"ANIMATED_BANNER",
@@ -31078,7 +31595,8 @@
 					"UNAVAILABLE_HIDDEN",
 					"VISIONARY",
 					"LARGE_GUILD_OVERRIDE",
-					"VERY_LARGE_GUILD"
+					"VERY_LARGE_GUILD",
+					"ANNOUNCEMENT_CHANNELS_DISABLED"
 				],
 				"x-enumDescriptions": [
 					"Guild can have an animated icon",
@@ -31113,14 +31631,15 @@
 					"Guild is hidden when it is force unavailable",
 					"Guild is a visionary guild",
 					"Guild has large guild overrides enabled",
-					"Guild has increased member capacity enabled"
+					"Guild has increased member capacity enabled",
+					"Guild cannot publish announcement messages or gain new followers"
 				],
 				"type": "string"
 			},
 			"ChannelType": {
 				"description": "The type of the channel",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 998, 999],
+				"enum": [0, 1, 2, 3, 4, 5, 998, 999],
 				"format": "int32",
 				"x-enumNames": [
 					"GUILD_TEXT",
@@ -31128,6 +31647,7 @@
 					"GUILD_VOICE",
 					"GROUP_DM",
 					"GUILD_CATEGORY",
+					"GUILD_ANNOUNCEMENT",
 					"GUILD_LINK",
 					"DM_PERSONAL_NOTES"
 				],
@@ -31137,6 +31657,7 @@
 					"A voice channel within a guild",
 					"A group direct message between users",
 					"A category that contains channels",
+					"A guild channel whose messages can be published to channels that follow it",
 					"A link channel for external resources",
 					"Personal notes DM channel"
 				]
@@ -31153,9 +31674,24 @@
 				"format": "int32",
 				"x-bitflagValues": [
 					{
+						"name": "CROSSPOSTED",
+						"value": "1",
+						"description": "This message has been published to channels that follow this announcement channel"
+					},
+					{
+						"name": "IS_CROSSPOST",
+						"value": "2",
+						"description": "This message was delivered from an announcement channel this channel follows"
+					},
+					{
 						"name": "SUPPRESS_EMBEDS",
 						"value": "4",
 						"description": "Do not include embeds when serialising this message"
+					},
+					{
+						"name": "SOURCE_MESSAGE_DELETED",
+						"value": "8",
+						"description": "The published message this copy came from has been deleted"
 					},
 					{
 						"name": "SUPPRESS_NOTIFICATIONS",
@@ -31537,8 +32073,8 @@
 												"$ref": "#/components/schemas/SnowflakeStringType"
 											},
 											"message_id": {
-												"description": "The ID of the referenced message",
-												"$ref": "#/components/schemas/SnowflakeStringType"
+												"description": "The ID of the referenced message, absent on a channel follow system message",
+												"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 											},
 											"guild_id": {
 												"description": "The ID of the guild containing the referenced message",
@@ -31546,7 +32082,7 @@
 											},
 											"type": {"$ref": "#/components/schemas/MessageReferenceType"}
 										},
-										"required": ["channel_id", "message_id", "type"],
+										"required": ["channel_id", "type"],
 										"additionalProperties": false
 									},
 									{"type": "null"}
@@ -31844,7 +32380,7 @@
 			"MessageType": {
 				"description": "The type of message",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 19],
+				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 12, 19],
 				"format": "int32",
 				"x-enumNames": [
 					"DEFAULT",
@@ -31855,6 +32391,7 @@
 					"CHANNEL_ICON_CHANGE",
 					"CHANNEL_PINNED_MESSAGE",
 					"USER_JOIN",
+					"CHANNEL_FOLLOW_ADD",
 					"REPLY"
 				],
 				"x-enumDescriptions": [
@@ -31866,6 +32403,7 @@
 					"A system message indicating the channel icon changed",
 					"A system message indicating a message was pinned",
 					"A system message indicating a user joined",
+					"System message posted when a channel starts following an announcement channel",
 					"A reply message"
 				]
 			},
@@ -32061,6 +32599,46 @@
 					}
 				}
 			},
+			"CrosspostSourceGuildResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the source community", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"name": {"type": "string", "description": "The name of the source community"},
+					"icon": {"description": "The hash of the source community icon", "type": ["string", "null"]},
+					"banner": {"description": "The hash of the source community banner", "type": ["string", "null"]},
+					"description": {
+						"description": "The discovery description of the source community, or null when it is not listed in discovery",
+						"type": ["string", "null"]
+					},
+					"features": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
+						"description": "The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only"
+					},
+					"approximate_member_count": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "Approximate number of members in the source community, or null when unavailable"
+					},
+					"approximate_presence_count": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "Approximate number of online members in the source community, or null when unavailable"
+					},
+					"discoverable": {
+						"type": "boolean",
+						"description": "Whether the source community can be joined through discovery"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"description",
+					"features",
+					"approximate_member_count",
+					"approximate_presence_count",
+					"discoverable"
+				],
+				"additionalProperties": false
+			},
 			"ChannelOverwriteType": {
 				"description": "The type of entity the overwrite applies to",
 				"x-enumNames": ["ROLE", "MEMBER"],
@@ -32078,6 +32656,14 @@
 				"required": ["id", "name", "emoji"],
 				"additionalProperties": false
 			},
+			"WebhookType": {
+				"description": "The type of webhook",
+				"type": "integer",
+				"enum": [1, 2],
+				"format": "int32",
+				"x-enumNames": ["INCOMING", "CHANNEL_FOLLOWER"],
+				"x-enumDescriptions": ["Incoming webhook", "Channel follower webhook"]
+			},
 			"DiscoveryCategoryResponse": {
 				"type": "object",
 				"properties": {
@@ -32088,6 +32674,12 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
+			"PlutoniumPageAssignmentResponse": {
+				"type": "object",
+				"properties": {"enabled": {"type": "boolean"}},
+				"required": ["enabled"],
+				"additionalProperties": false
+			},
 			"DomainMigrationAssignmentResponse": {
 				"type": "object",
 				"properties": {"enabled": {"type": "boolean"}},
@@ -32507,14 +33099,6 @@
 					"Message was unpinned"
 				]
 			},
-			"WebhookType": {
-				"description": "The type of webhook",
-				"type": "integer",
-				"enum": [1, 2],
-				"format": "int32",
-				"x-enumNames": ["INCOMING", "CHANNEL_FOLLOWER"],
-				"x-enumDescriptions": ["Incoming webhook", "Channel follower webhook"]
-			},
 			"GuildBanResponse": {
 				"type": "object",
 				"properties": {
@@ -32768,6 +33352,82 @@
 						"x-enumNames": ["GUILD_VOICE"],
 						"x-enumDescriptions": ["Channel type (voice channel)"],
 						"enum": [2]
+					},
+					"name": {"description": "The name of the channel", "type": "string"}
+				},
+				"required": ["type", "name"]
+			},
+			"GuildAnnouncementChannelCreateRequest": {
+				"type": "object",
+				"properties": {
+					"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"type": ["boolean", "null"]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"type": {
+						"type": "integer",
+						"x-enumNames": ["GUILD_ANNOUNCEMENT"],
+						"x-enumDescriptions": ["Channel type (announcement channel)"],
+						"enum": [5]
 					},
 					"name": {"description": "The name of the channel", "type": "string"}
 				},
@@ -34474,8 +35134,8 @@
 													"$ref": "#/components/schemas/SnowflakeStringType"
 												},
 												"message_id": {
-													"description": "The ID of the referenced message",
-													"$ref": "#/components/schemas/SnowflakeStringType"
+													"description": "The ID of the referenced message, absent on a channel follow system message",
+													"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 												},
 												"guild_id": {
 													"description": "The ID of the guild containing the referenced message",
@@ -34483,7 +35143,7 @@
 												},
 												"type": {"$ref": "#/components/schemas/MessageReferenceType"}
 											},
-											"required": ["channel_id", "message_id", "type"],
+											"required": ["channel_id", "type"],
 											"additionalProperties": false
 										},
 										{"type": "null"}

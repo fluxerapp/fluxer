@@ -3,6 +3,7 @@
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {buildVoiceEngineV2AppCameraPermissionDeniedError} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraPermissionDeniedError';
 import type {VoiceEngineV2AppCameraTransitionOutcome} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraTransition';
+import {beginMicrophoneSession} from '@app/features/voice/utils/noise_suppression/DeepFilter';
 import type {
 	LiveKitPort,
 	StatsPort,
@@ -200,6 +201,7 @@ export class VoiceEngineV2AppLiveKitExecutionAdapter implements LiveKitPort {
 			throw buildOperatingError('connect', 'options.token is missing');
 		}
 		this.logger.info('connect requested', {url: options.url});
+		beginMicrophoneSession();
 		const voiceServerDelegate = this.connection.connectToVoiceServer;
 		if (typeof voiceServerDelegate === 'function') {
 			try {

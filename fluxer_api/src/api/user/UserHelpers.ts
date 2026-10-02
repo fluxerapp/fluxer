@@ -9,12 +9,14 @@ import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {
 	DEFERRABLE_PHONE_FLAGS,
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
+	PREMIUM_GRACE_PERIOD_DAYS,
+	PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS,
 	PremiumFlags,
 	SuspiciousActivityFlags,
 	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
+import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import type {RequiredAction} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {ms} from 'itty-time';
 
 type ClauseAction = Exclude<RequiredAction, 'REQUIRE_INBOUND_PHONE_VERIFICATION'>;
 type VerificationChannel = 'email' | 'phone';
@@ -214,7 +216,15 @@ interface PremiumCheckable {
 	premiumFlags: number;
 }
 
-export const PREMIUM_GRACE_PERIOD_MS = ms('3 days');
+export const PREMIUM_GRACE_PERIOD_MS = PREMIUM_GRACE_PERIOD_DAYS * MS_PER_DAY;
+
+export function getPremiumPaymentRecoveryGraceMs(billingCycle: string | null | undefined): number {
+	const days =
+		billingCycle === 'yearly'
+			? PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS.yearly
+			: PREMIUM_PAYMENT_RECOVERY_GRACE_DAYS.monthly;
+	return days * MS_PER_DAY;
+}
 
 export function getEffectivePremiumUntil(
 	user: Pick<PremiumCheckable, 'premiumUntil' | 'premiumGiftExtensionEndsAt'>,

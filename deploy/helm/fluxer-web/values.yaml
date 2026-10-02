@@ -1,0 +1,83 @@
+image:
+  registry: ghcr.io/fluxerapp
+  tag: v1
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env: {}
+
+extraEnv: []
+
+envFrom:
+  - secretRef:
+      name: fluxer-env
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+
+probes:
+  startup:
+    httpGet:
+      path: /_health
+      port: http
+    periodSeconds: 10
+    failureThreshold: 30
+  liveness:
+    httpGet:
+      path: /_health
+      port: http
+  readiness:
+    httpGet:
+      path: /_health
+      port: http
+
+strategy:
+  type: RollingUpdate
+
+topologySpreadConstraints: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+workloads:
+  admin:
+    image:
+      name: fluxer-admin
+    replicas: 1
+    env:
+      FLUXER_ENV: production
+      FLUXER_API_ENDPOINT: https://api.example.com
+      FLUXER_ADMIN_ENDPOINT: https://admin.example.com
+      FLUXER_MEDIA_ENDPOINT: https://media.example.com
+      FLUXER_APP_ENDPOINT: https://web.example.com
+    resources:
+      requests:
+        cpu: 50m
+        memory: 96Mi
+      limits:
+        memory: 384Mi
+  app-proxy:
+    image:
+      name: fluxer-app-proxy-self-hosted
+    replicas: 1
+    env:
+      RELEASE_CHANNEL: stable
+      PUBLIC_BOOTSTRAP_API_ENDPOINT: /api
+      PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: https://web.example.com/api
+    resources:
+      requests:
+        cpu: 50m
+        memory: 96Mi
+      limits:
+        memory: 384Mi

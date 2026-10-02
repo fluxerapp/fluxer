@@ -108,7 +108,12 @@ function buildForwardGroupDMCandidates(i18n: I18n): ReadonlyArray<ForwardGroupDM
 function buildForwardChannelCandidates(): ReadonlyArray<ForwardChannelCandidate> {
 	const candidates: Array<ForwardChannelCandidate> = [];
 	for (const channel of Channels.allChannels) {
-		if (channel.type !== ChannelTypes.GUILD_TEXT && channel.type !== ChannelTypes.GUILD_VOICE) continue;
+		if (
+			channel.type !== ChannelTypes.GUILD_TEXT &&
+			channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT &&
+			channel.type !== ChannelTypes.GUILD_VOICE
+		)
+			continue;
 		const isVoice = channel.type === ChannelTypes.GUILD_VOICE;
 		const requiredPermissions = isVoice ? Permissions.VIEW_CHANNEL | Permissions.CONNECT : Permissions.VIEW_CHANNEL;
 		candidates.push(
@@ -137,6 +142,7 @@ function resolveForwardFrequentItem(id: string): ForwardFrequentItem {
 		case ChannelTypes.DM_PERSONAL_NOTES:
 			return {id, kind: 'group_dm', score};
 		case ChannelTypes.GUILD_TEXT:
+		case ChannelTypes.GUILD_ANNOUNCEMENT:
 			return {id, kind: 'text', score};
 		case ChannelTypes.GUILD_VOICE:
 			return {id, kind: 'voice', score};

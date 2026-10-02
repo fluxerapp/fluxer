@@ -6,7 +6,7 @@ import type {ChannelID, MemeID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createAttachmentID, createMemeID, userIdToChannelId} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
-import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
+import {attachmentStorageChannelId, makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
 import {mapFavoriteMemeToResponse} from '@app/api/favorite_meme/FavoriteMemeModel';
 import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
 import {
@@ -551,7 +551,11 @@ export class FavoriteMemeService {
 					embedCount: embeds.length,
 				});
 			}
-			return this.mediaFromEmbed(embeds[preferredEmbedIndex], `embed_${preferredEmbedIndex}`, message.channelId);
+			return this.mediaFromEmbed(
+				embeds[preferredEmbedIndex],
+				`embed_${preferredEmbedIndex}`,
+				attachmentStorageChannelId(message),
+			);
 		}
 		if (attachments.length > 0) {
 			let attachment: MessageAttachmentCandidate | undefined;
@@ -573,7 +577,7 @@ export class FavoriteMemeService {
 			}
 		}
 		for (const embed of embeds) {
-			const media = await this.mediaFromEmbed(embed, 'media', message.channelId);
+			const media = await this.mediaFromEmbed(embed, 'media', attachmentStorageChannelId(message));
 			if (media) return media;
 		}
 		return null;
@@ -594,8 +598,8 @@ export class FavoriteMemeService {
 		const isGifv = isAnimatedAttachment(attachment.contentType, attachment.flags);
 		return {
 			isExternal: false,
-			url: makeSignedAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename),
-			sourceKey: makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename),
+			url: makeSignedAttachmentCdnUrl(attachmentStorageChannelId(message), attachment.id, attachment.filename),
+			sourceKey: makeAttachmentCdnKey(attachmentStorageChannelId(message), attachment.id, attachment.filename),
 			filename: attachment.filename,
 			contentType: attachment.contentType,
 			size: attachment.size,

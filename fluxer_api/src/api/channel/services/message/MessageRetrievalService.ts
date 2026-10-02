@@ -7,7 +7,11 @@ import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IC
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {getDmChannelIdsForScope} from '@app/api/channel/services/message/DmScopeUtils';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
-import {collectMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import {
+	attachmentStorageChannelId,
+	collectMessageAttachments,
+	isCrosspostCopy,
+} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
 import {
 	createMessageResponseDataService,
@@ -254,11 +258,13 @@ export class MessageRetrievalService {
 	}> {
 		const attachments = collectMessageAttachments(message);
 		if (attachments.length === 0) return [];
-		const uploadedAt = snowflakeToDate(message.id);
+		const ownerMessageId = isCrosspostCopy(message) ? (message.reference?.messageId ?? message.id) : message.id;
+		const uploadedAt = snowflakeToDate(ownerMessageId);
+		const storageChannelId = attachmentStorageChannelId(message);
 		return attachments.map((attachment) => ({
 			attachmentId: attachment.id,
-			channelId: message.channelId,
-			messageId: message.id,
+			channelId: storageChannelId,
+			messageId: ownerMessageId,
 			filename: attachment.filename,
 			sizeBytes: attachment.size,
 			uploadedAt,

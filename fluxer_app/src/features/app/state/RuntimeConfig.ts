@@ -100,6 +100,7 @@ const DEFAULT_INSTANCE_FEATURES: InstanceFeatures = {
 	self_hosted: false,
 	presigned_attachment_uploads: false,
 	emails_enabled: false,
+	phone_verification_enabled: true,
 };
 
 export const DEFAULT_INSTANCE_REGISTRATION: InstanceRegistration = {
@@ -514,6 +515,10 @@ class RuntimeConfig {
 
 	get emailsEnabled(): boolean {
 		return this.features.emails_enabled;
+	}
+
+	get phoneVerificationEnabled(): boolean {
+		return this.features.phone_verification_enabled;
 	}
 
 	get productName(): string {

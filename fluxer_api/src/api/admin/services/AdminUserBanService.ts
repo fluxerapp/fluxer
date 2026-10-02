@@ -8,6 +8,7 @@ import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserU
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import {isAccountClosed, isTemporarilyBanned} from '@app/api/user/UserHelpers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -174,6 +175,7 @@ export class AdminUserBanService {
 				['public_reason', data.public_reason ?? 'null'],
 			]),
 		});
+		await clearNewConversationLimit(userId, {cache: cacheService});
 		await emitAdminAction(adminUserId, userId, 'unban');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),

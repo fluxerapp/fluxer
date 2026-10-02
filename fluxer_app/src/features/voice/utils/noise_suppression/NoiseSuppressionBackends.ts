@@ -84,8 +84,8 @@ const DESCRIPTORS: Readonly<Record<VoiceNoiseSuppressionBackend, NoiseSuppressio
 		engine: 'deep_filter',
 		browserNoiseSuppression: false,
 		preservesInputChannels: false,
-		supportedSampleRates: [48000],
-		requiresWasmSimd: false,
+		supportedSampleRates: [44100, 48000],
+		requiresWasmSimd: true,
 		usesSuppressionStrength: true,
 	},
 };
@@ -139,16 +139,6 @@ export function selectUsableNoiseSuppressionBackend(
 		if (candidate !== requested && isNoiseSuppressionBackendSupported(candidate, capabilities)) return candidate;
 	}
 	return 'none';
-}
-
-export function resolveNoiseSuppressionContextSampleRate(
-	backend: VoiceNoiseSuppressionBackend,
-	captureSampleRate: number,
-): number {
-	const descriptor = DESCRIPTORS[backend];
-	const supported = descriptor.supportedSampleRates;
-	if (supported == null || supported.includes(captureSampleRate)) return captureSampleRate;
-	return supported.includes(48000) ? 48000 : (supported[0] ?? captureSampleRate);
 }
 
 const WASM_SIMD_PROBE = new Uint8Array([

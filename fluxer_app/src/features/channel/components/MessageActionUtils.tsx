@@ -16,6 +16,7 @@ import * as MessageCommands from '@app/features/messaging/commands/MessageComman
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMessageCommands';
 import {ForwardModal, type ForwardModalSuccess} from '@app/features/messaging/components/modals/ForwardModal';
+import {MessageCrosspostConfirmModal} from '@app/features/messaging/components/modals/MessageCrosspostConfirmModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageReply from '@app/features/messaging/state/MessageReply';
@@ -37,6 +38,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Users from '@app/features/user/state/Users';
 import TtsUtils from '@app/features/voice/utils/VoiceTtsUtils';
 import {
+	ChannelTypes,
 	isMessageTypeDeletable,
 	MessageFlags,
 	MessageStates,
@@ -167,6 +169,7 @@ export interface MessagePermissions {
 	canDeleteAttachment: boolean;
 	canPinMessage: boolean;
 	canForwardMessage: boolean;
+	canCrosspostMessage: boolean;
 	canSuppressEmbeds: boolean;
 	shouldRenderSuppressEmbeds: boolean;
 }
@@ -226,6 +229,18 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 		(isDM ? true : Permission.can(Permissions.PIN_MESSAGES, {channelId: message.channelId}));
 	const canForwardMessage =
 		!interactionsBlocked && !sendMessageDisabled && canForwardMessageFromChannel(message, channel, isDM);
+	const canCrosspostMessage =
+		!interactionsBlocked &&
+		!sendMessageDisabled &&
+		!isDM &&
+		channel.type === ChannelTypes.GUILD_ANNOUNCEMENT &&
+		message.type === MessageTypes.DEFAULT &&
+		message.state === MessageStates.SENT &&
+		!message.messageSnapshots?.length &&
+		!message.isCrosspostCopy &&
+		passesVerification &&
+		Permission.can(Permissions.SEND_MESSAGES, {channelId: message.channelId}) &&
+		(message.isCurrentUserAuthor() || Permission.can(Permissions.MANAGE_MESSAGES, {channelId: message.channelId}));
 	const canSuppressEmbeds =
 		!interactionsBlocked &&
 		!sendMessageDisabled &&
@@ -243,6 +258,7 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 		canDeleteAttachment,
 		canPinMessage,
 		canForwardMessage,
+		canCrosspostMessage,
 		canSuppressEmbeds,
 		shouldRenderSuppressEmbeds,
 	};
@@ -297,6 +313,7 @@ export interface MessageActionHandlers {
 	handleRetryMessage: () => void;
 	handleFailedMessageDelete: () => void;
 	handleForward: () => void;
+	handleCrosspostMessage: (event?: React.MouseEvent | React.KeyboardEvent) => void;
 	handleRemoveAllReactions: () => void;
 	handleMarkAsUnread: () => void;
 }
@@ -382,6 +399,14 @@ export function createMessageActionHandlers(
 		}
 		requestMessageForward(message, sourceChannel);
 	};
+	const handleCrosspostMessage = (event?: React.MouseEvent | React.KeyboardEvent) => {
+		const crosspostMessage = () => requestMessageCrosspost(message, i18n, {shiftKey: Boolean(event?.shiftKey)});
+		if (onClose) {
+			ModalCommands.runAfterBottomSheetClose(onClose, crosspostMessage);
+			return;
+		}
+		crosspostMessage();
+	};
 	const handleRemoveAllReactions = () => {
 		if (onClose) {
 			ModalCommands.runAfterBottomSheetClose(onClose, () => requestRemoveAllReactions(message, i18n));
@@ -406,6 +431,7 @@ export function createMessageActionHandlers(
 		handleRetryMessage,
 		handleFailedMessageDelete,
 		handleForward,
+		handleCrosspostMessage,
 		handleRemoveAllReactions,
 		handleMarkAsUnread,
 	};
@@ -466,6 +492,24 @@ export function requestMessagePin(message: Message, i18n: I18n, options: {shiftK
 				onPrimary={() => ChannelPinCommands.pin(message.channelId, message.id)}
 				showShiftBypassConfirmationTip={true}
 				data-flx="channel.message-action-utils.request-message-pin.confirm-modal--2"
+			/>
+		)),
+	);
+}
+
+export function requestMessageCrosspost(message: Message, i18n: I18n, options: {shiftKey?: boolean} = {}): void {
+	if (message.isCrossposted) {
+		return;
+	}
+	if (options.shiftKey) {
+		void MessageCommands.crosspost(i18n, message.channelId, message.id);
+		return;
+	}
+	ModalCommands.push(
+		modal(() => (
+			<MessageCrosspostConfirmModal
+				message={message}
+				data-flx="channel.message-action-utils.request-message-crosspost.message-crosspost-confirm-modal"
 			/>
 		)),
 	);

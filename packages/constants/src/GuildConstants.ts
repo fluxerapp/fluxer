@@ -20,11 +20,16 @@ export const GuildVerificationLevel = {
 
 export type GuildVerificationLevelValue = ValueOf<typeof GuildVerificationLevel>;
 
-export function getEffectiveGuildVerificationLevel(verificationLevel: number, isDiscoverable: boolean): number {
+export function getEffectiveGuildVerificationLevel(
+	verificationLevel: number,
+	isDiscoverable: boolean,
+	phoneVerificationEnabled: boolean,
+): number {
+	const level = phoneVerificationEnabled ? verificationLevel : Math.min(verificationLevel, GuildVerificationLevel.HIGH);
 	if (!isDiscoverable) {
-		return verificationLevel;
+		return level;
 	}
-	return Math.max(verificationLevel, GuildVerificationLevel.LOW);
+	return Math.max(level, GuildVerificationLevel.LOW);
 }
 
 export const GuildMFALevel = {
@@ -136,6 +141,7 @@ export const GuildFeatures = {
 	VISIONARY: 'VISIONARY',
 	LARGE_GUILD_OVERRIDE: 'LARGE_GUILD_OVERRIDE',
 	VERY_LARGE_GUILD: 'VERY_LARGE_GUILD',
+	ANNOUNCEMENT_CHANNELS_DISABLED: 'ANNOUNCEMENT_CHANNELS_DISABLED',
 } as const;
 
 export type GuildFeature = ValueOf<typeof GuildFeatures>;

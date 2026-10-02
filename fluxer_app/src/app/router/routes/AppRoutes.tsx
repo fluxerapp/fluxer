@@ -58,6 +58,11 @@ const NotificationsPage = createNamedLoadableComponent<AppRouteComponentProps>({
 	displayName: 'NotificationsPage',
 	load: async () => (await import('@app/features/notification/components/pages/NotificationsPage')).NotificationsPage,
 });
+const PlutoniumPageLayout = createNamedLoadableComponent<AppRouteComponentProps>({
+	displayName: 'PlutoniumPageLayout',
+	load: async () =>
+		(await import('@app/features/premium/components/plutonium_page/PlutoniumPageLayout')).PlutoniumPageLayout,
+});
 const PremiumCallbackPage = createDefaultLoadableComponent<AppRouteComponentProps>({
 	displayName: 'PremiumCallbackPage',
 	load: () => import('@app/features/premium/components/pages/PremiumCallbackPage'),
@@ -210,6 +215,17 @@ const discoverRoute = createRoute({
 	path: '/channels/@discover',
 	component: () => <DiscoveryLayout data-flx="app.router.app-routes.discovery-layout" />,
 });
+const plutoniumRoute = createRoute({
+	getParentRoute: () => guildsLayoutRoute,
+	id: 'plutonium',
+	path: Routes.PLUTONIUM,
+	preload: PlutoniumPageLayout.preload,
+	component: () => (
+		<DMLayout data-flx="app.router.app-routes.dm-layout--plutonium">
+			<PlutoniumPageLayout data-flx="app.router.app-routes.plutonium-page-layout" />
+		</DMLayout>
+	),
+});
 const userProfileRoute = createRoute({
 	getParentRoute: () => appLayoutRoute,
 	id: 'userProfile',
@@ -318,6 +334,7 @@ export const appRouteTree = appLayoutRoute.addChildren([
 		mentionsRoute,
 		meRoute,
 		discoverRoute,
+		plutoniumRoute,
 		favoritesRoute.addChildren([favoritesChannelRoute]),
 		channelsRoute.addChildren([membersRoute, channelRoute.addChildren([messageRoute])]),
 	]),

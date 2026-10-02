@@ -18,6 +18,11 @@ import {Config} from '@app/api/Config';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import {
+	enqueueCrosspostFamilyPurgeFromCopies,
+	enqueueCrosspostSourceRemoval,
+} from '@app/api/channel/services/message/CrosspostPropagation';
+import {
+	attachmentStorageChannelId,
 	collectMessageAttachments,
 	makeAttachmentCdnKey,
 	makeAttachmentCdnUrl,
@@ -45,6 +50,7 @@ import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCl
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {CATEGORY_CHILD_SAFETY} from '@fluxer/constants/src/ReportCategories';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -474,33 +480,37 @@ export class NcmecSubmissionService {
 
 	private async resolveAttachment(input: SubmitAttachmentToNcmecInput): Promise<ResolvedAttachment> {
 		const liveMessage = await this.deps.channelRepository.getMessage(input.channelId, input.messageId);
-		if (liveMessage?.authorId) {
+		const liveAuthorId = liveMessage ? await this.resolveMessageAuthorId(liveMessage) : null;
+		if (liveMessage && liveAuthorId) {
 			const liveAttachment = collectMessageAttachments(liveMessage).find(
 				(attachment) => attachment.id === input.attachmentId && attachment.filename === input.filename,
 			);
+			const storageChannelId = attachmentStorageChannelId(liveMessage);
 			if (liveAttachment) {
 				return this.buildAttachmentContext(input, {
 					contentType: liveAttachment.contentType,
 					reportedAt: snowflakeToDate(input.messageId),
-					userId: liveMessage.authorId,
+					userId: liveAuthorId,
 					sourceReportId: input.sourceReportId ?? null,
 					bucket: Config.s3.buckets.cdn,
-					storageKey: makeAttachmentCdnKey(input.channelId, input.attachmentId, input.filename),
+					storageKey: makeAttachmentCdnKey(storageChannelId, input.attachmentId, input.filename),
 				});
 			}
-			const embedMedia = findEmbedReferencedAttachmentMedia(
-				liveMessage,
-				makeAttachmentCdnUrl(input.channelId, input.attachmentId, input.filename),
-			);
-			if (embedMedia) {
-				return this.buildAttachmentContext(input, {
-					contentType: embedMedia.contentType,
-					reportedAt: snowflakeToDate(input.messageId),
-					userId: liveMessage.authorId,
-					sourceReportId: input.sourceReportId ?? null,
-					bucket: Config.s3.buckets.cdn,
-					storageKey: makeAttachmentCdnKey(input.channelId, input.attachmentId, input.filename),
-				});
+			for (const embedChannelId of new Set([input.channelId, storageChannelId])) {
+				const embedMedia = findEmbedReferencedAttachmentMedia(
+					liveMessage,
+					makeAttachmentCdnUrl(embedChannelId, input.attachmentId, input.filename),
+				);
+				if (embedMedia) {
+					return this.buildAttachmentContext(input, {
+						contentType: embedMedia.contentType,
+						reportedAt: snowflakeToDate(input.messageId),
+						userId: liveAuthorId,
+						sourceReportId: input.sourceReportId ?? null,
+						bucket: Config.s3.buckets.cdn,
+						storageKey: makeAttachmentCdnKey(embedChannelId, input.attachmentId, input.filename),
+					});
+				}
 			}
 		}
 		if (!input.sourceReportId) {
@@ -530,6 +540,17 @@ export class NcmecSubmissionService {
 		throw new UnknownMessageError();
 	}
 
+	private async resolveMessageAuthorId(message: Message): Promise<UserID | null> {
+		if ((message.flags & MessageFlags.IS_CROSSPOST) === 0 || !message.reference?.messageId) {
+			return message.authorId;
+		}
+		const source = await this.deps.channelRepository.getMessage(
+			message.reference.channelId,
+			message.reference.messageId,
+		);
+		return source?.authorId ?? message.authorId;
+	}
+
 	private buildAttachmentContext(
 		input: SubmitAttachmentToNcmecInput,
 		context: {
@@ -553,7 +574,10 @@ export class NcmecSubmissionService {
 			sourceReportId: context.sourceReportId,
 			cdnBucket: context.bucket,
 			storageKey: context.storageKey,
-			cdnUrl: makeAttachmentCdnUrl(input.channelId, input.attachmentId, input.filename),
+			cdnUrl:
+				context.bucket === Config.s3.buckets.cdn
+					? `${Config.endpoints.media}/${context.storageKey}`
+					: makeAttachmentCdnUrl(input.channelId, input.attachmentId, input.filename),
 		};
 	}
 
@@ -754,9 +778,7 @@ export class NcmecSubmissionService {
 		const channel = await this.deps.channelRepository.findUnique(channelId);
 		const message = await this.deps.channelRepository.getMessage(channelId, messageId);
 		if (!message) return;
-		if (message.attachments.length > 0) {
-			await purgeMessageAttachments(message, this.deps.storageService, this.deps.purgeQueue);
-		}
+		await purgeMessageAttachments(message, this.deps.storageService, this.deps.purgeQueue);
 		await this.deps.channelRepository.deleteMessage(
 			channelId,
 			messageId,
@@ -764,6 +786,8 @@ export class NcmecSubmissionService {
 			message.pinnedTimestamp || undefined,
 		);
 		await deleteMessageSearchDocuments([messageId], {context: {source: 'ncmec_submission_delete'}});
+		await enqueueCrosspostSourceRemoval(this.deps.workerService, {messages: [message], mode: 'purge'});
+		await enqueueCrosspostFamilyPurgeFromCopies(this.deps.workerService, {messages: [message]});
 		if (!channel) return;
 		if (channel.guildId) {
 			await this.deps.gatewayService.dispatchGuild({

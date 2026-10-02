@@ -349,6 +349,9 @@
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -773,6 +776,9 @@
         "msgid": "{actor} banned {target}."
       },
       {
+        "msgid": "{actor} stopped following an announcement channel in {channel}"
+      },
+      {
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
       },
       {
@@ -804,6 +810,9 @@
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -1168,6 +1177,9 @@
         "msgid": "{releaseChannel} Web {buildVersion}"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -1351,6 +1363,9 @@
         "msgid": "384 kbps voice quality"
       },
       {
+        "msgid": "<0/> followed {sourceComponent} into this channel. Messages published there will appear here."
+      },
+      {
         "msgid": "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
       },
       {
@@ -1373,6 +1388,12 @@
       },
       {
         "msgid": "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
+      },
+      {
+        "msgid": "A profile that stands out"
+      },
+      {
+        "msgid": "A separate profile for each community"
       },
       {
         "msgid": "A viewer cannot play {pinnedCodec}, so your stream uses {codec}."
@@ -1460,6 +1481,18 @@
       },
       {
         "msgid": "Allowed {permissions}."
+      },
+      {
+        "msgid": "Animated avatar and profile banner"
+      },
+      {
+        "msgid": "Announcement"
+      },
+      {
+        "msgid": "Announcement (mature)"
+      },
+      {
+        "msgid": "Announcement channel"
       },
       {
         "msgid": "Anyone can create an account."
@@ -1552,6 +1585,9 @@
         "msgid": "Branding asset preview"
       },
       {
+        "msgid": "Bring custom emojis and stickers from any of your communities into every chat and community you're in."
+      },
+      {
         "msgid": "Built-in suppression from your browser or system."
       },
       {
@@ -1573,7 +1609,16 @@
         "msgid": "By purchasing, you agreed to our {legalDocument}."
       },
       {
+        "msgid": "CSS files"
+      },
+      {
         "msgid": "Camera access is needed for device previews"
+      },
+      {
+        "msgid": "Can't find {path}. Using the last loaded version."
+      },
+      {
+        "msgid": "Can't read {path}. Using the last loaded version."
       },
       {
         "msgid": "Cancel price change"
@@ -1711,6 +1756,9 @@
         "msgid": "Changed the voice region from {oldRegion} to {newRegion}."
       },
       {
+        "msgid": "Characters in a single message"
+      },
+      {
         "msgid": "Checkout is blocked for this account."
       },
       {
@@ -1724,6 +1772,15 @@
       },
       {
         "msgid": "Choose the premium model"
+      },
+      {
+        "msgid": "Choose where its published messages should go. You can unfollow any time in Community settings → Webhooks."
+      },
+      {
+        "msgid": "Claim your account to buy gifts."
+      },
+      {
+        "msgid": "Claim your account to buy {premiumProductName}."
       },
       {
         "msgid": "Clear command"
@@ -1759,10 +1816,19 @@
         "msgid": "Commands"
       },
       {
+        "msgid": "Communities and channels where you can't manage webhooks are hidden."
+      },
+      {
+        "msgid": "Communities you can join"
+      },
+      {
         "msgid": "Community model"
       },
       {
         "msgid": "Community overrides"
+      },
+      {
+        "msgid": "Compare Free and {premiumProductName}"
       },
       {
         "msgid": "Compressing"
@@ -1786,6 +1852,18 @@
         "msgid": "Contact the administrators of this instance for help."
       },
       {
+        "msgid": "Convert"
+      },
+      {
+        "msgid": "Converted the channel to a text channel"
+      },
+      {
+        "msgid": "Converted the channel to an announcement channel"
+      },
+      {
+        "msgid": "Converting this channel to a text channel removes every channel that follows it."
+      },
+      {
         "msgid": "Copy emoji"
       },
       {
@@ -1801,7 +1879,22 @@
         "msgid": "Couldn't connect to voice. Please try again."
       },
       {
+        "msgid": "Couldn't convert this channel"
+      },
+      {
         "msgid": "Couldn't duplicate this channel"
+      },
+      {
+        "msgid": "Couldn't load this community. Try again in a moment."
+      },
+      {
+        "msgid": "Couldn't publish this message"
+      },
+      {
+        "msgid": "Couldn't save channel settings"
+      },
+      {
+        "msgid": "Couldn't unfollow this channel"
       },
       {
         "msgid": "Couldn't update passkey two-factor authentication"
@@ -1825,6 +1918,9 @@
         "msgid": "Custom emoji {emojiName} from {communityName}"
       },
       {
+        "msgid": "Custom themes for the app"
+      },
+      {
         "msgid": "Cuts audio below a loudness threshold, lowest CPU cost."
       },
       {
@@ -1840,6 +1936,9 @@
         "msgid": "Delete prompt"
       },
       {
+        "msgid": "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
+      },
+      {
         "msgid": "Delete user"
       },
       {
@@ -1847,6 +1946,9 @@
       },
       {
         "msgid": "Deleted {duration} of the member's recent message history."
+      },
+      {
+        "msgid": "Delivered to #{targetChannelName}"
       },
       {
         "msgid": "Denied"
@@ -1888,6 +1990,9 @@
         "msgid": "Domain moved nagbar"
       },
       {
+        "msgid": "Donate instead"
+      },
+      {
         "msgid": "Download app"
       },
       {
@@ -1903,7 +2008,25 @@
         "msgid": "Duplicate role"
       },
       {
+        "msgid": "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
+      },
+      {
+        "msgid": "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again later."
+      },
+      {
+        "msgid": "Edit published message?"
+      },
+      {
+        "msgid": "Edit your message above"
+      },
+      {
+        "msgid": "Edit your message below"
+      },
+      {
         "msgid": "Edit your messages above or below"
+      },
+      {
+        "msgid": "Editing limit reached"
       },
       {
         "msgid": "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
@@ -1960,6 +2083,9 @@
         "msgid": "Entrance sounds unavailable"
       },
       {
+        "msgid": "Every community that follows this channel gets a copy. If you edit or delete it later, the copies change too."
+      },
+      {
         "msgid": "Excluded search filter: {filter}"
       },
       {
@@ -1987,13 +2113,61 @@
         "msgid": "Focus window"
       },
       {
+        "msgid": "Follow"
+      },
+      {
+        "msgid": "Follow channel"
+      },
+      {
+        "msgid": "Follow limit reached"
+      },
+      {
+        "msgid": "Follow this channel"
+      },
+      {
+        "msgid": "Follow to get these announcements in a channel you choose."
+      },
+      {
+        "msgid": "Followed channel {currentName}"
+      },
+      {
+        "msgid": "Followed channels"
+      },
+      {
+        "msgid": "Footnote about custom tags"
+      },
+      {
+        "msgid": "From {sourceGuildName}"
+      },
+      {
+        "msgid": "From {sourceGuildName} #{sourceChannelName}"
+      },
+      {
         "msgid": "Full user tag: {tag}"
       },
       {
         "msgid": "Fully quit and restart {productName} so macOS applies this permission."
       },
       {
+        "msgid": "Get an animated avatar and banner, a subscriber badge, the four-digit tag you want after your username{footnote}, and a separate profile for each community."
+      },
+      {
+        "msgid": "Get monthly"
+      },
+      {
         "msgid": "Get the new {productName} app"
+      },
+      {
+        "msgid": "Get yearly"
+      },
+      {
+        "msgid": "Gift length"
+      },
+      {
+        "msgid": "Gift {premiumProductName} to a friend for a month or a whole year. Gifts never renew."
+      },
+      {
+        "msgid": "Gifts aren't available right now."
       },
       {
         "msgid": "Give everyone on this instance the highest premium limits."
@@ -2006,6 +2180,9 @@
       },
       {
         "msgid": "Go to {communityName}"
+      },
+      {
+        "msgid": "Got it!"
       },
       {
         "msgid": "Grant"
@@ -2024,6 +2201,9 @@
       },
       {
         "msgid": "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
+      },
+      {
+        "msgid": "Have a gift code? Redeem it to unlock {premiumProductName}."
       },
       {
         "msgid": "Help button"
@@ -2083,6 +2263,9 @@
         "msgid": "Join voice channels and hear others."
       },
       {
+        "msgid": "Just want to support {productName}'s open source development? {donateLink}."
+      },
+      {
         "msgid": "Keep Neko still"
       },
       {
@@ -2096,6 +2279,9 @@
       },
       {
         "msgid": "Klipy GIFs"
+      },
+      {
+        "msgid": "Largest file you can upload"
       },
       {
         "msgid": "Leave and set aside"
@@ -2119,6 +2305,9 @@
         "msgid": "Let the member hear others in this community again."
       },
       {
+        "msgid": "Lets other communities follow this channel and get copies of what you publish."
+      },
+      {
         "msgid": "Lightweight classic filter, works on any device."
       },
       {
@@ -2129,6 +2318,24 @@
       },
       {
         "msgid": "Link a new device"
+      },
+      {
+        "msgid": "Link file"
+      },
+      {
+        "msgid": "Linked file unavailable"
+      },
+      {
+        "msgid": "Linked to a file"
+      },
+      {
+        "msgid": "Linked to {path}."
+      },
+      {
+        "msgid": "Linked to {path}. Edit the file in any editor and saved changes apply here right away."
+      },
+      {
+        "msgid": "Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away."
       },
       {
         "msgid": "Loading instance configuration"
@@ -2161,10 +2368,28 @@
         "msgid": "May cause compatibility issues for viewers. We’re working on improving this."
       },
       {
+        "msgid": "Media items you can save for later"
+      },
+      {
         "msgid": "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
       },
       {
         "msgid": "Message editing"
+      },
+      {
+        "msgid": "Message published"
+      },
+      {
+        "msgid": "Messages published in #{sourceName} will now appear in #{targetName}."
+      },
+      {
+        "msgid": "Messages published in these announcement channels are copied here."
+      },
+      {
+        "msgid": "Messages published in these announcement channels are copied into your channels."
+      },
+      {
+        "msgid": "Messages you can bookmark"
       },
       {
         "msgid": "Microphone ({deviceLabel})"
@@ -2248,6 +2473,9 @@
         "msgid": "Not accepted"
       },
       {
+        "msgid": "Not sent to followers yet."
+      },
+      {
         "msgid": "Nothing to search for"
       },
       {
@@ -2273,6 +2501,12 @@
       },
       {
         "msgid": "Open {host} in your browser."
+      },
+      {
+        "msgid": "Open {labelText}"
+      },
+      {
+        "msgid": "Open {premiumProductFullName}"
       },
       {
         "msgid": "Open {productName} in your browser"
@@ -2308,6 +2542,12 @@
         "msgid": "Pause preview when Fluxer isn’t focused"
       },
       {
+        "msgid": "Paused. The person who followed this channel can no longer see it. Follow it again to resume."
+      },
+      {
+        "msgid": "Pay once and get a gift link to share. Gifts never renew."
+      },
+      {
         "msgid": "Per-device volume"
       },
       {
@@ -2323,7 +2563,13 @@
         "msgid": "Permission override updated"
       },
       {
+        "msgid": "Pick a plan and your perks switch on the moment checkout finishes."
+      },
+      {
         "msgid": "Pick application audio while sharing a video device on Linux"
+      },
+      {
+        "msgid": "Pick the 4-digit number after your username"
       },
       {
         "msgid": "Pick the apps to capture audio from"
@@ -2338,6 +2584,9 @@
         "msgid": "Pin or unpin any message."
       },
       {
+        "msgid": "Plans, perks, gifts and your subscription all live on one page."
+      },
+      {
         "msgid": "Pop out user"
       },
       {
@@ -2345,6 +2594,9 @@
       },
       {
         "msgid": "Popped out"
+      },
+      {
+        "msgid": "Post to"
       },
       {
         "msgid": "Preferred screen share codec"
@@ -2392,6 +2644,21 @@
         "msgid": "Public registration is closed."
       },
       {
+        "msgid": "Publish"
+      },
+      {
+        "msgid": "Publish this message?"
+      },
+      {
+        "msgid": "Published"
+      },
+      {
+        "msgid": "Published to following communities"
+      },
+      {
+        "msgid": "Publishing limit reached"
+      },
+      {
         "msgid": "Purchases are disabled for this account."
       },
       {
@@ -2408,6 +2675,9 @@
       },
       {
         "msgid": "Reason (optional)."
+      },
+      {
+        "msgid": "Redeem a gift code"
       },
       {
         "msgid": "Registration"
@@ -2527,6 +2797,12 @@
         "msgid": "Renamed the community from {oldName} to {newName}."
       },
       {
+        "msgid": "Reply to message above"
+      },
+      {
+        "msgid": "Reply to message below"
+      },
+      {
         "msgid": "Reply to messages above or below"
       },
       {
@@ -2635,6 +2911,9 @@
         "msgid": "Run the instance as one community instead of many. This can only be enabled now, during setup."
       },
       {
+        "msgid": "Save {percent}%"
+      },
+      {
         "msgid": "Screen share audio couldn't start"
       },
       {
@@ -2687,6 +2966,9 @@
       },
       {
         "msgid": "Send file messages in order"
+      },
+      {
+        "msgid": "Send files up to {size}"
       },
       {
         "msgid": "Send messages in channels."
@@ -2821,6 +3103,9 @@
         "msgid": "Shape the social model"
       },
       {
+        "msgid": "Share full-length videos and big files without shrinking them first. Free accounts can send up to {freeSize}."
+      },
+      {
         "msgid": "Share screen"
       },
       {
@@ -2828,6 +3113,12 @@
       },
       {
         "msgid": "Share stream audio"
+      },
+      {
+        "msgid": "Share the perks"
+      },
+      {
+        "msgid": "Share your screen or camera in up to 4K at 60 frames per second. Free accounts stream in up to 720p at 30."
       },
       {
         "msgid": "Shared window"
@@ -2920,10 +3211,19 @@
         "msgid": "Some stream settings could not be applied to your live stream."
       },
       {
+        "msgid": "Someone gifted you {premiumProductName}. Your perks stay active until {date}."
+      },
+      {
         "msgid": "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
       },
       {
         "msgid": "Something went wrong while changing your price. Please try again in a moment."
+      },
+      {
+        "msgid": "Something went wrong while publishing. Try again in a moment."
+      },
+      {
+        "msgid": "Start in the tray instead of opening the window when launched at login"
       },
       {
         "msgid": "Started displaying members with this role separately."
@@ -2945,6 +3245,9 @@
       },
       {
         "msgid": "Stop Neko from chasing your cursor while keeping it draggable and interactive."
+      },
+      {
+        "msgid": "Stop being an announcement channel?"
       },
       {
         "msgid": "Stop streaming"
@@ -2983,6 +3286,9 @@
         "msgid": "Stopped the member from hearing others in this community."
       },
       {
+        "msgid": "Stream in 4K at 60 FPS"
+      },
+      {
         "msgid": "Stream is not keeping up"
       },
       {
@@ -2993,6 +3299,12 @@
       },
       {
         "msgid": "Strongest neural filter for speech, limits audio to the speech range."
+      },
+      {
+        "msgid": "Subscriber badge on your profile"
+      },
+      {
+        "msgid": "Support an independent communication platform and unlock some sweet perks."
       },
       {
         "msgid": "Switch price"
@@ -3124,6 +3436,21 @@
         "msgid": "This browser has WebAssembly turned off, so animated images can't be cropped."
       },
       {
+        "msgid": "This channel can publish 10 messages in a row, then one more every 6 minutes. Try again in a few minutes."
+      },
+      {
+        "msgid": "This channel can publish 10 messages in a row, then one more every 6 minutes. Try again in {duration}."
+      },
+      {
+        "msgid": "This channel has a content warning. Updates can only go to channels with a content warning or an age restriction."
+      },
+      {
+        "msgid": "This community has published a lot of messages recently. Try again in a few minutes."
+      },
+      {
+        "msgid": "This community has published a lot of messages recently. Try again in {duration}."
+      },
+      {
         "msgid": "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
       },
       {
@@ -3148,6 +3475,9 @@
         "msgid": "This is a custom sticker from a community. Ask the author for an invite to use this sticker."
       },
       {
+        "msgid": "This is an age-restricted channel. Updates can only go to age-restricted channels."
+      },
+      {
         "msgid": "This is not available on your account right now. Ask the administrators of this instance to review it."
       },
       {
@@ -3170,6 +3500,9 @@
       },
       {
         "msgid": "This message can only be forwarded to age-restricted channels"
+      },
+      {
+        "msgid": "This message has already been published"
       },
       {
         "msgid": "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
@@ -3241,7 +3574,22 @@
         "msgid": "Unavailable"
       },
       {
+        "msgid": "Unfollow"
+      },
+      {
+        "msgid": "Unfollow {name}?"
+      },
+      {
+        "msgid": "Unlink"
+      },
+      {
         "msgid": "Unread channels"
+      },
+      {
+        "msgid": "Up to 4K at 60 FPS"
+      },
+      {
+        "msgid": "Up to 720p at 30 FPS"
       },
       {
         "msgid": "Update passkey"
@@ -3250,10 +3598,22 @@
         "msgid": "Update your passkey"
       },
       {
+        "msgid": "Updates are on their way!"
+      },
+      {
+        "msgid": "Updates from this channel will stop arriving here. Messages already delivered stay. You can follow it again from the announcement channel."
+      },
+      {
         "msgid": "Upload files and media in messages."
       },
       {
         "msgid": "Upload files and media in this channel."
+      },
+      {
+        "msgid": "Use animated emojis in messages"
+      },
+      {
+        "msgid": "Use custom emojis and stickers in any community"
       },
       {
         "msgid": "Use emoji from other communities in this channel."
@@ -3289,10 +3649,31 @@
         "msgid": "Used in Custom mode. The Gaming and Screen share presets set their own hint."
       },
       {
+        "msgid": "Using {effectiveLabel} until {requestedLabel} is ready."
+      },
+      {
+        "msgid": "Verify your email to buy gifts."
+      },
+      {
+        "msgid": "Verify your email to buy {premiumProductName}."
+      },
+      {
+        "msgid": "Video call and screen share quality"
+      },
+      {
+        "msgid": "Video call backgrounds you can save"
+      },
+      {
         "msgid": "Virtual microphone"
       },
       {
+        "msgid": "Voice uses your system output device in this browser. Change it in your system settings."
+      },
+      {
         "msgid": "Volume sliders"
+      },
+      {
+        "msgid": "We could not renew your subscription. Update your payment method to keep your perks."
       },
       {
         "msgid": "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact the administrators of this instance if this keeps happening."
@@ -3322,6 +3703,12 @@
         "msgid": "What you're sharing isn't updating"
       },
       {
+        "msgid": "When launched at login, start in the menu bar instead of opening the window"
+      },
+      {
+        "msgid": "When launched at login, start in the system tray instead of opening the window"
+      },
+      {
         "msgid": "Who can join"
       },
       {
@@ -3337,13 +3724,25 @@
         "msgid": "You can close this tab"
       },
       {
+        "msgid": "You can only pick a tag that nobody else with the same username already has. Usernames aren't case sensitive, so Mina#4821 and mina#4821 count as the same. The #0000 tag is reserved for {productName} Visionary members. {visionaryLink}."
+      },
+      {
         "msgid": "You can still ask the administrators of this instance for a human review at any time."
       },
       {
         "msgid": "You can still email {supportEmail} for a human review at any time."
       },
       {
+        "msgid": "You can't manage webhooks in any community. Ask an admin to follow this channel."
+      },
+      {
         "msgid": "You will leave {guildNames}. Nothing you posted is deleted, and you can join again later."
+      },
+      {
+        "msgid": "You're a Visionary. Your perks never expire, and gifts for friends are always available."
+      },
+      {
+        "msgid": "You're a {premiumProductName} member. Thanks for supporting an independent communication platform."
       },
       {
         "msgid": "YouTube enrichment"
@@ -3362,6 +3761,9 @@
       },
       {
         "msgid": "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
+      },
+      {
+        "msgid": "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
       },
       {
         "msgid": "Your connection cannot keep up. Viewers get about {deliveredFrameRate} of {frameRate} FPS at {resolution}."
@@ -3388,6 +3790,9 @@
         "msgid": "Your device will ask you to save an updated passkey for {name}. Use the same phone or security key you just used."
       },
       {
+        "msgid": "Your emojis, everywhere"
+      },
+      {
         "msgid": "Your new nickname, or leave blank to reset it."
       },
       {
@@ -3395,6 +3800,9 @@
       },
       {
         "msgid": "Your source is producing about {sourceFrameRate} FPS"
+      },
+      {
+        "msgid": "Your subscription"
       },
       {
         "msgid": "Your subscription can't move to the new price right now."
@@ -3407,6 +3815,12 @@
       },
       {
         "msgid": "Your video encoder stopped, so your stream switched to {codec}."
+      },
+      {
+        "msgid": "Your {premiumProductName} perks have ended. Subscribe again to bring them back."
+      },
+      {
+        "msgid": "[Original message deleted]"
       },
       {
         "msgid": "deleted-category"
@@ -3437,6 +3851,9 @@
       },
       {
         "msgid": "online"
+      },
+      {
+        "msgid": "page link"
       },
       {
         "msgid": "{PAYMENT_PROVIDER_NAME} handles payment securely."
@@ -3482,6 +3899,9 @@
       },
       {
         "msgid": "{actor} banned {target}."
+      },
+      {
+        "msgid": "{actor} changed the permission overrides of the announcement channel {channel}"
       },
       {
         "msgid": "{actor} changed the permission overrides of the category {channel}."
@@ -3530,6 +3950,12 @@
       },
       {
         "msgid": "{actor} created a webhook."
+      },
+      {
+        "msgid": "{actor} created the announcement channel {channel}"
+      },
+      {
+        "msgid": "{actor} created the announcement channel {channel} in {category}"
       },
       {
         "msgid": "{actor} created the category {channel}."
@@ -3595,6 +4021,9 @@
         "msgid": "{actor} deleted some messages."
       },
       {
+        "msgid": "{actor} deleted the announcement channel {channel}"
+      },
+      {
         "msgid": "{actor} deleted the category {channel}."
       },
       {
@@ -3644,6 +4073,9 @@
       },
       {
         "msgid": "{actor} disconnected {target} from {channel}."
+      },
+      {
+        "msgid": "{actor} followed an announcement channel into {channel}"
       },
       {
         "msgid": "{actor} gave {target} the role {role}."
@@ -3757,6 +4189,9 @@
         "msgid": "{actor} removed their nickname {nick}."
       },
       {
+        "msgid": "{actor} renamed the announcement channel {oldName} to {newName}"
+      },
+      {
         "msgid": "{actor} renamed the community from {oldName} to {newName}."
       },
       {
@@ -3823,6 +4258,9 @@
         "msgid": "{actor} set their community pronouns to {text}."
       },
       {
+        "msgid": "{actor} stopped following an announcement channel in {channel}"
+      },
+      {
         "msgid": "{actor} stopped {target} from hearing others in this community."
       },
       {
@@ -3854,6 +4292,9 @@
       },
       {
         "msgid": "{actor} updated an emoji."
+      },
+      {
+        "msgid": "{actor} updated the announcement channel {channel}"
       },
       {
         "msgid": "{actor} updated the category {channel}."
@@ -3916,6 +4357,9 @@
         "msgid": "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
       },
       {
+        "msgid": "{count, plural, one {# channel follows} other {# channels follow}} this channel. Converting it to a text channel removes those follows."
+      },
+      {
         "msgid": "{count, plural, one {# file} other {# files}}"
       },
       {
@@ -3949,6 +4393,9 @@
         "msgid": "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural, one {# video} other {# videos}}"
       },
       {
+        "msgid": "{monthlyPrice}/mo"
+      },
+      {
         "msgid": "{name} copy"
       },
       {
@@ -3959,6 +4406,9 @@
       },
       {
         "msgid": "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
+      },
+      {
+        "msgid": "{premiumProductName} page"
       },
       {
         "msgid": "{productName} application logo"
@@ -3995,6 +4445,18 @@
       },
       {
         "msgid": "{remaining, plural, one {+# more} other {+# more}}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
+        "msgid": "{requestedLabel} could not start. Using {effectiveLabel} instead."
+      },
+      {
+        "msgid": "{username} followed {name} into this channel. Messages published there will appear here."
+      },
+      {
+        "msgid": "{yearlyPrice}/yr"
       },
       {
         "msgctxt": "audit-log-member-profile",
@@ -5696,6 +6158,9 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -6005,6 +6470,9 @@
       },
       {
         "msgid": "{productName} Desktop"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -6350,6 +6818,9 @@
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{zoomPercent}%"
@@ -6918,10 +7389,16 @@
         "msgid": "Open {host} in Safari."
       },
       {
+        "msgid": "Open {labelText}"
+      },
+      {
         "msgid": "Open {landmarkName}"
       },
       {
         "msgid": "Open {macosSystemSettingsName}"
+      },
+      {
+        "msgid": "Open {premiumProductFullName}"
       },
       {
         "msgid": "Open {productName}"
@@ -7147,6 +7624,9 @@
       },
       {
         "msgid": "{presenceCount} online"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -7662,6 +8142,9 @@
         "msgid": "{presenceCount} online"
       },
       {
+        "msgid": "{renderedOnlineCount} online"
+      },
+      {
         "msgid": "{renderedPresenceCount} online"
       },
       {
@@ -7936,6 +8419,9 @@
       },
       {
         "msgid": "{presenceCount} online"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -8296,6 +8782,9 @@
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"
@@ -8677,6 +9166,9 @@
       },
       {
         "msgid": "{releaseChannel} Web {buildVersion}"
+      },
+      {
+        "msgid": "{renderedOnlineCount} online"
       },
       {
         "msgid": "{renderedPresenceCount} online"

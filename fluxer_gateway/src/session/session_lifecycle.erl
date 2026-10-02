@@ -608,6 +608,7 @@ serialize_state(State) ->
         collected_guild_states => maps:get(collected_guild_states, State),
         collected_sessions => maps:get(collected_sessions, State),
         collected_presences => maps:get(collected_presences, State, []),
+        guild_health => maps:get(guild_health, State, #{}),
         guild_subscription_state => maps:get(guild_subscription_state, State, #{})
     }.
 
@@ -657,6 +658,7 @@ serialize_transfer_runtime(State) ->
         collected_guild_states => maps:get(collected_guild_states, State, []),
         collected_sessions => maps:get(collected_sessions, State, []),
         collected_presences => maps:get(collected_presences, State, []),
+        guild_health => maps:get(guild_health, State, #{}),
         guild_subscription_state => maps:get(guild_subscription_state, State, #{})
     }.
 

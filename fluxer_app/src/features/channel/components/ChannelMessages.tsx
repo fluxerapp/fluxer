@@ -745,15 +745,16 @@ export const Messages = observer(function Messages({
 						</div>
 					</div>
 				</Scroller>
-				<div
-					className={clsx(
-						styles.bottomFade,
-						composerStatusVisible &&
-							(state.isAtBottom ? styles.bottomFadeStatusAtBottom : styles.bottomFadeStatusScrolled),
-					)}
-					aria-hidden="true"
-					data-flx="channel.messages.bottom-fade"
-				/>
+				{composerStatusVisible && (
+					<div
+						className={clsx(
+							styles.bottomFade,
+							state.isAtBottom ? styles.bottomFadeStatusAtBottom : styles.bottomFadeStatusScrolled,
+						)}
+						aria-hidden="true"
+						data-flx="channel.messages.bottom-fade"
+					/>
+				)}
 			</div>
 			{bottomBar}
 		</div>

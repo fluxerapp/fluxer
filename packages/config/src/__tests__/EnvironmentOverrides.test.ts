@@ -290,6 +290,15 @@ describe('buildNamedFluxerEnvOverrides', () => {
 		});
 	});
 
+	test('maps the phone verification switch onto instance.phone_verification_enabled', () => {
+		expect(buildNamedFluxerEnvOverrides({FLUXER_PHONE_VERIFICATION_ENABLED: 'true'})).toEqual({
+			instance: {phone_verification_enabled: true},
+		});
+		expect(buildNamedFluxerEnvOverrides({FLUXER_PHONE_VERIFICATION_ENABLED: 'false'})).toEqual({
+			instance: {phone_verification_enabled: false},
+		});
+	});
+
 	test('rejects a store enabled flag that is not a boolean', () => {
 		expect(() => buildNamedFluxerEnvOverrides({FLUXER_APP_STORE_ENABLED: 'yes'})).toThrow(
 			'FLUXER_APP_STORE_ENABLED must be true or false',

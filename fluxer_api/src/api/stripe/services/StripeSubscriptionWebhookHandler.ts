@@ -30,7 +30,7 @@ import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumS
 import type {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
-import {PREMIUM_GRACE_PERIOD_MS} from '@app/api/user/UserHelpers';
+import {getPremiumPaymentRecoveryGraceMs} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
@@ -369,7 +369,7 @@ export class StripeSubscriptionWebhookHandler {
 			);
 			return;
 		}
-		const updatedUser = await this.markSubscriptionAsGraceDisabled(targetUser, {
+		const updatedUser = await this.markSubscriptionPaymentIssue(targetUser, {
 			subscriptionId,
 			customerId: this.reconciler.getCustomerIdFromInvoice(invoice),
 			failedInvoiceServicePeriod: this.getInvoiceServicePeriod(invoice),
@@ -507,10 +507,10 @@ export class StripeSubscriptionWebhookHandler {
 		}
 		const willCancel = getPremiumWillCancelFromSubscription(canonicalSubscription);
 		if (!canProvisionPremiumFromSubscriptionStatus(canonicalSubscription.status)) {
-			const updatedUser = await this.markSubscriptionAsGraceDisabled(targetUser, {
+			const updatedUser = await this.markSubscriptionPaymentIssue(targetUser, {
 				subscriptionId: canonicalSubscription.id,
 				customerId: extractId(canonicalSubscription.customer),
-				failedInvoiceServicePeriod: null,
+				failedInvoiceServicePeriod: this.getUnpaidRenewalPeriod(targetUser, canonicalSubscription),
 			});
 			await this.enqueuePremiumStateReconciliation(updatedUser.id, {
 				reason: 'subscription_updated_non_provisionable',
@@ -523,7 +523,7 @@ export class StripeSubscriptionWebhookHandler {
 					status: canonicalSubscription.status,
 					willCancel,
 				},
-				'Subscription updated in non-provisionable state; preserved local expiry and disabled grace period',
+				'Subscription updated in non-provisionable state; preserved local expiry',
 			);
 			return;
 		}
@@ -663,11 +663,22 @@ export class StripeSubscriptionWebhookHandler {
 			if (!alreadyAppliedEarlyCancellation) {
 				const cancelledBeforePeriodEnd =
 					targetUser.premiumUntil != null && subscriptionEndedAt.getTime() < targetUser.premiumUntil.getTime();
-				if (cancelledBeforePeriodEnd) {
-					updates.premium_until = subscriptionEndedAt;
-					updates.premium_grace_ends_at = subscriptionEndedAt;
+				if (subscription.cancellation_details?.reason === 'payment_failed') {
+					const lapseStart =
+						targetUser.premiumUntil && targetUser.premiumUntil.getTime() < subscriptionEndedAt.getTime()
+							? targetUser.premiumUntil
+							: subscriptionEndedAt;
+					const billingCycle =
+						targetUser.premiumBillingCycle ?? this.reconciler.getBillingCycleFromSubscription(subscription);
+					updates.premium_until = lapseStart;
+					updates.premium_grace_ends_at = new Date(
+						lapseStart.getTime() + getPremiumPaymentRecoveryGraceMs(billingCycle),
+					);
 				} else {
-					updates.premium_grace_ends_at = new Date(subscriptionEndedAt.getTime() + PREMIUM_GRACE_PERIOD_MS);
+					if (cancelledBeforePeriodEnd) {
+						updates.premium_until = subscriptionEndedAt;
+					}
+					updates.premium_grace_ends_at = subscriptionEndedAt;
 				}
 			}
 		}
@@ -740,7 +751,7 @@ export class StripeSubscriptionWebhookHandler {
 		);
 	}
 
-	private async markSubscriptionAsGraceDisabled(
+	private async markSubscriptionPaymentIssue(
 		user: User,
 		context: {
 			subscriptionId: string | null;
@@ -770,12 +781,44 @@ export class StripeSubscriptionWebhookHandler {
 		) {
 			patch.premium_until = context.failedInvoiceServicePeriod.start;
 		}
+		const lapseStart = patch.premium_until ?? user.premiumUntil;
+		if (
+			user.premiumType === UserPremiumTypes.SUBSCRIPTION &&
+			context.failedInvoiceServicePeriod &&
+			lapseStart?.getTime() === context.failedInvoiceServicePeriod.start.getTime()
+		) {
+			const graceEndsAt = new Date(lapseStart.getTime() + getPremiumPaymentRecoveryGraceMs(user.premiumBillingCycle));
+			if (user.premiumGraceEndsAt?.getTime() !== graceEndsAt.getTime()) {
+				patch.premium_grace_ends_at = graceEndsAt;
+			}
+		}
 		if (Object.keys(patch).length === 0) {
 			return user;
 		}
 		const updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
 		await this.dispatchUser(updatedUser);
 		return (await this.restoreStoreEntitlement(updatedUser.id)) ?? updatedUser;
+	}
+
+	private getUnpaidRenewalPeriod(
+		user: User,
+		subscription: Stripe.Subscription,
+	): {
+		start: Date;
+		end: Date;
+	} | null {
+		if (subscription.status !== 'past_due' && subscription.status !== 'unpaid') {
+			return null;
+		}
+		const item = getPrimarySubscriptionItem(subscription);
+		if (!item?.current_period_start || !item.current_period_end || !user.premiumUntil) {
+			return null;
+		}
+		const start = new Date(item.current_period_start * 1000);
+		if (user.premiumUntil.getTime() !== start.getTime()) {
+			return null;
+		}
+		return {start, end: new Date(item.current_period_end * 1000)};
 	}
 
 	private getInvoiceServicePeriod(invoice: Stripe.Invoice): {

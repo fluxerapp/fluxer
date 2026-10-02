@@ -49,7 +49,9 @@ export type MessageAttachmentResponse = z.infer<typeof MessageAttachmentResponse
 
 const MessageReferenceResponse = z.object({
 	channel_id: SnowflakeStringType.describe('The ID of the channel containing the referenced message'),
-	message_id: SnowflakeStringType.describe('The ID of the referenced message'),
+	message_id: SnowflakeStringType.nullish().describe(
+		'The ID of the referenced message, absent on a channel follow system message',
+	),
 	guild_id: SnowflakeStringType.nullish().describe('The ID of the guild containing the referenced message'),
 	type: MessageReferenceTypeSchema,
 });
@@ -235,7 +237,7 @@ export const BulkMessageFetchResponse = z.object({
 export type BulkMessageFetchResponse = z.infer<typeof BulkMessageFetchResponse>;
 
 export interface MessageReference {
-	readonly message_id: string;
+	readonly message_id?: string;
 	readonly channel_id: string;
 	readonly guild_id?: string;
 	readonly type?: number;

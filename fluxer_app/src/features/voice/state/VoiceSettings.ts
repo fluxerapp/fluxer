@@ -363,6 +363,40 @@ function applyVideoQualityNormalisationMigration(parsed: Record<string, unknown>
 	return changed;
 }
 
+export function applyLegacyNoiseSuppressionNoneMigrationV1(parsed: Record<string, unknown>): boolean {
+	let changed = false;
+	if (
+		parsed.noiseSuppressionBackendPrefV1 == null &&
+		parsed.noiseSuppression === false &&
+		parsed.deepFilterNoiseSuppressionPrefV2 !== true
+	) {
+		parsed.noiseSuppressionBackendPrefV1 = 'none';
+		changed = true;
+	}
+	for (const key of [
+		'noiseSuppression',
+		'deepFilterNoiseSuppressionPrefV2',
+		'deepFilterNoiseSuppressionLevelPrefV2',
+		'noiseSuppressionStandardDefaultMigratedV1',
+	]) {
+		if (!(key in parsed)) continue;
+		delete parsed[key];
+		changed = true;
+	}
+	return changed;
+}
+
+function applyDeepFilterDefaultRetiredMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (parsed.deepFilterDefaultRetiredMigratedV1 === true) {
+		return false;
+	}
+	if (parsed.noiseSuppressionBackendPrefV1 === 'deep_filter') {
+		parsed.noiseSuppressionBackendPrefV1 = null;
+	}
+	parsed.deepFilterDefaultRetiredMigratedV1 = true;
+	return true;
+}
+
 function validateNoiseSuppressionBackend(value: unknown): VoiceNoiseSuppressionBackend | null {
 	return isVoiceNoiseSuppressionBackend(value) ? value : null;
 }
@@ -437,6 +471,7 @@ class VoiceSettings {
 	screenShareHevcOptIn = false;
 	screenShareAv1OptOutMigratedV1 = false;
 	screenShareHevcOptOutMigratedV1 = false;
+	deepFilterDefaultRetiredMigratedV1 = false;
 	screenShareContentHintPrefV2: ScreenShareContentHint = DEFAULT_SCREEN_SHARE_CONTENT_HINT;
 	screenShareContentHintDefaultMigratedV1 = false;
 	screenShareSoftwareQualityRetiredV1 = false;
@@ -559,6 +594,8 @@ class VoiceSettings {
 			changed = applyScreenShareHevcOptOutMigrationV1(parsed) || changed;
 			changed = applyScreenShareSoftwareQualityRetiredMigrationV1(parsed) || changed;
 			changed = applyScreenShareBackupCodecModeRetiredMigrationV1(parsed) || changed;
+			changed = applyLegacyNoiseSuppressionNoneMigrationV1(parsed) || changed;
+			changed = applyDeepFilterDefaultRetiredMigrationV1(parsed) || changed;
 			if (changed) {
 				AppStorage.setItem('VoiceSettings', JSON.stringify(parsed));
 			}
@@ -566,6 +603,7 @@ class VoiceSettings {
 			this.screenShareAv1OptOutMigratedV1 = parsed.screenShareAv1OptOutMigratedV1 === true;
 			this.screenShareHevcOptOutMigratedV1 = parsed.screenShareHevcOptOutMigratedV1 === true;
 			this.manualAudioSourcesOptOutResetMigratedV1 = parsed.manualAudioSourcesOptOutResetMigratedV1 === true;
+			this.deepFilterDefaultRetiredMigratedV1 = parsed.deepFilterDefaultRetiredMigratedV1 === true;
 		} catch (error) {
 			logger.warn('Failed to migrate persisted voice settings:', error);
 		}
@@ -619,6 +657,7 @@ class VoiceSettings {
 			'screenShareHevcOptIn',
 			'screenShareAv1OptOutMigratedV1',
 			'screenShareHevcOptOutMigratedV1',
+			'deepFilterDefaultRetiredMigratedV1',
 			'screenShareContentHintPrefV2',
 			'screenShareContentHintDefaultMigratedV1',
 			'screenShareSoftwareQualityRetiredV1',

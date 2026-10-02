@@ -1,0 +1,53 @@
+{{- $np := .Values.networkPolicy | default dict }}
+{{- if $np.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: gateway
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "gateway.labels" (dict "root" . "name" "gateway") | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/part-of: fluxer
+  policyTypes:
+  - Ingress
+  - Egress
+  egress:
+  - {}
+  ingress:
+  {{- with $np.ingressNamespace }}
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: {{ . }}
+    ports:
+    - port: 8080
+      protocol: TCP
+  {{- end }}
+  {{- with $np.clients }}
+  - from:
+    {{- range . }}
+    - podSelector:
+        matchLabels:
+          {{- toYaml . | nindent 10 }}
+    {{- end }}
+    ports:
+    - port: 8080
+      protocol: TCP
+  {{- end }}
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/instance: {{ .Release.Name }}
+          app.kubernetes.io/part-of: fluxer
+    ports:
+    - port: 8080
+      protocol: TCP
+    - port: 4369
+      protocol: TCP
+    - port: 8081
+      protocol: TCP
+{{- end }}

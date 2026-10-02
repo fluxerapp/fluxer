@@ -1,0 +1,108 @@
+imagePullSecrets: []
+
+clusterDomain: cluster.local
+
+env: {}
+
+extraEnv: []
+
+envFrom: []
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+
+probes: {}
+
+updateStrategy: {}
+
+topologySpreadConstraints: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+nats:
+  image:
+    repository: nats
+    tag: 2.14-alpine
+    pullPolicy: IfNotPresent
+  replicas: 3
+  config:
+    clusterName: nats
+    maxPayload: 1MB
+    maxPending: 64MB
+    maxConnections: 65536
+  jetstream:
+    enabled: true
+    storage:
+      size: 10Gi
+      storageClassName: ""
+  podSecurityContext:
+    fsGroup: 65534
+    runAsGroup: 65534
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  probes:
+    liveness:
+      httpGet:
+        path: /healthz
+        port: monitor
+      initialDelaySeconds: 10
+    readiness:
+      httpGet:
+        path: /healthz?js-enabled-only=true
+        port: monitor
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+
+valkey:
+  image:
+    repository: valkey/valkey
+    tag: 9.1-alpine
+    pullPolicy: IfNotPresent
+  maxmemory: 192mb
+  maxmemoryPolicy: noeviction
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClassName: ""
+  podSecurityContext:
+    fsGroup: 999
+    runAsGroup: 999
+    runAsNonRoot: true
+    runAsUser: 999
+    seccompProfile:
+      type: RuntimeDefault
+  probes:
+    liveness:
+      exec:
+        command:
+          - valkey-cli
+          - ping
+      initialDelaySeconds: 10
+    readiness:
+      exec:
+        command:
+          - valkey-cli
+          - ping
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi

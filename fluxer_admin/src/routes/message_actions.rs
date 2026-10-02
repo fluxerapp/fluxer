@@ -171,7 +171,8 @@ pub(crate) async fn system_dms_post(
     let flash = if let Some(content) = content.as_deref()
         && !user_ids.is_empty()
     {
-        match client.send_system_dm(&user_ids, content).await {
+        let recipients = (user_ids != ["*"]).then_some(user_ids.as_slice());
+        match client.send_system_dm(recipients, content).await {
             Ok(_) => FlashData::success("System DM sent"),
             Err(error) => {
                 tracing::warn!(%error, "admin API request failed: send system DM");
