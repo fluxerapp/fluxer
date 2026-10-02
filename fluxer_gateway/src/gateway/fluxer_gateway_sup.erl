@@ -43,7 +43,8 @@ common_children() ->
         [
             child_spec(gateway_dispatch_relay, gateway_dispatch_relay),
             child_spec(gateway_periodic_gc, gateway_periodic_gc),
-            child_spec(process_health_watchdog, process_health_watchdog)
+            child_spec(process_health_watchdog, process_health_watchdog),
+            child_spec(gateway_stall_monitor, gateway_stall_monitor)
         ].
 
 -spec role_children(atom()) -> [supervisor:child_spec()].
