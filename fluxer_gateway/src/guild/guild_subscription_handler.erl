@@ -177,13 +177,27 @@ flush_lazy_subscribe_buffer(State) ->
     State1 = maps:remove(lazy_subscribe_buffer, State),
     State2 = maps:remove(lazy_subscribe_order, State1),
     State3 = maps:remove(lazy_subscribe_timer, State2),
-    lists:foldl(
-        fun(BufferKey, AccState) ->
-            process_buffered_lazy_subscribe(BufferKey, Buffer, AccState)
-        end,
-        State3,
-        Order
-    ).
+    flush_lazy_subscribe_keys(Order, Buffer, State3).
+
+-spec flush_lazy_subscribe_keys([lazy_subscribe_key()], map(), guild_state()) -> guild_state().
+flush_lazy_subscribe_keys([], _Buffer, State) ->
+    State;
+flush_lazy_subscribe_keys([BufferKey | Rest], Buffer, State) ->
+    Engines = map_size(maps:get(?ENGINES_KEY, State, #{})),
+    State1 = process_buffered_lazy_subscribe(BufferKey, Buffer, State),
+    case Rest =/= [] andalso map_size(maps:get(?ENGINES_KEY, State1, #{})) > Engines of
+        true -> defer_lazy_subscribe_keys(Rest, Buffer, State1);
+        false -> flush_lazy_subscribe_keys(Rest, Buffer, State1)
+    end.
+
+-spec defer_lazy_subscribe_keys([lazy_subscribe_key()], map(), guild_state()) -> guild_state().
+defer_lazy_subscribe_keys(Keys, Buffer, State) ->
+    Ref = erlang:send_after(0, self(), flush_lazy_subscribe_buffer),
+    State#{
+        lazy_subscribe_buffer => maps:with(Keys, Buffer),
+        lazy_subscribe_order => Keys,
+        lazy_subscribe_timer => Ref
+    }.
 
 -spec move_buffer_key_to_tail(lazy_subscribe_key(), [lazy_subscribe_key()]) ->
     [lazy_subscribe_key()].
