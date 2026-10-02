@@ -169,7 +169,7 @@ do_subscribe(#{conn := Conn, rpc_enabled := RpcEnabled} = State) when
         false ->
             logger:info(
                 "Gateway NATS RPC connected but subscription disabled"
-                " (GATEWAY_NATS_RPC_ENABLED=false)"
+                " (FLUXER_GATEWAY_NATS_RPC_ENABLED=false)"
             ),
             State;
         _ ->

@@ -114,6 +114,17 @@ env_gateway_base_config() ->
         <<"gateway_nats_rpc_max_handlers">> => env_int(
             "FLUXER_GATEWAY_NATS_RPC_MAX_HANDLERS", 512
         ),
+        <<"nats_rpc_enabled">> => env_bool("FLUXER_GATEWAY_NATS_RPC_ENABLED", true),
+        <<"pinned_guild_ids">> => env_optional_binary("FLUXER_GATEWAY_PINNED_GUILD_IDS"),
+        <<"guild_pin_keeper_beam">> => env_optional_binary(
+            "FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM"
+        ),
+        <<"guild_pin_keeper_beam_md5">> => env_optional_binary(
+            "FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM_MD5"
+        ),
+        <<"guild_pin_keeper_base_md5s">> => env_optional_binary(
+            "FLUXER_GATEWAY_GUILD_PIN_KEEPER_BASE_MD5S"
+        ),
         <<"gateway_http_failure_threshold">> => env_int(
             "FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD", 6
         ),
@@ -142,6 +153,7 @@ build_config(RawConfig) ->
         build_sharding_config(Service),
         build_http_config(Service),
         build_cluster_config(Service, Public),
+        build_pinned_node_config(Service),
         build_misc_config(Service)
     ]).
 
@@ -232,6 +244,39 @@ build_cluster_config(Service, Public) ->
             get_optional_binary(Service, <<"media_proxy_endpoint">>), Public
         )
     }.
+
+-spec build_pinned_node_config(map()) -> config().
+build_pinned_node_config(Service) ->
+    #{
+        nats_rpc_enabled => get_bool(Service, <<"nats_rpc_enabled">>, true),
+        pinned_guild_ids => parse_guild_id_list(
+            get_optional_binary(Service, <<"pinned_guild_ids">>)
+        ),
+        guild_pin_keeper_beam => optional_string(
+            get_optional_binary(Service, <<"guild_pin_keeper_beam">>)
+        ),
+        guild_pin_keeper_beam_md5 => get_optional_binary(
+            Service, <<"guild_pin_keeper_beam_md5">>
+        ),
+        guild_pin_keeper_base_md5s => get_optional_binary(
+            Service, <<"guild_pin_keeper_base_md5s">>
+        )
+    }.
+
+-spec parse_guild_id_list(binary() | undefined) -> [pos_integer()].
+parse_guild_id_list(undefined) ->
+    [];
+parse_guild_id_list(Bin) when is_binary(Bin) ->
+    lists:usort([parse_guild_id(Token) || Token <- string:lexemes(binary_to_list(Bin), ", ")]).
+
+-spec parse_guild_id(string()) -> pos_integer().
+parse_guild_id(Token) ->
+    try list_to_integer(Token) of
+        Id when Id > 0 -> Id;
+        _ -> erlang:error({invalid_pinned_guild_id, Token})
+    catch
+        error:badarg -> erlang:error({invalid_pinned_guild_id, Token})
+    end.
 
 -spec build_misc_config(map()) -> config().
 build_misc_config(Service) ->

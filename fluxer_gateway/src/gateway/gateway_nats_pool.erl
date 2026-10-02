@@ -112,12 +112,16 @@ init([]) ->
         slots => #{},
         monitors => #{},
         connecting => #{},
-        rpc_enabled => true,
+        rpc_enabled => nats_rpc_enabled(),
         subs => #{},
         handler_count => 0,
         handler_refs => #{},
         max_handlers => gateway_nats_pool_conn:max_handlers()
     }}.
+
+-spec nats_rpc_enabled() -> boolean().
+nats_rpc_enabled() ->
+    fluxer_gateway_env:get(nats_rpc_enabled) =/= false.
 
 -spec handle_call(term(), gen_server:from(), map()) -> {reply, term(), map()}.
 handle_call(get_pool_status, _From, State) ->
@@ -569,6 +573,24 @@ legacy_connect_timeout_ignores_tokened_slot_worker_test() ->
         ?assert(erlang:is_process_alive(Pid))
     after
         exit(Pid, kill)
+    end.
+
+pool_keeps_rpc_unsubscribed_when_switched_off_test() ->
+    persistent_term:put({fluxer_gateway, runtime_config}, #{nats_rpc_enabled => false}),
+    Parent = self(),
+    try
+        Pid = spawn(fun() -> Parent ! {self(), init([])} end),
+        {ok, State} =
+            receive
+                {Pid, Reply} -> Reply
+            after 5000 -> timeout
+            end,
+        ?assertEqual(false, maps:get(rpc_enabled, State)),
+        ?assertEqual(State, handle_ready(self(), false, #{0 => self()}, State))
+    after
+        persistent_term:erase(?PERSISTENT_TERM_KEY),
+        persistent_term:erase(?REPLY_FAILURE_KEY),
+        persistent_term:erase({fluxer_gateway, runtime_config})
     end.
 
 wait_forever() ->
