@@ -301,7 +301,7 @@ jobs:
                 if [ "$current" = "$root_number" ]; then
                   comment_body="Closed via merged PR #${pr_number}."
                 else
-                  comment_body="Closed via discussion #${root_number}"
+                  comment_body="Closed via merged PR #${pr_number} (mentioned in discussion #${root_number})"
                 fi
 
                 closed_total=$((closed_total + 1))
