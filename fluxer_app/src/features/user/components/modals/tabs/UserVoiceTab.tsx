@@ -715,6 +715,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 						echoCancellation,
 						autoGainControl,
 						voiceProcessingMode,
+						stereoMicrophone: isStereoMicrophoneEnabled(),
 					}}
 					data-flx="user.voice-tab.mic-test-section"
 				/>

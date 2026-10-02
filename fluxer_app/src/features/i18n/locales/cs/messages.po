@@ -30220,8 +30220,8 @@ msgstr "V této komunitě je odesílání zpráv zakázáno"
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:54
-msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
-msgstr "Odesílá oba kanály stereofonního mikrofonu. Vyžaduje vypnuté veškeré zpracování a kanál s rychlostí 128 kb/s nebo vyšší."
+msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 64 kbps or higher."
+msgstr "Odesílá oba kanály stereofonního mikrofonu. Vyžaduje vypnutí veškerého zpracování a kanál s rychlostí 64 kb/s nebo vyšší."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38

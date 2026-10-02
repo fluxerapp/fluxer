@@ -36,6 +36,7 @@ export interface MicTestSettings {
 	echoCancellation: boolean;
 	autoGainControl: boolean;
 	voiceProcessingMode: VoiceProcessingMode;
+	stereoMicrophone: boolean;
 }
 
 function readEffectiveNoiseSuppressionBackend(): VoiceNoiseSuppressionBackend {
@@ -77,6 +78,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 				echoCancellation: settings.echoCancellation,
 				autoGainControl: settings.autoGainControl,
 				voiceProcessingMode: settings.voiceProcessingMode,
+				stereoMicrophone: settings.stereoMicrophone,
 				noiseSuppressionBackend,
 			}),
 		[
@@ -84,6 +86,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 			settings.echoCancellation,
 			settings.inputDeviceId,
 			settings.outputDeviceId,
+			settings.stereoMicrophone,
 			settings.voiceProcessingMode,
 			noiseSuppressionBackend,
 		],
@@ -177,12 +180,17 @@ export const useMicTest = (settings: MicTestSettings) => {
 					return exhaustive;
 				}
 			}
-			const profile = resolveVoiceProcessing(settings, readEffectiveNoiseSuppressionBackend(), false);
+			const profile = resolveVoiceProcessing(
+				settings,
+				readEffectiveNoiseSuppressionBackend(),
+				settings.stereoMicrophone,
+			);
 			const baseAudioConstraints: MediaTrackConstraints & {voiceIsolation?: boolean} = {
 				echoCancellation: profile.echoCancellation,
 				noiseSuppression: profile.browserNoiseSuppression,
 				autoGainControl: profile.autoGainControl,
 				voiceIsolation: false,
+				...(profile.stereoCapture ? {channelCount: {ideal: 2}} : {}),
 			};
 			const useExactDeviceId = settings.inputDeviceId !== 'default';
 			const buildAudioConstraints = (exact: boolean): MediaTrackConstraints =>
@@ -227,6 +235,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 				signal: controller.signal,
 				source: acquired.source,
 				sourceTrack,
+				channelCount: profile.stereoCapture ? 2 : 1,
 				resolveConfig: () => ({
 					backend: resolveVoiceProcessing(settings, readEffectiveNoiseSuppressionBackend(), false)
 						.noiseSuppressionBackend,
