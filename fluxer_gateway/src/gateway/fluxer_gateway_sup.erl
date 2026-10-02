@@ -96,7 +96,7 @@ role_specs(guilds, _Role) ->
         child_spec(guild_counts_cache, guild_counts_cache),
         child_spec(guild_manager, guild_manager),
         child_spec(voice_state_counts_sync, voice_state_counts_sync)
-    ];
+    ] ++ gateway_guild_pin_keeper:child_specs();
 role_specs(calls, Role) ->
     [child_spec(call_manager, call_manager)] ++ calls_voice_state_counts_sync_children(Role);
 role_specs(push, _Role) ->

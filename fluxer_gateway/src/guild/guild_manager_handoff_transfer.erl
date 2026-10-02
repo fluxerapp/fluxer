@@ -5,7 +5,7 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--export([handoff_guild_to_owner/3]).
+-export([handoff_guild_to_owner/3, target_shard_pid/2]).
 
 -type guild_id() :: integer().
 -type shard_map() :: #{pid := pid(), ref := reference()}.
