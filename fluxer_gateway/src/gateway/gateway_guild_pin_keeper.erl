@@ -419,7 +419,7 @@ stray_nodes(Key, Nodes) ->
 
 -spec stop_stray(guild_id(), node()) -> term().
 stop_stray(GuildId, Node) ->
-    case guild_manager_handoff_transfer:target_shard_pid(GuildId, Node) of
+    case guild_handoff_freeze:shard_pid(GuildId, Node) of
         {ok, ShardPid} ->
             Request = {stop_guild, GuildId, {shutdown, handoff}},
             shard_utils:safe_gen_call_remote(ShardPid, Request, ?STOP_TIMEOUT_MS);
