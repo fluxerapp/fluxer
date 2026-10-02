@@ -445,6 +445,7 @@ export const ForwardedMessageContent = observer(({message, snapshot, onDelete}: 
 									message={message}
 									embedIndex={index}
 									contextualEmbeds={snapshot.embeds}
+									contextualContent={snapshot.content}
 									onDelete={onDelete}
 									isPreview={true}
 									data-flx="channel.message-attachments.forwarded-message-content.embed"

@@ -32,6 +32,7 @@ export interface EmbedProps {
 	embedIndex?: number;
 	onDelete?: (bypassConfirm?: boolean) => void;
 	contextualEmbeds?: ReadonlyArray<MessageEmbed>;
+	contextualContent?: string;
 	isPreview?: boolean;
 }
 
