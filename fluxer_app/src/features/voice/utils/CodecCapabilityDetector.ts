@@ -189,6 +189,13 @@ function getScreenShareCodecPolicyUnsupported(
 			detail: 'Firefox doesn\u2019t support H.265 encoding for WebRTC.',
 		};
 	}
+	if (context.firefox && context.platform === 'linux' && codec === 'h264') {
+		return {
+			supported: false,
+			reason: 'unsupported-browser',
+			detail: 'The voice server doesn\u2019t accept H.264 from Firefox on Linux or Android.',
+		};
+	}
 	return null;
 }
 
