@@ -20,7 +20,7 @@ import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePopout} from '@app/features/ui/hooks/usePopout';
-import {PortalHostContext, setActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
+import {PortalHostContext} from '@app/features/ui/overlay/PortalHostContext';
 import {Popout as PopoverPopout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenu, {isContextMenuNodeTarget} from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
@@ -40,7 +40,10 @@ import {StreamFocusHeaderInfo} from '@app/features/voice/components/StreamFocusH
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import {useStreamSpectators} from '@app/features/voice/components/useStreamSpectators';
 import {useStreamTrackInfo} from '@app/features/voice/components/useStreamTrackInfo';
-import {useVoiceCallAppFullscreen} from '@app/features/voice/components/useVoiceCallAppFullscreen';
+import {
+	useVoiceCallAppFullscreen,
+	useVoiceCallFullscreenPortalHost,
+} from '@app/features/voice/components/useVoiceCallAppFullscreen';
 import {useVoiceCallTracksAndLayout} from '@app/features/voice/components/useVoiceCallTracksAndLayout';
 import {useVoiceEngineConnectionState} from '@app/features/voice/components/useVoiceEngineConnectionState';
 import {VoiceCallCornerControls} from '@app/features/voice/components/VoiceCallCornerControls';
@@ -422,14 +425,7 @@ const VoiceCallViewInner = observer(
 		}, [enterVoiceCallAppFullscreen, fullscreenRequestNonce]);
 		const inheritedPortalHost = useContext(PortalHostContext);
 		const effectivePortalHost = isVoiceCallAppFullscreen || inPopout ? portalHost : null;
-		useEffect(() => {
-			if (!isVoiceCallAppFullscreen) return;
-			if (!effectivePortalHost) return;
-			setActivePortalHost(effectivePortalHost);
-			return () => {
-				setActivePortalHost(null);
-			};
-		}, [isVoiceCallAppFullscreen, effectivePortalHost]);
+		useVoiceCallFullscreenPortalHost(isVoiceCallAppFullscreen, effectivePortalHost);
 		const FavoriteIcon = useMemo(() => {
 			const Icon = forwardRef<SVGSVGElement, React.ComponentProps<typeof StarIcon>>((props, ref) => (
 				<StarIcon

@@ -7,6 +7,8 @@ import {
 	supportsWebkitRequestFullscreen,
 } from '@app/features/platform/types/Browser';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {setActivePortalHost} from '@app/features/ui/overlay/PortalHostContext';
+import Modal from '@app/features/ui/state/Modal';
 import {VOICE_CALL_FULLSCREEN_ENABLED} from '@app/features/voice/components/VoiceCallFullscreenFeatureFlag';
 import VoiceCallFullscreen from '@app/features/voice/state/VoiceCallFullscreen';
 import type {ExtendedHTMLElement} from '@app/types/browser.d';
@@ -190,6 +192,18 @@ export function useVoiceCallAppFullscreen(options: UseVoiceCallAppFullscreenOpti
 		exitFullscreen,
 		toggleFullscreen,
 	};
+}
+
+export function useVoiceCallFullscreenPortalHost(active: boolean, host: HTMLElement | null): void {
+	useEffect(() => {
+		if (!active) return;
+		if (!host) return;
+		setActivePortalHost(host);
+		return () => {
+			setActivePortalHost(null);
+			Modal.releasePortalHost(host);
+		};
+	}, [active, host]);
 }
 
 interface UseVoiceCallFullscreenViewStateOptions {
