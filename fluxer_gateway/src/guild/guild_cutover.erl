@@ -46,7 +46,7 @@ move(GuildId, From, To, Opts) ->
         {ok, SrcPid, SrcShard, Saved} ->
             TransferOpts = transfer_opts(GuildId, From, To, Nodes, Saved, Opts),
             Result = guild_handoff_freeze:transfer(GuildId, SrcPid, SrcShard, To, TransferOpts),
-            finish(GuildId, From, To, Nodes, Result, Opts);
+            finish(GuildId, SrcPid, {From, To, Nodes}, Result, Opts);
         {error, Reason} ->
             {error, #{phase => preflight, reason => Reason, from => From, to => To}}
     end.
@@ -106,9 +106,11 @@ transfer_opts(GuildId, From, To, Nodes, Saved, Opts) ->
         on_abort => fun() -> restore_and_verify(Nodes, GuildId, From, Saved) end
     }.
 
--spec finish(guild_id(), node(), node(), [node()], guild_handoff_freeze:result(), map()) ->
+-spec finish(
+    guild_id(), pid(), {node(), node(), [node()]}, guild_handoff_freeze:result(), map()
+) ->
     {ok, report()} | {error, report()}.
-finish(GuildId, From, To, Nodes, {ok, Report}, Opts) ->
+finish(GuildId, _SrcPid, {From, To, Nodes}, {ok, Report}, Opts) ->
     Reload = maybe_reload(GuildId, To, Opts),
     {ok, Report#{
         from => From,
@@ -116,8 +118,8 @@ finish(GuildId, From, To, Nodes, {ok, Report}, Opts) ->
         reload => Reload,
         routes_after => routes(GuildId, Nodes)
     }};
-finish(GuildId, From, To, Nodes, {error, Report}, Opts) ->
-    Repair = repair_source(GuildId, From, Report, Opts),
+finish(GuildId, SrcPid, {From, To, Nodes}, {error, Report}, Opts) ->
+    Repair = repair_source(GuildId, SrcPid, Report, Opts),
     {error, Report#{
         from => From,
         to => To,
@@ -125,16 +127,20 @@ finish(GuildId, From, To, Nodes, {error, Report}, Opts) ->
         routes_after => routes(GuildId, Nodes)
     }}.
 
--spec repair_source(guild_id(), node(), report(), map()) -> skipped | term().
-repair_source(GuildId, From, #{abort := #{routes := Routes} = Abort}, Opts) when
+-spec repair_source(guild_id(), pid(), report(), map()) -> skipped | term().
+repair_source(GuildId, SrcPid, #{abort := #{routes := Routes} = Abort}, Opts) when
     Routes =/= skipped
 ->
     case maps:get(exposed, Abort, true) of
-        true -> reload(GuildId, From, Opts);
+        true -> guild_handoff_freeze:repair(GuildId, SrcPid, repair_opts(Opts));
         false -> skipped
     end;
-repair_source(_GuildId, _From, _Report, _Opts) ->
+repair_source(_GuildId, _SrcPid, _Report, _Opts) ->
     skipped.
+
+-spec repair_opts(map()) -> guild_handoff_freeze:opts().
+repair_opts(Opts) ->
+    maps:with([suspend_timeout, guard_timeout, repair_timeout], Opts).
 
 -spec maybe_reload(guild_id(), node(), map()) -> skipped | term().
 maybe_reload(GuildId, To, #{reload := true} = Opts) ->
@@ -318,35 +324,19 @@ cutover_refuses_once_the_pin_keeper_has_armed_test() ->
         {error, #{phase := preflight, reason := {pin_keeper_unreadable, _}}}, reverse(Opts)
     ).
 
-exposed_abort_reloads_the_source_test() ->
-    Test = self(),
-    Manager = spawn(fun() -> reload_stub(Test) end),
-    true = register(guild_manager, Manager),
-    try
-        Exposed = #{abort => #{routes => ok, exposed => true}},
-        ?assertEqual(ok, repair_source(42, node(), Exposed, #{})),
-        ?assertEqual(
-            {reloaded, 42},
-            receive
-                {reloaded, _} = Reloaded -> Reloaded
-            after 1000 -> none
-            end
-        ),
-        Unexposed = #{abort => #{routes => ok, exposed => false}},
-        ?assertEqual(skipped, repair_source(42, node(), Unexposed, #{})),
-        Unrouted = #{abort => #{routes => skipped, exposed => true}},
-        ?assertEqual(skipped, repair_source(42, node(), Unrouted, #{}))
-    after
-        unregister(guild_manager),
-        exit(Manager, kill)
-    end.
-
-reload_stub(Test) ->
+exposed_abort_repairs_the_source_test() ->
+    Gone = spawn(fun() -> ok end),
+    Ref = erlang:monitor(process, Gone),
     receive
-        {'$gen_call', From, {reload_guild, GuildId}} ->
-            Test ! {reloaded, GuildId},
-            gen_server:reply(From, ok),
-            reload_stub(Test)
-    end.
+        {'DOWN', Ref, process, Gone, _} -> ok
+    end,
+    Exposed = #{abort => #{routes => ok, exposed => true}},
+    ?assertEqual({error, noproc}, repair_source(42, Gone, Exposed, #{})),
+    Crashed = #{abort => #{routes => ok, target => ok}},
+    ?assertEqual({error, noproc}, repair_source(42, Gone, Crashed, #{})),
+    Unexposed = #{abort => #{routes => ok, exposed => false}},
+    ?assertEqual(skipped, repair_source(42, Gone, Unexposed, #{})),
+    Unrouted = #{abort => #{routes => skipped, exposed => true}},
+    ?assertEqual(skipped, repair_source(42, Gone, Unrouted, #{})).
 
 -endif.

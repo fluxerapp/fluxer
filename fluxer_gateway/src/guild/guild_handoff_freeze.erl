@@ -5,6 +5,7 @@
 
 -export([
     transfer/5,
+    repair/3,
     default_opts/0,
     is_frozen/1,
     shard_pid/2,
@@ -36,6 +37,23 @@
     " end."
 ).
 -define(DRAIN_POLL_MS, 10).
+-define(REPAIR_EXPRS,
+    "D = erlang:monotonic_time(millisecond) + T,"
+    " case M:fetch_guild_data(G) of"
+    " {ok, Data} ->"
+    " case erlang:monotonic_time(millisecond) < D of"
+    " true ->"
+    " R = fun(S) -> case A:handle_call({reload, Data}, {self(), make_ref()}, S) of"
+    " {reply, _, S1} -> S1;"
+    " {reply, _, S1, _} -> S1"
+    " end end,"
+    " _ = sys:replace_state(P, R, max(1, D - erlang:monotonic_time(millisecond))),"
+    " reloaded;"
+    " false -> late"
+    " end;"
+    " Other -> {fetch_failed, Other}"
+    " end."
+).
 -define(EXPORT_EXPRS,
     "maps:merge(maps:update_with(data, fun(D) -> maps:without(K, D) end,"
     " guild_handoff:export_handoff_state(sys:get_state(P, T))), X)."
@@ -54,6 +72,7 @@
     guard_timeout => pos_integer(),
     freeze_budget => pos_integer(),
     commit_timeout => pos_integer(),
+    repair_timeout => pos_integer(),
     forward_rounds => non_neg_integer(),
     transfer_sessions => boolean(),
     max_heap_words => non_neg_integer(),
@@ -80,6 +99,7 @@ default_opts() ->
         guard_timeout => 10000,
         freeze_budget => 90000,
         commit_timeout => 300000,
+        repair_timeout => 30000,
         forward_rounds => 3,
         transfer_sessions => true,
         max_heap_words => 0,
@@ -127,6 +147,55 @@ crashed(GuildId, TargetNode, Reason, false, Opts) ->
     {error, #{
         phase => crashed, reason => Reason, abort => #{routes => Routes, target => Target}
     }}.
+
+-spec repair(guild_id(), pid(), opts()) -> ok | {error, term()}.
+repair(GuildId, SrcPid, Opts0) ->
+    Opts = maps:merge(default_opts(), Opts0),
+    maybe
+        ok ?= await_thawed(SrcPid, now_ms() + maps:get(guard_timeout, Opts)),
+        {ok, Freeze} ?= freeze(SrcPid, Opts),
+        Reload = reload_frozen(GuildId, SrcPid, maps:get(repair_timeout, Opts)),
+        repaired(Reload, thaw(Freeze, Opts))
+    end.
+
+-spec await_thawed(pid(), integer()) -> ok | {error, term()}.
+await_thawed(SrcPid, Deadline) ->
+    case is_frozen(SrcPid) of
+        false ->
+            ok;
+        true ->
+            case now_ms() < Deadline of
+                true ->
+                    timer:sleep(?DRAIN_POLL_MS),
+                    await_thawed(SrcPid, Deadline);
+                false ->
+                    {error, still_frozen}
+            end;
+        {error, _} = Error ->
+            Error
+    end.
+
+-spec reload_frozen(guild_id(), pid(), pos_integer()) -> ok | {error, term()}.
+reload_frozen(GuildId, SrcPid, Timeout) ->
+    Bindings = bindings([
+        {'G', GuildId},
+        {'P', SrcPid},
+        {'T', Timeout},
+        {'M', guild_manager_shard_fetch},
+        {'A', guild}
+    ]),
+    Args = [parse(?REPAIR_EXPRS), Bindings],
+    case rpc_call(node(SrcPid), erl_eval, exprs, Args, Timeout + 5000) of
+        {ok, {value, reloaded, _}} -> ok;
+        {ok, {value, Other, _}} -> {error, Other};
+        {error, _} = Error -> Error
+    end.
+
+-spec repaired(ok | {error, term()}, ok | {error, term()}) -> ok | {error, term()}.
+repaired(ok, ok) ->
+    ok;
+repaired(Reload, Thaw) ->
+    {error, #{reload => Reload, thaw => Thaw}}.
 
 -spec is_frozen(pid()) -> boolean() | {error, term()}.
 is_frozen(Pid) ->
@@ -822,6 +891,45 @@ capture_returns_only_new_forwardable_messages_test() ->
     end,
     ok = wait_exit(Pid),
     ?assertEqual({error, noproc}, capture(Pid, 0, Opts)).
+
+repair_applies_the_reload_before_dispatches_queued_during_the_fetch_test() ->
+    Test = self(),
+    meck:new(guild_repair_stub, [non_strict]),
+    meck:expect(guild_repair_stub, init, fun(State) -> {ok, State} end),
+    meck:expect(guild_repair_stub, handle_cast, fun({set, Value}, _State) ->
+        {noreply, Value}
+    end),
+    meck:new(guild_manager_shard_fetch, [passthrough]),
+    meck:expect(guild_manager_shard_fetch, fetch_guild_data, fun(42) ->
+        Test ! {fetching, self()},
+        receive
+            go -> {ok, fetched}
+        end
+    end),
+    meck:new(guild, [passthrough]),
+    meck:expect(guild, handle_call, fun({reload, Data}, _From, _State) -> {reply, ok, Data} end),
+    {ok, Pid} = gen_server:start(guild_repair_stub, before, []),
+    try
+        spawn(fun() -> Test ! {repaired, repair(42, Pid, #{})} end),
+        receive
+            {fetching, Fetcher} ->
+                ?assert(is_frozen(Pid)),
+                gen_server:cast(Pid, {set, dispatched}),
+                Fetcher ! go
+        after 5000 -> error(no_fetch)
+        end,
+        ?assertEqual(
+            ok,
+            receive
+                {repaired, Result} -> Result
+            after 5000 -> timeout
+            end
+        ),
+        ?assertEqual(dispatched, sys:get_state(Pid))
+    after
+        exit(Pid, kill),
+        meck:unload([guild, guild_manager_shard_fetch, guild_repair_stub])
+    end.
 
 wait_exit(Pid) ->
     Ref = erlang:monitor(process, Pid),
