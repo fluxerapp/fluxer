@@ -110,6 +110,7 @@ import {
 	selectPreferredVideoCodec,
 	sleep,
 	stopTransceiversForSender,
+	supportsScalabilityMode,
 	supportsVideoCodec,
 	usesLegacySVCEncodings,
 } from '../utils.ts';
@@ -978,6 +979,9 @@ export default class LocalParticipant extends Participant {
 		}
 
 		const videoCodec = opts.videoCodec;
+		if (!supportsScalabilityMode()) {
+			delete opts.scalabilityMode;
+		}
 
 		track.on(TrackEvent.Muted, this.onTrackMuted);
 		track.on(TrackEvent.Unmuted, this.onTrackUnmuted);
@@ -1055,7 +1059,12 @@ export default class LocalParticipant extends Participant {
 				}
 
 				const svcSimulcast = isSVCSimulcast(videoCodec, opts);
-				if (isSVCCodec(videoCodec) && !svcSimulcast && track.source !== Track.Source.ScreenShare) {
+				if (
+					isSVCCodec(videoCodec) &&
+					!svcSimulcast &&
+					track.source !== Track.Source.ScreenShare &&
+					supportsScalabilityMode()
+				) {
 					opts.scalabilityMode = opts.scalabilityMode ?? 'L3T3_KEY';
 				}
 

@@ -54,6 +54,7 @@ import {
 	supportsAV1,
 	supportsDynacast,
 	supportsH265,
+	supportsScalabilityMode,
 	supportsVideoCodec,
 	supportsVP9,
 } from './room/utils.ts';
@@ -176,6 +177,7 @@ export {
 	supportsAV1,
 	supportsDynacast,
 	supportsH265,
+	supportsScalabilityMode,
 	supportsVideoCodec,
 	supportsVP9,
 	TrackPublication,

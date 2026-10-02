@@ -37,6 +37,7 @@ import {
 	type LocalTrackPublication,
 	type LocalVideoTrack,
 	type ScreenShareCaptureOptions,
+	supportsScalabilityMode,
 	Track,
 	type TrackPublishOptions,
 	type VideoCodec,
@@ -265,6 +266,7 @@ function resolveScreenShareEncoding(target: ScreenShareTarget, publishOptions?: 
 }
 
 function getScreenShareLayeringForCodec(codec: VideoCodec | undefined): ScreenShareLayering {
+	if (!supportsScalabilityMode()) return {simulcast: false, scalabilityMode: undefined};
 	return resolveScreenShareLayering({
 		codec,
 		svcSetting: VoiceSettings.getScreenShareScalabilityModeOverride(),

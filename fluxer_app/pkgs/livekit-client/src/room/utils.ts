@@ -66,7 +66,7 @@ export function supportsDynacast() {
 }
 
 export function supportsAV1(): boolean {
-	if (isSafari() || isFireFox()) {
+	if (isSafari()) {
 		return false;
 	}
 	return hasSenderMimeType('video/av1') || hasSenderMimeType('video/av1x');
@@ -80,9 +80,6 @@ export function supportsH265(): boolean {
 }
 
 export function supportsVP9(): boolean {
-	if (isFireFox()) {
-		return false;
-	}
 	if (isSafari()) {
 		const browser = getBrowser();
 		if (browser?.version && compareVersions(browser.version, '16') < 0) {
@@ -131,6 +128,10 @@ function hasSenderMimeType(mimeType: string): boolean {
 	}
 	const lower = mimeType.toLowerCase();
 	return capabilities.codecs.some((codec) => codec.mimeType.toLowerCase() === lower);
+}
+
+export function supportsScalabilityMode(): boolean {
+	return !isFireFox();
 }
 
 export function isSVCCodec(codec?: string): boolean {

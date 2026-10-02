@@ -182,29 +182,12 @@ function getScreenShareCodecPolicyUnsupported(
 				'H.265 (HEVC) screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on H.265 screen sharing in Advanced settings to use it.',
 		};
 	}
-	if (context.firefox) {
-		switch (codec) {
-			case 'av1':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox doesn\u2019t support AV1 encoding for WebRTC yet.',
-				};
-			case 'vp9':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox\u2019s WebRTC stack doesn\u2019t expose VP9 as a publishable codec.',
-				};
-			case 'h265':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox doesn\u2019t support H.265 encoding for WebRTC.',
-				};
-			default:
-				break;
-		}
+	if (context.firefox && codec === 'h265') {
+		return {
+			supported: false,
+			reason: 'unsupported-browser',
+			detail: 'Firefox doesn\u2019t support H.265 encoding for WebRTC.',
+		};
 	}
 	return null;
 }
