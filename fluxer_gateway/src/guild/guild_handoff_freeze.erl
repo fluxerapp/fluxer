@@ -87,8 +87,16 @@ transfer(GuildId, SrcPid, SrcShard, TargetNode, Opts0) ->
             erlang:demonitor(Ref, [flush]),
             Result;
         {'DOWN', Ref, process, Pid, Reason} ->
-            {error, #{phase => crashed, reason => Reason}}
+            crashed(GuildId, TargetNode, Reason, Opts)
     end.
+
+-spec crashed(guild_id(), node(), term(), opts()) -> result().
+crashed(GuildId, TargetNode, Reason, Opts) ->
+    Routes = safe_hook(maps:get(on_abort, Opts)),
+    Target = ensure_absent(GuildId, TargetNode, Opts),
+    {error, #{
+        phase => crashed, reason => Reason, abort => #{routes => Routes, target => Target}
+    }}.
 
 -spec is_frozen(pid()) -> boolean() | {error, term()}.
 is_frozen(Pid) ->

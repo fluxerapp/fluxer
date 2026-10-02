@@ -97,10 +97,15 @@ controller_death_after_start_kills_target_and_resumes_source(#{
         after_start => fun(NewPid) ->
             Test ! {target, NewPid},
             exit(self(), kill)
+        end,
+        on_abort => fun() ->
+            Test ! routes_restored,
+            ok
         end
     },
     Result = guild_handoff_freeze:transfer(?GUILD_ID, Src, SrcShard, node(), Opts),
-    ?assertMatch({error, #{phase := crashed}}, Result),
+    ?assertMatch({error, #{phase := crashed, abort := #{routes := ok, target := ok}}}, Result),
+    ?assertEqual(routes_restored, receive_tagged(routes_restored)),
     {target, NewPid} = receive_tagged(target),
     ?assertEqual(ok, wait_dead(NewPid)),
     ?assertEqual({error, not_found}, gen_server:call(DstShard, {lookup, ?GUILD_ID})),
