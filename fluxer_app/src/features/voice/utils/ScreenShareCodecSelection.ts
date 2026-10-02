@@ -5,6 +5,7 @@ import type {VideoCodec} from 'livekit-client';
 
 export const CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
 const SOFTWARE_H264_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'vp9', 'h264', 'vp8'];
+const GECKO_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['vp8', 'h264'];
 const COMPATIBILITY_CODECS: ReadonlySet<VideoCodec> = new Set(['h264', 'vp9', 'vp8']);
 export const LAST_RESORT_VIDEO_CODEC: VideoCodec = 'vp8';
 const BASELINE_BROWSER_CODECS: ReadonlySet<VideoCodec> = new Set(['h264', 'vp8']);
@@ -104,7 +105,12 @@ export function rankScreenShareCodecs(input: ScreenShareCodecRankingInput): Scre
 		if (codec === 'h265') return pin === 'h265' || (input.encoderModeSetting !== 'software' && isHardware('h265'));
 		return true;
 	};
-	const preference = isHardware('h264') ? CODEC_PREFERENCE : SOFTWARE_H264_CODEC_PREFERENCE;
+	const preference =
+		input.profile.browser === 'firefox'
+			? GECKO_CODEC_PREFERENCE
+			: isHardware('h264')
+				? CODEC_PREFERENCE
+				: SOFTWARE_H264_CODEC_PREFERENCE;
 	const survivors = preference.filter(survives);
 	const ranked =
 		input.encoderModeSetting === 'software'
