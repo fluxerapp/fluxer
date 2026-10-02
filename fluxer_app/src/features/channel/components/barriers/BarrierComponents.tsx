@@ -14,8 +14,10 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {PhoneAddModal} from '@app/features/user/components/modals/PhoneAddModal';
+import {BouncedEmailChangeModal} from '@app/features/user/components/modals/BouncedEmailChangeModal';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
+import Users from '@app/features/user/state/Users';
+import {ACCOUNT_LIMITED_NOTICE_DESCRIPTOR} from '@app/features/user/utils/AccountLimitUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
@@ -23,7 +25,6 @@ import {
 	EnvelopeSimpleIcon,
 	InfoIcon,
 	MegaphoneSimpleIcon,
-	PhoneIcon,
 	ProhibitIcon,
 	ShieldWarningIcon,
 	TimerIcon,
@@ -181,13 +182,18 @@ export const UnverifiedEmailBarrier = observer(({onAction}: BarrierProps) => {
 					small={true}
 					onClick={() => {
 						onAction?.();
+						const bounced = Users.currentUser?.emailBounced === true;
 						ModalCommands.push(
-							modal(() => (
-								<UserSettingsModal
-									initialTab="account_security"
-									data-flx="channel.barriers.barrier-components.unverified-email-barrier.user-settings-modal"
-								/>
-							)),
+							modal(() =>
+								bounced ? (
+									<BouncedEmailChangeModal data-flx="channel.barriers.barrier-components.unverified-email-barrier.bounced-email-change-modal" />
+								) : (
+									<UserSettingsModal
+										initialTab="account_security"
+										data-flx="channel.barriers.barrier-components.unverified-email-barrier.user-settings-modal"
+									/>
+								),
+							),
 						);
 					}}
 					data-flx="channel.barriers.barrier-components.unverified-email-barrier.button.action"
@@ -245,34 +251,20 @@ export const NotMemberLongEnoughBarrier = observer(({initialTimeRemaining = 10 *
 		/>
 	);
 });
-export const NoPhoneNumberBarrier = observer(({onAction}: BarrierProps) => {
+export const AccountLimitedBarrier = observer(() => {
+	const {i18n} = useLingui();
 	return (
 		<BarrierBase
-			message={<Trans>You need to verify a phone number to send messages in this community.</Trans>}
+			message={i18n._(ACCOUNT_LIMITED_NOTICE_DESCRIPTOR)}
 			icon={
-				<PhoneIcon
+				<InfoIcon
 					size={remFromPx(18)}
 					weight="fill"
-					data-flx="channel.barriers.barrier-components.no-phone-number-barrier.phone-icon"
+					data-flx="channel.barriers.barrier-components.account-limited-barrier.info-icon"
 				/>
 			}
-			action={
-				<Button
-					small={true}
-					onClick={() => {
-						onAction?.();
-						ModalCommands.push(
-							modal(() => (
-								<PhoneAddModal data-flx="channel.barriers.barrier-components.no-phone-number-barrier.phone-add-modal" />
-							)),
-						);
-					}}
-					data-flx="channel.barriers.barrier-components.no-phone-number-barrier.button.action"
-				>
-					<Trans>Verify phone</Trans>
-				</Button>
-			}
-			data-flx="channel.barriers.barrier-components.no-phone-number-barrier.barrier-base"
+			action={null}
+			data-flx="channel.barriers.barrier-components.account-limited-barrier.barrier-base"
 		/>
 	);
 });

@@ -86,7 +86,6 @@ The object has the identifier and nothing else.
 | 201 | response body | Document was stored |
 | 400 | [error response](/http-api/#error-response) | The encoded document exceeds the size ceiling and the request returns `FILE_SIZE_TOO_LARGE` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The document is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
 
 ### Side effects

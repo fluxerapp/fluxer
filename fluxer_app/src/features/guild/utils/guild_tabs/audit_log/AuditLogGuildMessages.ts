@@ -241,7 +241,7 @@ export const GUILD_STICKER_CLONING_STOPPED_ROW = msg({
 export const GUILD_VERIFICATION_LEVEL_CHANGED_ROW = msg({
 	message: 'Changed the verification level from {oldLevel} to {newLevel}',
 	comment:
-		'Activity log detail line under a community settings update, shown when the member verification level changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldLevel} is the previous level and {newLevel} is the new level, each shown as None, Low, Medium, High or Very high.',
+		'Activity log detail line under a community settings update, shown when the member verification level changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldLevel} is the previous level and {newLevel} is the new level, each shown as None, Low, Medium or High.',
 });
 export const GUILD_EXPLICIT_CONTENT_FILTER_CHANGED_ROW = msg({
 	message: 'Changed the explicit content filter from {oldFilter} to {newFilter}',

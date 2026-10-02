@@ -4,8 +4,6 @@ import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {
 	PremiumFlags,
 	PremiumFlagsDescriptions,
-	SuspiciousActivityFlags,
-	SuspiciousActivityFlagsDescriptions,
 	UserFlags,
 	UserFlagsDescriptions,
 } from '@fluxer/constants/src/UserConstants';
@@ -49,7 +47,6 @@ export const UserAdminResponseSchema = z.object({
 	email: z.string().nullable(),
 	email_verified: z.boolean(),
 	email_bounced: z.boolean(),
-	has_verified_phone: z.boolean(),
 	date_of_birth: z.string().nullable(),
 	locale: z.string().nullable(),
 	premium_type: Int32Type.nullable(),
@@ -57,13 +54,6 @@ export const UserAdminResponseSchema = z.object({
 	premium_until: z.string().nullable(),
 	premium_grace_ends_at: z.string().nullable(),
 	premium_lifetime_sequence: Int32Type.nullable(),
-	suspicious_activity_flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Suspicious activity indicators',
-		'SuspiciousActivityFlags',
-	),
-	phone_verification_deferred: z.boolean().describe('Whether a stored phone requirement is deferred and not enforced'),
 	temp_banned_until: z.string().nullable(),
 	pending_deletion_at: z.string().nullable(),
 	pending_bulk_message_deletion_at: z.string().nullable(),
@@ -369,13 +359,6 @@ export const SetUserTraitsRequest = z.object({
 
 export type SetUserTraitsRequest = z.infer<typeof SetUserTraitsRequest>;
 
-export const UpdateHasVerifiedPhoneRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to update'),
-	has_verified_phone: z.boolean().describe('Whether the user should be treated as having completed phone verification'),
-});
-
-export type UpdateHasVerifiedPhoneRequest = z.infer<typeof UpdateHasVerifiedPhoneRequest>;
-
 export const ChangeDobRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to change date of birth for'),
 	date_of_birth: createStringType(10, 10)
@@ -384,47 +367,6 @@ export const ChangeDobRequest = z.object({
 });
 
 export type ChangeDobRequest = z.infer<typeof ChangeDobRequest>;
-
-export const UpdateSuspiciousActivityFlagsRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to update suspicious activity flags for'),
-	flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Bitmask of suspicious activity flags',
-		'SuspiciousActivityFlags',
-	),
-});
-
-export type UpdateSuspiciousActivityFlagsRequest = z.infer<typeof UpdateSuspiciousActivityFlagsRequest>;
-
-export const DisableForSuspiciousActivityRequest = z.object({
-	user_id: SnowflakeType.describe('ID of the user to disable for suspicious activity'),
-	flags: createBitflagInt32Type(
-		SuspiciousActivityFlags,
-		SuspiciousActivityFlagsDescriptions,
-		'Bitmask of suspicious activity flags that triggered the disable',
-		'SuspiciousActivityFlags',
-	),
-	notify_user: z.boolean().default(true).describe('Whether to email the user that the account was disabled'),
-});
-
-export type DisableForSuspiciousActivityRequest = z.infer<typeof DisableForSuspiciousActivityRequest>;
-
-export const BulkUpdateSuspiciousActivityFlagsRequest = z.object({
-	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to update'),
-	add_flags: z
-		.array(z.string())
-		.max(32)
-		.default([])
-		.describe('Suspicious activity flag names to add to all specified users'),
-	remove_flags: z
-		.array(z.string())
-		.max(32)
-		.default([])
-		.describe('Suspicious activity flag names to remove from all specified users'),
-});
-
-export type BulkUpdateSuspiciousActivityFlagsRequest = z.infer<typeof BulkUpdateSuspiciousActivityFlagsRequest>;
 
 export const BulkUpdateUserFlagsRequest = z.object({
 	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to update'),
@@ -691,21 +633,9 @@ export const AdminUserPremiumFlagsUpdateRequest = UpdatePremiumFlagsRequest.omit
 
 export type AdminUserPremiumFlagsUpdateRequest = z.infer<typeof AdminUserPremiumFlagsUpdateRequest>;
 
-export const AdminUserPhoneVerificationRequest = UpdateHasVerifiedPhoneRequest.omit({user_id: true});
-
-export type AdminUserPhoneVerificationRequest = z.infer<typeof AdminUserPhoneVerificationRequest>;
-
 export const AdminUserDobUpdateRequest = ChangeDobRequest.omit({user_id: true});
 
 export type AdminUserDobUpdateRequest = z.infer<typeof AdminUserDobUpdateRequest>;
-
-export const AdminUserSuspiciousActivityFlagsRequest = UpdateSuspiciousActivityFlagsRequest.omit({user_id: true});
-
-export type AdminUserSuspiciousActivityFlagsRequest = z.infer<typeof AdminUserSuspiciousActivityFlagsRequest>;
-
-export const AdminUserSuspiciousDisableRequest = DisableForSuspiciousActivityRequest.omit({user_id: true});
-
-export type AdminUserSuspiciousDisableRequest = z.infer<typeof AdminUserSuspiciousDisableRequest>;
 
 export const AdminUserDmChannelListResponse = z.union([ListUserDmChannelsResponse, ListUserGroupDmChannelsResponse]);
 

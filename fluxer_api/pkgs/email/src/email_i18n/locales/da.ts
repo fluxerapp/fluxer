@@ -15,10 +15,6 @@ const EMAIL_I18N_DA_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Sletningen af din {product_name}-konto er planlagt",
 		"body": "Hej {username},\n\nSom du har anmodet om, slettes din {product_name}-konto permanent den:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsag: {reason}}}\n\nDin konto er låst indtil da. Hvis du ikke har anmodet om dette, eller hvis du vil beholde din konto, skal du kontakte {safety_email} fra denne e-mailadresse inden denne dato.\n\n– Teamet bag {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Din {product_name}-konto er midlertidigt deaktiveret",
-		"body": "Hej {username},\n\nVi har midlertidigt deaktiveret din {product_name}-konto, fordi vi har registreret mistænkelig aktivitet.\n\n{reason, select,\n  null {}\n  other {Årsag: {reason}}\n}\n\nFor at få adgang til din konto igen skal du nulstille din adgangskode:\n\n{forgotUrl}\n\nNår du har nulstillet din adgangskode, kan du logge ind igen.\n\nHvis du mener, at dette er sket ved en fejl, kan du kontakte vores supportteam.\n\n– Sikkerhedsteamet hos {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Din {product_name}-konto slettes permanent",
 		"body": "Hej {username},\n\nVi har planlagt at slette din {product_name}-konto permanent på grund af overtrædelser af vores servicevilkår eller retningslinjer for fællesskabet.\n\nPlanlagt sletning: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Årsag: {reason}}\n}\n\nDette er en alvorlig sanktion. Dine kontodata bliver permanent slettet på den planlagte dato.\n\nGennemgå:\n- Servicevilkår: {termsUrl}\n- Retningslinjer for fællesskabet: {guidelinesUrl}\n\nKlageproces:\nHvis du mener, at denne beslutning om sanktioner var forkert eller uberettiget, har du 60 dage til at indsende en klage. Send en e-mail til {appeals_email} fra denne e-mailadresse.\n\nI din klage:\n- Forklar tydeligt, hvorfor du mener, at beslutning om sanktioneren var forkert eller uberettiget\n- Fremlæg relevant dokumentation eller kontekst\n\nEt medlem af sikkerhedsteamet hos {product_name} vil gennemgå din klage og kan sætte den afventende sletning på pause, indtil en endelig beslutning er truffet.\n\n– Sikkerhedsteamet hos {product_name}"
@@ -49,7 +45,7 @@ const EMAIL_I18N_DA_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Din e-mailadresse til {product_name} er ændret",
-		"body": "Hej {username},\n\nE-mailadressen på din {product_name}-konto blev ændret til {newEmail}.\n\nHvis du selv har foretaget ændringen, behøver du ikke gøre noget. Ellers kan du fortryde ændringen og sikre din konto ved at bruge dette link:\n\n{revertUrl}\n\nDette vil gendanne din tidligere e-mailadresse, logge dig ud overalt, fjerne tilknyttede telefonnumre, slå multifaktorgodkendelse fra og kræve, at du vælger en ny adgangskode.\n\n– Sikkerhedsteamet hos {product_name}"
+		"body": "Hej {username},\n\nE-mailadressen på din {product_name}-konto blev ændret til {newEmail}.\n\nHvis du selv har foretaget ændringen, behøver du ikke gøre noget. Ellers kan du fortryde ændringen og sikre din konto ved at bruge dette link:\n\n{revertUrl}\n\nDette vil gendanne din tidligere e-mailadresse, logge dig ud overalt, slå multifaktorgodkendelse fra og kræve, at du vælger en ny adgangskode.\n\n– Sikkerhedsteamet hos {product_name}"
 	},
 	"email_verification": {
 		"subject": "Bekræft din {product_name}-e-mailadresse",

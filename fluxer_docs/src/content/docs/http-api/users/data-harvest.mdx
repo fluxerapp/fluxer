@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A data harvest is a ZIP archive of the current account's data. Fluxer compiles it in the background, reports progress while it runs, and issues a temporary download URL once the archive is written.
 
-Every route except [Download data harvest archive](#download-data-harvest-archive) is user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has suspicious activity flags with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. No route here requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](/http-api/users/content/#delete-current-users-messages) takes the same filter shape, destroys the messages, and requires it.
+Every route except [Download data harvest archive](#download-data-harvest-archive) is user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`. No route here requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](/http-api/users/content/#delete-current-users-messages) takes the same filter shape, destroys the messages, and requires it.
 
 :::caution[A completed archive has a seven day download deadline]
 A completed harvest records a deadline exactly seven days after the archive was written. After it, [Get data harvest download URL](#get-data-harvest-download-url) returns 400 `HARVEST_EXPIRED` and [Download data harvest archive](#download-data-harvest-archive) returns 404, while the record keeps reporting `completed`. Nothing extends or restores it.

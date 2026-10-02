@@ -20,7 +20,8 @@ export interface IUserAccountRepository {
 	create(data: UserRow): Promise<User>;
 	upsert(data: UserRow, oldData?: UserRow | null): Promise<User>;
 	patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User>;
-	compareAndSetSuspiciousFlags(user: User, suspiciousFlags: number): Promise<User | null>;
+	compareAndSetFlags(user: User, flags: bigint): Promise<User | null>;
+	updateFlags(userId: UserID, mutate: (flags: bigint) => bigint): Promise<User | null>;
 	updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User>;
 	startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null>;
 	anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User>;

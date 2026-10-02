@@ -15,10 +15,6 @@ const EMAIL_I18N_ES_419_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "La eliminación de tu cuenta de {product_name} está programada",
 		"body": "Hola {username}:\n\nSegún lo que solicitaste, la eliminación permanente de tu cuenta de {product_name} está programada para el:\n\n{deletionDate, date, full} a las {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nTu cuenta permanecerá bloqueada hasta entonces. Si no solicitaste esto, o si quieres conservar tu cuenta, comunícate con {safety_email} desde esta dirección de correo electrónico antes de esa fecha.\n\n– Equipo de {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Tu cuenta de {product_name} ha sido deshabilitada temporalmente",
-		"body": "Hola {username}:\n\nDeshabilitamos temporalmente tu cuenta de {product_name} porque detectamos actividad sospechosa.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nPara recuperar el acceso a tu cuenta, deberás restablecer tu contraseña:\n\n{forgotUrl}\n\nDespués de restablecer tu contraseña, podrás iniciar sesión de nuevo.\n\nSi crees que esto fue un error, comunícate con nuestro equipo de soporte.\n\n– Equipo de seguridad de {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Tu cuenta de {product_name} será eliminada permanentemente",
 		"body": "Hola {username}:\n\nSe ha programado la eliminación permanente de tu cuenta de {product_name} debido a infracciones de nuestros Términos del servicio o Normas de la comunidad.\n\nEliminación programada: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nEsta es una medida grave. Los datos de tu cuenta se eliminarán permanentemente en la fecha programada.\n\nPor favor, revisa:\n- Términos del servicio: {termsUrl}\n- Normas de la comunidad: {guidelinesUrl}\n\nProceso de apelación:\nSi crees que esta decisión fue incorrecta o injustificada, tienes 60 días para presentar una apelación. Envía un correo electrónico a {appeals_email} desde esta dirección de correo electrónico.\n\nEn tu apelación:\n- Explica claramente por qué crees que la decisión fue incorrecta o injustificada\n- Aporta las pruebas o el contexto que consideres relevantes\n\nUn miembro del Equipo de seguridad de {product_name} revisará tu apelación y podrá pausar la eliminación pendiente hasta que se haya tomado una decisión final.\n\n– Equipo de seguridad de {product_name}"
@@ -49,7 +45,7 @@ const EMAIL_I18N_ES_419_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Se cambió tu correo electrónico en {product_name}",
-		"body": "Hola {username}:\n\nLa dirección de correo electrónico de tu cuenta de {product_name} se cambió a {newEmail}.\n\nSi realizaste este cambio, no es necesario que hagas nada. Si no lo hiciste, puedes revertir el cambio y proteger tu cuenta usando este enlace:\n\n{revertUrl}\n\nEsto restaurará tu correo electrónico anterior, cerrará tu sesión en todas partes, eliminará los números de teléfono vinculados, deshabilitará la autenticación multifactor y te pedirá que establezcas una nueva contraseña.\n\n– Equipo de seguridad de {product_name}"
+		"body": "Hola {username}:\n\nLa dirección de correo electrónico de tu cuenta de {product_name} se cambió a {newEmail}.\n\nSi realizaste este cambio, no es necesario que hagas nada. Si no lo hiciste, puedes revertir el cambio y proteger tu cuenta usando este enlace:\n\n{revertUrl}\n\nEsto restaurará tu correo electrónico anterior, cerrará tu sesión en todas partes, deshabilitará la autenticación multifactor y te pedirá que establezcas una nueva contraseña.\n\n– Equipo de seguridad de {product_name}"
 	},
 	"email_verification": {
 		"subject": "Verifica tu dirección de correo electrónico en {product_name}",

@@ -15,10 +15,6 @@ const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Penghapusan akun {product_name} kamu telah dijadwalkan",
 		"body": "Halo {username},\n\nSesuai permintaanmu, akun {product_name} kamu dijadwalkan untuk dihapus permanen pada:\n\n{deletionDate, date, full} pukul {deletionDate, time, short}{reason, select, null {} other {\n\nAlasan: {reason}}}\n\nAkunmu dikunci hingga saat itu. Jika kamu tidak meminta ini, atau ingin mempertahankan akunmu, hubungi {safety_email} dari alamat email ini sebelum tanggal tersebut.\n\n– Tim {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Akun {product_name} kamu telah dinonaktifkan sementara",
-		"body": "Halo {username},\n\nKami menonaktifkan sementara akun {product_name} kamu karena kami mendeteksi aktivitas mencurigakan.\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}}\n}\n\nUntuk mendapatkan kembali akses ke akunmu, kamu perlu mengatur ulang kata sandimu:\n\n{forgotUrl}\n\nSetelah mengatur ulang kata sandi, kamu bisa masuk lagi.\n\nJika kamu merasa ini keliru, silakan hubungi tim dukungan kami.\n\n– Tim Keamanan {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Akun {product_name} kamu akan dihapus secara permanen",
 		"body": "Halo {username},\n\nAkun {product_name} kamu telah dijadwalkan untuk dihapus permanen karena melanggar Ketentuan Layanan atau Pedoman Komunitas kami.\n\nPenghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}}\n}\n\nIni adalah tindakan penegakan yang serius. Data akunmu akan dihapus permanen pada tanggal yang dijadwalkan.\n\nSilakan tinjau:\n- Ketentuan Layanan: {termsUrl}\n- Pedoman Komunitas: {guidelinesUrl}\n\nProses banding:\nJika kamu yakin keputusan ini keliru atau tidak beralasan, kamu punya 60 hari untuk mengajukan banding. Kirim email ke {appeals_email} dari alamat email ini.\n\nDalam bandingmu:\n- Uraikan dengan jelas kenapa kamu yakin keputusan ini keliru atau tidak beralasan\n- Berikan bukti atau konteks yang relevan\n\nAnggota Tim Keamanan {product_name} akan meninjau bandingmu dan bisa menunda penghapusan sampai keputusan akhir tercapai.\n\n– Tim Keamanan {product_name}"
@@ -49,7 +45,7 @@ const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Email {product_name} kamu telah diubah",
-		"body": "Halo {username},\n\nAlamat email di akun {product_name} kamu telah diubah menjadi {newEmail}.\n\nJika ini memang kamu, tidak ada yang perlu dilakukan. Jika bukan, kamu bisa membatalkan perubahan itu dan mengamankan akunmu lewat tautan ini:\n\n{revertUrl}\n\nTindakan ini akan mengembalikan email lamamu, mengeluarkanmu dari semua perangkat, menghapus nomor telepon yang tertaut, menonaktifkan MFA, dan mengharuskanmu membuat kata sandi baru.\n\n– Tim Keamanan {product_name}"
+		"body": "Halo {username},\n\nAlamat email di akun {product_name} kamu telah diubah menjadi {newEmail}.\n\nJika ini memang kamu, tidak ada yang perlu dilakukan. Jika bukan, kamu bisa membatalkan perubahan itu dan mengamankan akunmu lewat tautan ini:\n\n{revertUrl}\n\nTindakan ini akan mengembalikan email lamamu, mengeluarkanmu dari semua perangkat, menonaktifkan MFA, dan mengharuskanmu membuat kata sandi baru.\n\n– Tim Keamanan {product_name}"
 	},
 	"email_verification": {
 		"subject": "Verifikasi alamat email {product_name} kamu",

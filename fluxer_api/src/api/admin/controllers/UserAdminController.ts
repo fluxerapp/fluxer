@@ -31,12 +31,9 @@ import {
 	AdminUserFlagsUpdateRequest,
 	AdminUserGuildListQuery,
 	AdminUserListQuery,
-	AdminUserPhoneVerificationRequest,
 	AdminUserPremiumFlagsUpdateRequest,
 	AdminUserRelationshipCategoryQuery,
 	AdminUserRelationshipParam,
-	AdminUserSuspiciousActivityFlagsRequest,
-	AdminUserSuspiciousDisableRequest,
 	AdminUserSystemStatusRequest,
 	AdminUsersMeResponse,
 	AdminUserTraitsRequest,
@@ -1129,38 +1126,6 @@ export function UserAdminController(app: HonoApp) {
 			);
 		},
 	);
-	app.put(
-		'/admin/users/:user_id/phone-verification',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_UPDATE_PHONE),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserPhoneVerificationRequest),
-		OpenAPI({
-			operationId: 'update_admin_user_phone_verification',
-			summary: 'Update user phone verification flag',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Set whether a user is treated as having completed phone verification. This is the only supported path for clearing the irreversible user-facing phone verification flag. Requires USER_UPDATE_PHONE permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.securityService.updateHasVerifiedPhone(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
 	app.patch(
 		'/admin/users/:user_id/date-of-birth',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
@@ -1185,70 +1150,6 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
 				await adminService.userService.profileService.changeDob(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
-	app.put(
-		'/admin/users/:user_id/suspicious-activity-flags',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_UPDATE_SUSPICIOUS_ACTIVITY),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserSuspiciousActivityFlagsRequest),
-		OpenAPI({
-			operationId: 'update_admin_user_suspicious_activity_flags',
-			summary: 'Update suspicious activity flags',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Flag user as suspicious for account abuse, fraud, or policy violations. Enables enforcement actions and rate limiting. Creates audit log entry. Requires USER_UPDATE_SUSPICIOUS_ACTIVITY permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.securityService.updateSuspiciousActivityFlags(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
-	app.put(
-		'/admin/users/:user_id/suspicious-activity-disablement',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_DISABLE_SUSPICIOUS),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserSuspiciousDisableRequest),
-		OpenAPI({
-			operationId: 'disable_admin_user_suspicious',
-			summary: 'Disable user for suspicious activity',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Disable user account due to suspicious activity or abuse. Account is locked pending review. User cannot access services. Emails the user unless notify_user is false. Creates audit log entry. Requires USER_DISABLE_SUSPICIOUS permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.securityService.disableForSuspiciousActivity(
 					{user_id: userId, ...ctx.req.valid('json')},
 					adminUserId,
 					auditLogReason,

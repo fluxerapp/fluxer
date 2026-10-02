@@ -232,28 +232,21 @@ export class UserDataRepository {
 		return {finalVersion, previousData, updatedData};
 	}
 
-	async compareAndSetSuspiciousFlags(
-		user: User,
-		suspiciousFlags: number,
-	): Promise<{previousData: UserRow; updatedData: UserRow} | null> {
+	async compareAndSetFlags(user: User, flags: bigint): Promise<{previousData: UserRow; updatedData: UserRow} | null> {
 		assertWritableUserId(user.id);
 		const previousData = user.toRow();
 		const version = nextVersion(user.version);
-		const expected = previousData.suspicious_activity_flags ?? 0;
-		const conditions: Array<Partial<UserRow>> = [{suspicious_activity_flags: expected}];
-		if (expected === 0 && previousData.version != null) {
-			conditions.push({suspicious_activity_flags: null, version: previousData.version});
+		const expected = previousData.flags ?? 0n;
+		const conditions: Array<Partial<UserRow>> = [{flags: expected}];
+		if (expected === 0n && previousData.version != null) {
+			conditions.push({flags: null, version: previousData.version});
 		}
 		for (const condition of conditions) {
 			const applied = await executeConditional(
-				Users.conditionalPatchByPk(
-					{user_id: user.id},
-					{suspicious_activity_flags: Db.set(suspiciousFlags), version: Db.set(version)},
-					condition,
-				),
+				Users.conditionalPatchByPk({user_id: user.id}, {flags: Db.set(flags), version: Db.set(version)}, condition),
 			);
 			if (!applied) continue;
-			const updatedData = {...previousData, suspicious_activity_flags: suspiciousFlags, version};
+			const updatedData = {...previousData, flags, version};
 			await emitAccountChangedIfRelevant(previousData, updatedData);
 			return {previousData, updatedData};
 		}

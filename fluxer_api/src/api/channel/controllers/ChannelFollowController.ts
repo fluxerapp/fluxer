@@ -6,6 +6,7 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {Validator} from '@app/api/Validator';
 import {
 	ChannelFollowerStatsResponse,
@@ -33,6 +34,7 @@ export function ChannelFollowController(app: HonoApp) {
 			tags: 'Channels',
 		}),
 		async (ctx) => {
+			assertAccountNotLimited(ctx.get('user'));
 			const followed = await ctx.get('channelFollowService').followChannel({
 				userId: ctx.get('user').id,
 				channelId: createChannelID(ctx.req.valid('param').channel_id),

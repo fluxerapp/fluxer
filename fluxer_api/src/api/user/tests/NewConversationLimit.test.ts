@@ -122,7 +122,7 @@ describe('New conversation limit', () => {
 	});
 
 	test('staff and trusted accounts are never limited', async () => {
-		for (const flag of [UserFlags.STAFF, UserFlags.NOT_SUSPICIOUS]) {
+		for (const flag of [UserFlags.STAFF, UserFlags.LIMIT_EXEMPT]) {
 			const [account, other] = await members(2);
 			const me = await createBuilder<{flags?: string | number}>(harness, account!.token).get('/users/@me').execute();
 			await createBuilder<unknown>(harness, account!.token)

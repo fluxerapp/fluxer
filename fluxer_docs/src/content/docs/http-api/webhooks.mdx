@@ -783,7 +783,6 @@ Returns an array of [webhook objects](#webhook-object) in a guild. The caller mu
 | 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
 | 400<sup>2</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>3</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403<sup>3</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403<sup>3</sup> | [error response](/http-api/#error-response) | The guild is unavailable |
 | 403<sup>3</sup> | [error response](/http-api/#error-response) | The caller is not a member of the guild or lacks `MANAGE_WEBHOOKS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
@@ -792,7 +791,7 @@ Returns an array of [webhook objects](#webhook-object) in a guild. The caller mu
 
 <sup>2</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
 
-<sup>3</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_ACCESS` for an unavailable guild, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+<sup>3</sup> `MISSING_ACCESS` for an unavailable guild, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
 
 A webhook is returned only when the caller also holds both `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` in that webhook's own channel. A webhook with no channel target is never returned.
 
@@ -820,7 +819,6 @@ Returns an array of [webhook objects](#webhook-object) in a guild text, voice, o
 | 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The guild is unavailable |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the channel's guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller lacks channel access or `MANAGE_WEBHOOKS` |
@@ -830,7 +828,7 @@ Returns an array of [webhook objects](#webhook-object) in a guild text, voice, o
 
 <sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
 
-<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_ACCESS` for an unavailable guild, `NSFW_CONTENT_AGE_RESTRICTED` for an unverified account in an age restricted channel, `MISSING_PERMISSIONS` for a membership, channel access, or permission failure, and `ACCESS_DENIED` otherwise
+<sup>2</sup> `MISSING_ACCESS` for an unavailable guild, `NSFW_CONTENT_AGE_RESTRICTED` for an unverified account in an age restricted channel, `MISSING_PERMISSIONS` for a membership, channel access, or permission failure, and `ACCESS_DENIED` otherwise
 
 ### Rate limit
 
@@ -872,7 +870,7 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 | 400<sup>2</sup> | [error response](/http-api/#error-response) | The guild or channel webhook allowance is already reached |
 | 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403 | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action |
+| 403 | [error response](/http-api/#error-response) | The account is limited |
 | 403 | [error response](/http-api/#error-response) | The guild is unavailable |
 | 403 | [error response](/http-api/#error-response) | The caller is not a member of the channel's guild |
 | 403 | [error response](/http-api/#error-response) | The caller lacks channel access or `MANAGE_WEBHOOKS` |
@@ -892,7 +890,7 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 | Caller holds the permission but has no enrolled authenticator | 400 `TWO_FACTOR_REQUIRED` |
 | Schema or image failure | 400 `INVALID_FORM_BODY` |
 | Name is blocked, or the avatar hash is banned | 403 `CONTENT_BLOCKED` |
-| Account has an outstanding required action | 403 `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| Account is limited | 403 `ACCOUNT_LIMITED` |
 | Guild is unavailable | 403 `MISSING_ACCESS` |
 | Unverified account in an age restricted channel | 403 `NSFW_CONTENT_AGE_RESTRICTED` |
 | Membership, channel access, or permission failure | 403 `MISSING_PERMISSIONS` |
@@ -928,13 +926,12 @@ Returns a [webhook object](#webhook-object). The caller must be a member of the 
 | 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild or lacks `MANAGE_WEBHOOKS` in the webhook's channel |
 | 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK`, or its guild does not resolve, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
 
-<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+<sup>2</sup> `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
 
 ### Rate limit
 
@@ -984,7 +981,6 @@ The returned webhook object has the destination channel. Copies a channel follow
 | 400<sup>3</sup> | [error response](/http-api/#error-response) | A channel follower webhook cannot move into the destination channel |
 | 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403 | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403 | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild |
 | 403 | [error response](/http-api/#error-response) | The caller lacks `MANAGE_WEBHOOKS` in the current or destination channel |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The destination channel is age restricted and the account is not age verified |
@@ -1010,7 +1006,6 @@ The returned webhook object has the destination channel. Copies a channel follow
 | Caller holds the permission but has no enrolled authenticator | 400 `TWO_FACTOR_REQUIRED` |
 | Schema or image failure, or an avatar on a channel follower webhook | 400 `INVALID_FORM_BODY` |
 | Name is blocked, or the avatar hash is banned | 403 `CONTENT_BLOCKED` |
-| Account has an outstanding required action | 403 `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | Unverified account in an age restricted destination channel | 403 `NSFW_CONTENT_AGE_RESTRICTED` |
 | Membership, channel access, or permission failure | 403 `MISSING_PERMISSIONS` |
 | Any other credential refusal | 403 `ACCESS_DENIED` |
@@ -1051,13 +1046,12 @@ No operation restores the webhook or reissues its token. Messages it already cre
 | 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild or lacks `MANAGE_WEBHOOKS` in the webhook's channel |
 | 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK`, or its guild does not resolve, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
 
-<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+<sup>2</sup> `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
 
 ### Side effects
 

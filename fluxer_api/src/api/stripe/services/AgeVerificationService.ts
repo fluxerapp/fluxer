@@ -122,11 +122,11 @@ export class AgeVerificationService {
 			Logger.debug({userId}, 'User already age-verified, skipping flag update');
 			return;
 		}
-		const updatedUser = await this.userRepository.patchUpsert(
-			user.id,
-			{flags: user.flags | UserFlags.AGE_VERIFIED_ADULT},
-			user.toRow(),
-		);
+		const updatedUser = await this.userRepository.updateFlags(user.id, (flags) => flags | UserFlags.AGE_VERIFIED_ADULT);
+		if (!updatedUser) {
+			Logger.error({userId}, 'User not found during age verification completion');
+			return;
+		}
 		await this.gatewayService.dispatchPresence({
 			userId: updatedUser.id,
 			event: 'USER_UPDATE',

@@ -56,7 +56,6 @@ export class UserAccountProfileService {
 		const updates: UserFieldUpdates = {
 			avatar_hash: user.avatarHash,
 			banner_hash: user.bannerHash,
-			flags: user.flags,
 		};
 		let preparedAvatarUpload: PreparedAssetUpload | null = null;
 		let preparedBannerUpload: PreparedAssetUpload | null = null;

@@ -81,7 +81,6 @@ const SKIP_CONTENT_FILTER_PATH_PARTS = [
 	'/users/@me/email-change/',
 	'/users/@me/mfa/',
 	'/users/@me/password-change/',
-	'/users/@me/phone/',
 	'/users/@me/sudo/',
 	'/webhooks/',
 ] as const;

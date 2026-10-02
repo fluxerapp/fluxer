@@ -15,10 +15,6 @@ const EMAIL_I18N_PT_BR_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "A exclusão da sua conta do {product_name} está agendada",
 		"body": "Olá, {username},\n\nConforme solicitado, sua conta do {product_name} está agendada para exclusão permanente em:\n\n{deletionDate, date, full} às {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nSua conta permanecerá bloqueada até lá. Se você não solicitou isso, ou se quiser manter sua conta, entre em contato com {safety_email} usando este endereço de e-mail antes dessa data.\n\n– Equipe do {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Sua conta do {product_name} foi desativada temporariamente",
-		"body": "Olá, {username},\n\nDesativamos temporariamente sua conta do {product_name} porque detectamos atividades suspeitas.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nPara acessar sua conta novamente, você precisará redefinir sua senha:\n\n{forgotUrl}\n\nDepois de redefinir sua senha, você poderá entrar novamente.\n\nSe você acredita que isso foi um erro, entre em contato com nossa equipe de suporte.\n\n– equipe de segurança do {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Sua conta do {product_name} será excluída permanentemente",
 		"body": "Olá, {username},\n\nA exclusão permanente da sua conta do {product_name} foi agendada devido a violações de nossos Termos de serviço ou Diretrizes da comunidade.\n\nExclusão agendada: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nEsta é uma medida séria. Os dados da sua conta serão excluídos permanentemente na data agendada.\n\nPor favor, revise:\n- Termos de serviço: {termsUrl}\n- Diretrizes da comunidade: {guidelinesUrl}\n\nProcesso de recurso:\nSe você acredita que esta decisão foi incorreta ou injustificada, você tem 60 dias para enviar um recurso. Envie um e-mail para {appeals_email} a partir deste endereço de e-mail.\n\nEm seu recurso:\n- Explique claramente por que você acredita que a decisão foi incorreta ou injustificada\n- Forneça quaisquer evidências ou contexto relevantes\n\nUm membro da equipe de segurança do {product_name} revisará seu recurso e poderá pausar a exclusão pendente até que uma decisão final seja tomada.\n\n– equipe de segurança do {product_name}"
@@ -49,7 +45,7 @@ const EMAIL_I18N_PT_BR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "O e-mail da sua conta do {product_name} foi alterado",
-		"body": "Olá, {username},\n\nO endereço de e-mail da sua conta do {product_name} foi alterado para {newEmail}.\n\nSe você fez essa alteração, nenhuma ação é necessária. Se você não fez, pode reverter a alteração e proteger sua conta usando este link:\n\n{revertUrl}\n\nIsso restaurará seu e-mail anterior, encerrará todas as suas sessões, removerá números de telefone vinculados, desativará a autenticação multifator (MFA) e exigirá que você defina uma nova senha.\n\n– equipe de segurança do {product_name}"
+		"body": "Olá, {username},\n\nO endereço de e-mail da sua conta do {product_name} foi alterado para {newEmail}.\n\nSe você fez essa alteração, nenhuma ação é necessária. Se você não fez, pode reverter a alteração e proteger sua conta usando este link:\n\n{revertUrl}\n\nIsso restaurará seu e-mail anterior, encerrará todas as suas sessões, desativará a autenticação multifator (MFA) e exigirá que você defina uma nova senha.\n\n– equipe de segurança do {product_name}"
 	},
 	"email_verification": {
 		"subject": "Verifique o endereço de e-mail da sua conta do {product_name}",

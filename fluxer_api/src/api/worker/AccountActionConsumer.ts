@@ -15,8 +15,7 @@ import {Logger} from '@app/api/Logger';
 import {
 	type AccountStateDeps,
 	applyLimitNewConversations,
-	applyPhoneVerified,
-	applySuspiciousFlags,
+	applySetAccountLimit,
 	applyTempBanIp,
 	outcomeOf,
 } from '@app/api/user/services/AccountStateApplier';
@@ -65,10 +64,8 @@ export function applyAction(deps: AccountActionDeps, env: ActionEnvelope): Promi
 	if (env.v !== CONTRACT_VERSION) return Promise.resolve(outcomeOf(env, 'unsupported'));
 	if (env.expires_at_ms <= (deps.now?.() ?? Date.now())) return Promise.resolve(outcomeOf(env, 'expired'));
 	switch (env.type) {
-		case 'set_suspicious_flags':
-			return applySuspiciousFlags(deps.state, env);
-		case 'phone_verified':
-			return applyPhoneVerified(deps.state, env);
+		case 'set_account_limit':
+			return applySetAccountLimit(deps.state, env);
 		case 'temp_ban_ip':
 			return applyTempBanIp(deps.state, env);
 		case 'limit_new_conversations':

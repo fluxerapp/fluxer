@@ -219,19 +219,6 @@ pub(crate) async fn bulk_actions_post(
                 .bulk_update_user_flags(&user_ids, &add, &remove, audit_log_reason.as_deref())
                 .await
         }
-        "bulk-update-suspicious-activity-flags" => {
-            let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
-            let add = form.list_values_any(&["add_flags[]", "add_flags"]);
-            let remove = form.list_values_any(&["remove_flags[]", "remove_flags"]);
-            client
-                .bulk_update_suspicious_activity_flags(
-                    &user_ids,
-                    &add,
-                    &remove,
-                    audit_log_reason.as_deref(),
-                )
-                .await
-        }
         "bulk-update-guild-features" => {
             let guild_ids = form.list_values_any(&["guild_ids[]", "guild_ids"]);
             let mut add = form.list_values_any(&["add_features[]", "add_features"]);

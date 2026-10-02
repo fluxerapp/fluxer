@@ -654,6 +654,7 @@ Fluxer evaluates the target's admission policy in this order.
 | 400 | [error response](/http-api/#error-response) | The group is already full and the request returns `MAX_GROUP_DM_RECIPIENTS` |
 | 400 | [error response](/http-api/#error-response) | The channel is not a group direct message and the request returns `INVALID_CHANNEL_TYPE` |
 | 403 | [error response](/http-api/#error-response) | Caller is not a recipient, or the target's admission policy rejects the caller, each returning `MISSING_ACCESS` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist and the request returns `UNKNOWN_CHANNEL` |
 
 The `MAX_GROUP_DM_RECIPIENTS` body has `max_recipients`, the exact ceiling that was reached. That ceiling is the deployment's [`max_group_dm_recipients`](/http-api/instance/#limit-keys) limit resolved for the caller, and it defaults to 50.

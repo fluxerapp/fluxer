@@ -283,14 +283,13 @@ A verification level gates member participation. Fluxer evaluates it when a memb
 | 0 | NONE | No verification requirement |
 | 1 | LOW<sup>1</sup> | The account is claimed and its email address verified |
 | 2 | MEDIUM | The LOW requirement, and the account is at least 5 minutes old |
-| 3 | HIGH<sup>2</sup> | The MEDIUM requirement, and the membership is at least 10 minutes old |
-| 4 | VERY_HIGH<sup>3</sup> | The account has a verified phone number |
+| 3 | HIGH<sup>2</sup> <sup>3</sup> | The MEDIUM requirement, and the membership is at least 10 minutes old |
 
 <sup>1</sup> A guild with `DISCOVERABLE` is evaluated at an effective minimum of LOW even when the stored value is NONE, and [Modify guild](#modify-guild) rejects lowering a discoverable guild below LOW with 400 `INVALID_FORM_BODY` and the field code `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW`
 
 <sup>2</sup> The membership age requirement is skipped when the join timestamp cannot be read, so the level behaves as MEDIUM
 
-<sup>3</sup> A verified phone number is the whole requirement at this level. A deployment whose [instance features](/http-api/instance/#instance-features-object) report `phone_verification_enabled` as false evaluates a stored VERY_HIGH as HIGH. [Modify guild](#modify-guild) then rejects a change to VERY_HIGH with 400 `INVALID_FORM_BODY` and the field code `VALUE_MUST_BE_INTEGER_IN_RANGE`, and a [guild template](#guild-creation-template-object) value is clamped to HIGH
+<sup>3</sup> A request value of 4 is stored as HIGH, and a [guild template](#guild-creation-template-object) value above HIGH is clamped to HIGH
 
 The guild owner, a bot, and any member holding at least one role bypass the check at every level.
 
@@ -531,6 +530,7 @@ The creation response has no roles, channels, emojis, stickers, or member counts
 | 200 | [guild object](#guild-object) | Guild was created |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | Body, image, template, bot or unclaimed credential, configured guild limit, or single community policy rejects creation |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Email address is unverified, or the name is blocked |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 
 <sup>1</sup> The [error code](/http-api/errors/) is `SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS` while the single community policy is active, `BOTS_CANNOT_CREATE_GUILDS` for a bot credential, `UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS` for an unclaimed account, `MAX_GUILDS` at the configured guild limit, `GUILD_TEMPLATE_INVALID` for a rejected template, and `INVALID_FORM_BODY` otherwise
 
@@ -674,7 +674,7 @@ Every field is optional. An omitted field preserves its current value, and a fie
 
 <sup>5</sup> The channel must exist in this guild and be a voice channel, and is otherwise rejected with `AFK_CHANNEL_MUST_BE_IN_GUILD` or `AFK_CHANNEL_MUST_BE_VOICE`
 
-<sup>6</sup> A guild with `DISCOVERABLE` cannot be lowered below LOW and is rejected with the field code `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW`. A change to VERY_HIGH is rejected with the field code `VALUE_MUST_BE_INTEGER_IN_RANGE` when phone verification is unavailable, as [Verification levels](#verification-levels) states
+<sup>6</sup> A guild with `DISCOVERABLE` cannot be lowered below LOW and is rejected with the field code `DISCOVERABLE_GUILD_VERIFICATION_LEVEL_TOO_LOW`.
 
 <sup>7</sup> Sending the value the guild already holds needs neither ownership nor sudo mode, and an owner without a configured second factor is rejected with the field code `MUST_ENABLE_2FA_BEFORE_REQUIRING_FOR_MODS`
 

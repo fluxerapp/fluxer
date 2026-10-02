@@ -3,10 +3,8 @@
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 
-export class PhoneAddNotEligibleError extends ForbiddenError {
+export class AccountLimitedError extends ForbiddenError {
 	constructor() {
-		super({
-			code: APIErrorCodes.PHONE_ADD_NOT_ELIGIBLE,
-		});
+		super({code: APIErrorCodes.ACCOUNT_LIMITED});
 	}
 }

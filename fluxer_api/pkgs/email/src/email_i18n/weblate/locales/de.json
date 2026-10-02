@@ -11,10 +11,6 @@
 		"subject": "Die Löschung deines {product_name}-Accounts ist geplant",
 		"body": "Hallo {username},\n\nwie von dir beantragt, wird dein {product_name}-Account an folgendem Termin dauerhaft gelöscht:\n\n{deletionDate, date, full} um {deletionDate, time, short}{reason, select, null {} other {\n\nGrund: {reason}}}\n\nDein Account ist bis dahin gesperrt. Wenn du das nicht beantragt hast oder deinen Account behalten möchtest, kontaktiere vor diesem Termin {safety_email} von dieser E-Mail-Adresse aus.\n\n– {product_name}-Team"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Dein {product_name}-Account wurde vorübergehend deaktiviert",
-		"body": "Hallo {username},\n\nwir haben deinen {product_name}-Account vorübergehend deaktiviert, da wir verdächtige Aktivitäten festgestellt haben.\n\n{reason, select,\n  null {}\n  other {Grund: {reason}}\n}\n\nUm wieder Zugriff auf deinen Account zu erhalten, musst du dein Passwort zurücksetzen:\n\n{forgotUrl}\n\nNachdem du dein Passwort zurückgesetzt hast, kannst du dich wieder anmelden.\n\nWenn du glaubst, dass dies ein Fehler war, kontaktiere bitte unser Support-Team.\n\n– {product_name}-Sicherheitsteam"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Dein {product_name}-Account wird dauerhaft gelöscht",
 		"body": "Hallo {username},\n\ndein {product_name}-Account wurde aufgrund von Verstößen gegen unsere Nutzungsbedingungen oder Community-Richtlinien zur dauerhaften Löschung vorgemerkt.\n\nGeplante Löschung: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Grund: {reason}}\n}\n\nDies ist eine ernsthafte Maßnahme. Deine Accountdaten werden am geplanten Datum dauerhaft gelöscht.\n\nBitte lies dir Folgendes durch:\n- Nutzungsbedingungen: {termsUrl}\n- Community-Richtlinien: {guidelinesUrl}\n\nEinspruchsverfahren:\nWenn du glaubst, dass diese Entscheidung falsch oder ungerechtfertigt war, hast du 60 Tage Zeit, Einspruch einzulegen. Sende eine E-Mail von dieser E-Mail-Adresse an {appeals_email}.\n\nIn deinem Einspruch:\n- Erkläre klar, warum du glaubst, dass die Entscheidung falsch oder ungerechtfertigt war\n- Füge alle relevanten Beweise oder Kontextinformationen bei\n\nEin Mitglied des {product_name}-Sicherheitsteams wird deinen Einspruch prüfen und die geplante Löschung möglicherweise aussetzen, bis eine endgültige Entscheidung getroffen wurde.\n\n– {product_name}-Sicherheitsteam"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Deine {product_name}-E-Mail-Adresse wurde geändert",
-		"body": "Hallo {username},\n\ndie E-Mail-Adresse deines {product_name}-Accounts wurde in {newEmail} geändert.\n\nWenn du diese Änderung vorgenommen hast, ist keine weitere Aktion erforderlich. Wenn nicht, kannst du die Änderung rückgängig machen und deinen Account über diesen Link absichern:\n\n{revertUrl}\n\nDadurch wird deine vorherige E-Mail-Adresse wiederhergestellt, du wirst überall abgemeldet, verknüpfte Telefonnummern werden entfernt, MFA wird deaktiviert und du musst ein neues Passwort festlegen.\n\n– {product_name}-Sicherheitsteam"
+		"body": "Hallo {username},\n\ndie E-Mail-Adresse deines {product_name}-Accounts wurde in {newEmail} geändert.\n\nWenn du diese Änderung vorgenommen hast, ist keine weitere Aktion erforderlich. Wenn nicht, kannst du die Änderung rückgängig machen und deinen Account über diesen Link absichern:\n\n{revertUrl}\n\nDadurch wird deine vorherige E-Mail-Adresse wiederhergestellt, du wirst überall abgemeldet, MFA wird deaktiviert und du musst ein neues Passwort festlegen.\n\n– {product_name}-Sicherheitsteam"
 	},
 	"email_verification": {
 		"subject": "Bestätige deine {product_name}-E-Mail-Adresse",

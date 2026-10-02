@@ -29,7 +29,6 @@ interface EmailChangeVerifyNewResponse {
 interface UserPrivateResponse {
 	id: string;
 	email: string;
-	phone?: string | null;
 	username: string;
 	discriminator: string;
 	global_name: string;

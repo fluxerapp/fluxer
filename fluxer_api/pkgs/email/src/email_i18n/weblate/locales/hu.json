@@ -11,10 +11,6 @@
 		"subject": "Ütemeztük {product_name}-fiókod törlését",
 		"body": "Szia, {username}!\n\nKérésedre {product_name}-fiókod végleges törlése a következő időpontra van ütemezve:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nIndok: {reason}}}\n\nAddig a fiókod zárolva van. Ha nem te kérted ezt, vagy meg szeretnéd tartani a fiókodat, még az időpont előtt írj erről az e-mail-címről erre a címre: {safety_email}.\n\n– {product_name} csapata"
 	},
-	"account_disabled_suspicious": {
-		"subject": "{product_name}-fiókodat ideiglenesen letiltottuk",
-		"body": "Szia, {username}!\n\nIdeiglenesen letiltottuk a {product_name}-fiókodat, mert gyanús tevékenységet észleltünk.\n\n{reason, select,\n  null {}\n  other {Indok: {reason}}\n}\n\nA fiókodhoz való hozzáférés visszaszerzéséhez vissza kell állítanod a jelszavadat:\n\n{forgotUrl}\n\nA jelszó visszaállítása után újra be tudsz jelentkezni.\n\nHa úgy gondolod, hogy ez tévedésből történt, vedd fel a kapcsolatot az ügyfélszolgálatunkkal.\n\n– {product_name} biztonsági csapata"
-	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name}-fiókodat véglegesen törölni fogjuk",
 		"body": "Szia, {username}!\n\n{product_name}-fiókod végleges törlését ütemeztük a szolgáltatási feltételeink vagy a közösségi irányelveink megsértése miatt.\n\nA törlés tervezett időpontja: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Indok: {reason}}\n}\n\nEz súlyos moderációs intézkedés. Fiókod adatait a megadott időpontban véglegesen töröljük.\n\nKérjük, olvasd át az alábbiakat:\n- Szolgáltatási feltételek: {termsUrl}\n- Közösségi irányelvek: {guidelinesUrl}\n\nFellebbezés:\nHa úgy gondolod, hogy ez a döntés hibás vagy indokolatlan volt, 60 napod van fellebbezni. Erről az e-mail-címről írj a következő címre: {appeals_email}.\n\nA fellebbezésben:\n- Világosan fejtsd ki, miért gondolod, hogy a döntés hibás vagy indokolatlan volt.\n- Add meg a kapcsolódó bizonyítékokat és a körülményeket.\n\nA {product_name} biztonsági csapatának egyik tagja elbírálja a fellebbezésedet, és a végleges döntésig felfüggesztheti a tervezett törlést.\n\n– {product_name} biztonsági csapata"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Megváltozott {product_name}-fiókod e-mail-címe",
-		"body": "Szia, {username}!\n\n{product_name}-fiókod e-mail-címe a következőre változott: {newEmail}.\n\nHa te módosítottad, nincs további teendőd. Ha nem te voltál, az alábbi linken visszavonhatod a módosítást, és biztonságba helyezheted a fiókodat:\n\n{revertUrl}\n\nEzzel visszaállítjuk a korábbi e-mail-címedet, mindenhol kijelentkeztetünk, eltávolítjuk a kapcsolt telefonszámokat, kikapcsoljuk a többfaktoros azonosítást, és új jelszót kell beállítanod.\n\n– {product_name} biztonsági csapata"
+		"body": "Szia, {username}!\n\n{product_name}-fiókod e-mail-címe a következőre változott: {newEmail}.\n\nHa te módosítottad, nincs további teendőd. Ha nem te voltál, az alábbi linken visszavonhatod a módosítást, és biztonságba helyezheted a fiókodat:\n\n{revertUrl}\n\nEzzel visszaállítjuk a korábbi e-mail-címedet, mindenhol kijelentkeztetünk, kikapcsoljuk a többfaktoros azonosítást, és új jelszót kell beállítanod.\n\n– {product_name} biztonsági csapata"
 	},
 	"email_verification": {
 		"subject": "Erősítsd meg {product_name}-fiókod e-mail-címét",

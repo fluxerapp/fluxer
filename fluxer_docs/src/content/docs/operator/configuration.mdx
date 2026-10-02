@@ -994,10 +994,6 @@ Defaults to the inverse of `FLUXER_SELF_HOSTED`. Off by default on a self-hosted
 
 With feeds off, Fluxer checks none of this data. The first worker start with feeds off removes the URL feed file and every `malware_bazaar` file-SHA ban that no Admin added. File-SHA bans added through the Admin API stay. Turning feeds back on downloads the URLs within six hours and the hashes within twelve. Compose forwards it from `.env`.
 
-#### `FLUXER_PHONE_VERIFICATION_ENABLED`
-
-Defaults to the inverse of `FLUXER_SELF_HOSTED`. Phone verification needs an external responder on the `rpc.phone.v1` NATS subjects, and none ships with Fluxer. With it off, the `VERY_HIGH` guild verification level is evaluated as `HIGH`, the guild settings stop offering it, and the API rejects it. Turn it on only when your own responder answers those subjects. Compose forwards it from `.env`.
-
 #### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
 
 Defaults to the inverse of `FLUXER_SELF_HOSTED`. Breached password rejection. Sends the first five characters of the password's SHA-1 hash to `api.pwnedpasswords.com`. Off by default on a self-hosted instance. Compose forwards it from `.env`.
@@ -1082,7 +1078,7 @@ Default `development`. The runtime mode. `development`, `production`, or `test`.
 
 #### `FLUXER_SELF_HOSTED`
 
-Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, and turns blocklist feeds and phone verification off.
+Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, and turns blocklist feeds off.
 
 `/_metrics` on `api`, `media-proxy`, `gateway`, and `push`, plus the Gateway's `/_health/ready`, `/_health/drain`, and `/_health/undrain`, are gated to loopback peers, so no proxy reaches them. The probes that work from outside are `/api/_health`, `/gateway/_health`, `/media/_health`, and the edge's own `/_health`.
 

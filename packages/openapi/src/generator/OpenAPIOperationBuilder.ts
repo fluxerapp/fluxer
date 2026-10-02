@@ -90,7 +90,7 @@ export class OpenAPIOperationBuilder {
 		if (route.path === '/users/@me' || route.path.startsWith('/users/@me/')) {
 			return [{bearerToken: []}, {sessionToken: []}];
 		}
-		if (!route.hasLoginRequired && !route.hasLoginRequiredAllowSuspicious && !route.hasDefaultUserOnly) {
+		if (!route.hasLoginRequired && !route.hasDefaultUserOnly) {
 			return [];
 		}
 		if (route.hasDefaultUserOnly) {

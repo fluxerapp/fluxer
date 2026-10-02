@@ -49,6 +49,7 @@ import type {Message} from '@app/api/models/Message';
 import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
 import type {Webhook} from '@app/api/models/Webhook';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
@@ -789,6 +790,7 @@ export class MessageSendService {
 			const message = await this.sendPersonalNoteMessage({authChannel, user, channelId, data, requestCache});
 			return {message, authChannel};
 		}
+		assertAccountNotLimited(user);
 		const {channel, guild, checkPermission, hasPermission, member} = authChannel;
 		const {canEmbedLinks, canMentionEveryone, canAttachFiles} = await this.checkMessageSendPermissions({
 			guild,

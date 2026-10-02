@@ -41,7 +41,6 @@ interface EmailChangeVerifyNewResponse {
 interface UserPrivateResponse {
 	id: string;
 	email: string;
-	phone?: string | null;
 	username: string;
 	discriminator: string;
 	global_name: string;
@@ -50,7 +49,6 @@ interface UserPrivateResponse {
 	mfa_enabled: boolean;
 	authenticator_types: Array<number>;
 	password_last_changed_at?: string;
-	required_actions?: Array<string> | null;
 	has_ever_purchased: boolean;
 }
 
@@ -343,77 +341,11 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 	});
-	it('allows suspicious accounts to complete email change and clears email-related flags', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilderWithoutAuth(harness)
-			.post(`/test/users/${account.userId}/security-flags`)
-			.body({
-				suspicious_activity_flag_names: ['REQUIRE_REVERIFIED_EMAIL', 'REQUIRE_VERIFIED_PHONE'],
-			})
-			.expect(200)
-			.execute();
-		const login = await loginUser(harness, {email: account.email, password: account.password});
-		if ('mfa' in login) {
-			throw new Error('Expected non-MFA login');
-		}
-		const suspiciousAccount: TestAccount = {...account, token: login.token};
-		const startResp = await startEmailChange(harness, suspiciousAccount, account.password);
-		const emails = await listTestEmails(harness, {recipient: account.email});
-		const originalEmail = findLastTestEmail(emails, 'email_change_original');
-		expect(startResp.require_original).toBe(true);
-		expect(originalEmail?.metadata?.code).toBeDefined();
-		const originalProof = await verifyOriginalEmailChange(
-			harness,
-			suspiciousAccount,
-			startResp.ticket,
-			originalEmail!.metadata!.code!,
-			account.password,
-		);
-		const newEmail = `integration-suspicious-${Date.now()}@example.com`;
-		await requestNewEmailChange(
-			harness,
-			suspiciousAccount,
-			startResp.ticket,
-			newEmail,
-			originalProof,
-			account.password,
-		);
-		const newEmails = await listTestEmails(harness, {recipient: newEmail});
-		const newEmailData = findLastTestEmail(newEmails, 'email_change_new');
-		expect(newEmailData?.metadata?.code).toBeDefined();
-		const token = await verifyNewEmailChange(
-			harness,
-			suspiciousAccount,
-			startResp.ticket,
-			newEmailData!.metadata!.code!,
-			originalProof,
-			account.password,
-		);
-		const updated = await createBuilder<UserPrivateResponse>(harness, suspiciousAccount.token)
-			.patch('/users/@me')
-			.body({
-				email_token: token,
-				password: account.password,
-			})
-			.expect(200)
-			.execute();
-		expect(updated.email).toBe(newEmail);
-		expect(updated.verified).toBe(true);
-		expect(updated.required_actions).toContain('REQUIRE_VERIFIED_PHONE');
-		expect(updated.required_actions).not.toContain('REQUIRE_REVERIFIED_EMAIL');
-	});
-	it('does not add suspicion on email change for users who have ever purchased', async () => {
+	it('applies email changes for users who have ever purchased', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
 			.post(`/test/users/${account.userId}/premium`)
 			.body({has_ever_purchased: true})
-			.expect(200)
-			.execute();
-		await createBuilderWithoutAuth(harness)
-			.post(`/test/users/${account.userId}/security-flags`)
-			.body({
-				suspicious_activity_flag_names: ['REQUIRE_REVERIFIED_EMAIL'],
-			})
 			.expect(200)
 			.execute();
 		const startResp = await startEmailChange(harness, account, account.password);
@@ -455,8 +387,6 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 		expect(updated.has_ever_purchased).toBe(true);
-		expect(updated.required_actions).not.toContain('REQUIRE_REVERIFIED_EMAIL');
-		expect(updated.required_actions).not.toContain('REQUIRE_VERIFIED_PHONE');
 	});
 	it('applies ordinary claimed email changes', async () => {
 		const account = await createTestAccount(harness);
@@ -493,7 +423,8 @@ describe('Email change flow', () => {
 			})
 			.expect(200)
 			.execute();
-		expect(updated.required_actions ?? []).not.toContain('REQUIRE_VERIFIED_PHONE');
+		expect(updated.email).toBe(newEmail);
+		expect(updated.verified).toBe(true);
 	});
 	it('requires MFA (not password) for email_token apply when user has TOTP enabled', async () => {
 		const account = await createTestAccount(harness);
@@ -751,7 +682,6 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 		expect(updated.verified).toBe(true);
-		expect(updated.required_actions).not.toContain('REQUIRE_VERIFIED_PHONE');
 	});
 	it('e2e: reporter scenario — MFA user with TOTP completes "Use Different Email" recovery without sudo loop', async () => {
 		const account = await createTestAccount(harness);

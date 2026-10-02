@@ -15,10 +15,6 @@ const EMAIL_I18N_RO_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Ștergerea contului {product_name} a fost programată",
 		"body": "Salut {username},\n\nConform solicitării tale, contul tău {product_name} este programat pentru ștergere permanentă la:\n\n{deletionDate, date, full} la ora {deletionDate, time, short}{reason, select, null {} other {\n\nMotiv: {reason}}}\n\nPână atunci, contul tău este blocat. Dacă nu ai solicitat acest lucru sau vrei să îți păstrezi contul, scrie la {safety_email} de pe această adresă de e-mail înainte de această dată.\n\n– Echipa {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Contul tău {product_name} a fost dezactivat temporar",
-		"body": "Salut {username},\n\nAm dezactivat temporar contul tău {product_name} deoarece am detectat activitate suspectă.\n\n{reason, select,\n  null {}\n  other {Motiv: {reason}}\n}\n\nPentru a recăpăta accesul la cont, va trebui să îți resetezi parola:\n\n{forgotUrl}\n\nDupă ce îți resetezi parola, te vei putea conecta din nou.\n\nDacă crezi că este o greșeală, te rugăm să contactezi asistența.\n\n– Echipa de siguranță {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Contul tău {product_name} va fi șters permanent",
 		"body": "Salut {username},\n\nContul tău {product_name} a fost programat pentru ștergere permanentă din cauza încălcării Termenilor și condițiilor sau a regulilor comunității.\n\nȘtergere programată: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Motiv: {reason}}\n}\n\nAceasta este o măsură disciplinară serioasă. Datele contului tău vor fi șterse permanent la data programată.\n\nTe rugăm să consulți:\n- Termeni și condiții: {termsUrl}\n- Regulile comunității: {guidelinesUrl}\n\nProcesul de contestare:\nDacă crezi că această decizie a fost incorectă sau nejustificată, ai la dispoziție 60 de zile pentru a depune o contestație. Trimite un e-mail la {appeals_email} de la această adresă.\n\nÎn contestația ta:\n- Explică clar de ce crezi că decizia a fost incorectă sau nejustificată\n- Adaugă orice dovadă sau context relevant\n\nUn membru al echipei de siguranță {product_name} va analiza contestația ta și poate suspenda ștergerea programată până la luarea unei decizii finale.\n\n– Echipa de siguranță {product_name}"
@@ -49,7 +45,7 @@ const EMAIL_I18N_RO_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Adresa de e-mail pentru {product_name} a fost schimbată",
-		"body": "Salut {username},\n\nAdresa de e-mail a contului tău {product_name} a fost schimbată în {newEmail}.\n\nDacă tu ai făcut această modificare, nu trebuie să faci nimic. Dacă nu ai făcut-o tu, poți anula modificarea și îți poți securiza contul folosind acest link:\n\n{revertUrl}\n\nAceasta va restabili adresa ta de e-mail anterioară, te va deconecta de pe toate dispozitivele, va elimina numerele de telefon asociate, va dezactiva MFA și îți va cere să setezi o parolă nouă.\n\n– Echipa de siguranță {product_name}"
+		"body": "Salut {username},\n\nAdresa de e-mail a contului tău {product_name} a fost schimbată în {newEmail}.\n\nDacă tu ai făcut această modificare, nu trebuie să faci nimic. Dacă nu ai făcut-o tu, poți anula modificarea și îți poți securiza contul folosind acest link:\n\n{revertUrl}\n\nAceasta va restabili adresa ta de e-mail anterioară, te va deconecta de pe toate dispozitivele, va dezactiva MFA și îți va cere să setezi o parolă nouă.\n\n– Echipa de siguranță {product_name}"
 	},
 	"email_verification": {
 		"subject": "Verifică-ți adresa de e-mail pentru {product_name}",

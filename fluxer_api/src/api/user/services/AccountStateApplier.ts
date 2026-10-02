@@ -14,13 +14,13 @@ import type {
 } from '@app/api/infrastructure/activity/Contract.generated';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {User} from '@app/api/models/User';
+import {isAccountLimitExempt} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {
 	clearNewConversationLimit,
 	isNewConversationLimitExempt,
 	setNewConversationLimit,
 } from '@app/api/user/NewConversationLimit';
-import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {getSameIpDecisionKey, isPublicIpAddress, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
@@ -33,15 +33,14 @@ export interface AccountUpdateDispatch {
 }
 
 export interface AccountStateDeps {
-	users: Pick<IUserRepository, 'findUnique' | 'patchUpsert' | 'compareAndSetSuspiciousFlags'>;
+	users: Pick<IUserRepository, 'findUnique' | 'compareAndSetFlags'>;
 	dispatch: AccountUpdateDispatch;
-	contactChangeLog: Pick<UserContactChangeLogService, 'recordDiff'>;
 	ipBans: Pick<AdminRepository, 'isIpBanned' | 'banIpTemp'>;
 	cache: Pick<ICacheService, 'publish' | 'get' | 'set' | 'delete'>;
 	now?: () => number;
 }
 
-const SUSPICIOUS_FLAGS_WRITE_ATTEMPTS = 3;
+const FLAGS_WRITE_ATTEMPTS = 3;
 const MIN_TEMP_BAN_SECONDS = 60;
 
 function gatewayDispatch(gateway: Pick<IGatewayService, 'dispatchPresence'>): AccountUpdateDispatch {
@@ -56,7 +55,6 @@ export function accountStateDepsFromContext(ctx: ApiContext, ipBans: AccountStat
 	return {
 		users: ctx.services.users,
 		dispatch: gatewayDispatch(ctx.services.gateway),
-		contactChangeLog: ctx.services.contactChangeLog,
 		ipBans,
 		cache: ctx.services.cache,
 	};
@@ -65,8 +63,6 @@ export function accountStateDepsFromContext(ctx: ApiContext, ipBans: AccountStat
 export function observedOf(user: User): Observed {
 	return {
 		flags: user.flags.toString(),
-		suspicious_flags: user.suspiciousActivityFlags ?? 0,
-		has_verified_phone: user.hasVerifiedPhone,
 		deleted: (user.flags & UserFlags.DELETED) !== 0n,
 	};
 }
@@ -92,59 +88,28 @@ function isIneligible(user: User): boolean {
 	return user.isBot || (user.flags & UserFlags.DELETED) !== 0n;
 }
 
-export async function applySuspiciousFlags(
+export async function applySetAccountLimit(
 	deps: AccountStateDeps,
-	env: ActionOf<'set_suspicious_flags'>,
+	env: ActionOf<'set_account_limit'>,
 ): Promise<ActionOutcome> {
 	return withAccountChangeSource('action', async () => {
 		const userId = createUserID(BigInt(env.user_id));
 		let user = await deps.users.findUnique(userId);
-		for (let attempt = 0; attempt < SUSPICIOUS_FLAGS_WRITE_ATTEMPTS; attempt++) {
+		for (let attempt = 0; attempt < FLAGS_WRITE_ATTEMPTS; attempt++) {
 			if (!user) return outcomeOf(env, 'ineligible');
 			if (isIneligible(user)) return outcomeOf(env, 'ineligible', user);
-			const current = user.suspiciousActivityFlags ?? 0;
-			const target = (current | env.set) & ~env.clear;
-			if (target === current) return outcomeOf(env, 'noop', user);
-			if (env.if_current !== null && env.if_current !== current) return outcomeOf(env, 'conflict', user);
-			const updated = await deps.users.compareAndSetSuspiciousFlags(user, target);
+			if (env.on && isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
+			const limited = (user.flags & UserFlags.ACCOUNT_LIMITED) !== 0n;
+			if (limited === env.on) return outcomeOf(env, 'noop', user);
+			const target = env.on ? user.flags | UserFlags.ACCOUNT_LIMITED : user.flags & ~UserFlags.ACCOUNT_LIMITED;
+			const updated = await deps.users.compareAndSetFlags(user, target);
 			if (updated) {
 				await deps.dispatch.userUpdated(updated);
 				return outcomeOf(env, 'applied', updated);
 			}
 			user = await deps.users.findUnique(userId);
 		}
-		throw new Error('Suspicious activity flags kept changing during apply');
-	});
-}
-
-export async function applyPhoneVerified(
-	deps: AccountStateDeps,
-	env: ActionOf<'phone_verified'>,
-): Promise<ActionOutcome> {
-	return withAccountChangeSource('phone_verify', async () => {
-		const user = await deps.users.findUnique(createUserID(BigInt(env.user_id)));
-		if (!user) return outcomeOf(env, 'ineligible');
-		if (isIneligible(user)) return outcomeOf(env, 'ineligible', user);
-		const suspicious = user.suspiciousActivityFlags ?? 0;
-		const nextSuspicious = suspicious & ~env.clear_suspicious;
-		if (user.hasVerifiedPhone && nextSuspicious === suspicious) {
-			return outcomeOf(env, 'noop', user);
-		}
-		const updates: {has_verified_phone: boolean; suspicious_activity_flags?: number} = {
-			has_verified_phone: true,
-		};
-		if (nextSuspicious !== suspicious) updates.suspicious_activity_flags = nextSuspicious;
-		const updated = await deps.users.patchUpsert(user.id, updates, user.toRow());
-		if (!user.hasVerifiedPhone) {
-			await deps.contactChangeLog.recordDiff({
-				oldUser: user,
-				newUser: updated,
-				reason: 'user_requested',
-				actorUserId: user.id,
-			});
-		}
-		await deps.dispatch.userUpdated(updated);
-		return outcomeOf(env, 'applied', updated);
+		throw new Error('User flags kept changing during apply');
 	});
 }
 

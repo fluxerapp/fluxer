@@ -7,6 +7,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import type {EntranceSoundSelection} from '@app/api/models/EntranceSound';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {EntranceSoundLibraryEntry, EntranceSoundService} from '@app/api/user/entrance_sound/EntranceSoundService';
 import {Validator} from '@app/api/Validator';
 import {
@@ -88,6 +89,7 @@ export function EntranceSoundController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const service: EntranceSoundService = ctx.get('entranceSoundService');
 			const {name, audio} = ctx.req.valid('json');
+			assertAccountNotLimited(ctx.get('user'));
 			const created = await service.upload({userId, name, base64Audio: audio});
 			return ctx.json(serializeSound(created), 201);
 		},
@@ -162,6 +164,9 @@ export function EntranceSoundController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const service: EntranceSoundService = ctx.get('entranceSoundService');
 			const {scope_id, sound_id} = ctx.req.valid('json');
+			if (sound_id) {
+				assertAccountNotLimited(ctx.get('user'));
+			}
 			await service.setSelection({
 				userId,
 				scopeId: scope_id,

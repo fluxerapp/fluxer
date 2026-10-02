@@ -16,12 +16,6 @@ export interface IEmailService {
 		location: string,
 		locale?: string | null,
 	): Promise<boolean>;
-	sendAccountDisabledForSuspiciousActivityEmail(
-		email: string,
-		username: string,
-		reason: string | null,
-		locale?: string | null,
-	): Promise<boolean>;
 	sendAccountTempBannedEmail(
 		email: string,
 		username: string,

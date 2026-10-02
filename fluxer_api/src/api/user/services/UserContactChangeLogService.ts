@@ -9,7 +9,7 @@ import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 type ContactChangeReason = 'user_requested' | 'admin_action';
 
 interface ContactChange {
-	field: 'email' | 'has_verified_phone' | 'fluxer_tag';
+	field: 'email' | 'fluxer_tag';
 	oldValue: string | null;
 	newValue: string | null;
 }
@@ -40,11 +40,6 @@ export class UserContactChangeLogService {
 				field: 'email',
 				oldValue: oldUser?.email?.toLowerCase() ?? null,
 				newValue: newUser.email?.toLowerCase() ?? null,
-			},
-			{
-				field: 'has_verified_phone',
-				oldValue: String(oldUser?.hasVerifiedPhone ?? false),
-				newValue: String(newUser.hasVerifiedPhone),
 			},
 			{
 				field: 'fluxer_tag',

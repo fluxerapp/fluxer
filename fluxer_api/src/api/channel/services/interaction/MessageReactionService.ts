@@ -14,6 +14,7 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import type {Channel} from '@app/api/models/Channel';
 import type {MessageReaction} from '@app/api/models/MessageReaction';
 import type {User} from '@app/api/models/User';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
@@ -171,6 +172,7 @@ export class MessageReactionService extends MessageInteractionBase {
 		const requestingUser = await this.userRepository.findUnique(userId);
 		if (requestingUser) {
 			requireEmailVerified(requestingUser, 'reaction');
+			assertAccountNotLimited(requestingUser);
 		}
 		const guildFeatures = guild?.features ?? null;
 		const maxUsersPerReaction = this.resolveLimitForUser({

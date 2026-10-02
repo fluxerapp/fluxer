@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A relationship describes a friendship, block, or pending friend request from the caller's perspective. Private notes belong to [User notes](/http-api/users/notes/).
 
-The routes here are user-only. A bot or OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+The routes here are user-only. A bot or OAuth2 bearer credential receives 403 `ACCESS_DENIED`.
 
 :::note[Relationship records are directional]
 A friendship is a FRIEND record on both accounts. A pending request is `OUTGOING_REQUEST` on the sender and `INCOMING_REQUEST` on the recipient. A block exists only on the account that created it, so the block adds no record to the blocked account and sends it no [Relationship Add](/gateway/events/#relationship-add).

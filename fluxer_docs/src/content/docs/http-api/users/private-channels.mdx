@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A private channel is a conversation outside any guild. It is either a direct message between two accounts or a group DM with its own participant set. Its fields come from the [channel object](/http-api/channels/#channel-object).
 
-The routes here take a user session or a bot token. An OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+The routes here take a user session or a bot token. An OAuth2 bearer credential receives 403 `ACCESS_DENIED`.
 
 :::note[Open state is per participant]
 A direct message channel exists once, and each participant holds its own open state. Closing one side leaves the channel and its messages in place, so a later [Create private channel](#create-private-channel) request for the same pair returns that stored channel.
@@ -146,6 +146,7 @@ Fluxer holds a bot caller to no friendship. A recipient that has blocked the bot
 | 200 | [channel](/http-api/channels/#channel-object) object | The direct message was opened or the group DM was created |
 | 400 | [error response](/http-api/#error-response) | CAPTCHA, account eligibility, the recipient set, relationship policy, a group DM limit, or instance policy rejects creation |
 | 403 | [error response](/http-api/#error-response) | An ordinary caller's email address is unverified and the request returns `DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED`, or a limited caller opens a new conversation and the request returns `NEW_CONVERSATIONS_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and creates a group direct message, and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | The caller or the direct message recipient does not resolve |
 
 ### Side effects

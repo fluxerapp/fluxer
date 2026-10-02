@@ -42,7 +42,6 @@ pub const BULK_ADD_GUILD_MEMBERS: &str = "bulk:add:guild_members";
 pub const BULK_DELETE_USERS: &str = "bulk:delete:users";
 pub const BULK_DELETE_USER_MESSAGES: &str = "bulk:delete:user_messages";
 pub const BULK_UPDATE_GUILD_FEATURES: &str = "bulk:update:guild_features";
-pub const BULK_UPDATE_SUSPICIOUS_ACTIVITY: &str = "bulk:update:suspicious_activity";
 pub const BULK_UPDATE_USER_FLAGS: &str = "bulk:update:user_flags";
 pub const CSAM_SUBMIT_NCMEC: &str = "csam:submit_ncmec";
 pub const DISCOVERY_REMOVE: &str = "discovery:remove";
@@ -78,7 +77,6 @@ pub const REPORT_VIEW_REPORTER_PII: &str = "report:view:reporter_pii";
 pub const SYSTEM_DM_SEND: &str = "system_dm:send";
 pub const USER_CANCEL_BULK_MESSAGE_DELETION: &str = "user:cancel:bulk_message_deletion";
 pub const USER_DELETE: &str = "user:delete";
-pub const USER_DISABLE_SUSPICIOUS: &str = "user:disable:suspicious";
 pub const USER_LIST_DM_CHANNELS: &str = "user:list:dm_channels";
 pub const USER_LIST_GUILDS: &str = "user:list:guilds";
 pub const USER_LIST_RELATIONSHIPS: &str = "user:list:relationships";
@@ -95,9 +93,7 @@ pub const USER_UPDATE_DOB: &str = "user:update:dob";
 pub const USER_UPDATE_EMAIL: &str = "user:update:email";
 pub const USER_UPDATE_FLAGS: &str = "user:update:flags";
 pub const USER_UPDATE_MFA: &str = "user:update:mfa";
-pub const USER_UPDATE_PHONE: &str = "user:update:phone";
 pub const USER_UPDATE_PROFILE: &str = "user:update:profile";
-pub const USER_UPDATE_SUSPICIOUS_ACTIVITY: &str = "user:update:suspicious_activity";
 pub const USER_UPDATE_TRAITS: &str = "user:update:traits";
 pub const USER_UPDATE_USERNAME: &str = "user:update:username";
 pub const VOICE_REGION_CREATE: &str = "voice:region:create";
@@ -151,7 +147,6 @@ pub const ALL_ACLS: &[&str] = &[
     BULK_DELETE_USERS,
     BULK_DELETE_USER_MESSAGES,
     BULK_UPDATE_GUILD_FEATURES,
-    BULK_UPDATE_SUSPICIOUS_ACTIVITY,
     BULK_UPDATE_USER_FLAGS,
     CSAM_SUBMIT_NCMEC,
     DISCOVERY_REMOVE,
@@ -187,7 +182,6 @@ pub const ALL_ACLS: &[&str] = &[
     SYSTEM_DM_SEND,
     USER_CANCEL_BULK_MESSAGE_DELETION,
     USER_DELETE,
-    USER_DISABLE_SUSPICIOUS,
     USER_LIST_DM_CHANNELS,
     USER_LIST_GUILDS,
     USER_LIST_RELATIONSHIPS,
@@ -204,9 +198,7 @@ pub const ALL_ACLS: &[&str] = &[
     USER_UPDATE_EMAIL,
     USER_UPDATE_FLAGS,
     USER_UPDATE_MFA,
-    USER_UPDATE_PHONE,
     USER_UPDATE_PROFILE,
-    USER_UPDATE_SUSPICIOUS_ACTIVITY,
     USER_UPDATE_TRAITS,
     USER_UPDATE_USERNAME,
     VOICE_REGION_CREATE,

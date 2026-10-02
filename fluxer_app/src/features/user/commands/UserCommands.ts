@@ -16,7 +16,6 @@ import type {HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHa
 import type {
 	BackupCode,
 	PasswordChangeCompleteResponse,
-	PhoneGateEscapePreviewResponse,
 	UserPrivate,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {PublicKeyCredentialCreationOptionsJSON, RegistrationResponseJSON} from '@simplewebauthn/browser';
@@ -41,28 +40,6 @@ const logger = new Logger('User');
 interface FluxerTagAvailabilityResponse {
 	taken: boolean;
 }
-
-interface PhoneVerifyResult {
-	verified: true;
-}
-
-export interface InboundPhoneChallengeResponse {
-	challenge_code: string;
-	our_number: string;
-	expires_at: string;
-}
-
-export interface PhoneSendVerificationInboundChallengeResponse extends InboundPhoneChallengeResponse {
-	channel: 'inbound_challenge';
-}
-
-export type PhoneVerificationSendChannel = 'sms' | 'inbound_challenge';
-export type PhoneSendVerificationResult =
-	| {
-			channel: 'sms';
-	  }
-	| PhoneSendVerificationInboundChallengeResponse;
-type PhoneSendVerificationApiResponse = PhoneSendVerificationResult;
 
 interface EmailChangeStartResponse {
 	ticket: string;
@@ -137,17 +114,6 @@ async function requestUserUpdate(user: UserUpdatePayload): Promise<UserUpdateRes
 	return response.body;
 }
 
-function phoneVerificationRequest(
-	phone: string,
-	channel?: PhoneVerificationSendChannel,
-): {phone: string; channel?: PhoneVerificationSendChannel} {
-	return channel ? {phone, channel} : {phone};
-}
-
-function phoneCodeRequest(phone: string, code: string): {phone: string; code: string} {
-	return {phone, code};
-}
-
 function emailTicketRequest(ticket: string): {ticket: string} {
 	return {ticket};
 }
@@ -192,22 +158,6 @@ function completePasswordChangeBody(
 		verification_proof: verificationProof,
 		new_password: newPassword,
 	};
-}
-
-async function emailApplySudoPayload(): Promise<SudoVerificationPayload> {
-	return Sudo.hasValidToken()
-		? {}
-		: await SudoPrompt.requestVerification({
-				method: 'POST',
-				path: Endpoints.USER_EMAIL_CHANGE_APPLY,
-			});
-}
-
-async function requestEmailApply(emailToken: string): Promise<UserUpdateResponse> {
-	const response = await http.post<UserUpdateResponse>(Endpoints.USER_EMAIL_CHANGE_APPLY, {
-		body: {email_token: emailToken, ...(await emailApplySudoPayload())},
-	});
-	return response.body;
 }
 
 function webAuthnRegistrationBody(
@@ -277,76 +227,6 @@ export async function checkFluxerTagAvailability({
 		return response.body.taken;
 	} catch (error) {
 		logger.error('Failed to check FluxerTag availability:', error);
-		throw error;
-	}
-}
-
-export async function getPhoneGateEscapePreview(): Promise<PhoneGateEscapePreviewResponse> {
-	try {
-		logger.debug('Fetching phone gate escape preview');
-		const response = await http.get<PhoneGateEscapePreviewResponse>(Endpoints.USER_REQUIRED_ACTION_PHONE_GATE_ESCAPE);
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to fetch phone gate escape preview', error);
-		throw error;
-	}
-}
-
-export async function executePhoneGateEscape(): Promise<UserPrivate> {
-	try {
-		logger.debug('Setting the phone gate check aside');
-		const response = await http.post<UserPrivate>(Endpoints.USER_REQUIRED_ACTION_PHONE_GATE_ESCAPE, {body: {}});
-		logger.debug('Phone gate check set aside');
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to set the phone gate check aside', error);
-		throw error;
-	}
-}
-
-export async function startInboundPhoneChallenge(): Promise<InboundPhoneChallengeResponse> {
-	try {
-		logger.debug('Starting inbound phone challenge');
-		const response = await http.post<InboundPhoneChallengeResponse>(Endpoints.USER_PHONE_INBOUND_CHALLENGE, {
-			body: {},
-		});
-		logger.debug('Inbound phone challenge started');
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to start inbound phone challenge', error);
-		throw error;
-	}
-}
-
-export async function sendPhoneVerification(
-	phone: string,
-	channel?: PhoneVerificationSendChannel,
-): Promise<PhoneSendVerificationResult> {
-	try {
-		logger.debug('Sending phone verification code');
-		const response = await http.post<PhoneSendVerificationApiResponse | undefined>(
-			Endpoints.USER_PHONE_SEND_VERIFICATION,
-			{body: phoneVerificationRequest(phone, channel)},
-		);
-		logger.debug('Phone verification code sent');
-		if (!response.body) return {channel: 'sms'};
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to send phone verification code', error);
-		throw error;
-	}
-}
-
-export async function verifyPhone(phone: string, code: string): Promise<PhoneVerifyResult> {
-	try {
-		logger.debug('Verifying phone code');
-		const response = await http.post<PhoneVerifyResult>(Endpoints.USER_PHONE_VERIFY, {
-			body: phoneCodeRequest(phone, code),
-		});
-		logger.debug('Phone code verified');
-		return response.body;
-	} catch (error) {
-		logger.error('Failed to verify phone code', error);
 		throw error;
 	}
 }
@@ -435,20 +315,6 @@ export async function verifyEmailChangeNew(
 		return response.body;
 	} catch (error) {
 		logger.error('Failed to verify new email code', error);
-		throw error;
-	}
-}
-
-export async function applyEmailChange(emailToken: string): Promise<
-	UserPrivate & {
-		token?: string;
-	}
-> {
-	try {
-		logger.debug('Applying verified email change');
-		return await requestEmailApply(emailToken);
-	} catch (error) {
-		logger.error('Failed to apply email change', error);
 		throw error;
 	}
 }

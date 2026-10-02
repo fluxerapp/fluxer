@@ -13,6 +13,7 @@ import {
 	DefaultMessageNotificationsSchema,
 	GuildExplicitContentFilterSchema,
 	GuildMFALevelSchema,
+	GuildVerificationLevelInputSchema,
 	GuildVerificationLevelSchema,
 	JoinSourceTypeSchema,
 	NSFWLevelSchema,
@@ -44,6 +45,22 @@ describe.each([
 	it.each([-1, 999, 0.5, '0', null])('rejects invalid value %j', (value) => {
 		expect(schema.safeParse(value).success).toBe(false);
 	});
+});
+
+it('rejects verification level 4 on output', () => {
+	expect(GuildVerificationLevelSchema.safeParse(4).success).toBe(false);
+});
+
+it('stores verification level 4 on input as high', () => {
+	expect(GuildVerificationLevelInputSchema.parse(4)).toBe(GuildVerificationLevel.HIGH);
+});
+
+it.each(Object.values(GuildVerificationLevel))('keeps input verification level %i', (value) => {
+	expect(GuildVerificationLevelInputSchema.parse(value)).toBe(value);
+});
+
+it.each([-1, 5, '4', null])('rejects input verification level %j', (value) => {
+	expect(GuildVerificationLevelInputSchema.safeParse(value).success).toBe(false);
 });
 
 it.each([1, 2])('rejects legacy NSFW level %i', (value) => {

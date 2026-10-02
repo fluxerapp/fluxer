@@ -54,6 +54,7 @@ import {TimezoneProfileSettings} from '@app/features/user/components/modals/tabs
 import {ProfilePreview} from '@app/features/user/components/profile/ProfilePreview';
 import type {Profile} from '@app/features/user/models/Profile';
 import Users from '@app/features/user/state/Users';
+import {ACCOUNT_LIMITED_NOTICE_DESCRIPTOR} from '@app/features/user/utils/AccountLimitUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {setMeaningfulFormValue} from '@app/lib/forms/MeaningfulFormValue';
 import {type RemoteFormResetReason, useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
@@ -251,7 +252,9 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const [lastFlashTrigger, setLastFlashTrigger] = useState(0);
 	const [ariaAnnouncement, setAriaAnnouncement] = useState('');
 	const isClaimed = user?.isClaimed() ?? false;
-	const isProfileCustomizationLocked = isClaimed && user?.verified === false;
+	const isProfileEmailLocked = isClaimed && user?.verified === false;
+	const isProfileAccountLimited = user?.accountLimited === true;
+	const isProfileCustomizationLocked = isProfileEmailLocked || isProfileAccountLimited;
 	const form = useForm<FormInputs>({
 		defaultValues: {
 			bio: null,
@@ -684,11 +687,13 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	const selectedGuild = selectedGuildId ? guilds.find((g) => g.id === selectedGuildId) : null;
 	const isPerGuildProfileCustomizationDisabled = isPerGuildProfile && !hasPerGuildProfiles;
 	const isPronounsDisabled = isProfileCustomizationLocked;
-	const profileCustomizationDescription = isProfileCustomizationLocked
+	const profileCustomizationDescription = isProfileEmailLocked
 		? isPerGuildProfile
 			? i18n._(VERIFY_YOUR_EMAIL_BEFORE_EDITING_THIS_COMMUNITY_PROFILE_DESCRIPTOR)
 			: i18n._(VERIFY_YOUR_EMAIL_BEFORE_EDITING_YOUR_PROFILE_YOU_DESCRIPTOR)
-		: i18n._(EDIT_YOUR_PROFILE_APPEARANCE_AND_SEE_A_LIVE_DESCRIPTOR);
+		: isProfileAccountLimited
+			? i18n._(ACCOUNT_LIMITED_NOTICE_DESCRIPTOR)
+			: i18n._(EDIT_YOUR_PROFILE_APPEARANCE_AND_SEE_A_LIVE_DESCRIPTOR);
 	const hasAvatar =
 		!avatarAsset.hasCleared &&
 		(avatarAsset.hasAsset || (!avatarAsset.isDirty && Boolean(profileRemoteValues?.avatar.hasCustomAsset)));
@@ -738,7 +743,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 						description={profileCustomizationDescription}
 						data-flx="user.my-profile-tab.my-profile-tab-component.settings-section"
 					>
-						{isProfileCustomizationLocked && (
+						{isProfileEmailLocked && (
 							<EmailVerificationAlert
 								title={
 									isPerGuildProfile

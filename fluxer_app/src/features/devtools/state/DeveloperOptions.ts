@@ -64,7 +64,7 @@ export type DeveloperOptionsState = Readonly<{
 		| 'unverified_email'
 		| 'account_too_new'
 		| 'not_member_long'
-		| 'no_phone'
+		| 'account_limited'
 		| 'send_message_disabled';
 	mockBarrierTimeRemaining: number | null;
 	mockMatureContentGateReason: 'none' | 'geo_restricted' | 'mature_content_check_required' | 'consent_required';
@@ -72,13 +72,6 @@ export type DeveloperOptionsState = Readonly<{
 	forceMatureMedia: boolean;
 	mockInUK: boolean;
 	mockGeoBlocked: boolean;
-	mockRequiredActionsOverlay: boolean;
-	mockRequiredActionsMode: 'email' | 'phone' | 'email_or_phone';
-	mockRequiredActionsSelectedTab: 'email' | 'phone';
-	mockRequiredActionsPhoneStep: 'phone' | 'code';
-	mockRequiredActionsResending: boolean;
-	mockRequiredActionsResendOutcome: 'success' | 'rate_limited' | 'server_error';
-	mockRequiredActionsReverify: boolean;
 	forceNoSendMessages: boolean;
 	forceNoAttachFiles: boolean;
 	mockSlowmodeActive: boolean;
@@ -146,7 +139,7 @@ class DeveloperOptions implements DeveloperOptionsState {
 		| 'unverified_email'
 		| 'account_too_new'
 		| 'not_member_long'
-		| 'no_phone'
+		| 'account_limited'
 		| 'send_message_disabled' = 'none';
 	mockBarrierTimeRemaining: number | null = null;
 	mockMatureContentGateReason: 'none' | 'geo_restricted' | 'mature_content_check_required' | 'consent_required' =
@@ -155,13 +148,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 	forceMatureMedia = false;
 	mockInUK = false;
 	mockGeoBlocked = false;
-	mockRequiredActionsOverlay = false;
-	mockRequiredActionsMode: 'email' | 'phone' | 'email_or_phone' = 'email';
-	mockRequiredActionsSelectedTab: 'email' | 'phone' = 'email';
-	mockRequiredActionsPhoneStep: 'phone' | 'code' = 'phone';
-	mockRequiredActionsResending = false;
-	mockRequiredActionsResendOutcome: 'success' | 'rate_limited' | 'server_error' = 'success';
-	mockRequiredActionsReverify = false;
 	forceNoSendMessages = false;
 	forceNoAttachFiles = false;
 	mockSlowmodeActive = false;
@@ -232,13 +218,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'forceMatureMedia',
 			'mockInUK',
 			'mockGeoBlocked',
-			'mockRequiredActionsOverlay',
-			'mockRequiredActionsMode',
-			'mockRequiredActionsSelectedTab',
-			'mockRequiredActionsPhoneStep',
-			'mockRequiredActionsResending',
-			'mockRequiredActionsResendOutcome',
-			'mockRequiredActionsReverify',
 			'forceNoSendMessages',
 			'forceNoAttachFiles',
 			'mockSlowmodeActive',

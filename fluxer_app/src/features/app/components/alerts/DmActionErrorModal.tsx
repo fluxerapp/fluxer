@@ -72,6 +72,7 @@ export function resolveDmActionErrorContent(
 ): {title: string; message: string} {
 	switch (code) {
 		case APIErrorCodes.NEW_CONVERSATIONS_LIMITED:
+		case APIErrorCodes.ACCOUNT_LIMITED:
 			return {
 				title: i18nGlobal._(GENERIC_TITLE_DESCRIPTOR),
 				message: apiMessage || i18nGlobal._(GENERIC_ERROR_BODY_DESCRIPTOR),

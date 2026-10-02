@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext} from '@app/api/ApiContext';
-import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '@app/api/auth/AuthEmail';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
 import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
@@ -146,10 +145,6 @@ export class UserAccountService {
 			...securityResult.updates,
 			...profileResult.updates,
 		};
-		if (securityResult.updates.flags !== undefined && securityResult.updates.flags !== null) {
-			const profileFlags = profileResult.updates.flags ?? user.flags;
-			updates.flags = profileFlags | (securityResult.updates.flags & ~user.flags);
-		}
 		const securityPremiumFlags = securityResult.updates.premium_flags;
 		if (securityPremiumFlags !== undefined && securityPremiumFlags !== null) {
 			const profilePremiumFlags = profileResult.updates.premium_flags ?? user.premiumFlags;
@@ -158,12 +153,6 @@ export class UserAccountService {
 		const emailChanged = data.email !== undefined;
 		if (emailChanged) {
 			updates.email_verified = !!emailVerifiedViaToken;
-			if (emailVerifiedViaToken && user.suspiciousActivityFlags !== null && user.suspiciousActivityFlags !== 0) {
-				const newFlags = user.suspiciousActivityFlags & ~EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS;
-				if (newFlags !== user.suspiciousActivityFlags) {
-					updates.suspicious_activity_flags = newFlags;
-				}
-			}
 		}
 		let updatedUser: User;
 		try {

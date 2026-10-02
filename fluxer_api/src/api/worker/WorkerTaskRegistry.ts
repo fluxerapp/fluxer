@@ -6,7 +6,6 @@ import bulkBanFileShas from '@app/api/worker/tasks/admin_bulk/BulkBanFileShas';
 import bulkDeleteMessagesForUsers from '@app/api/worker/tasks/admin_bulk/BulkDeleteMessagesForUsers';
 import bulkScheduleUserDeletion from '@app/api/worker/tasks/admin_bulk/BulkScheduleUserDeletion';
 import bulkUpdateGuildFeatures from '@app/api/worker/tasks/admin_bulk/BulkUpdateGuildFeatures';
-import bulkUpdateSuspiciousActivityFlags from '@app/api/worker/tasks/admin_bulk/BulkUpdateSuspiciousActivityFlags';
 import bulkUpdateUserFlags from '@app/api/worker/tasks/admin_bulk/BulkUpdateUserFlags';
 import batchGuildAuditLogMessageDeletes from '@app/api/worker/tasks/BatchGuildAuditLogMessageDeletes';
 import bulkDeleteSelfMessagesImmediate from '@app/api/worker/tasks/BulkDeleteSelfMessagesImmediate';
@@ -67,7 +66,6 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	bulkDeleteUserMessagesScoped,
 	bulkScheduleUserDeletion: bulkScheduleUserDeletion,
 	bulkUpdateGuildFeatures: bulkUpdateGuildFeatures,
-	bulkUpdateSuspiciousActivityFlags: bulkUpdateSuspiciousActivityFlags,
 	bulkUpdateUserFlags: bulkUpdateUserFlags,
 	crosspostMessage,
 	crosspostMessageChunk,

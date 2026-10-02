@@ -307,6 +307,7 @@ export class GuildMemberService {
 		sendJoinMessage?: boolean;
 		skipGuildLimitCheck?: boolean;
 		skipBanCheck?: boolean;
+		skipAccountLimitCheck?: boolean;
 		isTemporary?: boolean;
 		joinSourceType?: JoinSourceType;
 		sourceInviteCode?: InviteCode;

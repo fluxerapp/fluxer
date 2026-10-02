@@ -15,10 +15,6 @@ const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Usunięcie Twojego konta {product_name} zostało zaplanowane",
 		"body": "Witaj {username},\n\nZgodnie z Twoją prośbą zaplanowaliśmy trwałe usunięcie konta {product_name}. Termin usunięcia:\n\n{deletionDate, date, full} o {deletionDate, time, short}{reason, select, null {} other {\n\nPowód: {reason}}}\n\nDo tego czasu Twoje konto jest zablokowane. Jeśli nie prosiłeś o to lub chcesz zachować konto, skontaktuj się z {safety_email} z tego adresu e-mail przed tym terminem.\n\n– Zespół {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Twoje konto {product_name} zostało tymczasowo wyłączone",
-		"body": "Witaj {username},\n\nTymczasowo wyłączyliśmy Twoje konto {product_name}, ponieważ wykryliśmy podejrzaną aktywność.\n\n{reason, select,\n  null {}\n  other {Powód: {reason}}\n}\n\nAby odzyskać dostęp do konta, musisz zresetować hasło:\n\n{forgotUrl}\n\nPo zresetowaniu hasła możesz ponownie się zalogować.\n\nJeśli uważasz, że to błąd, skontaktuj się z naszym zespołem wsparcia.\n\n– Zespół ds. bezpieczeństwa {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Twoje konto {product_name} zostanie trwale usunięte",
 		"body": "Witaj {username},\n\nZaplanowaliśmy trwałe usunięcie Twojego konta {product_name} z powodu naruszenia naszych warunków korzystania z usługi lub zasad społeczności.\n\nZaplanowane usunięcie: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Powód: {reason}}\n}\n\nJest to poważna sankcja. Dane Twojego konta zostaną usunięte na stałe w zaplanowanym terminie.\n\nSprawdź:\n- Warunki korzystania z usługi: {termsUrl}\n- Zasady społeczności: {guidelinesUrl}\n\nProces odwoławczy:\nJeśli uważasz, że ta decyzja była błędna lub nieuzasadniona, masz 60 dni na złożenie odwołania. Wyślij e-mail na adres {appeals_email} z tego adresu e-mail.\n\nW swoim odwołaniu:\n- Wyjaśnij jasno, dlaczego uważasz, że decyzja była błędna lub nieuzasadniona\n- Przedstaw wszelkie istotne dowody lub kontekst\n\nCzłonek zespołu ds. bezpieczeństwa {product_name} rozpatrzy Twoje odwołanie i może wstrzymać usunięcie do czasu podjęcia ostatecznej decyzji.\n\n– Zespół ds. bezpieczeństwa {product_name}"
@@ -49,7 +45,7 @@ const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Twój adres e-mail w {product_name} został zmieniony",
-		"body": "Witaj {username},\n\nAdres e-mail przypisany do Twojego konta {product_name} został zmieniony na {newEmail}.\n\nJeśli ta zmiana została dokonana przez Ciebie, nie musisz nic robić. Jeśli nie, możesz cofnąć zmianę i zabezpieczyć swoje konto, korzystając z tego linku:\n\n{revertUrl}\n\nSpowoduje to przywrócenie poprzedniego adresu e-mail, wylogowanie ze wszystkich urządzeń, usunięcie powiązanych numerów telefonów, wyłączenie MFA i konieczność ustawienia nowego hasła.\n\n– Zespół ds. bezpieczeństwa {product_name}"
+		"body": "Witaj {username},\n\nAdres e-mail przypisany do Twojego konta {product_name} został zmieniony na {newEmail}.\n\nJeśli ta zmiana została dokonana przez Ciebie, nie musisz nic robić. Jeśli nie, możesz cofnąć zmianę i zabezpieczyć swoje konto, korzystając z tego linku:\n\n{revertUrl}\n\nSpowoduje to przywrócenie poprzedniego adresu e-mail, wylogowanie ze wszystkich urządzeń, wyłączenie MFA i konieczność ustawienia nowego hasła.\n\n– Zespół ds. bezpieczeństwa {product_name}"
 	},
 	"email_verification": {
 		"subject": "Zweryfikuj adres e-mail w {product_name}",

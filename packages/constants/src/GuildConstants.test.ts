@@ -63,31 +63,18 @@ describe('resolveVoiceChannelBitrate', () => {
 });
 
 describe('getEffectiveGuildVerificationLevel', () => {
-	it('returns the stored level when phone verification is available', () => {
-		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.VERY_HIGH, false, true)).toBe(
-			GuildVerificationLevel.VERY_HIGH,
-		);
-		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, false, true)).toBe(
-			GuildVerificationLevel.NONE,
-		);
-	});
-	it('treats very high as high when phone verification is unavailable', () => {
-		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.VERY_HIGH, false, false)).toBe(
-			GuildVerificationLevel.HIGH,
-		);
-		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.VERY_HIGH, true, false)).toBe(
-			GuildVerificationLevel.HIGH,
-		);
-		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.MEDIUM, false, false)).toBe(
+	it('returns the stored level for a guild outside discovery', () => {
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, false)).toBe(GuildVerificationLevel.NONE);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.MEDIUM, false)).toBe(
 			GuildVerificationLevel.MEDIUM,
 		);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.HIGH, false)).toBe(GuildVerificationLevel.HIGH);
+	});
+	it('clamps a retired stored level to high', () => {
+		expect(getEffectiveGuildVerificationLevel(4, false)).toBe(GuildVerificationLevel.HIGH);
+		expect(getEffectiveGuildVerificationLevel(4, true)).toBe(GuildVerificationLevel.HIGH);
 	});
 	it('raises a discoverable guild to at least low', () => {
-		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, true, true)).toBe(
-			GuildVerificationLevel.LOW,
-		);
-		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, true, false)).toBe(
-			GuildVerificationLevel.LOW,
-		);
+		expect(getEffectiveGuildVerificationLevel(GuildVerificationLevel.NONE, true)).toBe(GuildVerificationLevel.LOW);
 	});
 });

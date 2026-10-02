@@ -242,7 +242,7 @@ Fluxer accepts a non-string `status`. Null and a Boolean publish the session as 
 
 `offline` is normalised to `invisible`, so a Presence Update cannot publish a session as offline while it is connected.
 
-`custom_status` is replaced only when the key is present. Omitting the key keeps the current custom status, `null` clears it, and a value that is neither an object nor null is ignored. An object the backend rejects, such as an `emoji_id` that names no emoji or an `expires_at` in the past, leaves the current custom status in place. The connection stays open.
+`custom_status` is replaced only when the key is present. Omitting the key keeps the current custom status, `null` clears it, and a value that is neither an object nor null is ignored. An object the backend rejects, such as an `emoji_id` that names no emoji, an `expires_at` in the past, or any object from a [limited account](/http-api/users/#account-limitation), leaves the current custom status in place. The connection stays open.
 
 The published presence has a [custom status](#custom-status-object) object and no activities.
 

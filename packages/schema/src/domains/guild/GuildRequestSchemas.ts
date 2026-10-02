@@ -26,7 +26,7 @@ import {
 	DefaultMessageNotificationsSchema,
 	GuildExplicitContentFilterSchema,
 	GuildMFALevelSchema,
-	GuildVerificationLevelSchema,
+	GuildVerificationLevelInputSchema,
 	NSFWLevelSchema,
 	SplashCardAlignmentSchema,
 } from '@fluxer/schema/src/primitives/GuildValidators';
@@ -86,7 +86,7 @@ export const GuildUpdateRequest = z
 			'Default notification level for new members',
 		),
 		verification_level: withFieldDescription(
-			GuildVerificationLevelSchema,
+			GuildVerificationLevelInputSchema,
 			'Required verification level for members to participate',
 		),
 		mfa_level: withFieldDescription(GuildMFALevelSchema, 'Required MFA level for moderation actions'),

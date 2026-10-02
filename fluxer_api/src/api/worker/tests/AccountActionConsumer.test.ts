@@ -19,7 +19,7 @@ import {
 	startAccountActionConsumer,
 	stopAccountActionConsumer,
 } from '@app/api/worker/AccountActionConsumer';
-import {SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {AckPolicy, DeliverPolicy, type JsMsg, jetstream, jetstreamManager} from '@nats-io/jetstream';
 import {connect} from '@nats-io/transport-node';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -28,13 +28,11 @@ const USER_ID = '1174109840998400001';
 const NOW = 1_759_000_000_000;
 const NATS_URL = process.env.FLUXER_TEST_ACTIVITY_NATS_URL;
 
-function flagEnvelope(overrides: Partial<Extract<ActionEnvelope, {type: 'set_suspicious_flags'}>> = {}) {
-	return envelope<'set_suspicious_flags'>({
-		type: 'set_suspicious_flags',
+function limitEnvelope(overrides: Partial<Extract<ActionEnvelope, {type: 'set_account_limit'}>> = {}) {
+	return envelope<'set_account_limit'>({
+		type: 'set_account_limit',
 		user_id: USER_ID,
-		set: 1,
-		clear: 0,
-		if_current: null,
+		on: true,
 		...overrides,
 	});
 }
@@ -71,20 +69,14 @@ class FakeUsers {
 		return row ? new User(row) : null;
 	}
 
-	async patchUpsert(userId: UserID, patch: Partial<UserRow>): Promise<User> {
-		const row = {...this.rows.get(userId.toString())!, ...patch};
-		this.rows.set(userId.toString(), row);
-		return new User(row);
-	}
-
-	async compareAndSetSuspiciousFlags(user: User, flags: number): Promise<User | null> {
+	async compareAndSetFlags(user: User, flags: bigint): Promise<User | null> {
 		const row = this.rows.get(user.id.toString())!;
 		if (this.casFailures > 0) {
 			this.casFailures--;
 			return null;
 		}
-		if ((row.suspicious_activity_flags ?? 0) !== user.suspiciousActivityFlags) return null;
-		const next = {...row, suspicious_activity_flags: flags};
+		if ((row.flags ?? 0n) !== user.flags) return null;
+		const next = {...row, flags};
 		this.rows.set(user.id.toString(), next);
 		return new User(next);
 	}
@@ -94,7 +86,6 @@ interface Harness {
 	users: FakeUsers;
 	cached: Map<string, unknown>;
 	presence: Array<unknown>;
-	contactLogs: Array<unknown>;
 	bans: Array<{ip: string; ttl: number}>;
 	refreshes: number;
 	deps: AccountActionDeps;
@@ -106,7 +97,6 @@ function harness(): Harness {
 		users,
 		cached: new Map(),
 		presence: [],
-		contactLogs: [],
 		bans: [],
 		refreshes: 0,
 		deps: null as never,
@@ -116,11 +106,6 @@ function harness(): Harness {
 		dispatch: {
 			userUpdated: async (user) => {
 				h.presence.push(user.id);
-			},
-		},
-		contactChangeLog: {
-			recordDiff: async (params) => {
-				h.contactLogs.push(params);
 			},
 		},
 		ipBans: {
@@ -154,84 +139,68 @@ describe('account action apply', () => {
 		h.users.put();
 	});
 
-	it('sets requested suspicious bits and reports what it observed', async () => {
-		const outcome = await applyAction(
-			h.deps,
-			envelope<'set_suspicious_flags'>({
-				type: 'set_suspicious_flags',
-				user_id: USER_ID,
-				set: 1,
-				clear: 0,
-				if_current: 0,
-			}),
-		);
+	it('limits the account and reports what it observed', async () => {
+		const outcome = await applyAction(h.deps, limitEnvelope());
 		expect(outcome).toEqual({
 			action_id: 'a:07:4242:0',
-			action_type: 'set_suspicious_flags',
+			action_type: 'set_account_limit',
 			status: 'applied',
 			detail: null,
-			observed: {flags: '0', suspicious_flags: 1, has_verified_phone: false, deleted: false},
+			observed: {flags: UserFlags.ACCOUNT_LIMITED.toString(), deleted: false},
 			user_id: USER_ID,
 		});
-		expect(h.users.current().suspiciousActivityFlags).toBe(1);
+		expect(h.users.current().flags).toBe(UserFlags.ACCOUNT_LIMITED);
 		expect(h.presence).toHaveLength(1);
 	});
 
-	it('is a noop when the bits already hold, so a redelivery changes nothing', async () => {
-		const action = envelope<'set_suspicious_flags'>({
-			type: 'set_suspicious_flags',
-			user_id: USER_ID,
-			set: 1,
-			clear: 0,
-			if_current: null,
-		});
-		await applyAction(h.deps, action);
-		const second = await applyAction(h.deps, action);
+	it('is a noop when the limitation already holds, so a redelivery changes nothing', async () => {
+		await applyAction(h.deps, limitEnvelope());
+		const second = await applyAction(h.deps, limitEnvelope());
 		expect(second.status).toBe('noop');
 		expect(h.presence).toHaveLength(1);
 	});
 
-	it('refuses a stale precondition and leaves the flags alone', async () => {
-		h.users.put({suspicious_activity_flags: SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL});
-		const outcome = await applyAction(
-			h.deps,
-			envelope<'set_suspicious_flags'>({
-				type: 'set_suspicious_flags',
-				user_id: USER_ID,
-				set: 1,
-				clear: 0,
-				if_current: 0,
-			}),
-		);
-		expect(outcome.status).toBe('conflict');
-		expect(outcome.observed?.suspicious_flags).toBe(SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL);
-		expect(h.users.current().suspiciousActivityFlags).toBe(SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL);
+	it('lifts the limitation and keeps the other flags', async () => {
+		h.users.put({flags: UserFlags.HAS_SESSION_STARTED | UserFlags.ACCOUNT_LIMITED});
+		const lift = limitEnvelope({on: false});
+		expect((await applyAction(h.deps, lift)).status).toBe('applied');
+		expect(h.users.current().flags).toBe(UserFlags.HAS_SESSION_STARTED);
+		expect((await applyAction(h.deps, lift)).status).toBe('noop');
+		expect(h.presence).toHaveLength(1);
+	});
+
+	it('never limits staff, exempt or system accounts', async () => {
+		for (const overrides of [{flags: UserFlags.STAFF}, {flags: UserFlags.LIMIT_EXEMPT}, {system: true}] satisfies Array<
+			Partial<UserRow>
+		>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, limitEnvelope())).status).toBe('exempt');
+			expect(h.users.current().flags & UserFlags.ACCOUNT_LIMITED).toBe(0n);
+		}
+		expect(h.presence).toHaveLength(0);
 	});
 
 	it('rereads and retries when the compare and set loses a race', async () => {
 		h.users.casFailures = 2;
-		const outcome = await applyAction(
-			h.deps,
-			envelope<'set_suspicious_flags'>({
-				type: 'set_suspicious_flags',
-				user_id: USER_ID,
-				set: 1,
-				clear: 0,
-				if_current: null,
-			}),
-		);
+		const outcome = await applyAction(h.deps, limitEnvelope());
 		expect(outcome.status).toBe('applied');
+	});
+
+	it('gives up after repeated compare and set losses', async () => {
+		h.users.casFailures = 3;
+		await expect(applyAction(h.deps, limitEnvelope())).rejects.toThrow();
+		expect(h.users.current().flags).toBe(0n);
 	});
 
 	it('treats missing, deleted and bot accounts as ineligible', async () => {
 		h.users.rows.clear();
-		const missing = await applyAction(h.deps, flagEnvelope());
+		const missing = await applyAction(h.deps, limitEnvelope());
 		expect(missing).toMatchObject({status: 'ineligible', observed: null});
 		h.users.put({bot: true});
-		const bot = await applyAction(h.deps, flagEnvelope());
+		const bot = await applyAction(h.deps, limitEnvelope());
 		expect(bot.status).toBe('ineligible');
 		h.users.put({flags: UserFlags.DELETED});
-		const deleted = await applyAction(h.deps, flagEnvelope());
+		const deleted = await applyAction(h.deps, limitEnvelope());
 		expect(deleted).toMatchObject({status: 'ineligible', observed: {deleted: true}});
 	});
 
@@ -283,7 +252,7 @@ describe('account action apply', () => {
 			on: true,
 			until_ms: NOW + 86_400_000,
 		});
-		for (const overrides of [{flags: UserFlags.STAFF}, {flags: UserFlags.NOT_SUSPICIOUS}] satisfies Array<
+		for (const overrides of [{flags: UserFlags.STAFF}, {flags: UserFlags.LIMIT_EXEMPT}] satisfies Array<
 			Partial<UserRow>
 		>) {
 			h.users.put(overrides);
@@ -296,46 +265,11 @@ describe('account action apply', () => {
 		expect(h.cached.size).toBe(0);
 	});
 
-	it('attaches a verified phone once and logs the contact change once', async () => {
-		h.users.put({
-			flags: UserFlags.HAS_SESSION_STARTED,
-			suspicious_activity_flags:
-				SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL,
-		});
-		const action = envelope<'phone_verified'>({
-			type: 'phone_verified',
-			user_id: USER_ID,
-			method: 'outbound',
-			clear_suspicious: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE,
-		});
-		expect((await applyAction(h.deps, action)).status).toBe('applied');
-		const user = h.users.current();
-		expect(user.hasVerifiedPhone).toBe(true);
-		expect(user.suspiciousActivityFlags).toBe(SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL);
-		expect(user.flags).toBe(UserFlags.HAS_SESSION_STARTED);
-		expect((await applyAction(h.deps, action)).status).toBe('noop');
-		expect(h.contactLogs).toHaveLength(1);
-	});
-
 	it('ignores unknown envelope fields', async () => {
-		h.users.put({
-			flags: UserFlags.HAS_SESSION_STARTED,
-			suspicious_activity_flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE,
-		});
-		const action = {
-			...envelope<'phone_verified'>({
-				type: 'phone_verified',
-				user_id: USER_ID,
-				method: 'outbound',
-				clear_suspicious: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE,
-			}),
-			unknown_field: true,
-		};
+		h.users.put({flags: UserFlags.HAS_SESSION_STARTED});
+		const action = {...limitEnvelope(), unknown_field: true};
 		expect((await applyAction(h.deps, action)).status).toBe('applied');
-		const user = h.users.current();
-		expect(user.hasVerifiedPhone).toBe(true);
-		expect(user.suspiciousActivityFlags).toBe(0);
-		expect(user.flags).toBe(UserFlags.HAS_SESSION_STARTED);
+		expect(h.users.current().flags).toBe(UserFlags.HAS_SESSION_STARTED | UserFlags.ACCOUNT_LIMITED);
 	});
 
 	it('bans a public address until the requested time and refreshes the ban caches', async () => {
@@ -377,13 +311,13 @@ describe('account action apply', () => {
 	});
 
 	it('answers expired actions and unknown shapes without touching the account', async () => {
-		const expired = await applyAction(h.deps, flagEnvelope({expires_at_ms: NOW}));
+		const expired = await applyAction(h.deps, limitEnvelope({expires_at_ms: NOW}));
 		expect(expired.status).toBe('expired');
-		const future = await applyAction(h.deps, {...flagEnvelope(), v: 2});
+		const future = await applyAction(h.deps, {...limitEnvelope(), v: 2});
 		expect(future.status).toBe('unsupported');
-		const unknown = await applyAction(h.deps, {...flagEnvelope(), type: 'future_type'} as unknown as ActionEnvelope);
+		const unknown = await applyAction(h.deps, {...limitEnvelope(), type: 'future_type'} as unknown as ActionEnvelope);
 		expect(unknown).toMatchObject({status: 'unsupported', action_type: 'future_type'});
-		expect(h.users.current().suspiciousActivityFlags).toBe(0);
+		expect(h.users.current().flags).toBe(0n);
 	});
 });
 
@@ -420,7 +354,7 @@ describe('account action messages', () => {
 		h.deps.publishOutcome = async (_key, outcome) => {
 			outcomes.push(outcome);
 		};
-		const good = fakeMsg(JSON.stringify(flagEnvelope()), 1);
+		const good = fakeMsg(JSON.stringify(limitEnvelope()), 1);
 		await handleActionMessage(h.deps, good.msg);
 		expect(outcomes.map((outcome) => outcome.status)).toEqual(['applied']);
 		expect(good.state.acked).toBe(1);
@@ -440,7 +374,7 @@ describe('account action messages', () => {
 		h.deps.publishOutcome = async (_key, outcome) => {
 			outcomes.push(outcome);
 		};
-		const data = JSON.stringify(flagEnvelope());
+		const data = JSON.stringify(limitEnvelope());
 		const early = fakeMsg(data, 3);
 		await handleActionMessage(h.deps, early.msg);
 		expect(early.state.naks).toEqual([3000]);
@@ -486,14 +420,12 @@ describe.skipIf(!NATS_URL)('account action consumer against JetStream', () => {
 		h.deps.retryDelayMs = 200;
 		const js = jetstream(nc);
 		const expires = Date.now() + 60_000;
-		await js.publish('act.07', JSON.stringify(flagEnvelope({id: 'a:07:1:0', expires_at_ms: expires})), {
+		await js.publish('act.07', JSON.stringify(limitEnvelope({id: 'a:07:1:0', expires_at_ms: expires})), {
 			msgID: 'a:07:1:0',
 		});
-		await js.publish(
-			'act.07',
-			JSON.stringify(flagEnvelope({id: 'a:07:2:0', set: 0, clear: 1, expires_at_ms: expires})),
-			{msgID: 'a:07:2:0'},
-		);
+		await js.publish('act.07', JSON.stringify(limitEnvelope({id: 'a:07:2:0', on: false, expires_at_ms: expires})), {
+			msgID: 'a:07:2:0',
+		});
 		startAccountActionConsumer(h.deps);
 		const deadline = Date.now() + 10_000;
 		while (outcomes.length < 2 && Date.now() < deadline) {
@@ -503,7 +435,7 @@ describe.skipIf(!NATS_URL)('account action consumer against JetStream', () => {
 			['a:07:1:0', 'applied'],
 			['a:07:2:0', 'applied'],
 		]);
-		expect(h.users.current().suspiciousActivityFlags).toBe(0);
+		expect(h.users.current().flags).toBe(0n);
 		const info = await (await jetstreamManager(nc)).consumers.info(ACTIONS_STREAM, effectsConsumer(7));
 		expect(info.num_ack_pending).toBe(0);
 		expect(info.num_pending).toBe(0);

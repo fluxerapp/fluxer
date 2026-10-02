@@ -446,7 +446,6 @@ export function buildUserDataJson(params: UserDataJsonParams) {
 			email: user.email,
 			email_verified: user.emailVerified,
 			email_bounced: user.emailBounced,
-			has_verified_phone: user.hasVerifiedPhone,
 			avatar_hash: user.avatarHash,
 			avatar_url: user.avatarHash
 				? `${Config.endpoints.media}/avatars/${userId}/${user.avatarHash}.${user.avatarHash.startsWith('a_') ? 'gif' : 'png'}`

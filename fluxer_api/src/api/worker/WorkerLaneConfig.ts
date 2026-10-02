@@ -53,7 +53,6 @@ const LANE_CONFIG = {
 			'processGooglePlayNotification',
 			'refreshStorePurchase',
 			'bulkUpdateUserFlags',
-			'bulkUpdateSuspiciousActivityFlags',
 			'bulkScheduleUserDeletion',
 			'bulkUpdateGuildFeatures',
 			'bulkAddGuildMembers',

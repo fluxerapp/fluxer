@@ -71,7 +71,7 @@ function buildDiscoveryStaticInput(
 			self_hosted: Config.instance.selfHosted,
 			presigned_attachment_uploads: Config.presignedAttachmentUploadsEnabled,
 			emails_enabled: runtime.emailEnabled,
-			phone_verification_enabled: Config.instance.phoneVerificationEnabled,
+			phone_verification_enabled: false,
 		},
 		gif: {
 			provider: gifProviderName,

@@ -434,11 +434,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			member_count: hit.memberCount,
 			online_count: 0,
 			features: hit.features,
-			verification_level: getEffectiveGuildVerificationLevel(
-				hit.verificationLevel,
-				hit.isDiscoverable,
-				Config.instance.phoneVerificationEnabled,
-			),
+			verification_level: getEffectiveGuildVerificationLevel(hit.verificationLevel, hit.isDiscoverable),
 		}));
 		const total = results.total;
 		if (guilds.length > 0) {

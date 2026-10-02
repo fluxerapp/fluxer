@@ -11,10 +11,6 @@
 		"subject": "L'eliminazione del tuo account {product_name} è programmata",
 		"body": "Ciao {username},\n\nCome da tua richiesta, il tuo account {product_name} verrà eliminato definitivamente in questa data:\n\n{deletionDate, date, full} alle {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nFino ad allora il tuo account è bloccato. Se non hai richiesto l'eliminazione o se vuoi mantenere il tuo account, contatta {safety_email} da questo indirizzo email prima di tale data.\n\n– Il team di {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Il tuo account {product_name} è stato temporaneamente disabilitato",
-		"body": "Ciao {username},\n\nAbbiamo temporaneamente disabilitato il tuo account {product_name} perché abbiamo rilevato attività sospette.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nPer riottenere l'accesso al tuo account, dovrai reimpostare la password:\n\n{forgotUrl}\n\nDopo aver reimpostato la password, potrai accedere di nuovo.\n\nSe ritieni che ciò sia stato fatto per errore, contatta il nostro team di assistenza.\n\n– Il team per la sicurezza di {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Il tuo account {product_name} verrà eliminato definitivamente",
 		"body": "Ciao {username},\n\nÈ stata programmata l’eliminazione definitiva del tuo account {product_name} a causa di violazioni dei nostri Termini di servizio o delle Linee guida della community.\n\nEliminazione programmata: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nSi tratta di un provvedimento grave. I dati del tuo account verranno eliminati definitivamente alla data programmata.\n\nConsulta:\n- Termini di servizio: {termsUrl}\n- Linee guida della community: {guidelinesUrl}\n\nProcedura di ricorso:\nSe ritieni che questa decisione sia scorretta o ingiustificata, hai 60 giorni per presentare un ricorso. Invia un'email a {appeals_email} da questo indirizzo email.\n\nNel tuo ricorso:\n- Spiega chiaramente perché ritieni che la decisione sia scorretta o ingiustificata\n- Fornisci qualsiasi prova o contesto pertinente\n\nUn membro del team per la sicurezza {product_name} esaminerà il tuo ricorso e potrebbe sospendere l’eliminazione programmata fino a quando non sarà stata raggiunta una decisione finale.\n\n– Il team per la sicurezza di {product_name}"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Il tuo indirizzo email su {product_name} è stato modificato",
-		"body": "Ciao {username},\n\nL'indirizzo email del tuo account {product_name} è stato modificato in {newEmail}.\n\nSe hai effettuato questa modifica, non è necessaria alcuna azione. In caso contrario, puoi annullare la modifica e mettere in sicurezza il tuo account utilizzando questo link:\n\n{revertUrl}\n\nQuesto ripristinerà la tua email precedente, ti disconnetterà da tutti i dispositivi, rimuoverà i numeri di telefono collegati, disabiliterà l'MFA e ti richiederà di impostare una nuova password.\n\n– Il team per la sicurezza di {product_name}"
+		"body": "Ciao {username},\n\nL'indirizzo email del tuo account {product_name} è stato modificato in {newEmail}.\n\nSe hai effettuato questa modifica, non è necessaria alcuna azione. In caso contrario, puoi annullare la modifica e mettere in sicurezza il tuo account utilizzando questo link:\n\n{revertUrl}\n\nQuesto ripristinerà la tua email precedente, ti disconnetterà da tutti i dispositivi, disabiliterà l'MFA e ti richiederà di impostare una nuova password.\n\n– Il team per la sicurezza di {product_name}"
 	},
 	"email_verification": {
 		"subject": "Verifica il tuo indirizzo email di {product_name}",

@@ -12,6 +12,7 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {ConnectionRateLimitConfigs} from '@app/api/rate_limit_configs/ConnectionRateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {Validator} from '@app/api/Validator';
 import {
 	BlueskyAuthorizeRequest,
@@ -88,6 +89,7 @@ export function BlueskyOAuthController(app: HonoApp) {
 			if (!resolvedServices.bluesky_enabled) {
 				throw new BlueskyOAuthNotEnabledError();
 			}
+			assertAccountNotLimited(ctx.get('user'));
 			const {handle: rawHandle} = ctx.req.valid('json');
 			const userId = ctx.get('user').id;
 			const handle = normalizeBlueskyHandle(rawHandle);

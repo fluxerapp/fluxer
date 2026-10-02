@@ -24,6 +24,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
@@ -151,6 +152,7 @@ export class UserChannelService {
 		}
 		requireEmailVerified(callingUser, 'direct_message');
 		if (data.recipients !== undefined) {
+			assertAccountNotLimited(callingUser);
 			return await this.createGroupDMChannel({
 				userId,
 				recipients: data.recipients,

@@ -54,7 +54,6 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                 "bulk-actions",
                 [
                     acl::BULK_UPDATE_USER_FLAGS,
-                    acl::BULK_UPDATE_SUSPICIOUS_ACTIVITY,
                     acl::BULK_UPDATE_GUILD_FEATURES,
                     acl::BULK_ADD_GUILD_MEMBERS,
                     acl::BULK_DELETE_USERS,
@@ -268,7 +267,6 @@ mod tests {
             .expect("bulk actions nav item");
         for required in [
             acl::BULK_UPDATE_USER_FLAGS,
-            acl::BULK_UPDATE_SUSPICIOUS_ACTIVITY,
             acl::BULK_UPDATE_GUILD_FEATURES,
             acl::BULK_ADD_GUILD_MEMBERS,
             acl::BULK_DELETE_USERS,

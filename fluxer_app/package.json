@@ -217,7 +217,6 @@
 		"jpeg-js": "^0.4.4",
 		"katex": "catalog:",
 		"lexical": "catalog:",
-		"libphonenumber-js": "catalog:",
 		"livekit-client": "workspace:*",
 		"lodash": "catalog:",
 		"lru-cache": "catalog:",

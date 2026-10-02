@@ -1059,7 +1059,7 @@ msgstr "{count, plural, one {# 個反應} other {# 個反應}}"
 msgid "{count, plural, one {# reactor} other {# reactors}}"
 msgstr "{count, plural, one {# 位反應者} other {# 位反應者}}"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:183
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:157
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {# 秒} other {# 秒}}"
 
@@ -1223,7 +1223,7 @@ msgid "{currentAttachmentNumber}/{totalAttachments}"
 msgstr "{currentAttachmentNumber}/{totalAttachments}"
 
 #. Custom status clear-time label. dayLabel is a relative day such as "today" or a formatted date; timeString is the localized time.
-#: src/features/user/components/modals/CustomStatusModal.tsx:95
+#: src/features/user/components/modals/CustomStatusModal.tsx:96
 msgid "{dayLabel} at {timeString}"
 msgstr "{dayLabel} {timeString}"
 
@@ -1972,7 +1972,7 @@ msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your
 msgstr "{seconds, plural, one {您的邀請連結將於 # 秒後過期。} other {您的邀請連結將於 # 秒後過期。}}"
 
 #. Generic multi-select summary label. selectedCount is the number of selected options.
-#: src/features/ui/components/form/FormCombobox.tsx:79
+#: src/features/ui/components/form/FormCombobox.tsx:80
 msgid "{selectedCount} selected"
 msgstr "已選取 {selectedCount} 個"
 
@@ -2252,7 +2252,7 @@ msgstr "1 分鐘"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Fixed duration label for a one-month interval. Used as a standalone label in duration text or option lists.
 #. Gift purchase dialog option for a one-month gift.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:98
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:69
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:40
 #: src/features/premium/components/modals/GiftPlutoniumModal.tsx:31
 msgid "1 month"
@@ -2335,7 +2335,7 @@ msgid "12 hours"
 msgstr "12 小時"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:110
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:81
 msgid "12 months (1 year)"
 msgstr "12 個月（1 年）"
 
@@ -2399,7 +2399,7 @@ msgstr "2FA"
 msgid "2FA backup"
 msgstr "雙重驗證備份"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:469
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:446
 msgid "2FA requirement"
 msgstr "雙重驗證要求"
 
@@ -2417,7 +2417,7 @@ msgid "3 members (typing)"
 msgstr "3 位成員（正在輸入）"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:102
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:73
 msgid "3 months"
 msgstr "3 個月"
 
@@ -2464,7 +2464,7 @@ msgid "6 hours"
 msgstr "6 小時"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:106
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:77
 msgid "6 months"
 msgstr "6 個月"
 
@@ -2574,11 +2574,6 @@ msgstr "1 分鐘"
 #: src/features/updater/commands/UpdaterModalCommands.tsx:25
 msgid "A new desktop version is available. Download the installer, then run it to update {productName}."
 msgstr "有新的桌面版本可用。請下載安裝程式並執行，以更新 {productName}。"
-
-#. Toast confirmation shown after resending a verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:146
-msgid "A new verification code has been sent."
-msgstr "新的驗證碼已寄出。"
 
 #. Description for has:poll. Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:53
@@ -2792,6 +2787,11 @@ msgstr "帳號資料"
 msgid "Account exists to spam, scam, or abuse the platform."
 msgstr "此帳號用於發送垃圾訊息、詐騙或濫用平台。"
 
+#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:49
+msgid "Account limited"
+msgstr "帳號受限"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:124
 msgid "Account removal"
@@ -2803,14 +2803,12 @@ msgid "Account state"
 msgstr "帳號狀態"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:42
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:41
 msgid "Account too new"
 msgstr "帳號太新"
 
-#. Required-action modal title shown when an account-level verification step is required to proceed.
 #. Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:8
-#: src/features/invite/commands/InviteCommands.tsx:34
+#: src/features/invite/commands/InviteCommands.tsx:35
 msgid "Account verification required"
 msgstr "需要驗證帳號"
 
@@ -3004,7 +3002,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "將機器人新增至社群並授予要求的權限"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:96
+#: src/features/messaging/components/modals/ForwardModal.tsx:98
 msgid "Add a comment (optional)"
 msgstr "新增留言（選填）"
 
@@ -3054,8 +3052,10 @@ msgstr "新增頻道主題"
 msgid "Add a word…"
 msgstr "新增字詞…"
 
-#. Required-action modal carousel step title for replacing a bounced email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:388
+#. Nagbar button that opens the flow to replace an email address that bounced. Keep it concise.
+#. Title of the modal that replaces an email address that bounced. Keep it concise.
+#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx:28
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:23
 msgid "Add a working email"
 msgstr "新增可用的電子郵件"
 
@@ -3087,7 +3087,7 @@ msgid "Add an account to continue."
 msgstr "新增帳號以繼續。"
 
 #. Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.
-#: src/features/invite/commands/InviteCommands.tsx:39
+#: src/features/invite/commands/InviteCommands.tsx:40
 msgid "Add an email and password to your account first."
 msgstr "請先為您的帳號新增電子郵件和密碼。"
 
@@ -3424,11 +3424,6 @@ msgstr "新增日期：{createdDate} • 上次使用：{lastUsedDate}"
 msgid "Additional comments (optional)"
 msgstr "其他意見（選填）"
 
-#. Required-action modal title for a generic additional verification step (e.g. anti-spam).
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:36
-msgid "Additional verification required"
-msgstr "需要額外驗證"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:22
@@ -3670,7 +3665,7 @@ msgstr "所有語言"
 #. Short label in the default notifications section. Keep it concise.
 #. Short label in the visual tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
-#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:86
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:348
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
@@ -3921,7 +3916,7 @@ msgid "Already set to cancel"
 msgstr "已排定取消"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:87
+#: src/features/messaging/commands/MessageCommands.tsx:88
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "同時將此訊息檢舉給 {productName} 安全團隊"
 
@@ -4713,11 +4708,6 @@ msgstr "開始通話前詢問"
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "登入時，在輸入密碼後要求使用通行金鑰"
 
-#. Body of the human-review option in the required-action modal on a self-hosted instance. The instance is run by its own administrators, not by the app maker.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284
-msgid "Ask the administrators of this instance to review your account. This instance is run independently, and only its administrators can change your account."
-msgstr "請向此實例的管理員申請審查您的帳號。此實例由其管理員獨立營運，只有他們能變更您的帳號。"
-
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
 msgid "Assets"
@@ -5214,7 +5204,7 @@ msgstr "自動移除您傳送訊息中網址的追蹤參數（例如 utm_source�
 msgid "Automatically remove tracking parameters from URLs in messages you send"
 msgstr "自動移除您傳送訊息中網址的追蹤參數"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:355
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:332
 msgid "Automatically screen messages for explicit content in channels not marked for mature content."
 msgstr "自動篩選未標示為成人內容的頻道中，含有露骨內容的訊息。"
 
@@ -5359,8 +5349,6 @@ msgstr "目前離開中"
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:251
-#: src/features/user/components/modals/PhoneAddModal.tsx:417
-#: src/features/user/components/modals/PhoneAddModal.tsx:436
 msgid "Back"
 msgstr "返回"
 
@@ -6506,11 +6494,6 @@ msgstr "相機和虛擬擷取裝置要在 {productName} 中選取，而不是在
 msgid "Cameras are off above {voiceChannelCameraUserLimit} participants"
 msgstr "參與者超過 {voiceChannelCameraUserLimit} 人時，相機會關閉"
 
-#. Required-action modal carousel step title for email recovery options.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:252
-msgid "Can't access that email?"
-msgstr "無法存取該電子郵件信箱？"
-
 #. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:303
 msgid "Can't connect"
@@ -6575,13 +6558,14 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:591
+#: src/features/messaging/components/modals/ForwardModal.tsx:597
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:173
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:188
 #: src/features/user/components/modals/EmailChangeModal.tsx:278
 #: src/features/user/components/modals/EmailChangeModal.tsx:289
 #: src/features/user/components/modals/EmailChangeModal.tsx:311
@@ -6590,7 +6574,6 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/user/components/modals/PasswordChangeModal.tsx:226
 #: src/features/user/components/modals/PasswordChangeModal.tsx:237
 #: src/features/user/components/modals/PasswordChangeModal.tsx:255
-#: src/features/user/components/modals/PhoneAddModal.tsx:398
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:846
@@ -6857,8 +6840,8 @@ msgstr "變更電子郵件"
 
 #. Short label in the custom status bottom sheet. Keep it concise.
 #. Short label in the custom status modal. Keep it concise.
-#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:44
-#: src/features/user/components/modals/CustomStatusModal.tsx:54
+#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:45
+#: src/features/user/components/modals/CustomStatusModal.tsx:55
 msgid "Change emoji"
 msgstr "變更表情符號"
 
@@ -7201,7 +7184,7 @@ msgstr "已將使用者上限從 {oldCount} 變更為 {newCount}"
 msgid "Changed the vanity URL from {oldCode} to {newCode}"
 msgstr "已將自訂網址從 {oldCode} 變更為 {newCode}"
 
-#. Activity log detail line under a community settings update, shown when the member verification level changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldLevel} is the previous level and {newLevel} is the new level, each shown as None, Low, Medium, High or Very high.
+#. Activity log detail line under a community settings update, shown when the member verification level changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldLevel} is the previous level and {newLevel} is the new level, each shown as None, Low, Medium or High.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:241
 msgid "Changed the verification level from {oldLevel} to {newLevel}"
 msgstr "已將驗證等級從 {oldLevel} 變更為 {newLevel}"
@@ -7373,7 +7356,7 @@ msgid "Channel or category"
 msgstr "頻道或類別"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:48
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:42
 msgid "Channel permission overrides"
 msgstr "頻道權限覆寫"
 
@@ -7509,8 +7492,6 @@ msgstr "請檢查您的連線，然後再試一次。"
 msgid "Check your connection, then try again."
 msgstr "請檢查您的連線，然後再試一次。"
 
-#. Required-action modal carousel step title for existing-email verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:240
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:55
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:120
 msgid "Check your email"
@@ -7632,11 +7613,6 @@ msgstr "在系統選取器中選擇一個顯示器"
 msgid "Choose a GIF"
 msgstr "選擇 GIF"
 
-#. Required-action modal carousel step title for choosing email or phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:232
-msgid "Choose a method"
-msgstr "選擇方式"
-
 #: src/features/user/components/modals/PasswordChangeModal.tsx:179
 msgid "Choose a new password."
 msgstr "請選擇新密碼。"
@@ -7680,8 +7656,8 @@ msgstr "選擇一個動作。"
 
 #. Button or menu action label in the custom status bottom sheet. Keep it concise.
 #. Button or menu action label in the custom status modal. Keep it concise.
-#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:48
-#: src/features/user/components/modals/CustomStatusModal.tsx:58
+#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:49
+#: src/features/user/components/modals/CustomStatusModal.tsx:59
 msgid "Choose an emoji"
 msgstr "選擇表情符號"
 
@@ -7749,11 +7725,6 @@ msgstr "選擇您的實例運作方式"
 msgid "Choose one of the methods below to prove domain ownership. You only need to complete one."
 msgstr "請選擇以下其中一種方式來驗證網域所有權。您只需完成其中一種即可。"
 
-#. Required-action modal intro text when email or phone verification can satisfy the requirement.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:220
-msgid "Choose one verification method. Either method can clear this check."
-msgstr "請選擇一種驗證方式。任一種方式皆可通過此檢查。"
-
 #. Modal title for the payment method picker (local card vs alternative method).
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
 msgid "Choose payment method"
@@ -7797,7 +7768,7 @@ msgstr "選擇「{clientLabel}」可以在您的社群中執行哪些操作。�
 msgid "Choose what friends see in their active now panel"
 msgstr "選擇好友在「目前在線上」面板中會看到什麼"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:311
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:292
 msgid "Choose what members must have before they can post or DM community members."
 msgstr "選擇成員發文或傳送私訊給社群成員前，必須具備的條件。"
 
@@ -8030,8 +8001,8 @@ msgstr "讓您的麥克風更清晰地收音。"
 msgid "Clear"
 msgstr "清除"
 
-#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:274
-#: src/features/user/components/modals/CustomStatusModal.tsx:397
+#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:277
+#: src/features/user/components/modals/CustomStatusModal.tsx:400
 msgid "Clear after"
 msgstr "清除時間"
 
@@ -8053,7 +8024,7 @@ msgstr "清除所有附件模擬"
 msgid "Clear all token overrides"
 msgstr "清除所有主題變數覆寫"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:380
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:277
 msgid "Clear attachment mocks"
 msgstr "清除附件模擬資料"
 
@@ -8066,14 +8037,14 @@ msgstr "清除指令"
 
 #. Button or menu action label in the custom status bottom sheet. Keep it concise.
 #. Button or menu action label in the custom status modal. Keep it concise.
-#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:52
-#: src/features/user/components/modals/CustomStatusModal.tsx:62
+#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:53
+#: src/features/user/components/modals/CustomStatusModal.tsx:63
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:236
 msgid "Clear custom status"
 msgstr "清除自訂狀態"
 
 #. Body of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:76
+#: src/features/channel/components/MessageActionUtils.tsx:77
 msgid "Clear every reaction from this message?"
 msgstr "要清除此訊息的所有反應嗎？"
 
@@ -8124,7 +8095,7 @@ msgstr "清除搜尋輸入"
 #. Accessible label for the combobox clear button.
 #. Button or menu action label in the authorized apps tab. Keep it concise.
 #. Button or menu action label in the devices tab. Keep it concise.
-#: src/features/ui/components/form/FormCombobox.tsx:91
+#: src/features/ui/components/form/FormCombobox.tsx:92
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:46
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:61
 msgid "Clear selection"
@@ -8435,10 +8406,8 @@ msgstr "煤炭主題"
 
 #. Input label for a one-time authenticator app verification code.
 #. Input label for a one-time authenticator or backup code.
-#. Label for an inbound phone verification code shown in the required-action modal.
 #: src/features/auth/components/modals/MfaTotpDisableModal.tsx:26
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:462
 #: src/features/invite/components/InviteListItem.tsx:77
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
 msgid "Code"
@@ -8629,17 +8598,17 @@ msgid "Commands"
 msgstr "指令"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:68
+#: src/features/messaging/components/modals/ForwardModal.tsx:70
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "由於所選頻道中至少有一個已開啟慢速模式，留言功能已停用。轉傳後，留言會立即被慢速模式阻擋。"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:62
+#: src/features/messaging/components/modals/ForwardModal.tsx:64
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "由於「{forwardChannelDisplayName}」已開啟慢速模式，留言功能已停用。轉傳後，留言會立即被慢速模式阻擋。"
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:92
+#: src/features/messaging/components/modals/ForwardModal.tsx:94
 msgid "Comments are unavailable while slowmode is on."
 msgstr "慢速模式開啟時無法留言。"
 
@@ -8670,11 +8639,11 @@ msgstr "社群"
 msgid "Communities and channels where you can't manage webhooks are hidden."
 msgstr "無法管理網頁掛鉤的社群和頻道將會隱藏。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:365
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:342
 msgid "Communities listed in Discovery are required to scan messages from all members. This setting cannot be changed while Discovery is enabled."
 msgstr "在探索中列出的社群必須掃描所有成員的訊息。啟用探索時無法變更此設定。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:320
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:301
 msgid "Communities listed in Discovery require at least email verification. None cannot be selected while Discovery is enabled."
 msgstr "在探索中列出的社群至少需要驗證電子郵件。啟用探索時，無法選擇「無」。"
 
@@ -8827,7 +8796,7 @@ msgstr "社群名稱"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:125
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:126
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:113
 msgid "Community nickname"
 msgstr "社群暱稱"
@@ -8880,7 +8849,7 @@ msgid "Community profile"
 msgstr "社群個人檔案"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:72
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:73
 msgid "Community profile updated"
 msgstr "社群個人檔案已更新"
 
@@ -8907,7 +8876,7 @@ msgstr "社群未讀標記等級"
 #. Audit log entry label. Past-tense action describing that the community settings were changed.
 #. Short label in the guild overview tab utils helper. Keep it concise.
 #: src/features/app/config/AuditLogConstants.ts:8
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:215
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:204
 #: src/features/guild/utils/guild_tabs/GuildOverviewTabUtils.tsx:35
 msgid "Community updated"
 msgstr "社群已更新"
@@ -8952,11 +8921,6 @@ msgstr "比較"
 msgid "Complete mature content check"
 msgstr "完成成人內容檢查"
 
-#. Required-action modal body when either of two verification paths is acceptable. Product name is interpolated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:74
-msgid "Complete one of the verification paths below to continue using {productName}."
-msgstr "請完成以下其中一個驗證路徑，以繼續使用 {productName}。"
-
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:194
 msgid "Complete payment"
@@ -8965,16 +8929,6 @@ msgstr "完成付款"
 #: src/features/moderation/components/modals/MatureMediaGateDetailsModal.tsx:67
 msgid "Complete the mature content check to unlock mature media."
 msgstr "完成成人內容檢查以解鎖成人媒體。"
-
-#. Required-action modal body when both email and phone verification are required. Product name is interpolated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:79
-msgid "Complete the required email and phone verification steps below to continue using {productName}."
-msgstr "請完成下方所需的電子郵件和電話驗證步驟，以繼續使用 {productName}。"
-
-#. Required-action modal body. Generic instructions to complete verification. Product name is interpolated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:40
-msgid "Complete the required verification to continue using {productName}."
-msgstr "請完成必要的驗證，以繼續使用 {productName}。"
 
 #. Label in the premium badge settings. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:16
@@ -9098,6 +9052,7 @@ msgstr "設定您的個人檔案徽章"
 #. Action label for confirming a mass mention that may notify many people.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx:185
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:212
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
 msgid "Confirm"
@@ -9334,7 +9289,7 @@ msgid "Connections reordered"
 msgstr "連結已重新排序"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:94
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:65
 msgid "Consent required"
 msgstr "需要同意"
 
@@ -9348,16 +9303,6 @@ msgstr "使用範圍和權限建構授權網址。"
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:20
 msgid "Contact"
 msgstr "聯絡方式"
-
-#. Link label in the required-action modal. Opens an email to Fluxer support.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:264
-msgid "Contact support"
-msgstr "聯絡客服"
-
-#. Shown in the required-action modal on a self-hosted instance in place of the Contact support link. The instance is run by its own administrators, not by the app maker.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:268
-msgid "Contact the administrators of this instance for help."
-msgstr "如需協助，請聯絡此實例的管理員。"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
 #: src/features/auth/components/ContentBlockedHandler.tsx:10
@@ -9374,7 +9319,7 @@ msgstr "內容創作者"
 msgid "Content filter"
 msgstr "內容篩選"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:349
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:326
 msgid "Content filtering"
 msgstr "內容篩選"
 
@@ -9384,7 +9329,7 @@ msgid "Content hint"
 msgstr "內容提示"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:84
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:58
 msgid "Content safety gates"
 msgstr "內容安全閘門"
 
@@ -9416,12 +9361,10 @@ msgstr "按一下左鍵（在按鈕上）或按一下右鍵（在其他元素上
 #. Button that confirms signing out selected saved devices.
 #. Generic primary button label that advances a multi-step flow.
 #. OAuth authorization primary button. Advances to the next step after choosing an account.
-#. Primary button in the required-action modal. Continues the current verification path.
 #: src/features/auth/components/modals/BackupCodesRegenerateModal.tsx:107
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:181
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:75
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:111
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:162
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
@@ -9507,7 +9450,7 @@ msgstr "控制頻道列表中已靜音頻道的未讀指示行為。"
 msgid "Control which chat updates are announced by assistive technology."
 msgstr "控制輔助技術會播報哪些聊天更新。"
 
-#: src/features/channel/components/channel_view/DMChannelView.tsx:260
+#: src/features/channel/components/channel_view/DMChannelView.tsx:262
 msgid "Conversation not found"
 msgstr "找不到對話"
 
@@ -9955,12 +9898,12 @@ msgid "Couldn't add tag"
 msgstr "無法新增標籤"
 
 #. Body of the generic fallback error modal shown when adding a friend to a group DM fails.
-#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:23
+#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:24
 msgid "Couldn't add this friend to the group. Please try again."
 msgstr "無法將這位好友新增到群組。請再試一次。"
 
 #. Title of the error modal shown when adding a friend to a group DM fails.
-#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:11
+#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:12
 msgid "Couldn't add to group"
 msgstr "無法新增至群組"
 
@@ -10055,7 +9998,7 @@ msgid "Couldn't create a theme link"
 msgstr "無法建立主題連結"
 
 #. Title of the error modal shown when generating a group DM invite link fails.
-#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:28
+#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:29
 msgid "Couldn't create invite link"
 msgstr "無法建立邀請連結"
 
@@ -10132,7 +10075,7 @@ msgid "Couldn't end your grace period"
 msgstr "無法結束寬限期"
 
 #. Body of the error modal shown when generating a group DM invite link fails.
-#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:32
+#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:33
 msgid "Couldn't generate an invite link. Please try again."
 msgstr "無法產生邀請連結。請再試一次。"
 
@@ -10229,7 +10172,7 @@ msgid "Couldn't process image"
 msgstr "無法處理圖片"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:119
+#: src/features/messaging/commands/MessageCommands.tsx:120
 msgid "Couldn't publish this message"
 msgstr "無法發布此訊息"
 
@@ -10264,7 +10207,7 @@ msgid "Couldn't rejoin the Visionary community"
 msgstr "無法重新加入 Visionary 社群"
 
 #. Error message in the use entrance sound. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:55
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:56
 msgid "Couldn't remove entrance sound"
 msgstr "無法移除進場音效"
 
@@ -10324,7 +10267,7 @@ msgid "Couldn't save channel settings"
 msgstr "無法儲存頻道設定"
 
 #. Error message in the use entrance sound.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:47
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:48
 msgid "Couldn't save entrance sound"
 msgstr "無法儲存進場音效"
 
@@ -10501,16 +10444,9 @@ msgid "Couldn't withdraw application"
 msgstr "無法撤回申請"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:40
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:34
 msgid "Countdown timer"
 msgstr "倒數計時器"
-
-#. Form field label for the country selector in the phone verification step.
-#. Short label in the phone add modal. Keep it concise.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:92
-#: src/features/user/components/modals/PhoneAddModal.tsx:57
-msgid "Country"
-msgstr "國家/地區"
 
 #. Field label on the details step of the DSA report form. The country where the reporter resides, used for the legal declaration.
 #: src/features/moderation/components/report/ReportStepDetails.tsx:62
@@ -10687,8 +10623,8 @@ msgstr "建立管理員帳號"
 msgid "Create the group DM with the remaining {addableCount, plural, one {# recipient} other {# recipients}} and skip the others?"
 msgstr "要建立包含{addableCount, plural, one {其餘 # 位收件者} other {其餘 # 位收件者}}的群組私訊，並略過其他收件者嗎？"
 
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:145
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:202
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:147
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:204
 msgid "Create webhook"
 msgstr "建立 Webhook"
 
@@ -10948,7 +10884,7 @@ msgstr "來自社群的自訂表情符號 {emojiName}"
 
 #. Error modal body shown when custom entrance sounds are disabled on the instance.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:471
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:71
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:72
 msgid "Custom entrance sounds are not enabled on this instance."
 msgstr "此實例未啟用自訂入場音效。"
 
@@ -11108,7 +11044,7 @@ msgstr "自訂語音處理"
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Textarea label in the community moderation settings tab for the custom content warning shown to members.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:45
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:149
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 msgid "Custom warning text"
 msgstr "自訂警告文字"
 
@@ -11530,11 +11466,6 @@ msgstr "預設搜尋引擎"
 msgid "Default shortcuts"
 msgstr "預設快速鍵"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:72
-msgid "Default tab"
-msgstr "預設分頁"
-
 #. Short label in the search engines tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:77
 msgid "Default translator"
@@ -11580,7 +11511,7 @@ msgstr "德拉瓦州"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:83
+#: src/features/messaging/commands/MessageCommands.tsx:84
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
@@ -11829,12 +11760,12 @@ msgid "Delete this message"
 msgstr "刪除此訊息"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:79
+#: src/features/messaging/commands/MessageCommands.tsx:80
 msgid "Delete this message? Can't be undone."
 msgstr "要刪除這則訊息嗎？此動作無法復原。"
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:92
+#: src/features/messaging/commands/MessageCommands.tsx:93
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "刪除此訊息？無法復原。此訊息也會從所有追蹤此頻道的社群中移除。"
 
@@ -12164,7 +12095,7 @@ msgid "Developer mode"
 msgstr "開發人員模式"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:284
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:256
 msgid "Developer option"
 msgstr "開發人員選項"
 
@@ -12299,7 +12230,7 @@ msgstr "直接輸入"
 #. Generic singular label for a direct message conversation (distinct from the plural DIRECT_MESSAGES section heading).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:295
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
 msgid "Direct message"
@@ -12712,7 +12643,7 @@ msgstr "顯示模式"
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:22
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:137
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:138
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:61
 msgid "Display name"
 msgstr "顯示名稱"
@@ -12858,7 +12789,7 @@ msgstr "你想加入 {communityName} 嗎？"
 #. Label in the accessibility tab.
 #. Label in the my profile tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:54
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:145
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:146
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "博士，我來自未來。我搭乘您發明的時光機來到這裡。現在，我需要您的幫助才能回到 1985 年。"
 
@@ -13471,7 +13402,7 @@ msgid "Edit profile local time"
 msgstr "編輯個人檔案當地時間"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:98
+#: src/features/messaging/commands/MessageCommands.tsx:99
 msgid "Edit published message?"
 msgstr "編輯已發布的訊息？"
 
@@ -13539,7 +13470,7 @@ msgid "Edit your messages above or below"
 msgstr "編輯上方或下方的訊息"
 
 #. Button or menu action label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:92
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
 msgid "Edit your profile appearance and see a live preview"
 msgstr "編輯個人檔案外觀並查看即時預覽"
 
@@ -13590,10 +13521,8 @@ msgstr "在 {windowEndsOn} 前可申請退款。這也會立即取消您的訂�
 msgid "Email"
 msgstr "電子郵件"
 
-#. Label for the current account email shown in the required-action modal.
 #. Short label in the inputs tab. Keep it concise.
 #. Short label in the moderation report step email. Keep it concise. Keep the tone plain and specific.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:248
 #: src/features/moderation/components/report/ReportStepEmail.tsx:11
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:55
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:110
@@ -13607,6 +13536,8 @@ msgid "Email address required."
 msgstr "必須填寫電子郵件地址。"
 
 #. Short label in the email change modal. Keep it concise.
+#. Short label in the email change modal. Keep it concise.
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:43
 #: src/features/user/components/modals/EmailChangeModal.tsx:35
 msgid "Email changed"
 msgstr "電子郵件已變更"
@@ -13616,49 +13547,17 @@ msgstr "電子郵件已變更"
 msgid "Email delivery"
 msgstr "電子郵件遞送"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:62
-msgid "Email or phone"
-msgstr "電子郵件或電話號碼"
-
-#. Required-action modal title shown when either email or phone needs reverification (user chooses).
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:32
-msgid "Email or phone re-verification required"
-msgstr "需要重新驗證電子郵件或電話號碼"
-
-#. Required-action modal title shown when the email address must be reverified.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:16
-msgid "Email re-verification required"
-msgstr "需要重新驗證電子郵件"
-
 #. Account switcher fallback when an account's email is unknown.
 #: src/features/auth/components/accounts/AccountListItem.tsx:16
 msgid "Email unavailable"
 msgstr "無法取得電子郵件"
-
-#. Required-action error shown when email update cannot continue.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:518
-msgid "Email update is unavailable right now. Try again later or contact support."
-msgstr "目前無法更新電子郵件。請稍後再試，或聯絡客服。"
-
-#. Required-action modal title shown when the user must update their email address to continue.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:12
-msgid "Email update required"
-msgstr "需要更新電子郵件"
-
-#. Body of the human-review option in the required-action modal, rendered directly above the Contact support link. Sets the expectation that a reply takes time.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:278
-msgid "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
-msgstr "請透過電子郵件與我們聯繫，將由專人審核您的帳號。請告知我們您無法透過 SMS 驗證，後續事宜將由我們處理。我們將透過電子郵件回覆，因此處理過程並非即時。"
 
 #. Developer control label for the email-verification banner.
 #: src/features/devtools/components/NagbarControls.ts:36
 msgid "Email verification nagbar"
 msgstr "電子郵件驗證提示列"
 
-#. Required-action modal title shown when the email address must be verified for the first time.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:83
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:20
 msgid "Email verification required"
 msgstr "需要驗證電子郵件"
 
@@ -13674,6 +13573,10 @@ msgstr "覆寫電子郵件驗證"
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:94
 msgid "Email verified successfully"
 msgstr "電子郵件驗證成功"
+
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:133
+msgid "Emails to your current address are not being delivered. Enter a new email and we'll send a code there."
+msgstr "目前地址的電子郵件無法送達。請輸入新電子郵件，我們會將驗證碼寄到那裡。"
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
 #: src/features/channel/components/ChannelMessage.tsx:61
@@ -13728,12 +13631,12 @@ msgid "Embeds"
 msgstr "嵌入內容"
 
 #. Toast confirmation after hiding link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:88
+#: src/features/channel/components/MessageActionUtils.tsx:89
 msgid "Embeds suppressed"
 msgstr "已隱藏嵌入內容"
 
 #. Toast confirmation after re-enabling link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:84
+#: src/features/channel/components/MessageActionUtils.tsx:85
 msgid "Embeds unsuppressed"
 msgstr "已取消隱藏嵌入內容"
 
@@ -13883,7 +13786,7 @@ msgid "Enable /tts speech playback"
 msgstr "啟用 /tts 語音播放"
 
 #. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the owner has not enabled 2FA on their own account.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:43
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:42
 msgid "Enable 2FA on your account to change this setting"
 msgstr "請先為您的帳號啟用雙重驗證，才能變更此設定"
 
@@ -14287,8 +14190,6 @@ msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "請輸入有效的 {theOtherPlatform} 範本網址或代碼。"
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
-#. Required-action form error for an invalid email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:506
 #: src/features/moderation/components/pages/ReportPage.tsx:59
 msgid "Enter a valid email address."
 msgstr "請輸入有效的電子郵件地址。"
@@ -14298,32 +14199,10 @@ msgstr "請輸入有效的電子郵件地址。"
 msgid "Enter a valid message link."
 msgstr "請輸入有效的訊息連結。"
 
-#. Required-action form error for an invalid phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:522
-msgid "Enter a valid mobile phone number."
-msgstr "請輸入有效的行動電話號碼。"
-
-#. Form validation error shown when the entered phone number cannot be parsed.
-#. Label in the phone add modal.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:108
-#: src/features/user/components/modals/PhoneAddModal.tsx:45
-msgid "Enter a valid phone number"
-msgstr "請輸入有效的電話號碼"
-
 #. Description text in the channel and chat add friend form. Preserve {exampleFluxerTagFull}; it is inserted by code.
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:32
 msgid "Enter a valid username ({exampleFluxerTagFull})."
 msgstr "請輸入有效的使用者名稱（{exampleFluxerTagFull}）。"
-
-#. Required-action modal body for entering a replacement email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:392
-msgid "Enter an email address you can access. We will send a code there."
-msgstr "請輸入您能收信的電子郵件地址。我們會將驗證碼傳送到該地址。"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:70
-msgid "Enter code"
-msgstr "輸入代碼"
 
 #. Tooltip / aria label on the fullscreen toggle in the compact voice call tile (not in fullscreen).
 #. Tooltip / aria label on the fullscreen toggle in the media player (not in fullscreen).
@@ -14339,11 +14218,6 @@ msgstr "進入全螢幕"
 msgid "Enter gift code…"
 msgstr "輸入禮物代碼…"
 
-#. Required-action modal carousel step title for changing to a new email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:396
-msgid "Enter new email"
-msgstr "輸入新電子郵件"
-
 #. MFA code entry instructions shown when the account uses passkeys as its second factor.
 #: src/features/auth/flow/MfaScreen.tsx:42
 msgid "Enter one of your backup codes if you can't use your passkey."
@@ -14353,11 +14227,6 @@ msgstr "如果您無法使用通行金鑰，請輸入其中一組備用碼。"
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:56
 msgid "Enter one of your backup codes."
 msgstr "請輸入其中一組備用碼。"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:66
-msgid "Enter phone"
-msgstr "輸入電話號碼"
 
 #. Tooltip / aria label on the picture-in-picture toggle in the media player (not in PiP).
 #: src/features/voice/components/media_player/components/MediaPipButton.tsx:17
@@ -14384,16 +14253,6 @@ msgstr "請輸入驗證器應用程式中的 {digitCount} 位數驗證碼，或�
 msgid "Enter the {digitCount}-digit code from your authenticator app."
 msgstr "請輸入驗證器應用程式中的 {digitCount} 位數驗證碼。"
 
-#. Required-action modal body for entering an SMS code. digitCount and phoneNumber are inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:430
-msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
-msgstr "請輸入傳送至 {phoneNumber} 的 {digitCount} 位數驗證碼。"
-
-#. placeholder {0}: getE164PhoneNumber(phoneNumber, selectedCountry) ?? formattedPhone
-#: src/features/user/components/modals/PhoneAddModal.tsx:373
-msgid "Enter the {MFA_CODE_DIGIT_COUNT}-digit code sent to {0}."
-msgstr "請輸入傳送到 {0} 的 {MFA_CODE_DIGIT_COUNT} 位數驗證碼。"
-
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:118
 msgid "Enter the code"
 msgstr "輸入驗證碼"
@@ -14408,11 +14267,6 @@ msgstr "請先輸入驗證碼再繼續。"
 msgid "Enter the code from your authenticator app."
 msgstr "請輸入驗證器應用程式中的代碼。"
 
-#. Required-action modal body for entering a code sent to a new email address. emailAddress is inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:408
-msgid "Enter the code sent to {emailAddress}."
-msgstr "輸入傳送至 {emailAddress} 的驗證碼。"
-
 #: src/features/user/components/modals/EmailChangeModal.tsx:198
 msgid "Enter the code sent to your current email."
 msgstr "請輸入傳送到您目前電子郵件的驗證碼。"
@@ -14426,6 +14280,7 @@ msgstr "請輸入寄到您電子郵件地址的驗證碼。"
 msgid "Enter the code shown in the app to continue."
 msgstr "請輸入應用程式中顯示的代碼以繼續。"
 
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:157
 #: src/features/user/components/modals/EmailChangeModal.tsx:244
 msgid "Enter the code we emailed to your new address."
 msgstr "請輸入我們寄到您新信箱的驗證碼。"
@@ -14433,11 +14288,6 @@ msgstr "請輸入我們寄到您新信箱的驗證碼。"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:181
 msgid "Enter the code we sent to your email to verify it. Your password will be set once the code is confirmed."
 msgstr "請輸入我們寄到您電子郵件的驗證碼。驗證碼確認後，您的密碼就會設定完成。"
-
-#. Required-action modal carousel step title for entering an email verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:404
-msgid "Enter the email code"
-msgstr "輸入電子郵件驗證碼"
 
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:76
 msgid "Enter the invite link to join a community."
@@ -14451,11 +14301,6 @@ msgstr "請輸入您想使用的新電子郵件。我們稍後會將驗證碼傳
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:29
 msgid "Enter the PIN for your security key to continue."
 msgstr "請輸入安全金鑰的 PIN 以繼續。"
-
-#. Required-action modal carousel step title for entering a phone SMS verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:426
-msgid "Enter the SMS code"
-msgstr "輸入簡訊驗證碼"
 
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
@@ -14492,11 +14337,6 @@ msgstr "輸入您的名字"
 msgid "Enter your password."
 msgstr "請輸入您的密碼。"
 
-#. Required-action modal carousel step title for entering a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:413
-msgid "Enter your phone number"
-msgstr "輸入您的電話號碼"
-
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:84
 msgid "Entertainment"
@@ -14528,22 +14368,22 @@ msgid "Entrance sound"
 msgstr "進場音效"
 
 #. Error modal body shown when an entrance sound upload exceeds the client-side size limit.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:35
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:36
 msgid "Entrance sound files must be {limit} or less."
 msgstr "進場音效檔案大小必須為 {limit} 或更小。"
 
 #. Title of the error modal shown when the entrance sound library quota is reached.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:59
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:60
 msgid "Entrance sound library full"
 msgstr "進場音效庫已滿"
 
 #. Short label in the use entrance sound. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:51
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:52
 msgid "Entrance sound removed"
 msgstr "已移除進場音效"
 
 #. Short label in the use entrance sound. Keep it concise.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:43
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:44
 msgid "Entrance sound saved"
 msgstr "已儲存進場音效"
 
@@ -14560,7 +14400,7 @@ msgid "Entrance sounds"
 msgstr "進場音效"
 
 #. Title of the error modal shown when custom entrance sounds are disabled on the instance.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:67
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:68
 msgid "Entrance sounds unavailable"
 msgstr "無法使用進場音效"
 
@@ -14870,7 +14710,7 @@ msgid "Expires:"
 msgstr "到期時間："
 
 #. Accessible label for the explicit content filter radio group in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:128
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:118
 msgid "Explicit content filter setting"
 msgstr "露骨內容篩選設定"
 
@@ -15016,7 +14856,7 @@ msgid "Failed to copy to clipboard"
 msgstr "無法複製到剪貼簿"
 
 #. Error message in the channel webhooks tab.
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:37
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:38
 msgid "Failed to create webhook"
 msgstr "建立 Webhook 失敗"
 
@@ -15117,7 +14957,7 @@ msgid "Failed to load vanity URL. Try again."
 msgstr "載入自訂網址失敗。請再試一次。"
 
 #. Error message in the guild webhooks tab.
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:157
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:159
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:26
 msgid "Failed to load webhooks"
 msgstr "載入 Webhook 失敗"
@@ -15190,11 +15030,6 @@ msgstr "無法移除自訂網址。請再試一次。"
 msgid "Failed to resend code. Try again."
 msgstr "無法重新傳送驗證碼。請再試一次。"
 
-#. Toast error shown when resending the verification code fails.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:150
-msgid "Failed to resend verification code. Try again later."
-msgstr "無法重新傳送驗證碼。請稍後再試。"
-
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:74
 msgid "Failed to reset premium state."
@@ -15219,11 +15054,6 @@ msgstr "訊息傳送失敗。長按可顯示選項。"
 #: src/features/moderation/components/pages/ReportPage.tsx:51
 msgid "Failed to send report. Try again."
 msgstr "無法傳送檢舉。請再試一次。"
-
-#. Toast error shown when sending the verification email fails.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:142
-msgid "Failed to send verification email. Try again later."
-msgstr "傳送驗證電子郵件失敗。請稍後再試。"
 
 #: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
@@ -15551,15 +15381,15 @@ msgstr "依使用者篩選"
 
 #. Activity log value for the explicit content filter setting that filters messages from every member.
 #. Explicit content filter option in the community moderation settings tab. Filters messages from every member regardless of role.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:118
-#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:82
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:108
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:78
 msgid "Filter everyone"
 msgstr "篩選所有人"
 
 #. Activity log value for the explicit content filter setting that filters messages from members who have no roles.
 #. Explicit content filter option in the community moderation settings tab. Filters messages from members who have no roles assigned.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:108
-#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:77
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:98
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:73
 msgid "Filter members without roles"
 msgstr "篩選沒有身分組的成員"
 
@@ -15757,7 +15587,7 @@ msgid "Follow this channel"
 msgstr "追蹤此頻道"
 
 #. Shown instead of the message composer in an announcement channel where the user cannot send messages.
-#: src/features/channel/components/barriers/BarrierComponents.tsx:323
+#: src/features/channel/components/barriers/BarrierComponents.tsx:315
 msgid "Follow to get these announcements in a channel you choose."
 msgstr "追蹤以在您選擇的頻道中接收這些公告。"
 
@@ -15773,7 +15603,7 @@ msgstr "已關注頻道 {currentName}"
 
 #. Section heading in the channel webhook settings that lists announcement channels this channel follows.
 #. Section heading in the community webhook settings that lists announcement channels followed into this community.
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:220
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:222
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:189
 msgid "Followed channels"
 msgstr "追蹤的頻道"
@@ -15857,11 +15687,6 @@ msgstr "限英國地區觀看…"
 msgid "For me"
 msgstr "自己使用"
 
-#. Required-action modal body for starting an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:438
-msgid "For this check, you send us a text message instead of receiving one from us."
-msgstr "這次驗證，您需要傳送簡訊給我們，而不是接收我們的簡訊。"
-
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:268
 msgid "For your security, please confirm it's you to continue."
 msgstr "為了您的帳戶安全，請驗證是您本人操作，才能繼續。"
@@ -15905,7 +15730,7 @@ msgstr "強制顯示載入骨架"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:212
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:281
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:190
 msgid "Force mature media"
 msgstr "強制成人媒體"
 
@@ -15914,7 +15739,7 @@ msgid "Force move to AFK channel"
 msgstr "強制移至閒置頻道"
 
 #. Developer tools checkbox label. permissionName is a permission constant display name.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:44
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:38
 msgid "Force no {permissionName} permission"
 msgstr "強制不授予「{permissionName}」權限"
 
@@ -15948,7 +15773,7 @@ msgstr "強制顯示自訂網址免責聲明"
 msgid "Force show voice connection"
 msgstr "強制顯示語音連線"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:174
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:148
 msgid "Force slowmode active"
 msgstr "強制啟用慢速模式"
 
@@ -16020,7 +15845,7 @@ msgstr "轉傳媒體"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:33
-#: src/features/messaging/components/modals/ForwardModal.tsx:83
+#: src/features/messaging/components/modals/ForwardModal.tsx:85
 msgid "Forward message"
 msgstr "轉傳訊息"
 
@@ -16440,7 +16265,7 @@ msgid "Geo block overlay"
 msgstr "地理封鎖重疊畫面"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:86
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:57
 msgid "Geo restricted"
 msgstr "受地理區域限制"
 
@@ -16489,12 +16314,6 @@ msgstr "取得動畫頭像和橫幅、訂閱者徽章、您想要的四位數標
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:30
 msgid "Get monthly"
 msgstr "每月訂閱"
-
-#. Button in the required-action modal. Requests a new inbound SMS challenge code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:202
-#: src/features/user/components/modals/PhoneAddModal.tsx:424
-msgid "Get new code"
-msgstr "取得新驗證碼"
 
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:43
@@ -16634,20 +16453,20 @@ msgstr "禮物代碼"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:272
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:100
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:244
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:74
 msgid "Gift duration"
 msgstr "禮物期限"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:268
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:240
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:42
 msgid "Gift inventory"
 msgstr "禮物庫存"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:96
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:70
 msgid "Gift inventory flow"
 msgstr "禮物庫存流程"
 
@@ -16674,7 +16493,7 @@ msgid "Gift not found"
 msgstr "找不到禮物"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:276
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:248
 msgid "Gift redeemed"
 msgstr "禮物已兌換"
 
@@ -17030,7 +16849,7 @@ msgstr "群組私訊"
 #: src/features/app/components/dialogs/shared/RecipientList.tsx:29
 #: src/features/auth/components/pages/oauth_authorize_page/hooks/useBotGuilds.ts:33
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep.tsx:52
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:411
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:308
 #: src/features/ui/state/Notification.ts:57
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:116
 msgid "Group DM"
@@ -17349,9 +17168,14 @@ msgid "Hey {displayName}, claim your account to prevent losing access."
 msgstr "嗨，{displayName}，請認領您的帳號，以免失去存取權限。"
 
 #. Nagbar warning shown when the current user still needs to verify email. displayName is the user display name.
-#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx:17
+#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx:18
 msgid "Hey {displayName}, please verify your email address."
 msgstr "嗨，{displayName}，請驗證您的電子郵件地址。"
+
+#. Nagbar warning shown when emails to the current user address bounce, so the address cannot be verified. displayName is the user display name.
+#: src/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar.tsx:23
+msgid "Hey {displayName}, we can't deliver email to your address. Add a working email to verify your account."
+msgstr "哈囉 {displayName}，我們無法將郵件寄送到您的電子郵件地址。請新增一個有效的電子郵件地址來驗證您的帳號。"
 
 #. Randomly selected welcome message that appears as a system message when a user joins a community. Plural placeholder is the new member username. Tone is friendly and warm; keep variety across these strings.
 #: src/features/messaging/utils/SystemMessageUtils.tsx:31
@@ -17550,7 +17374,7 @@ msgstr "要隱藏自己的螢幕分享嗎？"
 
 #. Activity log value naming the high member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:75
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:74
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:65
 msgid "High"
 msgstr "高"
@@ -17755,11 +17579,6 @@ msgstr "這是一個工具提示"
 msgid "I changed my mind"
 msgstr "我改變心意了"
 
-#. Secondary button in the required-action modal. Opens recovery options for the current verification step.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:166
-msgid "I need another way"
-msgstr "我需要其他方式"
-
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
@@ -17861,16 +17680,6 @@ msgstr "如果這則檢舉是關於特定訊息，請改為檢舉該訊息。訊
 #: src/features/moderation/utils/ReportActionUtils.tsx:22
 msgid "If this report is about specific messages, report the most relevant message instead. Message reports give our safety team the clearest context, and adding details in the comments can help us review it faster. Only continue with reporting the user as a whole if reporting a message would not capture the broader issue."
 msgstr "如果此檢舉是關於多則特定訊息，請改為檢舉最相關的那一則。訊息檢舉能讓我們的安全團隊掌握最清楚的脈絡，在意見中新增詳細資訊也能幫助我們更快審查。只有在檢舉訊息無法涵蓋更廣泛的問題時，才繼續檢舉這位使用者整體。"
-
-#. Heading of the alternative-routes block in the required-action modal. Introduces human review and the option to set the phone check aside. Must read as a real supported route, not fine print.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:273
-msgid "If you can't verify by SMS"
-msgstr "如果您無法透過簡訊驗證"
-
-#. Required-action modal body when the user must contact support for account recovery.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:260
-msgid "If you cannot use any verification method, contact support for help."
-msgstr "如果您無法使用任何驗證方式，請聯絡客服以取得協助。"
 
 #. Confirmation modal body shown before dismissing the desktop-notification nagbar. {notificationSettingsPath} is the localized settings path.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:39
@@ -18635,7 +18444,7 @@ msgstr "介面大小"
 
 #. Error message in the use entrance sound.
 #. Error message in the use sound settings.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:31
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:32
 #: src/features/user/components/modals/tabs/notifications_tab/useSoundSettings.ts:17
 msgid "Invalid audio file"
 msgstr "音訊檔無效"
@@ -18674,8 +18483,10 @@ msgstr "JSON 無效。請貼上來自上方網址的完整回應。"
 
 #. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
 #. Error message in the email change modal.
+#. Error message in the email change modal.
 #. Error message in the password change modal. Keep the tone plain and specific.
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:27
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:35
 #: src/features/user/components/modals/EmailChangeModal.tsx:27
 #: src/features/user/components/modals/PasswordChangeModal.tsx:26
 msgid "Invalid or expired code"
@@ -19158,7 +18969,7 @@ msgstr "加入語音通話"
 
 #. Button in the unjoined voice channel call surface. Joins the current voice channel.
 #. Confirm dialog title shown before joining a voice channel from a context where confirmation is required.
-#: src/features/channel/components/channel_view/GuildChannelView.tsx:65
+#: src/features/channel/components/channel_view/GuildChannelView.tsx:66
 #: src/features/voice/hooks/usePendingVoiceConnection.tsx:12
 msgid "Join voice channel"
 msgstr "加入語音頻道"
@@ -19613,16 +19424,6 @@ msgstr "進一步了解 Visionary"
 msgid "Leave"
 msgstr "離開"
 
-#. Confirmation dialog title in the required-action modal when communities will be left. count is inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:311
-msgid "Leave {count, plural, one {# community} other {# communities}} and set this check aside?"
-msgstr "離開 {count, plural, one {# 個社群} other {# 個社群}} 並暫停此檢查？"
-
-#. Primary button of the set-aside confirmation in the required-action modal when communities will be left. Uses the destructive button style.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:352
-msgid "Leave and set aside"
-msgstr "離開並暫停"
-
 #. Short label in the authentication auth register form core. Keep the tone plain and specific.
 #: src/features/auth/flow/AuthRegisterFormCore.tsx:63
 msgid "Leave blank for a random username"
@@ -19772,7 +19573,7 @@ msgid "Let screen readers announce new messages as they arrive in the open chann
 msgstr "讓螢幕閱讀器在開啟的頻道中收到新訊息時，即時朗讀訊息內容。通知音效不受影響。"
 
 #. Helper text for the "Off" explicit content filter option in the community moderation settings tab. Means leave moderation to members.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:103
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:93
 msgid "Let the community self-moderate"
 msgstr "讓社群自行管理"
 
@@ -19800,7 +19601,7 @@ msgid "Library"
 msgstr "主題庫"
 
 #. Error modal body shown when entrance sound library quota is reached.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:63
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:64
 msgid "Library full ({max} sounds max). Delete one before adding another."
 msgstr "音效庫已滿（最多 {max} 個音效）。請先刪除一個，再新增其他音效。"
 
@@ -19812,7 +19613,7 @@ msgstr "音效庫：{count} / {max}"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:448
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:22
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:21
 msgid "Lifetime"
 msgstr "終身"
 
@@ -20147,7 +19948,7 @@ msgid "Loading..."
 msgstr "正在載入…"
 
 #. Combobox popup status shown while options are loading.
-#: src/features/ui/components/form/FormCombobox.tsx:87
+#: src/features/ui/components/form/FormCombobox.tsx:88
 #: src/features/ui/components/Spinner.tsx:22
 msgid "Loading…"
 msgstr "載入中…"
@@ -20261,7 +20062,7 @@ msgstr "路易斯安那州"
 
 #. Activity log value naming the low member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:57
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:56
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:57
 msgid "Low"
 msgstr "低"
@@ -20416,7 +20217,7 @@ msgstr "管理社群功能"
 msgid "Manage emoji & stickers"
 msgstr "管理表情符號和貼圖"
 
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:96
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:97
 msgid "Manage incoming webhooks that can post messages into this channel."
 msgstr "管理可將訊息發佈到此頻道的傳入 Webhook。"
 
@@ -20514,7 +20315,7 @@ msgstr "立即將所有未讀的收件匣頻道標示為已讀，不需確認"
 msgid "Mark as read"
 msgstr "標示為已讀"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:337
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:246
 msgid "Mark as redeemed"
 msgstr "標示為已兌換"
 
@@ -20676,14 +20477,14 @@ msgstr "成人社群"
 #. Generic title or label for content marked for mature audiences.
 #. Select label in the community moderation settings tab. Sensitive setting; keep neutral tone.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:90
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:132
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:61
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:122
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:296
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:180
 msgid "Mature content"
 msgstr "成人內容"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:408
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:385
 msgid "Mature content & content warnings"
 msgstr "成人內容與內容警告"
 
@@ -20794,7 +20595,7 @@ msgid "Maximum lifetime (days)"
 msgstr "附件最長保留期限（天）"
 
 #. Helper text under the "Filter everyone" explicit content filter option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:123
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:113
 msgid "Maximum protection for family-friendly spaces"
 msgstr "為闔家適宜的空間提供最高等級的保護"
 
@@ -20924,7 +20725,7 @@ msgstr "停止播放"
 #. Activity log value naming the medium member verification level of a community.
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #. Short label in the selections tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:66
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:65
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:61
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:49
 msgid "Medium"
@@ -21009,12 +20810,12 @@ msgstr "成員已解除停權"
 msgid "Member updated"
 msgstr "成員已更新"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:304
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:285
 msgid "Member verification"
 msgstr "成員驗證"
 
 #. Accessible label for the member verification level radio group in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:94
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:84
 msgid "Member verification level"
 msgstr "成員驗證等級"
 
@@ -21048,7 +20849,7 @@ msgstr "除非獲得身分組，否則成員離線時就會被移除。"
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
 msgstr "擁有「{pinMessagesPermissionLabel}」權限的成員可以為所有人釘選訊息。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:314
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:295
 msgid "Members with roles can bypass these checks. For public spaces, we recommend enabling verification."
 msgstr "擁有身分組的成員可以略過這些檢查。對於公開空間，我們建議啟用驗證。"
 
@@ -21153,7 +20954,7 @@ msgstr "提及您的訊息會在這裡顯示 {retentionDays} 天。"
 #. Activity log value for the default notification setting of a community where members are notified only when mentioned.
 #. Short label in the default notifications section. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:24
-#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:91
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:87
 msgid "Mentions only"
 msgstr "只接收提及通知"
 
@@ -21292,7 +21093,7 @@ msgstr "訊息顯示設定僅供桌面版使用。"
 msgid "Message editing"
 msgstr "編輯訊息"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:309
+#: src/features/messaging/components/modals/ForwardModal.tsx:315
 msgid "Message forwarded"
 msgstr "訊息已轉傳"
 
@@ -21341,7 +21142,7 @@ msgstr "訊息輸入按鈕"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:54
+#: src/features/messaging/components/modals/ForwardModal.tsx:56
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "訊息過長"
@@ -21396,7 +21197,7 @@ msgid "Message previews in the DM list"
 msgstr "私訊列表中的訊息預覽"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:111
+#: src/features/messaging/commands/MessageCommands.tsx:112
 msgid "Message published"
 msgstr "訊息已發布"
 
@@ -21490,7 +21291,7 @@ msgid "Messages published in #{sourceName} will now appear in #{targetName}."
 msgstr "發佈到 #{sourceName} 的訊息現在會顯示在 #{targetName}。"
 
 #. Description of the followed channels section in the channel webhook settings.
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:228
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:230
 msgid "Messages published in these announcement channels are copied here."
 msgstr "在此公告頻道中發布的訊息會在此處複製。"
 
@@ -21504,7 +21305,7 @@ msgstr "發佈於這些公告頻道的訊息會被複製到你的頻道。"
 msgid "Messages you can bookmark"
 msgstr "可收藏的訊息"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:282
+#: src/features/channel/components/barriers/BarrierComponents.tsx:274
 msgid "Messaging is temporarily paused in this community."
 msgstr "此社群的訊息功能已暫時停用。"
 
@@ -21733,30 +21534,30 @@ msgstr "模擬將於 1 天後到期"
 msgid "Mock expires in 7 days"
 msgstr "模擬將於 7 天後到期"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:293
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:202
 msgid "Mock geo block overlay"
 msgstr "模擬地理封鎖覆疊"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:320
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:229
 msgid "Mock gift inventory"
 msgstr "模擬禮物庫存"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:68
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:54
 msgid "Mock incoming call"
 msgstr "模擬來電"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:88
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:62
 msgid "Mock mature content channel gate reason"
 msgstr "模擬成人內容頻道閘門原因"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:92
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:66
 msgid "Mock mature content media gate reason"
 msgstr "模擬成人內容媒體閘門原因"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:287
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:196
 msgid "Mock UK geo"
 msgstr "模擬英國地理位置"
 
@@ -21765,12 +21566,7 @@ msgid "Mock user avatars in various sizes and all status permutations."
 msgstr "各種尺寸和所有狀態排列的模擬使用者頭像。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:64
-msgid "Mock variant"
-msgstr "模擬變體"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:104
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:78
 msgid "Mocked product flows"
 msgstr "模擬產品流程"
 
@@ -22698,14 +22494,16 @@ msgstr "新社群已靜音"
 msgid "New direct message"
 msgstr "新的私訊"
 
-#. Form field label for the new email address input in the email update flow.
 #. Short label in the email change modal. Keep it concise.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:84
+#. Short label in the email change modal. Keep it concise.
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:31
 #: src/features/user/components/modals/EmailChangeModal.tsx:47
 msgid "New email"
 msgstr "新電子郵件"
 
 #. Short label in the email change modal. Keep it concise.
+#. Short label in the email change modal. Keep it concise.
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:27
 #: src/features/user/components/modals/EmailChangeModal.tsx:43
 msgid "New email form"
 msgstr "新電子郵件表單"
@@ -22816,9 +22614,7 @@ msgstr "最新優先"
 
 #. Button that moves to the next setup wizard step.
 #. Generic primary or pagination action label that advances to the next step, page, or item.
-#. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:82
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:726
 msgid "Next"
 msgstr "下一步"
@@ -22860,12 +22656,12 @@ msgid "No"
 msgstr "否"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:256
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:228
 msgid "No {attachFilesPermission} permission"
 msgstr "沒有 {attachFilesPermission} 權限"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:252
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:224
 msgid "No {sendMessagesPermission} permission"
 msgstr "沒有 {sendMessagesPermission} 權限"
 
@@ -23005,7 +22801,7 @@ msgstr "沒有要儲存的變更"
 msgid "No channels available"
 msgstr "沒有可用的頻道"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:383
+#: src/features/messaging/components/modals/ForwardModal.tsx:389
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "找不到任何頻道"
@@ -23233,11 +23029,6 @@ msgstr "找不到權限"
 msgid "No personal words yet."
 msgstr "還沒有任何個人詞彙。"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:50
-msgid "No phone number"
-msgstr "沒有電話號碼"
-
 #. Short label in the shared app channel pins content.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:55
 msgid "No pinned messages"
@@ -23290,7 +23081,7 @@ msgstr "沒有結果"
 #. Empty state shown when a combobox search returns no matches.
 #. Empty state shown when a combobox search returns no matches.
 #: src/features/channel/components/embeds/attachments/TextualAttachmentLanguageCombobox.tsx:30
-#: src/features/ui/components/form/FormCombobox.tsx:83
+#: src/features/ui/components/form/FormCombobox.tsx:84
 msgid "No results found"
 msgstr "沒有結果"
 
@@ -23444,7 +23235,7 @@ msgid "No users found"
 msgstr "找不到使用者"
 
 #. Helper text for the "None" member verification level option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:53
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:52
 msgid "No verification is required."
 msgstr "不需要驗證。"
 
@@ -23452,7 +23243,7 @@ msgstr "不需要驗證。"
 msgid "No verification methods available"
 msgstr "沒有可用的驗證方式"
 
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:191
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:193
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:175
 msgid "No webhooks"
 msgstr "沒有 Webhook"
@@ -23504,7 +23295,7 @@ msgstr "無轉換"
 #. Short label in the visual tab. Keep it concise.
 #. Summary row value on the confirm step when no items in the category were selected.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:41
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:48
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:47
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:52
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:37
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:146
@@ -23520,7 +23311,7 @@ msgid "None"
 msgstr "無"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:30
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:29
 msgid "None (normal behavior)"
 msgstr "無（正常行為）"
 
@@ -23542,7 +23333,7 @@ msgid "Norwegian"
 msgstr "挪威文"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:46
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:45
 msgid "Not a member long enough"
 msgstr "成為成員的時間不夠久"
 
@@ -23798,9 +23589,9 @@ msgstr "物品"
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:98
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:140
-#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:73
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:88
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:130
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
 msgid "Off"
 msgstr "關閉"
 
@@ -23848,7 +23639,7 @@ msgstr "最舊優先"
 #. On state suffix appended to the reply bar mention toggle label.
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:136
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:126
 msgid "On"
 msgstr "開啟"
 
@@ -23883,11 +23674,6 @@ msgstr "有一個或多個附件無法讀取或上傳。檔案可能已移動或
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:27
 msgid "One or more files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "您嘗試上傳的一個或多個檔案，超出每個檔案 {maxSizeFormatted} 的大小上限。"
-
-#. Required-action modal carousel step title. Introduces why account verification is required.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:206
-msgid "One quick check"
-msgstr "快速檢查一下"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:66
@@ -23985,7 +23771,7 @@ msgid "Only speakers"
 msgstr "僅限揚聲器"
 
 #. Tooltip on the 2FA-for-moderation switch in the community moderation settings tab when the viewer is not the owner. Plain explanatory tone.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:38
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:37
 msgid "Only the community owner can change this setting"
 msgstr "只有社群擁有者可以變更此設定"
 
@@ -24275,7 +24061,7 @@ msgid "Open emoji in browser"
 msgstr "在瀏覽器中開啟表情符號"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:100
+#: src/features/messaging/components/modals/ForwardModal.tsx:102
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "開啟表情符號選取器"
@@ -24382,12 +24168,8 @@ msgstr "開啟選單圖示"
 msgid "Open message history threshold"
 msgstr "開啟訊息歷史記錄門檻"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:216
-msgid "Open overlay"
-msgstr "開啟浮層"
-
 #. Accessible label for the combobox popup trigger button.
-#: src/features/ui/components/form/FormCombobox.tsx:95
+#: src/features/ui/components/form/FormCombobox.tsx:96
 msgid "Open popup"
 msgstr "開啟彈出式視窗"
 
@@ -24485,11 +24267,6 @@ msgstr "開啟新版應用程式。您已登入。"
 msgid "Open the shortcuts list for quick actions."
 msgstr "開啟快速鍵清單以快速執行動作。"
 
-#. Required-action modal body explaining how to finish email verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:244
-msgid "Open the verification email and use the link inside. This window updates after the link opens."
-msgstr "開啟驗證電子郵件並使用裡面的連結。連結開啟後，此視窗會更新。"
-
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:257
 msgid "Open theme studio popout"
@@ -24534,23 +24311,9 @@ msgstr "開啟語音與視訊設定"
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "開啟您的瀏覽器，登入後輸入以下代碼，即可連結您的帳號。"
 
-#. Required-action modal carousel step title for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:446
-msgid "Open your messages"
-msgstr "開啟您的訊息"
-
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "開啟您的舊版 {PRODUCT_NAME} 應用程式，選擇「連結新裝置」，然後輸入下方的代碼。"
-
-#: src/features/user/components/modals/PhoneAddModal.tsx:324
-msgid "Open your phone's messaging app and create a new text message."
-msgstr "開啟手機的訊息應用程式，然後建立新簡訊。"
-
-#. Required-action modal body for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
-msgid "Open your phone's messaging app and start a new text message."
-msgstr "開啟手機訊息應用程式，然後開始新的簡訊。"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:253
@@ -24719,11 +24482,6 @@ msgstr "其他反應…"
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:64
 msgid "OTP"
 msgstr "OTP"
-
-#. Required-action form error when our own phone lookup provider is unavailable and we fail closed. Must blame us, not the number, and must invite retrying the same number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:554
-msgid "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
-msgstr "我們的電話號碼驗證目前無法使用。這是我們的問題，不是您的號碼有問題。請稍等幾分鐘，再用同一個號碼試一次。"
 
 #. IAR modal: body copy on the success step shown after a platform report is submitted. Reassures the user about follow-up.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:96
@@ -25313,54 +25071,6 @@ msgstr "PgUp"
 msgid "Phishing, fraud, malicious links, or false claims likely to cause real-world harm."
 msgstr "網路釣魚、詐騙、惡意連結或可能造成實際危害的虛假聲明。"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#. Tab label for the phone verification path in the required-action modal.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:104
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:58
-msgid "Phone"
-msgstr "電話"
-
-#. Form field label for the phone number input.
-#. Short label in the phone add modal. Keep it concise.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:100
-#: src/features/user/components/modals/PhoneAddModal.tsx:65
-msgid "Phone number"
-msgstr "電話號碼"
-
-#. Form validation error shown when the phone number field is empty.
-#. Label in the phone add modal.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:116
-#: src/features/user/components/modals/PhoneAddModal.tsx:41
-msgid "Phone number is required"
-msgstr "請輸入電話號碼"
-
-#. Toast shown after phone verification succeeds.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:482
-#: src/features/user/components/modals/PhoneAddModal.tsx:178
-#: src/features/user/components/modals/PhoneAddModal.tsx:183
-msgid "Phone number verified"
-msgstr "電話號碼已驗證"
-
-#. Required-action modal title shown when the phone number must be reverified.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:24
-msgid "Phone re-verification required"
-msgstr "需要重新驗證電話號碼"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:76
-msgid "Phone step"
-msgstr "電話步驟"
-
-#. Required-action error when the account is not eligible to add phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:538
-msgid "Phone verification is not available for this account. Use another method or contact support."
-msgstr "此帳號無法使用電話驗證。請使用其他方式或聯絡客服。"
-
-#. Required-action modal title shown when the phone number must be verified for the first time.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:28
-msgid "Phone verification required"
-msgstr "需要驗證電話號碼"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:21
 msgid "Photo"
@@ -25416,11 +25126,6 @@ msgstr "選擇您名稱後面的 4 位數字"
 msgid "Pick the appearance this administrator account should start with."
 msgstr "選擇此管理員帳號的初始外觀。"
 
-#. Required-action modal body for choosing a verification method.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:236
-msgid "Pick the method you can complete now."
-msgstr "選擇您現在可以完成的方法。"
-
 #. Validation hint in the IAR modal on the rule selection step.
 #: src/features/moderation/components/report_modal/IARModal.tsx:74
 msgid "Pick the rule to review."
@@ -25453,7 +25158,7 @@ msgstr "子母畫面"
 
 #. Confirm button label on the pin message alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MessageActionUtils.tsx:68
+#: src/features/channel/components/MessageActionUtils.tsx:69
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:70
 msgid "Pin"
 msgstr "釘選"
@@ -25471,7 +25176,7 @@ msgstr "釘選群組私訊"
 #. Generic action label that pins a message to the channel pins.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:60
+#: src/features/channel/components/MessageActionUtils.tsx:61
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:544
 #: src/features/input/state/input_keybind/shared.ts:17
 msgid "Pin message"
@@ -25498,7 +25203,7 @@ msgid "Pin or unpin any message."
 msgstr "釘選或取消釘選任何訊息。"
 
 #. Body of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:64
+#: src/features/channel/components/MessageActionUtils.tsx:65
 msgid "Pin this message to the channel for everyone to see."
 msgstr "將此訊息釘選到頻道，讓所有人都能看到。"
 
@@ -26227,18 +25932,18 @@ msgstr "個人檔案顏色"
 
 #. Settings section label for editing profile appearance and identity.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:104
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:105
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:6
 msgid "Profile customization"
 msgstr "個人檔案自訂"
 
 #. Label in the my profile tab. Preserve {selectedGuildName}; it is inserted by code.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:100
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:101
 msgid "Profile customization for {selectedGuildName}"
 msgstr "{selectedGuildName} 的個人檔案自訂"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:96
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:97
 msgid "Profile customization form"
 msgstr "個人檔案自訂表單"
 
@@ -26303,7 +26008,7 @@ msgid "Profile type"
 msgstr "個人檔案類型"
 
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:76
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:77
 msgid "Profile updated"
 msgstr "個人檔案已更新"
 
@@ -26340,7 +26045,7 @@ msgstr "偵測到新音訊裝置時提示"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the my profile tab. Keep it concise.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:141
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:142
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:177
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:160
 msgid "Pronouns"
@@ -26689,11 +26394,6 @@ msgstr "協調突襲"
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:171
 msgid "Rate"
 msgstr "語速"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:78
-msgid "Rate limited"
-msgstr "頻率限制"
 
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:292
 msgid "Raw embed JSON"
@@ -27277,7 +26977,7 @@ msgid "Remove {userName} from your friends?"
 msgstr "要將 {userName} 從您的好友中移除嗎？"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
-#: src/features/channel/components/MessageActionUtils.tsx:80
+#: src/features/channel/components/MessageActionUtils.tsx:81
 msgid "Remove all"
 msgstr "全部移除"
 
@@ -27290,7 +26990,7 @@ msgstr "要從此訊息中移除所有 {emojiNameWithColons} 表情符號反應�
 #. Message action that removes every reaction from the selected message.
 #. Title of the confirmation alert shown when clearing every reaction on a message.
 #: src/features/channel/components/MessageActionMenu.tsx:79
-#: src/features/channel/components/MessageActionUtils.tsx:72
+#: src/features/channel/components/MessageActionUtils.tsx:73
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:70
 msgid "Remove all reactions"
 msgstr "移除所有反應"
@@ -27899,19 +27599,9 @@ msgstr "被檢舉使用者的標籤（選填）"
 msgid "Reposts: <0>{countLabel}</0>"
 msgstr "轉發：<0>{countLabel}</0>"
 
-#. Required-action form error when the user submits before a code exists.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:494
-msgid "Request a new code first."
-msgstr "請先要求新驗證碼。"
-
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:136
 msgid "Request a new reset link"
 msgstr "要求新的重設連結"
-
-#. Form validation error shown when the user tries to submit a code before requesting one.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:112
-msgid "Request a verification code first."
-msgstr "請先要求驗證碼。"
 
 #. Footer submit button label on the confirm step of the data-export modal.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:196
@@ -27928,7 +27618,7 @@ msgid "Requests"
 msgstr "邀請"
 
 #. Switch label in the community moderation settings tab. Requires moderators to have two-factor auth enabled before they can ban, kick, time out, or delete messages. Security-sensitive; keep tone plain.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:157
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:147
 msgid "Require 2FA for moderation actions"
 msgstr "管理動作需要雙重驗證"
 
@@ -27958,7 +27648,7 @@ msgstr "需要 OAuth2 授權碼授予"
 msgid "Require passkey"
 msgstr "要求通行金鑰"
 
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:475
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:452
 msgid "Require two-factor authentication for moderators before they can ban, kick, time out, or remove messages."
 msgstr "管理員必須啟用雙重驗證，才能執行停權、踢出、禁言或移除訊息等操作。"
 
@@ -27972,46 +27662,6 @@ msgstr "必要"
 msgid "Required 2FA for moderation actions"
 msgstr "已要求執行管理動作前必須啟用 2FA"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:232
-msgid "Required action default tab"
-msgstr "必要動作預設分頁"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:60
-msgid "Required action flow"
-msgstr "必要動作流程"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:236
-msgid "Required action phone step"
-msgstr "必要動作電話步驟"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:240
-msgid "Required action resend loading"
-msgstr "必要動作重新傳送載入中"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:244
-msgid "Required action resend outcome"
-msgstr "重新傳送必要動作的結果"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:248
-msgid "Required action reverification text"
-msgstr "必要動作重新驗證文字"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:228
-msgid "Required action variant"
-msgstr "必要動作變體"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:224
-msgid "Required actions overlay"
-msgstr "必要動作重疊畫面"
-
 #. Reason spoken by screen readers when a required slash-command argument in the message box is empty.
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:57
 msgid "Required value missing"
@@ -28023,27 +27673,23 @@ msgid "Requires a redirect URI and an authorization code when inviting this bot.
 msgstr "邀請此機器人時，需要重新導向 URI 和授權碼。"
 
 #. Helper text for the "Medium" member verification level option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:71
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:70
 msgid "Requires a verified email address and an account that's at least 5 minutes old."
 msgstr "需要驗證電子郵件地址，且帳號建立時間至少滿 5 分鐘。"
 
 #. Helper text for the "Low" member verification level option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:62
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:61
 msgid "Requires a verified email address."
 msgstr "需要驗證電子郵件地址。"
 
-#. Helper text for the "Very high" member verification level option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:90
-msgid "Requires a verified phone number."
-msgstr "需要已驗證的電話號碼。"
-
 #. Helper text for the "High" member verification level option in the community moderation settings tab. "Medium" refers to the matching level option.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:80
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:79
 msgid "Requires everything in medium, plus being a member of the community for at least 10 minutes."
 msgstr "除了中等安全等級的所有要求外，還必須成為社群成員至少 10 分鐘。"
 
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:200
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:240
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:205
 #: src/features/user/components/modals/EmailChangeModal.tsx:296
 #: src/features/user/components/modals/EmailChangeModal.tsx:333
 #: src/features/user/components/modals/PasswordChangeModal.tsx:244
@@ -28067,31 +27713,19 @@ msgid "Resend ({resendSecondsRemaining}s)"
 msgstr "重新傳送（{resendSecondsRemaining} 秒）"
 
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:200
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:205
 #: src/features/user/components/modals/PasswordChangeModal.tsx:244
 msgid "Resend ({secondsRemaining}s)"
 msgstr "重新傳送（{secondsRemaining} 秒）"
 
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:244
-msgid "Resend button loading"
-msgstr "重新傳送按鈕載入中"
-
-#. Button in the required-action modal. Requests another verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:194
 #: src/features/moderation/components/report/ReportStepVerification.tsx:105
 msgid "Resend code"
 msgstr "重新傳送驗證碼"
 
-#. Button in the required-action modal. Sends another verification email.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:93
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:198
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:145
 msgid "Resend email"
 msgstr "重寄驗證信"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:80
-msgid "Resend outcome"
-msgstr "重新傳送結果"
 
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:145
 msgid "Resent"
@@ -28518,21 +28152,6 @@ msgstr "顯示"
 msgid "Reveal spoiler"
 msgstr "顯示劇透內容"
 
-#. Required-action modal body when user must reverify email or verify phone. Product name is interpolated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:65
-msgid "Reverify your email or verify your phone to continue using {productName}."
-msgstr "請重新驗證您的電子郵件或驗證您的電話號碼，才能繼續使用 {productName}。"
-
-#. Required-action modal body for email re-verification. Product name is interpolated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:49
-msgid "Reverify your email to continue using {productName}."
-msgstr "請重新驗證您的電子郵件，以繼續使用 {productName}。"
-
-#. Required-action modal body for phone re-verification. Product name is interpolated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:57
-msgid "Reverify your phone number to continue using {productName}."
-msgstr "請重新驗證您的電話號碼，以繼續使用 {productName}。"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
 msgid "Reverse image"
@@ -28934,12 +28553,12 @@ msgstr "飽和度"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:107
+#: src/features/messaging/commands/MessageCommands.tsx:108
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
 #: src/features/user/components/modals/BaseChangeNicknameModal.tsx:136
-#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:297
+#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:300
 #: src/features/user/components/modals/NoteEditSheet.tsx:48
 #: src/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal.tsx:96
 msgid "Save"
@@ -29337,7 +28956,7 @@ msgstr "拖曳預覽"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:87
+#: src/features/messaging/components/modals/ForwardModal.tsx:89
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:46
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29381,16 +29000,6 @@ msgstr "搜尋頻道"
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
 msgid "Search communities"
 msgstr "搜尋社群"
-
-#. Button or menu action label in the phone add modal. Keep it concise.
-#: src/features/user/components/modals/PhoneAddModal.tsx:61
-msgid "Search countries..."
-msgstr "搜尋國家…"
-
-#. Placeholder text inside the country search input.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:96
-msgid "Search countries…"
-msgstr "搜尋國家…"
 
 #. Button or menu action label in the guild emoji tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:93
@@ -29908,7 +29517,7 @@ msgid "Select your country of residence."
 msgstr "請選擇您的居住國家/地區。"
 
 #. Generic combobox control placeholder.
-#: src/features/ui/components/form/FormCombobox.tsx:75
+#: src/features/ui/components/form/FormCombobox.tsx:76
 msgid "Select…"
 msgstr "選擇…"
 
@@ -29998,7 +29607,7 @@ msgid "Send"
 msgstr "傳送"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:104
+#: src/features/messaging/components/modals/ForwardModal.tsx:106
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "傳送 ({selectedCount}/{selectionLimit})"
 
@@ -30053,9 +29662,8 @@ msgstr "再送出一則檢舉"
 msgid "Send button"
 msgstr "傳送按鈕"
 
-#. Primary button in the required-action modal. Requests a verification code.
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:219
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:190
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:196
 #: src/features/user/components/modals/EmailChangeModal.tsx:318
 msgid "Send code"
 msgstr "傳送驗證碼"
@@ -30113,7 +29721,7 @@ msgid "Send messages"
 msgstr "傳送訊息"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:54
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:53
 msgid "Send messages disabled"
 msgstr "無法傳送訊息"
 
@@ -30151,31 +29759,10 @@ msgstr "傳送已儲存的媒體 {memeName}"
 msgid "Send text-to-speech messages with /tts. Members who turned text-to-speech on hear them read aloud."
 msgstr "使用 /tts 傳送文字轉語音訊息。開啟文字轉語音的成員會聽到朗讀。"
 
-#. placeholder {0}: inboundChallenge.challenge_code
-#. placeholder {1}: inboundChallenge.our_number
-#: src/features/user/components/modals/PhoneAddModal.tsx:332
-msgid "Send the code <0>{0}</0> to <1>{1}</1>"
-msgstr "將驗證碼 <0>{0}</0> 傳送至 <1>{1}</1>"
-
-#. Required-action modal body for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:458
-msgid "Send the code to the phone number below."
-msgstr "將驗證碼傳送至以下電話號碼。"
-
-#. Required-action modal carousel step title for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:454
-msgid "Send this code"
-msgstr "傳送此驗證碼"
-
 #. Unpin confirmation body. Keep the time-travel quip.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:39
 msgid "Send this pin back in time?"
 msgstr "將此釘選訊息送回過去？"
-
-#. Label for the destination phone number in an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:466
-msgid "Send to"
-msgstr "傳送至"
 
 #. Permission name: allows sending text-to-speech messages.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:406
@@ -30199,14 +29786,6 @@ msgstr "傳送語音訊息"
 #: src/features/voice/components/voice_connection_status/shared.ts:84
 msgid "Send:"
 msgstr "傳送："
-
-#: src/features/user/components/modals/PhoneAddModal.tsx:301
-msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also ask the administrators of this instance to lift this requirement from your account."
-msgstr "由於傳送簡訊到此電話號碼的費用對 {PRODUCT_NAME} 來說太高了，因此我們需要您改為傳送簡訊給我們。我們知道這不太理想。您也可以請此實例的管理員免除您帳號的此項要求。"
-
-#: src/features/user/components/modals/PhoneAddModal.tsx:307
-msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also contact <0>{SUPPORT_EMAIL}</0> to have us lift this requirement from your account."
-msgstr "由於傳送簡訊到此電話號碼的費用對 {PRODUCT_NAME} 來說太高了，因此我們需要您改為傳送簡訊給我們。我們知道這不太理想。您也可以聯絡 <0>{SUPPORT_EMAIL}</0>，要求我們免除您帳號的此項要求。"
 
 #. IAR modal: rule label.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:269
@@ -30287,11 +29866,6 @@ msgstr "逐一傳送"
 msgid "Serve the token file"
 msgstr "提供權杖檔案"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:82
-msgid "Service error"
-msgstr "服務錯誤"
-
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.
 #: src/features/devtools/components/NagbarControls.ts:27
 msgid "Service incident nagbar"
@@ -30343,7 +29917,7 @@ msgid "Set custom shortcut for \"{label}\""
 msgstr "為「{label}」設定自訂快速鍵"
 
 #. Short label in the custom status bottom sheet. Keep it concise.
-#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:36
+#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:37
 msgid "Set custom status"
 msgstr "設定自訂狀態"
 
@@ -30486,18 +30060,6 @@ msgstr "已將語音區域設為 {region}"
 msgid "Set the voice region to automatic"
 msgstr "將語音區域設為自動"
 
-#. Primary button of the set-aside confirmation in the required-action modal when nothing will be left. Uses the normal button style, not the destructive one.
-#. Secondary button in the required-action modal that restores the deferred phone check instead of verifying a number. Must not read as skipping or circumventing, and must not use back or undo wording, which collides with the modal back button.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:290
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:347
-msgid "Set this check aside"
-msgstr "暫緩此驗證"
-
-#. Confirmation dialog title in the required-action modal when nothing will be left.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:307
-msgid "Set this check aside?"
-msgstr "暫緩此驗證？"
-
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:74
 msgid "Set up {productName}"
@@ -30528,7 +30090,7 @@ msgid "Set your pronouns"
 msgstr "設定您的代名詞"
 
 #. Short label in the custom status modal. Keep it concise.
-#: src/features/user/components/modals/CustomStatusModal.tsx:46
+#: src/features/user/components/modals/CustomStatusModal.tsx:47
 msgid "Set your status"
 msgstr "設定您的狀態"
 
@@ -30796,7 +30358,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "錄製期間快速鍵會暫停作用。"
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:58
+#: src/features/messaging/components/modals/ForwardModal.tsx:60
 msgid "Shorten the message and try again."
 msgstr "請縮短訊息後再試一次。"
 
@@ -30827,7 +30389,7 @@ msgid "Show a {productName} icon in the system tray or menu bar"
 msgstr "在系統匣或選單列中顯示 {productName} 圖示"
 
 #. Switch label in the community moderation settings tab. Toggles a consent prompt before entering any channel.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:144
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:134
 msgid "Show a content warning"
 msgstr "顯示內容警示"
 
@@ -31672,7 +31234,7 @@ msgstr "慢速模式 · 等待 {remaining}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Short label in the slowmode rate limited modal. Keep it concise.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:260
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:232
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:8
 msgid "Slowmode active"
 msgstr "慢速模式進行中"
@@ -31718,17 +31280,17 @@ msgid "Slowmode is set to {durationLabel}. Wait before sending another message."
 msgstr "慢速模式設為 {durationLabel}。請稍候再傳送下一則訊息。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:264
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:236
 msgid "Slowmode remaining"
 msgstr "慢速模式剩餘時間"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:52
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:46
 msgid "Slowmode simulation"
 msgstr "慢速模式模擬"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:56
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:50
 msgid "Slowmode time remaining"
 msgstr "慢速模式剩餘時間"
 
@@ -31806,11 +31368,6 @@ msgstr "平滑捲動"
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:242
 msgid "Smoother video"
 msgstr "畫面更流暢"
-
-#. Required-action error when the SMS provider cannot send or verify a code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:534
-msgid "SMS verification is unavailable right now. Try again later or contact support."
-msgstr "目前無法進行簡訊驗證。請稍後再試或聯絡客服。"
 
 #. Success message after validating SMTP credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:1019
@@ -31943,7 +31500,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "準備貼圖時發生錯誤。請嘗試其他檔案，或稍後再試一次。"
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:123
+#: src/features/messaging/commands/MessageCommands.tsx:124
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "發布時發生了問題。請稍後再試。"
 
@@ -32009,11 +31566,9 @@ msgstr "發生錯誤。請重新載入頁面或重新登入。"
 msgid "Something went wrong. Try again later."
 msgstr "發生錯誤。請稍後再試。"
 
-#. Generic required-action error fallback.
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "發生錯誤。請再試一次。"
@@ -32352,11 +31907,6 @@ msgstr "單一登入逾時。請再試一次。"
 msgid "Staff controls"
 msgstr "員工控制項"
 
-#. Required-action modal notice for inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:478
-msgid "Standard messaging rates from your carrier may apply."
-msgstr "您的電信業者可能會收取標準訊息費率。"
-
 #. Short label in the hdr tab. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab.tsx:21
 msgid "Standard range"
@@ -32386,8 +31936,6 @@ msgstr "收藏動畫"
 msgid "Starred channels"
 msgstr "收藏頻道"
 
-#. Primary button in the required-action modal. Starts the selected verification path.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:158
 #: src/features/user/components/modals/EmailChangeModal.tsx:281
 #: src/features/user/components/modals/PasswordChangeModal.tsx:229
 msgid "Start"
@@ -33026,7 +32574,7 @@ msgstr "訂閱者傳輸："
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:18
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:17
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:11
 msgid "Subscription"
 msgstr "訂閱"
@@ -33051,14 +32599,12 @@ msgstr "訂閱情境"
 msgid "Subtext"
 msgstr "小字"
 
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:74
 #: src/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab.tsx:123
 msgid "Success"
 msgstr "成功"
 
 #. Helper text under the "Filter members without roles" explicit content filter option in the community moderation settings tab.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:113
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:103
 msgid "Suggested for most communities"
 msgstr "建議用於大多數社群"
 
@@ -33402,7 +32948,7 @@ msgid "System & welcome"
 msgstr "系統與歡迎"
 
 #. Read-only system DM barrier message. productName is the Fluxer product name.
-#: src/features/channel/components/barriers/BarrierComponents.tsx:50
+#: src/features/channel/components/barriers/BarrierComponents.tsx:51
 msgid "System announcements from {productName} staff. You can't reply here."
 msgstr "來自 {productName} 團隊的系統公告。您無法在此回覆。"
 
@@ -33765,11 +33311,6 @@ msgstr "選取文字"
 msgid "Text size"
 msgstr "文字大小"
 
-#. Required-action modal carousel step title for starting inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:434
-msgid "Text us from your phone"
-msgstr "用您的手機傳送簡訊給我們"
-
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:424
@@ -33816,26 +33357,6 @@ msgstr "泰文"
 msgid "Thank you for helping keep {productName} safe. We'll review your report as soon as possible."
 msgstr "感謝您協助維護 {productName} 的安全。我們會盡快審核您的檢舉。"
 
-#. Required-action form error for an invalid verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:486
-msgid "That code didn't work. Check it and try again."
-msgstr "驗證碼有誤。請檢查後再試一次。"
-
-#. Required-action form error for an expired verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:490
-msgid "That code expired. Request a new code."
-msgstr "驗證碼已過期。請取得新的驗證碼。"
-
-#. Shown in the required-action modal when setting the check aside failed part way through leaving communities. Retrying is safe and continues from where it stopped. Names the button so the reader knows what to press.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:382
-msgid "That did not finish. Some communities may already have been left, and your account is still locked. Press Set this check aside again to finish."
-msgstr "這次沒有完成。您可能已經退出部分社群，且您的帳號仍處於鎖定狀態。請再按一次「暫緩此驗證」以完成。"
-
-#. Shown in the required-action modal when setting the check aside failed and the user was in no community that would have been left, so nothing can have been lost.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:377
-msgid "That did not go through. Nothing changed. Try again."
-msgstr "無法完成。沒有任何變更。請再試一次。"
-
 #. Body of the passkey page after the passkey prompt failed or was dismissed. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:36
 msgid "That didn't work. Try again or cancel."
@@ -33848,11 +33369,6 @@ msgstr "這看起來不是有效的顏色。請試試看十六進位、rgb()、h
 #: src/features/moderation/components/report/ReportStepDetails.tsx:175
 msgid "That doesn't look like a valid URL."
 msgstr "這看起來不是有效的網址。"
-
-#. Required-action form error when a new email is already used by another account.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:510
-msgid "That email is already in use."
-msgstr "該電子郵件已被使用。"
 
 #. Body of the accept-friend-request error modal when the request no longer exists.
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx:54
@@ -34089,11 +33605,6 @@ msgstr "該覆寫曾拒絕 {permissions}"
 msgid "The page you're looking for doesn't exist or has been moved."
 msgstr "您要找的頁面不存在，或可能已移動。"
 
-#. Success toast after the phone check is set aside while an email requirement remains, so the modal stays open on the email step. Never tell someone they are done while a modal is still in front of them.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:362
-msgid "The phone check is set aside. One email step is left."
-msgstr "電話驗證已暫緩。剩下一個電子郵件驗證步驟。"
-
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
 msgid "The provided redirect_uri is not registered for this application."
@@ -34251,7 +33762,7 @@ msgstr "沒有可建立邀請的頻道。"
 msgid "There are no roles to assign in this community at this time, but you can create a new role in <0>{rolesSettingsPath}</0>."
 msgstr "目前這個社群沒有可指派的身分組，但您可以在<0>{rolesSettingsPath}</0>中建立新的身分組。"
 
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:193
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:195
 msgid "There are no webhooks configured for this channel. Create a webhook to allow external applications to post messages."
 msgstr "此頻道尚未設定任何 Webhook。請建立 Webhook，以允許外部應用程式發佈訊息。"
 
@@ -34273,7 +33784,7 @@ msgstr "載入邀請時發生錯誤。請再試一次。"
 msgid "There was an error loading the stickers. Try again."
 msgstr "載入貼圖時發生錯誤。請再試一次。"
 
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:158
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:160
 msgid "There was an error loading the webhooks for this channel. Try again."
 msgstr "載入此頻道的 Webhook 時發生錯誤。請再試一次。"
 
@@ -34417,7 +33928,7 @@ msgstr "此頻道一次最多可發布 10 則訊息，之後每隔 6 分鐘才�
 msgid "This channel can publish 10 messages in a row, then one more every 6 minutes. Try again in a few minutes."
 msgstr "此頻道一次最多可發布 10 則訊息，之後每 6 分鐘可再發布一則。請稍後再試。"
 
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:121
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:123
 msgid "This channel does not support webhooks."
 msgstr "此頻道不支援 Webhook。"
 
@@ -34550,12 +34061,12 @@ msgstr "此連結帳號尚未驗證。"
 #. Label in the content warning utils helper. Keep the tone plain and specific.
 #. Placeholder example shown in the custom content warning textarea in the community moderation settings tab.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:30
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:153
+#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:143
 #: src/features/messaging/utils/ContentWarningUtils.ts:11
 msgid "This contains sensitive content."
 msgstr "此內容含有敏感資訊。"
 
-#: src/features/channel/components/channel_view/DMChannelView.tsx:263
+#: src/features/channel/components/channel_view/DMChannelView.tsx:265
 msgid "This conversation is no longer available."
 msgstr "此對話已無法使用。"
 
@@ -34658,7 +34169,7 @@ msgid "This group has too many people"
 msgstr "此群組人數過多"
 
 #. Body of the error modal shown when a group DM is already at the maximum number of recipients.
-#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:15
+#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:16
 msgid "This group is full. Remove someone before adding more people."
 msgstr "此群組已滿。請先移除成員，才能再新增成員。"
 
@@ -34715,11 +34226,6 @@ msgstr "這是來自某個社群的自訂貼圖。"
 msgid "This is an age-restricted channel. Updates can only go to age-restricted channels."
 msgstr "這是年齡限制頻道。更新只能發送到年齡限制頻道。"
 
-#. Required-action modal intro text when phone verification is required.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:228
-msgid "This is an anti-spam check. Your phone number is not linked to your account."
-msgstr "這是反垃圾訊息檢查。您的電話號碼不會連結到您的帳號。"
-
 #. Error message in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:62
 msgid "This is an error message"
@@ -34734,16 +34240,6 @@ msgstr "此功能已停用"
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:36
 msgid "This is how messages appear"
 msgstr "訊息顯示方式"
-
-#. Shown in the required-action modal on a self-hosted instance when setting the check aside is refused, and when it reported success but the phone requirement is still in force.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:372
-msgid "This is not available on your account right now. Ask the administrators of this instance to review it."
-msgstr "您的帳號目前無法使用此功能。請向此實例的管理員申請審查。"
-
-#. Shown in the required-action modal when setting the check aside is refused, and when it reported success but the phone requirement is still in force. supportEmail is inserted by code, and the address is named in full because the support link may have scrolled out of view.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:367
-msgid "This is not available on your account right now. Email {supportEmail} and a person will review it."
-msgstr "此功能目前在您的帳號上無法使用。請寄信至 {supportEmail}，我們將請專人為您處理。"
 
 #: src/features/channel/components/ChannelLayout.tsx:45
 msgid "This is not the channel you're looking for."
@@ -34791,11 +34287,6 @@ msgstr "這是您最後一個通行金鑰，而通行金鑰是您的第二道驗
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "這是您最後一個通行金鑰。刪除後，您將無法再以通行金鑰作為第二道驗證。"
-
-#. Required-action form error when the number is not a mobile line. Do not name the line type.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:566
-msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
-msgstr "這不是手機號碼，無法接收我們的簡訊。請嘗試輸入手機號碼，或若您認為有誤，請聯絡客服。"
 
 #. Extra file-too-large alert sentence shown when premium upload-limit upgrades are unavailable.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:39
@@ -34864,7 +34355,7 @@ msgid "This message has already been deleted."
 msgstr "此訊息已被刪除。"
 
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:115
+#: src/features/messaging/commands/MessageCommands.tsx:116
 msgid "This message has already been published"
 msgstr "此訊息已發佈過"
 
@@ -34874,19 +34365,9 @@ msgid "This message no longer exists."
 msgstr "此訊息已不存在。"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:129
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:130
 msgid "This nickname will only be visible in this community"
 msgstr "這個暱稱只會在此社群中顯示"
-
-#. Required-action form error when a number must use the inbound text-in challenge and the current step cannot start one. Do not say why the number was routed there.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:548
-msgid "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
-msgstr "這個號碼是透過傳送簡訊驗證的。請返回並重新開始電話驗證，以取得驗證碼和要傳送簡訊的號碼。"
-
-#. Required-action modal explanation for an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:442
-msgid "This number needs text-in verification instead of an SMS from us."
-msgstr "此號碼需要透過文字訊息驗證，而非我們傳送的簡訊。"
 
 #. Notice shown in the slash-command parameter bar when a required argument was left empty.
 #: src/features/channel/components/SlashCommandParamBar.tsx:12
@@ -34907,16 +34388,6 @@ msgstr "此參與者已耳機靜音"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:65
 msgid "This participant was deafened by moderators"
 msgstr "此參與者遭管理員設為耳機靜音"
-
-#. Required-action form error when the backend rejects a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:526
-msgid "This phone number cannot be used. Try another mobile number or contact support."
-msgstr "此電話號碼無法使用。請嘗試其他手機號碼或聯絡客服。"
-
-#. Required-action form error when the backend rejects a reused phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
-msgid "This phone number has already been used. Try another number or contact support."
-msgstr "此電話號碼已被使用。請嘗試其他號碼或聯絡客服。"
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
@@ -35041,7 +34512,7 @@ msgstr "此使用者在此社群中沒有任何身分組。"
 msgid "This user is already banned from the community."
 msgstr "此使用者已被社群停權。"
 
-#: src/features/channel/components/channel_view/DMChannelView.tsx:280
+#: src/features/channel/components/channel_view/DMChannelView.tsx:282
 msgid "This user is no longer available."
 msgstr "此使用者已無法使用。"
 
@@ -35064,11 +34535,6 @@ msgstr "此使用者是由平台管理員強制加入此社群的。"
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:40
 msgid "This verification session expired. Return to {productName} and start checkout again."
 msgstr "此驗證工作階段已過期。請返回 {productName} 並重新開始結帳。"
-
-#. Required-action form error when an email-change ticket or proof is invalid or expired.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:498
-msgid "This verification session expired. Start again."
-msgstr "此驗證工作階段已過期。請重新開始。"
 
 #. Body of the voice-channel-full modal.
 #: src/features/voice/components/alerts/VoiceChannelFullModal.tsx:12
@@ -35162,11 +34628,6 @@ msgstr "這會將您登出、清除快取檔案與已儲存的工作階段，並
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:84
 msgid "This will trust all external links and skip the warning for every domain. Your existing trusted domains will be replaced. This is less secure."
 msgstr "這會信任所有外部連結，並略過所有網域的警告。您現有的信任網域將會被取代。此設定較不安全。"
-
-#. Required-action modal body after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:474
-msgid "This window updates automatically after we receive your message."
-msgstr "我們收到您的訊息後，此視窗會自動更新。"
 
 #. IAR modal: rule description for a user report.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:153
@@ -35307,7 +34768,7 @@ msgid "Title bar"
 msgstr "標題列"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:280
+#: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:252
 msgid "Title bar platform"
 msgstr "標題列平台"
 
@@ -35470,18 +34931,11 @@ msgstr "色調"
 msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "將 HDR 影像色調對應至標準範圍，降低峰值亮度。"
 
-#. Required-action error shown for rate limits.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:502
-msgid "Too many attempts. Wait a bit, then try again."
-msgstr "嘗試次數過多。請稍候再試。"
-
 #. Error message in the max guilds modal.
 #: src/features/guild/components/alerts/MaxGuildsModal.tsx:9
 msgid "Too many communities"
 msgstr "社群數量過多"
 
-#. Toast error shown when the verification request is rate-limited.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:138
 #: src/features/platform/transport/RestTransport.ts:21
 msgid "Too many requests. Try again later."
 msgstr "請求次數過多。請稍後再試。"
@@ -36151,8 +35605,10 @@ msgstr "無法準備任何要上傳的表情符號。發生以下錯誤："
 
 #. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
 #. Error message in the email change modal.
+#. Error message in the email change modal.
 #. Error message in the password change modal. Keep the tone plain and specific.
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:31
+#: src/features/user/components/modals/BouncedEmailChangeModal.tsx:39
 #: src/features/user/components/modals/EmailChangeModal.tsx:31
 #: src/features/user/components/modals/PasswordChangeModal.tsx:30
 msgid "Unable to resend code right now"
@@ -36208,7 +35664,7 @@ msgstr "無法使用"
 
 #. Relationship action label for removing a block from this user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/barriers/BarrierComponents.tsx:409
+#: src/features/channel/components/barriers/BarrierComponents.tsx:401
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:45
 #: src/features/user/components/modals/tabs/BlockedUsersTab.tsx:177
 #: src/features/user/components/settings_utils/search_index/BlockedUsersIndex.ts:22
@@ -36245,7 +35701,7 @@ msgstr "未分類"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:14
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:192
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:38
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:37
 msgid "Unclaimed account"
 msgstr "未認領的帳號"
 
@@ -36721,7 +36177,7 @@ msgid "Unordered"
 msgstr "項目符號清單"
 
 #. Confirm button label on the unpin message alert.
-#: src/features/channel/components/MessageActionUtils.tsx:56
+#: src/features/channel/components/MessageActionUtils.tsx:57
 msgid "Unpin"
 msgstr "取消釘選"
 
@@ -36746,7 +36202,7 @@ msgid "Unpin message"
 msgstr "取消釘選訊息"
 
 #. Body of the confirmation alert shown when unpinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:52
+#: src/features/channel/components/MessageActionUtils.tsx:53
 msgid "Unpin this message?"
 msgstr "要取消釘選這則訊息嗎？"
 
@@ -36866,7 +36322,7 @@ msgid "Unsaved changes"
 msgstr "未儲存的變更"
 
 #. Error modal body shown when an entrance sound upload has an unsupported audio format.
-#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:39
+#: src/features/user/components/modals/tabs/hooks/useEntranceSound.ts:40
 msgid "Unsupported audio file."
 msgstr "不支援的音訊檔案。"
 
@@ -36915,7 +36371,7 @@ msgid "Until I turn it back on"
 msgstr "直到我再次開啟"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:34
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:33
 msgid "Unverified email"
 msgstr "未驗證的電子郵件"
 
@@ -36958,12 +36414,7 @@ msgstr "請更新 {productName} 以檢視此訊息。"
 msgid "Update app"
 msgstr "更新應用程式"
 
-#. Primary button in the required-action modal. Submits a code to update the account email.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:186
-msgid "Update email"
-msgstr "更新電子郵件"
-
-#: src/features/user/components/modals/CustomStatusModal.tsx:421
+#: src/features/user/components/modals/CustomStatusModal.tsx:424
 msgid "Update my status"
 msgstr "更新我的狀態"
 
@@ -37306,18 +36757,13 @@ msgstr "在要插入圖片網址的位置使用 {url}。"
 msgid "Use a dedicated modal to set a message history threshold date for members who don't have the {readMessageHistoryPermissionLabel} permission."
 msgstr "使用專屬的彈出視窗，為沒有「{readMessageHistoryPermissionLabel}」權限的成員設定訊息歷史記錄截止日期。"
 
-#. Required-action modal body for self-serve email recovery.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:256
-msgid "Use a different email address and verify it with a code."
-msgstr "使用其他電子郵件地址，並透過驗證碼進行驗證。"
-
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/NagbarControls.ts:9
 msgid "Use actual"
 msgstr "使用實際"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:26
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:25
 msgid "Use actual premium type"
 msgstr "使用實際的進階方案類型"
 
@@ -37334,16 +36780,6 @@ msgstr "使用其他方式"
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "使用驗證器應用程式產生雙重驗證碼"
-
-#. Required-action modal body for entering a new email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:400
-msgid "Use an email address you can access. We will send a code there."
-msgstr "請使用您能正常收信的電子郵件地址。我們會將驗證碼寄送到該地址。"
-
-#. Required-action form error when the new email matches the current account email.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:514
-msgid "Use an email that is different from your current one."
-msgstr "請使用與您目前不同的電子郵件地址。"
 
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
@@ -37408,16 +36844,6 @@ msgstr "在整個應用程式中使用深色主題"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:45
 msgid "Use default"
 msgstr "使用預設值"
-
-#. Button in the required-action modal. Starts the flow for changing to another email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:182
-msgid "Use different email"
-msgstr "使用其他電子郵件"
-
-#. Button in the required-action modal. Selects the email verification path.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:170
-msgid "Use email"
-msgstr "使用電子郵件"
 
 #. Permission description in the channel-scoped permissions editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:260
@@ -37522,15 +36948,6 @@ msgstr "要使用通行金鑰進行雙重驗證嗎？"
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
 msgid "Use passkeys to sign in without a password"
 msgstr "使用通行金鑰登入，無需密碼"
-
-#. Button in the required-action modal. Selects the phone verification path.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:174
-msgid "Use phone"
-msgstr "使用電話號碼"
-
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:238
-msgid "Use reverification text"
-msgstr "使用重新驗證文字"
 
 #. Primary action button in the trimmer modal: accept the current selection and upload it.
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:37
@@ -37730,7 +37147,7 @@ msgstr "使用者移動頻道"
 #. Reason chip in the unaddable recipients alert when the user record is missing.
 #. Title of the error modal shown when the recipient of a DM no longer exists.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:24
-#: src/features/channel/components/channel_view/DMChannelView.tsx:277
+#: src/features/channel/components/channel_view/DMChannelView.tsx:279
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:11
 msgid "User not found"
 msgstr "找不到使用者"
@@ -37947,7 +37364,7 @@ msgid "Verification"
 msgstr "驗證"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:36
+#: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:30
 msgid "Verification & membership barriers"
 msgstr "驗證與成員資格門檻"
 
@@ -37970,15 +37387,8 @@ msgstr "驗證碼"
 msgid "Verification code sent"
 msgstr "驗證碼已送出"
 
-#. Toast confirmation after sending a verification code to the new email address during email update.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:120
-msgid "Verification code sent. Check your new email inbox."
-msgstr "驗證碼已寄出。請檢查您的新電子郵件收件匣。"
-
-#. Toast confirmation after a verification email has been sent to the existing email address.
 #. Toast confirmation in the email verification alert after a verification email has been sent.
 #: src/features/app/components/dialogs/components/EmailVerificationAlert.tsx:19
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:134
 msgid "Verification email sent. Check your inbox."
 msgstr "驗證電子郵件已寄出。請檢查您的收件匣。"
 
@@ -38038,23 +37448,6 @@ msgstr "驗證身分表單"
 msgid "Verify it's you"
 msgstr "驗證是您本人操作"
 
-#. Primary button in the required-action modal. Sends or submits phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:178
-#: src/features/channel/components/barriers/BarrierComponents.tsx:272
-#: src/features/user/components/modals/PhoneAddModal.tsx:405
-msgid "Verify phone"
-msgstr "驗證電話號碼"
-
-#. Short label in the phone add modal. Keep it concise.
-#: src/features/user/components/modals/PhoneAddModal.tsx:53
-msgid "Verify phone number"
-msgstr "驗證電話號碼"
-
-#. Label in the phone add modal.
-#: src/features/user/components/modals/PhoneAddModal.tsx:49
-msgid "Verify phone number form"
-msgstr "驗證電話號碼表單"
-
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:40
@@ -38082,22 +37475,22 @@ msgid "Verify your email before adding an authenticator app."
 msgstr "請先驗證您的電子郵件，然後再新增驗證器應用程式。"
 
 #. Description text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:116
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:117
 msgid "Verify your email before changing your community nickname, avatar, banner, bio, pronouns, or accent color."
 msgstr "請先驗證您的電子郵件，才能更改社群暱稱、大頭貼、橫幅、個人簡介、代名詞或強調色。"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:120
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:121
 msgid "Verify your email before changing your username, display name, avatar, banner, bio, pronouns, time zone, or {premiumProductName} badge privacy."
 msgstr "請先驗證您的電子郵件，然後再變更您的使用者名稱、顯示名稱、大頭貼、橫幅、個人簡介、代名詞、時區或 {premiumProductName} 徽章隱私設定。"
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:84
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:85
 msgid "Verify your email before editing this community profile. You can still preview it here."
 msgstr "請先驗證您的電子郵件，才能編輯這個社群個人檔案。您仍然可以在這裡預覽。"
 
 #. Description text in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:88
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:89
 msgid "Verify your email before editing your profile. You can still preview it here."
 msgstr "請先驗證您的電子郵件，然後再編輯個人檔案。您仍然可以在這裡預覽。"
 
@@ -38112,11 +37505,6 @@ msgstr "請先驗證您的電子郵件，才能傳送好友邀請。"
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:108
 msgid "Verify your email first"
 msgstr "請先驗證您的電子郵件"
-
-#. Required-action modal body when the user must verify email or phone for the first time. Preserve {productName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:69
-msgid "Verify your email or phone to continue using {productName}."
-msgstr "請驗證您的電子郵件或電話，以繼續使用 {productName}。"
 
 #. Plutonium page note under disabled buttons for unverified accounts. premiumProductName is the paid tier name.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:242
@@ -38133,18 +37521,13 @@ msgstr "請驗證您的電子郵件以購買禮物。"
 msgid "Verify your email to change your username"
 msgstr "請驗證您的電子郵件以更改使用者名稱"
 
-#. Required-action modal body for first-time email verification. Product name is interpolated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:53
-msgid "Verify your email to continue using {productName}."
-msgstr "請驗證您的電子郵件，以繼續使用 {productName}。"
-
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:108
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:109
 msgid "Verify your email to edit this community profile"
 msgstr "請驗證您的電子郵件以編輯此社群個人檔案"
 
 #. Label in the my profile tab.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:112
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:113
 msgid "Verify your email to edit your profile"
 msgstr "請驗證您的電子郵件以編輯個人檔案"
 
@@ -38180,13 +37563,6 @@ msgstr "佛蒙特州"
 #: src/features/theme_studio/sections/LibrarySection.tsx:116
 msgid "Version"
 msgstr "版本"
-
-#. Activity log value naming the highest member verification level of a community.
-#. Member verification level option in the community moderation settings tab. Short standalone severity label.
-#: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:85
-#: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:69
-msgid "Very high"
-msgstr "非常高"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:47
@@ -38934,19 +38310,10 @@ msgstr "提高音量"
 msgid "Wait a moment before deleting more messages."
 msgstr "請稍候再刪除其他訊息。"
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:349
-msgid "Wait a moment. This window will close automatically once we receive your message."
-msgstr "請稍候，收到您的訊息後此視窗將自動關閉。"
-
 #. Description under the slowmode slider in channel settings. bypassSlowmodePermissionLabel is the localized Bypass Slowmode permission name.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:29
 msgid "Wait between messages. Members with \"{bypassSlowmodePermissionLabel}\" can bypass this."
 msgstr "訊息之間的間隔時間。擁有「{bypassSlowmodePermissionLabel}」權限的成員可以略過此限制。"
-
-#. Required-action modal carousel step title after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:470
-msgid "Wait here"
-msgstr "請在此等候"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
@@ -38958,12 +38325,12 @@ msgid "Waiting for passkey…"
 msgstr "正在等候通行金鑰…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:74
+#: src/features/messaging/components/modals/ForwardModal.tsx:76
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "正在等待「{forwardChannelDisplayName}」的慢速模式結束。"
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:79
+#: src/features/messaging/components/modals/ForwardModal.tsx:81
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "正在等待一個或多個所選頻道的慢速模式結束。"
 
@@ -39115,16 +38482,6 @@ msgstr "我們無法讀取此主題。它可能已損壞或無效。"
 msgid "We couldn't remove that account. Try again."
 msgstr "我們無法移除該帳號。請再試一次。"
 
-#. Required-action form error when a phone attempt cannot be verified automatically and needs a support review. Keep it non-specific.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:571
-msgid "We couldn't verify this number automatically. Contact support and a person will review your account."
-msgstr "我們無法自動驗證此號碼。請聯絡客服，將由專人審核您的帳號。"
-
-#. Required-action form error when the phone number's country is on the SMS send ban list. Must not imply the number itself is invalid.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:542
-msgid "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
-msgstr "我們不向此國家/地區傳送驗證簡訊。請嘗試使用其他國家的手機號碼，或聯絡客服。"
-
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:132
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
@@ -39134,16 +38491,6 @@ msgstr "我們發現此帳號已有 {premiumProductFullName} 訂閱。請前往�
 #: src/features/premium/config/PriceAnnouncementCampaign.ts:7
 msgid "We lowered the price of {premiumProductName} in Brazil. It is now {monthlyPrice} a month or {yearlyPrice} a year."
 msgstr "我們在巴西調降了 {premiumProductName} 的價格。現在每月是 {monthlyPrice}，每年是 {yearlyPrice}。"
-
-#. Required-action modal intro text for a generic verification requirement. productName is inserted by code. Keep it calm and concise.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:210
-msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
-msgstr "在您繼續之前，我們需要一個驗證步驟。這有助於保護帳號並防止垃圾訊息出現在 {productName} 上。"
-
-#. Required-action modal intro text when both email and phone verification are required.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:216
-msgid "We need two verification steps before you continue. We will show one step at a time."
-msgstr "在您繼續之前，我們需要兩個驗證步驟。我們會一次顯示一個步驟。"
 
 #: src/features/auth/components/modals/BackupCodesModal.tsx:40
 msgid "We recommend saving these codes now so that you don't get locked out of your account."
@@ -39166,11 +38513,6 @@ msgstr "我們已將驗證碼傳送至 {email}。"
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:152
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "瀏覽器登入開啟後，我們會預填 {prefillEmail}。"
-
-#. Required-action modal body for entering a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:417
-msgid "We will send an SMS code when available."
-msgstr "可用時，我們會傳送簡訊驗證碼。"
 
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
 msgid "We'd love to give you more than a lifetime of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
@@ -39197,8 +38539,8 @@ msgid "We'll process this as soon as possible. You'll get an email when your arc
 msgstr "我們會盡快處理。當您的封存檔準備好時，您會收到一封電子郵件。"
 
 #: src/features/auth/components/pages/EmailRevertPage.tsx:75
-msgid "We'll restore your previous email, sign out old sessions, remove phone numbers, disable MFA, and secure your account with a new password."
-msgstr "我們會還原您先前的電子郵件、登出舊的工作階段、移除電話號碼、停用多重要素驗證，並以新密碼保護您的帳號。"
+msgid "We'll restore your previous email, sign out old sessions, disable MFA, and secure your account with a new password."
+msgstr "我們將會復原您先前的電子郵件、登出舊的裝置，停用多重要素驗證，並以新密碼保護您的帳號。"
 
 #: src/features/moderation/components/report/ReportStepEmail.tsx:46
 msgid "We'll send a short code to confirm you can receive updates about this report."
@@ -39211,10 +38553,6 @@ msgstr "我們會傳送驗證碼到您的電子郵件，以便您變更密碼。
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:146
 msgid "We'll send a verification code to your email before you can view your backup codes."
 msgstr "我們會在您查看備用碼前，將驗證碼寄送到您的電子郵件。"
-
-#: src/features/user/components/modals/PhoneAddModal.tsx:284
-msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time."
-msgstr "我們會在號碼可用時傳送 SMS 驗證碼。您的號碼不會連結到您的帳號。我們只會保留一個加密標記，不含使用者 ID，並在有限的時間內刪除。"
 
 #: src/features/user/components/modals/EmailChangeModal.tsx:189
 msgid "We'll verify your current email and then your new email with one-time codes."
@@ -39307,7 +38645,7 @@ msgstr "Webhook {currentName}"
 #. Audit log entry label. A new webhook integration was created.
 #. Short label in the channel webhooks tab. Keep it concise.
 #: src/features/app/config/AuditLogConstants.ts:91
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:33
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:34
 msgid "Webhook created"
 msgstr "Webhook 已建立"
 
@@ -39331,7 +38669,7 @@ msgstr "Webhook 已更新"
 msgid "Webhook URL"
 msgstr "Webhook 網址"
 
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:93
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:94
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:106
 msgid "Webhooks"
 msgstr "Webhook"
@@ -39486,8 +38824,8 @@ msgstr "您分享的內容沒有更新"
 
 #. Placeholder question in the custom status text field.
 #. Placeholder question in the custom status text field.
-#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:40
-#: src/features/user/components/modals/CustomStatusModal.tsx:50
+#: src/features/user/components/modals/CustomStatusBottomSheet.tsx:41
+#: src/features/user/components/modals/CustomStatusModal.tsx:51
 msgid "What's happening?"
 msgstr "近況如何？"
 
@@ -39967,20 +39305,10 @@ msgstr "您可以在 <2>{rolesSettingsPath}</2> 中，從 <1>{EVERYONE_MENTION}<
 msgid "You can sign back in at any time."
 msgstr "您可以隨時重新登入。"
 
-#. Last line of the set-aside confirmation in the required-action modal on a self-hosted instance. The instance is run by its own administrators, not by the app maker.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:342
-msgid "You can still ask the administrators of this instance for a human review at any time."
-msgstr "您仍可隨時請此實例的管理員進行人工審查。"
-
 #. Invite page subtext shown when community admins pause invites. Explains that account actions still work.
 #: src/features/invite/utils/InviteMessageDescriptors.ts:47
 msgid "You can still create an account or sign in. If invites are re-enabled later, you can use this same link to join."
 msgstr "您仍然可以建立帳號或登入。如果稍後重新啟用邀請，您可以使用相同的連結加入。"
-
-#. Last line of the set-aside confirmation in the required-action modal. supportEmail is inserted by code. The self-serve route never closes the support route.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:337
-msgid "You can still email {supportEmail} for a human review at any time."
-msgstr "您隨時都可以寄信到 {supportEmail} 請求人工審查。"
 
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:288
 msgid "You can use links, emoji, and Markdown."
@@ -39992,7 +39320,7 @@ msgid "You can't add expressions there"
 msgstr "您無法在那裡新增表情符號"
 
 #. Error message in the messaging commands.
-#: src/features/messaging/commands/ReactionCommands.tsx:26
+#: src/features/messaging/commands/ReactionCommands.tsx:27
 msgid "You can't add new reactions while you're timed out."
 msgstr "您在禁言期間無法新增反應。"
 
@@ -40007,7 +39335,7 @@ msgid "You can't befriend yourself"
 msgstr "您無法將自己新增為朋友"
 
 #. Label in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:133
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:134
 msgid "You can't change your nickname here"
 msgstr "您無法在這裡變更暱稱"
 
@@ -40094,7 +39422,7 @@ msgstr "您無法傳送好友邀請給自己。"
 msgid "You can't send messages in this channel."
 msgstr "您無法在此頻道中傳送訊息。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:351
+#: src/features/channel/components/barriers/BarrierComponents.tsx:343
 msgid "You can't send messages in this community."
 msgstr "您無法在此社群中傳送訊息。"
 
@@ -40229,7 +39557,7 @@ msgid "You don't have permission to do this to this member."
 msgstr "您沒有權限對此成員執行此操作。"
 
 #. Tooltip on the disabled Join voice channel button shown when the user lacks the Connect permission in the voice channel.
-#: src/features/channel/components/channel_view/GuildChannelView.tsx:69
+#: src/features/channel/components/channel_view/GuildChannelView.tsx:70
 msgid "You don't have permission to join this voice channel"
 msgstr "您沒有權限加入此語音頻道"
 
@@ -40243,7 +39571,7 @@ msgstr "您沒有重新命名此表情符號的權限。名稱已還原為先前
 msgid "You have been banned from this community."
 msgstr "您已被此社群停權。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:395
+#: src/features/channel/components/barriers/BarrierComponents.tsx:387
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "您已封鎖 {username}。解除封鎖才能傳送訊息。"
 
@@ -40262,7 +39590,7 @@ msgid "You have unsaved changes."
 msgstr "您有未儲存的變更。"
 
 #. Warning text in the my profile tab. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/MyProfileTab.tsx:80
+#: src/features/user/components/modals/tabs/MyProfileTab.tsx:81
 msgid "You have unsaved changes. Save or reset before leaving."
 msgstr "您有未儲存的變更。請先儲存或重設，再離開。"
 
@@ -40270,7 +39598,7 @@ msgstr "您有未儲存的變更。請先儲存或重設，再離開。"
 msgid "You haven't authorized any applications to access your account."
 msgstr "您尚未授權任何應用程式存取您的帳號。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:228
+#: src/features/channel/components/barriers/BarrierComponents.tsx:234
 msgid "You haven't been a member of this community long enough to send messages."
 msgstr "您加入此社群的時間還不夠長，因此無法傳送訊息。"
 
@@ -40326,11 +39654,6 @@ msgstr "您必須同意服務條款才能建立帳號"
 msgid "You must verify your email before sending a report."
 msgstr "您必須先驗證電子郵件，才能傳送檢舉。"
 
-#. Body text shown when the user lacks access to their old email and must use phone verification or contact support. Keep plain and calm.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:128
-msgid "You need access to your current email to change it from here. Use phone verification if available or contact support."
-msgstr "您需要存取目前的電子郵件，才能從這裡變更。如果可以，請使用電話驗證，或聯絡客服。"
-
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
 #: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:64
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
@@ -40356,7 +39679,7 @@ msgstr "您需要「{manageRolesPermissionLabel}」權限才能編輯這些權�
 msgid "You need the \"{manageRolesPermissionLabel}\" permission to edit these permissions."
 msgstr "您需要「{manageRolesPermissionLabel}」權限才能編輯這些權限。"
 
-#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:131
+#: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:133
 msgid "You need the \"{manageWebhooksPermissionLabel}\" permission to view and edit webhooks for this channel."
 msgstr "您需要「{manageWebhooksPermissionLabel}」權限才能檢視及編輯此頻道的 Webhook。"
 
@@ -40384,17 +39707,13 @@ msgstr "您必須先認領帳號，才能建立社群。"
 msgid "You need to claim your account before you can start a direct message."
 msgstr "您必須先認領帳號，才能開始傳送私訊。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:420
+#: src/features/channel/components/barriers/BarrierComponents.tsx:412
 msgid "You need to claim your account to send direct messages."
 msgstr "您需要先認領帳號才能傳送私訊。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:143
+#: src/features/channel/components/barriers/BarrierComponents.tsx:144
 msgid "You need to claim your account to send messages in this community."
 msgstr "您必須先認領帳號，才能在這個社群傳送訊息。"
-
-#: src/features/channel/components/barriers/BarrierComponents.tsx:251
-msgid "You need to verify a phone number to send messages in this community."
-msgstr "您需要驗證電話號碼才能在這個社群傳送訊息。"
 
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:460
@@ -40415,7 +39734,7 @@ msgstr "您需要先驗證電子郵件地址，才能開始傳送私訊。"
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "您必須先驗證電子郵件，才能購買 {premiumProductFullName}。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:171
+#: src/features/channel/components/barriers/BarrierComponents.tsx:172
 msgid "You need to verify your email to send messages in this community."
 msgstr "您需要驗證電子郵件才能在這個社群傳送訊息。"
 
@@ -40423,11 +39742,6 @@ msgstr "您需要驗證電子郵件才能在這個社群傳送訊息。"
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:60
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "您或您要新增的對象已達群組私訊數量上限。請先離開一個，然後再試一次。"
-
-#. Confirmation line in the required-action modal explaining that communities the user owns are kept rather than left. ownedNames is a comma-separated list inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:327
-msgid "You stay in {ownedNames}. Owners cannot leave their own community."
-msgstr "您會留在 {ownedNames}。社群擁有者無法離開自己的社群。"
 
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:61
@@ -40438,21 +39752,6 @@ msgstr "您已遭管理員設為耳機靜音"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAuthorizeActions.tsx:22
 msgid "You will be taken to {redirectHostname} after authorizing."
 msgstr "授權後，您將會被導向 {redirectHostname}。"
-
-#. Hint under the set-aside button in the required-action modal when the user is in communities that trigger the check. count is inserted by code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:301
-msgid "You will leave {count, plural, one {# community} other {# communities}} that this check applies to, and your account will work normally again."
-msgstr "您將離開 {count, plural, one {# 個社群} other {# 個社群}}，這些社群會觸發此檢查，您的帳號將恢復正常。"
-
-#. Confirmation line in the required-action modal, shown only when the user is in communities that trigger the check. guildNames is a comma-separated list inserted by code. Both reassurances answer fears people actually have.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:322
-msgid "You will leave {guildNames}. Nothing you posted is deleted, and you can join again later."
-msgstr "您將離開 {guildNames}。您發布的內容不會被刪除，之後也可以再次加入。"
-
-#. Confirmation line in the required-action modal when an email requirement remains alongside the phone check, so the modal stays open afterwards.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:332
-msgid "You will still need to finish the email step."
-msgstr "您還是需要完成電子郵件驗證步驟。"
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
@@ -40588,7 +39887,7 @@ msgid "You're going too fast"
 msgstr "您的操作太頻繁了"
 
 #. Body of the error modal shown when adding a friend to a group DM is rate limited.
-#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:19
+#: src/features/channel/components/alerts/GroupDmRecipientErrorModalUtils.tsx:20
 msgid "You're going too fast. Wait a moment and try again."
 msgstr "您的操作太頻繁了。請稍候片刻再試一次。"
 
@@ -40636,7 +39935,7 @@ msgstr "您傳送訊息的速度太快了"
 msgid "You're streaming!"
 msgstr "您正在直播！"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:298
+#: src/features/channel/components/barriers/BarrierComponents.tsx:290
 msgid "You're timed out. Messaging, reactions, and voice are paused until the timeout expires."
 msgstr "您已被禁言。在禁言結束前，訊息、反應和語音功能將會暫停。"
 
@@ -40764,25 +40063,25 @@ msgstr "您的 {storeName} 續訂付款失敗，但 <0/> 會保持啟用狀態�
 msgid "Your account"
 msgstr "您的帳號"
 
-#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because the check may or may not come back.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:316
-msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption, and we can ask for this check again later."
-msgstr "您的帳號會立即恢復正常，且您暫時不需要電話號碼。這並非永久豁免，我們之後仍可能要求您再次進行驗證。"
-
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
 msgstr "您的帳號已成功連結。現在您可以關閉此分頁並返回應用程式。"
 
-#. Success toast after the phone check is set aside and no verification steps remain. Deliberately count-free, because any communities that were left already disappear from the sidebar.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:357
-msgid "Your account is back to normal."
-msgstr "您的帳號已恢復正常。"
+#. Title of the error modal shown when an action fails because the current account is limited.
+#: src/features/user/utils/AccountLimitUtils.ts:15
+msgid "Your account is limited"
+msgstr "您的帳號受限"
+
+#. Notice shown in place of the message composer, and as an error, when the current account is limited and cannot post, react, join communities or change its profile.
+#: src/features/user/utils/AccountLimitUtils.ts:10
+msgid "Your account is limited. Check your email for how to lift it."
+msgstr "你的帳號受到限制。請檢查你的電子郵件，了解如何解除限制。"
 
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:26
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
 msgstr "您的帳號尚未認領。如果沒有電子郵件和密碼，您將無法從其他裝置登入，並可能因此失去帳號的存取權。請立即認領您的帳號以確保安全。"
 
-#: src/features/channel/components/barriers/BarrierComponents.tsx:205
+#: src/features/channel/components/barriers/BarrierComponents.tsx:211
 msgid "Your account is too new to send messages in this community."
 msgstr "您的帳號建立時間太短，無法在此社群傳送訊息。"
 
@@ -40799,11 +40098,6 @@ msgstr "您的帳號需要多重要素驗證，但此裝置上未設定任何支
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "使用密碼登入時，您的帳號將不再受雙重驗證保護。您也會失去在要求雙重驗證的社群中的進階權限。"
-
-#. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:295
-msgid "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
-msgstr "您的帳號會立即恢復正常，且不會移除任何項目。我們可以稍後再要求進行這次檢查。"
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
 #: src/features/auth/components/ContentBlockedHandler.tsx:14
@@ -40827,13 +40121,8 @@ msgstr "正在檢查您的卡片是否適用當地定價。這通常很快就會
 msgid "Your card is eligible. Redirecting you to the payment page now."
 msgstr "您的卡片符合資格。正在將您重新導向至付款頁面。"
 
-#. Required-action form error when the carrier lookup says the number does not exist. Leaves room for the lookup to be wrong.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:560
-msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
-msgstr "您的電信業者表示此號碼未啟用。請檢查號碼後再試一次，或若號碼正確，請聯絡客服。"
-
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:102
+#: src/features/messaging/commands/MessageCommands.tsx:103
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "你的變更會傳送給所有追蹤此頻道的社群，這可能需要一分鐘。每則已發布的訊息可快速編輯 3 次，之後每 20 分鐘可編輯 1 次。"
 
@@ -40868,21 +40157,6 @@ msgstr "您的裝置會要求您儲存 {name} 的更新通行金鑰。這會取�
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:33
 msgid "Your device will ask you to save an updated passkey for {name}. Use the same phone or security key you just used."
 msgstr "您的裝置會要求您儲存 {name} 的更新通行金鑰。請使用您剛才使用的同一支手機或安全金鑰。"
-
-#. Toast confirmation after the email address has been successfully updated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:124
-msgid "Your email address has been updated."
-msgstr "您的電子郵件地址已更新。"
-
-#. Required-action modal intro text when the current account email bounced and must be replaced.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:224
-msgid "Your email could not receive messages. Add a working email so we can keep your account reachable."
-msgstr "您的電子郵件無法接收訊息。請新增一個可用的電子郵件，以便我們能持續與您聯絡。"
-
-#. Required-action modal body. Explains the email needs updating because delivery failed. Product name is interpolated.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:44
-msgid "Your email couldn't receive messages. Update it to continue using {productName}."
-msgstr "您的電子郵件無法接收訊息。請更新電子郵件，以繼續使用 {productName}。"
 
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:97
 msgid "Your email has been verified. You can now sign in to your account."
@@ -41000,20 +40274,10 @@ msgstr "您的訊息未更新"
 msgid "Your most recent purchase is no longer within the refund window. Contact support for billing issues."
 msgstr "您最近的購買已超出退款期限。如需處理帳務問題，請聯絡客服。"
 
-#. Placeholder text inside the new email field. Sentence-fragment hint, intentionally lowercase.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:88
-msgid "your new email"
-msgstr "您的新電子郵件"
-
 #. Description for the /nick nickname option.
 #: src/features/devtools/hooks/useCommands.ts:79
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "您的新暱稱，留空則重設。"
-
-#. Required-action modal privacy note for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:421
-msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time."
-msgstr "您的號碼未連結至您的帳戶。我們僅會暫時保留一個加密標記，不含使用者 ID。"
 
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:152
 msgid "Your payment was canceled. You can now close this tab and return to the app."
@@ -41053,11 +40317,6 @@ msgstr "您已購買的禮物"
 #: src/features/user/utils/UserGeo.ts:7
 msgid "your region"
 msgstr "您的地區"
-
-#. Required-action modal body for an extra anti-spam verification during registration.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:61
-msgid "Your registration needs an extra anti-spam check before you can continue."
-msgstr "您的註冊需要額外的防垃圾訊息驗證，才能繼續。"
 
 #. Plutonium subscription card text shown while a failed renewal payment is being retried. {graceDate} is a date already formatted and localized by code; never write a date into the translation.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:492

@@ -19,10 +19,11 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import Users from '@app/features/user/state/Users';
+import {showAccountLimitedModal} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -88,13 +89,9 @@ function showGuildInviteAcceptFailure(
 	responseErr: HttpError | null,
 ): void {
 	const isRaidDetected = guildInviteFeatures(invite).includes(GuildFeatures.RAID_DETECTED);
-	if (
-		errorCode === APIErrorCodes.ACCOUNT_SUSPICIOUS_ACTIVITY &&
-		(Users.currentUser?.requiredActions?.length ?? 0) > 0
-	) {
-		return;
-	}
-	if (errorCode === APIErrorCodes.INVITES_DISABLED) {
+	if (errorCode === APIErrorCodes.ACCOUNT_LIMITED) {
+		showAccountLimitedModal(responseErr ? failureMessage(responseErr) : undefined);
+	} else if (errorCode === APIErrorCodes.INVITES_DISABLED) {
 		ModalCommands.push(
 			modal(() => (
 				<InvitesDisabledModal

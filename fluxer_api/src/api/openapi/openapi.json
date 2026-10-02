@@ -13902,7 +13902,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as phone, MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.",
+				"description": "Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.",
 				"security": [{"botToken": []}, {"oauth2Token": ["identify"]}, {"sessionToken": []}]
 			},
 			"patch": {
@@ -15141,7 +15141,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Completes bounced-email recovery by verifying the replacement email code, updating the account email, and clearing email-related suspicious-activity requirements.",
+				"description": "Completes bounced-email recovery by verifying the replacement email code, and updating the account email.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -18837,175 +18837,6 @@
 				}
 			}
 		},
-		"/users/@me/phone/inbound-challenge": {
-			"post": {
-				"operationId": "start_inbound_phone_challenge",
-				"summary": "Start an inbound SMS challenge",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/InboundSmsChallengeStartResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "When an account must verify its phone number inbound, the user texts a one-time code to the platform's number instead of receiving one. This endpoint generates the code and the destination number to display.",
-				"security": [{"sessionToken": []}]
-			}
-		},
-		"/users/@me/phone/send-verification": {
-			"post": {
-				"operationId": "send_phone_verification_code",
-				"summary": "Send phone verification code",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneSendVerificationResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel=\"sms\" to request SMS (only honoured for SMS-allowlisted destinations) or channel=\"inbound_challenge\" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge. Requires a solved captcha challenge (X-Captcha-Token) when the phone verification service asks for one.",
-				"security": [{"sessionToken": []}],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneSendVerificationRequest"}}}
-				}
-			}
-		},
-		"/users/@me/phone/verify": {
-			"post": {
-				"operationId": "verify_phone_code",
-				"summary": "Verify phone code",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneVerifyResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Verify a phone number by confirming the SMS verification code. Returns phone verification status.",
-				"security": [{"sessionToken": []}],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneVerifyRequest"}}}
-				}
-			}
-		},
 		"/users/@me/preload-messages": {
 			"post": {
 				"operationId": "preload_messages_for_channels",
@@ -19759,114 +19590,6 @@
 					"content": {
 						"application/json": {"schema": {"$ref": "#/components/schemas/RelationshipNicknameUpdateRequest"}}
 					}
-				}
-			}
-		},
-		"/users/@me/required-actions/phone-gate-escape": {
-			"get": {
-				"operationId": "get_phone_gate_escape",
-				"summary": "Preview setting the deferred phone check aside",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneGateEscapePreviewResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Reports whether this account can set a due phone verification requirement aside. The community lists are always empty.",
-				"security": [{"sessionToken": []}]
-			},
-			"post": {
-				"operationId": "execute_phone_gate_escape",
-				"summary": "Set the deferred phone check aside",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserPrivateResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Defers a due phone verification requirement again, so the account works normally without leaving any community. Returns the updated private user object.",
-				"security": [{"sessionToken": []}],
-				"requestBody": {
-					"required": false,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EmptyBodyRequest"}}}
 				}
 			}
 		},
@@ -22978,14 +22701,7 @@
 						"description": "Whether the current email address is marked as bounced by the mail provider",
 						"type": "boolean"
 					},
-					"phone": {
-						"description": "Always null. Retained for old-client backward compatibility — phone numbers are no longer stored on the user record.",
-						"type": ["string", "null"]
-					},
-					"has_verified_phone": {
-						"type": "boolean",
-						"description": "Whether this account has completed phone verification"
-					},
+					"has_verified_phone": {"type": "boolean", "description": "Deprecated. Always false."},
 					"bio": {"description": "The user biography text", "type": ["string", "null"]},
 					"pronouns": {"description": "The preferred pronouns of the user", "type": ["string", "null"]},
 					"accent_color": {
@@ -23006,6 +22722,7 @@
 						"items": {"$ref": "#/components/schemas/UserAuthenticatorTypes"}
 					},
 					"verified": {"type": "boolean", "description": "Whether the email address has been verified"},
+					"account_limited": {"description": "Whether the account is limited", "type": "boolean"},
 					"premium_type": {
 						"anyOf": [
 							{"$ref": "#/components/schemas/UserPremiumTypes", "description": "The type of premium subscription"},
@@ -23068,10 +22785,6 @@
 						"type": "boolean",
 						"description": "Whether premium perks are temporarily disabled for this account"
 					},
-					"force_inbound_phone_verification": {
-						"description": "Whether this account is forced through the inbound phone verification flow, for debugging",
-						"type": "boolean"
-					},
 					"password_last_changed_at": {
 						"description": "ISO8601 timestamp of the last password change",
 						"type": ["string", "null"]
@@ -23083,7 +22796,7 @@
 					"required_actions": {
 						"type": "array",
 						"items": {"type": "string"},
-						"description": "Actions the user must complete before full access"
+						"description": "Deprecated. Always empty."
 					},
 					"nsfw_allowed": {"type": "boolean", "description": "Whether the user is allowed to view NSFW content"},
 					"has_dismissed_premium_onboarding": {
@@ -23583,49 +23296,6 @@
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/SavedMessageEntryResponse"}
 			},
-			"PhoneGateEscapePreviewResponse": {
-				"type": "object",
-				"properties": {
-					"available": {
-						"type": "boolean",
-						"description": "Whether this account can set a due phone verification requirement aside right now"
-					},
-					"guilds": {
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"id": {
-									"description": "The unique identifier (snowflake) for the community",
-									"$ref": "#/components/schemas/SnowflakeStringType"
-								},
-								"name": {"type": "string", "description": "The community name"}
-							},
-							"required": ["id", "name"],
-							"additionalProperties": false
-						},
-						"description": "Always empty, the escape leaves no community"
-					},
-					"owned_guilds": {
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"id": {
-									"description": "The unique identifier (snowflake) for the community",
-									"$ref": "#/components/schemas/SnowflakeStringType"
-								},
-								"name": {"type": "string", "description": "The community name"}
-							},
-							"required": ["id", "name"],
-							"additionalProperties": false
-						},
-						"description": "Always empty, the escape leaves no community"
-					}
-				},
-				"required": ["available", "guilds", "owned_guilds"],
-				"additionalProperties": false
-			},
 			"RelationshipNicknameUpdateRequest": {
 				"type": "object",
 				"properties": {
@@ -23807,112 +23477,6 @@
 				"propertyNames": {"$ref": "#/components/schemas/SnowflakeStringType"},
 				"additionalProperties": {"anyOf": [{"$ref": "#/components/schemas/MessageResponseSchema"}, {"type": "null"}]},
 				"description": "A map of channel IDs to the latest message in each channel"
-			},
-			"PhoneVerifyRequest": {
-				"type": "object",
-				"properties": {
-					"phone": {"description": "Phone number being verified", "$ref": "#/components/schemas/PhoneNumberType"},
-					"code": {"description": "The verification code", "type": "string"}
-				},
-				"required": ["phone", "code"]
-			},
-			"PhoneVerifyResponse": {
-				"type": "object",
-				"properties": {
-					"verified": {
-						"type": "boolean",
-						"const": true,
-						"description": "Indicates the phone number was verified successfully"
-					}
-				},
-				"required": ["verified"],
-				"additionalProperties": false
-			},
-			"PhoneSendVerificationRequest": {
-				"type": "object",
-				"properties": {
-					"phone": {
-						"description": "Phone number to send verification code",
-						"$ref": "#/components/schemas/PhoneNumberType"
-					},
-					"channel": {
-						"description": "Channel to deliver the OTP on. Defaults to the first available channel from server policy. Server may override to an available fallback when the requested channel is disabled.",
-						"type": "string",
-						"enum": ["sms", "inbound_challenge"]
-					}
-				},
-				"required": ["phone"]
-			},
-			"PhoneSendVerificationResponse": {
-				"anyOf": [
-					{
-						"type": "object",
-						"properties": {
-							"channel": {
-								"type": "string",
-								"const": "sms",
-								"description": "Channel actually used for delivery (may differ from request when server adjusts)"
-							}
-						},
-						"required": ["channel"],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"channel": {
-								"type": "string",
-								"const": "inbound_challenge",
-								"description": "The user must send Fluxer an SMS instead of receiving one"
-							},
-							"challenge_code": {
-								"description": "The numeric code the user must text to our number",
-								"type": "string",
-								"minLength": 4,
-								"maxLength": 12
-							},
-							"our_number": {
-								"description": "The Twilio number the user must text the code to (E.164)",
-								"type": "string",
-								"minLength": 4,
-								"maxLength": 32
-							},
-							"expires_at": {
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-								"description": "ISO 8601 timestamp when this inbound challenge expires"
-							},
-							"reason": {
-								"type": "string",
-								"enum": ["verification_required"],
-								"description": "Always verification_required"
-							}
-						},
-						"required": ["channel", "challenge_code", "our_number", "expires_at", "reason"],
-						"additionalProperties": false
-					}
-				]
-			},
-			"InboundSmsChallengeStartResponse": {
-				"type": "object",
-				"properties": {
-					"challenge_code": {
-						"description": "The numeric code the user must text to our number",
-						"type": "string",
-						"minLength": 4,
-						"maxLength": 12
-					},
-					"our_number": {
-						"description": "The Twilio number the user must text the code to (E.164)",
-						"type": "string",
-						"minLength": 4,
-						"maxLength": 32
-					},
-					"expires_at": {"type": "string", "description": "ISO timestamp at which the challenge becomes invalid"}
-				},
-				"required": ["challenge_code", "our_number", "expires_at"],
-				"additionalProperties": false
 			},
 			"PasswordChangeVerifyRequest": {
 				"type": "object",
@@ -28519,8 +28083,8 @@
 					},
 					"default_message_notifications": {"$ref": "#/components/schemas/DefaultMessageNotificationsInput"},
 					"verification_level": {
-						"$ref": "#/components/schemas/GuildVerificationLevelInput",
-						"description": "Required verification level for members to participate"
+						"description": "Required verification level for members to participate",
+						"$ref": "#/components/schemas/GuildVerificationLevelInput"
 					},
 					"mfa_level": {"$ref": "#/components/schemas/GuildMFALevelInput"},
 					"nsfw_level": {
@@ -30853,10 +30417,7 @@
 						"type": "boolean",
 						"description": "Whether the instance sends emails (verification, password reset, etc.)"
 					},
-					"phone_verification_enabled": {
-						"type": "boolean",
-						"description": "Whether users can verify a phone number, so the very high guild verification level applies"
-					}
+					"phone_verification_enabled": {"type": "boolean", "description": "Deprecated. Always false."}
 				},
 				"required": [
 					"voice_enabled",
@@ -32852,15 +32413,14 @@
 				"minimum": 0,
 				"maximum": 2147483647,
 				"format": "int32",
-				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH"],
 				"x-enumDescriptions": [
 					"Unrestricted",
 					"Must have verified email",
 					"Registered for more than 5 minutes",
-					"Member of the server for more than 10 minutes",
-					"Must have a verified phone number"
+					"Member of the server for more than 10 minutes"
 				],
-				"enum": [0, 1, 2, 3, 4]
+				"enum": [0, 1, 2, 3]
 			},
 			"DefaultMessageNotificationsInput": {
 				"description": "Default notification level for new members",
@@ -33793,15 +33353,14 @@
 			"GuildVerificationLevel": {
 				"description": "Required verification level for members",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4],
+				"enum": [0, 1, 2, 3],
 				"format": "int32",
-				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH"],
 				"x-enumDescriptions": [
 					"Unrestricted",
 					"Must have verified email",
 					"Registered for more than 5 minutes",
-					"Member of the server for more than 10 minutes",
-					"Must have a verified phone number"
+					"Member of the server for more than 10 minutes"
 				]
 			},
 			"GroupDmInviteResponse": {
@@ -35748,7 +35307,6 @@
 				"required": ["status"],
 				"additionalProperties": false
 			},
-			"PhoneNumberType": {"type": "string"},
 			"RelationshipTypesInput": {
 				"description": "Relationship type",
 				"type": "integer",

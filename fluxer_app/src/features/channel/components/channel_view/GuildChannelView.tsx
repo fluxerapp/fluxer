@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	AccountLimitedBarrier,
 	AccountTooNewBarrier,
 	AnnouncementFollowBarrier,
-	NoPhoneNumberBarrier,
 	NotMemberLongEnoughBarrier,
 	SendMessageDisabledBarrier,
 	UnclaimedAccountBarrier,
@@ -40,6 +40,7 @@ import {Button} from '@app/features/ui/button/Button';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isPwaOnMobileOrTablet} from '@app/features/ui/utils/PwaUtils';
+import Users from '@app/features/user/state/Users';
 import {CompactVoiceCallStreamHeaderInfo} from '@app/features/voice/components/CompactVoiceCallStreamHeaderInfo';
 import {useVoiceCallFullscreenViewState} from '@app/features/voice/components/useVoiceCallAppFullscreen';
 import {VoiceCallView} from '@app/features/voice/components/VoiceCallView';
@@ -389,9 +390,9 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 							data-flx="channel.channel-view.guild-channel-view.render-chat-area.not-member-long-enough-barrier"
 						/>
 					);
-				case 'no_phone':
+				case 'account_limited':
 					return (
-						<NoPhoneNumberBarrier data-flx="channel.channel-view.guild-channel-view.render-chat-area.no-phone-number-barrier" />
+						<AccountLimitedBarrier data-flx="channel.channel-view.guild-channel-view.render-chat-area.account-limited-barrier" />
 					);
 				case 'send_message_disabled':
 					return (
@@ -407,6 +408,11 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 						/>
 					);
 			}
+		}
+		if (Users.currentUser?.accountLimited) {
+			return (
+				<AccountLimitedBarrier data-flx="channel.channel-view.guild-channel-view.render-chat-area.account-limited-barrier--2" />
+			);
 		}
 		return passesVerification ? (
 			renderComposer(inputSuppressed)

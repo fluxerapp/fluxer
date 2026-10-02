@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildModerationTab.module.css';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -81,15 +80,6 @@ const VERIFICATION_LEVEL_HIGH_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Requires everything in medium, plus being a member of the community for at least 10 minutes.',
 	comment:
 		'Helper text for the "High" member verification level option in the community moderation settings tab. "Medium" refers to the matching level option.',
-});
-const VERIFICATION_LEVEL_VERY_HIGH_NAME_DESCRIPTOR = msg({
-	message: 'Very high',
-	comment:
-		'Member verification level option in the community moderation settings tab. Short standalone severity label.',
-});
-const VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Requires a verified phone number.',
-	comment: 'Helper text for the "Very high" member verification level option in the community moderation settings tab.',
 });
 const MEMBER_VERIFICATION_LEVEL_ARIA_DESCRIPTOR = msg({
 	message: 'Member verification level',
@@ -177,7 +167,6 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 	const canManageGuild = Permission.can(Permissions.MANAGE_GUILD, {guildId});
 	const isGuildOwner = guild?.ownerId === currentUser?.id;
 	const isDiscoverable = guild?.features.has(GuildFeatures.DISCOVERABLE) ?? false;
-	const phoneVerificationEnabled = RuntimeConfig.phoneVerificationEnabled;
 	const remoteValues: FormInputs = {
 		verification_level: guild?.verificationLevel ?? GuildVerificationLevel.NONE,
 		mfa_level: guild?.mfaLevel ?? GuildMFALevel.NONE,
@@ -260,7 +249,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		}
 		return;
 	};
-	const allVerificationLevelOptions: ReadonlyArray<RadioOption<number>> = [
+	const verificationLevelOptions: ReadonlyArray<RadioOption<number>> = [
 		{
 			value: GuildVerificationLevel.NONE,
 			name: i18n._(VERIFICATION_LEVEL_NONE_NAME_DESCRIPTOR),
@@ -282,15 +271,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_HIGH_NAME_DESCRIPTOR), '#f97316'),
 			desc: i18n._(VERIFICATION_LEVEL_HIGH_DESCRIPTION_DESCRIPTOR),
 		},
-		{
-			value: GuildVerificationLevel.VERY_HIGH,
-			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_VERY_HIGH_NAME_DESCRIPTOR), '#ef4444'),
-			desc: i18n._(VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR),
-		},
 	];
-	const verificationLevelOptions = phoneVerificationEnabled
-		? allVerificationLevelOptions
-		: allVerificationLevelOptions.filter((option) => option.value !== GuildVerificationLevel.VERY_HIGH);
 	const matureContentOptions: ReadonlyArray<ComboboxOption<string>> = [
 		{value: 'on', label: i18n._(MATURE_CONTENT_ON_DESCRIPTOR)},
 		{value: 'off', label: i18n._(MATURE_CONTENT_OFF_DESCRIPTOR)},
@@ -329,11 +310,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 							control={form.control}
 							render={({field}) => (
 								<RadioGroup
-									value={getEffectiveGuildVerificationLevel(
-										field.value ?? GuildVerificationLevel.NONE,
-										isDiscoverable,
-										phoneVerificationEnabled,
-									)}
+									value={getEffectiveGuildVerificationLevel(field.value ?? GuildVerificationLevel.NONE, isDiscoverable)}
 									onChange={field.onChange}
 									disabled={!canManageGuild}
 									options={verificationLevelOptions}

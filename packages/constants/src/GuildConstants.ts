@@ -15,17 +15,12 @@ export const GuildVerificationLevel = {
 	LOW: 1,
 	MEDIUM: 2,
 	HIGH: 3,
-	VERY_HIGH: 4,
 } as const;
 
 export type GuildVerificationLevelValue = ValueOf<typeof GuildVerificationLevel>;
 
-export function getEffectiveGuildVerificationLevel(
-	verificationLevel: number,
-	isDiscoverable: boolean,
-	phoneVerificationEnabled: boolean,
-): number {
-	const level = phoneVerificationEnabled ? verificationLevel : Math.min(verificationLevel, GuildVerificationLevel.HIGH);
+export function getEffectiveGuildVerificationLevel(verificationLevel: number, isDiscoverable: boolean): number {
+	const level = Math.min(verificationLevel, GuildVerificationLevel.HIGH);
 	if (!isDiscoverable) {
 		return level;
 	}

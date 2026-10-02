@@ -108,15 +108,9 @@ pub struct AdminUser {
     pub premium_grace_ends_at: Option<String>,
     pub premium_lifetime_sequence: Option<i32>,
     #[serde(default)]
-    pub suspicious_activity_flags: i32,
-    #[serde(default)]
-    pub phone_verification_deferred: bool,
-    #[serde(default)]
     pub has_totp: bool,
     #[serde(default)]
     pub authenticator_types: Vec<i32>,
-    #[serde(default)]
-    pub has_verified_phone: bool,
     pub temp_banned_until: Option<String>,
     pub pending_deletion_at: Option<String>,
     pub pending_bulk_message_deletion_at: Option<String>,

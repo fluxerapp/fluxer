@@ -123,7 +123,6 @@ export async function createTestAccount(
 	if (!params?.skipEmailVerification) {
 		const securityFlagsBuilder = createBuilder(harness, '').post(`/test/users/${reg.user_id}/security-flags`).body({
 			email_verified: true,
-			suspicious_activity_flags: 0,
 		});
 		if (ipAddress) {
 			securityFlagsBuilder.header('x-forwarded-for', ipAddress);

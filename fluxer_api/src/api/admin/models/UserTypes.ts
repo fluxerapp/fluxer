@@ -3,7 +3,6 @@
 import type {User} from '@app/api/models/User';
 import {getIpAddressReverse, lookupGeoip} from '@app/api/utils/IpUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {DEFERRED_PHONE_ON_COMMUNITY_JOIN} from '@fluxer/constants/src/UserConstants';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
@@ -50,7 +49,6 @@ export async function mapUserToAdminResponse(
 		email: canViewEmail ? (user.email ?? null) : null,
 		email_verified: canViewEmail ? user.emailVerified : false,
 		email_bounced: canViewEmail ? user.emailBounced : false,
-		has_verified_phone: user.hasVerifiedPhone,
 		date_of_birth: canViewDob ? user.dateOfBirth : null,
 		locale: user.locale,
 		premium_type: user.premiumType,
@@ -58,8 +56,6 @@ export async function mapUserToAdminResponse(
 		premium_until: user.premiumUntil?.toISOString() ?? null,
 		premium_grace_ends_at: user.premiumGraceEndsAt?.toISOString() ?? null,
 		premium_lifetime_sequence: user.premiumLifetimeSequence ?? null,
-		suspicious_activity_flags: user.suspiciousActivityFlags,
-		phone_verification_deferred: ((user.suspiciousActivityFlags ?? 0) & DEFERRED_PHONE_ON_COMMUNITY_JOIN) !== 0,
 		temp_banned_until:
 			user.tempBannedUntil && user.tempBannedUntil.getTime() > Date.now() ? user.tempBannedUntil.toISOString() : null,
 		pending_deletion_at: user.pendingDeletionAt?.toISOString() ?? null,

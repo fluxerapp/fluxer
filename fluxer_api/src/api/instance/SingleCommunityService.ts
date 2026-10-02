@@ -35,6 +35,7 @@ export class SingleCommunityService {
 				userId,
 				guildId,
 				skipGuildLimitCheck: true,
+				skipAccountLimitCheck: true,
 				joinSourceType: JoinSourceTypes.ADMIN_FORCE_ADD,
 				requestCache,
 			});

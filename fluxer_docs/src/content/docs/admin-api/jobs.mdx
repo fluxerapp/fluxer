@@ -126,7 +126,7 @@ The queue drops a job 7 days after it was queued. A job still recorded as `queue
 
 Use the returned `task_type` value to filter [List jobs](#list-jobs).
 
-The tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) are `bulkUpdateUserFlags`, `bulkUpdateSuspiciousActivityFlags`, `bulkUpdateGuildFeatures`, `bulkAddGuildMembers`, and `bulkScheduleUserDeletion`. `harvestUserData` and `harvestGuildData` build [archives](/admin-api/archives/), `sendSystemDm` delivers a [system DM broadcast](/admin-api/system-dms/), and `refreshSearchIndex` rebuilds a [search index](/admin-api/search-indexes/). `removeChannelFollowers` runs on the `crosspost` lane after an announcement channel is deleted or converted into a text channel, and removes the channel follower webhooks that follow it.
+The tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) are `bulkUpdateUserFlags`, `bulkUpdateGuildFeatures`, `bulkAddGuildMembers`, and `bulkScheduleUserDeletion`. `harvestUserData` and `harvestGuildData` build [archives](/admin-api/archives/), `sendSystemDm` delivers a [system DM broadcast](/admin-api/system-dms/), and `refreshSearchIndex` rebuilds a [search index](/admin-api/search-indexes/). `removeChannelFollowers` runs on the `crosspost` lane after an announcement channel is deleted or converted into a text channel, and removes the channel follower webhooks that follow it.
 
 ## List jobs
 

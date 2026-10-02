@@ -22,7 +22,7 @@ An authorisation code expires 10 minutes after it is issued, an access token aft
 
 ## Route authentication
 
-Every route on this page that authenticates a user is user-only unless the operation says otherwise. Fluxer rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`, and accepts an account with an outstanding required action. The token, introspection, and revocation routes authenticate the client application instead, so their [rate limit](/topics/rate-limits/) is keyed by client IP address.
+Every route on this page that authenticates a user is user-only unless the operation says otherwise. Fluxer rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. The token, introspection, and revocation routes authenticate the client application instead, so their [rate limit](/topics/rate-limits/) is keyed by client IP address.
 
 ## OAuth2 string normalisation
 

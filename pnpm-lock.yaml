@@ -264,9 +264,6 @@ catalogs:
     lexical:
       specifier: 0.50.0
       version: 0.50.0
-    libphonenumber-js:
-      specifier: 1.13.13
-      version: 1.13.13
     livekit-server-sdk:
       specifier: 2.19.0
       version: 2.19.0
@@ -1495,9 +1492,6 @@ importers:
       lexical:
         specifier: 'catalog:'
         version: 0.50.0(typescript@7.0.2)
-      libphonenumber-js:
-        specifier: 'catalog:'
-        version: 1.13.13
       livekit-client:
         specifier: workspace:*
         version: link:pkgs/livekit-client
@@ -8575,9 +8569,6 @@ packages:
     resolution: {integrity: sha512-DeXj9X5xDCjgKLU/7RR+/HQEVzuuEUiwldwOGsHK/sfAfELGWEyTcf0x+uOvCvK3O2zPmZePXWL85vtia6GyZw==}
     engines: {node: '>=16'}
     hasBin: true
-
-  libphonenumber-js@1.13.13:
-    resolution: {integrity: sha512-hV6SmWnyQ8U1QXhhqbqYBHIStNnscG7A5XbGodgdHhf/8N5PwhYpJA5U/yHDjYwPYTd8uNGXqq416XctuvK2PA==}
 
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
@@ -17701,8 +17692,6 @@ snapshots:
   lib0@0.2.117:
     dependencies:
       isomorphic.js: 0.2.5
-
-  libphonenumber-js@1.13.13: {}
 
   lightningcss-android-arm64@1.32.0:
     optional: true

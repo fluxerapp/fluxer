@@ -15,7 +15,6 @@ import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 const DELETION_TEMPLATES = [
@@ -254,29 +253,6 @@ describe('Admin staff notifications', () => {
 				.execute();
 			expect((await emailsTo(target)).map((email) => email.type)).not.toContain('unban_notification');
 			expect((await auditMetadata('unban', target.userId))?.get('notification_sent')).toBe('false');
-		});
-	});
-
-	describe('suspicious activity disable', () => {
-		test.each([
-			[undefined, true],
-			[false, false],
-		])('notify_user %s emails %s', async (notifyUser, expected) => {
-			const target = await createTestAccount(harness);
-			await clearTestEmails(harness);
-			await createBuilder(harness, admin.token)
-				.put(`/admin/users/${target.userId}/suspicious-activity-disablement`)
-				.body({
-					flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE,
-					...(notifyUser === undefined ? {} : {notify_user: notifyUser}),
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			const types = (await emailsTo(target)).map((email) => email.type);
-			expect(types.includes('account_disabled_suspicious')).toBe(expected);
-			const metadata = await auditMetadata('disable_suspicious_activity', target.userId);
-			expect(metadata?.get('notify_user')).toBe(expected ? 'true' : 'false');
-			expect(metadata?.get('notification_sent')).toBe(expected ? 'true' : 'false');
 		});
 	});
 

@@ -178,7 +178,7 @@ The ALTCHA proof-of-work check that the API issues and verifies itself on gated 
 | cost | integer | PBKDF2 iterations per solving attempt (1000-20000, default 5000) |
 | max_counter | integer | Upper bound of the hidden counter a client searches for (100-20000, default 1000) |
 
-Every field is present on read. An absent document or missing field uses the defaults above, so the check is on until an administrator sets `enabled` to false. Setting `enabled` to false turns the check off for the whole instance. Phone sends that the [phone verification service](/http-api/users/phone-verification/#send-phone-verification) challenges are refused instead.
+Every field is present on read. An absent document or missing field uses the defaults above, so the check is on until an administrator sets `enabled` to false. Setting `enabled` to false turns the check off for the whole instance.
 
 Each challenge hides its counter between half of `max_counter` and `max_counter`, and a client tries counters from 0 upward. Solve time grows with `cost` times `max_counter`. Fluxer spends one attempt at `cost` to issue each challenge.
 

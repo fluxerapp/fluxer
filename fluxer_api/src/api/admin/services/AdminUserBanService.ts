@@ -49,14 +49,8 @@ export class AdminUserBanService {
 		} else {
 			tempBannedUntil.setHours(tempBannedUntil.getHours() + data.duration_hours);
 		}
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				temp_banned_until: tempBannedUntil,
-				flags: user.flags | UserFlags.DISABLED,
-			},
-			user.toRow(),
-		);
+		const bannedUser = await userRepository.patchUpsert(userId, {temp_banned_until: tempBannedUntil}, user.toRow());
+		const updatedUser = (await userRepository.updateFlags(userId, (flags) => flags | UserFlags.DISABLED)) ?? bannedUser;
 		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		const email = user.email;
@@ -146,14 +140,9 @@ export class AdminUserBanService {
 			throw new UnknownUserError();
 		}
 		const wasTempBanned = isTemporarilyBanned(user) && !isAccountClosed(user);
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				temp_banned_until: null,
-				flags: user.flags & ~UserFlags.DISABLED,
-			},
-			user.toRow(),
-		);
+		const unbannedUser = await userRepository.patchUpsert(userId, {temp_banned_until: null}, user.toRow());
+		const updatedUser =
+			(await userRepository.updateFlags(userId, (flags) => flags & ~UserFlags.DISABLED)) ?? unbannedUser;
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		const email = user.email;
 		const notificationSent =

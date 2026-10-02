@@ -15,7 +15,7 @@ import {
 	DefaultMessageNotificationsSchema,
 	GuildExplicitContentFilterSchema,
 	GuildMFALevelSchema,
-	GuildVerificationLevelSchema,
+	GuildVerificationLevelInputSchema,
 	NSFWLevelSchema,
 } from '@fluxer/schema/src/primitives/GuildValidators';
 import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
@@ -156,7 +156,7 @@ export type UpdateGuildNameRequest = z.infer<typeof UpdateGuildNameRequest>;
 export const UpdateGuildSettingsRequest = z.object({
 	guild_id: SnowflakeType.describe('ID of the guild to update'),
 	verification_level: withFieldDescription(
-		GuildVerificationLevelSchema,
+		GuildVerificationLevelInputSchema,
 		'Required verification level for guild members',
 	).optional(),
 	mfa_level: withFieldDescription(GuildMFALevelSchema, 'Required MFA level for moderators').optional(),

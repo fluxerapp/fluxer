@@ -79,19 +79,6 @@ export class EmailService implements IEmailService {
 		});
 	}
 
-	async sendAccountDisabledForSuspiciousActivityEmail(
-		email: string,
-		username: string,
-		reason: string | null,
-		locale: string | null = null,
-	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'account_disabled_suspicious', locale, {
-			username,
-			reason: optionalReason(reason),
-			forgotUrl: `${this.config.appBaseUrl}/forgot`,
-		});
-	}
-
 	async sendAccountTempBannedEmail(
 		email: string,
 		username: string,

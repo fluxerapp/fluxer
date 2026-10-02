@@ -113,7 +113,6 @@ export interface SearchableUser {
 	premiumType: number | null;
 	emailVerified: boolean;
 	emailBounced: boolean;
-	suspiciousActivityFlags: number;
 	acls: Array<string>;
 	createdAt: number;
 	lastActiveAt: number | null;
@@ -132,7 +131,6 @@ export interface UserSearchFilters {
 	isTempBanned?: boolean;
 	isPendingDeletion?: boolean;
 	hasAcl?: Array<string>;
-	minSuspiciousActivityFlags?: number;
 	createdAtGreaterThanOrEqual?: number;
 	createdAtLessThanOrEqual?: number;
 	sortBy?: 'createdAt' | 'lastActiveAt' | 'relevance';

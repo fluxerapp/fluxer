@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A note is short private text the caller stores about another account.
 
-Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`. An account with an outstanding required action is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`.
 
 :::note[A note is private to its author]
 The target account never receives the note in an HTTP response or [Gateway Dispatch](/gateway/events/). A note has no relationship requirement, so the caller can hold one for an account that is neither a friend nor blocked.

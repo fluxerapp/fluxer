@@ -81,10 +81,6 @@ const PATCHABLE_USER_FLAGS: &[UserFlag] = &[
         value: 1 << 34,
     },
     UserFlag {
-        name: "DISABLED_SUSPICIOUS_ACTIVITY",
-        value: 1 << 35,
-    },
-    UserFlag {
         name: "SELF_DELETED",
         value: 1 << 36,
     },
@@ -109,6 +105,10 @@ const PATCHABLE_USER_FLAGS: &[UserFlag] = &[
         value: 1 << 49,
     },
     UserFlag {
+        name: "ACCOUNT_LIMITED",
+        value: 1 << 50,
+    },
+    UserFlag {
         name: "HAS_DISMISSED_PREMIUM_ONBOARDING",
         value: 1 << 51,
     },
@@ -125,26 +125,11 @@ const PATCHABLE_USER_FLAGS: &[UserFlag] = &[
         value: 1 << 60,
     },
     UserFlag {
-        name: "FORCE_INBOUND_PHONE_VERIFICATION",
-        value: 1 << 61,
-    },
-    UserFlag {
-        name: "NOT_SUSPICIOUS",
+        name: "LIMIT_EXEMPT",
         value: 1 << 62,
     },
 ];
 
-const SUSPICIOUS_ACTIVITY_FLAGS: &[&str] = &[
-    "REQUIRE_VERIFIED_EMAIL",
-    "REQUIRE_REVERIFIED_EMAIL",
-    "REQUIRE_VERIFIED_PHONE",
-    "REQUIRE_REVERIFIED_PHONE",
-    "REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE",
-    "REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE",
-    "REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE",
-    "REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE",
-    "REQUIRE_INBOUND_PHONE_VERIFICATION",
-];
 const GUILD_FEATURES: &[&str] = &[
     "ANIMATED_ICON",
     "ANIMATED_BANNER",
@@ -206,9 +191,6 @@ pub fn bulk_actions_page(config: &AdminConfig, auth: &AuthContext, csrf_token: &
             @if acl::has_permission(admin_acls, acl::BULK_UPDATE_USER_FLAGS) {
                 (bulk_update_user_flags_section(base, csrf_token))
             }
-            @if acl::has_permission(admin_acls, acl::BULK_UPDATE_SUSPICIOUS_ACTIVITY) {
-                (bulk_update_suspicious_activity_section(base, csrf_token))
-            }
             @if acl::has_permission(admin_acls, acl::BULK_UPDATE_GUILD_FEATURES) {
                 (bulk_update_guild_features_section(base, csrf_token))
             }
@@ -224,16 +206,6 @@ pub fn bulk_actions_page(config: &AdminConfig, auth: &AuthContext, csrf_token: &
         }
     };
     admin_layout(config, auth, "Bulk Actions", "bulk-actions", None, content)
-}
-
-fn flag_checkbox_grid(prefix: &str, flags: &[&str]) -> Markup {
-    html! {
-        div class="grid grid-cols-1 gap-3 sm:grid-cols-2" {
-            @for flag in flags {
-                (checkbox(prefix, flag, flag, false, true))
-            }
-        }
-    }
 }
 
 fn guild_feature_checkbox_grid(prefix: &str, include_deprecated: bool) -> Markup {
@@ -281,36 +253,6 @@ fn bulk_update_user_flags_section(base: &str, csrf_token: &str) -> Markup {
                     (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
                     (form_actions(html! {
                         (submit_button("Update User Flags"))
-                    }))
-                }
-            }
-        },
-    )
-}
-
-fn bulk_update_suspicious_activity_section(base: &str, csrf_token: &str) -> Markup {
-    section_card_simple(
-        "Bulk Update Suspicious Activity Flags",
-        html! {
-            form method="post" action={(base) "/bulk-actions?action=bulk-update-suspicious-activity-flags"} {
-                (csrf_input(csrf_token))
-                div class="space-y-4" {
-                    (textarea_input("user_ids", "User IDs (one per line)", "123456789\n987654321", "", 5, true))
-                    div {
-                        p class="font-semibold text-neutral-500 text-xs uppercase tracking-wide mb-2" {
-                            "Flags to Add"
-                        }
-                        (flag_checkbox_grid("add_flags[]", SUSPICIOUS_ACTIVITY_FLAGS))
-                    }
-                    div {
-                        p class="font-semibold text-neutral-500 text-xs uppercase tracking-wide mb-2" {
-                            "Flags to Remove"
-                        }
-                        (flag_checkbox_grid("remove_flags[]", SUSPICIOUS_ACTIVITY_FLAGS))
-                    }
-                    (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
-                    (form_actions(html! {
-                        (submit_button("Update Suspicious Activity Flags"))
                     }))
                 }
             }

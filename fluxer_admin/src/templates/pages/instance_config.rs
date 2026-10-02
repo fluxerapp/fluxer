@@ -1403,7 +1403,7 @@ fn captcha_section(base: &str, csrf_token: &str, captcha: &CaptchaConfigResponse
                         ))
                         p class="text-sm text-neutral-700" {
                             (format!(
-                                "Average solve: about {estimate:.1} s on a low-end Android phone, \
+                                "Average solve: about {estimate:.1} s on a low-end Android device, \
                                  well under a second in desktop browsers."
                             ))
                         }

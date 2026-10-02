@@ -11,10 +11,6 @@
 		"subject": "Brisanje tvog računa na {product_name}u je zakazano",
 		"body": "Pozdrav {username},\n\nNa tvoj zahtjev, tvoj račun na {product_name}u zakazan je za trajno brisanje:\n\n{deletionDate, date, full} u {deletionDate, time, short}{reason, select, null {} other {\n\nRazlog: {reason}}}\n\nDo tada je tvoj račun zaključan. Ako ovaj zahtjev ne dolazi od tebe ili želiš zadržati račun, kontaktiraj {safety_email} s ove adrese e-pošte prije tog datuma.\n\n– Tim {product_name}a"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Tvoj račun na {product_name}u privremeno je onemogućen",
-		"body": "Pozdrav {username},\n\nPrivremeno smo onemogućili tvoj račun na {product_name}u jer smo otkrili sumnjivu aktivnost.\n\n{reason, select,\n  null {}\n  other {Razlog: {reason}}\n}\n\nZa ponovni pristup svom računu morat ćeš poništiti lozinku:\n\n{forgotUrl}\n\nNakon što poništiš lozinku, moći ćeš se ponovno prijaviti.\n\nAko misliš da je ovo pogreška, kontaktiraj naš tim za podršku.\n\n– Sigurnosni tim {product_name}a"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Tvoj račun na {product_name}u bit će trajno izbrisan",
 		"body": "Pozdrav {username},\n\nTvoj račun na {product_name}u zakazan je za trajno brisanje zbog kršenja naših Uvjeta pružanja usluge ili Smjernica zajednice.\n\nZakazano brisanje: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Razlog: {reason}}\n}\n\nOvo je ozbiljna mjera. Podaci tvog računa bit će trajno izbrisani na zakazani datum.\n\nPregledaj:\n- Uvjeti pružanja usluge: {termsUrl}\n- Smjernice zajednice: {guidelinesUrl}\n\nPostupak žalbe:\nAko smatraš da je ova odluka bila netočna ili neopravdana, imaš 60 dana za podnošenje žalbe. Pošalji e-poštu na {appeals_email} s ove adrese e-pošte.\n\nU svojoj žalbi:\n- Jasno objasni zašto smatraš da je odluka bila netočna ili neopravdana\n- Navedi sve relevantne dokaze ili kontekst\n\nČlan Sigurnosnog tima {product_name}a pregledat će tvoju žalbu i može privremeno zaustaviti zakazano brisanje dok se ne donese konačna odluka.\n\n– Sigurnosni tim {product_name}a"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Tvoja e-pošta za {product_name} je promijenjena",
-		"body": "Pozdrav {username},\n\nAdresa e-pošte na tvom računu na {product_name}u promijenjena je u {newEmail}.\n\nAko ova promjena dolazi od tebe, nije potrebna nikakva radnja. Ako ne dolazi, možeš je poništiti i zaštititi svoj račun ovom poveznicom:\n\n{revertUrl}\n\nOvo će vratiti tvoju prethodnu e-poštu, odjaviti te iz svih sesija, ukloniti povezane telefonske brojeve, onemogućiti višefaktorsku autentifikaciju i zahtijevati postavljanje nove lozinke.\n\n– Sigurnosni tim {product_name}a"
+		"body": "Pozdrav {username},\n\nAdresa e-pošte na tvom računu na {product_name}u promijenjena je u {newEmail}.\n\nAko ova promjena dolazi od tebe, nije potrebna nikakva radnja. Ako ne dolazi, možeš je poništiti i zaštititi svoj račun ovom poveznicom:\n\n{revertUrl}\n\nOvo će vratiti tvoju prethodnu e-poštu, odjaviti te iz svih sesija, onemogućiti višefaktorsku autentifikaciju i zahtijevati postavljanje nove lozinke.\n\n– Sigurnosni tim {product_name}a"
 	},
 	"email_verification": {
 		"subject": "Potvrdi svoju e-poštu za {product_name}",

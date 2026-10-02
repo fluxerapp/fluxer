@@ -1271,7 +1271,11 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			return;
 		}
 		const conversationLimit = getApiErrorBody(error);
-		if (conversationLimit?.code === APIErrorCodes.NEW_CONVERSATIONS_LIMITED && conversationLimit.message) {
+		if (
+			(conversationLimit?.code === APIErrorCodes.NEW_CONVERSATIONS_LIMITED ||
+				conversationLimit?.code === APIErrorCodes.ACCOUNT_LIMITED) &&
+			conversationLimit.message
+		) {
 			const systemMessage = createSystemMessage(channelId, conversationLimit.message);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			return;

@@ -1125,7 +1125,6 @@ Signs from 1 through 50 attachment URLs again. Returns one [refreshed attachment
 | 400 | [error response](/http-api/#error-response) | Body, URL count, or a URL length is invalid and the request returns `INVALID_FORM_BODY` |
 | 401 | [error response](/http-api/#error-response) | The credential is missing or invalid and the request returns `UNAUTHORIZED` |
 | 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 :::caution[A refreshed URL is not an access check]
 Anyone who can authenticate can sign any attachment URL of the instance whose path they know. A signature limits how long a copied URL works. It does not decide who can read the file.
@@ -1278,6 +1277,7 @@ The resolved `max_voice_message_duration` limit defaults to 1200 seconds.
 | 403 | [error response](/http-api/#error-response) | Is age restricted from the channel and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 403 | [error response](/http-api/#error-response) | Message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | A limited caller messages an account that has not written in the direct message and the request returns `NEW_CONVERSATIONS_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation), the channel is not its personal notes channel, and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel, referenced message, sticker, or guild does not exist or is unavailable, or the supplied nonce was last used in a different channel and the request returns `UNKNOWN_MESSAGE` |
 
 :::caution[Slowmode denials are 400, not 429]
@@ -1368,6 +1368,7 @@ An `id` that names no attachment on the message is skipped, and the edit still s
 | 403 | [error response](/http-api/#error-response) | The caller is age restricted from the channel and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 403 | [error response](/http-api/#error-response) | Message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | A limited author edits a direct message the other account has not written in and the request returns `NEW_CONVERSATIONS_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation), the channel is not its personal notes channel, and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist |
 | 429 | [error response](/http-api/#error-response) | The published message edit allowance is used up, returning `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` |
 
@@ -1422,6 +1423,7 @@ Each announcement channel can publish 10 messages in a row, then one every 6 min
 | 403 | [error response](/http-api/#error-response) | The author is timed out, returning `COMMUNICATION_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The message matches an instance blocklist, returning `CONTENT_BLOCKED` |
 | 403<sup>1</sup> | [error response](/http-api/#error-response) | Publishing is disabled for the guild, returning `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or is older than the caller's history cutoff |
 | 429<sup>2</sup> | [error response](/http-api/#error-response) | The channel publish allowance is used up |
 | 429 | [error response](/http-api/#error-response) | A concurrent change holds the message, returning `RESOURCE_LOCKED` |
@@ -1521,7 +1523,7 @@ Deletes the authenticated identity's read state entry for one channel. Returns 2
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Read state was absent or deleted |
-| 403 | [error response](/http-api/#error-response) | Credential type or account state denies the request and it returns `ACCESS_DENIED` or `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Credential type denies the request and it returns `ACCESS_DENIED` |
 
 ### Side effects
 
@@ -1709,7 +1711,7 @@ Deletion has no age boundary and no confirmation step, and there is no restore o
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | Every personal note was deleted |
-| 403 | [error response](/http-api/#error-response) | Credential type or account state denies the request and it returns `ACCESS_DENIED` or `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Credential type denies the request and it returns `ACCESS_DENIED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller cannot resolve it |
 
 ### Side effects
@@ -1943,7 +1945,7 @@ A channel the caller cannot see is acknowledged like any other whenever it store
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Pin state was absent or acknowledged |
-| 403 | [error response](/http-api/#error-response) | Credential type or account state denies the request and it returns `ACCESS_DENIED` or `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Credential type denies the request and it returns `ACCESS_DENIED` |
 
 ### Side effects
 
@@ -2102,6 +2104,7 @@ Adds the authenticated identity's reaction. Returns 204 with an empty body. Emit
 | 403 | [error response](/http-api/#error-response) | The caller has an unverified email and the request returns `REACTION_EMAIL_VERIFICATION_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | The caller is under a new conversation limit in a direct message the recipient has not written in, and the request returns `NEW_CONVERSATIONS_LIMITED` |
 | 403 | [error response](/http-api/#error-response) | Reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects

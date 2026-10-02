@@ -4,7 +4,6 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
-import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '@app/api/auth/AuthEmail';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
@@ -188,21 +187,11 @@ export class AdminUserProfileService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const updates: {
-			email_verified: boolean;
-			email_bounced: boolean;
-			suspicious_activity_flags?: number;
-		} = {
-			email_verified: true,
-			email_bounced: false,
-		};
-		if (user.suspiciousActivityFlags !== null && user.suspiciousActivityFlags !== 0) {
-			const newFlags = user.suspiciousActivityFlags & ~EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS;
-			if (newFlags !== user.suspiciousActivityFlags) {
-				updates.suspicious_activity_flags = newFlags;
-			}
-		}
-		const updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
+		const updatedUser = await userRepository.patchUpsert(
+			userId,
+			{email_verified: true, email_bounced: false},
+			user.toRow(),
+		);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		await auditService.createAuditLog({
 			adminUserId,

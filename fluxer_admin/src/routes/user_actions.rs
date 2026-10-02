@@ -134,19 +134,6 @@ pub async fn dispatch(
                 "Failed to update premium flags",
             )
         }
-        "update_suspicious_flags" => {
-            let Ok(submitted) =
-                form.parse_list_values::<i32>(&["suspicious_flags[]", "suspicious_flags"])
-            else {
-                return DispatchOutcome::error("Invalid suspicious activity flag value");
-            };
-            let flags = submitted.into_iter().fold(0, |acc, flag| acc | flag);
-            DispatchOutcome::from_result(
-                client.update_suspicious_flags(user_id, flags).await,
-                "Suspicious activity flags updated successfully",
-                "Failed to update suspicious activity flags",
-            )
-        }
         "update_acls" => {
             let acls = form.list_values_any(&["acls[]", "acls"]);
             DispatchOutcome::from_result(
@@ -178,14 +165,6 @@ pub async fn dispatch(
             "Email verified successfully",
             "Failed to verify email",
         ),
-        "update_has_verified_phone" => {
-            let val = form.bool_value("has_verified_phone");
-            DispatchOutcome::from_result(
-                client.update_has_verified_phone(user_id, val).await,
-                "Phone verification status updated successfully",
-                "Failed to update phone verification status",
-            )
-        }
         "terminate_sessions" => DispatchOutcome::from_result(
             client.terminate_user_sessions(user_id).await,
             "User sessions terminated successfully",

@@ -13,6 +13,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {GuildCreationPermissionRequiredError} from '@fluxer/errors/src/domains/guild/GuildCreationPermissionRequiredError';
@@ -62,6 +63,7 @@ export function GuildBaseController(app: HonoApp) {
 			if (!user.isUnclaimedAccount()) {
 				requireEmailVerified(user, 'guild_creation');
 			}
+			assertAccountNotLimited(user);
 			if (Config.instance.selfHosted && !policy.guild_create_access) {
 				const granted =
 					user.acls.has(AdminACLs.WILDCARD) ||

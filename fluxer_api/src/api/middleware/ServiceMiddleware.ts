@@ -832,11 +832,7 @@ class RequestServices implements RequestScopedServices {
 	}
 
 	get userAuthRequestService(): UserAuthRequestService {
-		this.cachedUserAuthRequestService ??= new UserAuthRequestService(
-			this.context,
-			getUserRepository(),
-			getGuildRepository(),
-		);
+		this.cachedUserAuthRequestService ??= new UserAuthRequestService(this.context, getUserRepository());
 		return this.cachedUserAuthRequestService;
 	}
 

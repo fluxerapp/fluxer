@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
-import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {requireOAuth2BearerToken, requireOAuth2Scope} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -104,7 +104,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.post(
 		'/oauth2/authorize/consent',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_AUTHORIZE),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		Validator('json', AuthorizeConsentRequest),
 		OpenAPI({
@@ -219,7 +219,7 @@ export function OAuth2Controller(app: HonoApp) {
 		'/oauth2/@me',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
 		requireOAuth2BearerToken(),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
 			operationId: 'get_current_user_oauth2',
@@ -280,7 +280,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.post(
 		'/oauth2/applications/:id/bot/reset-token',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENT_ROTATE_SECRET),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		SudoModeMiddleware,
 		Validator('param', ApplicationIdParam),
@@ -311,7 +311,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.post(
 		'/oauth2/applications/:id/client-secret/reset',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENT_ROTATE_SECRET),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		SudoModeMiddleware,
 		Validator('param', ApplicationIdParam),
@@ -342,7 +342,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.get(
 		'/oauth2/@me/authorizations',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_DEV_CLIENTS_LIST),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
 			operationId: 'list_user_oauth2_authorizations',
@@ -363,7 +363,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.delete(
 		'/oauth2/@me/authorizations/:applicationId',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		Validator('param', ApplicationAuthorizationIdParam),
 		OpenAPI({
@@ -386,7 +386,7 @@ export function OAuth2Controller(app: HonoApp) {
 	app.post(
 		'/oauth2/@me/authorizations/revoke',
 		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		Validator('json', OAuth2AuthorizationsBulkRevokeRequest),
 		OpenAPI({

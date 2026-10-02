@@ -307,6 +307,7 @@ export class StripePremiumService {
 				guildId: visionariesGuildId,
 				sendJoinMessage: true,
 				skipBanCheck: true,
+				skipAccountLimitCheck: true,
 				requestCache,
 			});
 			Logger.debug({userId, guildId: visionariesGuildId}, 'Added visionary user to visionaries guild');

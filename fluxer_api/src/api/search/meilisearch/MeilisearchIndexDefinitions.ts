@@ -72,7 +72,6 @@ export const MEILISEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Meilis
 			'tempBannedUntil',
 			'pendingDeletionAt',
 			'acls',
-			'suspiciousActivityFlags',
 			'createdAt',
 		],
 		sortableAttributes: ['createdAt', 'lastActiveAt', 'id'],

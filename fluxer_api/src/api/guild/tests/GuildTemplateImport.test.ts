@@ -103,7 +103,7 @@ describe('Guild Template Import', () => {
 				},
 			})
 			.execute();
-		expect(guild.verification_level).toBe(4);
+		expect(guild.verification_level).toBe(3);
 		expect(guild.default_message_notifications).toBe(1);
 		expect(guild.explicit_content_filter).toBe(2);
 		expect(guild.system_channel_flags).toBe(SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS);

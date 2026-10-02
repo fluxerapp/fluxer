@@ -16,7 +16,6 @@ import {z} from 'zod';
 const EMAIL_LOCAL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/;
 const DISCRIMINATOR_REGEX = /^\d{1,4}$/;
 const FLUXER_TAG_REGEX = /^[a-zA-Z0-9_]+$/;
-export const PHONE_E164_REGEX = /^\+[1-9]\d{1,14}$/;
 
 function sanitizeUsername(value: string): string {
 	if (value.length > MAX_STRING_PROCESSING_LENGTH) {
@@ -119,13 +118,6 @@ export const PasswordType = withOpenApiType(
 		.overwrite(normalizeString)
 		.pipe(withStringLengthRangeValidation(z.string(), 8, 256, ValidationErrorCodes.PASSWORD_LENGTH_INVALID)),
 	'PasswordType',
-);
-export const PhoneNumberType = withOpenApiType(
-	z
-		.string()
-		.overwrite(normalizeString)
-		.refine((value) => PHONE_E164_REGEX.test(value), ValidationErrorCodes.PHONE_NUMBER_INVALID_FORMAT),
-	'PhoneNumberType',
 );
 export const WebhookNameType = z
 	.string()

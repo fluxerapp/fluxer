@@ -32,7 +32,6 @@ export interface UserRow {
 	email: Nullish<string>;
 	email_verified: Nullish<boolean>;
 	email_bounced: Nullish<boolean>;
-	has_verified_phone?: Nullish<boolean>;
 	password_hash: Nullish<string>;
 	password_last_changed_at: Nullish<Date>;
 	totp_secret: Nullish<string>;
@@ -61,7 +60,6 @@ export interface UserRow {
 	stripe_subscription_id: Nullish<string>;
 	stripe_customer_id: Nullish<string>;
 	has_ever_purchased: Nullish<boolean>;
-	suspicious_activity_flags: Nullish<number>;
 	terms_agreed_at: Nullish<Date>;
 	privacy_agreed_at: Nullish<Date>;
 	last_active_at: Nullish<Date>;
@@ -98,7 +96,6 @@ export const USER_COLUMNS = [
 	'email',
 	'email_verified',
 	'email_bounced',
-	'has_verified_phone',
 	'password_hash',
 	'password_last_changed_at',
 	'totp_secret',
@@ -127,7 +124,6 @@ export const USER_COLUMNS = [
 	'stripe_subscription_id',
 	'stripe_customer_id',
 	'has_ever_purchased',
-	'suspicious_activity_flags',
 	'terms_agreed_at',
 	'privacy_agreed_at',
 	'last_active_at',
@@ -163,7 +159,6 @@ export const EMPTY_USER_ROW: UserRow = {
 	email: null,
 	email_verified: null,
 	email_bounced: null,
-	has_verified_phone: null,
 	password_hash: null,
 	password_last_changed_at: null,
 	totp_secret: null,
@@ -192,7 +187,6 @@ export const EMPTY_USER_ROW: UserRow = {
 	stripe_subscription_id: null,
 	stripe_customer_id: null,
 	has_ever_purchased: null,
-	suspicious_activity_flags: null,
 	terms_agreed_at: null,
 	privacy_agreed_at: null,
 	last_active_at: null,

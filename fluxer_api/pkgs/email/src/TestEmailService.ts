@@ -69,16 +69,6 @@ export class TestEmailService implements ITestEmailService {
 		return this.record(email, 'ip_authorization', {token: authorizationToken, ip: ipAddress, location});
 	}
 
-	async sendAccountDisabledForSuspiciousActivityEmail(
-		email: string,
-		username: string,
-		reason: string | null,
-		_locale?: string | null,
-	): Promise<boolean> {
-		this.logger.info(`Account disabled email sent to ${email} for user ${username}, reason: ${reason ?? 'none'}`);
-		return this.record(email, 'account_disabled_suspicious', {reason: reason ?? ''});
-	}
-
 	async sendAccountTempBannedEmail(
 		email: string,
 		username: string,

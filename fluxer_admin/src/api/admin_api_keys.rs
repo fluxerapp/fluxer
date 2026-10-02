@@ -12,7 +12,7 @@ impl AdminApiClient {
         acls: &[String],
     ) -> ApiResult<CreateAdminApiKeyResponse> {
         let body = generated_types::CreateAdminApiKeyRequest {
-            acls: parse_acls(acls)?,
+            acls: parse_acls(acls),
             expires_in_days: None,
             name: generated_types::CreateAdminApiKeyRequestName::try_from(name)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,
@@ -44,11 +44,8 @@ impl AdminApiClient {
     }
 }
 
-pub(super) fn parse_acls(acls: &[String]) -> ApiResult<Vec<generated_types::AdminAclType>> {
+pub(super) fn parse_acls(acls: &[String]) -> Vec<generated_types::AdminAclType> {
     acls.iter()
-        .map(|acl| {
-            generated_types::AdminAclType::try_from(acl.as_str())
-                .map_err(|e| ApiError::Parse(e.to_string()))
-        })
+        .filter_map(|acl| generated_types::AdminAclType::try_from(acl.as_str()).ok())
         .collect()
 }

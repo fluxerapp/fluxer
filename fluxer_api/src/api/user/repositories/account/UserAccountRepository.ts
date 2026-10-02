@@ -24,6 +24,8 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
+const USER_FLAGS_WRITE_ATTEMPTS = 3;
+
 export class UserAccountRepository {
 	private dataRepo: UserDataRepository;
 	private emailOwnershipRepo: UserEmailOwnershipRepository;
@@ -112,12 +114,24 @@ export class UserAccountRepository {
 		return this.patchAccount(userId, patchData, oldData);
 	}
 
-	async compareAndSetSuspiciousFlags(user: User, suspiciousFlags: number): Promise<User | null> {
-		const result = await this.dataRepo.compareAndSetSuspiciousFlags(user, suspiciousFlags);
+	async compareAndSetFlags(user: User, flags: bigint): Promise<User | null> {
+		const result = await this.dataRepo.compareAndSetFlags(user, flags & ~LEGACY_DEAD_USER_FLAGS_MASK);
 		if (!result) return null;
 		const updatedUser = new User(result.updatedData);
 		await this.searchRepo.updateUser(updatedUser);
 		return updatedUser;
+	}
+
+	async updateFlags(userId: UserID, mutate: (flags: bigint) => bigint): Promise<User | null> {
+		for (let attempt = 0; attempt < USER_FLAGS_WRITE_ATTEMPTS; attempt++) {
+			const user = await this.findUnique(userId);
+			if (!user) return null;
+			const next = mutate(user.flags);
+			if (next === user.flags) return user;
+			const updated = await this.compareAndSetFlags(user, next);
+			if (updated) return updated;
+		}
+		throw new Error(`User ${userId} flags kept changing during update`);
 	}
 
 	async updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User> {
@@ -272,7 +286,6 @@ export class UserAccountRepository {
 	private migratePremiumFlagsInPatch(patchData: Partial<UserRow>, oldData: UserRow): Partial<UserRow> {
 		const oldRawFlags = oldData.flags ?? 0n;
 		const oldLegacyPremiumBits = extractPremiumFlagsFromLegacyUserFlags(oldRawFlags);
-		const oldHasDeadBits = (oldRawFlags & LEGACY_DEAD_USER_FLAGS_MASK) !== 0n;
 		const flagsInPatch = patchData.flags;
 		let migratedPatch = patchData;
 		if (flagsInPatch !== undefined && flagsInPatch !== null) {
@@ -283,12 +296,10 @@ export class UserAccountRepository {
 				const basePremiumFlags = patchData.premium_flags ?? oldData.premium_flags ?? 0;
 				migratedPatch.premium_flags = basePremiumFlags | inboundLegacyPremium;
 			}
-		} else if (oldLegacyPremiumBits !== 0 || oldHasDeadBits) {
+		} else if (oldLegacyPremiumBits !== 0) {
 			migratedPatch = {...patchData, flags: oldRawFlags & ~LEGACY_PREMIUM_FLAGS_MASK & ~LEGACY_DEAD_USER_FLAGS_MASK};
-			if (oldLegacyPremiumBits !== 0) {
-				const basePremiumFlags = patchData.premium_flags ?? oldData.premium_flags ?? 0;
-				migratedPatch.premium_flags = basePremiumFlags | oldLegacyPremiumBits;
-			}
+			const basePremiumFlags = patchData.premium_flags ?? oldData.premium_flags ?? 0;
+			migratedPatch.premium_flags = basePremiumFlags | oldLegacyPremiumBits;
 		}
 		return migratedPatch;
 	}

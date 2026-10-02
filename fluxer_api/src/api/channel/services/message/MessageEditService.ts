@@ -9,7 +9,7 @@ import {emitMessageUpdated} from '@app/api/channel/services/message/MessageActiv
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
-import {isOperationDisabled} from '@app/api/channel/services/message/MessageHelpers';
+import {isOperationDisabled, isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
 import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
 import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
 import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
@@ -19,6 +19,7 @@ import type {MessageWriteLock} from '@app/api/channel/services/message/MessageWr
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {assertMayStartConversation, oneToOneDmRecipient} from '@app/api/user/NewConversationLimit';
 import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
@@ -153,6 +154,9 @@ export class MessageEditService {
 			});
 			await this.deps.crosspostPropagation.propagateEdit(editedMessage);
 			return {message: editedMessage, authChannel};
+		}
+		if (user && !isPersonalNotesChannel({userId, channelId})) {
+			assertAccountNotLimited(user);
 		}
 		const dmRecipientId = oneToOneDmRecipient(channel, userId);
 		if (user && dmRecipientId !== null) {

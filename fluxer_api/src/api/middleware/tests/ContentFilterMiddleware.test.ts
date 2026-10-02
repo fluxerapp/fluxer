@@ -71,11 +71,10 @@ describe('shouldSkipContentFilterPath', () => {
 			'/users/@me/email-change/verify-original',
 			'/users/@me/mfa/totp/enable',
 			'/users/@me/password-change/complete',
-			'/users/@me/phone/verify',
 			'/reports/dsa/email/verify',
 		];
 		const result = paths.map((path) => shouldSkipContentFilterPath(path));
-		expect(result).toEqual([true, true, true, true, true]);
+		expect(result).toEqual([true, true, true, true]);
 	});
 	test('does not skip public content update request bodies', () => {
 		const paths = ['/guilds/123/vanity-url', '/channels/123/messages', '/users/@me'];

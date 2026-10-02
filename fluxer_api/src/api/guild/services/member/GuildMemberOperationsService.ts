@@ -31,6 +31,7 @@ import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {isProfileSubstringExempt} from '@app/api/user/UserHelpers';
 import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse} from '@app/api/user/UserMappers';
@@ -418,6 +419,7 @@ export class GuildMemberOperationsService {
 			sendJoinMessage?: boolean;
 			skipGuildLimitCheck?: boolean;
 			skipBanCheck?: boolean;
+			skipAccountLimitCheck?: boolean;
 			isTemporary?: boolean;
 			joinSourceType?: JoinSourceType;
 			sourceInviteCode?: InviteCode;
@@ -435,6 +437,7 @@ export class GuildMemberOperationsService {
 				sendJoinMessage = true,
 				skipGuildLimitCheck = false,
 				skipBanCheck = false,
+				skipAccountLimitCheck = false,
 				isTemporary = false,
 				joinSourceType = JoinSourceTypes.INSTANT_INVITE,
 				sourceInviteCode = null,
@@ -449,6 +452,9 @@ export class GuildMemberOperationsService {
 			assertMutableUserId(userId);
 			const user = await this.userRepository.findUnique(userId);
 			if (!user) throw new UnknownGuildError();
+			if (!skipAccountLimitCheck) {
+				assertAccountNotLimited(user);
+			}
 			if (!skipBanCheck) {
 				await this.validationService.checkUserBanStatus({userId, guildId});
 			}
@@ -706,6 +712,7 @@ export class GuildMemberOperationsService {
 		const {targetId, guildId, targetUser, targetMember, data, updateData, preparedAssets} = params;
 		if (hasSelfProfileCustomizationUpdate(data)) {
 			requireEmailVerified(targetUser, 'profile');
+			assertAccountNotLimited(targetUser);
 		}
 		const ctx = createLimitMatchContext({user: targetUser});
 		const hasGuildProfileCustomization = resolveLimitSafe(

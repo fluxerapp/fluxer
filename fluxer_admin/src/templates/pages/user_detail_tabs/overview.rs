@@ -139,13 +139,6 @@ fn render_overview_tab(
                             }
                         }))
                     }
-                    (detail_row("Phone", html! {
-                        @if user.has_verified_phone {
-                            span class="text-green-700" { "Verified" }
-                        } @else {
-                            span class="text-neutral-400" { "Not verified" }
-                        }
-                    }))
                     @if acl::has_permission(admin_acls, acl::USER_VIEW_DOB) {
                         (detail_row("Date of Birth", html! {
                             (user.date_of_birth.as_deref().unwrap_or("Not set"))
@@ -270,8 +263,6 @@ fn flags_card(
     csrf_token: &str,
 ) -> Markup {
     let can_update_flags = acl::has_permission(admin_acls, acl::USER_UPDATE_FLAGS);
-    let can_update_suspicious =
-        acl::has_permission(admin_acls, acl::USER_UPDATE_SUSPICIOUS_ACTIVITY);
     html! {
         div class="space-y-6" {
             (u64_flag_form(
@@ -298,23 +289,6 @@ fn flags_card(
                 can_update_flags,
                 Some(acl::USER_UPDATE_FLAGS),
             ))
-            (i32_flag_form(
-                config,
-                &user.id,
-                "Suspicious Activity Flags",
-                "update_suspicious_flags",
-                "suspicious_flags[]",
-                user.suspicious_activity_flags,
-                admin_flags::SUSPICIOUS_ACTIVITY_FLAGS,
-                csrf_token,
-                can_update_suspicious,
-                Some(acl::USER_UPDATE_SUSPICIOUS_ACTIVITY),
-            ))
-            @if user.phone_verification_deferred {
-                p class="text-sm text-amber-700 dark:text-amber-400" {
-                    "Phone verification is deferred: the requirement above is stored but not enforced."
-                }
-            }
         }
     }
 }

@@ -5,9 +5,10 @@ import type {IMessageRepository} from '@app/api/channel/repositories/IMessageRep
 import {getCacheService, getChannelRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Channel} from '@app/api/models/Channel';
 import type {User} from '@app/api/models/User';
+import {isAccountLimitExempt} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {NewConversationsLimitedError} from '@fluxer/errors/src/domains/user/NewConversationsLimitedError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
@@ -40,12 +41,7 @@ function limitKey(userId: UserID | bigint | string): string {
 }
 
 export function isNewConversationLimitExempt(user: Pick<User, 'isBot' | 'isSystem' | 'flags'>): boolean {
-	return (
-		user.isBot ||
-		user.isSystem ||
-		(user.flags & UserFlags.STAFF) !== 0n ||
-		(user.flags & UserFlags.NOT_SUSPICIOUS) !== 0n
-	);
+	return isAccountLimitExempt(user);
 }
 
 export async function getNewConversationLimit(

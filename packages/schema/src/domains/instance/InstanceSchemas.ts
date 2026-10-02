@@ -113,9 +113,7 @@ export const InstanceFeaturesSchema = z
 		self_hosted: z.boolean().describe('Whether this is a self-hosted instance'),
 		presigned_attachment_uploads: z.boolean().describe('Whether clients can request presigned attachment upload URLs'),
 		emails_enabled: z.boolean().describe('Whether the instance sends emails (verification, password reset, etc.)'),
-		phone_verification_enabled: z
-			.boolean()
-			.describe('Whether users can verify a phone number, so the very high guild verification level applies'),
+		phone_verification_enabled: z.boolean().describe('Deprecated. Always false.'),
 	})
 	.describe('Feature flags for this instance');
 export type InstanceFeatures = z.infer<typeof InstanceFeaturesSchema>;

@@ -10,7 +10,7 @@ Multi-factor authentication asks for a second proof of identity after the accoun
 
 Registering a WebAuthn credential does not make passkeys a second factor. A registered credential answers a [sudo mode](#sudo-mode) challenge and a passwordless login on its own, and only [Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication) adds the WebAuthn [authenticator type](/http-api/users/#authenticator-types) that makes a passkey a required second factor at password login.
 
-Every route here requires a non-bot user session. Fluxer rejects an account in suspicious activity state with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`, including on the sudo routes.
+Every route here requires a non-bot user session.
 
 :::caution[A challenge is one-use and context-bound]
 Fluxer consumes a backup code, a WebAuthn registration challenge, and a WebAuthn sudo challenge on first use. A challenge is bound to the user it was issued to and to the operation it was issued for. The operations are registration, sudo, MFA login, discoverable login, the passkey bridge, and the passkey update. It expires after five minutes, so a registration challenge cannot be redeemed as a sudo assertion.
