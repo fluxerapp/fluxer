@@ -28,6 +28,9 @@
 -define(RECONNECT_WINDOW_MS, 600000).
 -define(STOP_TIMEOUT_MS, 5000).
 -define(PREWARM_TIMEOUT_MS, 55000).
+-define(RELEASE_TIMEOUT_MS, 150000).
+-define(RELEASE_ROUNDS, 3).
+-define(RELEASE_RETRY_MS, 200).
 
 -type guild_id() :: pos_integer().
 -type beam() :: #{binary := binary(), md5 := binary()}.
@@ -100,11 +103,11 @@ prewarm() ->
 
 -spec arm() -> {ok, map()} | {error, term()}.
 arm() ->
-    gen_server:call(?MODULE, arm, ?CALL_TIMEOUT_MS).
+    gen_server:call(?MODULE, arm, ?RELEASE_TIMEOUT_MS).
 
--spec disarm() -> {ok, map()}.
+-spec disarm() -> {ok, map()} | {error, map()}.
 disarm() ->
-    gen_server:call(?MODULE, disarm, ?CALL_TIMEOUT_MS).
+    gen_server:call(?MODULE, disarm, ?RELEASE_TIMEOUT_MS).
 
 -spec status() -> map().
 status() ->
@@ -114,6 +117,8 @@ status() ->
 init([]) ->
     ok = net_kernel:monitor_nodes(true),
     Armed = application:get_env(fluxer_gateway, guild_pin_keeper_armed, false) =:= true,
+    EverArmed =
+        application:get_env(fluxer_gateway, guild_pin_keeper_ever_armed, false) =:= true,
     ok = maybe_resume_armed(Armed),
     {ok, #{
         guild_ids => pinned_guild_ids(),
@@ -123,7 +128,7 @@ init([]) ->
         ),
         base_md5s => parse_md5_list(fluxer_gateway_env:get(guild_pin_keeper_base_md5s)),
         armed => Armed,
-        ever_armed => Armed,
+        ever_armed => Armed orelse EverArmed,
         peers => #{},
         workers => #{},
         sweep_timer => undefined,
@@ -231,6 +236,8 @@ do_arm(#{beam := {error, Reason}} = State) ->
     {{error, {beam_unavailable, Reason}}, State};
 do_arm(#{beam := Beam, base_md5s := BaseMd5s, guild_ids := GuildIds} = State) ->
     ok = pin_local(GuildIds),
+    ok = application:set_env(fluxer_gateway, guild_pin_keeper_ever_armed, true),
+    State0 = State#{ever_armed := true},
     Peers = gateway_peers(nodes()),
     Results = run_parallel(
         fun(Node) -> patch_peer(Node, Beam, BaseMd5s, GuildIds) end, Peers, ?PATCH_TIMEOUT_MS
@@ -238,31 +245,101 @@ do_arm(#{beam := Beam, base_md5s := BaseMd5s, guild_ids := GuildIds} = State) ->
     case [{Node, Result} || {Node, Result} <- Results, not is_patched(Result)] of
         [] ->
             ok = application:set_env(fluxer_gateway, guild_pin_keeper_armed, true),
-            State1 = record_patches(Results, State#{armed := true, ever_armed := true}),
+            State1 = record_patches(Results, State0#{armed := true}),
             {{ok, #{patched => length(Results)}}, schedule_sweep(0, State1)};
         Failed ->
-            Patched = [Node || {Node, Result} <- Results, is_patched(Result)],
-            _ = run_parallel(
-                fun(Node) -> unpin_peer(Node, GuildIds) end, Patched, ?PATCH_TIMEOUT_MS
-            ),
-            {{error, #{failed => Failed, unpinned => Patched}}, State}
+            {{_Released, Release}, State1} = do_disarm(State0),
+            {{error, Release#{failed => Failed}}, State1}
     end.
 
--spec do_disarm(state()) -> {{ok, map()}, state()}.
+-spec do_disarm(state()) -> {{ok, map()} | {error, map()}, state()}.
 do_disarm(#{guild_ids := GuildIds} = State) ->
     ok = application:unset_env(fluxer_gateway, guild_pin_keeper_armed),
-    State1 = stop_reconnects(cancel_sweep(State#{armed := false})),
+    State1 = settle_workers(cancel_sweep(State#{armed := false})),
     Peers = gateway_peers(nodes()),
-    Results = run_parallel(
-        fun(Node) -> unpin_peer(Node, GuildIds) end, Peers, ?PATCH_TIMEOUT_MS
+    case release_peers(Peers, GuildIds) of
+        [] ->
+            ok = unpin_local(GuildIds),
+            Stopped = [{GuildId, stop_local_copy(GuildId)} || GuildId <- GuildIds],
+            Reply = #{unpinned => length(Peers), pinned_after => [], stopped_local => Stopped},
+            {{ok, Reply}, State1};
+        PinnedAfter ->
+            Reply = #{pinned_after => PinnedAfter, kept_local => GuildIds, next => disarm},
+            {{error, Reply}, State1}
+    end.
+
+-spec release_peers([node()], [guild_id()]) -> [{node(), term()}].
+release_peers(Peers, GuildIds) ->
+    release_peers(Peers, GuildIds, ?RELEASE_ROUNDS).
+
+-spec release_peers([node()], [guild_id()], pos_integer()) -> [{node(), term()}].
+release_peers([], _GuildIds, _Left) ->
+    [];
+release_peers(Peers, GuildIds, Left) ->
+    _ = run_parallel(fun(Node) -> unpin_peer(Node, GuildIds) end, Peers, ?PATCH_TIMEOUT_MS),
+    Checked = run_parallel(
+        fun(Node) -> routes_here(Node, GuildIds) end, Peers, ?PATCH_TIMEOUT_MS
     ),
-    Failed = [{Node, Result} || {Node, Result} <- Results, Result =/= ok],
-    ok = unpin_local(GuildIds),
-    Stopped = [{GuildId, stop_local_copy(GuildId)} || GuildId <- GuildIds],
-    Reply = #{
-        unpinned => length(Results) - length(Failed), failed => Failed, stopped_local => Stopped
-    },
-    {{ok, Reply}, State1}.
+    case [{Node, Answer} || {Node, Answer} <- Checked, Answer =/= released] of
+        [] ->
+            [];
+        Still when Left =:= 1 ->
+            Still;
+        Still ->
+            timer:sleep(?RELEASE_RETRY_MS),
+            release_peers([Node || {Node, _Answer} <- Still], GuildIds, Left - 1)
+    end.
+
+-spec routes_here(node(), [guild_id()]) -> released | {pinned | unverified, term()}.
+routes_here(Node, GuildIds) ->
+    Answers = [
+        rpc:call(Node, ?ROUTER, owner_node_result, [GuildId, guilds], ?RPC_TIMEOUT_MS)
+     || GuildId <- GuildIds
+    ],
+    case [Answer || Answer <- Answers, not released_answer(Answer)] of
+        [] -> released;
+        Wrong -> release_status(Wrong)
+    end.
+
+-spec released_answer(term()) -> boolean().
+released_answer({ok, Owner}) -> Owner =/= node();
+released_answer({error, {no_active_nodes, _}}) -> true;
+released_answer({badrpc, nodedown}) -> true;
+released_answer(_Answer) -> false.
+
+-spec release_status([term()]) -> {pinned | unverified, term()}.
+release_status(Wrong) ->
+    case lists:member({ok, node()}, Wrong) of
+        true -> {pinned, Wrong};
+        false -> {unverified, Wrong}
+    end.
+
+-spec settle_workers(state()) -> state().
+settle_workers(#{workers := Workers} = State) ->
+    Deadline = erlang:monotonic_time(millisecond) + ?PATCH_TIMEOUT_MS,
+    lists:foldl(
+        fun
+            ({Ref, {{Kind, _Node}, _Pid}}, Acc) when Kind =:= patch; Kind =:= unpin ->
+                await_worker(Ref, Deadline, Acc);
+            ({Ref, _Worker}, Acc) ->
+                kill_worker(Ref, Acc)
+        end,
+        State,
+        maps:to_list(Workers)
+    ).
+
+-spec await_worker(reference(), integer(), state()) -> state().
+await_worker(Ref, Deadline, State) ->
+    Wait = max(0, Deadline - erlang:monotonic_time(millisecond)),
+    receive
+        {worker_result, Ref, _Result} ->
+            erlang:demonitor(Ref, [flush]),
+            drop_worker(Ref, State);
+        {'DOWN', Ref, process, _Pid, _Reason} ->
+            drop_worker(Ref, State)
+    after Wait ->
+        kill_worker(Ref, State)
+    end.
 
 -spec stop_local_copy(guild_id()) -> term().
 stop_local_copy(GuildId) ->
@@ -569,11 +646,6 @@ reconnect_loop(Node, Deadline) ->
             end
     end.
 
--spec stop_reconnects(state()) -> state().
-stop_reconnects(#{workers := Workers} = State) ->
-    Reconnects = [Ref || {Ref, {{reconnect, _Node}, _Pid}} <- maps:to_list(Workers)],
-    lists:foldl(fun kill_worker/2, State, Reconnects).
-
 -spec kill_worker(reference(), state()) -> state().
 kill_worker(Ref, #{workers := Workers} = State) ->
     {_Worker, Pid} = maps:get(Ref, Workers),
@@ -664,6 +736,7 @@ status_map(State) ->
     #{
         node => node(),
         armed => maps:get(armed, State),
+        ever_armed => maps:get(ever_armed, State),
         guild_ids => maps:get(guild_ids, State),
         beam_md5 => beam_status(maps:get(beam, State)),
         base_md5s => [binary:encode_hex(Md5) || Md5 <- maps:get(base_md5s, State)],
@@ -852,6 +925,27 @@ sweep_leaves_remote_copies_alone_without_a_local_copy_test() ->
     ok = process_registry:init(),
     ?assertEqual([], sweep_guild(?PG, ['fluxer_gateway@10.0.0.1'])),
     ?assertEqual(#{stopped => [], unpinned => []}, sweep([?PG], [])).
+
+release_unpins_and_verifies_the_route_test() ->
+    persistent_term:put({gateway_cluster_membership, members}, [node(), 'g1@h', 'g2@h']),
+    persistent_term:put({gateway_cluster_membership, members_by_role}, #{
+        guilds => [node(), 'g1@h', 'g2@h']
+    }),
+    application:set_env(fluxer_gateway, guild_pinned_only_nodes, [node()]),
+    application:set_env(fluxer_gateway, guild_owner_pins, #{?PG => node(), 42 => 'g1@h'}),
+    try
+        ?assertMatch({pinned, [{ok, _}]}, routes_here(node(), [?PG])),
+        ?assertEqual([], release_peers([node(), 'fluxer_gateway@10.9.9.9'], [?PG])),
+        ?assertEqual(
+            {ok, #{42 => 'g1@h'}}, application:get_env(fluxer_gateway, guild_owner_pins)
+        ),
+        ?assertEqual(released, routes_here(node(), [?PG]))
+    after
+        application:unset_env(fluxer_gateway, guild_owner_pins),
+        application:unset_env(fluxer_gateway, guild_pinned_only_nodes),
+        persistent_term:erase({gateway_cluster_membership, members}),
+        persistent_term:erase({gateway_cluster_membership, members_by_role})
+    end.
 
 permanent_patch_errors_are_not_retried_test() ->
     ?assert(permanent_patch_error({unexpected_router_md5, <<"AB">>})),
