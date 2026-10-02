@@ -41,7 +41,6 @@ derived_data_keys() ->
         role_perms_cache,
         overwrite_perms_cache,
         <<"role_index">>,
-        <<"channel_index">>,
         <<"member_role_index">>
     ].
 

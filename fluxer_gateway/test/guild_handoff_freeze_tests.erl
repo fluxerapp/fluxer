@@ -159,6 +159,36 @@ export_drops_only_keys_the_importer_rebuilds_test() ->
     end,
     ?assertEqual(Rebuild(Full), Rebuild(Slim)).
 
+export_keeps_channel_fields_that_only_the_index_holds_test() ->
+    Raw = #{
+        <<"guild">> => #{<<"id">> => <<"4242">>},
+        <<"channels">> => [
+            #{<<"id">> => <<"77">>, <<"type">> => 0, <<"last_message_id">> => <<"10">>}
+        ]
+    },
+    Full = guild_state_channels:handle_message_create(
+        #{<<"channel_id">> => <<"77">>, <<"id">> => <<"900">>},
+        guild_data_index:normalize_map(Raw)
+    ),
+    State = #{id => ?GUILD_ID, data => Full, sessions => #{}},
+    Slim = maps:get(data, guild_handoff:export_handoff_state(State)),
+    ?assertMatch({rebuilt, _}, bounded_rebuild(Slim)),
+    {rebuilt, Rebuilt} = bounded_rebuild(Slim),
+    [Channel] = guild_data_index:channel_list(Rebuilt),
+    ?assertEqual(900, maps:get(<<"last_message_id">>, Channel)).
+
+bounded_rebuild(Data) ->
+    {Pid, Ref} = spawn_monitor(fun() ->
+        process_flag(max_heap_size, #{size => 4000000, kill => true, error_logger => false}),
+        exit({rebuilt, guild_data_index:normalize_map(Data)})
+    end),
+    receive
+        {'DOWN', Ref, process, Pid, Reason} -> Reason
+    after 10000 ->
+        exit(Pid, kill),
+        timeout
+    end.
+
 setup() ->
     ets:new(?SHARD_TABLE, [named_table, public, set]),
     ets:new(?SINK, [named_table, public, set]),
