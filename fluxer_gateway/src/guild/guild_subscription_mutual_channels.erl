@@ -13,7 +13,8 @@
 -type user_id() :: integer().
 -type memo() :: #{exceptions := sets:set(user_id()), cache := #{term() => boolean()}}.
 -type view_cache() :: #{term() => [integer()]}.
--export_type([guild_state/0, user_id/0]).
+-type view_memo() :: #{exceptions => sets:set(user_id()), views => view_cache()}.
+-export_type([guild_state/0, user_id/0, view_memo/0]).
 
 -spec filter_member_ids(user_id(), [user_id()], guild_state()) -> [user_id()].
 filter_member_ids(_SessionUserId, [], _State) ->
@@ -32,15 +33,20 @@ filter_member_ids(SessionUserId, MemberIds, State) ->
 -spec filter_session_member_ids([{term(), user_id(), [term()]}], guild_state()) ->
     #{term() => [user_id()]}.
 filter_session_member_ids(Requests, State) ->
-    {Results, _Views} = filter_session_member_ids(Requests, #{}, State),
+    {Results, _Memo} = filter_session_member_ids(Requests, #{}, State),
     Results.
 
--spec filter_session_member_ids([{term(), user_id(), [term()]}], view_cache(), guild_state()) ->
-    {#{term() => [user_id()]}, view_cache()}.
-filter_session_member_ids([], Views, _State) ->
-    {#{}, Views};
-filter_session_member_ids(Requests, Views, State) ->
-    Exceptions = exceptions(State),
+-spec filter_session_member_ids([{term(), user_id(), [term()]}], view_memo(), guild_state()) ->
+    {#{term() => [user_id()]}, view_memo()}.
+filter_session_member_ids([], Memo, _State) ->
+    {#{}, Memo};
+filter_session_member_ids(Requests, Memo, State) ->
+    Exceptions =
+        case Memo of
+            #{exceptions := Cached} -> Cached;
+            _ -> exceptions(State)
+        end,
+    Views = maps:get(views, Memo, #{}),
     Sessions = maps:get(sessions, State, #{}),
     {Results, Cache} = lists:foldl(
         fun({SessionId, SessionUserId, MemberIds}, {Acc, Cache}) ->
@@ -53,7 +59,7 @@ filter_session_member_ids(Requests, Views, State) ->
         {#{}, Views},
         Requests
     ),
-    {Results, role_views(Cache)}.
+    {Results, #{exceptions => Exceptions, views => role_views(Cache)}}.
 
 -spec role_views(view_cache()) -> view_cache().
 role_views(Cache) ->

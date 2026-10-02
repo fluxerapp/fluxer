@@ -169,9 +169,9 @@ evaluate(Entries, State) ->
         {SessionId, UserId, maps:keys(Partners)}
      || {SessionId, #{user_id := UserId, partners := Partners}} <- maps:to_list(Entries)
     ],
-    {Views0, Inputs} = view_memo(State),
-    {Results, Views} = guild_subscription_mutual_channels:filter_session_member_ids(
-        Requests, Views0, State
+    {Memo0, Inputs} = view_memo(State),
+    {Results, Memo} = guild_subscription_mutual_channels:filter_session_member_ids(
+        Requests, Memo0, State
     ),
     GuildId = maps:get(id, State),
     Evaluated = maps:map(
@@ -180,21 +180,24 @@ evaluate(Entries, State) ->
         end,
         Entries
     ),
-    {Evaluated, store_view_memo(Inputs, Views, State)}.
+    {Evaluated, store_view_memo(Inputs, Memo, State)}.
 
--spec view_memo(guild_state()) -> {map(), term()}.
+-spec view_memo(guild_state()) ->
+    {guild_subscription_mutual_channels:view_memo(), term()}.
 view_memo(State) ->
     Inputs = visibility_inputs(State),
     case maps:get(?VIEW_MEMO_KEY, State, undefined) of
-        #{inputs := Inputs, views := Views} when is_map(Views) -> {Views, Inputs};
+        #{inputs := Inputs, memo := Memo} when is_map(Memo) -> {Memo, Inputs};
         _ -> {#{}, Inputs}
     end.
 
--spec store_view_memo(term(), map(), guild_state()) -> guild_state().
-store_view_memo(_Inputs, Views, State) when map_size(Views) > ?VIEW_MEMO_LIMIT ->
-    maps:remove(?VIEW_MEMO_KEY, State);
-store_view_memo(Inputs, Views, State) ->
-    State#{?VIEW_MEMO_KEY => #{inputs => Inputs, views => Views}}.
+-spec store_view_memo(term(), guild_subscription_mutual_channels:view_memo(), guild_state()) ->
+    guild_state().
+store_view_memo(Inputs, Memo, State) ->
+    case map_size(maps:get(views, Memo, #{})) > ?VIEW_MEMO_LIMIT of
+        true -> maps:remove(?VIEW_MEMO_KEY, State);
+        false -> State#{?VIEW_MEMO_KEY => #{inputs => Inputs, memo => Memo}}
+    end.
 
 -spec apply_result(integer(), [user_id()], registration()) -> registration().
 apply_result(GuildId, EligibleIds, #{pid := Pid, eligible := Previous} = Entry) ->
