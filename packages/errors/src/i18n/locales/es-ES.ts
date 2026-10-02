@@ -7,7 +7,7 @@ const ERROR_I18N_ES_ES_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Se requiere verificar tu correo electrónico para esta acción.",
 	"account.guild_verification_required": "Se requiere verificación de la comunidad.",
 	"account.ip_authorization_required": "Se requiere autorización de IP.",
-	"account.limited": "Tu cuenta está limitada. Revisa tu correo electrónico para saber cómo quitar la limitación.",
+	"account.limited": "El envío de mensajes está en pausa en tu cuenta. Revisa tu correo electrónico para completar un paso rápido y continuar.",
 	"account.sensitive_content_filter_age_restricted": "Este filtro de contenido sensible no está disponible para tu edad.",
 	"account.session_timeout": "La sesión ha caducado. Actualiza la página e inicia sesión de nuevo.",
 	"account.session_token_mismatch": "El token de sesión no coincide.",

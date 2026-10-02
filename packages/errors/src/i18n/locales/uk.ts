@@ -7,7 +7,7 @@ const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Для цієї дії потрібно підтвердити електронну адресу.",
 	"account.guild_verification_required": "Потрібно пройти перевірку спільноти.",
 	"account.ip_authorization_required": "Потрібне підтвердження IP-адреси.",
-	"account.limited": "Твій акаунт обмежено. Перевір електронну пошту, щоб дізнатися, як зняти обмеження.",
+	"account.limited": "Надсилання повідомлень у вашому обліковому записі на паузі. Загляньте в електронну пошту: щоб продовжити, потрібен лише один швидкий крок.",
 	"account.sensitive_content_filter_age_restricted": "Цей фільтр чутливого вмісту недоступний для твоєї вікової групи.",
 	"account.session_timeout": "Час сесії вичерпано. Онови сторінку та увійди знову.",
 	"account.session_token_mismatch": "Токен сесії не збігається.",

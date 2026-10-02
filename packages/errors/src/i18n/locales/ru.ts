@@ -7,7 +7,7 @@ const ERROR_I18N_RU_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Для этого действия требуется подтверждение email.",
 	"account.guild_verification_required": "Нужно пройти проверку сообщества.",
 	"account.ip_authorization_required": "Требуется авторизация по IP.",
-	"account.limited": "Твой аккаунт ограничен. Проверь почту, чтобы узнать, как снять ограничение.",
+	"account.limited": "Отправка сообщений в вашем аккаунте на паузе. Загляните в почту: чтобы продолжить, нужен всего один быстрый шаг.",
 	"account.sensitive_content_filter_age_restricted": "Этот фильтр контента 18+ недоступен для твоей возрастной группы.",
 	"account.session_timeout": "Время сессии истекло. Обнови страницу и войди снова.",
 	"account.session_token_mismatch": "Токен сессии не совпадает.",

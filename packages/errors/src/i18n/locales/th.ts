@@ -7,7 +7,7 @@ const ERROR_I18N_TH_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "ต้องยืนยันอีเมลสำหรับการดำเนินการนี้",
 	"account.guild_verification_required": "ต้องมีการยืนยันคอมมูนิตี้",
 	"account.ip_authorization_required": "ต้องมีการอนุญาต IP",
-	"account.limited": "บัญชีของคุณถูกจำกัด โปรดตรวจสอบอีเมลเพื่อดูวิธียกเลิกการจำกัด",
+	"account.limited": "ขณะนี้การส่งข้อความในบัญชีของคุณหยุดชั่วคราว โปรดดูอีเมลของคุณ แล้วทำขั้นตอนง่าย ๆ เพียงขั้นตอนเดียวเพื่อใช้งานต่อ",
 	"account.sensitive_content_filter_age_restricted": "ตัวกรองเนื้อหาที่ละเอียดอ่อนนี้ไม่พร้อมใช้งานสำหรับกลุ่มอายุของคุณ",
 	"account.session_timeout": "เซสชันหมดเวลา โปรดรีเฟรชหน้าและเข้าสู่ระบบอีกครั้ง",
 	"account.session_token_mismatch": "โทเค็นเซสชันไม่ตรงกัน",

@@ -7,7 +7,7 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Bu işlem için e-posta doğrulaması gerekiyor.",
 	"account.guild_verification_required": "Topluluk doğrulaması gerekli.",
 	"account.ip_authorization_required": "IP yetkilendirmesi gerekli.",
-	"account.limited": "Hesabın kısıtlandı. Kısıtlamayı nasıl kaldıracağını öğrenmek için e-postanı kontrol et.",
+	"account.limited": "Hesabınızda mesajlaşma şimdilik duraklatıldı. Devam etmek için e-postanıza göz atın, sizi tek bir kısa adım bekliyor.",
 	"account.sensitive_content_filter_age_restricted": "Bu hassas içerik filtresi yaş grubun için kullanılamıyor.",
 	"account.session_timeout": "Oturum zaman aşımına uğradı. Sayfayı yenile ve tekrar giriş yap.",
 	"account.session_token_mismatch": "Oturum belirteci uyuşmuyor.",

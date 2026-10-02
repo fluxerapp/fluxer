@@ -7,7 +7,7 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Voor deze actie is e-mailverificatie vereist.",
 	"account.guild_verification_required": "Voor deze community is verificatie vereist.",
 	"account.ip_authorization_required": "IP-autorisatie is vereist.",
-	"account.limited": "Je account is beperkt. Bekijk je e-mail om te zien hoe je de beperking opheft.",
+	"account.limited": "Berichten sturen is gepauzeerd voor je account. Kijk in je e-mail voor één snelle stap om verder te gaan.",
 	"account.sensitive_content_filter_age_restricted": "Dit filter voor gevoelige inhoud is niet beschikbaar voor jouw leeftijdsgroep.",
 	"account.session_timeout": "Sessie is verlopen. Vernieuw de pagina en log opnieuw in.",
 	"account.session_token_mismatch": "Sessietoken komt niet overeen.",

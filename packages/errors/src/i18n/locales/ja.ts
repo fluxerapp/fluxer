@@ -7,7 +7,7 @@ const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "この操作にはメールアドレスの確認が必要です。",
 	"account.guild_verification_required": "コミュニティの認証が必要です。",
 	"account.ip_authorization_required": "IPアドレスの認証が必要です。",
-	"account.limited": "アカウントが制限されています。制限を解除する方法はメールをご確認ください。",
+	"account.limited": "アカウントのメッセージ機能は一時停止中です。メールでご案内しているかんたんな手続きを済ませると、再開できます。",
 	"account.sensitive_content_filter_age_restricted": "このセンシティブコンテンツフィルターは、現在の年齢層ではご利用いただけません。",
 	"account.session_timeout": "セッションがタイムアウトしました。ページを更新して、もう一度ログインしてください。",
 	"account.session_token_mismatch": "セッショントークンが一致しません。",

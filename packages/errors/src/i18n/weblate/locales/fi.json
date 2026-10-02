@@ -3,7 +3,7 @@
 	"account.email_verification_required": "Tämä toiminto vaatii sähköpostiosoitteesi vahvistamisen.",
 	"account.guild_verification_required": "Yhteisön vahvistus vaaditaan.",
 	"account.ip_authorization_required": "IP-osoitteen valtuutus vaaditaan.",
-	"account.limited": "Tilisi on rajoitettu. Katso sähköpostistasi, miten voit poistaa rajoituksen.",
+	"account.limited": "Viestien lähettäminen on tililläsi tauolla. Löydät sähköpostistasi yhden nopean vaiheen, jolla pääset jatkamaan.",
 	"account.sensitive_content_filter_age_restricted": "Tätä arkaluontoista sisältöä koskevaa suodatinta ei ole saatavilla ikäsi vuoksi.",
 	"account.session_timeout": "Istunto aikakatkesi. Päivitä sivu ja kirjaudu sisään uudelleen.",
 	"account.session_token_mismatch": "Istuntotunnus ei täsmää.",

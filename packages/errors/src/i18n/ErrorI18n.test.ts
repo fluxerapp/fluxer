@@ -143,7 +143,7 @@ describe('ErrorI18n', () => {
 	describe('account limited message', () => {
 		it('resolves ACCOUNT_LIMITED to its own message', () => {
 			expect(getErrorMessageUnsafe('ACCOUNT_LIMITED', 'en-US')).toBe(
-				'Your account is limited. Check your email for how to lift it.',
+				'Messaging is paused on your account. Check your email for a quick step to continue.',
 			);
 			expect(consoleWarnSpy).not.toHaveBeenCalled();
 		});

@@ -3,7 +3,7 @@
 	"account.email_verification_required": "Pro tuto akci je vyžadováno ověření e-mailu.",
 	"account.guild_verification_required": "Vyžaduje se ověření komunity.",
 	"account.ip_authorization_required": "Vyžaduje se autorizace IP adresy.",
-	"account.limited": "Váš účet je omezený. Jak omezení zrušit, najdete ve svém e-mailu.",
+	"account.limited": "U vašeho účtu je posílání zpráv na pauze. Podívejte se do e-mailu: stačí jeden rychlý krok a můžete pokračovat.",
 	"account.sensitive_content_filter_age_restricted": "Tento filtr citlivého obsahu není pro vaši věkovou skupinu dostupný.",
 	"account.session_timeout": "Platnost relace vypršela. Obnovte stránku a přihlaste se znovu.",
 	"account.session_token_mismatch": "Token relace nesouhlasí.",

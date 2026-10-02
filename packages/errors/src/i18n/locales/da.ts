@@ -7,7 +7,7 @@ const ERROR_I18N_DA_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "E-mailbekræftelse er påkrævet for denne handling.",
 	"account.guild_verification_required": "Verificering i fællesskabet er påkrævet.",
 	"account.ip_authorization_required": "Godkendelse af IP-adressen er påkrævet.",
-	"account.limited": "Din konto er begrænset. Tjek din e-mail for at se, hvordan du ophæver begrænsningen.",
+	"account.limited": "Beskeder er sat på pause på din konto. Tjek din e-mail for et hurtigt trin, så du kan fortsætte.",
 	"account.sensitive_content_filter_age_restricted": "Dette filter til følsomt indhold er ikke tilgængeligt for din aldersgruppe.",
 	"account.session_timeout": "Sessionen er udløbet. Opdater siden, og log ind igen.",
 	"account.session_token_mismatch": "Sessionstokenet stemmer ikke overens.",

@@ -3,7 +3,7 @@
 	"account.email_verification_required": "Email verification is required for this action.",
 	"account.guild_verification_required": "Community verification is required.",
 	"account.ip_authorization_required": "IP authorization is required.",
-	"account.limited": "Your account is limited. Check your email for how to lift it.",
+	"account.limited": "Messaging is paused on your account. Check your email for a quick step to continue.",
 	"account.sensitive_content_filter_age_restricted": "This sensitive content filter isn't available for your age group.",
 	"account.session_timeout": "Session timed out. Refresh the page and log in again.",
 	"account.session_token_mismatch": "Session token mismatch.",

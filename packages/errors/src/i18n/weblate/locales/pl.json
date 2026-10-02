@@ -3,7 +3,7 @@
 	"account.email_verification_required": "Weryfikacja adresu e-mail jest wymagana do wykonania tej czynności.",
 	"account.guild_verification_required": "Wymagana jest weryfikacja społeczności.",
 	"account.ip_authorization_required": "Wymagana jest autoryzacja adresu IP.",
-	"account.limited": "Twoje konto jest ograniczone. Sprawdź swoją skrzynkę e-mail, aby dowiedzieć się, jak znieść ograniczenie.",
+	"account.limited": "Wysyłanie wiadomości na Twoim koncie jest wstrzymane. Sprawdź e-mail i wykonaj jeden szybki krok, aby kontynuować.",
 	"account.sensitive_content_filter_age_restricted": "Ten filtr treści wrażliwych nie jest dostępny dla Twojej grupy wiekowej.",
 	"account.session_timeout": "Sesja wygasła. Odśwież stronę i zaloguj się jeszcze raz.",
 	"account.session_token_mismatch": "Niezgodność tokenu sesji.",

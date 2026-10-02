@@ -1019,8 +1019,8 @@ msgid "{count, plural, one {# image} other {# images}}"
 msgstr "{count, plural, one {# इमेज} other {# इमेज}}"
 
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:437
-#: src/features/channel/components/direct_message/DMListItem.tsx:601
+#: src/features/channel/components/direct_message/DMListItem.tsx:430
+#: src/features/channel/components/direct_message/DMListItem.tsx:592
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:118
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -2786,11 +2786,6 @@ msgstr "अकाउंट डेटा"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:253
 msgid "Account exists to spam, scam, or abuse the platform."
 msgstr "यह अकाउंट स्पैम करने, स्कैम करने या प्लेटफ़ॉर्म का गलत इस्तेमाल करने के लिए है।"
-
-#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
-#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:49
-msgid "Account limited"
-msgstr "खाता सीमित"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:124
@@ -6730,7 +6725,7 @@ msgid "Categories"
 msgstr "श्रेणियाँ"
 
 #. Lowercase channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:84
+#: src/features/app/components/layout/ChannelItem.tsx:83
 msgid "category"
 msgstr "श्रेणी"
 
@@ -7200,7 +7195,7 @@ msgstr "बदलाव तुरंत लाइव क्लाइंट प�
 
 #. Fallback channel-name placeholder used inside the textarea message hint when no name is available. Lowercase.
 #. Lowercase generic channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:92
+#: src/features/app/components/layout/ChannelItem.tsx:91
 #: src/features/channel/components/channel_textarea/shared.ts:12
 msgid "channel"
 msgstr "चैनल"
@@ -8296,7 +8291,7 @@ msgid "Close account"
 msgstr "अकाउंट बंद करें"
 
 #. Accessible label and tooltip for the close-DM button on a DM list row.
-#: src/features/channel/components/direct_message/DMListItem.tsx:83
+#: src/features/channel/components/direct_message/DMListItem.tsx:82
 msgid "Close direct message with {displayName}"
 msgstr "{displayName} के साथ डायरेक्ट मैसेज बंद करें"
 
@@ -8505,7 +8500,7 @@ msgstr "{channelHeading} के लिए न पढ़े गए मैसे�
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for a collapsed category.
-#: src/features/app/components/layout/ChannelItem.tsx:100
+#: src/features/app/components/layout/ChannelItem.tsx:99
 #: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:85
 msgid "collapsed"
 msgstr "छोटा किया गया"
@@ -9149,7 +9144,7 @@ msgid "Connect with {providerName}"
 msgstr "{providerName} से कनेक्ट करें"
 
 #. Lowercase state label used inside channel-list accessible text for the current voice channel.
-#: src/features/app/components/layout/ChannelItem.tsx:116
+#: src/features/app/components/layout/ChannelItem.tsx:115
 msgid "connected"
 msgstr "कनेक्ट किया गया"
 
@@ -12678,7 +12673,7 @@ msgid "DM"
 msgstr "DM"
 
 #. Very short badge shown in place of an avatar on a favorited direct-message row. Must fit about 2-3 characters; abbreviate rather than translate in full.
-#: src/features/app/components/layout/FavoritesChannelListContent.tsx:70
+#: src/features/app/components/layout/FavoritesChannelListContent.tsx:68
 msgctxt "channel-badge"
 msgid "DM"
 msgstr "DM"
@@ -13039,7 +13034,7 @@ msgid "Downloading desktop update: {percent}% ({formatBytes} / {formatBytes2} at
 msgstr "डेस्कटॉप अपडेट डाउनलोड हो रहा है: {percent}% ({formatBytes} / {formatBytes2} {formatBytes3}/सेकंड पर)"
 
 #. Short desktop updater status label.
-#: src/features/app/state/Updater.ts:46
+#: src/features/app/state/Updater.ts:48
 msgid "Downloading desktop update…"
 msgstr "डेस्कटॉप अपडेट डाउनलोड हो रहा है…"
 
@@ -13294,7 +13289,7 @@ msgstr "अटैचमेंट एडिट करें"
 #. Action that opens the edit-category modal.
 #. Action that opens the edit-category modal.
 #. Tooltip and accessible label for the category settings button in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:120
+#: src/features/app/components/layout/ChannelItem.tsx:119
 #: src/features/ui/action_menu/items/CategoryMenuData.tsx:85
 #: src/features/ui/action_menu/items/CategoryMenuItems.tsx:62
 msgid "Edit category"
@@ -13754,7 +13749,7 @@ msgid "Empty edit"
 msgstr "खाली एडिट"
 
 #. Short label in the app layout favorites channel list content.
-#: src/features/app/components/layout/FavoritesChannelListContent.tsx:77
+#: src/features/app/components/layout/FavoritesChannelListContent.tsx:75
 msgid "Empty favorites"
 msgstr "पसंदीदा खाली हैं"
 
@@ -14608,7 +14603,7 @@ msgstr "{channelHeading} के लिए न पढ़े गए मैसे�
 
 #. Lowercase screen-reader fragment in the sidebar navigation guild folder item.
 #. Lowercase state label used inside channel-list accessible text for an expanded category.
-#: src/features/app/components/layout/ChannelItem.tsx:104
+#: src/features/app/components/layout/ChannelItem.tsx:103
 #: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:81
 msgid "expanded"
 msgstr "विस्तारित"
@@ -18624,7 +18619,7 @@ msgstr "इनवाइट मास्किंग"
 #. Action label that opens the invite flow.
 #. Button or menu action label in the guild header popout. Keep it concise.
 #. Tooltip and accessible label for the invite button shown beside a channel in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:124
+#: src/features/app/components/layout/ChannelItem.tsx:123
 #: src/features/guild/components/popouts/GuildHeaderPopout.tsx:58
 #: src/features/ui/action_menu/items/GuildMenuData.tsx:84
 msgid "Invite members"
@@ -21305,9 +21300,24 @@ msgstr "इन घोषणा चैनलों में प्रकाश�
 msgid "Messages you can bookmark"
 msgstr "बुकमार्क करने लायक संदेश"
 
+#. Title of the error modal shown when an action fails because messaging is paused on the current account until the user completes one quick step described in an email. Keep the tone calm and friendly.
+#: src/features/user/utils/AccountLimitUtils.ts:15
+msgid "Messaging is paused"
+msgstr "मैसेजिंग अभी रुकी हुई है"
+
+#. Notice shown in place of the message composer, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.
+#: src/features/user/utils/AccountLimitUtils.ts:10
+msgid "Messaging is paused on your account. Check your email for a quick step to continue."
+msgstr "आपके अकाउंट पर मैसेजिंग अभी रुकी हुई है। आगे बढ़ने के लिए अपना ईमेल देखें, बस एक आसान स्टेप पूरा करना है।"
+
 #: src/features/channel/components/barriers/BarrierComponents.tsx:274
 msgid "Messaging is temporarily paused in this community."
 msgstr "इस कम्युनिटी में मैसेजिंग अस्थायी रूप से रोक दी गई है।"
+
+#. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
+#: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:49
+msgid "Messaging paused"
+msgstr "मैसेजिंग अभी रुकी हुई है"
 
 #. Column header for saved billing payment methods.
 #: src/features/app/components/dialogs/components/plutonium/PaymentMethodList.tsx:65
@@ -22051,10 +22061,10 @@ msgstr "स्ट्रीम ऑडियो म्यूट करें"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text when a channel is muted.
 #. Screen-reader fragment announcing that the DM list row is muted. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:112
+#: src/features/app/components/layout/ChannelItem.tsx:111
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:62
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
-#: src/features/channel/components/direct_message/DMListItem.tsx:75
+#: src/features/channel/components/direct_message/DMListItem.tsx:74
 msgid "muted"
 msgstr "म्यूट किया गया"
 
@@ -23984,7 +23994,7 @@ msgstr "{channelName} के चैनल विवरण खोलें"
 
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
-#: src/features/app/components/layout/ChannelItem.tsx:128
+#: src/features/app/components/layout/ChannelItem.tsx:127
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:156
 msgid "Open chat"
 msgstr "चैट खोलें"
@@ -25232,7 +25242,7 @@ msgid "Ping: {latency}ms"
 msgstr "पिंग: {latency} ms"
 
 #. Screen-reader fragment announcing that the DM list row is pinned. Lowercase fragment.
-#: src/features/channel/components/direct_message/DMListItem.tsx:79
+#: src/features/channel/components/direct_message/DMListItem.tsx:78
 msgid "pinned"
 msgstr "पिन किया गया"
 
@@ -29530,10 +29540,10 @@ msgstr "सिलेक्टेबल टेक्स्ट"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text for the selected channel.
 #. Screen-reader suffix announcing that the DM list row is the active selection. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:96
+#: src/features/app/components/layout/ChannelItem.tsx:95
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:54
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
-#: src/features/channel/components/direct_message/DMListItem.tsx:67
+#: src/features/channel/components/direct_message/DMListItem.tsx:66
 msgid "selected"
 msgstr "चुना गया"
 
@@ -29841,7 +29851,7 @@ msgid "Sent"
 msgstr "भेजा गया"
 
 #. DM list row preview text when the most recent message has only attachments.
-#: src/features/channel/components/direct_message/DMListItem.tsx:63
+#: src/features/channel/components/direct_message/DMListItem.tsx:62
 msgid "Sent an attachment"
 msgstr "अटैचमेंट भेजा"
 
@@ -36228,11 +36238,11 @@ msgstr "ग्रुप DM अनपिन किया गया"
 #. Lowercase screen-reader fragment in the sidebar navigation guild list item.
 #. Lowercase state label used inside channel-list accessible text when a channel has unread messages.
 #. Screen-reader fragment announcing that the DM list row has unread messages. Lowercase fragment.
-#: src/features/app/components/layout/ChannelItem.tsx:108
+#: src/features/app/components/layout/ChannelItem.tsx:107
 #: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
-#: src/features/channel/components/direct_message/DMListItem.tsx:71
+#: src/features/channel/components/direct_message/DMListItem.tsx:70
 msgid "unread"
 msgstr "अपठित"
 
@@ -38120,7 +38130,7 @@ msgstr "वॉइस कॉल। {statusText}।"
 
 #. Generic channel-type token used inside a wider delete confirmation string.
 #. Lowercase channel type label used inside channel-list accessible text.
-#: src/features/app/components/layout/ChannelItem.tsx:88
+#: src/features/app/components/layout/ChannelItem.tsx:87
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:79
 msgid "voice channel"
 msgstr "वॉइस चैनल"
@@ -39163,7 +39173,7 @@ msgstr "कल {timeString} बजे"
 
 #. First-person prefix used in DM list row preview when the current user is the message author.
 #: src/features/app/components/layout/MobileBottomNav.tsx:153
-#: src/features/channel/components/direct_message/DMListItem.tsx:59
+#: src/features/channel/components/direct_message/DMListItem.tsx:58
 msgid "You"
 msgstr "आप"
 
@@ -40066,16 +40076,6 @@ msgstr "आपका अकाउंट"
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
 msgstr "आपका अकाउंट सफलतापूर्वक लिंक हो गया है। अब आप इस टैब को बंद करके ऐप पर वापस जा सकते हैं।"
-
-#. Title of the error modal shown when an action fails because the current account is limited.
-#: src/features/user/utils/AccountLimitUtils.ts:15
-msgid "Your account is limited"
-msgstr "आपका खाता सीमित है"
-
-#. Notice shown in place of the message composer, and as an error, when the current account is limited and cannot post, react, join communities or change its profile.
-#: src/features/user/utils/AccountLimitUtils.ts:10
-msgid "Your account is limited. Check your email for how to lift it."
-msgstr "आपका खाता सीमित है। इसे हटाने के तरीके के बारे में जानने के लिए अपना ईमेल देखें।"
 
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:26
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."

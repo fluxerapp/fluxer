@@ -7,7 +7,7 @@ const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Απαιτείται επιβεβαίωση της διεύθυνσης email σου για αυτήν την ενέργεια.",
 	"account.guild_verification_required": "Απαιτείται επαλήθευση κοινότητας.",
 	"account.ip_authorization_required": "Απαιτείται εξουσιοδότηση IP.",
-	"account.limited": "Ο λογαριασμός σου είναι περιορισμένος. Έλεγξε το email σου για να δεις πώς να άρεις τον περιορισμό.",
+	"account.limited": "Η αποστολή μηνυμάτων από τον λογαριασμό σας είναι σε παύση. Ελέγξτε το email σας: ένα γρήγορο βήμα αρκεί για να συνεχίσετε.",
 	"account.sensitive_content_filter_age_restricted": "Αυτό το φίλτρο ευαίσθητου περιεχομένου δεν είναι διαθέσιμο για την ηλικιακή σου ομάδα.",
 	"account.session_timeout": "Η συνεδρία έληξε. Ανανέωσε τη σελίδα και συνδέσου ξανά.",
 	"account.session_token_mismatch": "Ασυμφωνία token συνεδρίας.",

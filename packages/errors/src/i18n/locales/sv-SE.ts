@@ -7,7 +7,7 @@ const ERROR_I18N_SV_SE_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Du måste verifiera din e-postadress för att utföra den här åtgärden.",
 	"account.guild_verification_required": "Communityverifiering krävs.",
 	"account.ip_authorization_required": "IP-adressen måste godkännas.",
-	"account.limited": "Ditt konto är begränsat. Kolla din e-post för att se hur du häver begränsningen.",
+	"account.limited": "Meddelanden är pausade på ditt konto. Kolla din e-post så hittar du ett snabbt steg för att fortsätta.",
 	"account.sensitive_content_filter_age_restricted": "Det här filtret för känsligt innehåll är inte tillgängligt för din åldersgrupp.",
 	"account.session_timeout": "Sessionen har löpt ut. Uppdatera sidan och logga in igen.",
 	"account.session_token_mismatch": "Sessionstoken matchar inte.",

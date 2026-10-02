@@ -7,7 +7,7 @@ const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "이 작업에는 이메일 인증이 필요해요.",
 	"account.guild_verification_required": "커뮤니티 인증이 필요해요.",
 	"account.ip_authorization_required": "IP 인증이 필요해요.",
-	"account.limited": "계정이 제한되었어요. 제한을 해제하는 방법은 이메일을 확인해 주세요.",
+	"account.limited": "계정의 메시지 기능이 잠시 멈춰 있어요. 이메일로 안내해 드린 간단한 단계 하나만 마치면 다시 이용할 수 있어요.",
 	"account.sensitive_content_filter_age_restricted": "이 민감한 콘텐츠 필터는 현재 연령대에서는 사용할 수 없어요.",
 	"account.session_timeout": "세션이 만료되었어요. 페이지를 새로고침하고 다시 로그인해 주세요.",
 	"account.session_token_mismatch": "세션 토큰이 일치하지 않아요.",

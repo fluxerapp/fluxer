@@ -7,7 +7,7 @@ const ERROR_I18N_AR_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "يلزم التحقق من بريدك الإلكتروني لهذا الإجراء.",
 	"account.guild_verification_required": "يلزم استيفاء متطلبات التحقق في هذا المجتمع.",
 	"account.ip_authorization_required": "يلزم تفويض عنوان IP.",
-	"account.limited": "حسابك مقيّد. راجع بريدك الإلكتروني لمعرفة كيفية رفع التقييد.",
+	"account.limited": "إرسال الرسائل متوقف مؤقتًا في حسابك. ستجد في بريدك الإلكتروني خطوة سريعة واحدة للمتابعة.",
 	"account.sensitive_content_filter_age_restricted": "فلتر المحتوى الحساس هذا غير متاح لفئتك العمرية.",
 	"account.session_timeout": "انتهت صلاحية الجلسة. حدّث الصفحة وسجّل الدخول مرة أخرى.",
 	"account.session_token_mismatch": "عدم تطابق رمز الجلسة.",

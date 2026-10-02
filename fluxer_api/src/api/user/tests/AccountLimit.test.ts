@@ -29,7 +29,7 @@ async function clearFlags(harness: ApiTestHarness, userId: string, flags: Array<
 async function expectLimited(request: Promise<{json: ErrorResponse}>): Promise<void> {
 	const {json} = await request;
 	expect(json.code).toBe(APIErrorCodes.ACCOUNT_LIMITED);
-	expect(json.message).toBe('Your account is limited. Check your email for how to lift it.');
+	expect(json.message).toBe('Messaging is paused on your account. Check your email for a quick step to continue.');
 }
 
 describe('Account limitation', () => {

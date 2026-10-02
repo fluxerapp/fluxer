@@ -47,7 +47,7 @@ export const NOT_A_MEMBER_LONG_ENOUGH_DESCRIPTOR = msg({
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 export const ACCOUNT_LIMITED_DESCRIPTOR = msg({
-	message: 'Account limited',
+	message: 'Messaging paused',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 export const SEND_MESSAGES_DISABLED_DESCRIPTOR = msg({

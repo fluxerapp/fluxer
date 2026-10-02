@@ -3,7 +3,7 @@
 	"account.email_verification_required": "A verificação do e-mail é necessária para esta ação.",
 	"account.guild_verification_required": "A verificação da comunidade é necessária.",
 	"account.ip_authorization_required": "A autorização de IP é necessária.",
-	"account.limited": "Sua conta está limitada. Confira seu e-mail para saber como remover a limitação.",
+	"account.limited": "O envio de mensagens está pausado na sua conta. Confira seu e-mail para concluir uma etapa rápida e continuar.",
 	"account.sensitive_content_filter_age_restricted": "Este filtro de conteúdo sensível não está disponível para sua faixa etária.",
 	"account.session_timeout": "A sessão expirou. Atualize a página e entre novamente.",
 	"account.session_token_mismatch": "Token de sessão incompatível.",

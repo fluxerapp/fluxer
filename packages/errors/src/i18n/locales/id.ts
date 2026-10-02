@@ -7,7 +7,7 @@ const ERROR_I18N_ID_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Verifikasi email diperlukan untuk tindakan ini.",
 	"account.guild_verification_required": "Verifikasi komunitas diperlukan.",
 	"account.ip_authorization_required": "Otorisasi IP diperlukan.",
-	"account.limited": "Akunmu dibatasi. Periksa emailmu untuk mengetahui cara mencabut pembatasannya.",
+	"account.limited": "Fitur pesan di akunmu sedang dijeda. Cek emailmu untuk satu langkah singkat agar bisa lanjut.",
 	"account.sensitive_content_filter_age_restricted": "Filter konten sensitif ini tidak tersedia untuk kelompok usiamu.",
 	"account.session_timeout": "Sesi berakhir. Muat ulang halaman dan masuk lagi.",
 	"account.session_token_mismatch": "Token sesi tidak cocok.",

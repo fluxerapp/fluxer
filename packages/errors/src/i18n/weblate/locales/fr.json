@@ -3,7 +3,7 @@
 	"account.email_verification_required": "Vous devez vérifier votre adresse e-mail pour effectuer cette action.",
 	"account.guild_verification_required": "La vérification de la communauté est requise.",
 	"account.ip_authorization_required": "L'autorisation IP est requise.",
-	"account.limited": "Votre compte est limité. Consultez vos e-mails pour savoir comment lever cette limitation.",
+	"account.limited": "L'envoi de messages est en pause sur votre compte. Consultez vos e-mails pour découvrir l'étape rapide qui vous permettra de continuer.",
 	"account.sensitive_content_filter_age_restricted": "Ce filtre de contenu sensible n’est pas disponible pour votre tranche d’âge.",
 	"account.session_timeout": "La session a expiré. Actualisez la page et reconnectez-vous.",
 	"account.session_token_mismatch": "Incompatibilité du jeton de session.",

@@ -7,7 +7,7 @@ const ERROR_I18N_ZH_CN_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "此操作需要验证邮箱。",
 	"account.guild_verification_required": "需要社区验证。",
 	"account.ip_authorization_required": "需要 IP 授权。",
-	"account.limited": "你的账号已被限制。请查看你的邮箱，了解如何解除限制。",
+	"account.limited": "你账号的消息功能已暂停。请查看邮箱，完成一个简单步骤即可继续使用。",
 	"account.sensitive_content_filter_age_restricted": "此敏感内容过滤器不适用于你的年龄段。",
 	"account.session_timeout": "会话超时。刷新页面后重新登录。",
 	"account.session_token_mismatch": "会话令牌不匹配。",

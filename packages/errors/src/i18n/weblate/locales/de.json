@@ -3,7 +3,7 @@
 	"account.email_verification_required": "Für diese Aktion ist eine Bestätigung deiner E-Mail-Adresse erforderlich.",
 	"account.guild_verification_required": "Community-Verifizierung ist erforderlich.",
 	"account.ip_authorization_required": "IP-Autorisierung ist erforderlich.",
-	"account.limited": "Dein Account ist eingeschränkt. In deinen E-Mails erfährst du, wie du die Einschränkung aufhebst.",
+	"account.limited": "Das Senden von Nachrichten ist für deinen Account pausiert. Schau in deine E-Mails, dort erfährst du, wie es mit einem kurzen Schritt weitergeht.",
 	"account.sensitive_content_filter_age_restricted": "Dieser Filter für sensible Inhalte ist für deine Altersgruppe nicht verfügbar.",
 	"account.session_timeout": "Sitzung abgelaufen. Lade die Seite neu und melde dich erneut an.",
 	"account.session_token_mismatch": "Das Sitzungstoken stimmt nicht überein.",

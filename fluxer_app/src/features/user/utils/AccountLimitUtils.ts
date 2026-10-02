@@ -8,13 +8,14 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
 
 export const ACCOUNT_LIMITED_NOTICE_DESCRIPTOR = msg({
-	message: 'Your account is limited. Check your email for how to lift it.',
+	message: 'Messaging is paused on your account. Check your email for a quick step to continue.',
 	comment:
-		'Notice shown in place of the message composer, and as an error, when the current account is limited and cannot post, react, join communities or change its profile.',
+		'Notice shown in place of the message composer, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.',
 });
 const ACCOUNT_LIMITED_TITLE_DESCRIPTOR = msg({
-	message: 'Your account is limited',
-	comment: 'Title of the error modal shown when an action fails because the current account is limited.',
+	message: 'Messaging is paused',
+	comment:
+		'Title of the error modal shown when an action fails because messaging is paused on the current account until the user completes one quick step described in an email. Keep the tone calm and friendly.',
 });
 
 export function showAccountLimitedModal(serverMessage?: string): void {

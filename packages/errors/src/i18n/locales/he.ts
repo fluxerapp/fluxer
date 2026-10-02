@@ -7,7 +7,7 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "נדרש אימות כתובת האימייל עבור פעולה זו.",
 	"account.guild_verification_required": "נדרש אימות קהילה.",
 	"account.ip_authorization_required": "נדרשת הרשאת IP.",
-	"account.limited": "החשבון שלך מוגבל. ניתן לבדוק בתיבת הדואר האלקטרוני איך להסיר את ההגבלה.",
+	"account.limited": "שליחת ההודעות בחשבון שלך מושהית כרגע. באימייל שלך מחכה לך שלב קצר אחד כדי להמשיך.",
 	"account.sensitive_content_filter_age_restricted": "מסנן התוכן הרגיש הזה אינו זמין לקבוצת הגיל שלך.",
 	"account.session_timeout": "הסשן פג. יש לרענן את הדף ולהתחבר שוב.",
 	"account.session_token_mismatch": "אי-התאמה באסימון הסשן.",

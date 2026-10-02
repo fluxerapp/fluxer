@@ -7,7 +7,7 @@ const ERROR_I18N_HU_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Ehhez a művelethez meg kell erősítened az e-mail-címedet.",
 	"account.guild_verification_required": "Közösségi ellenőrzés szükséges.",
 	"account.ip_authorization_required": "Az IP-cím engedélyezése szükséges.",
-	"account.limited": "A fiókod korlátozva van. Az e-mailjeidben megtalálod, hogyan oldhatod fel a korlátozást.",
+	"account.limited": "Az üzenetküldés jelenleg szünetel a fiókodban. Nézd meg az e-mailjeidet: egy gyors lépés, és folytathatod.",
 	"account.sensitive_content_filter_age_restricted": "Ez az érzékeny tartalmakat szűrő beállítás nem érhető el a korosztályodnak.",
 	"account.session_timeout": "A munkamenet lejárt. Frissítsd az oldalt, és jelentkezz be újra.",
 	"account.session_token_mismatch": "A munkamenettoken nem egyezik.",

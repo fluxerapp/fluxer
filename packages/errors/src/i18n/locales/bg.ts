@@ -7,7 +7,7 @@ const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "За това действие се изисква потвърден имейл.",
 	"account.guild_verification_required": "Изисква се потвърждение за общността.",
 	"account.ip_authorization_required": "Необходимо е IP удостоверяване.",
-	"account.limited": "Акаунтът ти е ограничен. Провери имейла си, за да разбереш как да премахнеш ограничението.",
+	"account.limited": "Изпращането на съобщения от акаунта ти е на пауза. Погледни имейла си: остава само една бърза стъпка, за да продължиш.",
 	"account.sensitive_content_filter_age_restricted": "Този филтър за чувствително съдържание не е наличен за твоята възрастова група.",
 	"account.session_timeout": "Сесията изтече. Презареди страницата и влез отново.",
 	"account.session_token_mismatch": "Несъответствие на токена за сесия.",

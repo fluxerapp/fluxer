@@ -3,7 +3,7 @@
 	"account.email_verification_required": "Cần xác minh email cho hành động này.",
 	"account.guild_verification_required": "Yêu cầu xác minh cộng đồng.",
 	"account.ip_authorization_required": "Yêu cầu ủy quyền IP.",
-	"account.limited": "Tài khoản của bạn đang bị giới hạn. Hãy kiểm tra email để biết cách gỡ giới hạn.",
+	"account.limited": "Tính năng nhắn tin trên tài khoản của bạn đang tạm dừng. Hãy kiểm tra email và làm một bước đơn giản để tiếp tục.",
 	"account.sensitive_content_filter_age_restricted": "Bộ lọc nội dung nhạy cảm này không khả dụng cho độ tuổi của bạn.",
 	"account.session_timeout": "Phiên đã hết hạn. Hãy làm mới trang và đăng nhập lại.",
 	"account.session_token_mismatch": "Token phiên không khớp.",

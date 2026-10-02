@@ -7,7 +7,7 @@ const ERROR_I18N_HI_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "इस कार्रवाई के लिए ईमेल वेरिफ़िकेशन ज़रूरी है।",
 	"account.guild_verification_required": "कम्युनिटी वेरिफ़िकेशन ज़रूरी है।",
 	"account.ip_authorization_required": "IP ऑथराइज़ेशन ज़रूरी है।",
-	"account.limited": "आपका अकाउंट सीमित है। इसे हटाने का तरीका जानने के लिए अपना ईमेल देखें।",
+	"account.limited": "आपके अकाउंट पर मैसेजिंग अभी रुकी हुई है। आगे बढ़ने के लिए अपना ईमेल देखें, बस एक आसान स्टेप पूरा करना है।",
 	"account.sensitive_content_filter_age_restricted": "यह संवेदनशील सामग्री फ़िल्टर आपके उम्र वर्ग के लिए उपलब्ध नहीं है।",
 	"account.session_timeout": "सेशन टाइमआउट हो गया है। पेज रिफ़्रेश करें और दोबारा लॉगिन करें।",
 	"account.session_token_mismatch": "सेशन टोकन मेल नहीं खा रहा।",

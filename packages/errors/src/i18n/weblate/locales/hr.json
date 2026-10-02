@@ -3,7 +3,7 @@
 	"account.email_verification_required": "Za ovu je radnju potrebna potvrda e-maila.",
 	"account.guild_verification_required": "Potrebna je provjera zajednice.",
 	"account.ip_authorization_required": "Potrebna je IP autorizacija.",
-	"account.limited": "Tvoj je račun ograničen. Provjeri e-poštu kako bi saznao kako ukloniti ograničenje.",
+	"account.limited": "Slanje poruka na vašem računu je pauzirano. Pogledajte e-poštu: dovoljan je jedan brzi korak za nastavak.",
 	"account.sensitive_content_filter_age_restricted": "Ovaj filtar osjetljivog sadržaja nije dostupan za tvoju dobnu skupinu.",
 	"account.session_timeout": "Sesija je istekla. Osvježi stranicu i prijavi se ponovno.",
 	"account.session_token_mismatch": "Token sesije se ne podudara.",

@@ -134,7 +134,7 @@ You don't have access to this resource or feature
 
 ### `ACCOUNT_LIMITED`
 
-Your account is limited
+Messaging is paused on your account
 
 ### `ACCOUNT_SUSPENDED_PERMANENTLY`
 

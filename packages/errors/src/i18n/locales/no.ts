@@ -7,7 +7,7 @@ const ERROR_I18N_NO_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "E-postbekreftelse kreves for denne handlingen.",
 	"account.guild_verification_required": "Verifisering i fellesskapet er nødvendig.",
 	"account.ip_authorization_required": "IP-autorisasjon er nødvendig.",
-	"account.limited": "Kontoen din er begrenset. Sjekk e-posten din for å se hvordan du opphever begrensningen.",
+	"account.limited": "Meldinger er satt på pause for kontoen din. Sjekk e-posten din for et raskt steg så du kan fortsette.",
 	"account.sensitive_content_filter_age_restricted": "Dette filteret for sensitivt innhold er ikke tilgjengelig for aldersgruppen din.",
 	"account.session_timeout": "Økten din er utløpt. Oppdater siden og logg inn på nytt.",
 	"account.session_token_mismatch": "Økttokenet samsvarer ikke.",
