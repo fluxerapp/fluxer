@@ -9,6 +9,8 @@ mod health;
 mod spa_index;
 mod spa_static;
 
+pub use spa_index::present_local_asset_prefixes;
+
 use crate::state::AppState;
 use axum::{
     Router,

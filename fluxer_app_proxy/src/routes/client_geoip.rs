@@ -54,6 +54,7 @@ mod tests {
                 client_ip_header_name: "x-forwarded-for".to_owned(),
             })),
             index_html: Some(Arc::from("<html><head></head><body></body></html>")),
+            local_asset_prefixes: None,
             budgets: crate::state::AppProxyBudgets::default(),
         }
     }

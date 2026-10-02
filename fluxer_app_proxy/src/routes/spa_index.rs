@@ -17,6 +17,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use std::path::Path;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use super::assets_proxy::serve_local_asset;
@@ -45,7 +46,14 @@ pub async fn spa_catch_all(
         )
         .await;
     }
-    if is_static_asset_path(request_path) {
+    if let Some(prefix) = static_asset_prefix(request_path) {
+        if state
+            .local_asset_prefixes
+            .as_ref()
+            .is_some_and(|present| !present.contains(&prefix))
+        {
+            return StatusCode::NOT_FOUND.into_response();
+        }
         return serve_local_asset(
             &state.budgets,
             &state.config.static_dir,
@@ -80,10 +88,23 @@ fn static_root_file_cache_control(request_path: &str) -> Option<&'static str> {
         .map(|(_, cache_control)| *cache_control)
 }
 
-fn is_static_asset_path(request_path: &str) -> bool {
+fn static_asset_prefix(request_path: &str) -> Option<&'static str> {
     STATIC_ASSET_PREFIXES
         .iter()
-        .any(|prefix| request_path.starts_with(prefix))
+        .copied()
+        .find(|prefix| request_path.starts_with(prefix))
+}
+
+pub fn present_local_asset_prefixes(static_dir: &str) -> Arc<[&'static str]> {
+    STATIC_ASSET_PREFIXES
+        .iter()
+        .copied()
+        .filter(|prefix| {
+            Path::new(static_dir)
+                .join(prefix.trim_matches('/'))
+                .is_dir()
+        })
+        .collect()
 }
 
 async fn serve_static_file(
@@ -609,11 +630,11 @@ mod tests {
 
     use crate::config::{AppProxyConfig, ReleaseChannel};
     use crate::discovery_cache::DiscoveryCache;
+    use crate::state::LOCAL_FILE_READS_IN_FLIGHT_MAX;
     use axum::Router;
     use axum::body::Body;
     use fluxer_common::config::GeoipSourceConfig;
     use fluxer_common::geoip::{GeoipConfig, GeoipResolver};
-    use std::sync::Arc;
 
     #[test]
     fn dev_asset_cache_buster_rewrites_script_and_link_assets() {
@@ -823,6 +844,79 @@ mod tests {
         assert!(served.contains("window.__FLUXER_BOOTSTRAP__"));
     }
 
+    fn static_dir_with(prefix_dirs: &[&str]) -> std::path::PathBuf {
+        static NEXT_DIR: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let unique = NEXT_DIR.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let root = std::env::temp_dir().join(format!(
+            "fluxer-static-prefixes-{}-{unique}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&root).unwrap();
+        for dir in prefix_dirs {
+            std::fs::create_dir_all(root.join(dir)).unwrap();
+        }
+        root
+    }
+
+    #[test]
+    fn only_prefixes_with_a_directory_on_disk_are_present() {
+        let root = static_dir_with(&["emoji", "web"]);
+        std::fs::write(root.join("badges"), b"a file, not a directory").unwrap();
+
+        let present = present_local_asset_prefixes(root.to_str().unwrap());
+
+        assert_eq!(&*present, &["/emoji/", "/web/"]);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[tokio::test]
+    async fn a_prefix_missing_at_startup_is_refused_without_a_file_read_slot() {
+        let mut state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
+        state.local_asset_prefixes = Some(Arc::from([] as [&str; 0]));
+        let _every_slot = state
+            .budgets
+            .local_read_slots
+            .clone()
+            .try_acquire_many_owned(LOCAL_FILE_READS_IN_FLIGHT_MAX as u32)
+            .unwrap();
+
+        let response = spa_catch_all(
+            State(state),
+            HeaderMap::new(),
+            Request::builder()
+                .uri("/emoji/1f600.svg")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn a_prefix_present_at_startup_is_still_served_from_disk() {
+        let root = static_dir_with(&["emoji"]);
+        std::fs::write(root.join("emoji").join("1f600.svg"), b"<svg/>").unwrap();
+        let mut state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
+        let mut config = (*state.config).clone();
+        config.static_dir = root.to_str().unwrap().to_owned();
+        state.local_asset_prefixes = Some(present_local_asset_prefixes(&config.static_dir));
+        state.config = Arc::new(config);
+
+        let response = spa_catch_all(
+            State(state),
+            HeaderMap::new(),
+            Request::builder()
+                .uri("/emoji/1f600.svg")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
     #[tokio::test]
     async fn the_official_instance_keeps_its_link_preview_metadata() {
         let state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
@@ -923,6 +1017,7 @@ mod tests {
                 client_ip_header_name: "x-forwarded-for".to_owned(),
             })),
             index_html: cached_shell.map(Arc::from),
+            local_asset_prefixes: None,
             budgets: crate::state::AppProxyBudgets::default(),
         }
     }
