@@ -145,7 +145,7 @@ function getCurrentInviteDestinationKey(): string | null {
 	if (guildId === '@me') {
 		return channelId ? createBotInviteDestinationKey('group_dm', channelId) : null;
 	}
-	if (guildId !== '@favorites' && guildId !== '@discover') {
+	if (guildId !== '@favorites' && guildId !== '@discover' && guildId !== '@premium') {
 		return createBotInviteDestinationKey('guild', guildId);
 	}
 	return null;

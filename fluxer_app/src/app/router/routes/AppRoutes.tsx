@@ -226,6 +226,12 @@ const plutoniumRoute = createRoute({
 		</DMLayout>
 	),
 });
+const legacyPlutoniumRoute = createRoute({
+	getParentRoute: () => guildsLayoutRoute,
+	id: 'legacyPlutonium',
+	path: Routes.LEGACY_PLUTONIUM,
+	onEnter: () => new Redirect(Routes.PLUTONIUM),
+});
 const userProfileRoute = createRoute({
 	getParentRoute: () => appLayoutRoute,
 	id: 'userProfile',
@@ -335,6 +341,7 @@ export const appRouteTree = appLayoutRoute.addChildren([
 		meRoute,
 		discoverRoute,
 		plutoniumRoute,
+		legacyPlutoniumRoute,
 		favoritesRoute.addChildren([favoritesChannelRoute]),
 		channelsRoute.addChildren([membersRoute, channelRoute.addChildren([messageRoute])]),
 	]),
