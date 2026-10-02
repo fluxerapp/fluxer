@@ -247,11 +247,34 @@ do_arm(#{guild_ids := GuildIds} = State) ->
 -spec reload_and_arm(state()) -> {{ok, map()} | {error, term()}, state()}.
 reload_and_arm(#{guild_ids := GuildIds} = State) ->
     ok = pin_local(GuildIds),
-    Reloads = [{GuildId, reload_local_copy(GuildId)} || GuildId <- GuildIds],
-    case [Reload || {_GuildId, Result} = Reload <- Reloads, Result =/= ok] of
+    Refreshes = [{GuildId, refresh_local_copy(GuildId)} || GuildId <- GuildIds],
+    case [Refresh || {_GuildId, Result} = Refresh <- Refreshes, not refreshed(Result)] of
         [] -> arm_if_calm(State);
         Failed -> {{error, #{reload_failed => Failed}}, State}
     end.
+
+-spec refreshed(term()) -> boolean().
+refreshed(ok) -> true;
+refreshed(adopted) -> true;
+refreshed(_Result) -> false.
+
+-spec refresh_local_copy(guild_id()) -> ok | adopted | {error, term()}.
+refresh_local_copy(GuildId) ->
+    case
+        local_copy(GuildId) =/= undefined andalso routed_here(GuildId, gateway_peers(nodes()))
+    of
+        true -> adopted;
+        false -> reload_local_copy(GuildId)
+    end.
+
+-spec routed_here(guild_id(), [node()]) -> boolean().
+routed_here(_GuildId, []) ->
+    true;
+routed_here(GuildId, Peers) ->
+    Answers = erpc:multicall(
+        Peers, ?ROUTER, owner_node_result, [GuildId, guilds], ?RPC_TIMEOUT_MS
+    ),
+    lists:all(fun(Answer) -> Answer =:= {ok, {ok, node()}} end, Answers).
 
 -spec arm_if_calm(state()) -> {{ok, map()} | {error, term()}, state()}.
 arm_if_calm(#{guild_ids := GuildIds} = State) ->
@@ -1063,6 +1086,16 @@ arm_waits_for_a_calm_source_copy_test() ->
     after
         ets:delete(process_registry_table, Key),
         exit(Pid, kill)
+    end.
+
+arm_adopts_a_copy_that_already_owns_the_guild_test() ->
+    ok = process_registry:init(),
+    Key = process_registry:build_process_key(guild, ?PG),
+    true = ets:insert(process_registry_table, {Key, self()}),
+    try
+        ?assertEqual(adopted, refresh_local_copy(?PG))
+    after
+        ets:delete(process_registry_table, Key)
     end.
 
 router_with_pins_needs_no_load_test() ->
