@@ -46,6 +46,7 @@
     armed := boolean(),
     ever_armed := boolean(),
     peers := #{node() => peer()},
+    blocked := #{node() => term()},
     workers := #{reference() => {worker(), pid()}},
     sweep_timer := reference() | undefined,
     strays_stopped := non_neg_integer(),
@@ -130,6 +131,7 @@ init([]) ->
         armed => Armed,
         ever_armed => Armed orelse EverArmed,
         peers => #{},
+        blocked => #{},
         workers => #{},
         sweep_timer => undefined,
         strays_stopped => 0,
@@ -393,13 +395,14 @@ start_patch(Node, #{beam := Beam, base_md5s := BaseMd5s, guild_ids := GuildIds} 
     end.
 
 -spec handle_worker_result(worker(), term(), state()) -> state().
-handle_worker_result({patch, Node}, {Role, ok}, #{peers := Peers} = State) when is_atom(Role) ->
+handle_worker_result({patch, Node}, {Role, ok}, State) when is_atom(Role) ->
+    #{peers := Peers, blocked := Blocked} = State,
     self() ! sweep,
-    State#{peers := Peers#{Node => patched_peer(Role)}};
+    State#{peers := Peers#{Node => patched_peer(Role)}, blocked := maps:remove(Node, Blocked)};
 handle_worker_result({patch, Node}, {Role0, {error, Reason}}, #{peers := Peers} = State) ->
     Role = known_role(Role0, Node, Peers),
-    maybe_repatch(Node, Reason, State),
-    State#{peers := Peers#{Node => #{status => {failed, Reason}, role => Role}}};
+    State1 = State#{peers := Peers#{Node => #{status => {failed, Reason}, role => Role}}},
+    patch_failed(Node, Reason, State1);
 handle_worker_result(sweep, {ok, #{stopped := Stopped, unpinned := Unpinned}}, State) ->
     #{peers := Peers} = State,
     Drifted = [
@@ -413,17 +416,18 @@ handle_worker_result(sweep, _Result, State) ->
 handle_worker_result(_Worker, _Result, State) ->
     State.
 
--spec maybe_repatch(node(), term(), state()) -> ok.
-maybe_repatch(Node, Reason, #{armed := true}) ->
+-spec patch_failed(node(), term(), state()) -> state().
+patch_failed(Node, Reason, #{armed := true, blocked := Blocked} = State) ->
     case permanent_patch_error(Reason) of
         true ->
-            logger:error("guild pin keeper cannot patch ~p: ~p", [Node, Reason]);
+            logger:error("guild pin keeper cannot patch ~p: ~p", [Node, Reason]),
+            State#{blocked := Blocked#{Node => Reason}};
         false ->
             _ = erlang:send_after(?REPATCH_DELAY_MS, self(), {repatch, Node}),
-            ok
+            State
     end;
-maybe_repatch(_Node, _Reason, _State) ->
-    ok.
+patch_failed(_Node, _Reason, State) ->
+    State.
 
 -spec permanent_patch_error(term()) -> boolean().
 permanent_patch_error({unexpected_router_md5, _}) -> true;
@@ -443,13 +447,13 @@ known_role(_Role, Node, Peers) ->
 -spec start_sweep(state()) -> state().
 start_sweep(#{armed := false} = State) ->
     State;
-start_sweep(#{workers := Workers} = State) ->
+start_sweep(#{workers := Workers, blocked := Blocked} = State) ->
     case has_worker(sweep, Workers) of
         true ->
             State;
         false ->
             GuildIds = maps:get(guild_ids, State),
-            Nodes = gateway_peers(nodes()),
+            Nodes = gateway_peers(nodes()) -- maps:keys(Blocked),
             start_worker(sweep, fun() -> {ok, sweep(GuildIds, Nodes)} end, State)
     end.
 
@@ -533,10 +537,18 @@ ensure_router(Node, #{binary := Bin, md5 := PinnedMd5}, BaseMd5s) ->
         {ok, Md5} ->
             case lists:member(Md5, BaseMd5s) of
                 true -> load_router(Node, Bin, PinnedMd5);
-                false -> {error, {unexpected_router_md5, binary:encode_hex(Md5)}}
+                false -> pin_aware_router(Node, Md5)
             end;
         {error, _Reason} = Error ->
             Error
+    end.
+
+-spec pin_aware_router(node(), binary()) -> ok | {error, term()}.
+pin_aware_router(Node, Md5) ->
+    Args = [?ROUTER, pinned_guild_owner, 1],
+    case rpc:call(Node, erlang, function_exported, Args, ?RPC_TIMEOUT_MS) of
+        true -> ok;
+        _ -> {error, {unexpected_router_md5, binary:encode_hex(Md5)}}
     end.
 
 -spec remote_router_md5(node()) -> {ok, binary()} | {error, term()}.
@@ -741,6 +753,7 @@ status_map(State) ->
         beam_md5 => beam_status(maps:get(beam, State)),
         base_md5s => [binary:encode_hex(Md5) || Md5 <- maps:get(base_md5s, State)],
         peers => maps:get(peers, State),
+        blocked => maps:get(blocked, State),
         workers => lists:sort([
             Worker
          || {Worker, _Pid} <- maps:values(maps:get(workers, State))
@@ -945,6 +958,24 @@ release_unpins_and_verifies_the_route_test() ->
         application:unset_env(fluxer_gateway, guild_pinned_only_nodes),
         persistent_term:erase({gateway_cluster_membership, members}),
         persistent_term:erase({gateway_cluster_membership, members_by_role})
+    end.
+
+router_with_pins_needs_no_load_test() ->
+    Beam = #{binary => <<>>, md5 => <<0:128>>},
+    ?assertEqual(ok, ensure_router(node(), Beam, [])).
+
+permanent_patch_failure_blocks_the_peer_until_patched_test() ->
+    Node = 'fluxer_gateway@10.9.9.8',
+    State = #{armed => true, peers => #{}, blocked => #{}},
+    Failed = handle_worker_result(
+        {patch, Node}, {guilds, {error, {unexpected_router_md5, <<"AB">>}}}, State
+    ),
+    ?assertEqual(#{Node => {unexpected_router_md5, <<"AB">>}}, maps:get(blocked, Failed)),
+    Patched = handle_worker_result({patch, Node}, {guilds, ok}, Failed),
+    ?assertEqual(#{}, maps:get(blocked, Patched)),
+    receive
+        sweep -> ok
+    after 0 -> ok
     end.
 
 permanent_patch_errors_are_not_retried_test() ->
