@@ -558,6 +558,8 @@ forward_msg({'$gen_call', _From, _Request}, _NewPid, final) ->
     dropped_call;
 forward_msg({'$gen_cast', {session_connect_worker_done, _, _, _, _}}, _NewPid, _Phase) ->
     dropped_worker_result;
+forward_msg({'$gen_cast', {session_connect_worker_batch_done, _}}, _NewPid, _Phase) ->
+    dropped_worker_result;
 forward_msg({'$gen_cast', _Request} = Msg, NewPid, _Phase) ->
     NewPid ! Msg,
     cast;

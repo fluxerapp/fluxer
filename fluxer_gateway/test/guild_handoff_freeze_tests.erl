@@ -21,7 +21,8 @@ transfer_test_() ->
         instantiate(fun target_death_before_commit_keeps_source/1),
         instantiate(fun sessions_stay_behind_when_not_transferred/1),
         instantiate(fun cast_during_source_terminate_reaches_target/1),
-        instantiate(fun monitor_flush_in_source_terminate_loses_no_cast/1)
+        instantiate(fun monitor_flush_in_source_terminate_loses_no_cast/1),
+        instantiate(fun connect_worker_results_stay_with_the_source/1)
     ]}.
 
 instantiate(Test) ->
@@ -139,6 +140,22 @@ monitor_flush_in_source_terminate_loses_no_cast(#{src := Src, src_shard := SrcSh
     ?assertMatch({ok, #{final := #{cast := 1}}}, Result),
     {ok, #{new_pid := NewPid}} = Result,
     ?assertEqual([a, late], gen_server:call(NewPid, get_log)).
+
+connect_worker_results_stay_with_the_source(#{src := Src, src_shard := SrcShard}) ->
+    BeforeStart = fun() ->
+        gen_server:cast(Src, {session_connect_worker_done, <<"s1">>, 1, {ok, #{}}, #{}}),
+        gen_server:cast(
+            Src, {session_connect_worker_batch_done, [{<<"s1">>, 1, {ok, #{}}, #{}}]}
+        ),
+        gen_server:cast(Src, {append, b}),
+        wait_mailbox(Src, 3)
+    end,
+    Result = guild_handoff_freeze:transfer(
+        ?GUILD_ID, Src, SrcShard, node(), #{before_start => BeforeStart}
+    ),
+    ?assertMatch({ok, #{new_pid := _}}, Result),
+    {ok, #{new_pid := NewPid}} = Result,
+    ?assertEqual([a, b], gen_server:call(NewPid, get_log)).
 
 export_drops_only_keys_the_importer_rebuilds_test() ->
     Raw = #{
