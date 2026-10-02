@@ -24,7 +24,7 @@ import {
 	type ScreenShareCodecProfileEntry,
 	type ScreenShareCodecRanking,
 } from '@app/features/voice/utils/ScreenShareCodecSelection';
-import {normaliseStreamingModeForContext} from '@app/features/voice/utils/ScreenShareOptions';
+import {isH264SoftwareClamped, normaliseStreamingModeForContext} from '@app/features/voice/utils/ScreenShareOptions';
 import {getProbedVideoDecoderExclusionsSync} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import type {TrackPublishDefaults, TrackPublishOptions} from 'livekit-client';
 import {BackupCodecPolicy, supportsVideoCodec, type VideoCodec, type VideoEncoding} from 'livekit-client';
@@ -410,6 +410,7 @@ export function buildScreenShareCodecProfile(): ScreenShareCodecProfile {
 			h265: entry('h265'),
 			av1: entry('av1'),
 		},
+		h264SoftwareClamped: isH264SoftwareClamped(),
 	};
 }
 

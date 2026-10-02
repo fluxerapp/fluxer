@@ -330,9 +330,12 @@ export function resolveScreenShareDegradationPreference(
 	return 'maintain-framerate';
 }
 
-function shouldClampToSoftwareH264(codec: VideoCodec | undefined): boolean {
-	if (codec !== 'h264') return false;
+export function isH264SoftwareClamped(): boolean {
 	return getH264HardwareProfilesSync()?.profiles.size === 0;
+}
+
+function shouldClampToSoftwareH264(codec: VideoCodec | undefined): boolean {
+	return codec === 'h264' && isH264SoftwareClamped();
 }
 
 function clampToSoftwareH264Budget(quality: {

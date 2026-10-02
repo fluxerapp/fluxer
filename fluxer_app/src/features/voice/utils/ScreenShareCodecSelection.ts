@@ -5,6 +5,7 @@ import type {VideoCodec} from 'livekit-client';
 
 export const CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
 const SOFTWARE_H264_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'vp9', 'h264', 'vp8'];
+const CLAMPED_H264_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'vp9', 'vp8', 'h264'];
 const GECKO_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['vp8', 'h264'];
 const COMPATIBILITY_CODECS: ReadonlySet<VideoCodec> = new Set(['h264', 'vp9', 'vp8']);
 export const LAST_RESORT_VIDEO_CODEC: VideoCodec = 'vp8';
@@ -79,6 +80,7 @@ export interface ScreenShareCodecProfile {
 	browser: ScreenShareCodecBrowser;
 	desktop: boolean;
 	codecs: Record<VideoCodec, ScreenShareCodecProfileEntry>;
+	h264SoftwareClamped?: boolean;
 }
 
 export interface ScreenShareCodecRankingInput {
@@ -94,7 +96,9 @@ export interface ScreenShareCodecRanking {
 
 export function rankScreenShareCodecs(input: ScreenShareCodecRankingInput): ScreenShareCodecRanking {
 	const {codecs} = input.profile;
-	const isHardware = (codec: VideoCodec): boolean => codecs[codec].supported && codecs[codec].hardware;
+	const h264Clamped = input.profile.h264SoftwareClamped === true;
+	const isHardware = (codec: VideoCodec): boolean =>
+		codecs[codec].supported && codecs[codec].hardware && !(codec === 'h264' && h264Clamped);
 	const hardwareAvailable = CODEC_PREFERENCE.some((codec) => isHardware(codec));
 	const pin = input.pin !== 'auto' && codecs[input.pin].allowed && codecs[input.pin].supported ? input.pin : null;
 	const baselineOnly =
@@ -108,9 +112,11 @@ export function rankScreenShareCodecs(input: ScreenShareCodecRankingInput): Scre
 	const preference =
 		input.profile.browser === 'firefox'
 			? GECKO_CODEC_PREFERENCE
-			: isHardware('h264')
-				? CODEC_PREFERENCE
-				: SOFTWARE_H264_CODEC_PREFERENCE;
+			: h264Clamped
+				? CLAMPED_H264_CODEC_PREFERENCE
+				: isHardware('h264')
+					? CODEC_PREFERENCE
+					: SOFTWARE_H264_CODEC_PREFERENCE;
 	const survivors = preference.filter(survives);
 	const ranked =
 		input.encoderModeSetting === 'software'
