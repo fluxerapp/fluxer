@@ -194,6 +194,10 @@ handle_cast_internal(
     {session_connect_worker_done, SessionId, Attempt, Result0, Computed}, State
 ) ->
     handle_session_connect_worker_done_cast(SessionId, Attempt, Result0, Computed, State);
+handle_cast_internal({session_connect_worker_batch_done, Results}, State) when
+    is_list(Results)
+->
+    {noreply, guild_connect_async:finalize_session_connect_batch(Results, State)};
 handle_cast_internal({set_session_active, SessionId}, State) ->
     handle_set_session_active_cast(SessionId, State);
 handle_cast_internal({set_session_passive, SessionId}, State) ->

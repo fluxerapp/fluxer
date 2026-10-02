@@ -195,7 +195,7 @@ build_sharding_config(Service) ->
         guild_counts_cache_shards => get_optional_int(Service, <<"guild_counts_cache_shards">>),
         guild_shards => get_optional_int(Service, <<"guild_shards">>),
         session_shards => get_optional_int(Service, <<"session_shards">>),
-        session_connect_max_queue => get_int(Service, <<"session_connect_max_queue">>, 1024)
+        session_connect_max_queue => get_int(Service, <<"session_connect_max_queue">>, 8192)
     }.
 
 -spec build_http_config(map()) -> config().
