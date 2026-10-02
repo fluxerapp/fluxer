@@ -449,8 +449,12 @@ fluxer_docker_hint() {
 		printf '%s' 'On Debian and Ubuntu, follow https://docs.docker.com/engine/install/ and install docker-ce with docker-compose-plugin. The distribution docker.io package ships no Compose plugin.'
 		return 0
 	fi
+	if grep -qE '^ID="?fedora"?$' /etc/os-release 2>/dev/null; then
+		printf '%s' 'On Fedora, install Podman and Docker Compose with dnf install -y podman docker-compose, then start the Podman API socket with systemctl --user enable --now podman.socket. podman compose runs docker-compose ahead of podman-compose, which lacks commands this script runs.'
+		return 0
+	fi
 	if command -v dnf >/dev/null 2>&1; then
-		printf '%s' 'On Fedora, RHEL and derivatives, follow https://docs.docker.com/engine/install/ and install docker-ce with docker-compose-plugin.'
+		printf '%s' 'On RHEL and derivatives, follow https://docs.docker.com/engine/install/ and install docker-ce with docker-compose-plugin.'
 		return 0
 	fi
 	if command -v zypper >/dev/null 2>&1; then
@@ -552,6 +556,9 @@ fluxer_preflight() {
 	fluxer_resolve_engine
 	if ! $fluxer_engine compose version >/dev/null 2>&1; then
 		fluxer_fail 2 "$fluxer_engine has no compose subcommand. $(fluxer_docker_hint)"
+	fi
+	if $fluxer_engine compose version 2>/dev/null | grep -q '^podman-compose version'; then
+		fluxer_fail 2 "$fluxer_engine compose runs podman-compose, which lacks compose ps -a and compose config --images that this script runs. $(fluxer_docker_hint)"
 	fi
 	fluxer_engine_report=$($fluxer_engine --version 2>/dev/null)
 	fluxer_engine_kind=$(printf '%s\n' "$fluxer_engine_report" | sed -n 's/^\([A-Za-z][A-Za-z]*\) version .*/\1/p' | tr 'A-Z' 'a-z')
