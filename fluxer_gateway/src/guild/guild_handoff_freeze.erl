@@ -21,6 +21,21 @@
     " try sys:resume(P, 60000) of ok -> resumed catch _:Reason -> {resume_failed, Reason} end"
     " end."
 ).
+-define(CAPTURE_EXPRS,
+    "F = fun({'$gen_call', _, _}) -> true;"
+    " ({'$gen_cast', _}) -> true;"
+    " ({presence, U, _}) when is_integer(U) -> true;"
+    " ({reconcile_user_presence, _}) -> true;"
+    " ({clear_stale_cached_voice_states, _}) -> true;"
+    " (_) -> false end,"
+    " case erlang:process_info(P, messages) of"
+    " {messages, Ms} ->"
+    " R = [M || M <- Ms, F(M)], L = length(R),"
+    " {L, case L >= S of true -> lists:nthtail(S, R); false -> [] end};"
+    " undefined -> undefined"
+    " end."
+).
+-define(DRAIN_POLL_MS, 10).
 -define(EXPORT_EXPRS,
     "maps:merge(maps:update_with(data, fun(D) -> maps:without(K, D) end,"
     " guild_handoff:export_handoff_state(sys:get_state(P, T))), X)."
@@ -250,9 +265,8 @@ source_gone(NewPid, #{src := SrcPid, opts := Opts} = Ctx) ->
 
 -spec stop_and_drain(pid(), non_neg_integer(), map()) -> result().
 stop_and_drain(NewPid, Seen, #{src := SrcPid, opts := Opts} = Ctx) ->
-    case capture(SrcPid, Opts) of
-        {ok, Msgs} ->
-            New = drop_seen(Seen, relevant(Msgs)),
+    case capture(SrcPid, Seen, Opts) of
+        {ok, _Len, New} ->
             Stats = forward(New, NewPid, final),
             Parent = self(),
             Tag = make_ref(),
@@ -273,12 +287,11 @@ stop_and_drain(NewPid, Seen, #{src := SrcPid, opts := Opts} = Ctx) ->
 
 -spec drain(pid(), non_neg_integer(), map(), map()) -> result().
 drain(NewPid, Seen, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
-    case capture(SrcPid, Opts) of
-        {ok, Msgs} ->
-            New = drop_seen(Seen, relevant(Msgs)),
+    case capture(SrcPid, Seen, Opts) of
+        {ok, _Len, New} ->
             Stats = merge_counts(maps:get(stats, Drain), forward(New, NewPid, final)),
             Drain1 = Drain#{stats => Stats, captures => maps:get(captures, Drain) + 1},
-            drain_alive(NewPid, Seen + length(New), poll_stopper(Drain1, 1), Ctx);
+            drain_alive(NewPid, Seen + length(New), poll_stopper(Drain1, ?DRAIN_POLL_MS), Ctx);
         {error, noproc} ->
             drained(NewPid, poll_stopper(Drain, maps:get(stop_timeout, Opts)), Ctx);
         {error, Reason} ->
@@ -292,7 +305,7 @@ drain_alive(NewPid, Seen, #{stop := pending} = Drain, Ctx) ->
 drain_alive(NewPid, Seen, #{stop := ok} = Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
     case now_ms() - maps:get(t0, Drain) > maps:get(stop_timeout, Opts) of
         true -> exit(SrcPid, kill);
-        false -> timer:sleep(1)
+        false -> timer:sleep(?DRAIN_POLL_MS)
     end,
     drain(NewPid, Seen, Drain, Ctx);
 drain_alive(_NewPid, _Seen, #{stop := Reason}, Ctx) ->
@@ -502,50 +515,24 @@ start_on(GuildId, Target, Export, Timeout) ->
 forward_rounds(_SrcPid, _NewPid, 0, Seen, Rounds, _Opts) ->
     {ok, Seen, Rounds};
 forward_rounds(SrcPid, NewPid, Left, Seen, Rounds, Opts) ->
-    case capture(SrcPid, Opts) of
-        {ok, Msgs} ->
-            Relevant = relevant(Msgs),
-            forward_round(SrcPid, NewPid, Left, Seen, Relevant, Rounds, Opts);
+    case capture(SrcPid, Seen, Opts) of
+        {ok, Len, _New} when Len < Seen ->
+            {error, mailbox_shrank, Rounds};
+        {ok, _Len, []} ->
+            {ok, Seen, Rounds};
+        {ok, _Len, New} ->
+            Stats = forward(New, NewPid, rounds),
+            T0 = now_ms(),
+            Barrier = barrier(NewPid, maps:get(barrier_timeout, Opts)),
+            Round = Stats#{
+                captured => length(New), barrier => Barrier, barrier_ms => now_ms() - T0
+            },
+            forward_rounds(
+                SrcPid, NewPid, Left - 1, Seen + length(New), [Round | Rounds], Opts
+            );
         {error, Reason} ->
             {error, {capture_failed, Reason}, Rounds}
     end.
-
--spec forward_round(
-    pid(), pid(), pos_integer(), non_neg_integer(), [term()], [map()], opts()
-) -> {ok, non_neg_integer(), [map()]} | {error, term(), [map()]}.
-forward_round(_SrcPid, _NewPid, _Left, Seen, Relevant, Rounds, _Opts) when
-    length(Relevant) < Seen
-->
-    {error, mailbox_shrank, Rounds};
-forward_round(_SrcPid, _NewPid, _Left, Seen, Relevant, Rounds, _Opts) when
-    length(Relevant) =:= Seen
-->
-    {ok, Seen, Rounds};
-forward_round(SrcPid, NewPid, Left, Seen, Relevant, Rounds, Opts) ->
-    New = drop_seen(Seen, Relevant),
-    Stats = forward(New, NewPid, rounds),
-    T0 = now_ms(),
-    Barrier = barrier(NewPid, maps:get(barrier_timeout, Opts)),
-    Round = Stats#{captured => length(New), barrier => Barrier, barrier_ms => now_ms() - T0},
-    forward_rounds(SrcPid, NewPid, Left - 1, Seen + length(New), [Round | Rounds], Opts).
-
--spec drop_seen(non_neg_integer(), [term()]) -> [term()].
-drop_seen(Seen, Relevant) when length(Relevant) >= Seen ->
-    lists:nthtail(Seen, Relevant);
-drop_seen(_Seen, _Relevant) ->
-    [].
-
--spec relevant([term()]) -> [term()].
-relevant(Msgs) ->
-    [Msg || Msg <- Msgs, forwardable(Msg)].
-
--spec forwardable(term()) -> boolean().
-forwardable({'$gen_call', _From, _Request}) -> true;
-forwardable({'$gen_cast', _Request}) -> true;
-forwardable({presence, UserId, _Payload}) when is_integer(UserId) -> true;
-forwardable({reconcile_user_presence, _UserId}) -> true;
-forwardable({clear_stale_cached_voice_states, _Ids}) -> true;
-forwardable(_Msg) -> false.
 
 -spec forward([term()], pid(), rounds | final) -> map().
 forward(Msgs, NewPid, Phase) ->
@@ -588,12 +575,13 @@ barrier(NewPid, Timeout) ->
         Other -> {error, Other}
     end.
 
--spec capture(pid(), opts()) -> {ok, [term()]} | {error, term()}.
-capture(SrcPid, Opts) ->
-    Args = [SrcPid, messages],
-    case rpc_call(node(SrcPid), erlang, process_info, Args, maps:get(rpc_timeout, Opts)) of
-        {ok, {messages, Msgs}} when is_list(Msgs) -> {ok, Msgs};
-        {ok, undefined} -> {error, noproc};
+-spec capture(pid(), non_neg_integer(), opts()) ->
+    {ok, non_neg_integer(), [term()]} | {error, term()}.
+capture(SrcPid, Seen, Opts) ->
+    Args = [parse(?CAPTURE_EXPRS), bindings([{'P', SrcPid}, {'S', Seen}])],
+    case rpc_call(node(SrcPid), erl_eval, exprs, Args, maps:get(rpc_timeout, Opts)) of
+        {ok, {value, {Len, New}, _}} when is_integer(Len), is_list(New) -> {ok, Len, New};
+        {ok, {value, undefined, _}} -> {error, noproc};
         {ok, Other} -> {error, {unexpected, Other}};
         {error, _} = Error -> Error
     end.
@@ -695,3 +683,50 @@ put_report(Key, Value, #{report := Report} = Ctx) ->
 -spec now_ms() -> integer().
 now_ms() ->
     erlang:monotonic_time(millisecond).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+capture_returns_only_new_forwardable_messages_test() ->
+    Pid = spawn(fun() ->
+        receive
+            stop -> ok
+        end
+    end),
+    Msgs = [
+        {'$gen_cast', a},
+        {'DOWN', make_ref(), process, self(), normal},
+        {'$gen_call', {self(), make_ref()}, b},
+        {presence, not_a_user, x},
+        {presence, 7, x},
+        {reconcile_user_presence, 7},
+        {clear_stale_cached_voice_states, []}
+    ],
+    [Pid ! Msg || Msg <- Msgs],
+    Opts = default_opts(),
+    try
+        ?assertMatch({ok, 5, [_, _, _, _, _]}, capture(Pid, 0, Opts)),
+        ?assertEqual(
+            {ok, 5, [
+                {presence, 7, x},
+                {reconcile_user_presence, 7},
+                {clear_stale_cached_voice_states, []}
+            ]},
+            capture(Pid, 2, Opts)
+        ),
+        ?assertEqual({ok, 5, []}, capture(Pid, 5, Opts)),
+        ?assertEqual({ok, 5, []}, capture(Pid, 9, Opts))
+    after
+        Pid ! stop
+    end,
+    ok = wait_exit(Pid),
+    ?assertEqual({error, noproc}, capture(Pid, 0, Opts)).
+
+wait_exit(Pid) ->
+    Ref = erlang:monitor(process, Pid),
+    receive
+        {'DOWN', Ref, process, Pid, _} -> ok
+    after 5000 -> timeout
+    end.
+
+-endif.
