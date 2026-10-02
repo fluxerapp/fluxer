@@ -8,6 +8,7 @@ import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificati
 import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {User} from '@app/api/models/User';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {TotpGenerator} from '@app/api/utils/TotpGenerator';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {MfaNotDisabledError} from '@fluxer/errors/src/domains/auth/MfaNotDisabledError';
@@ -53,6 +54,20 @@ async function assertSudoVerifiedForMfa(
 		userHasSudoCapability(user, hasPasskeyCredentials),
 		deriveSudoMethods(user, hasPasskeyCredentials, hasBackupCodes),
 	);
+}
+
+async function isValidTotpSetupCode(secret: string, code: string): Promise<boolean> {
+	try {
+		return await new TotpGenerator(secret).validateTotp(code);
+	} catch {
+		return false;
+	}
+}
+
+export async function assertValidTotpSetupCode(secret: string, code: string): Promise<void> {
+	if (!(await isValidTotpSetupCode(secret, code))) {
+		throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_CODE);
+	}
 }
 
 export async function enableMfaTotp(

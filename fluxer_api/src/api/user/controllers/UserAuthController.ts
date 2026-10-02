@@ -12,6 +12,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertValidTotpSetupCode} from '@app/api/user/services/UserAuth';
 import {Validator} from '@app/api/Validator';
 import {
 	DisableTotpRequest,
@@ -60,6 +61,7 @@ export function UserAuthController(app: HonoApp) {
 		async (ctx) => {
 			const body = ctx.req.valid('json');
 			const user = ctx.get('user');
+			await assertValidTotpSetupCode(body.secret, body.code);
 			const sudoResult = await requireSudoMode(ctx, user, body);
 			return ctx.json(
 				await ctx.get('userAuthRequestService').enableTotp({
