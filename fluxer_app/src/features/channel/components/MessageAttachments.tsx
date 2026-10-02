@@ -29,7 +29,6 @@ import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
-import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {extractEmbeddableCodeLinkContent} from '@app/features/messaging/utils/EmbeddableCodeLinkContent';
@@ -38,7 +37,6 @@ import {buildMessageSnapshotCopyText} from '@app/features/messaging/utils/Messag
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import {canonicalizeMediaUrl, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
-import matureStyles from '@app/features/theme/styles/MatureBlur.module.css';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import * as ThemeUtils from '@app/features/theme/utils/ThemeUtils';
 import {StickerInlineMenuItems} from '@app/features/ui/action_menu/items/StickerContextMenuItems';
@@ -507,7 +505,6 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 	const stickerRecord = Sticker.getStickerById(sticker.id);
 	const isMobile = MobileLayout.enabled;
 	const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
-	const {shouldBlur, shouldBlock, canReveal, reveal} = useMatureMedia(false, message.channelId);
 	const handleContextMenu = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -538,37 +535,17 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 			/>
 		));
 	};
-	const handleRevealClick = useCallback(
-		(e: React.MouseEvent) => {
-			if (shouldBlur && canReveal) {
-				e.preventDefault();
-				e.stopPropagation();
-				reveal();
-			}
-		},
-		[shouldBlur, canReveal, reveal],
-	);
-	const handleMobileClick = useCallback(
-		(e: React.MouseEvent) => {
-			if (shouldBlur) {
-				handleRevealClick(e);
-				return;
-			}
-			setIsBottomSheetOpen(true);
-		},
-		[shouldBlur, handleRevealClick],
-	);
+	const handleMobileClick = useCallback(() => {
+		setIsBottomSheetOpen(true);
+	}, []);
 	const handleCloseBottomSheet = useCallback(() => {
 		setIsBottomSheetOpen(false);
 	}, []);
-	if (shouldBlock) {
-		return null;
-	}
 	const stickerImage = (
 		<img
 			src={stickerUrl}
 			alt={stickerRecord?.description || sticker.name}
-			className={clsx(styles.stickerImage, shouldBlur && matureStyles.matureStickerBlurred)}
+			className={styles.stickerImage}
 			width="160"
 			height="160"
 			data-flx="channel.message-attachments.sticker-item.sticker-image"
@@ -601,16 +578,13 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 			</>
 		);
 	}
-	const renderHoverTooltip = () =>
-		shouldBlur ? (
-			sticker.name
-		) : (
-			<ExpressionHoverTooltipContent
-				displayName={sticker.name}
-				previewUrl={previewUrl}
-				data-flx="channel.message-attachments.sticker-item.expression-hover-tooltip-content"
-			/>
-		);
+	const renderHoverTooltip = () => (
+		<ExpressionHoverTooltipContent
+			displayName={sticker.name}
+			previewUrl={previewUrl}
+			data-flx="channel.message-attachments.sticker-item.expression-hover-tooltip-content"
+		/>
+	);
 	const renderInfoCard = ({onClose}: {onClose: () => void}) => (
 		<ExpressionInfoCard
 			kind="sticker"
@@ -624,7 +598,6 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 	);
 	return (
 		<ExpressionInfoPopout
-			canOpenCard={!shouldBlur}
 			renderTooltip={renderHoverTooltip}
 			renderCard={renderInfoCard}
 			data-flx="channel.message-attachments.sticker-item.expression-info-popout"
@@ -635,7 +608,6 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 				className={clsx(styles.stickerWrapper, styles.stickerWrapperInteractive)}
 				data-message-sticker="true"
 				onContextMenu={handleContextMenu}
-				onClick={handleRevealClick}
 				data-flx="channel.message-attachments.sticker-item.sticker-wrapper.reveal-click"
 				{...interactionHandlers}
 			>
