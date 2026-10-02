@@ -12,6 +12,10 @@
 		var(--compact-call-control-padding-top) +
 		var(--compact-call-control-padding-bottom)
 	);
+	--compact-call-control-centre-offset: calc(
+		(var(--compact-call-control-button-size) - var(--compact-call-secondary-button-size)) /
+		2
+	);
 	--compact-call-control-reserve: calc(
 		var(--compact-call-control-height, var(--compact-call-control-height-fallback)) +
 		clamp(16px, calc(var(--compact-call-height, 320px) * 0.055), 28px)
@@ -207,7 +211,7 @@
 .fullscreenButtonWrap {
 	position: absolute;
 	right: max(0.75rem, env(safe-area-inset-right, 0px));
-	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+	bottom: calc(var(--compact-call-control-padding-bottom) + var(--compact-call-control-centre-offset));
 	z-index: 13;
 	display: flex;
 	align-items: center;
@@ -218,7 +222,7 @@
 .heightToggleButtonWrap {
 	position: absolute;
 	left: max(0.75rem, env(safe-area-inset-left, 0px));
-	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+	bottom: calc(var(--compact-call-control-padding-bottom) + var(--compact-call-control-centre-offset));
 	z-index: 13;
 	display: flex;
 	align-items: center;
