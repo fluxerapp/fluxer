@@ -109,7 +109,7 @@ do_resolve_sources(GuildId, Req) ->
 -spec guild_call_sources(pid(), map()) -> map().
 guild_call_sources(Pid, Req) ->
     Msg = {resolve_mention_sources, Req},
-    case gen_server:call(Pid, Msg, ?GUILD_CALL_TIMEOUT) of
+    case guild_query_handler:call(Pid, Msg, ?GUILD_CALL_TIMEOUT) of
         #{direct_user_ids := D, role_user_ids := R, everyone_user_ids := E} ->
             #{
                 <<"direct_user_ids">> => fmt_ids(D),
@@ -139,7 +139,7 @@ do_resolve_sources_page(GuildId, Request) ->
 -spec guild_call_sources_page(pid(), map()) -> map().
 guild_call_sources_page(Pid, Request) ->
     Msg = {resolve_mention_sources_page, Request},
-    case gen_server:call(Pid, Msg, ?GUILD_CALL_TIMEOUT) of
+    case guild_query_handler:call(Pid, Msg, ?GUILD_CALL_TIMEOUT) of
         #{mentions := Mentions, next_cursor := NextCursor} ->
             #{
                 <<"mentions">> => fmt_mention_entries(Mentions),
@@ -161,15 +161,15 @@ build_mention_req(ChannelId, AuthorId, ME, MH, RIds, UIDs) ->
         user_ids => validation:snowflake_list_or_throw(<<"user_ids">>, UIDs)
     }.
 
--spec mention_guild_call(integer(), term(), binary()) -> term().
+-spec mention_guild_call(integer(), {atom(), map()}, binary()) -> term().
 mention_guild_call(GuildId, Msg, ErrorBin) ->
     gateway_rpc_guild_infra:with_guild(GuildId, fun(Pid) ->
         guild_call_user_ids(Pid, Msg, ErrorBin)
     end).
 
--spec guild_call_user_ids(pid(), term(), binary()) -> map().
+-spec guild_call_user_ids(pid(), {atom(), map()}, binary()) -> map().
 guild_call_user_ids(Pid, Msg, ErrorBin) ->
-    case gen_server:call(Pid, Msg, ?GUILD_CALL_TIMEOUT) of
+    case guild_query_handler:call(Pid, Msg, ?GUILD_CALL_TIMEOUT) of
         #{user_ids := Ids} ->
             #{<<"user_ids">> => [integer_to_binary(U) || U <- Ids]};
         _ ->
@@ -321,6 +321,54 @@ parse_page_params_defaults_optional_fields_test() ->
         ?MENTION_SOURCE_PAGE_DEFAULT_LIMIT,
         maps:get(limit, Req)
     ).
+
+mention_guild_calls_carry_the_caller_deadline_test() ->
+    Cases = [
+        {
+            fun(Pid) -> guild_call_sources_page(Pid, #{limit => 5}) end,
+            #{mentions => [], next_cursor => undefined},
+            #{<<"mentions">> => [], <<"next_cursor">> => null}
+        },
+        {
+            fun(Pid) -> guild_call_sources(Pid, #{user_ids => [7]}) end,
+            #{direct_user_ids => [7], role_user_ids => [], everyone_user_ids => []},
+            #{
+                <<"direct_user_ids">> => [<<"7">>],
+                <<"role_user_ids">> => [],
+                <<"everyone_user_ids">> => []
+            }
+        },
+        {
+            fun(Pid) ->
+                guild_call_user_ids(
+                    Pid,
+                    {get_users_to_mention_by_user_ids, #{user_ids => [7]}},
+                    <<"users_error">>
+                )
+            end,
+            #{user_ids => [7]},
+            #{<<"user_ids">> => [<<"7">>]}
+        }
+    ],
+    lists:foreach(fun assert_call_carries_deadline/1, Cases).
+
+assert_call_carries_deadline({Call, GuildReply, Expected}) ->
+    Self = self(),
+    Guild = spawn(fun() ->
+        receive
+            {'$gen_call', From, Msg} ->
+                Self ! {guild_request, Msg},
+                gen_server:reply(From, GuildReply)
+        end
+    end),
+    Before = os:system_time(millisecond),
+    ?assertEqual(Expected, Call(Guild)),
+    receive
+        {guild_request, {_Tag, #{deadline := Deadline}}} ->
+            ?assert(Deadline >= Before + ?GUILD_CALL_TIMEOUT)
+    after 1000 ->
+        ?assert(false, guild_request_not_received)
+    end.
 
 parse_page_params_rejects_malformed_optional_ids_test() ->
     Base = #{

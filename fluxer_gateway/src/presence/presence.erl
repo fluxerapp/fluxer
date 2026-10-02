@@ -22,7 +22,7 @@
 }.
 -type sessions() :: #{session_id() => session_entry()}.
 -type push_buffer_entry() :: #{
-    channel_id := integer(), message_id := integer(), params := map()
+    channel_id := integer(), message_id := integer(), params := map(), buffered_at => integer()
 }.
 -type state() :: #{
     user_id := user_id(),

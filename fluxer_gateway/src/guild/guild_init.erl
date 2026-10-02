@@ -39,6 +39,9 @@ init_base_state(GuildState) ->
         member_presence => ets:new(member_presence, [set, public]),
         connected_user_ids => sets:new(),
         user_session_counts => #{},
+        guild_session_refs => guild_sessions_connect:build_session_ref_index(
+            maps:get(sessions, TransferSafe, #{})
+        ),
         viewable_channels_cache => ets:new(viewable_channels_cache, [set, public])
     },
     guild_handoff:restore_transferred_session_state(BaseState).
@@ -128,7 +131,9 @@ handle_reload(NewData, State) ->
     ),
     NormalizedNewData0 = guild_data_index:normalize_map(ReloadData),
     NormalizedNewData = carry_members_table(OldData, NormalizedNewData0),
-    NewState0 = State#{voice_states => ReloadVoiceStates, data => NormalizedNewData},
+    NewState0 = guild_member_list_engine_inputs:forget_all(
+        State#{voice_states => ReloadVoiceStates, data => NormalizedNewData}
+    ),
     NewState1 = guild_availability:handle_unavailability_transition(State, NewState0),
     NewState2 = guild_sessions:refresh_all_viewable_channels(NewState1),
     GuildId = maps:get(id, State),

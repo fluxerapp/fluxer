@@ -795,12 +795,6 @@ export class NoopGatewayService extends IGatewayService {
 
 	async dispatchPresence(_params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void> {}
 
-	async invalidatePushBadgeCount(_params: {userId: UserID}): Promise<void> {}
-
-	async invalidatePushBadgeCounts(_params: {userIds: Array<UserID>}): Promise<void> {}
-
-	async invalidatePushSubscriptions(_params: {userId: UserID}): Promise<void> {}
-
 	async clearPushChannelNotifications(_params: {
 		userId: UserID;
 		channelId: ChannelID;
@@ -974,6 +968,9 @@ export class NoopGatewayService extends IGatewayService {
 		return {
 			status: 'ok',
 			sessions: 0,
+			session_resumes_total: 0,
+			websocket_dispatches_total: 0,
+			websocket_dispatch_drops_total: 0,
 			guilds: 0,
 			presences: 0,
 			calls: 0,

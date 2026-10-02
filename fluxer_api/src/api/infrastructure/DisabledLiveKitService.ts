@@ -38,6 +38,16 @@ interface DisconnectParticipantParams {
 	serverId: string;
 }
 
+interface MuteMicrophoneTrackParams {
+	userId: UserID;
+	guildId?: GuildID;
+	channelId: ChannelID;
+	connectionId: string;
+	regionId: string;
+	serverId: string;
+	trackSid: string;
+}
+
 interface UpdateParticipantPermissionsParams {
 	userId: UserID;
 	guildId?: GuildID;
@@ -62,6 +72,8 @@ export class DisabledLiveKitService implements ILiveKitService {
 	async updateParticipant(_params: UpdateParticipantParams): Promise<void> {}
 
 	async updateParticipantPermissions(_params: UpdateParticipantPermissionsParams): Promise<void> {}
+
+	async muteMicrophoneTrack(_params: MuteMicrophoneTrackParams): Promise<void> {}
 
 	async disconnectParticipant(_params: DisconnectParticipantParams): Promise<void> {}
 

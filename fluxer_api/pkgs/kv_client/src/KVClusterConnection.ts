@@ -1,13 +1,12 @@
 import {domainToASCII} from 'node:url';
-import type {KVClusterNode} from '@pkgs/kv_client/src/KVClientConfig';
 import type {RedisOptions} from 'ioredis';
 
 interface KVClusterConnection {
-	nodes: Array<KVClusterNode>;
+	node: {host: string; port: number};
 	redisOptions: RedisOptions;
 }
 
-export function resolveKVClusterConnection(url: string, nodes: ReadonlyArray<KVClusterNode>): KVClusterConnection {
+export function resolveKVClusterConnection(url: string): KVClusterConnection {
 	const normalizedUrl = url.trim();
 	for (let index = 0; index < normalizedUrl.length; index++) {
 		const code = normalizedUrl.charCodeAt(index);
@@ -46,17 +45,8 @@ export function resolveKVClusterConnection(url: string, nodes: ReadonlyArray<KVC
 		redisOptions.tls = {};
 	}
 	const host = resolveClusterHost(authority, parsed);
-	const resolvedNodes = nodes.length > 0 ? [...nodes] : [{host, port: Number(parsed.port || '6379')}];
-	for (const node of resolvedNodes) {
-		if (node.host.trim().length === 0) {
-			throw new Error('KV cluster node must include a host');
-		}
-		if (!Number.isInteger(node.port) || node.port < 1 || node.port > 65535) {
-			throw new Error('KV cluster node port must be an integer between 1 and 65535');
-		}
-	}
 	return {
-		nodes: resolvedNodes,
+		node: {host, port: Number(parsed.port || '6379')},
 		redisOptions,
 	};
 }

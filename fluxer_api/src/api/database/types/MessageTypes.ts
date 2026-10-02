@@ -100,7 +100,7 @@ export interface MessageStickerItem {
 
 export interface MessageReference {
 	channel_id: ChannelID;
-	message_id: MessageID;
+	message_id: Nullish<MessageID>;
 	guild_id: Nullish<GuildID>;
 	type: number;
 }

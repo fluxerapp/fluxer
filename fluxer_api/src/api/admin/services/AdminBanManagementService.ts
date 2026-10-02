@@ -4,6 +4,7 @@ import type {ApiContext} from '@app/api/ApiContext';
 import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import {
 	BANNED_AVATAR_HASHES_REFRESH_CHANNEL,
 	BANNED_FILE_SHAS_REFRESH_CHANNEL,
@@ -16,21 +17,12 @@ import {
 } from '@app/api/constants/ContentModeration';
 import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
 import type {BannedProfileSubstringScope} from '@app/api/database/types/AdminArchiveTypes';
-import {Logger} from '@app/api/Logger';
 import {bannedAvatarHashCache} from '@app/api/middleware/BannedAvatarHashCache';
 import {fileShaCache} from '@app/api/middleware/FileShaCache';
 import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
 import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
-import {
-	getIpBanBlastRadiusVerdict,
-	getSuspiciousIpSkipReason,
-	isSingleIpBanCandidate,
-} from '@app/api/risk/IpBanCgnatGuard';
-import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
-import type {ISuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
-import {tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
 import {canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
 import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -40,14 +32,11 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {AdminBlocklistListType} from '@fluxer/schema/src/domains/admin/AdminBlocklistSchemas';
-import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 
 interface AdminBanManagementServiceDeps {
 	apiContext: ApiContext;
 	adminRepository: IAdminRepository;
 	auditService: AdminAuditService;
-	ipInfoService: IpInfoService;
-	suspiciousIpRepository: ISuspiciousIpRepository;
 }
 
 interface AdminBlocklistEntry {
@@ -153,20 +142,6 @@ export class AdminBanManagementService {
 				message: 'This IP address is on the instance exemption list',
 			});
 		}
-		if (await this.shouldSkipIpBanForCgnat(data.ip)) {
-			await auditService.createAuditLog({
-				adminUserId,
-				targetType: 'ip',
-				targetId: BigInt(0),
-				action: 'ban_ip_skipped_cgnat',
-				auditLogReason,
-				metadata: new Map([['ip', data.ip]]),
-			});
-			throw new BadRequestError({
-				code: APIErrorCodes.IP_BAN_DECLINED,
-				message: 'This IP address is a high blast-radius carrier network',
-			});
-		}
 		await adminRepository.banIp(data.ip);
 		ipBanCache.ban(data.ip);
 		await cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
@@ -205,105 +180,6 @@ export class AdminBanManagementService {
 	}> {
 		const banned = ipBanCache.isBanned(data.ip);
 		return {banned};
-	}
-
-	async markSuspiciousIpForScheduledDeletion(
-		data: {
-			ip: string;
-			sourceUserId: UserID;
-			deletionReasonCode: number;
-		},
-		adminUserId: UserID,
-		auditLogReason: string | null,
-	): Promise<void> {
-		const parsed = tryParseSingleIp(data.ip);
-		if (!parsed) {
-			await this.deps.auditService.createAuditLog({
-				adminUserId,
-				targetType: 'ip',
-				targetId: BigInt(0),
-				action: 'mark_suspicious_ip_skipped_invalid',
-				auditLogReason,
-				metadata: new Map([['ip', data.ip]]),
-			});
-			return;
-		}
-		let info: IpInfoLookupResult;
-		try {
-			info = await this.deps.ipInfoService.lookup(parsed.canonical, {
-				source: 'admin.scheduled_deletion_suspicious_ip',
-				reason: 'pre_write_suspicious_ip_guard',
-				metadata: {
-					source_user_id: data.sourceUserId.toString(),
-					deletion_reason_code: data.deletionReasonCode,
-				},
-			});
-		} catch (error) {
-			Logger.warn({error, ip: parsed.canonical}, 'IPInfo guard failed while marking suspicious IP');
-			return;
-		}
-		const skipReason = getSuspiciousIpSkipReason(info);
-		if (skipReason) {
-			Logger.info({ip: parsed.canonical, skipReason}, 'Skipping suspicious IP marker from scheduled deletion');
-			await this.deps.auditService.createAuditLog({
-				adminUserId,
-				targetType: 'ip',
-				targetId: BigInt(0),
-				action: `mark_suspicious_ip_skipped_${skipReason}`,
-				auditLogReason,
-				metadata: new Map([
-					['ip', parsed.canonical],
-					['source_user_id', data.sourceUserId.toString()],
-					['deletion_reason_code', data.deletionReasonCode.toString()],
-					['provider_name', info.anonymous.providerName ?? ''],
-				]),
-			});
-			return;
-		}
-		await this.deps.suspiciousIpRepository.markSuspiciousIp({
-			ip: parsed.canonical,
-			source: 'scheduled_deletion',
-			reason: 'account_scheduled_for_deletion',
-			sourceUserId: data.sourceUserId,
-			deletionReasonCode: data.deletionReasonCode,
-			providerName: info.anonymous.providerName,
-			asn: info.asn.number,
-			asnName: info.asn.name,
-			asnType: info.asn.type,
-			riskNote: info.riskNote,
-		});
-		await this.deps.auditService.createAuditLog({
-			adminUserId,
-			targetType: 'ip',
-			targetId: BigInt(0),
-			action: 'mark_suspicious_ip',
-			auditLogReason,
-			metadata: new Map([
-				['ip', parsed.canonical],
-				['source_user_id', data.sourceUserId.toString()],
-				['deletion_reason_code', data.deletionReasonCode.toString()],
-				['provider_name', info.anonymous.providerName ?? ''],
-			]),
-		});
-	}
-
-	private async shouldSkipIpBanForCgnat(ip: string): Promise<boolean> {
-		if (!isSingleIpBanCandidate(ip)) {
-			return false;
-		}
-		try {
-			const {cgnat: highRisk} = await getIpBanBlastRadiusVerdict(ip, this.deps.ipInfoService, {
-				source: 'admin.ip_ban',
-				reason: 'pre_write_cgnat_guard',
-			});
-			if (highRisk) {
-				Logger.warn({ip}, 'Skipping IP ban because IPInfo indicates high CGNAT blast-radius risk');
-			}
-			return highRisk;
-		} catch (error) {
-			Logger.warn({error, ip}, 'IPInfo CGNAT guard failed while adding IP ban');
-			return false;
-		}
 	}
 
 	async banEmail(
@@ -347,50 +223,6 @@ export class AdminBanManagementService {
 	}> {
 		const {adminRepository} = this.deps;
 		const banned = await adminRepository.isEmailBanned(data.email);
-		return {banned};
-	}
-
-	async addSuspiciousEmailDomain(
-		data: {
-			domain: string;
-		},
-		adminUserId: UserID,
-		auditLogReason: string | null,
-	) {
-		const {adminRepository} = this.deps;
-		await adminRepository.addSuspiciousEmailDomain(data.domain);
-		await this.createBlocklistAuditLog({
-			adminUserId,
-			targetType: 'email_domain',
-			action: 'add_suspicious_email_domain',
-			auditLogReason,
-			metadata: new Map([['domain', data.domain]]),
-		});
-	}
-
-	async removeSuspiciousEmailDomain(
-		data: {
-			domain: string;
-		},
-		adminUserId: UserID,
-		auditLogReason: string | null,
-	) {
-		const {adminRepository} = this.deps;
-		await adminRepository.removeSuspiciousEmailDomain(data.domain);
-		await this.createBlocklistAuditLog({
-			adminUserId,
-			targetType: 'email_domain',
-			action: 'remove_suspicious_email_domain',
-			auditLogReason,
-			metadata: new Map([['domain', data.domain]]),
-		});
-	}
-
-	async checkSuspiciousEmailDomain(data: {domain: string}): Promise<{
-		banned: boolean;
-	}> {
-		const {adminRepository} = this.deps;
-		const banned = await adminRepository.isEmailDomainSuspicious(data.domain);
 		return {banned};
 	}
 
@@ -870,10 +702,6 @@ export class AdminBanManagementService {
 			}
 			case 'email': {
 				const rows = await adminRepository.loadAllBannedEmails();
-				return rows.map((value) => createBlocklistEntry(listType, value));
-			}
-			case 'email-domain-suspicious': {
-				const rows = await adminRepository.loadAllSuspiciousEmailDomains();
 				return rows.map((value) => createBlocklistEntry(listType, value));
 			}
 			case 'phrase': {

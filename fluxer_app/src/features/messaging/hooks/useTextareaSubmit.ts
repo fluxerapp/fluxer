@@ -20,6 +20,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {MentionConfirmationInfo, MentionType} from '@app/features/messaging/state/MentionConfirmationStateMachine';
 import Messages from '@app/features/messaging/state/MessagingMessages';
@@ -29,6 +30,10 @@ import {
 	isAttachmentOnlyMessage,
 } from '@app/features/messaging/utils/MessageEditContentUtils';
 import {canSubmitMessage, hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
+import {
+	getReactionShorthandTargetId,
+	parseReactionShorthand,
+} from '@app/features/messaging/utils/ReactionShorthandUtils';
 import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
 import {resolveTypedEmojiShortcodes} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -458,6 +463,20 @@ export const useTextareaSubmit = ({
 			parsedCommand = lexicalCommand.command;
 		}
 		const replaceCommand = ReplaceCommandUtils.parseReplaceCommand(actualContent);
+		const reactionShorthand =
+			editingMessage === null && uploadAttachmentsLength === 0 && !hasPendingSticker
+				? parseReactionShorthand(actualContent, Channels.getChannel(channelId) ?? null, guildId, i18n)
+				: null;
+		const reactionTargetId = reactionShorthand === null ? null : getReactionShorthandTargetId(channelId);
+		if (reactionShorthand !== null && reactionTargetId !== null) {
+			ReactionCommands.addReaction(i18n, channelId, reactionTargetId, reactionShorthand);
+			setValue('');
+			clearSegments();
+			DraftCommands.deleteDraft(channelId);
+			TypingUtils.clear(channelId);
+			MessageCommands.stopReply(channelId);
+			return;
+		}
 		if (
 			shouldBlockSubmissionForSlowmode(
 				isSlowmodeActive,
@@ -483,15 +502,17 @@ export const useTextareaSubmit = ({
 					return;
 				}
 				if (canSubmitEmptyMessageEdit(editingMessage)) {
-					finishMobileEdit();
-					void MessageCommands.edit(
-						channelId,
-						editingMessage.id,
-						'',
-						undefined,
-						editingMessage._allowedMentions,
-						buildExistingAttachmentEditReferences(editingMessage),
-					);
+					MessageCommands.confirmPublishedMessageEdit(i18n, editingMessage, () => {
+						finishMobileEdit();
+						void MessageCommands.edit(
+							channelId,
+							editingMessage.id,
+							'',
+							undefined,
+							editingMessage._allowedMentions,
+							buildExistingAttachmentEditReferences(editingMessage),
+						);
+					});
 					return;
 				}
 				MessageCommands.showDeleteConfirmation(i18n, {
@@ -505,14 +526,16 @@ export const useTextareaSubmit = ({
 			if (checkCustomEmojiAvailability(resolvedContent)) {
 				return;
 			}
-			finishMobileEdit();
-			void MessageCommands.edit(
-				channelId,
-				editingMessage.id,
-				resolvedContent,
-				undefined,
-				editingMessage._allowedMentions,
-			);
+			MessageCommands.confirmPublishedMessageEdit(i18n, editingMessage, () => {
+				finishMobileEdit();
+				void MessageCommands.edit(
+					channelId,
+					editingMessage.id,
+					resolvedContent,
+					undefined,
+					editingMessage._allowedMentions,
+				);
+			});
 			return;
 		}
 		if (!canSubmitMessage(resolvedContent, uploadAttachmentsLength > 0 || hasPendingSticker)) {
@@ -523,13 +546,15 @@ export const useTextareaSubmit = ({
 			if (lastMessage) {
 				const newContent = ReplaceCommandUtils.executeReplaceCommand(lastMessage.content, replaceCommand);
 				if (newContent !== lastMessage.content) {
-					MessageCommands.edit(
-						lastMessage.channelId,
-						lastMessage.id,
-						newContent,
-						undefined,
-						lastMessage._allowedMentions,
-					);
+					MessageCommands.confirmPublishedMessageEdit(i18n, lastMessage, () => {
+						void MessageCommands.edit(
+							lastMessage.channelId,
+							lastMessage.id,
+							newContent,
+							undefined,
+							lastMessage._allowedMentions,
+						);
+					});
 				}
 			}
 			setValue('');

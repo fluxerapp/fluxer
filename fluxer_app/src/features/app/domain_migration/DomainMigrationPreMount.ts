@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	desktopPasskeysSupported,
 	hasStoredAccount,
 	readActiveSessionToken,
 	readDomainMigrationDiscovery,
 	readDomainMigrationEnvironment,
+	readDomainMigrationGateInput,
+	startDomainMigrationFromSource,
 } from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import {
 	anonymousRolloutIsOpen,
@@ -15,24 +18,33 @@ import {
 	DOMAIN_MIGRATION_DEFAULT_NEXT_PATH,
 	DOMAIN_MIGRATION_DEVICE_KEY,
 	DOMAIN_MIGRATION_MARKER_KEY,
+	DOMAIN_MIGRATION_MAX_FAILED_ATTEMPTS,
 	DOMAIN_MIGRATION_NOTIFICATIONS_KEY,
 	DOMAIN_MIGRATION_PAYLOAD_VERSION,
 	DOMAIN_MIGRATION_PENDING_KEY,
 	DOMAIN_MIGRATION_PENDING_MAX_AGE_MS,
 	DOMAIN_MIGRATION_THEME_ASSETS_MAX_BYTES,
 	type DomainMigrationCustomSound,
+	type DomainMigrationMediaDevice,
 	type DomainMigrationPayload,
 	type DomainMigrationSide,
 	type DomainMigrationThemeLibrary,
 	deviceIsInAnonymousRollout,
 	environmentAllowsDomainMigration,
 	environmentMayForward,
+	importIsRunning,
 	intentConfirmsCompletion,
+	isCompletedDomainMigrationMarker,
+	isDomainMigrationOneShotRoute,
 	isExportableLocalStorageKey,
+	keepValidTargetSession,
 	markDomainMigrationCompleted,
 	markDomainMigrationFailed,
+	markDomainMigrationHandedOff,
 	parseDomainMigrationMarker,
 	parseDomainMigrationPayload,
+	readDomainMigrationEnrollment,
+	readDomainMigrationImport,
 	readDomainMigrationIntent,
 	readDomainMigrationMarker,
 	resolveDomainMigrationSide,
@@ -40,7 +52,10 @@ import {
 	type StorageLike,
 	sanitizeNextPath,
 	shouldForwardCompletedSource,
+	shouldStartDomainMigration,
 	withoutOptionalPayloadData,
+	writeDomainMigrationDeviceMap,
+	writeDomainMigrationImport,
 	writeDomainMigrationIntent,
 } from '@app/features/app/domain_migration/DomainMigrationCore';
 import {
@@ -52,6 +67,11 @@ import {
 	sha256Hex,
 } from '@app/features/app/domain_migration/DomainMigrationCrypto';
 import type {SoundType} from '@app/features/notification/utils/SoundUtils';
+import {
+	AuthSessionStorageKey,
+	parseStoredSessionValue,
+	readStoredSessionUserId,
+} from '@app/features/platform/state/auth_session/AuthSessionStorage';
 import {getProtectedLocalStorage, getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {
@@ -67,6 +87,11 @@ const NONCE_BYTES = 32;
 const DEVICE_ID_BYTES = 16;
 const BASE64URL_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/u;
 const MAX_HANDOFF_PAYLOAD_LENGTH = 8 * 1024 * 1024;
+const IMPORT_WAIT_MS = 20_000;
+const IMPORT_POLL_MS = 250;
+const MEDIA_DEVICES_WAIT_MS = 1500;
+
+type DomainMigrationLanding = 'target' | 'source';
 
 type DomainMigrationFailureReason =
 	| 'disabled'
@@ -95,6 +120,11 @@ interface PendingHandoff {
 function navigate(url: string): true {
 	window.location.replace(url);
 	return true;
+}
+
+function mountInPlace(next: string): false {
+	window.history.replaceState(null, '', next);
+	return false;
 }
 
 function readCurrentPath(): {pathname: string; search: string; hash: string} {
@@ -152,6 +182,27 @@ async function restoreCustomSounds(sounds: ReadonlyArray<DomainMigrationCustomSo
 		} catch (err) {
 			logger.warn(`Failed to restore custom sound ${sound.sound_type}:`, err);
 		}
+	}
+}
+
+async function collectMediaDevices(): Promise<Array<DomainMigrationMediaDevice> | undefined> {
+	try {
+		const devices = await Promise.race([
+			navigator.mediaDevices?.enumerateDevices?.() ?? Promise.resolve([]),
+			new Promise<Array<MediaDeviceInfo>>((resolve) => setTimeout(() => resolve([]), MEDIA_DEVICES_WAIT_MS)),
+		]);
+		const labelled = devices.flatMap((device): Array<DomainMigrationMediaDevice> => {
+			const deviceId = device.deviceId.trim();
+			const label = device.label.trim();
+			if (!deviceId || !label || deviceId === 'default' || deviceId === 'communications') {
+				return [];
+			}
+			return [{kind: device.kind, device_id: deviceId, label}];
+		});
+		return labelled.length > 0 ? labelled : undefined;
+	} catch (err) {
+		logger.warn('Skipping media devices in the domain migration export:', err);
+		return undefined;
 	}
 }
 
@@ -279,7 +330,7 @@ function discoveryAllowsMigration(): boolean {
 }
 
 function revokeCompletedMarker(storage: StorageLike | null): void {
-	if (readDomainMigrationMarker(storage)?.state === 'completed') {
+	if (isCompletedDomainMigrationMarker(readDomainMigrationMarker(storage))) {
 		markDomainMigrationFailed(storage, Date.now());
 	}
 }
@@ -296,11 +347,20 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 		if (nonce === null || !BASE64URL_TOKEN_PATTERN.test(nonce)) {
 			throw new Error('Missing or malformed nonce');
 		}
-		const [{default: accountStorage}, {default: RuntimeConfig}] = await Promise.all([
-			import('@app/features/auth/state/AccountStorage'),
-			import('@app/features/app/state/RuntimeConfig'),
-		]);
-		const accounts = (await accountStorage.getAllAccounts()).filter((account) => Boolean(account.token));
+		const previous = readDomainMigrationMarker(storage);
+		const attempts = previous?.state === 'handed-off' ? previous.attempts + 1 : Math.max(previous?.attempts ?? 0, 1);
+		if (attempts > DOMAIN_MIGRATION_MAX_FAILED_ATTEMPTS) {
+			throw new Error('Too many domain migration attempts');
+		}
+		const [{default: accountStorage}, {default: RuntimeConfig, runtimeConfigSnapshotsAreSameInstance}] =
+			await Promise.all([
+				import('@app/features/auth/state/AccountStorage'),
+				import('@app/features/app/state/RuntimeConfig'),
+			]);
+		const instance = RuntimeConfig.getSnapshot();
+		const accounts = (await accountStorage.getAllAccounts()).filter(
+			(account) => Boolean(account.token) && runtimeConfigSnapshotsAreSameInstance(account.instance, instance),
+		);
 		const token = readActiveSessionToken() ?? accounts.find((account) => account.isValid !== false)?.token ?? null;
 		if (!token) {
 			throw new Error('No stored account to export');
@@ -313,6 +373,7 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 			accounts,
 			custom_sounds: await collectCustomSounds(),
 			theme_library: await collectThemeLibrary(),
+			media_devices: await collectMediaDevices(),
 			notification_permission: readNotificationPermission(),
 		};
 		let sealed = await encryptDomainMigrationPayload(payload);
@@ -321,7 +382,14 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 		}
 		const handoffId = await createHandoff(RuntimeConfig.apiEndpoint, token, await sha256Hex(nonce), sealed.payload);
 		writeDomainMigrationIntent(sessionStorage, {at: intent.at, handoff_id: handoffId});
-		return navigate(`${side.target}/migrate/complete#h=${handoffId}&k=${sealed.key}`);
+		markDomainMigrationHandedOff(storage, side.target, Date.now(), attempts);
+		const landing: DomainMigrationLanding = environmentMayForward(
+			readDomainMigrationEnvironment(),
+			readDomainMigrationDiscovery(),
+		)
+			? 'target'
+			: 'source';
+		return navigate(`${side.target}/migrate/complete#h=${handoffId}&k=${sealed.key}&land=${landing}`);
 	} catch (err) {
 		logger.warn('Domain migration export failed:', err);
 		clearDomainMigrationIntent(sessionStorage);
@@ -330,20 +398,45 @@ async function exportFromSource(side: DomainMigrationSide, nonce: string | null)
 	}
 }
 
+async function forwardCompletedSource(side: DomainMigrationSide): Promise<true> {
+	const {pathname, search, hash} = readCurrentPath();
+	if (!(await hasStoredAccount())) {
+		return navigate(buildTargetUrl(side.target, pathname, search, hash));
+	}
+	writeDomainMigrationIntent(getProtectedSessionStorage(), {at: Date.now()});
+	const next = sanitizeNextPath(`${pathname}${search}${hash}`);
+	const imported = readDomainMigrationMarker(getProtectedLocalStorage())?.state === 'completed' ? '&imported=1' : '';
+	return navigate(`${side.target}/migrate/begin?resume=1${imported}&next=${encodeURIComponent(next)}`);
+}
+
+async function startEnrolledSource(side: DomainMigrationSide): Promise<boolean> {
+	if (
+		!readDomainMigrationEnrollment(getProtectedLocalStorage()) ||
+		!shouldStartDomainMigration(readDomainMigrationGateInput(true, false))
+	) {
+		return false;
+	}
+	if (!(await hasStoredAccount()) || !(await desktopPasskeysSupported())) {
+		return false;
+	}
+	return startDomainMigrationFromSource(side);
+}
+
 async function forwardFromSource(side: DomainMigrationSide): Promise<boolean> {
+	const {pathname, search, hash} = readCurrentPath();
+	if (isDomainMigrationOneShotRoute(pathname)) {
+		return false;
+	}
+	if (await startEnrolledSource(side)) {
+		return true;
+	}
 	const environment = readDomainMigrationEnvironment();
 	const discovery = readDomainMigrationDiscovery();
 	if (!environmentMayForward(environment, discovery)) {
 		return false;
 	}
-	const {pathname, search, hash} = readCurrentPath();
 	if (shouldForwardCompletedSource(discovery, readDomainMigrationMarker(getProtectedLocalStorage()), environment)) {
-		if (!(await hasStoredAccount())) {
-			return navigate(buildTargetUrl(side.target, pathname, search, hash));
-		}
-		writeDomainMigrationIntent(getProtectedSessionStorage(), {at: Date.now()});
-		const next = sanitizeNextPath(`${pathname}${search}${hash}`);
-		return navigate(`${side.target}/migrate/begin?resume=1&next=${encodeURIComponent(next)}`);
+		return forwardCompletedSource(side);
 	}
 	if (
 		discovery !== null &&
@@ -360,6 +453,7 @@ async function forwardWhenIdle(side: DomainMigrationSide): Promise<void> {
 	const {default: MediaEngine} = await import('@app/features/voice/engine/MediaEngineFacade');
 	await when(() => !MediaEngine.connected && !MediaEngine.connecting);
 	if (
+		isDomainMigrationOneShotRoute(window.location.pathname) ||
 		!shouldForwardCompletedSource(
 			readDomainMigrationDiscovery(),
 			readDomainMigrationMarker(getProtectedLocalStorage()),
@@ -368,8 +462,7 @@ async function forwardWhenIdle(side: DomainMigrationSide): Promise<void> {
 	) {
 		return;
 	}
-	const {pathname, search, hash} = readCurrentPath();
-	navigate(buildTargetUrl(side.target, pathname, search, hash));
+	await forwardCompletedSource(side);
 }
 
 function installSourceMarkerListener(side: DomainMigrationSide): void {
@@ -486,18 +579,35 @@ async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParam
 	if (payload === null) {
 		throw new DomainMigrationImportError('invalid_payload');
 	}
+	const storage = getProtectedLocalStorage();
+	const previousImport = readDomainMigrationImport(storage);
+	writeDomainMigrationImport(storage, {state: 'running', at: Date.now()});
 	try {
 		const [{default: accountStorage}, {default: RuntimeConfig}] = await Promise.all([
 			import('@app/features/auth/state/AccountStorage'),
 			import('@app/features/app/state/RuntimeConfig'),
 		]);
 		const instance = RuntimeConfig.getSnapshot();
-		await accountStorage.importAccounts(payload.accounts.map((account) => rewriteImportedAccount(account, instance)));
+		const activeToken = readActiveSessionToken();
+		const activeUserId = storage ? readStoredSessionUserId(storage) : null;
+		const incomingToken = parseStoredSessionValue(payload.local_storage[AuthSessionStorageKey.Token] ?? null);
+		const incomingUserId = parseStoredSessionValue(payload.local_storage[AuthSessionStorageKey.UserId] ?? null);
+		const existing = new Map((await accountStorage.getAllAccounts()).map((account) => [account.userId, account]));
+		await accountStorage.importAccounts(
+			payload.accounts.map((account) =>
+				keepValidTargetSession(rewriteImportedAccount(account, instance), existing.get(account.userId)),
+			),
+		);
+		if (activeToken !== null && activeUserId !== null && incomingToken !== null && incomingUserId !== activeUserId) {
+			await accountStorage.stashAccountData(activeUserId, activeToken, undefined, instance).catch((err: unknown) => {
+				logger.warn('Failed to keep the replaced target session:', err);
+			});
+		}
 	} catch (err) {
+		writeDomainMigrationImport(storage, previousImport);
 		logger.warn('Failed to import migrated accounts:', err);
 		throw new DomainMigrationImportError('import_failed');
 	}
-	const storage = getProtectedLocalStorage();
 	for (const [storageKey, value] of Object.entries(payload.local_storage)) {
 		if (!isExportableLocalStorageKey(storageKey)) {
 			continue;
@@ -508,13 +618,17 @@ async function importHandoff(side: DomainMigrationSide, fragment: URLSearchParam
 			logger.warn(`Failed to import localStorage key ${storageKey}:`, err);
 		}
 	}
-	await restoreCustomSounds(payload.custom_sounds);
-	await restoreThemeLibrary(payload.theme_library);
+	if (payload.media_devices) {
+		writeDomainMigrationDeviceMap(storage, {at: Date.now(), devices: payload.media_devices, resolved: []});
+	}
 	if (payload.notification_permission === 'granted') {
 		try {
 			storage?.setItem(DOMAIN_MIGRATION_NOTIFICATIONS_KEY, 'granted');
 		} catch {}
 	}
+	writeDomainMigrationImport(storage, {state: 'done', at: Date.now()});
+	await restoreCustomSounds(payload.custom_sounds);
+	await restoreThemeLibrary(payload.theme_library);
 	await persistDesktopAppOrigin();
 }
 
@@ -531,8 +645,25 @@ function doneUrl(side: DomainMigrationSide, next: string, handoffId: string | nu
 	return `${side.source}/migrate/done?${handoff}next=${encodeURIComponent(next)}`;
 }
 
+function landingUrl(side: DomainMigrationSide, fragment: URLSearchParams, next: string): string {
+	switch (fragment.get('land')) {
+		case 'target':
+			return `${side.target}${next}`;
+		case 'source':
+			return sourceUrl(side, next);
+	}
+	return doneUrl(side, next, fragment.get('h'));
+}
+
 function failedUrl(side: DomainMigrationSide, reason: DomainMigrationFailureReason, next: string): string {
 	return `${side.source}/migrate/failed?reason=${reason}&next=${encodeURIComponent(next)}`;
+}
+
+async function waitForRunningImport(): Promise<void> {
+	const deadline = Date.now() + IMPORT_WAIT_MS;
+	while (importIsRunning(readDomainMigrationImport(getProtectedLocalStorage()), Date.now()) && Date.now() < deadline) {
+		await new Promise((resolve) => setTimeout(resolve, IMPORT_POLL_MS));
+	}
 }
 
 async function beginOnTarget(side: DomainMigrationSide, params: URLSearchParams): Promise<boolean> {
@@ -540,14 +671,24 @@ async function beginOnTarget(side: DomainMigrationSide, params: URLSearchParams)
 	if (readDomainMigrationDiscovery()?.enabled !== true) {
 		return navigate(failedUrl(side, 'disabled', next));
 	}
+	const storage = getProtectedLocalStorage();
 	const started = params.get('start') === '1';
-	if (await hasStoredAccount()) {
+	const resumed = params.get('resume') === '1';
+	if (resumed) {
+		await waitForRunningImport();
+	}
+	const imported = readDomainMigrationImport(storage)?.state === 'done' || (resumed && params.get('imported') === '1');
+	if ((resumed || started) && (imported || (started && (await hasStoredAccount())))) {
 		await persistDesktopAppOrigin();
-		return navigate(params.get('resume') === '1' || started ? `${side.target}${next}` : doneUrl(side, next, null));
+		return mountInPlace(next);
 	}
 	if (started) {
 		return navigate(`${side.source}/migrate/start?next=${encodeURIComponent(next)}`);
 	}
+	if (imported) {
+		return navigate(doneUrl(side, next, null));
+	}
+	writeDomainMigrationImport(storage, {state: 'running', at: Date.now()});
 	const nonce = randomBase64Url(NONCE_BYTES);
 	const pending: PendingHandoff = {nonce, next, at: Date.now()};
 	getProtectedSessionStorage()?.setItem(DOMAIN_MIGRATION_PENDING_KEY, JSON.stringify(pending));
@@ -559,22 +700,29 @@ async function completeOnTarget(side: DomainMigrationSide): Promise<boolean> {
 	window.history.replaceState(window.history.state, '', `${window.location.pathname}${window.location.search}`);
 	const pending = takePendingHandoff();
 	if (pending === null || Date.now() - pending.at > DOMAIN_MIGRATION_PENDING_MAX_AGE_MS) {
+		const lastImport = readDomainMigrationImport(getProtectedLocalStorage());
+		if (lastImport?.state === 'done' && Date.now() - lastImport.at < DOMAIN_MIGRATION_PENDING_MAX_AGE_MS) {
+			return navigate(
+				fragment.get('land') === 'source'
+					? sourceUrl(side, DOMAIN_MIGRATION_DEFAULT_NEXT_PATH)
+					: `${side.target}${DOMAIN_MIGRATION_DEFAULT_NEXT_PATH}`,
+			);
+		}
 		return navigate(failedUrl(side, 'no_pending', DOMAIN_MIGRATION_DEFAULT_NEXT_PATH));
 	}
 	const next = sanitizeNextPath(pending.next);
-	const handoffId = fragment.get('h');
-	if (await hasStoredAccount()) {
-		await persistDesktopAppOrigin();
-		return navigate(doneUrl(side, next, handoffId));
-	}
 	try {
 		await importHandoff(side, fragment, pending.nonce);
 	} catch (err) {
 		const reason = err instanceof DomainMigrationImportError ? err.reason : 'import_failed';
 		logger.warn('Domain migration import failed:', err);
+		const storage = getProtectedLocalStorage();
+		if (readDomainMigrationImport(storage)?.state === 'running') {
+			writeDomainMigrationImport(storage, null);
+		}
 		return navigate(failedUrl(side, reason, next));
 	}
-	return navigate(doneUrl(side, next, handoffId));
+	return navigate(landingUrl(side, fragment, next));
 }
 
 async function handleTarget(side: DomainMigrationSide): Promise<boolean> {

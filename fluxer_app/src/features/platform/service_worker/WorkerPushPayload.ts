@@ -89,6 +89,20 @@ export const matchesPushChannelNotification = (notification: Notification, chann
 	}
 	return typeof tag === 'string' && tag.startsWith(`${channelTag}:`);
 };
+const SNOWFLAKE_PATTERN = /^[1-9]\d*$/;
+export const isPushNotificationReadThrough = (
+	notification: {readonly data?: unknown},
+	readThroughMessageId: string | undefined,
+): boolean => {
+	if (readThroughMessageId === undefined || !SNOWFLAKE_PATTERN.test(readThroughMessageId)) {
+		return true;
+	}
+	const messageId = isRecord(notification.data) ? notification.data.message_id : undefined;
+	if (typeof messageId !== 'string' || !SNOWFLAKE_PATTERN.test(messageId)) {
+		return true;
+	}
+	return BigInt(messageId) <= BigInt(readThroughMessageId);
+};
 export const getPushNotificationClientState = (
 	clients: ReadonlyArray<{readonly visibilityState?: string}>,
 ): PushNotificationClientState => ({

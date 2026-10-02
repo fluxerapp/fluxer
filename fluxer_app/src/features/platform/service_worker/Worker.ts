@@ -13,12 +13,17 @@ import {
 	precacheAssets,
 	seedAppShell,
 } from '@app/features/platform/service_worker/WorkerAppShell';
-import {shouldDeleteWorkerCache, WORKER_CACHE_PREFIX} from '@app/features/platform/service_worker/WorkerCacheCleanup';
+import {
+	shouldDeleteWorkerCache,
+	WORKER_CACHE_PREFIX,
+	WORKER_NAVIGATION_CACHE_PREFIX,
+} from '@app/features/platform/service_worker/WorkerCacheCleanup';
 import {getWorkerFetchRoute} from '@app/features/platform/service_worker/WorkerFetchRouting';
 import {
 	getBadgeCount,
 	getPushNotificationClientState,
 	isNotificationClearPayload,
+	isPushNotificationReadThrough,
 	matchesPushChannelNotification,
 	normalizePushPayload,
 	resolvePushChannelId,
@@ -44,7 +49,7 @@ const ensureServiceWorkerReady: Promise<void> = Promise.resolve();
 const SERVICE_WORKER_VERSION = typeof __FLUXER_SW_VERSION__ === 'string' ? __FLUXER_SW_VERSION__ : 'dev';
 const PRECACHE_MANIFEST = typeof __FLUXER_PRECACHE_MANIFEST__ === 'undefined' ? [] : __FLUXER_PRECACHE_MANIFEST__;
 const PRECACHE_CACHE = `${WORKER_CACHE_PREFIX}-precache-${SERVICE_WORKER_VERSION}`;
-const NAVIGATION_CACHE = `${WORKER_CACHE_PREFIX}-navigation-${SERVICE_WORKER_VERSION}`;
+const NAVIGATION_CACHE = `${WORKER_NAVIGATION_CACHE_PREFIX}${SERVICE_WORKER_VERSION}`;
 const EXPECTED_CACHES = new Set([PRECACHE_CACHE, NAVIGATION_CACHE]);
 const NAVIGATION_NETWORK_TIMEOUT_MS = 650;
 const serviceWorkerCaches = self.caches;
@@ -227,7 +232,10 @@ const getShownPushNotifications = async (tag: string): Promise<ReadonlyArray<Not
 		return [];
 	}
 };
-const closePushNotificationsForChannel = async (channelId: string): Promise<number> => {
+const closePushNotificationsForChannel = async (
+	channelId: string,
+	readThroughMessageId: string | undefined,
+): Promise<number> => {
 	if (typeof self.registration.getNotifications !== 'function') {
 		return 0;
 	}
@@ -235,7 +243,10 @@ const closePushNotificationsForChannel = async (channelId: string): Promise<numb
 		const notifications = await self.registration.getNotifications();
 		let closedCount = 0;
 		for (const notification of notifications) {
-			if (matchesPushChannelNotification(notification, channelId)) {
+			if (
+				matchesPushChannelNotification(notification, channelId) &&
+				isPushNotificationReadThrough(notification, readThroughMessageId)
+			) {
 				notification.close();
 				closedCount++;
 			}
@@ -340,7 +351,7 @@ self.addEventListener('push', (event: PushEvent) => {
 			if (isNotificationClearPayload(payload)) {
 				const channelId = resolvePushChannelId(payload);
 				const closedCount = channelId
-					? await closePushNotificationsForChannel(channelId)
+					? await closePushNotificationsForChannel(channelId, resolvePushMessageId(payload))
 					: await closePushNotifications(tag);
 				await updateAppBadge(badgeCount);
 				await log('info', 'push clear received', {tag, channelId, closedCount, badgeCount});

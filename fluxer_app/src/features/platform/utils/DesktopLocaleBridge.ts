@@ -5,6 +5,7 @@ import {
 	IDLE_DESCRIPTOR,
 	ONLINE_DESCRIPTOR,
 	OPEN_SETTINGS_DESCRIPTOR,
+	TRY_AGAIN_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -271,6 +272,19 @@ const IMPORT_FOLDER_DESCRIPTOR = msg({
 	message: 'Import folder',
 	comment: 'Title of the native folder picker that imports a directory of theme files.',
 });
+const IMPORT_CSS_DESCRIPTOR = msg({
+	message: 'Import CSS',
+	comment:
+		'Title of the native file picker that imports CSS theme files on the desktop app. Imported files stay linked and update live when saved.',
+});
+const LINK_FILE_DESCRIPTOR = msg({
+	message: 'Link file',
+	comment: 'Title of the native file picker that links an existing theme to a CSS file on disk.',
+});
+const CSS_FILES_DESCRIPTOR = msg({
+	message: 'CSS files',
+	comment: 'Name of the file type filter in the native theme file picker, shown next to the *.css pattern.',
+});
 const UNREAD_MESSAGES_DESCRIPTOR = msg({
 	message: 'Unread messages',
 	comment:
@@ -285,6 +299,16 @@ const FAILED_TO_START_DESCRIPTOR = msg({
 	message: '{appName} failed to start',
 	comment:
 		'Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).',
+});
+const APP_LOAD_FAILED_TITLE_DESCRIPTOR = msg({
+	message: "Can't connect",
+	comment:
+		'Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.',
+});
+const APP_LOAD_FAILED_MESSAGE_DESCRIPTOR = msg({
+	message: "{appName} can't reach its servers. It will keep trying in the background.",
+	comment:
+		'Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.',
 });
 const LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR = msg({
 	message: 'Instant Messenger',
@@ -373,9 +397,15 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.notifications.open': OPEN_NOTIFICATION_DESCRIPTOR,
 	'desktop.themes.addLocalFiles': ADD_LOCAL_FILES_DESCRIPTOR,
 	'desktop.themes.importFolder': IMPORT_FOLDER_DESCRIPTOR,
+	'desktop.themes.importCss': IMPORT_CSS_DESCRIPTOR,
+	'desktop.themes.linkFile': LINK_FILE_DESCRIPTOR,
+	'desktop.themes.cssFilesFilter': CSS_FILES_DESCRIPTOR,
 	'desktop.badge.unreadMessages': UNREAD_MESSAGES_DESCRIPTOR,
 	'desktop.badge.unreadMessagesCount': UNREAD_MESSAGES_COUNT_DESCRIPTOR,
 	'desktop.startup.failedTitle': FAILED_TO_START_DESCRIPTOR,
+	'desktop.appLoad.failedTitle': APP_LOAD_FAILED_TITLE_DESCRIPTOR,
+	'desktop.appLoad.failedMessage': APP_LOAD_FAILED_MESSAGE_DESCRIPTOR,
+	'desktop.appLoad.retry': TRY_AGAIN_DESCRIPTOR,
 	'desktop.linuxEntry.genericName': LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR,
 	'desktop.linuxEntry.comment': LINUX_ENTRY_COMMENT_DESCRIPTOR,
 };

@@ -326,7 +326,7 @@ export const LexicalChannelTextareaContent = observer(
 		}, [value, segmentManagerRef]);
 		const handleEmojiSelect = useCallback(
 			(emoji: FlatEmoji, shiftKey?: boolean): boolean => {
-				const didInsert = insertComposerEmoji(handleRef.current, emoji);
+				const didInsert = insertComposerEmoji(handleRef.current, emoji, {reactionShorthand: true});
 				if (didInsert && !shiftKey) {
 					ExpressionPickerCommands.close();
 					PopoutCommands.close(`expression-picker-${channel.id}`);

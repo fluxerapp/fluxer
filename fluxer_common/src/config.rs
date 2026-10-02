@@ -9,10 +9,8 @@ pub enum GeoipSourceConfig {
     },
     S3 {
         maxmind_db_path: String,
-        maxmind_asn_db_path: Option<String>,
         s3_bucket: String,
         s3_key: String,
-        s3_asn_key: Option<String>,
     },
 }
 
@@ -36,7 +34,7 @@ pub struct GeoipS3Config {
 }
 
 pub fn read_geoip_s3_config_from_env(source: &GeoipSourceConfig) -> Option<GeoipS3Config> {
-    read_geoip_s3_config(source, |name| env::var(name).ok())
+    read_geoip_s3_config(source, env_value)
 }
 
 fn read_geoip_s3_config<F>(source: &GeoipSourceConfig, mut read_var: F) -> Option<GeoipS3Config>
@@ -82,33 +80,10 @@ fn parse_geoip_s3_source_config(raw_value: &str, service_name: &str) -> GeoipSou
     }
     let maxmind_db_path =
         geoip_runtime_path(&resolve_geoip_download_path(&url, raw_value), service_name);
-    let s3_asn_key = url
-        .query_pairs()
-        .find(|(key, _)| key == "asn_key")
-        .map(|(_, value)| value.into_owned());
-    let maxmind_asn_db_path = s3_asn_key.as_ref().map(|asn_key| {
-        let configured_path = url
-            .query_pairs()
-            .find(|(key, _)| key == "asn_download_path")
-            .map(|(_, value)| require_absolute_path(value.as_ref(), "asn_download_path", raw_value))
-            .unwrap_or_else(|| {
-                let directory = Path::new(&maxmind_db_path)
-                    .parent()
-                    .map(Path::to_path_buf)
-                    .unwrap_or_default();
-                directory
-                    .join(Path::new(asn_key).file_name().unwrap_or_default())
-                    .to_string_lossy()
-                    .into_owned()
-            });
-        geoip_runtime_path(&configured_path, service_name)
-    });
     GeoipSourceConfig::S3 {
         maxmind_db_path,
-        maxmind_asn_db_path,
         s3_bucket,
         s3_key,
-        s3_asn_key,
     }
 }
 
@@ -148,26 +123,23 @@ fn percent_decode(value: &str) -> String {
         .unwrap_or_else(|_| value.to_owned())
 }
 
-pub fn read_env(name: &str, fallback: &str) -> String {
-    env::var(name).unwrap_or_else(|_| fallback.to_owned())
+pub fn env_value(name: &str) -> Option<String> {
+    env::var(name).ok().filter(|value| !value.trim().is_empty())
 }
 
-pub fn read_env_preferred(names: &[&str], fallback: &str) -> String {
-    names
-        .iter()
-        .find_map(|name| env::var(name).ok().filter(|value| !value.trim().is_empty()))
-        .unwrap_or_else(|| fallback.to_owned())
+pub fn read_env(name: &str, fallback: &str) -> String {
+    env_value(name).unwrap_or_else(|| fallback.to_owned())
 }
 
 pub fn read_first_env(names: &[&str], fallback: &str) -> String {
     names
         .iter()
-        .find_map(|name| env::var(name).ok())
+        .find_map(|name| env_value(name))
         .unwrap_or_else(|| fallback.to_owned())
 }
 
-pub fn read_bool_env(names: &[&str], fallback: bool) -> bool {
-    let Some(value) = names.iter().find_map(|name| env::var(name).ok()) else {
+pub fn read_bool_env(name: &str, fallback: bool) -> bool {
+    let Some(value) = env_value(name) else {
         return fallback;
     };
     matches!(
@@ -176,11 +148,10 @@ pub fn read_bool_env(names: &[&str], fallback: bool) -> bool {
     )
 }
 
-pub fn non_empty_env(name: &str) -> Option<String> {
-    env::var(name)
-        .ok()
-        .map(|v| v.trim().to_owned())
-        .filter(|v| !v.is_empty())
+pub fn env_filter(default: &str) -> tracing_subscriber::EnvFilter {
+    env_value("RUST_LOG")
+        .and_then(|filter| tracing_subscriber::EnvFilter::try_new(filter).ok())
+        .unwrap_or_else(|| tracing_subscriber::EnvFilter::new(default))
 }
 
 pub fn normalize_base_path(value: &str) -> String {
@@ -320,7 +291,7 @@ pub fn normalize_public_endpoint(url: &str, base_domain: &str, public_port: Opti
 }
 
 pub fn try_normalize_public_endpoint_from_env(url: &str) -> anyhow::Result<String> {
-    let (base_domain, public_port) = resolve_public_domain_and_port(|name| env::var(name).ok())?;
+    let (base_domain, public_port) = resolve_public_domain_and_port(env_value)?;
     Ok(normalize_public_endpoint(url, &base_domain, public_port))
 }
 
@@ -357,19 +328,15 @@ mod tests {
     #[test]
     fn parses_s3_geoip_source() {
         let source = parse_geoip_source_config(
-            "s3://geoip/GeoLite2-City.mmdb?download_path=/tmp/city.mmdb&asn_key=GeoLite2-ASN.mmdb",
+            "s3://geoip/GeoLite2-City.mmdb?download_path=/tmp/city.mmdb",
             "test_svc",
         );
         assert_eq!(
             source,
             GeoipSourceConfig::S3 {
                 maxmind_db_path: "/tmp/fluxer/geoip/test_svc/city.mmdb".to_owned(),
-                maxmind_asn_db_path: Some(
-                    "/tmp/fluxer/geoip/test_svc/GeoLite2-ASN.mmdb".to_owned()
-                ),
                 s3_bucket: "geoip".to_owned(),
                 s3_key: "GeoLite2-City.mmdb".to_owned(),
-                s3_asn_key: Some("GeoLite2-ASN.mmdb".to_owned()),
             }
         );
     }
@@ -794,6 +761,45 @@ mod tests {
         let (domain, port) = resolve_public_domain_and_port(reader(&[])).expect("empty resolves");
         assert_eq!("", domain);
         assert_eq!(None, port);
+    }
+
+    #[test]
+    fn a_blank_value_reads_as_unset() {
+        unsafe {
+            env::set_var("FLUXER_COMMON_TEST_BLANK_EMPTY", "");
+            env::set_var("FLUXER_COMMON_TEST_BLANK_SPACES", "  \t");
+            env::set_var("FLUXER_COMMON_TEST_BLANK_SET", "value");
+            env::set_var("FLUXER_COMMON_TEST_BLANK_TRUE", "true");
+        }
+        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_EMPTY"));
+        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_SPACES"));
+        assert_eq!(None, env_value("FLUXER_COMMON_TEST_BLANK_MISSING"));
+        assert_eq!(
+            "fallback",
+            read_env("FLUXER_COMMON_TEST_BLANK_EMPTY", "fallback")
+        );
+        assert_eq!(
+            "fallback",
+            read_env("FLUXER_COMMON_TEST_BLANK_SPACES", "fallback")
+        );
+        assert_eq!(
+            "value",
+            read_env("FLUXER_COMMON_TEST_BLANK_SET", "fallback")
+        );
+        assert_eq!(
+            "value",
+            read_first_env(
+                &[
+                    "FLUXER_COMMON_TEST_BLANK_EMPTY",
+                    "FLUXER_COMMON_TEST_BLANK_SPACES",
+                    "FLUXER_COMMON_TEST_BLANK_SET",
+                ],
+                "fallback"
+            )
+        );
+        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_EMPTY", true));
+        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_SPACES", true));
+        assert!(read_bool_env("FLUXER_COMMON_TEST_BLANK_TRUE", false));
     }
 
     #[test]

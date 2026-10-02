@@ -10,7 +10,6 @@
     resolve_author_name/3,
     resolve_author_avatar_url/1,
     extract_image_url/1,
-    maybe_image_fields/1,
     build_url/3,
     truncate_bytes/2
 ]).
@@ -21,6 +20,7 @@
 -define(CHANNEL_TYPE_GUILD_TEXT, 0).
 -define(CHANNEL_TYPE_GUILD_VOICE, 2).
 -define(CHANNEL_TYPE_GUILD_CATEGORY, 4).
+-define(CHANNEL_TYPE_GUILD_ANNOUNCEMENT, 5).
 -define(CHANNEL_TYPE_GUILD_LINK, 998).
 
 -spec build_content_preview(map()) -> binary().
@@ -33,7 +33,7 @@ build_content_preview(MessageData, MarkdownContext) ->
     Preview = push_markdown_plaintext:render_push_preview(Content, MarkdownContext),
     case Preview of
         <<>> ->
-            truncate_preview(build_content_fallback_preview(MessageData));
+            truncate_preview(build_content_fallback_preview(MessageData, MarkdownContext));
         _ ->
             truncate_preview(Preview)
     end.
@@ -334,6 +334,8 @@ is_copyable_channel_type(?CHANNEL_TYPE_GUILD_VOICE) ->
     true;
 is_copyable_channel_type(?CHANNEL_TYPE_GUILD_CATEGORY) ->
     true;
+is_copyable_channel_type(?CHANNEL_TYPE_GUILD_ANNOUNCEMENT) ->
+    true;
 is_copyable_channel_type(?CHANNEL_TYPE_GUILD_LINK) ->
     true;
 is_copyable_channel_type(_Type) ->
@@ -372,13 +374,37 @@ valid_utf8_prefix(Content) ->
         {error, Valid, _Rest} -> Valid
     end.
 
--spec build_content_fallback_preview(map()) -> binary().
-build_content_fallback_preview(MessageData) ->
+-spec build_content_fallback_preview(map(), map()) -> binary().
+build_content_fallback_preview(MessageData, MarkdownContext) ->
     case
         first_nonempty_binary([
             build_sticker_preview(maps:get(<<"stickers">>, MessageData, [])),
             build_attachment_preview(maps:get(<<"attachments">>, MessageData, [])),
-            build_embed_preview(maps:get(<<"embeds">>, MessageData, []))
+            build_embed_preview(maps:get(<<"embeds">>, MessageData, [])),
+            build_snapshot_preview(
+                maps:get(<<"message_snapshots">>, MessageData, []), MarkdownContext
+            )
+        ])
+    of
+        Preview when is_binary(Preview) -> Preview;
+        undefined -> <<>>
+    end.
+
+-spec build_snapshot_preview(term(), map()) -> binary().
+build_snapshot_preview([Snapshot | _Rest], MarkdownContext) when is_map(Snapshot) ->
+    snapshot_preview(Snapshot, MarkdownContext);
+build_snapshot_preview(_Snapshots, _MarkdownContext) ->
+    <<>>.
+
+-spec snapshot_preview(map(), map()) -> binary().
+snapshot_preview(Snapshot, MarkdownContext) ->
+    Content = push_utils:normalize_binary(maps:get(<<"content">>, Snapshot, <<>>), <<>>),
+    case
+        first_nonempty_binary([
+            push_markdown_plaintext:render_push_preview(Content, MarkdownContext),
+            build_sticker_preview(maps:get(<<"stickers">>, Snapshot, [])),
+            build_attachment_preview(maps:get(<<"attachments">>, Snapshot, [])),
+            build_embed_preview(maps:get(<<"embeds">>, Snapshot, []))
         ])
     of
         Preview when is_binary(Preview) -> Preview;
@@ -592,12 +618,6 @@ is_sensitive_media(true, _Flags) ->
 is_sensitive_media(_Nsfw, Flags) ->
     bitset:any(Flags, 16#18).
 
--spec maybe_image_fields(binary() | undefined) -> map().
-maybe_image_fields(undefined) ->
-    #{};
-maybe_image_fields(ImageUrl) when is_binary(ImageUrl) ->
-    #{<<"image_url">> => ImageUrl, <<"image">> => ImageUrl}.
-
 -spec build_url(integer(), integer(), integer()) -> binary().
 build_url(0, ChannelId, MessageId) ->
     build_url_parts([<<"@me">>, integer_to_binary(ChannelId), integer_to_binary(MessageId)]);
@@ -638,6 +658,52 @@ truncate_preview_is_unchanged_for_valid_ascii_test() ->
 truncate_preview_keeps_short_valid_content_identical_test() ->
     Content = <<"hello \xC3\xA9 world">>,
     ?assertEqual(Content, truncate_preview(Content)).
+
+a_forwarded_message_previews_its_snapshot_content_test() ->
+    MessageData = #{
+        <<"content">> => <<>>,
+        <<"message_snapshots">> => [#{<<"content">> => <<"forwarded text">>}]
+    },
+    ?assertEqual(<<"forwarded text">>, build_content_preview(MessageData)).
+
+a_forwarded_attachment_previews_its_filename_test() ->
+    MessageData = #{
+        <<"content">> => <<>>,
+        <<"message_snapshots">> => [
+            #{<<"content">> => null, <<"attachments">> => [#{<<"filename">> => <<"cat.png">>}]}
+        ]
+    },
+    ?assertEqual(<<"Attachment: cat.png">>, build_content_preview(MessageData)).
+
+a_forwarded_sticker_previews_its_name_test() ->
+    MessageData = #{
+        <<"content">> => <<>>,
+        <<"message_snapshots">> => [
+            #{<<"content">> => null, <<"stickers">> => [#{<<"name">> => <<"Wave">>}]}
+        ]
+    },
+    ?assertEqual(<<"Sticker: Wave">>, build_content_preview(MessageData)).
+
+own_content_wins_over_a_snapshot_test() ->
+    MessageData = #{
+        <<"content">> => <<"my words">>,
+        <<"message_snapshots">> => [#{<<"content">> => <<"forwarded text">>}]
+    },
+    ?assertEqual(<<"my words">>, build_content_preview(MessageData)).
+
+an_empty_snapshot_list_previews_nothing_test() ->
+    ?assertEqual(
+        <<>>, build_content_preview(#{<<"content">> => <<>>, <<"message_snapshots">> => []})
+    ).
+
+a_null_snapshot_field_previews_nothing_test() ->
+    ?assertEqual(
+        <<>>, build_content_preview(#{<<"content">> => <<>>, <<"message_snapshots">> => null})
+    ).
+
+announcement_channel_mentions_are_copyable_test() ->
+    ?assert(is_copyable_channel_type(5)),
+    ?assert(is_copyable_channel_mention(#{<<"type">> => 5})).
 
 build_url_dm_test() ->
     ?assertEqual(<<"/channels/@me/456/789">>, build_url(0, 456, 789)).

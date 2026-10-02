@@ -19,8 +19,9 @@ import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAcco
 import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import type {ReportService} from '@app/api/report/ReportService';
-import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
@@ -46,8 +47,8 @@ interface AdminUserServiceDeps {
 	kvDeletionQueue: KVAccountDeletionQueueService;
 	bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService;
 	stripe: Stripe | null;
-	riskHistoryRepository: Pick<IRiskHistoryRepository, 'recordOutcomeForUser'>;
 	reportService: ReportService;
+	storeEntitlementService: StoreEntitlementService;
 }
 
 export class AdminUserService {
@@ -94,7 +95,6 @@ export class AdminUserService {
 			apiContext: deps.apiContext,
 			auditService: deps.auditService,
 			updatePropagator: this.updatePropagator,
-			riskHistoryRepository: deps.riskHistoryRepository,
 		});
 		this.banService = new AdminUserBanService({
 			apiContext: deps.apiContext,
@@ -110,6 +110,8 @@ export class AdminUserService {
 			kvDeletionQueue: deps.kvDeletionQueue,
 			stripe: deps.stripe,
 			billingRepository: getBillingRepository(),
+			oauth2Tokens: new OAuth2TokenRepository(),
+			storeEntitlementService: deps.storeEntitlementService,
 		});
 		this.contactChangeLogService = contactChangeLog;
 	}

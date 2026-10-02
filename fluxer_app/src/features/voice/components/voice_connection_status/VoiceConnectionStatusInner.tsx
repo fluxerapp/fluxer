@@ -34,6 +34,7 @@ import {
 import {VoiceDetailsPopout} from '@app/features/voice/components/voice_connection_status/VoiceDetailsPopout';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import {readEffectiveNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
 import {VOICE_DISCONNECT_DESCRIPTOR, VOICE_IN_CHAT_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {getActiveVoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 import {msg} from '@lingui/core/macro';
@@ -110,9 +111,8 @@ const ResolvedVoiceConnectionStatusInner = observer(function ResolvedVoiceConnec
 	const storeIsConnected = MediaEngine.connected;
 	const voiceSettings = VoiceSettings;
 	const processingMode = getActiveVoiceProcessingMode(voiceSettings);
-	const noiseSuppressionEnabled = voiceSettings.noiseSuppression;
-	const deepFilterEnabled = voiceSettings.deepFilterNoiseSuppression;
-	const isProcessingActive = isAudioProcessingActive(processingMode, noiseSuppressionEnabled, deepFilterEnabled);
+	const noiseSuppressionBackend = readEffectiveNoiseSuppressionBackend();
+	const isProcessingActive = isAudioProcessingActive(processingMode, noiseSuppressionBackend);
 	const showVoiceConnectionId = voiceSettings.showVoiceConnectionId;
 	const openNoiseSuppressionModal = useCallback(() => {
 		ModalCommands.push(
@@ -121,12 +121,7 @@ const ResolvedVoiceConnectionStatusInner = observer(function ResolvedVoiceConnec
 			)),
 		);
 	}, []);
-	const noiseSuppressionTooltip = getAudioProcessingTooltip(
-		i18n,
-		processingMode,
-		noiseSuppressionEnabled,
-		deepFilterEnabled,
-	);
+	const noiseSuppressionTooltip = getAudioProcessingTooltip(i18n, processingMode, noiseSuppressionBackend);
 	const currentLatency = MediaEngine.currentLatency;
 	const latencyHistory = MediaEngine.latencyHistory.slice(-30);
 	const connectionId = MediaEngine.connectionId;

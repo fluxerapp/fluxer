@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A connection links a Fluxer account to a verified domain or Bluesky account. Visible connections appear in `connected_accounts` on the [full user profile object](/http-api/users/#full-user-profile-object).
 
-Connection routes require a user token. Bot tokens and OAuth2 bearers receive 403 `ACCESS_DENIED`, except that [List connections](#list-connections) accepts a bearer with the `connections` [scope](/http-api/oauth2/#oauth2-scopes). Accounts with an outstanding [required action](/http-api/users/#required-actions) receive 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. Connection IDs are not snowflakes.
+Connection routes require a user token. Bot tokens and OAuth2 bearers receive 403 `ACCESS_DENIED`, except that [List connections](#list-connections) accepts a bearer with the `connections` [scope](/http-api/oauth2/#oauth2-scopes). Connection IDs are not snowflakes.
 
 [Bluesky client metadata](#get-bluesky-client-metadata) and [JWKS](#get-bluesky-jwks) are public and contain no account data.
 
@@ -167,6 +167,7 @@ Only the `domain` type is accepted. A Bluesky connection is created through [Sta
 | --- | --- | --- |
 | 201 | [connection verification](#connection-verification-object) object | Verification was started |
 | 400 | [error response](/http-api/#error-response) | The requested type is bsky and the request returns `BLUESKY_OAUTH_NOT_ENABLED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 | 409 | [error response](/http-api/#error-response) | A connection of the same type already exists for that identifier, compared case-insensitively, and the request returns `CONNECTION_ALREADY_EXISTS` |
 
 ### Side effects
@@ -201,6 +202,7 @@ Use the initiation token returned for this domain and account. The connection li
 | 201 | [connection](#connection-object) object | Proof succeeded and the connection was created |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The initiation token is not usable and the request returns `CONNECTION_INITIATION_TOKEN_INVALID` |
 | 403 | [error response](/http-api/#error-response) | The proof failed and the request returns `CONNECTION_VERIFICATION_FAILED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 | 409 | [error response](/http-api/#error-response) | The identifier is already linked (`CONNECTION_ALREADY_EXISTS`), or the connection list changed during the request (`CONFLICT`). Fetch the list before retrying |
 
 <sup>1</sup> Invalid, expired or wrong-account initiation tokens return the same code
@@ -343,6 +345,7 @@ Starts or renews a Bluesky connection. Bluesky must be enabled on the instance. 
 | --- | --- | --- |
 | 200 | [Bluesky authorisation](#bluesky-authorisation-object) object | Send the user to `authorize_url` |
 | 400 | [error response](/http-api/#error-response) | Unavailable (`BLUESKY_OAUTH_NOT_ENABLED`) or failed (`BLUESKY_OAUTH_AUTHORIZATION_FAILED`) |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 
 ### Completing the flow
 

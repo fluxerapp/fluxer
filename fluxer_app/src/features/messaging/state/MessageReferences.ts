@@ -2,7 +2,7 @@
 
 import {Message as MessageRecord} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
-import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MessageFlags, MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {makeAutoObservable} from 'mobx';
@@ -137,13 +137,23 @@ class MessageReferences {
 		this.referencingMessages.delete(referencingMessageId);
 	}
 
-	private resolveReferenceTarget(message: WireMessage, fallbackChannelId: string): boolean {
+	private resolvableReferenceMessageId(message: WireMessage): string | undefined {
 		const reference = message.message_reference;
 		if (!reference || reference.type !== MessageReferenceTypes.DEFAULT) {
+			return undefined;
+		}
+		if ((message.flags & MessageFlags.IS_CROSSPOST) !== 0) {
+			return undefined;
+		}
+		return reference.message_id ?? undefined;
+	}
+
+	private resolveReferenceTarget(message: WireMessage, fallbackChannelId: string): boolean {
+		const refMessageId = this.resolvableReferenceMessageId(message);
+		if (!refMessageId) {
 			return false;
 		}
-		const refChannelId = reference.channel_id ?? fallbackChannelId;
-		const refMessageId = reference.message_id;
+		const refChannelId = message.message_reference?.channel_id ?? fallbackChannelId;
 		this.addReference(refChannelId, refMessageId, message.id);
 		if (!('referenced_message' in message)) {
 			return false;
@@ -200,11 +210,9 @@ class MessageReferences {
 		if (!('message_reference' in message) && !('referenced_message' in message)) {
 			return;
 		}
-		const reference = message.message_reference;
-		const isReferenceBearing = reference != null && reference.type === MessageReferenceTypes.DEFAULT;
 		const previousRef = this.referencingMessages.get(message.id);
-		const newRefChannelId = reference?.channel_id ?? message.channel_id;
-		const newRefMessageId = isReferenceBearing ? reference.message_id : undefined;
+		const newRefChannelId = message.message_reference?.channel_id ?? message.channel_id;
+		const newRefMessageId = this.resolvableReferenceMessageId(message);
 		if (previousRef) {
 			const previousKey = this.getKey(previousRef.channelId, previousRef.messageId);
 			const newKey = newRefMessageId ? this.getKey(newRefChannelId, newRefMessageId) : null;

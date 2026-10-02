@@ -18,6 +18,7 @@ import {createRoute} from '@app/features/platform/components/router/RouterBuilde
 import type {RouteConfig, RouteContext} from '@app/features/platform/components/router/RouterTypes';
 import {Redirect} from '@app/features/platform/components/router/RouterTypes';
 import SessionManager from '@app/features/platform/state/AuthSession';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {i18n} from '@lingui/core';
 
 const AuthorizeIPPage = createAuthRoutePage(
@@ -388,5 +389,5 @@ export const authRouteTree = authLayoutRoute.addChildren([
 	authorizeIPRoute,
 	pendingRoute,
 	reportRoute,
-	...(RuntimeConfig.isSelfHosted() ? [] : [giftRegisterRoute, giftLoginRoute]),
+	...(shouldShowPremiumFeatures() ? [giftRegisterRoute, giftLoginRoute] : []),
 ]);

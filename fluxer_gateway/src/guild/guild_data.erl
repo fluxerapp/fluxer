@@ -23,7 +23,11 @@
 -type guild_id() :: integer().
 
 -define(CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, [
-    <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
+    <<"members">>,
+    members_normalized,
+    <<"member_role_index">>,
+    members_sorted_ids,
+    member_list_revision
 ]).
 -define(CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS, [active_guilds, user_roles, viewable_channels]).
 
@@ -153,8 +157,10 @@ get_guild_state(UserId, State) ->
         JoinedAt
     ).
 
--spec build_connect_snapshot(map(), guild_state()) -> map().
-build_connect_snapshot(Item, State) ->
+-spec build_connect_snapshot(map() | [map()], guild_state()) -> map().
+build_connect_snapshot(Item, State) when is_map(Item) ->
+    build_connect_snapshot([Item], State);
+build_connect_snapshot(Items, State) ->
     Base = maps:with(
         [
             id,
@@ -168,17 +174,27 @@ build_connect_snapshot(Item, State) ->
         ],
         State
     ),
-    project_snapshot_sessions(maybe_trim_connect_snapshot(Item, Base, State)).
+    project_snapshot_sessions(maybe_trim_connect_snapshot(Items, Base, State)).
 
 -spec project_snapshot_sessions(map()) -> map().
 project_snapshot_sessions(#{sessions := Sessions} = Snapshot) when is_map(Sessions) ->
-    Projected = maps:map(
-        fun(_SessionId, SessionData) -> project_snapshot_session(SessionData) end,
-        Sessions
-    ),
-    Snapshot#{sessions => Projected};
+    case snapshot_reads_sessions(Snapshot) of
+        true ->
+            Projected = maps:map(
+                fun(_SessionId, SessionData) -> project_snapshot_session(SessionData) end,
+                Sessions
+            ),
+            Snapshot#{sessions => Projected};
+        false ->
+            Snapshot#{sessions => #{}}
+    end;
 project_snapshot_sessions(Snapshot) ->
     Snapshot.
+
+-spec snapshot_reads_sessions(map()) -> boolean().
+snapshot_reads_sessions(Snapshot) ->
+    guild_availability_check:get_unavailability_mode_from_state(Snapshot) =:=
+        unavailable_for_everyone_but_staff.
 
 -spec project_snapshot_session(term()) -> term().
 project_snapshot_session(SessionData) when is_map(SessionData) ->
@@ -186,10 +202,10 @@ project_snapshot_session(SessionData) when is_map(SessionData) ->
 project_snapshot_session(SessionData) ->
     SessionData.
 
--spec maybe_trim_connect_snapshot(map(), map(), guild_state()) -> map().
-maybe_trim_connect_snapshot(Item, Base, State) ->
+-spec maybe_trim_connect_snapshot([map()], map(), guild_state()) -> map().
+maybe_trim_connect_snapshot(Items, Base, State) ->
     case should_trim_connect_snapshot(State) of
-        true -> trim_connect_snapshot(Item, Base);
+        true -> trim_connect_snapshot(Items, Base);
         false -> Base
     end.
 
@@ -201,9 +217,9 @@ should_trim_connect_snapshot(State) ->
 has_members_ets(#{data := #{members_ets := Tab}}) -> is_reference(Tab);
 has_members_ets(_) -> false.
 
--spec trim_connect_snapshot(map(), map()) -> map().
-trim_connect_snapshot(Item, #{data := Data} = Base) when is_map(Data) ->
-    Retained = retained_member_map(Item, Base, Data),
+-spec trim_connect_snapshot([map()], map()) -> map().
+trim_connect_snapshot(Items, #{data := Data} = Base) when is_map(Data) ->
+    Retained = retained_member_map(Items, Base, Data),
     Trimmed = maps:without(?CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, Data),
     Base#{
         data => Trimmed#{
@@ -213,12 +229,12 @@ trim_connect_snapshot(Item, #{data := Data} = Base) when is_map(Data) ->
                 guild_data_index_members:build_member_role_index(Retained)
         }
     };
-trim_connect_snapshot(_Item, Base) ->
+trim_connect_snapshot(_Items, Base) ->
     Base.
 
--spec retained_member_map(map(), map(), map()) -> #{integer() => map()}.
-retained_member_map(Item, Base, Data) ->
-    UserIds = [connect_user_id(Item) | voice_state_user_ids(Base)],
+-spec retained_member_map([map()], map(), map()) -> #{integer() => map()}.
+retained_member_map(Items, Base, Data) ->
+    UserIds = [connect_user_id(Item) || Item <- Items] ++ voice_state_user_ids(Base),
     lists:foldl(
         fun(UserId, Acc) -> retain_member(UserId, Data, Acc) end,
         #{},
@@ -303,8 +319,8 @@ get_guild_data_for_user(UserId, Data, State) ->
         undefined ->
             {reply, #{guild_data => null, error_reason => <<"forbidden">>}, State};
         Member ->
-            GuildData = build_member_guild_data(UserId, Member, Data, State),
-            {reply, #{guild_data => GuildData}, State}
+            {GuildData, NewState} = build_member_guild_data(UserId, Member, Data, State),
+            {reply, #{guild_data => GuildData}, NewState}
     end.
 
 -spec build_complete_guild_data(map(), guild_state()) -> map().
@@ -313,14 +329,17 @@ build_complete_guild_data(Data, State) ->
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
     maps:merge(GuildProperties, build_guild_collection_data(Data, Channels, State)).
 
--spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> map().
+-spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> {map(), guild_state()}.
 build_member_guild_data(UserId, Member, Data, State) ->
     GuildProperties = maps:get(<<"guild">>, Data, #{}),
     AllChannels = guild_data_channels:channels_from_data(Data),
-    {ViewableChannels, _JoinedAt} = guild_data_channels:derive_member_view(
+    {ViewableChannels, NewState} = guild_data_channels:member_view(
         UserId, Member, State, AllChannels
     ),
-    maps:merge(GuildProperties, build_guild_collection_data(Data, ViewableChannels, State)).
+    GuildData = maps:merge(
+        GuildProperties, build_guild_collection_data(Data, ViewableChannels, State)
+    ),
+    {GuildData, NewState}.
 
 -spec build_guild_collection_data(map(), [map()], guild_state()) -> map().
 build_guild_collection_data(Data, Channels, State) ->
@@ -473,8 +492,12 @@ guild_id_wire_value(GuildId) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
+staff_only_data() ->
+    #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE_BUT_STAFF">>]}}.
+
 projection_snapshot() ->
     #{
+        data => staff_only_data(),
         sessions => #{
             <<"s1">> => #{
                 session_id => <<"s1">>,
@@ -513,8 +536,23 @@ projection_leaves_snapshot_data_untouched_test() ->
     ?assertEqual(Data, maps:get(data, project_snapshot_sessions(Snapshot))).
 
 projection_keeps_non_map_session_entries_test() ->
-    Snapshot = #{sessions => #{<<"broken">> => not_a_map}},
+    Snapshot = #{data => staff_only_data(), sessions => #{<<"broken">> => not_a_map}},
     ?assertEqual(Snapshot, project_snapshot_sessions(Snapshot)).
+
+projection_drops_sessions_unless_staff_only_test() ->
+    Snapshot = projection_snapshot(),
+    lists:foreach(
+        fun(Data) ->
+            Projected = project_snapshot_sessions(Snapshot#{data => Data}),
+            ?assertEqual(#{}, maps:get(sessions, Projected)),
+            ?assertEqual(Data, maps:get(data, Projected))
+        end,
+        [
+            #{},
+            #{<<"guild">> => #{<<"features">> => []}},
+            #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}
+        ]
+    ).
 
 projection_keeps_snapshot_without_sessions_test() ->
     Snapshot = #{id => 42, member_count => 3},

@@ -1,0 +1,145 @@
+{{- range $service, $svc := .Values.services }}
+{{- if not (kindIs "invalid" $svc) }}
+{{- $svc = $svc | default dict }}
+{{- $rc := fromYaml (include "fluxer-svc.config" (dict "root" $ "svc" $svc "mode" "router")) }}
+{{- $sc := fromYaml (include "fluxer-svc.config" (dict "root" $ "svc" $svc "mode" "shard")) }}
+{{- $routerReplicas := ternary $rc.replicas 1 (hasKey $rc "replicas") | int64 }}
+{{- $shardCount := ternary $sc.replicas 1 (hasKey $sc "replicas") | int64 }}
+{{- if lt $shardCount 1 }}
+{{- fail (printf "services.%s shard replicas must be at least 1" $service) }}
+{{- end }}
+{{- $router := dict "root" $ "service" $service "svc" $svc "mode" "router" "name" $service "c" $rc "shardCount" (toString $shardCount) }}
+{{- $shard := dict "root" $ "service" $service "svc" $svc "mode" "shard" "name" (printf "%s-shard" $service) "c" $sc "shardCount" (toString $shardCount) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $service }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-svc.labels" $router | nindent 4 }}
+spec:
+  {{- if not $rc.hpa }}
+  replicas: {{ $routerReplicas }}
+  {{- end }}
+  {{- if not (kindIs "invalid" $rc.minReadySeconds) }}
+  minReadySeconds: {{ $rc.minReadySeconds | int64 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fluxer-svc.selectorLabels" $router | nindent 6 }}
+  {{- with $rc.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    {{- include "fluxer-svc.pod" $router | nindent 4 }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $service }}-shard
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-svc.labels" $shard | nindent 4 }}
+spec:
+  replicas: {{ $shardCount }}
+  {{- if not (kindIs "invalid" $sc.minReadySeconds) }}
+  minReadySeconds: {{ $sc.minReadySeconds | int64 }}
+  {{- end }}
+  podManagementPolicy: Parallel
+  serviceName: {{ $service }}-shard-headless
+  selector:
+    matchLabels:
+      {{- include "fluxer-svc.selectorLabels" $shard | nindent 6 }}
+  {{- with $sc.updateStrategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    {{- include "fluxer-svc.pod" $shard | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-svc.labels" $router | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer-svc.selectorLabels" $router | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $.Values.port }}
+      targetPort: {{ $.Values.port }}
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service }}-shard-headless
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-svc.labels" $shard | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    {{- include "fluxer-svc.selectorLabels" $shard | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $.Values.port }}
+      targetPort: {{ $.Values.port }}
+      protocol: TCP
+{{- with $rc.hpa }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $service }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-svc.labels" $router | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $service }}
+  minReplicas: {{ required (printf "services.%s router hpa.minReplicas is required" $service) .minReplicas | int64 }}
+  maxReplicas: {{ required (printf "services.%s router hpa.maxReplicas is required" $service) .maxReplicas | int64 }}
+  {{- if not (kindIs "invalid" .targetCPUUtilizationPercentage) }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .targetCPUUtilizationPercentage | int64 }}
+  {{- end }}
+  {{- with .behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- range $ctx := list $router $shard }}
+{{- with include "fluxer-svc.pdb" ($ctx.c.pdb | default dict) | fromYaml }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $ctx.name }}-pdb
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-svc.labels" $ctx | nindent 4 }}
+spec:
+  {{- toYaml . | nindent 2 }}
+  selector:
+    matchLabels:
+      {{- include "fluxer-svc.selectorLabels" $ctx | nindent 6 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

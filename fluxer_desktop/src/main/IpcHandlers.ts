@@ -108,6 +108,9 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	if (typeof value.closeToTray === 'boolean') {
 		update.closeToTray = value.closeToTray;
 	}
+	if (typeof value.startMinimized === 'boolean') {
+		update.startMinimized = value.startMinimized;
+	}
 	if (typeof value.useNativeTitleBar === 'boolean') {
 		update.useNativeTitleBar = value.useNativeTitleBar;
 	}

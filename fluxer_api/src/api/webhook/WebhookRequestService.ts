@@ -6,6 +6,7 @@ import {Config} from '@app/api/Config';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {LiveKitWebhookService} from '@app/api/infrastructure/LiveKitWebhookService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -13,9 +14,11 @@ import type {Message} from '@app/api/models/Message';
 import type {SweegoWebhookService} from '@app/api/webhook/SweegoWebhookService';
 import {transformSlackWebhookRequest} from '@app/api/webhook/transformers/SlackTransformer';
 import {
+	createWebhookSourceResolver,
 	mapWebhooksToResponse,
 	mapWebhookToResponseWithCache,
 	mapWebhookToTokenResponse,
+	type WebhookSourceResolver,
 } from '@app/api/webhook/WebhookModel';
 import type {WebhookExecuteMessageData, WebhookService} from '@app/api/webhook/WebhookService';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -167,7 +170,16 @@ export class WebhookRequestService {
 		private readonly userCacheService: UserCacheService,
 		private readonly liveKitWebhookService: LiveKitWebhookService | null,
 		private readonly sweegoWebhookService: SweegoWebhookService,
+		private readonly gatewayService: IGatewayService,
 	) {}
+
+	private sourceResolver(requestCache: RequestCache): WebhookSourceResolver {
+		return createWebhookSourceResolver({
+			channelRepository: this.channelRepository,
+			gatewayService: this.gatewayService,
+			requestCache,
+		});
+	}
 
 	async listGuildWebhooks(params: WebhookListGuildParams): Promise<Array<WebhookResponse>> {
 		const webhooks = await this.webhookService.getGuildWebhooks({
@@ -178,6 +190,7 @@ export class WebhookRequestService {
 			webhooks,
 			userCacheService: this.userCacheService,
 			requestCache: params.requestCache,
+			resolveSource: this.sourceResolver(params.requestCache),
 		});
 	}
 
@@ -190,6 +203,7 @@ export class WebhookRequestService {
 			webhooks,
 			userCacheService: this.userCacheService,
 			requestCache: params.requestCache,
+			resolveSource: this.sourceResolver(params.requestCache),
 		});
 	}
 
@@ -221,6 +235,7 @@ export class WebhookRequestService {
 			webhook,
 			userCacheService: this.userCacheService,
 			requestCache: params.requestCache,
+			resolveSource: this.sourceResolver(params.requestCache),
 		});
 	}
 
@@ -247,6 +262,7 @@ export class WebhookRequestService {
 			webhook,
 			userCacheService: this.userCacheService,
 			requestCache: params.requestCache,
+			resolveSource: this.sourceResolver(params.requestCache),
 		});
 	}
 

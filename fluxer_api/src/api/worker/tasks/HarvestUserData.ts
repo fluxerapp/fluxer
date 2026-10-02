@@ -29,6 +29,7 @@ import {
 	type SelfMessageFilter,
 } from '@app/api/channel/services/message/SelfMessageFilter';
 import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
+import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import type {Application} from '@app/api/models/Application';
@@ -48,6 +49,7 @@ import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
 import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {mapStorePurchaseToResponse} from '@app/api/store_billing/StoreBillingMappers';
 import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
@@ -132,6 +134,7 @@ interface UserDataJsonParams {
 	mfaBackupCodes: Array<MfaBackupCode>;
 	createdGiftCodes: Array<GiftCode>;
 	payments: Array<Payment>;
+	storePurchases: Array<StorePurchaseRow>;
 	oauthClients: Array<Application>;
 	connections: Array<UserConnectionRow>;
 	pinnedDms: Array<{
@@ -407,7 +410,7 @@ export async function harvestMessages(
 	return {channelMessagesMap, totalMessages};
 }
 
-function buildUserDataJson(params: UserDataJsonParams) {
+export function buildUserDataJson(params: UserDataJsonParams) {
 	const {
 		user,
 		userId,
@@ -426,6 +429,7 @@ function buildUserDataJson(params: UserDataJsonParams) {
 		mfaBackupCodes,
 		createdGiftCodes,
 		payments,
+		storePurchases,
 		oauthClients,
 		connections,
 		pinnedDms,
@@ -442,7 +446,6 @@ function buildUserDataJson(params: UserDataJsonParams) {
 			email: user.email,
 			email_verified: user.emailVerified,
 			email_bounced: user.emailBounced,
-			has_verified_phone: user.hasVerifiedPhone,
 			avatar_hash: user.avatarHash,
 			avatar_url: user.avatarHash
 				? `${Config.endpoints.media}/avatars/${userId}/${user.avatarHash}.${user.avatarHash.startsWith('a_') ? 'gif' : 'png'}`
@@ -630,6 +633,7 @@ function buildUserDataJson(params: UserDataJsonParams) {
 			stripe_payment_intent_id: gift.stripePaymentIntentId,
 		})),
 		payments: payments.map(mapPayment),
+		store_purchases: storePurchases.map(mapStorePurchaseToResponse),
 		oauth_applications: oauthClients.map(mapOAuthApplication),
 		connections: connections.map((connection) => ({
 			id: connection.connection_id,
@@ -775,6 +779,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 		storageService,
 		emailService,
 		instanceConfigRepository,
+		storeEntitlementService,
 	} = dependencies;
 	const adminRequestedBy = validated.adminRequestedBy ? BigInt(validated.adminRequestedBy) : null;
 	const isAdminArchive = adminRequestedBy !== null;
@@ -846,6 +851,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			mfaBackupCodes,
 			createdGiftCodes,
 			payments,
+			storePurchases,
 			oauthClients,
 			connections,
 			pinnedDms,
@@ -865,6 +871,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			userRepository.listMfaBackupCodes(userId),
 			userRepository.findGiftCodesByCreator(userId),
 			paymentRepository.findPaymentsByUserId(userId),
+			storeEntitlementService.listStorePurchases(userId),
 			applicationRepository.listApplicationsByOwner(userId),
 			connectionRepository.findByUserId(userId),
 			userRepository.getPinnedDmsWithDetails(userId),
@@ -900,6 +907,7 @@ const harvestUserData: ArchiveTaskHandler = async (payload, helpers, attempt) =>
 			mfaBackupCodes,
 			createdGiftCodes,
 			payments,
+			storePurchases,
 			oauthClients,
 			connections,
 			pinnedDms,

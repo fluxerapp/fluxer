@@ -75,15 +75,13 @@ export const UserUpdateRequest = z
 		bio: createStringType(1, 320).nullish().describe('User biography text (max 320 characters)'),
 		pronouns: createStringType(1, 40).nullish().describe('User pronouns (max 40 characters)'),
 		accent_color: ColorType.nullish().describe('Profile accent color as integer'),
-		timezone: createStringType(1, 128)
-			.nullish()
-			.describe('Staff-only IANA timezone identifier saved for profile local time. Ignored for non-staff users.'),
+		timezone: createStringType(1, 128).nullish().describe('IANA timezone identifier saved for profile local time'),
 		timezone_privacy_flags: createBitflagInt32Type(
 			ProfileFieldPrivacyFlags,
 			ProfileFieldPrivacyFlagsDescriptions,
 			'Bitfield controlling who can see the profile timezone',
 			'ProfileFieldPrivacyFlags',
-		).describe('Staff-only bitfield controlling who can see the profile timezone. Ignored for non-staff users.'),
+		).describe('Bitfield controlling who can see the profile timezone'),
 		premium_badge_hidden: z.boolean().describe('Whether to hide the premium badge'),
 		premium_badge_masked: z.boolean().describe('Whether to mask the premium badge'),
 		premium_badge_timestamp_hidden: z.boolean().describe('Whether to hide premium badge timestamp'),

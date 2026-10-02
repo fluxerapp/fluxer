@@ -23,3 +23,7 @@ export const NOISE_SUPPRESSION_WASM_URLS = {
 	rnnoiseSimd: rnnoiseSimdWasmUrl,
 	speex: speexWasmUrl,
 } as const;
+
+export const DEEP_FILTER_WORKLET_URL = new URL('./deepFilterProcessor.worklet.js', import.meta.url).href;
+
+export const VOICE_GATE_WORKLET_URL = new URL('../voiceGateProcessor.worklet.js', import.meta.url).href;

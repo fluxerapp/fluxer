@@ -193,7 +193,6 @@ export class ApplicationService {
 			stripe_subscription_id: null,
 			stripe_customer_id: null,
 			has_ever_purchased: null,
-			suspicious_activity_flags: null,
 			terms_agreed_at: null,
 			privacy_agreed_at: null,
 			last_active_at: null,
@@ -499,17 +498,17 @@ export class ApplicationService {
 			}
 			updates.bio = args.bio;
 		}
-		if (args.bot_flags !== undefined) {
-			const mask = UserFlags.FRIENDLY_BOT | UserFlags.FRIENDLY_BOT_MANUAL_APPROVAL;
-			const updatedFlags = (botUser.flags & ~mask) | (BigInt(args.bot_flags) & mask);
-			if (updatedFlags !== botUser.flags) {
-				updates.flags = updatedFlags;
-			}
-		}
 		const preparedAssets = await this.prepareBotAssets(botUser, args, updates);
 		let updatedUser: User;
 		try {
 			updatedUser = await this.apiContext.services.users.patchUpsert(botUserId, updates, botUser.toRow());
+			if (args.bot_flags !== undefined) {
+				const mask = UserFlags.FRIENDLY_BOT | UserFlags.FRIENDLY_BOT_MANUAL_APPROVAL;
+				const botFlags = BigInt(args.bot_flags) & mask;
+				updatedUser =
+					(await this.apiContext.services.users.updateFlags(botUserId, (flags) => (flags & ~mask) | botFlags)) ??
+					updatedUser;
+			}
 		} catch (err) {
 			Logger.error(
 				{error: err, applicationId: applicationId.toString(), botUserId: botUserId.toString()},

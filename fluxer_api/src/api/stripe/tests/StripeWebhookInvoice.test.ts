@@ -43,6 +43,7 @@ const MOCK_PRICES = {
 	gift1YearEur: 'price_gift_1_year_eur',
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
 const LEGACY_MONTHLY_BRL_PRICE = 'price_legacy_monthly_brl';
 const LEGACY_YEARLY_BRL_PRICE = 'price_legacy_yearly_brl';
 const UNMAPPED_PRICE = 'price_retired_unmapped_brl';
@@ -147,6 +148,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 		customerId: string;
 		premiumUntil: Date;
 		premiumWillCancel?: boolean;
+		billingCycle?: 'monthly' | 'yearly';
 	}): Promise<void> {
 		const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 		const userRepository = new UserRepository();
@@ -157,11 +159,43 @@ describe('Stripe Webhook - Invoice Events', () => {
 				premium_type: UserPremiumTypes.SUBSCRIPTION,
 				premium_until: params.premiumUntil,
 				premium_will_cancel: params.premiumWillCancel ?? false,
+				...(params.billingCycle ? {premium_billing_cycle: params.billingCycle} : {}),
 				stripe_subscription_id: params.subscriptionId,
 				stripe_customer_id: params.customerId,
 			},
 			(await userRepository.findUnique(userId))!.toRow(),
 		);
+	}
+	function createRenewalFailureEvent(params: {
+		invoiceId: string;
+		customerId: string;
+		subscriptionId: string;
+		periodStart: Date;
+		periodEnd: Date;
+	}): StripeWebhookEventData {
+		const eventData = createInvoicePaymentFailedEvent({
+			invoiceId: params.invoiceId,
+			customerId: params.customerId,
+			subscriptionId: params.subscriptionId,
+			amountDue: 2500,
+		});
+		eventData.data.object.billing_reason = 'subscription_cycle';
+		eventData.data.object.lines = {
+			data: [
+				{
+					period: {
+						start: Math.floor(params.periodStart.getTime() / 1000),
+						end: Math.floor(params.periodEnd.getTime() / 1000),
+					},
+					parent: {
+						subscription_item_details: {
+							subscription: params.subscriptionId,
+						},
+					},
+				},
+			],
+		};
+		return eventData;
 	}
 	describe('invoice.payment_succeeded', () => {
 		test('processes recurring subscription payment successfully', async () => {
@@ -559,6 +593,7 @@ describe('Stripe Webhook - Invoice Events', () => {
 					premium_type: UserPremiumTypes.SUBSCRIPTION,
 					premium_until: existingPremiumUntil,
 					premium_will_cancel: false,
+					premium_billing_cycle: 'monthly',
 					stripe_subscription_id: subscriptionId,
 					stripe_customer_id: 'cus_test_failed_invoice',
 				},
@@ -592,12 +627,96 @@ describe('Stripe Webhook - Invoice Events', () => {
 				premium_type: number | null;
 				premium_until: string | null;
 				premium_will_cancel: boolean;
+				premium_grace_ends_at: string | null;
+			}>(harness, account.token)
+				.get('/users/@me')
+				.execute();
+			const failedPeriodStartMs = Math.floor(failedPeriodStart.getTime() / 1000) * 1000;
+			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
+			expect(me.premium_until).toBe(new Date(failedPeriodStartMs).toISOString());
+			expect(me.premium_will_cancel).toBe(true);
+			expect(me.premium_grace_ends_at).toBe(new Date(failedPeriodStartMs + 7 * DAY_MS).toISOString());
+		});
+		test('records a 14-day recovery deadline for a yearly subscription', async () => {
+			const account = await createTestAccount(harness);
+			const subscriptionId = `sub_failed_yearly_${Date.now()}`;
+			const failedPeriodStart = new Date(Math.floor((Date.now() - 60 * 60 * 1000) / 1000) * 1000);
+			const failedPeriodEnd = new Date(failedPeriodStart.getTime() + 365 * DAY_MS);
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: MOCK_PRICES.yearlyUsd,
+				productType: ProductType.YEARLY_SUBSCRIPTION,
+			});
+			await setSubscriptionUserState({
+				accountUserId: account.userId,
+				subscriptionId,
+				customerId: 'cus_test_failed_yearly',
+				premiumUntil: failedPeriodStart,
+				billingCycle: 'yearly',
+			});
+			const result = await sendWebhook(
+				createRenewalFailureEvent({
+					invoiceId: `in_failed_yearly_${Date.now()}`,
+					customerId: 'cus_test_failed_yearly',
+					subscriptionId,
+					periodStart: failedPeriodStart,
+					periodEnd: failedPeriodEnd,
+				}),
+			);
+			expect(result.received).toBe(true);
+			const me = await createBuilder<{
+				premium_type: number | null;
+				premium_until: string | null;
+				premium_grace_ends_at: string | null;
 			}>(harness, account.token)
 				.get('/users/@me')
 				.execute();
 			expect(me.premium_type).toBe(UserPremiumTypes.SUBSCRIPTION);
-			expect(me.premium_until).toBe(new Date(Math.floor(failedPeriodStart.getTime() / 1000) * 1000).toISOString());
-			expect(me.premium_will_cancel).toBe(true);
+			expect(me.premium_until).toBe(failedPeriodStart.toISOString());
+			expect(me.premium_grace_ends_at).toBe(new Date(failedPeriodStart.getTime() + 14 * DAY_MS).toISOString());
+		});
+		test('does not move the recovery deadline on a repeated failure for the same period', async () => {
+			const account = await createTestAccount(harness);
+			const subscriptionId = `sub_failed_repeat_${Date.now()}`;
+			const failedPeriodStart = new Date(Math.floor((Date.now() - 2 * DAY_MS) / 1000) * 1000);
+			const failedPeriodEnd = new Date(failedPeriodStart.getTime() + 30 * DAY_MS);
+			await createPaymentRecord({
+				userId: account.userId,
+				subscriptionId,
+				priceId: MOCK_PRICES.monthlyUsd,
+				productType: ProductType.MONTHLY_SUBSCRIPTION,
+			});
+			await setSubscriptionUserState({
+				accountUserId: account.userId,
+				subscriptionId,
+				customerId: 'cus_test_failed_repeat',
+				premiumUntil: failedPeriodStart,
+				billingCycle: 'monthly',
+			});
+			const invoiceId = `in_failed_repeat_${Date.now()}`;
+			const expectedDeadline = new Date(failedPeriodStart.getTime() + 7 * DAY_MS).toISOString();
+			for (const attempt of [1, 2]) {
+				const eventData = createRenewalFailureEvent({
+					invoiceId,
+					customerId: 'cus_test_failed_repeat',
+					subscriptionId,
+					periodStart: failedPeriodStart,
+					periodEnd: failedPeriodEnd,
+				});
+				eventData.id = `evt_failed_repeat_${attempt}_${Date.now()}`;
+				eventData.data.object.attempt_count = attempt;
+				const result = await sendWebhook(eventData);
+				expect(result.received).toBe(true);
+				const me = await createBuilder<{
+					premium_until: string | null;
+					premium_grace_ends_at: string | null;
+				}>(harness, account.token)
+					.get('/users/@me')
+					.execute();
+				expect(me.premium_until).toBe(failedPeriodStart.toISOString());
+				expect(me.premium_grace_ends_at).toBe(expectedDeadline);
+			}
 		});
 		test('ignores non-renewal invoice payment failures', async () => {
 			const account = await createTestAccount(harness);
@@ -688,11 +807,14 @@ describe('Stripe Webhook - Invoice Events', () => {
 			const me = await createBuilder<{
 				premium_until: string | null;
 				premium_will_cancel: boolean;
+				premium_grace_ends_at: string | null;
 			}>(harness, account.token)
 				.get('/users/@me')
 				.execute();
-			expect(me.premium_until).toBe(new Date(Math.floor(failedPeriodStart.getTime() / 1000) * 1000).toISOString());
+			const failedPeriodStartMs = Math.floor(failedPeriodStart.getTime() / 1000) * 1000;
+			expect(me.premium_until).toBe(new Date(failedPeriodStartMs).toISOString());
 			expect(me.premium_will_cancel).toBe(true);
+			expect(me.premium_grace_ends_at).toBe(new Date(failedPeriodStartMs + 7 * DAY_MS).toISOString());
 		});
 		test('handles invoice.finalization_failed like a recurring access issue', async () => {
 			const account = await createTestAccount(harness);

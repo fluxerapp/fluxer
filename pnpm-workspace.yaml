@@ -50,7 +50,6 @@ catalog:
   '@elastic/elasticsearch': 9.5.1
   '@floating-ui/react': 0.27.20
   '@floating-ui/react-dom': 2.1.9
-  '@hcaptcha/react-hcaptcha': 2.2.0
   '@hono/node-server': 2.1.1
   '@lexical/history': 0.50.0
   '@lexical/react': 0.50.0
@@ -61,7 +60,6 @@ catalog:
   '@lingui/react': 6.7.0
   '@lingui/swc-plugin': 6.7.0
   '@livekit/components-react': 2.9.24
-  '@marsidev/react-turnstile': 1.6.1
   '@mdx-js/mdx': 3.1.1
   '@messageformat/core': 3.4.0
   '@messageformat/parser': 5.1.1
@@ -97,6 +95,7 @@ catalog:
   '@vvo/tzdb': 6.198.0
   '@webgpu/types': 0.1.72
   ajv: 8.20.0
+  altcha-lib: 2.5.0
   archiver: 8.0.0
   argon2: 0.44.0
   astro: 7.3.2
@@ -106,7 +105,6 @@ catalog:
   clsx: 2.1.1
   colorjs.io: 0.7.1
   combokeys: 3.0.1
-  deepfilternet3-noise-filter: 1.3.0
   emoji-regex: 11.0.0
   esbuild: 0.28.2
   eslint: 10.10.0
@@ -125,7 +123,6 @@ catalog:
   katex: 0.18.7
   knip: 6.36.0
   lexical: 0.50.0
-  libphonenumber-js: 1.13.13
   livekit-server-sdk: 2.19.0
   lodash: 4.18.1
   lru-cache: 11.5.2

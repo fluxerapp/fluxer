@@ -41,13 +41,42 @@ const BUCKET_DURATION_MS: i64 = 864_000_000;
 const FLUXER_EPOCH_MS: i64 = 1_420_070_400_000;
 const SERVICE_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 const MESSAGE_REFERENCE_TYPE_DEFAULT: i32 = 0;
+const MESSAGE_FLAG_IS_CROSSPOST: i64 = 1 << 1;
 
 fn effective_reference_type(reference: &MessageReference) -> i32 {
     reference
         .reference_type
         .unwrap_or(MESSAGE_REFERENCE_TYPE_DEFAULT)
 }
+
+fn is_crosspost_copy(message: &Message) -> bool {
+    (message.flags.unwrap_or_default() & MESSAGE_FLAG_IS_CROSSPOST) != 0
+}
+
+fn attachment_storage_channel_id(message: &Message) -> i64 {
+    if !is_crosspost_copy(message) {
+        return message.channel_id;
+    }
+    message
+        .message_reference
+        .as_ref()
+        .and_then(|reference| reference.channel_id)
+        .unwrap_or(message.channel_id)
+}
+
+fn reply_target(message: &Message) -> Option<(i64, i64)> {
+    if is_crosspost_copy(message) {
+        return None;
+    }
+    let reference = message.message_reference.as_ref()?;
+    if effective_reference_type(reference) != MESSAGE_REFERENCE_TYPE_DEFAULT {
+        return None;
+    }
+    Some((reference.channel_id?, reference.message_id?))
+}
+
 const MESSAGE_FLAG_SUPPRESS_EMBEDS: i64 = 1 << 2;
+const EMBED_MEDIA_OWNED_ATTACHMENT_FLAG: i32 = 1 << 30;
 #[cfg(test)]
 const USER_FLAG_DELETED: i64 = 1_i64 << 34;
 const FLUXER_SYSTEM_USER_ID: i64 = 0;
@@ -786,14 +815,7 @@ impl<T: Transport> MessagesShard<T> {
     ) -> HashMap<(i64, i64), Message> {
         let mut refs = HashSet::new();
         for message in messages {
-            let Some(reference) = &message.message_reference else {
-                continue;
-            };
-            if effective_reference_type(reference) != MESSAGE_REFERENCE_TYPE_DEFAULT {
-                continue;
-            }
-            let (Some(channel_id), Some(message_id)) = (reference.channel_id, reference.message_id)
-            else {
+            let Some((channel_id, message_id)) = reply_target(message) else {
                 continue;
             };
             if !self.is_message_visible_to_requester(message_id, options) {
@@ -1018,13 +1040,14 @@ impl<T: Transport> MessagesShard<T> {
         include_referenced_message: bool,
     ) -> ApiMessageResponse {
         let author = self.resolve_author(message, context);
+        let storage_channel_id = attachment_storage_channel_id(message);
         let attachments = message
             .attachments
             .as_deref()
             .unwrap_or_default()
             .iter()
             .filter_map(|attachment| {
-                self.map_attachment(message.channel_id, attachment, options, context)
+                self.map_attachment(storage_channel_id, attachment, options, context)
             })
             .collect();
         let embeds = if (message.flags.unwrap_or_default() & MESSAGE_FLAG_SUPPRESS_EMBEDS) == 0 {
@@ -1083,33 +1106,22 @@ impl<T: Transport> MessagesShard<T> {
             .filter_map(|id| context.users.get(&id).cloned())
             .collect::<Vec<_>>();
         let referenced_message = if include_referenced_message {
-            message
-                .message_reference
-                .as_ref()
-                .and_then(|reference| {
-                    Some((
-                        reference.channel_id?,
-                        reference.message_id?,
-                        effective_reference_type(reference),
-                    ))
-                })
-                .filter(|(_, _, reference_type)| *reference_type == MESSAGE_REFERENCE_TYPE_DEFAULT)
-                .map(|(channel_id, message_id, _)| {
-                    context
-                        .referenced_messages
-                        .get(&(channel_id, message_id))
-                        .map(|referenced| {
-                            let mut referenced_options = options.clone();
-                            referenced_options.nonce = None;
-                            referenced_options.tts = false;
-                            Box::new(self.map_message_response(
-                                referenced,
-                                &referenced_options,
-                                context,
-                                false,
-                            ))
-                        })
-                })
+            reply_target(message).map(|(channel_id, message_id)| {
+                context
+                    .referenced_messages
+                    .get(&(channel_id, message_id))
+                    .map(|referenced| {
+                        let mut referenced_options = options.clone();
+                        referenced_options.nonce = None;
+                        referenced_options.tts = false;
+                        Box::new(self.map_message_response(
+                            referenced,
+                            &referenced_options,
+                            context,
+                            false,
+                        ))
+                    })
+            })
         } else {
             None
         };
@@ -1389,7 +1401,9 @@ impl<T: Transport> MessagesShard<T> {
             content_type: media.content_type,
             content_hash: media.content_hash,
             placeholder: media.placeholder,
-            flags: media.flags,
+            flags: media
+                .flags
+                .map(|flags| flags & !EMBED_MEDIA_OWNED_ATTACHMENT_FLAG),
         })
     }
 
@@ -2382,8 +2396,6 @@ fn decode_postgres_message(row: serde_json::Value) -> anyhow::Result<Message> {
         .get("pinned_timestamp")
         .is_some_and(|value| !value.is_null());
     row.insert("pinned".to_owned(), serde_json::Value::Bool(pinned));
-    default_i32_field(&mut row, "type", 0);
-    default_i32_field(&mut row, "version", 0);
     Ok(serde_json::from_value(serde_json::Value::Object(row))?)
 }
 
@@ -2413,16 +2425,6 @@ fn decode_postgres_attachment_decay(
     let expires_at = DateTime::<Utc>::from_timestamp_millis(row.expires_at)
         .ok_or_else(|| anyhow::anyhow!("invalid attachment decay timestamp"))?;
     Ok((row.attachment_id, expires_at))
-}
-
-fn default_i32_field(
-    row: &mut serde_json::Map<String, serde_json::Value>,
-    field: &str,
-    value: i32,
-) {
-    if row.get(field).is_none_or(serde_json::Value::is_null) {
-        row.insert(field.to_owned(), serde_json::Value::Number(value.into()));
-    }
 }
 
 #[cfg(feature = "scylla")]
@@ -2819,7 +2821,7 @@ fn map_reactions(
 fn map_message_reference(reference: &MessageReference) -> Option<ApiMessageReferenceResponse> {
     Some(ApiMessageReferenceResponse {
         channel_id: reference.channel_id?.to_string(),
-        message_id: reference.message_id?.to_string(),
+        message_id: reference.message_id.map(|id| id.to_string()),
         guild_id: reference.guild_id.map(|id| id.to_string()),
         reference_type: effective_reference_type(reference),
     })
@@ -3405,6 +3407,36 @@ mod tests {
     }
 
     #[test]
+    fn build_responses_request_accepts_legacy_null_version_rows() {
+        let request: MessageRequest = serde_json::from_value(json!({
+            "op": "BuildResponses",
+            "messages": [{
+                "message_id": "1449544529132171273",
+                "channel_id": "1431572375251247158",
+                "bucket": 399,
+                "author_id": "1130650140672000000",
+                "type": null,
+                "version": null,
+                "content": ""
+            }],
+            "viewer_user_id": "1130650140672000000",
+            "source_guild_id": null,
+            "message_history_cutoff_ms": null,
+            "can_read_message_history": true,
+            "media_endpoint": "https://media.example",
+            "media_proxy_secret_key": "secret",
+            "include_reactions": true
+        }))
+        .unwrap();
+
+        let MessageRequest::BuildResponses { messages, .. } = request else {
+            panic!("expected BuildResponses");
+        };
+        assert_eq!(messages[0].message_type, 0);
+        assert_eq!(messages[0].version, 0);
+    }
+
+    #[test]
     fn mention_context_carries_embed_user_ids_for_message_and_snapshots() {
         let message: Message = serde_json::from_value(json!({
             "message_id": "10",
@@ -3617,6 +3649,29 @@ mod tests {
         assert_eq!(response.name, "");
         assert_eq!(response.value, "");
         assert!(!response.is_inline);
+    }
+
+    #[test]
+    fn embed_media_response_hides_the_owned_attachment_flag() {
+        let shard = recording_shard(&DeletedMessageKeys::default());
+        let response = shard
+            .map_embed_media(
+                MessageEmbedMedia {
+                    url: Some("https://media.example.com/attachments/1/2/a.png".to_owned()),
+                    width: None,
+                    height: None,
+                    duration: None,
+                    description: None,
+                    content_type: None,
+                    content_hash: None,
+                    placeholder: None,
+                    flags: Some(EMBED_MEDIA_OWNED_ATTACHMENT_FLAG | (1 << 3)),
+                },
+                &build_options(),
+            )
+            .unwrap();
+
+        assert_eq!(response.flags, Some(1 << 3));
     }
 
     #[test]
@@ -4528,5 +4583,291 @@ mod tests {
             (0u8..32).collect::<Vec<u8>>(),
             decode_attachment_url_secret(Some("AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="))
         );
+    }
+
+    const CROSSPOST_SOURCE_CHANNEL_ID: i64 = 500;
+    const CROSSPOST_SOURCE_GUILD_ID: i64 = 600;
+    const CROSSPOST_SOURCE_MESSAGE_ID: i64 = 1_509_197_195_776_110_590;
+
+    fn referencing_message(message_type: i32, flags: i64, reference: serde_json::Value) -> Message {
+        decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": "1509197195776110600"},
+            "webhook_id": {"__fluxer_type": "bigint", "value": "77"},
+            "webhook_name": "Source #news",
+            "type": message_type,
+            "flags": flags,
+            "content": "published",
+            "message_reference": reference
+        }))
+        .unwrap()
+    }
+
+    fn source_reference() -> serde_json::Value {
+        json!({
+            "channel_id": CROSSPOST_SOURCE_CHANNEL_ID.to_string(),
+            "message_id": CROSSPOST_SOURCE_MESSAGE_ID.to_string(),
+            "guild_id": CROSSPOST_SOURCE_GUILD_ID.to_string(),
+            "type": MESSAGE_REFERENCE_TYPE_DEFAULT
+        })
+    }
+
+    fn source_message() -> Message {
+        decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": CROSSPOST_SOURCE_CHANNEL_ID.to_string()},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": CROSSPOST_SOURCE_MESSAGE_ID.to_string()},
+            "author_id": {"__fluxer_type": "bigint", "value": "1472426752046002208"},
+            "flags": 1,
+            "content": "published"
+        }))
+        .unwrap()
+    }
+
+    fn context_with_source() -> ResponseContext {
+        ResponseContext {
+            referenced_messages: [(
+                (CROSSPOST_SOURCE_CHANNEL_ID, CROSSPOST_SOURCE_MESSAGE_ID),
+                source_message(),
+            )]
+            .into_iter()
+            .collect(),
+            ..ResponseContext::default()
+        }
+    }
+
+    fn serialized_response(message: &Message, context: &ResponseContext) -> serde_json::Value {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        serde_json::to_value(shard.map_message_response(message, &build_options(), context, true))
+            .expect("response serialises")
+    }
+
+    fn signed_attachment_response(message: &Message) -> serde_json::Value {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let response = serde_json::to_value(shard.map_message_response(
+            message,
+            &signing_options(),
+            &ResponseContext::default(),
+            true,
+        ))
+        .expect("response serialises");
+        response["attachments"][0].clone()
+    }
+
+    fn assert_attachment_signed_for_channel(attachment: &serde_json::Value, channel_id: i64) {
+        let options = signing_options();
+        let storage_key =
+            make_attachment_cdn_key(channel_id, SIGNED_ATTACHMENT_ID, SIGNED_FILENAME);
+        let unsigned = make_attachment_cdn_url(
+            &options.media_endpoint,
+            channel_id,
+            SIGNED_ATTACHMENT_ID,
+            SIGNED_FILENAME,
+        );
+        let url = attachment["url"]
+            .as_str()
+            .expect("a live attachment carries a url");
+        assert_eq!(attachment["proxy_url"], attachment["url"]);
+        assert_eq!(attachment["id"], json!(SIGNED_ATTACHMENT_ID.to_string()));
+        assert_eq!(
+            Some(format!("{unsigned}?")),
+            url.split_once("ex=").map(|(head, _)| head.to_owned()),
+            "{url}"
+        );
+        let query = url.split_once('?').expect("a signed url carries a query").1;
+        assert_eq!(
+            fluxer_common::attachment_url_signature::Verdict::Valid,
+            fluxer_common::attachment_url_signature::verify(
+                &storage_key,
+                Some(query),
+                &[&options.attachment_url_secret],
+                now_epoch_secs(),
+            )
+            .verdict,
+            "{url}"
+        );
+    }
+
+    #[test]
+    fn crosspost_copy_attachment_urls_point_at_the_source_channel() {
+        let mut copy = referencing_message(0, MESSAGE_FLAG_IS_CROSSPOST, source_reference());
+        copy.attachments = Some(vec![signed_attachment()]);
+
+        assert_eq!(
+            attachment_storage_channel_id(&copy),
+            CROSSPOST_SOURCE_CHANNEL_ID
+        );
+        let attachment = signed_attachment_response(&copy);
+        assert_attachment_signed_for_channel(&attachment, CROSSPOST_SOURCE_CHANNEL_ID);
+        assert!(
+            !attachment["url"]
+                .as_str()
+                .unwrap()
+                .contains(&format!("/attachments/{}/", copy.channel_id)),
+            "{attachment}"
+        );
+    }
+
+    #[test]
+    fn a_message_without_the_copy_flag_keeps_its_own_channel_for_attachments() {
+        for message in [
+            referencing_message(19, 0, source_reference()),
+            referencing_message(0, 0, source_reference()),
+            webhook_message(1_509_197_195_776_110_600),
+        ] {
+            let mut message = message;
+            message.attachments = Some(vec![signed_attachment()]);
+            assert_eq!(attachment_storage_channel_id(&message), message.channel_id);
+            let attachment = signed_attachment_response(&message);
+            assert_attachment_signed_for_channel(&attachment, message.channel_id);
+        }
+    }
+
+    #[test]
+    fn a_copy_without_a_reference_channel_falls_back_to_its_own_channel() {
+        let mut copy = referencing_message(0, MESSAGE_FLAG_IS_CROSSPOST, source_reference());
+        copy.message_reference = None;
+        copy.attachments = Some(vec![signed_attachment()]);
+
+        assert_eq!(attachment_storage_channel_id(&copy), copy.channel_id);
+        let attachment = signed_attachment_response(&copy);
+        assert_attachment_signed_for_channel(&attachment, copy.channel_id);
+    }
+
+    #[tokio::test]
+    async fn crosspost_copy_omits_referenced_message_and_requests_no_fetch() {
+        let copy = referencing_message(0, MESSAGE_FLAG_IS_CROSSPOST, source_reference());
+
+        assert_eq!(reply_target(&copy), None);
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let fetched = shard
+            .fetch_referenced_messages(std::slice::from_ref(&copy), &build_options())
+            .await;
+        assert!(fetched.is_empty());
+
+        let response = serialized_response(&copy, &context_with_source());
+        let object = response.as_object().expect("response is an object");
+        assert!(!object.contains_key("referenced_message"));
+        assert_eq!(
+            response["message_reference"],
+            json!({
+                "channel_id": CROSSPOST_SOURCE_CHANNEL_ID.to_string(),
+                "message_id": CROSSPOST_SOURCE_MESSAGE_ID.to_string(),
+                "guild_id": CROSSPOST_SOURCE_GUILD_ID.to_string(),
+                "type": MESSAGE_REFERENCE_TYPE_DEFAULT
+            })
+        );
+        assert_eq!(response["flags"], json!(MESSAGE_FLAG_IS_CROSSPOST));
+    }
+
+    #[test]
+    fn crosspost_copy_with_other_flags_still_omits_referenced_message() {
+        let copy = referencing_message(
+            0,
+            MESSAGE_FLAG_IS_CROSSPOST | MESSAGE_FLAG_SUPPRESS_EMBEDS | (1 << 3),
+            source_reference(),
+        );
+
+        assert_eq!(reply_target(&copy), None);
+        let response = serialized_response(&copy, &context_with_source());
+        assert!(response.get("referenced_message").is_none());
+    }
+
+    #[test]
+    fn reply_with_the_same_reference_still_resolves() {
+        let reply = referencing_message(19, 0, source_reference());
+
+        assert_eq!(
+            reply_target(&reply),
+            Some((CROSSPOST_SOURCE_CHANNEL_ID, CROSSPOST_SOURCE_MESSAGE_ID))
+        );
+        let response = serialized_response(&reply, &context_with_source());
+        assert_eq!(
+            response["referenced_message"]["id"],
+            json!(CROSSPOST_SOURCE_MESSAGE_ID.to_string())
+        );
+        assert_eq!(
+            response["referenced_message"]["content"],
+            json!("published")
+        );
+    }
+
+    #[test]
+    fn reply_whose_target_is_missing_serialises_referenced_message_null() {
+        let reply = referencing_message(19, 0, source_reference());
+
+        let response = serialized_response(&reply, &ResponseContext::default());
+        assert_eq!(
+            response.get("referenced_message"),
+            Some(&serde_json::Value::Null)
+        );
+    }
+
+    #[tokio::test]
+    async fn follow_add_reference_without_message_id_keeps_channel_and_guild() {
+        let follow_add = referencing_message(
+            12,
+            0,
+            json!({
+                "channel_id": CROSSPOST_SOURCE_CHANNEL_ID.to_string(),
+                "guild_id": CROSSPOST_SOURCE_GUILD_ID.to_string(),
+                "type": MESSAGE_REFERENCE_TYPE_DEFAULT
+            }),
+        );
+
+        assert_eq!(reply_target(&follow_add), None);
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let fetched = shard
+            .fetch_referenced_messages(std::slice::from_ref(&follow_add), &build_options())
+            .await;
+        assert!(fetched.is_empty());
+
+        let response = serialized_response(&follow_add, &context_with_source());
+        assert_eq!(response["type"], json!(12));
+        assert!(response.get("referenced_message").is_none());
+        assert_eq!(
+            response["message_reference"],
+            json!({
+                "channel_id": CROSSPOST_SOURCE_CHANNEL_ID.to_string(),
+                "guild_id": CROSSPOST_SOURCE_GUILD_ID.to_string(),
+                "type": MESSAGE_REFERENCE_TYPE_DEFAULT
+            })
+        );
+    }
+
+    #[test]
+    fn map_message_reference_emits_every_field_for_a_copy() {
+        let mapped = map_message_reference(&MessageReference {
+            channel_id: Some(CROSSPOST_SOURCE_CHANNEL_ID),
+            message_id: Some(CROSSPOST_SOURCE_MESSAGE_ID),
+            guild_id: Some(CROSSPOST_SOURCE_GUILD_ID),
+            reference_type: Some(MESSAGE_REFERENCE_TYPE_DEFAULT),
+        })
+        .expect("copy reference maps");
+
+        assert_eq!(mapped.channel_id, CROSSPOST_SOURCE_CHANNEL_ID.to_string());
+        assert_eq!(
+            mapped.message_id,
+            Some(CROSSPOST_SOURCE_MESSAGE_ID.to_string())
+        );
+        assert_eq!(mapped.guild_id, Some(CROSSPOST_SOURCE_GUILD_ID.to_string()));
+        assert_eq!(mapped.reference_type, MESSAGE_REFERENCE_TYPE_DEFAULT);
+    }
+
+    #[test]
+    fn map_message_reference_still_requires_a_channel_id() {
+        let mapped = map_message_reference(&MessageReference {
+            channel_id: None,
+            message_id: Some(CROSSPOST_SOURCE_MESSAGE_ID),
+            guild_id: Some(CROSSPOST_SOURCE_GUILD_ID),
+            reference_type: None,
+        });
+
+        assert!(mapped.is_none());
     }
 }

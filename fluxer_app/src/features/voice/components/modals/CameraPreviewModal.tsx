@@ -2,6 +2,7 @@
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {isPendingMigratedDeviceId} from '@app/features/app/domain_migration/DomainMigrationDeviceRemap';
 import {CAMERA_DESCRIPTOR, SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -442,7 +443,7 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 		const currentDeviceId = voiceSettings.videoDeviceId;
 		const currentDeviceExists =
 			currentDeviceId === 'default' || videoInputs.some((device) => device.deviceId === currentDeviceId);
-		if (videoInputs.length > 0 && !currentDeviceExists) {
+		if (videoInputs.length > 0 && !currentDeviceExists && !isPendingMigratedDeviceId(currentDeviceId)) {
 			VoiceSettingsCommands.update({videoDeviceId: 'default'});
 		}
 	}, []);

@@ -46,7 +46,7 @@ pub fn web_push_message(job: &MessageJob, target_user_id: &str, badge_count: u32
     } else {
         Value::String(job.guild_id.clone())
     };
-    let mut data = json!({
+    let data = json!({
         "channel_id": job.channel_id,
         "author_avatar_url": fields.icon,
         "message_id": job.message_id,
@@ -57,8 +57,7 @@ pub fn web_push_message(job: &MessageJob, target_user_id: &str, badge_count: u32
         "target_user_id": target_user_id,
         "has_media": image_url.is_some(),
     });
-    merge_image_fields(&mut data, image_url);
-    let mut notification = json!({
+    let notification = json!({
         "title": fields.title,
         "body": fields.body,
         "icon": fields.icon,
@@ -68,7 +67,6 @@ pub fn web_push_message(job: &MessageJob, target_user_id: &str, badge_count: u32
         "app_badge": badge_count.to_string(),
         "data": data,
     });
-    merge_image_fields(&mut notification, image_url);
     let mut envelope = json!({
         "web_push": WEB_PUSH_MARKER,
         "notification": notification,
@@ -582,7 +580,6 @@ fn merge_image_fields(target: &mut Value, image_url: Option<&str>) {
         return;
     };
     object.insert("image_url".to_owned(), image_url.into());
-    object.insert("image".to_owned(), image_url.into());
 }
 
 fn non_empty(value: &Value) -> Option<&str> {
@@ -605,7 +602,6 @@ mod tests {
     fn message_job(image_url: Option<&str>) -> MessageJob {
         MessageJob {
             v: 1,
-            config_version: 7,
             guild_id: "0".to_owned(),
             channel_id: CHANNEL_ID.to_owned(),
             message_id: MESSAGE_ID.to_owned(),
@@ -626,10 +622,10 @@ mod tests {
     fn clear_job() -> ClearJob {
         ClearJob {
             v: 1,
-            config_version: 7,
             user_id: USER_ID.to_owned(),
             channel_id: CHANNEL_ID.to_owned(),
             message_id: MESSAGE_ID.to_owned(),
+            after_message_id: None,
         }
     }
 

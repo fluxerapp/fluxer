@@ -14,7 +14,6 @@ export interface LoginSuccessPayload {
 
 export interface MfaChallenge {
 	ticket: string;
-	sms?: boolean;
 	totp: boolean;
 	webauthn: boolean;
 	backupCodes: boolean;
@@ -32,7 +31,7 @@ export type LoginResult =
 	| {type: 'ip_authorization'; challenge: IpAuthorizationChallenge}
 	| {type: 'suspended'; banViewToken: string};
 
-function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenResponse): LoginSuccessPayload {
+export function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenResponse): LoginSuccessPayload {
 	const userData = AuthenticationCommands.authResponseUserToUserData(response.user);
 	return {
 		token: response.token,
@@ -76,7 +75,6 @@ export async function loginWithPassword({
 			type: 'mfa',
 			challenge: {
 				ticket: response.ticket,
-				sms: (response as {sms?: boolean}).sms ?? false,
 				totp: response.totp,
 				webauthn: response.webauthn,
 				backupCodes: response.backup_codes ?? false,
@@ -266,7 +264,6 @@ export async function resetPassword(token: string, password: string): Promise<Pa
 		type: 'mfa',
 		challenge: {
 			ticket: response.ticket,
-			sms: (response as {sms?: boolean}).sms ?? false,
 			totp: response.totp,
 			webauthn: response.webauthn,
 			backupCodes: response.backup_codes ?? false,

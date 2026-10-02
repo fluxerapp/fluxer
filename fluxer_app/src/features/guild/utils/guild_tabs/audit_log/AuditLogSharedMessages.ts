@@ -66,10 +66,6 @@ export const VERIFICATION_LEVEL_HIGH_LABEL = msg({
 	message: 'High',
 	comment: 'Activity log value naming the high member verification level of a community.',
 });
-export const VERIFICATION_LEVEL_VERY_HIGH_LABEL = msg({
-	message: 'Very high',
-	comment: 'Activity log value naming the highest member verification level of a community.',
-});
 export const EXPLICIT_CONTENT_FILTER_OFF_LABEL = msg({
 	message: 'Off',
 	comment: 'Activity log value meaning the explicit content filter of a community is turned off.',

@@ -5,7 +5,6 @@ import {LongPressable} from '@app/features/app/components/LongPressable';
 import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {CustomStatusDisplay} from '@app/features/app/components/shared/custom_status_display/CustomStatusDisplay';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
-import {useChannelHoverPreload} from '@app/features/app/hooks/useChannelHoverPreload';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
 import styles from '@app/features/channel/components/direct_message/DirectMessageList.module.css';
@@ -199,15 +198,9 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		leaveGroup,
 		i18n,
 	});
-	const {scheduleChannelPreload, cancelChannelPreload, preloadChannelNow} = useChannelHoverPreload({
-		channel,
-		guild: null,
-		preloadMemberList: false,
-	});
 	const handleNavigate = useCallback(() => {
-		preloadChannelNow();
 		handlers.navigateTo();
-	}, [handlers.navigateTo, preloadChannelNow]);
+	}, [handlers.navigateTo]);
 	const mobileMenuGroups = buildMobileMenuGroups({
 		channel,
 		recipient,
@@ -507,8 +500,6 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 					)}
 					onClick={handleNavigate}
 					onContextMenu={handleContextMenu}
-					onMouseEnter={scheduleChannelPreload}
-					onMouseLeave={cancelChannelPreload}
 					onFocus={() => setIsFocused(true)}
 					onBlur={() => setIsFocused(false)}
 					data-dm-list-focus-item="true"

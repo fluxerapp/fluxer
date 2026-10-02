@@ -3,7 +3,7 @@
 import type {I18nResult, TemplateCompiler} from '@fluxer/i18n/src/runtime/I18nTypes';
 import {renderTemplate} from '@fluxer/i18n/src/runtime/RenderTemplate';
 import {getEffectiveStaticLocale, hasStaticLocale} from '@fluxer/i18n/src/runtime/StaticLocale';
-import type MessageFormat from '@messageformat/core';
+import type {default as MessageFormat, MessageFormatOptions} from '@messageformat/core';
 
 export type StaticLocaleMessages<TKey extends string, TValue> = Partial<Record<TKey, TValue>>;
 
@@ -14,6 +14,7 @@ export interface StaticI18nConfig<TKey extends string, TValue, TVariables> {
 	normalizeLocale?: (locale: string) => string;
 	onWarning?: (message: string) => void;
 	validateVariables?: (key: TKey, template: TValue, variables: TVariables) => string | null;
+	messageFormatOptions?: MessageFormatOptions<'string'>;
 }
 
 interface StaticI18nModule<TKey extends string, TValue, TVariables> {
@@ -70,6 +71,7 @@ export function createStaticI18n<TKey extends string, TValue, TVariables>(
 				variables,
 				compile,
 				messageFormatCache,
+				messageFormatOptions: config.messageFormatOptions,
 			});
 		},
 		hasLocale(locale: string): boolean {

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    admin_flags, api::client::AdminApiClient, middleware::flash::FlashData,
+    admin_flags,
+    api::client::{AdminApiClient, ApiError},
+    middleware::flash::FlashData,
     utils::forms::MultiValueForm,
 };
 use std::collections::HashSet;
@@ -132,19 +134,6 @@ pub async fn dispatch(
                 "Failed to update premium flags",
             )
         }
-        "update_suspicious_flags" => {
-            let Ok(submitted) =
-                form.parse_list_values::<i32>(&["suspicious_flags[]", "suspicious_flags"])
-            else {
-                return DispatchOutcome::error("Invalid suspicious activity flag value");
-            };
-            let flags = submitted.into_iter().fold(0, |acc, flag| acc | flag);
-            DispatchOutcome::from_result(
-                client.update_suspicious_flags(user_id, flags).await,
-                "Suspicious activity flags updated successfully",
-                "Failed to update suspicious activity flags",
-            )
-        }
         "update_acls" => {
             let acls = form.list_values_any(&["acls[]", "acls"]);
             DispatchOutcome::from_result(
@@ -176,14 +165,6 @@ pub async fn dispatch(
             "Email verified successfully",
             "Failed to verify email",
         ),
-        "update_has_verified_phone" => {
-            let val = form.bool_value("has_verified_phone");
-            DispatchOutcome::from_result(
-                client.update_has_verified_phone(user_id, val).await,
-                "Phone verification status updated successfully",
-                "Failed to update phone verification status",
-            )
-        }
         "terminate_sessions" => DispatchOutcome::from_result(
             client.terminate_user_sessions(user_id).await,
             "User sessions terminated successfully",
@@ -242,12 +223,14 @@ pub async fn dispatch(
             };
             let reason = get("reason");
             let private = get("private_reason");
+            let notify_user = form.opt_out_value("notify_user");
             DispatchOutcome::from_result(
                 client
                     .temp_ban_user(
                         user_id,
                         duration.unwrap_or(24),
                         reason.as_deref(),
+                        notify_user,
                         private.as_deref(),
                     )
                     .await,
@@ -255,11 +238,23 @@ pub async fn dispatch(
                 "Failed to temporarily ban user",
             )
         }
-        "unban" => DispatchOutcome::from_result(
-            client.unban_user(user_id).await,
-            "User unbanned successfully",
-            "Failed to unban user",
-        ),
+        "unban" => {
+            let public_reason = get("public_reason");
+            let private_reason = get("private_reason");
+            let notify_user = form.opt_out_value("notify_user");
+            DispatchOutcome::from_result(
+                client
+                    .unban_user(
+                        user_id,
+                        public_reason.as_deref(),
+                        notify_user,
+                        private_reason.as_deref(),
+                    )
+                    .await,
+                "User unbanned successfully",
+                "Failed to unban user",
+            )
+        }
         "ban_ip" => {
             let Some(ip) = get("ip") else {
                 return DispatchOutcome::error("IP address is required");
@@ -289,6 +284,7 @@ pub async fn dispatch(
             let Ok(days) = form.parse_value_any::<u32>(&["days_until_deletion", "days"]) else {
                 return DispatchOutcome::error("Invalid deletion delay");
             };
+            let notify_user = form.opt_out_value("notify_user");
             DispatchOutcome::from_result(
                 client
                     .schedule_deletion(
@@ -296,6 +292,7 @@ pub async fn dispatch(
                         reason_code.unwrap_or(0),
                         public_reason.as_deref(),
                         days.unwrap_or(60),
+                        notify_user,
                         private_reason.as_deref(),
                     )
                     .await,
@@ -303,11 +300,53 @@ pub async fn dispatch(
                 "Failed to schedule user deletion",
             )
         }
-        "cancel_deletion" => DispatchOutcome::from_result(
-            client.cancel_deletion(user_id).await,
-            "User deletion cancelled successfully",
-            "Failed to cancel user deletion",
-        ),
+        "cancel_deletion" => {
+            let Some(expected) = get("expected_pending_deletion_at") else {
+                return DispatchOutcome::error(
+                    "The pending deletion is missing from the form. Reload and review.",
+                );
+            };
+            if !form.bool_value("confirm") {
+                return DispatchOutcome::error(
+                    "Confirm whose deletion you are cancelling before submitting",
+                );
+            }
+            let Some(private_reason) = get("private_reason") else {
+                return DispatchOutcome::error("A private reason is required to cancel a deletion");
+            };
+            let notify_user = form.bool_value("notify_user");
+            match client
+                .cancel_deletion(user_id, &expected, notify_user, Some(&private_reason))
+                .await
+            {
+                Ok(_) => DispatchOutcome::success("User deletion cancelled successfully"),
+                Err(ApiError::Http { status: 409, .. }) => DispatchOutcome::error(
+                    "The pending deletion changed since this page loaded. Reload and review.",
+                ),
+                Err(error) => {
+                    tracing::warn!(%error, user_id, "admin API request failed: cancel user deletion");
+                    DispatchOutcome::error("Failed to cancel user deletion")
+                }
+            }
+        }
+        "annotate_ban" => {
+            let Some(ban_audit_log_id) = get("ban_audit_log_id") else {
+                return DispatchOutcome::error("The ban audit log entry is missing from the form");
+            };
+            let Some(note) = get("note") else {
+                return DispatchOutcome::error("Note is required");
+            };
+            match client.annotate_ban(user_id, &ban_audit_log_id, &note).await {
+                Ok(()) => DispatchOutcome::success("Note added to the ban"),
+                Err(ApiError::Http { status: 409, .. }) => DispatchOutcome::error(
+                    "The ban changed since this page loaded. Reload and review.",
+                ),
+                Err(error) => {
+                    tracing::warn!(%error, user_id, "admin API request failed: annotate ban");
+                    DispatchOutcome::error("Failed to add the note to the ban")
+                }
+            }
+        }
         "change_dob" => {
             let Some(dob) = get("date_of_birth") else {
                 return DispatchOutcome::error("Date of birth is required");

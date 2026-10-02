@@ -33,7 +33,7 @@ describe('the shipped object store checks the credentials the stack sends', () =
 	});
 
 	test('media-proxy signs its reads, which the store now refuses to serve unsigned', () => {
-		expect(serviceEnvironment('media-proxy').FLUXER_S3_READ_SIGNED).toBe('true');
+		expect(serviceEnvironment('media-proxy').FLUXER_S3_READ_SIGNED).toBe(`\${FLUXER_S3_READ_SIGNED:-true}`);
 	});
 
 	test('every service that reaches the store waits for the identity to exist', () => {

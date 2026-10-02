@@ -27,7 +27,6 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {User} from '@app/api/models/User';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {createDirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
 import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -87,6 +86,7 @@ export class ChannelService {
 			gatewayService,
 			storageService,
 			purgeQueue,
+			workerService,
 		});
 		const messagePersistenceService = new MessagePersistenceService(
 			channelRepository,
@@ -101,7 +101,6 @@ export class ChannelService {
 			readStateService,
 			limitConfigService,
 		);
-		const directMessageSpamMitigationService = createDirectMessageSpamMitigationService(apiContext, userRepository);
 		this.channelData = new ChannelDataService(
 			channelRepository,
 			userRepository,
@@ -121,6 +120,7 @@ export class ChannelService {
 			webhookRepository,
 			limitConfigService,
 			rateLimitService,
+			cacheService,
 		);
 		this.messages = new MessageService(
 			channelRepository,
@@ -141,7 +141,6 @@ export class ChannelService {
 			messagePersistenceService,
 			attachmentUploadTraceRepository,
 			limitConfigService,
-			directMessageSpamMitigationService,
 		);
 		this.interactions = new MessageInteractionService(
 			channelRepository,

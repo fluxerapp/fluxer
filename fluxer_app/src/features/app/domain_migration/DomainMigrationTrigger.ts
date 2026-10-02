@@ -1,84 +1,158 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Routes} from '@app/app/Routes';
 import {
-	browserSupportsRelatedOrigins,
-	readDomainMigrationDiscovery,
-	readDomainMigrationEnvironment,
+	desktopPasskeysSupported,
+	readDomainMigrationGateInput,
+	startDomainMigrationFromSource,
 } from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import {
+	DOMAIN_MIGRATION_IMPORT_KEY,
 	DOMAIN_MIGRATION_NOTIFICATIONS_KEY,
-	type DomainMigrationGateInput,
 	type DomainMigrationSide,
-	markDomainMigrationFailed,
-	readDomainMigrationMarker,
+	domainMigrationProbeIsDue,
+	environmentAllowsDomainMigration,
+	markDomainMigrationProbed,
+	markerAllowsDomainMigration,
+	readDomainMigrationImport,
 	resolveDomainMigrationSide,
 	shouldStartDomainMigration,
-	writeDomainMigrationIntent,
 } from '@app/features/app/domain_migration/DomainMigrationCore';
 import DomainMigrationRollout from '@app/features/app/domain_migration/DomainMigrationRollout';
-import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
-import {getProtectedLocalStorage, getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import AccountManager from '@app/features/auth/state/AccountManager';
+import {EXPERIMENT_ASSIGNMENTS_PATH} from '@app/features/experiment/state/ExperimentAssignments';
+import SessionManager from '@app/features/platform/state/AuthSession';
+import {getProtectedLocalStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {when} from 'mobx';
+import {
+	ExperimentAssignmentsResponse,
+	readDomainMigrationAssignment,
+} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {compareShallow, reaction} from 'mobx';
 
 const logger = new Logger('DomainMigrationTrigger');
 
-const ONE_SHOT_ROUTE_PREFIXES: ReadonlyArray<string> = [
-	Routes.RESET_PASSWORD,
-	Routes.VERIFY_EMAIL,
-	Routes.AUTHORIZE_IP,
-	Routes.EMAIL_REVERT,
-	Routes.OAUTH_AUTHORIZE,
-	Routes.SSO_CALLBACK,
-	Routes.PREMIUM_CALLBACK,
-	Routes.AGE_VERIFICATION_CALLBACK,
-	Routes.CONNECTION_CALLBACK,
-];
-
 let started = false;
 let navigating = false;
+let probing = false;
+
+interface SourceGateState {
+	assignmentReady: boolean;
+	assignmentEnabled: boolean;
+	deviceEnrolled: boolean;
+	userId: string | null;
+	sessionSettled: boolean;
+	voiceActive: boolean;
+}
 
 function isVoiceActive(): boolean {
 	return MediaEngine.connected || MediaEngine.connecting;
 }
 
-function isOneShotRoute(pathname: string): boolean {
-	return ONE_SHOT_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+function isSessionSettled(): boolean {
+	return SessionManager.isAuthenticated && SessionManager.userId !== null && !AccountManager.transitioning;
 }
 
-function readGateInput(assignmentEnabled: boolean, relatedOriginsSupported: boolean): DomainMigrationGateInput {
-	return {
-		environment: readDomainMigrationEnvironment(),
-		assignmentEnabled,
-		discovery: readDomainMigrationDiscovery(),
-		marker: readDomainMigrationMarker(getProtectedLocalStorage()),
-		now: Date.now(),
-		relatedOriginsSupported,
-		voiceActive: isVoiceActive(),
-		oneShotRoute: isOneShotRoute(window.location.pathname),
-	};
+function sourceMayStart(): boolean {
+	return (
+		!navigating &&
+		isSessionSettled() &&
+		shouldStartDomainMigration(readDomainMigrationGateInput(DomainMigrationRollout.enabled, isVoiceActive()))
+	);
 }
 
-async function evaluateSource(side: DomainMigrationSide, assignmentEnabled: boolean): Promise<void> {
-	if (navigating || !shouldStartDomainMigration(readGateInput(assignmentEnabled, true))) {
+async function evaluateSource(side: DomainMigrationSide): Promise<void> {
+	if (!sourceMayStart()) {
 		return;
 	}
-	const relatedOriginsSupported = await browserSupportsRelatedOrigins();
-	if (
-		navigating ||
-		!shouldStartDomainMigration(readGateInput(DomainMigrationRollout.enabled, relatedOriginsSupported))
-	) {
+	const passkeysSupported = await desktopPasskeysSupported();
+	if (!passkeysSupported || !sourceMayStart()) {
 		return;
 	}
 	navigating = true;
-	markDomainMigrationFailed(getProtectedLocalStorage(), Date.now());
-	writeDomainMigrationIntent(getProtectedSessionStorage(), {at: Date.now()});
-	const next = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-	window.location.replace(`${side.target}/migrate/begin?next=${encodeURIComponent(next)}`);
+	startDomainMigrationFromSource(side);
+}
+
+async function accountIsEnrolled(token: string): Promise<boolean> {
+	try {
+		const response = await fetch(
+			`${RuntimeConfig.apiEndpoint}/v${RuntimeConfig.apiCodeVersion}${EXPERIMENT_ASSIGNMENTS_PATH}`,
+			{credentials: 'omit', headers: {Authorization: token}},
+		);
+		if (!response.ok) {
+			return false;
+		}
+		const parsed = ExperimentAssignmentsResponse.safeParse(await response.json());
+		return parsed.success && readDomainMigrationAssignment(parsed.data).enabled;
+	} catch {
+		return false;
+	}
+}
+
+async function probeStoredAccounts(): Promise<void> {
+	const storage = getProtectedLocalStorage();
+	const gate = readDomainMigrationGateInput(false, false);
+	if (
+		probing ||
+		DomainMigrationRollout.deviceEnrolled ||
+		gate.discovery?.enabled !== true ||
+		!environmentAllowsDomainMigration(gate.environment) ||
+		!markerAllowsDomainMigration(gate.marker, gate.now) ||
+		!domainMigrationProbeIsDue(storage, gate.now)
+	) {
+		return;
+	}
+	const activeUserId = SessionManager.userId;
+	const tokens = SessionManager.accounts
+		.filter((account) => account.userId !== activeUserId && account.isValid !== false && Boolean(account.token))
+		.map((account) => account.token);
+	if (tokens.length === 0) {
+		return;
+	}
+	probing = true;
+	markDomainMigrationProbed(storage, gate.now);
+	try {
+		for (const token of tokens) {
+			if (await accountIsEnrolled(token)) {
+				DomainMigrationRollout.markDeviceEnrolled();
+				return;
+			}
+		}
+	} finally {
+		probing = false;
+	}
+}
+
+function readSourceGateState(): SourceGateState {
+	return {
+		assignmentReady: DomainMigrationRollout.assignmentReady,
+		assignmentEnabled: DomainMigrationRollout.assignmentEnabled,
+		deviceEnrolled: DomainMigrationRollout.deviceEnrolled,
+		userId: SessionManager.userId,
+		sessionSettled: isSessionSettled(),
+		voiceActive: isVoiceActive(),
+	};
+}
+
+function handleSourceGateState(side: DomainMigrationSide, state: SourceGateState): void {
+	if (state.assignmentEnabled && !state.deviceEnrolled) {
+		DomainMigrationRollout.markDeviceEnrolled();
+		return;
+	}
+	if (navigating || !state.sessionSettled || (!state.assignmentReady && !state.deviceEnrolled)) {
+		return;
+	}
+	if (!state.deviceEnrolled) {
+		probeStoredAccounts().catch((err) => {
+			logger.warn('Domain migration enrollment probe failed:', err);
+		});
+		return;
+	}
+	evaluateSource(side).catch((err) => {
+		logger.warn('Domain migration trigger failed:', err);
+	});
 }
 
 function offerNotificationReenable(): void {
@@ -96,6 +170,27 @@ function offerNotificationReenable(): void {
 	}
 }
 
+function reloadAfterSiblingImport(event: StorageEvent): void {
+	if (
+		event.key === DOMAIN_MIGRATION_IMPORT_KEY &&
+		readDomainMigrationImport(getProtectedLocalStorage())?.state === 'done'
+	) {
+		window.location.reload();
+	}
+}
+
+export function probeSignedOutDeviceEnrollment(): void {
+	if (typeof window === 'undefined' || SessionManager.isAuthenticated) {
+		return;
+	}
+	if (resolveDomainMigrationSide(window.location.origin)?.role !== 'source') {
+		return;
+	}
+	probeStoredAccounts().catch((err) => {
+		logger.warn('Domain migration enrollment probe failed:', err);
+	});
+}
+
 export function startDomainMigrationTrigger(): void {
 	if (started || typeof window === 'undefined') {
 		return;
@@ -107,14 +202,11 @@ export function startDomainMigrationTrigger(): void {
 	started = true;
 	if (side.role === 'target') {
 		setTimeout(offerNotificationReenable, 0);
+		window.addEventListener('storage', reloadAfterSiblingImport);
 		return;
 	}
-	when(
-		() => ExperimentAssignments.response !== INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE,
-		() => {
-			evaluateSource(side, DomainMigrationRollout.enabled).catch((err) => {
-				logger.warn('Domain migration trigger failed:', err);
-			});
-		},
-	);
+	reaction(readSourceGateState, (state) => handleSourceGateState(side, state), {
+		fireImmediately: true,
+		equals: compareShallow,
+	});
 }

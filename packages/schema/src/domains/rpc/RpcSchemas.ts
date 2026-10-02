@@ -2,7 +2,7 @@
 
 import {RTC_REGION_ID_MAX_LENGTH, RTC_REGION_ID_MIN_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {GatewayRolloutConfigResponse} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
-import {PushServiceDeliveryConfigResponse} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
+import {LegacyPushServiceDeliveryWire} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {WebAuthnCredentialResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ChannelResponse, RtcRegionResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {VoiceStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
@@ -204,6 +204,11 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		type: z.literal('get_dm_channel').describe('Request type for fetching a DM channel'),
 		channel_id: SnowflakeType.describe('ID of the DM channel'),
 		user_id: SnowflakeType.describe('ID of the user requesting the channel'),
+	}),
+	z.object({
+		type: z.literal('get_read_state').describe('Request type for fetching the read state of one channel'),
+		user_id: SnowflakeType.describe('ID of the user who owns the read state'),
+		channel_id: SnowflakeType.describe('ID of the channel'),
 	}),
 	z.object({
 		type: z.literal('validate_custom_status').describe('Request type for validating a custom status'),
@@ -516,6 +521,14 @@ export const RpcResponse = z.discriminatedUnion('type', [
 			.describe('DM channel result'),
 	}),
 	z.object({
+		type: z.literal('get_read_state').describe('Response type for a channel read state'),
+		data: z
+			.object({
+				last_message_id: SnowflakeStringType.nullable().describe('ID of the last read message, or null if none'),
+			})
+			.describe('Channel read state result'),
+	}),
+	z.object({
 		type: z.literal('get_gateway_rollout_config').describe('Response type for gateway rollout configuration'),
 		data: z
 			.object({
@@ -529,7 +542,7 @@ export const RpcResponse = z.discriminatedUnion('type', [
 			.describe('Response type for push service delivery configuration'),
 		data: z
 			.object({
-				config: PushServiceDeliveryConfigResponse.describe('Push service delivery configuration'),
+				config: LegacyPushServiceDeliveryWire.describe('Push service delivery configuration'),
 			})
 			.describe('Push service delivery config result'),
 	}),

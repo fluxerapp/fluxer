@@ -1,6 +1,12 @@
+import {readEnvValue} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
+
+export function readOptionalEnv(name: string): string | undefined {
+	return readEnvValue(process.env, name);
+}
+
 export function readOptionalIntegerEnv(name: string): number | undefined {
-	const raw = process.env[name]?.trim();
-	if (raw === undefined || raw === '') return undefined;
+	const raw = readOptionalEnv(name)?.trim();
+	if (raw === undefined) return undefined;
 	const value = Number(raw);
 	if (!/^-?\d+$/.test(raw) || !Number.isSafeInteger(value)) {
 		throw new Error(`${name} must be a safe integer`);

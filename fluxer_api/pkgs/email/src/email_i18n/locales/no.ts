@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "{product_name}-kontoen din er midlertidig deaktivert",
-		"body": "Hei {username},\n\nVi deaktiverte {product_name}-kontoen din midlertidig fordi vi oppdaget mistenkelig aktivitet.\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}}\n}\n\nFor å få tilgang til kontoen din igjen må du tilbakestille passordet ditt:\n\n{forgotUrl}\n\nEtter at du har tilbakestilt passordet ditt, kan du logge inn igjen.\n\nHvis du mener dette er en feil, kan du kontakte kundestøtten vår.\n\n– Sikkerhetsteamet hos {product_name}"
+	"account_deletion_cancelled": {
+		"subject": "Slettingen av {product_name}-kontoen din er avbrutt",
+		"body": "Hei {username},\n\nDen planlagte slettingen av {product_name}-kontoen din er avbrutt. Kontoen din blir ikke slettet.\n\nHvis du har spørsmål, kan du kontakte {safety_email}.\n\n– {product_name}-teamet"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "{product_name}-kontoen din vil bli slettet på grunn av inaktivitet",
+		"body": "Hei {username},\n\n{product_name}-kontoen din har vært inaktiv lenge, så den er planlagt for permanent sletting:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsak: {reason}}}\n\nHvis du vil beholde kontoen din, kan du kontakte {safety_email} fra denne e-postadressen før denne datoen.\n\n– {product_name}-teamet"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Slettingen av {product_name}-kontoen din er planlagt",
+		"body": "Hei {username},\n\nSom du ba om, er {product_name}-kontoen din planlagt for permanent sletting:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsak: {reason}}}\n\nKontoen din er låst frem til da. Hvis du ikke ba om dette, eller hvis du vil beholde kontoen din, kan du kontakte {safety_email} fra denne e-postadressen før denne datoen.\n\n– {product_name}-teamet"
 	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name}-kontoen din blir permanent slettet",
@@ -37,7 +45,7 @@ const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "E-postadressen på {product_name}-kontoen din er endret",
-		"body": "Hei {username},\n\nE-postadressen på {product_name}-kontoen din ble endret til {newEmail}.\n\nHvis du gjorde denne endringen, trenger du ikke å gjøre noe. Hvis det ikke var deg, kan du angre endringen og sikre kontoen din via denne lenken:\n\n{revertUrl}\n\nDette gjenoppretter den forrige e-postadressen din, logger deg ut overalt, fjerner tilknyttede telefonnumre, deaktiverer flerfaktorautentisering (MFA) og krever at du angir et nytt passord.\n\n– Sikkerhetsteamet hos {product_name}"
+		"body": "Hei {username},\n\nE-postadressen på {product_name}-kontoen din ble endret til {newEmail}.\n\nHvis du gjorde denne endringen, trenger du ikke å gjøre noe. Hvis det ikke var deg, kan du angre endringen og sikre kontoen din via denne lenken:\n\n{revertUrl}\n\nDette gjenoppretter den forrige e-postadressen din, logger deg ut overalt, deaktiverer flerfaktorautentisering (MFA) og krever at du angir et nytt passord.\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"email_verification": {
 		"subject": "Bekreft e-postadressen din for {product_name}",
@@ -65,7 +73,7 @@ const EMAIL_I18N_NO_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Bekreft passordendringen for {product_name}",
-		"body": "Hei {username},\n\nVi mottok en forespørsel om å endre passordet på {product_name}-kontoen din.\n\nSkriv inn denne koden i appen for å bekrefte endringen:\n\n{code}\n\nDenne koden utløper {expiresAt}.\n\nHvis du ikke ba om dette, kan noen ha tilgang til kontoen din. Endre passordet ditt med en gang og aktiver tofaktorautentisering.\n\n– {product_name}-teamet"
+		"body": "Hei {username},\n\nVi mottok en forespørsel om å endre passordet på {product_name}-kontoen din.\n\nSkriv inn denne koden i appen for å bekrefte endringen:\n\n{code}\n\nDenne koden utløper {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nHvis du ikke ba om dette, kan noen ha tilgang til kontoen din. Endre passordet ditt med en gang og aktiver tofaktorautentisering.\n\n– {product_name}-teamet"
 	},
 	"password_reset": {
 		"subject": "Tilbakestill {product_name}-passordet ditt",

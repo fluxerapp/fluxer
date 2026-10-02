@@ -42,8 +42,6 @@ export function serviceEnvironment(name: string): Record<string, string> {
 	return value === undefined ? {} : environment(value, `services.${name}.environment`);
 }
 
-export const sharedEnvironment = environment(compose['x-fluxer-env'], 'x-fluxer-env');
-
 export function serviceList(name: string, key: string): Array<string> {
 	const value = composeService(name)[key];
 	assert.ok(Array.isArray(value), `services.${name}.${key} must be a list`);

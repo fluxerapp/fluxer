@@ -11,6 +11,9 @@ import {
 } from '@fluxer/constants/src/GuildConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {createInt32EnumType, createNamedLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {z} from 'zod';
+
+const RETIRED_GUILD_VERIFICATION_LEVEL = 4;
 
 export const GuildVerificationLevelSchema = createInt32EnumType(
 	[
@@ -18,10 +21,13 @@ export const GuildVerificationLevelSchema = createInt32EnumType(
 		[GuildVerificationLevel.LOW, 'LOW', 'Must have verified email'],
 		[GuildVerificationLevel.MEDIUM, 'MEDIUM', 'Registered for more than 5 minutes'],
 		[GuildVerificationLevel.HIGH, 'HIGH', 'Member of the server for more than 10 minutes'],
-		[GuildVerificationLevel.VERY_HIGH, 'VERY_HIGH', 'Must have a verified phone number'],
 	],
 	'Required verification level for members',
 	'GuildVerificationLevel',
+);
+export const GuildVerificationLevelInputSchema = z.preprocess(
+	(value) => (value === RETIRED_GUILD_VERIFICATION_LEVEL ? GuildVerificationLevel.HIGH : value),
+	GuildVerificationLevelSchema,
 );
 export const GuildMFALevelSchema = createInt32EnumType(
 	[

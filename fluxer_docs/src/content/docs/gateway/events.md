@@ -210,6 +210,9 @@ The first entry always has `session_id: "all"` and the account's combined status
 | name | string | Credential name |
 | created_at | ISO8601 timestamp | When the credential was registered |
 | last_used_at | ?ISO8601 timestamp | When the credential was last used |
+| rp_id | string | The domain the passkey was created for, as in the [WebAuthn credential object](/http-api/users/mfa/#webauthn-credential-object) |
+
+[Replaced passkeys](/http-api/users/mfa/#replaced-passkeys) never appear in this list.
 
 #### RTC region object
 
@@ -475,7 +478,7 @@ A channel became visible to the session, whether newly created or newly permitte
 
 ### <span id="channel-update"></span>CHANNEL_UPDATE
 
-A visible channel changed. The payload is the complete [channel object](/http-api/channels/#channel-object).
+A visible channel changed. The payload is the complete [channel object](/http-api/channels/#channel-object). Converting a text channel into an announcement channel, or back, emits it with the new `type`.
 
 ### <span id="channel-update-bulk"></span>CHANNEL_UPDATE_BULK
 
@@ -515,6 +518,8 @@ A user left a group direct message the session belongs to.
 ### <span id="webhooks-update"></span>WEBHOOKS_UPDATE
 
 The webhook set of a guild channel changed. The event has no webhook data, so a client that needs the new set reads it over the HTTP API.
+
+A [follow](/http-api/channels/#follow-announcement-channel) and an unfollow each emit it for the target channel. Moving a webhook emits it for the previous channel and again for the new one. Removing the follows of a deleted or converted announcement channel emits it once for each target channel.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -741,6 +746,8 @@ A visible message was created. The payload is the complete [message object](/htt
 
 <sup>1</sup> The `user` field is removed from it, and the account is in the message's `author`
 
+Each copy of a [published message](/http-api/messages/#crosspost-message) arrives in its following channel as Message Create, with the `IS_CROSSPOST` flag, and so does the `CHANNEL_FOLLOW_ADD` system message of a new follow. A copy mentions nobody.
+
 Message Create alone overrides both the passive filter and the `ignored_events` list, and the two use different tests. A direct mention, a mention of one of the user's roles, an everyone mention, or a here mention overrides the passive filter. A direct, everyone, or here mention alone overrides the `ignored_events` list.
 
 ### <span id="message-update"></span>MESSAGE_UPDATE
@@ -748,6 +755,8 @@ Message Create alone overrides both the passive filter and the `ignored_events` 
 A visible message changed. The payload is the complete current [message object](/http-api/messages/#message-object), with no `channel_type`, `nicks`, or `mention_here`. In a guild channel it is extended with `guild_id` and with `member`, the author's guild member object with its `user` field removed.
 
 Recipients must hold `READ_MESSAGE_HISTORY` on the channel, or the message must be newer than the guild's message history cutoff.
+
+[Publishing](/http-api/messages/#crosspost-message) a message emits it in the announcement channel with the `CROSSPOSTED` flag set. An edit of a published message emits it for each copy once Fluxer has copied the change, and deleting the published message emits it for each copy with the `SOURCE_MESSAGE_DELETED` flag and the content removed.
 
 ### <span id="message-delete"></span>MESSAGE_DELETE
 
@@ -762,7 +771,7 @@ One visible message was deleted.
 | guild_id? | snowflake | Guild the channel belongs to |
 | member?<sup>2</sup> | [guild member](/http-api/guild-members/#guild-member-object) object | The author's guild member object, present in a guild channel |
 
-<sup>1</sup> Both fields are omitted when an instance administrator deleted the message through the Admin API, when Fluxer deleted it after a CSAM report, or when Fluxer deleted it because content moderation blocked a link preview in it, and `author_id` is also omitted for a message with no author
+<sup>1</sup> Both fields are omitted when an instance administrator deleted the message through the Admin API, when Fluxer deleted it after a CSAM report, when Fluxer deleted it because content moderation blocked a link preview in it, or when Fluxer removed a published message and its copies together, and `author_id` is also omitted for a message with no author
 
 <sup>2</sup> The `user` field is removed from it, and the whole field is absent when `author_id` is absent or the author is no longer a member
 

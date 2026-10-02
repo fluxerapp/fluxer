@@ -116,11 +116,6 @@ async fn execute_single_ban(
     let result = match ban_type {
         "ip-bans" => client.ban_ip(value, audit_log_reason).await,
         "email-bans" => client.ban_email(value, audit_log_reason).await,
-        "suspicious-email-domains" => {
-            client
-                .add_suspicious_email_domain(value, audit_log_reason)
-                .await
-        }
         "phrase-bans" => client.ban_phrase(value, audit_log_reason).await,
         "url-bans" => client.ban_url(value, audit_log_reason).await,
         "file-sha-bans" => client.ban_file_sha(value, audit_log_reason).await,
@@ -143,11 +138,6 @@ async fn execute_single_unban(
     let result = match ban_type {
         "ip-bans" => client.unban_ip(value, audit_log_reason).await,
         "email-bans" => client.unban_email(value, audit_log_reason).await,
-        "suspicious-email-domains" => {
-            client
-                .remove_suspicious_email_domain(value, audit_log_reason)
-                .await
-        }
         "phrase-bans" => client.unban_phrase(value, audit_log_reason).await,
         "url-bans" => client.unban_url(value, audit_log_reason).await,
         "file-sha-bans" => client.unban_file_sha(value, audit_log_reason).await,
@@ -169,7 +159,6 @@ async fn execute_check(
     let result = match ban_type {
         "ip-bans" => client.check_ip_ban(value).await,
         "email-bans" => client.check_email_ban(value).await,
-        "suspicious-email-domains" => client.check_suspicious_email_domain(value).await,
         "phrase-bans" => client.check_phrase_ban(value).await,
         "url-bans" => client.check_url_ban(value).await,
         "file-sha-bans" => client.check_file_sha_ban(value).await,

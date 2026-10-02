@@ -336,6 +336,9 @@ jobs:
           restore-keys: |
             rebar3-${{ runner.os }}-otp28-rebar3.27.0-
 
+      - name: Drop restored gateway build output
+        run: rm -rf fluxer_gateway/_build/default/lib/fluxer_gateway fluxer_gateway/_build/test/lib/fluxer_gateway
+
       - name: Check formatting
         run: |
           "$FLUXER_CI_BIN" ci --step gateway_fmt

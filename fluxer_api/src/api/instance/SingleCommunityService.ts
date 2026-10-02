@@ -32,10 +32,10 @@ export class SingleCommunityService {
 		}
 		try {
 			await this.guildMemberService.addUserToGuild({
-				skipRiskGate: true,
 				userId,
 				guildId,
 				skipGuildLimitCheck: true,
+				skipAccountLimitCheck: true,
 				joinSourceType: JoinSourceTypes.ADMIN_FORCE_ADD,
 				requestCache,
 			});

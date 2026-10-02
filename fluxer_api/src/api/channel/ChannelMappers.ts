@@ -196,6 +196,7 @@ export async function mapChannelToResponse(params: MapChannelToResponseParams): 
 	let response: ChannelResponse;
 	switch (channel.type) {
 		case ChannelTypes.GUILD_TEXT:
+		case ChannelTypes.GUILD_ANNOUNCEMENT:
 			response = serializeGuildTextChannel(channel, ctx);
 			break;
 		case ChannelTypes.GUILD_VOICE:

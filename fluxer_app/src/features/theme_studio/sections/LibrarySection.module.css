@@ -265,3 +265,35 @@
 	align-items: center;
 	padding-right: 0.625rem;
 }
+
+.listItemStatus {
+	display: inline-flex;
+	margin-right: 0.25rem;
+	vertical-align: -0.0625rem;
+	color: var(--studio-success);
+}
+
+.listItemStatusWarning {
+	color: var(--studio-warning);
+}
+
+.linkedBanner {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.875rem;
+	border-bottom: 0.0625rem solid var(--studio-border);
+	font-size: var(--studio-fs-xs);
+	color: var(--studio-fg-muted);
+}
+
+.linkedBannerWarning {
+	background: var(--studio-warning-soft);
+	color: var(--studio-fg-primary);
+}
+
+.linkedBannerText {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: anywhere;
+}

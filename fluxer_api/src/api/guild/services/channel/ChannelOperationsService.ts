@@ -120,21 +120,25 @@ export class ChannelOperationsService {
 		}
 		let channelName = params.data.name;
 		let guildFeatures: Array<string> | null = null;
-		if (params.data.type === ChannelTypes.GUILD_TEXT || params.data.type === ChannelTypes.GUILD_VOICE) {
+		if (
+			params.data.type === ChannelTypes.GUILD_TEXT ||
+			params.data.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+			params.data.type === ChannelTypes.GUILD_VOICE
+		) {
 			const guildData = await this.gatewayService.getGuildData({
 				guildId: params.guildId,
 				userId: params.userId,
 			});
 			guildFeatures = guildData.features;
 		}
-		if (params.data.type === ChannelTypes.GUILD_TEXT) {
+		if (params.data.type === ChannelTypes.GUILD_TEXT || params.data.type === ChannelTypes.GUILD_ANNOUNCEMENT) {
 			const hasFlexibleNamesEnabled = (guildFeatures ?? []).includes(GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES);
 			if (!hasFlexibleNamesEnabled) {
 				channelName = ChannelNameType.parse(channelName);
 			}
 		}
 		const requestedNsfwOverride =
-			params.data.nsfw_override !== undefined ? params.data.nsfw_override : (params.data.nsfw ?? null);
+			params.data.nsfw_override !== undefined ? params.data.nsfw_override : params.data.nsfw === true ? true : null;
 		const requestedContentWarningLevel =
 			params.data.content_warning_level === ContentWarningLevel.CONTENT_WARNING
 				? ContentWarningLevel.CONTENT_WARNING
@@ -230,7 +234,10 @@ export class ChannelOperationsService {
 		let hasChanges = false;
 		const updatedChannels: Array<Channel> = [];
 		for (const channel of channels) {
-			if (channel.type !== ChannelTypes.GUILD_TEXT || channel.name == null) {
+			if (
+				(channel.type !== ChannelTypes.GUILD_TEXT && channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT) ||
+				channel.name == null
+			) {
 				updatedChannels.push(channel);
 				continue;
 			}

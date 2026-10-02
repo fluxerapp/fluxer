@@ -1,0 +1,90 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.hero {
+	position: relative;
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 8.5rem;
+	overflow: hidden;
+	background-color: var(--brand-primary);
+}
+
+.patternImage {
+	position: absolute;
+	inset: 0;
+	background-size: 16.25rem 16.25rem;
+	background-repeat: repeat;
+	opacity: 0.06;
+	filter: invert(1);
+	background-color: transparent;
+	pointer-events: none;
+}
+
+.composition {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-4);
+}
+
+.sourceIconWrap {
+	position: relative;
+	display: inline-flex;
+}
+
+.guildIcon {
+	box-shadow: 0 0 0 0.25rem var(--background-secondary);
+}
+
+.announcementBadge {
+	position: absolute;
+	right: -0.375rem;
+	bottom: -0.375rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 624.9375rem;
+	background-color: var(--background-tertiary);
+	box-shadow: 0 0 0 0.25rem var(--background-secondary);
+	color: var(--text-primary);
+}
+
+.announcementBadgeIcon {
+	width: 0.875rem;
+	height: 0.875rem;
+}
+
+.arrow {
+	width: 1.75rem;
+	height: 1.75rem;
+	flex-shrink: 0;
+	color: var(--text-on-brand-primary);
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-2);
+	padding: var(--spacing-6) var(--spacing-6) var(--spacing-5);
+	text-align: center;
+}
+
+.title {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 700;
+	line-height: 1.5rem;
+	color: var(--text-primary);
+}
+
+.description {
+	margin: 0 0 var(--spacing-3);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}

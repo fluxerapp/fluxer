@@ -32,7 +32,6 @@ export interface UserRow {
 	email: Nullish<string>;
 	email_verified: Nullish<boolean>;
 	email_bounced: Nullish<boolean>;
-	has_verified_phone?: Nullish<boolean>;
 	password_hash: Nullish<string>;
 	password_last_changed_at: Nullish<Date>;
 	totp_secret: Nullish<string>;
@@ -61,7 +60,6 @@ export interface UserRow {
 	stripe_subscription_id: Nullish<string>;
 	stripe_customer_id: Nullish<string>;
 	has_ever_purchased: Nullish<boolean>;
-	suspicious_activity_flags: Nullish<number>;
 	terms_agreed_at: Nullish<Date>;
 	privacy_agreed_at: Nullish<Date>;
 	last_active_at: Nullish<Date>;
@@ -75,6 +73,8 @@ export interface UserRow {
 	deletion_reason_code: Nullish<number>;
 	deletion_public_reason: Nullish<string>;
 	deletion_audit_log_reason: Nullish<string>;
+	deletion_scheduled_by?: Nullish<UserID>;
+	deletion_scheduled_at?: Nullish<Date>;
 	acls: Nullish<Set<string>>;
 	traits: Nullish<Set<string>>;
 	first_refund_at: Nullish<Date>;
@@ -96,7 +96,6 @@ export const USER_COLUMNS = [
 	'email',
 	'email_verified',
 	'email_bounced',
-	'has_verified_phone',
 	'password_hash',
 	'password_last_changed_at',
 	'totp_secret',
@@ -125,7 +124,6 @@ export const USER_COLUMNS = [
 	'stripe_subscription_id',
 	'stripe_customer_id',
 	'has_ever_purchased',
-	'suspicious_activity_flags',
 	'terms_agreed_at',
 	'privacy_agreed_at',
 	'last_active_at',
@@ -139,6 +137,8 @@ export const USER_COLUMNS = [
 	'deletion_reason_code',
 	'deletion_public_reason',
 	'deletion_audit_log_reason',
+	'deletion_scheduled_by',
+	'deletion_scheduled_at',
 	'acls',
 	'traits',
 	'first_refund_at',
@@ -159,7 +159,6 @@ export const EMPTY_USER_ROW: UserRow = {
 	email: null,
 	email_verified: null,
 	email_bounced: null,
-	has_verified_phone: null,
 	password_hash: null,
 	password_last_changed_at: null,
 	totp_secret: null,
@@ -188,7 +187,6 @@ export const EMPTY_USER_ROW: UserRow = {
 	stripe_subscription_id: null,
 	stripe_customer_id: null,
 	has_ever_purchased: null,
-	suspicious_activity_flags: null,
 	terms_agreed_at: null,
 	privacy_agreed_at: null,
 	last_active_at: null,
@@ -202,6 +200,8 @@ export const EMPTY_USER_ROW: UserRow = {
 	deletion_reason_code: null,
 	deletion_public_reason: null,
 	deletion_audit_log_reason: null,
+	deletion_scheduled_by: null,
+	deletion_scheduled_at: null,
 	acls: null,
 	traits: null,
 	first_refund_at: null,

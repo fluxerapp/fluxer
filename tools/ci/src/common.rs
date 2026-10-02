@@ -562,7 +562,12 @@ pub(crate) fn split_append_only_upload_plan(
     let mut skipped = Vec::new();
     for item in plan {
         if let Some(remote) = existing_objects.get(&item.key) {
-            ensure_existing_s3_object_matches_local(bucket, &item, remote)?;
+            if let Err(error) = ensure_existing_s3_object_matches_local(bucket, &item, remote) {
+                if !item.key.ends_with(".map") {
+                    return Err(error);
+                }
+                println!("Keeping the published source map: {error}");
+            }
             skipped.push(item);
         } else {
             pending.push(item);
@@ -1157,6 +1162,35 @@ mod tests {
         let error = split_append_only_upload_plan("bucket", plan, &existing).unwrap_err();
 
         assert!(error.to_string().contains("differs from local file"));
+    }
+
+    #[test]
+    fn append_only_plan_keeps_a_published_source_map_that_differs() {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("abc.worker.js.map");
+        fs::write(&path, "local").unwrap();
+        let plan = vec![S3UploadPlanItem::new(
+            path,
+            "assets/abc.worker.js.map".to_string(),
+        )];
+        let existing = BTreeMap::from([(
+            "assets/abc.worker.js.map".to_string(),
+            S3ObjectMetadata {
+                e_tag: Some("\"00000000000000000000000000000000\"".to_string()),
+                size: Some(9),
+            },
+        )]);
+
+        let (pending, skipped) = split_append_only_upload_plan("bucket", plan, &existing).unwrap();
+
+        assert!(pending.is_empty());
+        assert_eq!(
+            skipped
+                .iter()
+                .map(|item| item.key.as_str())
+                .collect::<Vec<_>>(),
+            vec!["assets/abc.worker.js.map"]
+        );
     }
 
     #[test]

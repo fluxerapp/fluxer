@@ -9,6 +9,7 @@ import {
 	deleteChannel,
 	getChannel,
 	updateChannel,
+	updateGuild,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -57,6 +58,34 @@ describe('Channel Operation Permissions', () => {
 			.get(`/channels/${systemChannel.id}/messages`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
+	});
+	it('should gate channels created before a guild becomes adult-only', async () => {
+		const owner = await createTestAccount(harness);
+		const minor = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+		const guild = await createGuild(harness, owner.token, 'Later Mature Guild');
+		const category = await createChannel(harness, owner.token, guild.id, 'category', 4);
+		const child = await createBuilder<{id: string; nsfw_override?: boolean | null}>(harness, owner.token)
+			.post(`/guilds/${guild.id}/channels`)
+			.body({name: 'child', type: 0, parent_id: category.id})
+			.execute();
+		const opened = await createBuilder<{id: string}>(harness, owner.token)
+			.post(`/guilds/${guild.id}/channels`)
+			.body({name: 'opened', type: 0, nsfw_override: false})
+			.execute();
+		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
+		expect(systemChannel.nsfw_override ?? null).toBeNull();
+		expect(category.nsfw_override ?? null).toBeNull();
+		expect(child.nsfw_override ?? null).toBeNull();
+		const invite = await createChannelInvite(harness, owner.token, systemChannel.id);
+		await acceptInvite(harness, minor.token, invite.code);
+		await updateGuild(harness, owner.token, guild.id, {nsfw: true});
+		for (const channelId of [systemChannel.id, child.id]) {
+			await createBuilder(harness, minor.token)
+				.get(`/channels/${channelId}/messages`)
+				.expect(HTTP_STATUS.FORBIDDEN)
+				.execute();
+		}
+		await createBuilder(harness, minor.token).get(`/channels/${opened.id}/messages`).expect(HTTP_STATUS.OK).execute();
 	});
 	it('should reject member from updating channel without MANAGE_CHANNELS', async () => {
 		const owner = await createTestAccount(harness);

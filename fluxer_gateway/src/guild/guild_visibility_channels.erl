@@ -5,6 +5,7 @@
 
 -export([
     get_user_viewable_channels/2,
+    shares_viewable_channel/3,
     viewable_channel_set/2,
     have_shared_viewable_channel/3,
     viewable_channel_map/1,
@@ -36,16 +37,18 @@ get_user_viewable_channels(UserId, State) ->
         undefined ->
             [];
         _ ->
-            compute_viewable_with_categories(UserId, Member, Channels, State)
+            Base = guild_permissions:member_base_permissions(UserId, Member, State),
+            compute_viewable_with_categories(UserId, Base, Channels, State)
     end.
 
 -spec compute_viewable_with_categories(
-    user_id(), map(), [map()], guild_state()
+    user_id(), guild_permissions:base_permissions(), [map()], guild_state()
 ) -> [channel_id()].
-compute_viewable_with_categories(UserId, Member, Channels, State) ->
+compute_viewable_with_categories(UserId, Base, Channels, State) ->
+    Viewable = guild_permissions:viewable_channel_ids(UserId, Base, Channels, State),
     {ViewableIds, ViewableIdSet, NeededParentIds} = lists:foldl(
         fun(Channel, {Ids, IdSet, Parents}) ->
-            collect_viewable_channel(Channel, UserId, Member, State, {Ids, IdSet, Parents})
+            collect_viewable_channel(Channel, Viewable, {Ids, IdSet, Parents})
         end,
         {[], #{}, #{}},
         Channels
@@ -58,6 +61,38 @@ compute_viewable_with_categories(UserId, Member, Channels, State) ->
             ExtraIds = collect_missing_parent_ids(Channels, MissingParents),
             lists:reverse(ViewableIds) ++ ExtraIds
     end.
+
+-spec shares_viewable_channel(user_id(), map(), guild_state()) -> boolean().
+shares_viewable_channel(UserId, ChannelMap, State) ->
+    Data = map_utils:ensure_map(map_utils:get_safe(State, data, #{})),
+    Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
+    case guild_permissions:find_member_by_user_id(UserId, State) of
+        undefined ->
+            false;
+        Member ->
+            lists:any(
+                fun(Channel) ->
+                    shares_channel_or_parent(
+                        Channel, UserId, Member, ChannelMap, Channels, State
+                    )
+                end,
+                Channels
+            )
+    end.
+
+-spec shares_channel_or_parent(map(), user_id(), map(), map(), [map()], guild_state()) ->
+    boolean().
+shares_channel_or_parent(Channel, UserId, Member, ChannelMap, Channels, State) ->
+    channel_viewable(UserId, Member, Channel, State) andalso
+        (maps:is_key(channel_id(Channel), ChannelMap) orelse
+            shared_parent(channel_parent_id(Channel), ChannelMap, Channels)).
+
+-spec shared_parent(channel_id() | undefined, map(), [map()]) -> boolean().
+shared_parent(undefined, _ChannelMap, _Channels) ->
+    false;
+shared_parent(ParentId, ChannelMap, Channels) ->
+    maps:is_key(ParentId, ChannelMap) andalso
+        lists:any(fun(C) -> channel_id(C) =:= ParentId end, Channels).
 
 -spec collect_missing_parent_ids([map()], map()) -> [channel_id()].
 collect_missing_parent_ids(Channels, MissingParents) ->
@@ -79,10 +114,10 @@ check_missing_parent(CId, MissingParents) when is_integer(CId) ->
 check_missing_parent(_, _) ->
     false.
 
--spec collect_viewable_channel(map(), user_id(), map(), guild_state(), {list(), map(), map()}) ->
+-spec collect_viewable_channel(map(), #{channel_id() => true}, {list(), map(), map()}) ->
     {list(), map(), map()}.
-collect_viewable_channel(Channel, UserId, Member, State, {Ids, IdSet, Parents}) ->
-    case channel_viewable(UserId, Member, Channel, State) of
+collect_viewable_channel(Channel, Viewable, {Ids, IdSet, Parents}) ->
+    case maps:is_key(channel_id(Channel), Viewable) of
         false ->
             {Ids, IdSet, Parents};
         true ->

@@ -3,6 +3,11 @@
 import type {ChannelID, GuildID, MessageID} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {
+	enqueueCrosspostSourceRemoval,
+	enqueueCrosspostSync,
+	isCrosspostedMessage,
+} from '@app/api/channel/services/message/CrosspostPropagation';
 import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
 import type {MessageEmbed, MessageEmbedChild} from '@app/api/database/types/MessageTypes';
 import type {ModerationContext} from '@app/api/infrastructure/ContentModerationService';
@@ -457,6 +462,7 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 			return;
 		}
 		const orderedEmbeds = buildOrderedEmbeds(urls, unfurledEmbedsByUrl);
+		let propagated: Message | null = null;
 		const handled = await withMessageWriteLock(cacheService, channelId, messageId, async () => {
 			const latestExpectedMessage = await channelRepository.getMessage(channelId, messageId);
 			if (!latestExpectedMessage) {
@@ -496,6 +502,10 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 					await deleteMessageSearchDocuments([messageId], {context: {source: 'blocked_embed_unfurl'}});
 					const eventDispatcher = new ChannelEventDispatcher({gatewayService});
 					await eventDispatcher.dispatchMessageDelete(channel, messageId);
+					await enqueueCrosspostSourceRemoval(getWorkerDependencies().workerService, {
+						messages: [latestExpectedMessage],
+						mode: 'purge',
+					});
 					return true;
 				}
 				Logger.error(
@@ -506,6 +516,9 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 			const latestMessage = await updateMessageEmbeds(channelRepository, latestExpectedMessage, orderedEmbeds);
 			if (!latestMessage) {
 				return false;
+			}
+			if (latestMessage !== latestExpectedMessage) {
+				propagated = latestMessage;
 			}
 			if (!(latestMessage.flags & MessageFlags.SUPPRESS_EMBEDS)) {
 				await dispatchEmbedUpdate({
@@ -519,6 +532,9 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 			}
 			return true;
 		});
+		if (propagated && isCrosspostedMessage(propagated)) {
+			await enqueueCrosspostSync(getWorkerDependencies().workerService, {channelId, messageId, mode: 'update'});
+		}
 		if (!handled) {
 			return;
 		}

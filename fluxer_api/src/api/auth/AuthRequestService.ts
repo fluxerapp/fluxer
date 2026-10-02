@@ -168,8 +168,10 @@ export class AuthRequestService {
 		});
 	}
 
-	completeSso(data: SsoCompleteRequest, request: Request) {
-		return this.toSsoCompleteResponse(this.ssoService.completeLogin({code: data.code, state: data.state, request}));
+	completeSso(data: SsoCompleteRequest, request: Request, requestCache: RequestCache) {
+		return this.toSsoCompleteResponse(
+			this.ssoService.completeLogin({code: data.code, state: data.state, request, requestCache}),
+		);
 	}
 
 	async register({data, request, requestCache}: AuthRegisterRequest): Promise<AuthRegisterResponse> {
@@ -280,21 +282,18 @@ export class AuthRequestService {
 		return {completed: false};
 	}
 
-	async getWebAuthnAuthenticationOptions() {
-		return AuthMfa.generateWebAuthnAuthenticationOptionsDiscoverable(this.apiContext);
+	async getWebAuthnAuthenticationOptions(origin: string | undefined) {
+		return AuthMfa.generateWebAuthnAuthenticationOptionsDiscoverable(this.apiContext, origin);
 	}
 
 	async authenticateWebAuthnDiscoverable({data, request}: AuthWebAuthnAuthenticateRequest) {
 		const user = await AuthMfa.verifyWebAuthnAuthenticationDiscoverable(this.apiContext, data.response, data.challenge);
-		const [token] = await AuthSession.createAuthSession(this.apiContext, {
-			user,
-			origin: AuthSession.resolveSessionOrigin(this.apiContext, request),
-		});
+		const [token] = await AuthLogin.createLoginSession(this.apiContext, user, request);
 		return {token, user_id: user.id.toString(), user: mapUserToPartialResponse(user)};
 	}
 
-	async getWebAuthnMfaOptions({ticket}: MfaTicketRequest) {
-		return AuthMfa.generateWebAuthnAuthenticationOptionsForMfa(this.apiContext, ticket);
+	async getWebAuthnMfaOptions({ticket}: MfaTicketRequest, origin: string | undefined) {
+		return AuthMfa.generateWebAuthnAuthenticationOptionsForMfa(this.apiContext, ticket, origin);
 	}
 
 	async loginMfaWebAuthn({data, request}: AuthWebAuthnMfaRequest): Promise<AuthTokenWithUserIdResponse> {

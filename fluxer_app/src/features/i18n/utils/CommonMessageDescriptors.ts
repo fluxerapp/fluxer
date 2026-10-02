@@ -67,6 +67,11 @@ export const HOURS_AND_MINUTES_DURATION_DESCRIPTOR = msg({
 	message: '{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {# minute} other {# minutes}}',
 	comment: 'Generic duration label for an interval that includes hours and remaining minutes.',
 });
+export const COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR = msg({
+	message: "Couldn't verify with passkey. Try again.",
+	comment:
+		'Error shown when verifying with a passkey fails, in the sudo (re-auth) modal and on the sign-in page. Keep plain.',
+});
 export const TRY_AGAIN_DESCRIPTOR = msg({
 	message: 'Try again',
 	comment: 'Generic action label for retrying a failed or interrupted operation.',
@@ -230,6 +235,11 @@ export const VOICE_CHANNEL_DESCRIPTOR = msg({
 export const TEXT_CHANNEL_DESCRIPTOR = msg({
 	message: 'Text channel',
 	comment: 'Generic label for a text channel type.',
+});
+export const ANNOUNCEMENT_CHANNEL_DESCRIPTOR = msg({
+	message: 'Announcement channel',
+	comment:
+		'Generic label for an announcement channel type. Other communities can follow an announcement channel to get its published messages in their own channels.',
 });
 export const STICKER_DESCRIPTOR = msg({
 	message: 'Sticker',

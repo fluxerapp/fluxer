@@ -2,7 +2,7 @@
 
 use clap::Parser;
 use fluxer_media_proxy::{cli, healthcheck, run};
-use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
@@ -12,7 +12,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     tracing_subscriber::registry()
-        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with(fluxer_common::config::env_filter("info"))
         .with(tracing_subscriber::fmt::layer().json())
         .init();
 

@@ -4,11 +4,12 @@ import crypto from 'node:crypto';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
 import type {UserRow} from '@app/api/database/types/UserTypes';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
-import {SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
 
 interface ISweegoUserRepository {
 	findByEmail(email: string): Promise<User | null>;
@@ -152,25 +153,25 @@ export class SweegoWebhookService {
 			Logger.warn({recipient: event.recipient}, 'User not found for bounced email');
 			return;
 		}
+		await emitActivity('email_bounced', user.id.toString(), {
+			user_id: user.id.toString(),
+			kind: event.event_type === 'complaint' ? 'complaint' : 'hard',
+			provider_event_id: event.event_id ?? `${event.event_type}:${event.recipient}`,
+			email_domain: extractEmailDomain(event.recipient) ?? '',
+		});
 		if (user.emailBounced) {
 			Logger.debug({userId: user.id, recipient: event.recipient}, 'Email already marked as bounced');
 			return;
 		}
-		const currentFlags = user.suspiciousActivityFlags || 0;
-		const newFlags = currentFlags | SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL;
 		const updatedUser = await this.userRepository.patchUpsert(
 			user.id,
 			{
 				email_bounced: true,
 				email_verified: false,
-				suspicious_activity_flags: newFlags,
 			},
 			user.toRow(),
 		);
-		Logger.info(
-			{userId: user.id, recipient: event.recipient, details: event.details},
-			'User email marked as bounced and requires reverification',
-		);
+		Logger.info({userId: user.id, recipient: event.recipient, details: event.details}, 'User email marked as bounced');
 		if (updatedUser) {
 			await this.gatewayService.dispatchPresence({
 				userId: updatedUser.id,

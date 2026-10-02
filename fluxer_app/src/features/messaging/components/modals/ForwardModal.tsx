@@ -42,6 +42,8 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import type {User} from '@app/features/user/models/User';
+import Users from '@app/features/user/state/Users';
+import {blockIfAccountLimited, showAccountLimitedModal} from '@app/features/user/utils/AccountLimitUtils';
 import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -269,6 +271,7 @@ export const ForwardModal = observer(
 		const isCommentCounterVisible = actualOptionalMessage.length > user.maxMessageLength * 0.8;
 		const handleForward = async (skipNavigation = false) => {
 			if (selected.length === 0) return;
+			if (blockIfAccountLimited()) return;
 			if (isForwarding) return;
 			if (isSendBlockedBySlowmode) return;
 			if (!isCommentComposerDisabled && isCommentOverLimit) {
@@ -302,6 +305,9 @@ export const ForwardModal = observer(
 					actualMessage,
 				);
 				if (!forwarded) {
+					if (Users.currentUser?.accountLimited === true) {
+						showAccountLimitedModal();
+					}
 					return;
 				}
 				ToastCommands.createToast({

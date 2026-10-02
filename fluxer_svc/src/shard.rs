@@ -436,7 +436,6 @@ mod tests {
             nats_auth_token: None,
             cache_max_entries: 100,
             cache_ttl: Duration::from_secs(30),
-            cache_hard_ttl: Duration::from_secs(600),
             max_concurrent_requests,
             scylla_hosts: Vec::new(),
             scylla_keyspace: "fluxer".to_owned(),

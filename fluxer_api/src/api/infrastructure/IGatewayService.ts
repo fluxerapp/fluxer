@@ -62,6 +62,9 @@ export interface GatewayNodeStatsEntry {
 	node_id: string;
 	status: string;
 	sessions: number;
+	session_resumes_total: number | null;
+	websocket_dispatches_total: number | null;
+	websocket_dispatch_drops_total: number | null;
 	guilds: number;
 	presences: number;
 	calls: number;
@@ -74,6 +77,9 @@ export interface GatewayNodeStatsEntry {
 export interface GatewayNodeStats {
 	status: string;
 	sessions: number;
+	session_resumes_total: number;
+	websocket_dispatches_total: number;
+	websocket_dispatch_drops_total: number;
 	guilds: number;
 	presences: number;
 	calls: number;
@@ -291,12 +297,6 @@ export abstract class IGatewayService {
 	abstract getFirstViewableTextChannel(guildId: GuildID): Promise<ChannelID | null>;
 
 	abstract dispatchPresence(params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void>;
-
-	abstract invalidatePushBadgeCount(params: {userId: UserID}): Promise<void>;
-
-	abstract invalidatePushBadgeCounts(params: {userIds: Array<UserID>}): Promise<void>;
-
-	abstract invalidatePushSubscriptions(params: {userId: UserID}): Promise<void>;
 
 	abstract clearPushChannelNotifications(params: {
 		userId: UserID;

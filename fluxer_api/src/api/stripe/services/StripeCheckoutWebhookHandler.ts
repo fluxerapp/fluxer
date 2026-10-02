@@ -23,6 +23,7 @@ import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {isLocalizedCurrency} from '@app/api/utils/CurrencyUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -719,7 +720,7 @@ export class StripeCheckoutWebhookHandler {
 	}
 
 	private requiresLocalizedCardEligibility(productInfo: ProductInfo): boolean {
-		return productInfo.currency !== 'USD' && productInfo.currency !== 'EUR';
+		return isLocalizedCurrency(productInfo.currency);
 	}
 
 	private getDeclaredCheckoutPaymentMethodType(session: Stripe.Checkout.Session): string | null {

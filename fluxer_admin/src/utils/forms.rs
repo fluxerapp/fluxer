@@ -55,6 +55,10 @@ impl MultiValueForm {
         self.fields.contains_key(key)
     }
 
+    pub fn values(&self, key: &str) -> &[String] {
+        self.fields.get(key).map(Vec::as_slice).unwrap_or_default()
+    }
+
     pub fn first(&self, key: &str) -> Option<&str> {
         self.fields
             .get(key)
@@ -94,6 +98,10 @@ impl MultiValueForm {
                 .iter()
                 .any(|value| matches!(value.as_str(), "1" | "true" | "on"))
         })
+    }
+
+    pub fn opt_out_value(&self, key: &str) -> bool {
+        !self.contains_key(&format!("{key}_present")) || self.bool_value(key)
     }
 
     pub fn list_values(&self, key: &str) -> Vec<String> {

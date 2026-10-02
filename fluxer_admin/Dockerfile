@@ -2,7 +2,6 @@
 
 FROM rust:1-trixie AS builder
 
-ARG BUILD_VERSION=""
 ARG TARGETARCH
 
 WORKDIR /usr/src/app
@@ -44,8 +43,6 @@ RUN printf '%s\n' \
 	'codegen-units = 1' \
 	'strip = "symbols"' \
 	> Cargo.toml
-
-ENV FLUXER_BUILD_VERSION="${BUILD_VERSION}"
 
 RUN cargo build --release -p fluxer_admin \
 	&& cp target/release/fluxer_admin /usr/local/bin/fluxer-admin

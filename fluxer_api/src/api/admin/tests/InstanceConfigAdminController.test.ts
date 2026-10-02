@@ -4,7 +4,7 @@ import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
 import type {TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
-import {PushServiceDeliveryConfigPublisher} from '@app/api/instance/PushServiceDeliveryConfigPublisher';
+import {PushRelayConfigPublisher} from '@app/api/instance/PushRelayConfigPublisher';
 import {InstanceConfigWriteRaceExecutor} from '@app/api/instance/tests/InstanceConfigWriteRaceExecutor';
 import {getAdminRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -16,12 +16,12 @@ import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
-	DEFAULT_PUSH_SERVICE_DELIVERY_CONFIG,
-	type PushServiceDeliveryConfig,
-} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
+	type LegacyPushServiceDeliveryWire,
+	toLegacyPushServiceDeliveryWire,
+} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
-const PUSH_SERVICE_DELIVERY_CONFIG_KEY = 'push_service_delivery_config';
+const PUSH_RELAY_CONFIG_KEY = 'push_service_delivery_config';
 
 describe('instance config admin PATCH under concurrent writes', () => {
 	let harness: ApiTestHarness;
@@ -55,13 +55,13 @@ describe('instance config admin PATCH under concurrent writes', () => {
 	const patchConfig = (admin: TestAccount, body: Record<string, unknown>) =>
 		createBuilder<InstanceConfigResponse>(harness, admin.token).patch('/admin/instance/config').body(body);
 
-	const spyOnPushDeliveryPublishes = () =>
-		vi.spyOn(PushServiceDeliveryConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
+	const spyOnPushRelayPublishes = () =>
+		vi.spyOn(PushRelayConfigPublisher.prototype, 'publish').mockResolvedValue(undefined);
 
-	async function readStoredPushServiceDelivery(): Promise<PushServiceDeliveryConfig> {
-		const raw = await executor.readDirectly(PUSH_SERVICE_DELIVERY_CONFIG_KEY);
-		if (raw === null) throw new Error('push service delivery config was never stored');
-		return JSON.parse(raw) as PushServiceDeliveryConfig;
+	async function readStoredPushRelay(): Promise<LegacyPushServiceDeliveryWire> {
+		const raw = await executor.readDirectly(PUSH_RELAY_CONFIG_KEY);
+		if (raw === null) throw new Error('push relay config was never stored');
+		return JSON.parse(raw) as LegacyPushServiceDeliveryWire;
 	}
 
 	async function listConfigUpdateAudits(): Promise<Array<AdminAuditLog>> {
@@ -84,37 +84,32 @@ describe('instance config admin PATCH under concurrent writes', () => {
 	});
 
 	it('answers with a conflict and neither writes, publishes nor audits once every attempt has lost the race', async () => {
-		const publish = spyOnPushDeliveryPublishes();
+		const publish = spyOnPushRelayPublishes();
 		const admin = await createAdmin();
-		await patchConfig(admin, {push_service_delivery: {enabled: true, rollout_basis_points: 1000}}).execute();
+		await patchConfig(admin, {push_relay: {relay_consent_accepted: false}}).execute();
 		publish.mockClear();
 		const auditsBefore = await listConfigUpdateAudits();
-		executor.watch(PUSH_SERVICE_DELIVERY_CONFIG_KEY);
+		executor.watch(PUSH_RELAY_CONFIG_KEY);
+		const unaccepted = {
+			relay_consent_accepted: false,
+			relay_consent_accepted_at: null,
+			relay_consent_accepted_by: null,
+		};
 		let competingWrites = 0;
 		executor.competeBeforeEachWrite(async () => {
 			competingWrites++;
 			await executor.writeDirectly(
-				PUSH_SERVICE_DELIVERY_CONFIG_KEY,
-				JSON.stringify({
-					...DEFAULT_PUSH_SERVICE_DELIVERY_CONFIG,
-					enabled: false,
-					rollout_basis_points: 1000,
-					config_version: 100 + competingWrites,
-				}),
+				PUSH_RELAY_CONFIG_KEY,
+				JSON.stringify(toLegacyPushServiceDeliveryWire(unaccepted, 100 + competingWrites)),
 			);
 		});
 
-		await patchConfig(admin, {push_service_delivery: {rollout_basis_points: 5000}})
+		await patchConfig(admin, {push_relay: {relay_consent_accepted: true}})
 			.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
 			.execute();
 
 		expect(executor.events).not.toContain('write');
-		expect(await readStoredPushServiceDelivery()).toEqual({
-			...DEFAULT_PUSH_SERVICE_DELIVERY_CONFIG,
-			enabled: false,
-			rollout_basis_points: 1000,
-			config_version: 100 + competingWrites,
-		});
+		expect(await readStoredPushRelay()).toEqual(toLegacyPushServiceDeliveryWire(unaccepted, 100 + competingWrites));
 		expect(publish).not.toHaveBeenCalled();
 		expect(await listConfigUpdateAudits()).toHaveLength(auditsBefore.length);
 	});

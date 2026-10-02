@@ -125,6 +125,7 @@ export const WebhookListItem: React.FC<WebhookListItemProps> = observer(
 		}, [webhook.id, effectiveAvatar]);
 		const webhookUrl = useMemo(() => webhook.webhookUrl, [webhook.webhookUrl]);
 		const handleCopy = useCallback(async () => {
+			if (!webhookUrl) return;
 			try {
 				await TextCopyCommands.copy(i18n, webhookUrl);
 			} catch (error) {
@@ -319,7 +320,7 @@ export const WebhookListItem: React.FC<WebhookListItemProps> = observer(
 									<Input
 										id={`webhook-url-${webhook.id}`}
 										label={i18n._(WEBHOOK_URL_DESCRIPTOR)}
-										value={webhookUrl}
+										value={webhookUrl ?? ''}
 										readOnly
 										onFocus={(event) => event.currentTarget.select()}
 										className={styles.monoInput}

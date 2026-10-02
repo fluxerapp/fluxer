@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {installBrowserStorageAccessProtection} from '@app/features/platform/state/ProtectedWebStorage';
-import 'urlpattern-polyfill';
 import '@fluxer/fonts/css/fluxer-sans.css';
 import '@fluxer/fonts/css/fluxer-mono.css';
 import '@fluxer/fonts/css/variables.css';
@@ -12,185 +11,61 @@ import '@app/app/globals.css';
 import '@app/features/theme/styles/generated/color-system.css';
 import '@app/features/theme/styles/generated/message-layout.css';
 import '@app/features/theme/styles/preflight.css';
-import {bootstrapSyntheticHistory} from '@app/app/HistoryBootstrap';
-import reactiveI18n, {initI18n} from '@app/app/I18n';
-import {Routes} from '@app/app/Routes';
-import {AppErrorBoundary} from '@app/features/app/components/AppErrorBoundary';
-import {BootstrapErrorScreen} from '@app/features/app/components/BootstrapErrorScreen';
-import {ErrorFallback} from '@app/features/app/components/ErrorFallback';
+import {resolveDomainMigrationSide} from '@app/features/app/domain_migration/DomainMigrationCore';
 import {runDomainMigrationPreMount} from '@app/features/app/domain_migration/DomainMigrationPreMount';
-import {installSelfXssNotice} from '@app/features/devtools/utils/SelfXssNotice';
-import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
-import {installLocaleSwitchWatchdog} from '@app/features/i18n/utils/LocaleSwitchWatchdog';
-import {installTranslationDomGuard} from '@app/features/i18n/utils/TranslationDomGuard';
-import {installScrollRestoration} from '@app/features/platform/components/router/ScrollRestoration';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {
-	getFormattedClientInfo,
-	getFormattedClientInfoSync,
-	installFluxerConfigDebugApi,
-	preloadClientInfo,
-} from '@app/features/platform/utils/ClientInfo';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
-import {scheduleNonLatinScriptFaces} from '@app/features/theme/fonts/ScriptFontLoader';
-import {installVoiceSubscriptionDebugApi} from '@app/features/voice/diagnostics/VoiceSubscriptionDebugApi';
-import {i18n} from '@lingui/core';
+import {PASSKEY_BRIDGE_PATH} from '@fluxer/constants/src/PasskeyConstants';
 import {configure} from 'mobx';
-import type {ReactNode} from 'react';
-import ReactDOM from 'react-dom/client';
 
 const logger = new Logger('index');
 
-configure({disableErrorBoundaries: true, enforceActions: 'observed'});
-
 installBrowserStorageAccessProtection();
 
-if (typeof window !== 'undefined' && window.history) {
-	bootstrapSyntheticHistory();
-	installScrollRestoration();
-}
+configure({disableErrorBoundaries: true, enforceActions: 'observed'});
 
-installFluxerConfigDebugApi();
-installVoiceSubscriptionDebugApi();
-
-function createRoot(): ReactDOM.Root {
-	const container = document.getElementById('root');
-	if (!container) {
-		throw new Error('Missing #root element');
-	}
-	return ReactDOM.createRoot(container);
-}
-
-function mountRoot(content: ReactNode, dataFlxScope: string): void {
-	installTranslationDomGuard();
-	createRoot().render(
-		<AppErrorBoundary
-			fallback={(error) => (
-				<AppI18nProvider i18n={i18n}>
-					<ErrorFallback error={error ?? undefined} data-flx={`${dataFlxScope}.error-fallback`} />
-				</AppI18nProvider>
-			)}
-			data-flx={`${dataFlxScope}.app-error-boundary`}
-		>
-			{content}
-		</AppErrorBoundary>,
-	);
-}
-
-async function logClientInfo(): Promise<void> {
-	try {
-		const info = await getFormattedClientInfo();
-		logger.info(`[CLIENT INFO] ${info}`);
-	} catch (error) {
-		logger.warn('Failed to load full client info:', error);
-		logger.info(`[CLIENT INFO] ${getFormattedClientInfoSync()}`);
-	}
-}
-
-async function preloadMarkdownParser(): Promise<void> {
-	try {
-		const {preloadMarkdownParserWasm} = await loadLazyModule(
-			() => import('@app/features/messaging/utils/markdown/parser/MarkdownParserWasm'),
-		);
-		await preloadMarkdownParserWasm();
-	} catch (error) {
-		logger.warn('Failed to preload markdown parser:', error);
-	}
-}
-
-async function bootstrapThemeStudio(): Promise<void> {
-	const markdownParserReady = preloadMarkdownParser();
-	const [{ThemeStudioStandaloneApp}, {setupHttp}, {default: AccountManager}] = await Promise.all([
-		loadLazyModule(() => import('@app/features/theme_studio/ThemeStudioStandaloneApp')),
-		loadLazyModule(() => import('@app/app/SetupHttp')),
-		loadLazyModule(() => import('@app/features/auth/state/AccountManager')),
-	]);
-	await AccountManager.bootstrap();
-	setupHttp();
-	await markdownParserReady;
-	mountRoot(
-		<AppI18nProvider i18n={i18n}>
-			<ThemeStudioStandaloneApp data-flx="index.render-theme-studio.theme-studio-standalone-app" />
-		</AppI18nProvider>,
-		'index.render-theme-studio',
-	);
-}
-
-async function bootstrapApp(): Promise<void> {
-	const markdownParserReady = preloadMarkdownParser();
-	const [
-		{App},
-		{setupHttp},
-		{default: CaptchaInterceptor},
-		{initializeEmojiParser},
-		{registerServiceWorker},
-		{default: AccountManager},
-		{default: ChannelDisplayName},
-		_channelFrecency,
-		_geoIp,
-		{default: Keybind},
-		{default: NewDeviceMonitoring},
-		{default: Notification},
-		{default: QuickSwitcher},
-		_runtimeConfig,
-		{default: StatusPage},
-	] = await Promise.all([
-		loadLazyModule(() => import('@app/app/App')),
-		loadLazyModule(() => import('@app/app/SetupHttp')),
-		loadLazyModule(() => import('@app/features/auth/components/CaptchaInterceptor')),
-		loadLazyModule(() => import('@app/features/messaging/utils/markdown/EmojiProviderSetup')),
-		loadLazyModule(() => import('@app/features/platform/service_worker/Register')),
-		loadLazyModule(() => import('@app/features/auth/state/AccountManager')),
-		loadLazyModule(() => import('@app/features/channel/state/ChannelDisplayName')),
-		loadLazyModule(() => import('@app/features/channel/state/ChannelFrecency')),
-		loadLazyModule(() => import('@app/features/app/state/GeoIP')),
-		loadLazyModule(() => import('@app/features/input/state/InputKeybind')),
-		loadLazyModule(() => import('@app/features/auth/state/NewDeviceMonitoring')),
-		loadLazyModule(() => import('@app/features/ui/state/Notification')),
-		loadLazyModule(() => import('@app/features/search/state/QuickSwitcher')),
-		loadLazyModule(() => import('@app/features/app/state/RuntimeConfig')),
-		loadLazyModule(() => import('@app/features/user/state/StatusPage')),
-	]);
-	void preloadClientInfo();
-	QuickSwitcher.setI18n(reactiveI18n);
-	ChannelDisplayName.setI18n(reactiveI18n);
-	Keybind.setI18n(reactiveI18n);
-	NewDeviceMonitoring.setI18n(reactiveI18n);
-	Notification.setI18n(reactiveI18n);
-	CaptchaInterceptor.setI18n(reactiveI18n);
-	void StatusPage.checkIncidents();
-	StatusPage.startPolling();
-	await AccountManager.bootstrap();
-	setupHttp();
-	initializeEmojiParser();
-	await markdownParserReady;
-	mountRoot(<App data-flx="index.bootstrap.app" />, 'index.bootstrap');
-	QuickSwitcher.preloadModal();
-	registerServiceWorker();
+function loadAppBootstrap() {
+	return loadLazyModule(() => import('@app/app/AppBootstrap'));
 }
 
 async function bootstrap(): Promise<void> {
+	const passkeyBridgeSide =
+		window.location.pathname === PASSKEY_BRIDGE_PATH ? resolveDomainMigrationSide(window.location.origin) : null;
+	if (passkeyBridgeSide !== null) {
+		const {runPasskeyBridge} = await loadAppBootstrap();
+		await runPasskeyBridge(passkeyBridgeSide);
+		return;
+	}
 	if (await runDomainMigrationPreMount()) {
 		return;
 	}
-	scheduleNonLatinScriptFaces();
-	await initI18n();
-	installLocaleSwitchWatchdog();
-	installSelfXssNotice();
-	void logClientInfo();
-	if (window.location.pathname === Routes.THEME_STUDIO) {
-		await bootstrapThemeStudio();
-	} else {
-		await bootstrapApp();
+	const {runApp} = await loadAppBootstrap();
+	await runApp();
+}
+
+async function showBootstrapError(error: unknown): Promise<void> {
+	const {reportBootstrapError} = await loadLazyModule(() => import('@app/app/BootstrapErrorMount'));
+	await reportBootstrapError(error);
+}
+
+function showPlainBootstrapError(): void {
+	const container = document.getElementById('root');
+	if (!container) {
+		return;
 	}
+	const title = document.createElement('p');
+	title.textContent = 'Failed to start';
+	const retry = document.createElement('button');
+	retry.type = 'button';
+	retry.textContent = 'Try again';
+	retry.addEventListener('click', () => window.location.reload());
+	container.replaceChildren(title, retry);
 }
 
 bootstrap().catch((error: unknown) => {
-	const normalized = error instanceof Error ? error : new Error(String(error));
-	logger.error('Failed to bootstrap app:', normalized);
-	createRoot().render(
-		<AppI18nProvider i18n={i18n}>
-			<BootstrapErrorScreen error={normalized} data-flx="index.bootstrap-error-screen" />
-		</AppI18nProvider>,
-	);
+	showBootstrapError(error).catch((renderError: unknown) => {
+		logger.error('Failed to bootstrap app:', error);
+		logger.error('Failed to show the bootstrap error screen:', renderError);
+		showPlainBootstrapError();
+	});
 });

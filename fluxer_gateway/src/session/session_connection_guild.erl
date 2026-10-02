@@ -449,6 +449,7 @@ finalize_guild_connection(GuildId, GuildPid, State, ReadyFun) ->
 finalize_guild_monitor(GuildId, GuildPid, Guilds0, State, ReadyFun) ->
     MonitorRef = monitor(process, GuildPid),
     Guilds = Guilds0#{GuildId => {GuildPid, MonitorRef}},
+    ok = session_lifecycle:send_guild_push_hold({GuildPid, MonitorRef}, State),
     apply_ready_fun(GuildId, GuildPid, ReadyFun, State#{guilds => Guilds}).
 
 -spec apply_ready_fun(
@@ -458,8 +459,10 @@ finalize_guild_monitor(GuildId, GuildPid, Guilds0, State, ReadyFun) ->
     session_state()
 ) -> session_result().
 apply_ready_fun(GuildId, GuildPid, ReadyFun, State) ->
-    case ReadyFun(State) of
+    State1 = session_guild_health:forget(GuildId, State),
+    case ReadyFun(State1) of
         {noreply, ReadyState} ->
+            ok = guild_health:send_current(GuildPid, self()),
             ReplayedState = maybe_replay_guild_subscriptions(GuildId, GuildPid, ReadyState),
             {noreply, session_dm_partners:register_guild(GuildId, GuildPid, ReplayedState)};
         {stop, normal, ReadyState} ->

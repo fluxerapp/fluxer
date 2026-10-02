@@ -69,7 +69,7 @@ describe('JobLedgerRepository listJobs status filter', () => {
 
 	it('matches the live status of a succeeded job rather than the creation-time bucket snapshot', async () => {
 		const repository = new JobLedgerRepository();
-		await createJob(repository, 1n, 'syncDisposableEmailDomains');
+		await createJob(repository, 1n, 'syncUrlBlocklists');
 		await repository.markSucceeded(1n, null);
 
 		expect(await listJobIdsByStatus(repository, 'succeeded')).toEqual([1n]);
@@ -78,7 +78,7 @@ describe('JobLedgerRepository listJobs status filter', () => {
 
 	it('matches the live status of a dead-lettered job', async () => {
 		const repository = new JobLedgerRepository();
-		await createJob(repository, 2n, 'syncDisposableEmailDomains');
+		await createJob(repository, 2n, 'syncUrlBlocklists');
 		await repository.markDeadletter(2n, 'boom');
 
 		expect(await listJobIdsByStatus(repository, 'deadletter')).toEqual([2n]);
@@ -87,7 +87,7 @@ describe('JobLedgerRepository listJobs status filter', () => {
 
 	it('still returns a job that has not left the queue under status=queued', async () => {
 		const repository = new JobLedgerRepository();
-		await createJob(repository, 3n, 'syncDisposableEmailDomains');
+		await createJob(repository, 3n, 'syncUrlBlocklists');
 
 		expect(await listJobIdsByStatus(repository, 'queued')).toEqual([3n]);
 		expect(await listJobIdsByStatus(repository, 'running')).toEqual([]);
@@ -95,7 +95,7 @@ describe('JobLedgerRepository listJobs status filter', () => {
 
 	it('keeps the other filters working alongside the status filter', async () => {
 		const repository = new JobLedgerRepository();
-		await createJob(repository, 4n, 'syncDisposableEmailDomains');
+		await createJob(repository, 4n, 'syncUrlBlocklists');
 		await createJob(repository, 5n, 'processExpiredPremium');
 		await repository.markSucceeded(4n, null);
 		await repository.markSucceeded(5n, null);
@@ -124,7 +124,7 @@ describe('JobLedgerRepository listJobs pagination', () => {
 	it('emits a cursor for a page that filled exactly on the bucket boundary', async () => {
 		const repository = new JobLedgerRepository();
 		for (let index = 0; index < 3; index++) {
-			await createJob(repository, BigInt(index + 1), 'syncDisposableEmailDomains');
+			await createJob(repository, BigInt(index + 1), 'syncUrlBlocklists');
 		}
 
 		const result = await repository.listJobs({limit: 3, cursor: null, filters: {}, maxLookbackDays: 1});
@@ -135,7 +135,7 @@ describe('JobLedgerRepository listJobs pagination', () => {
 
 	it('emits no cursor for a page that did not fill', async () => {
 		const repository = new JobLedgerRepository();
-		await createJob(repository, 1n, 'syncDisposableEmailDomains');
+		await createJob(repository, 1n, 'syncUrlBlocklists');
 
 		const result = await repository.listJobs({limit: 3, cursor: null, filters: {}, maxLookbackDays: 1});
 
@@ -146,7 +146,7 @@ describe('JobLedgerRepository listJobs pagination', () => {
 	it('returns every match of a task type filter that sits past the unfiltered page window', async () => {
 		const repository = new JobLedgerRepository();
 		for (let index = 0; index < 60; index++) {
-			await createJob(repository, BigInt(index + 1), 'syncDisposableEmailDomains');
+			await createJob(repository, BigInt(index + 1), 'syncUrlBlocklists');
 		}
 		for (let index = 0; index < 5; index++) {
 			await createJob(repository, BigInt(1_000 + index), 'processExpiredPremium');

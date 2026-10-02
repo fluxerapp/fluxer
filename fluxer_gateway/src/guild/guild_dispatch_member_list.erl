@@ -43,12 +43,12 @@ dispatch_member_list_event(channel_create, _EventData, _OldState, UpdatedState) 
     broadcast_all_updates(UpdatedState);
 dispatch_member_list_event(channel_delete, _EventData, _OldState, UpdatedState) ->
     broadcast_all_updates(UpdatedState);
-dispatch_member_list_event(channel_update, EventData, OldState, UpdatedState) ->
-    broadcast_channel_update(EventData, OldState, UpdatedState);
-dispatch_member_list_event(channel_update_bulk, EventData, OldState, UpdatedState) ->
+dispatch_member_list_event(channel_update, EventData, _OldState, UpdatedState) ->
+    broadcast_channel_update(EventData, UpdatedState);
+dispatch_member_list_event(channel_update_bulk, EventData, _OldState, UpdatedState) ->
     Channels = maps:get(<<"channels">>, EventData, []),
     lists:foldl(
-        fun(Channel, AccState) -> broadcast_channel_update(Channel, OldState, AccState) end,
+        fun(Channel, AccState) -> broadcast_channel_update(Channel, AccState) end,
         UpdatedState,
         Channels
     );
@@ -73,25 +73,25 @@ broadcast_all_updates(UpdatedState) ->
     {ok, NewState} = guild_member_list:broadcast_all_member_list_updates(UpdatedState),
     NewState.
 
--spec broadcast_channel_update(event_data(), guild_state(), guild_state()) -> guild_state().
-broadcast_channel_update(EventData, OldState, UpdatedState) ->
+-spec broadcast_channel_update(event_data(), guild_state()) -> guild_state().
+broadcast_channel_update(EventData, UpdatedState) ->
     ChannelIdBin = maps:get(<<"id">>, EventData, undefined),
     case guild_dispatch_decorate:parse_snowflake(<<"id">>, ChannelIdBin) of
         undefined ->
             UpdatedState;
         ChannelId ->
-            broadcast_channel_update_for_id(ChannelId, OldState, UpdatedState)
+            broadcast_channel_update_for_id(ChannelId, UpdatedState)
     end.
 
 %% guild_state:post_update_channel/2 has already rebuilt this channel's engine
-%% earlier in the same dispatch, through
+%% earlier in the same dispatch when its permission inputs changed, through
 %% guild_member_list_write:rebuild_channels_for_permission_change/2. Rebuilding
 %% again here is a second full O(members) build over the same state, so when the
 %% engine already exists and nothing in the window can have changed what a
 %% rebuild would see, queue the sync and skip the rebuild.
--spec broadcast_channel_update_for_id(integer(), guild_state(), guild_state()) -> guild_state().
-broadcast_channel_update_for_id(ChannelId, OldState, UpdatedState) ->
-    case rebuild_is_redundant(ChannelId, OldState, UpdatedState) of
+-spec broadcast_channel_update_for_id(integer(), guild_state()) -> guild_state().
+broadcast_channel_update_for_id(ChannelId, UpdatedState) ->
+    case rebuild_is_redundant(ChannelId, UpdatedState) of
         true ->
             sync_channel_list_without_rebuild(ChannelId, UpdatedState);
         false ->
@@ -102,17 +102,15 @@ broadcast_channel_update_for_id(ChannelId, OldState, UpdatedState) ->
     end.
 
 %% The engine must already exist, because the earlier pass only rebuilds
-%% ALREADY-LOADED engines while this pass would build a missing one. Virtual
-%% channel access is compared across the whole dispatch, which is a conservative
-%% superset of the window between the two rebuilds: guild_visibility can grant a
-%% user virtual access to a channel they just lost permission for, and that does
-%% change what a rebuild sees.
--spec rebuild_is_redundant(integer(), guild_state(), guild_state()) -> boolean().
-rebuild_is_redundant(ChannelId, OldState, UpdatedState) ->
-    guild_member_list_channel_engine:ref(integer_to_binary(ChannelId), UpdatedState) =/=
-        undefined andalso
-        maps:get(virtual_channel_access, OldState, #{}) =:=
-            maps:get(virtual_channel_access, UpdatedState, #{}).
+%% ALREADY-LOADED engines while this pass would build a missing one. guild_visibility
+%% can grant a user virtual access to a channel they just lost permission for, and
+%% that does change what a rebuild sees, so the engine must also still match the
+%% permission inputs it was built from.
+-spec rebuild_is_redundant(integer(), guild_state()) -> boolean().
+rebuild_is_redundant(ChannelId, UpdatedState) ->
+    ListId = integer_to_binary(ChannelId),
+    guild_member_list_channel_engine:ref(ListId, UpdatedState) =/= undefined andalso
+        not guild_member_list_engine_inputs:is_stale(ListId, UpdatedState).
 
 %% Mirrors guild_member_list_write:broadcast_list_by_id/4 with the rebuild
 %% removed: a list nobody is subscribed to is left alone, otherwise the sync is

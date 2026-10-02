@@ -86,6 +86,7 @@ class MentionFeed {
 			case ChannelTypes.GROUP_DM:
 				return channel.recipientIds.length > 0;
 			case ChannelTypes.GUILD_TEXT:
+			case ChannelTypes.GUILD_ANNOUNCEMENT:
 			case ChannelTypes.GUILD_VOICE: {
 				if (!channel.guildId) return false;
 				const guild = Guilds.getGuild(channel.guildId);

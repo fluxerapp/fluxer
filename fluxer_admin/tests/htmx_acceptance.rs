@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![recursion_limit = "256"]
+
 use axum::{
     Json, Router,
     body::{Body, to_bytes},
@@ -361,7 +363,9 @@ async fn user_account_actions_use_no_swap_htmx_toasts() {
     assert!(body.contains("__fluxerAdminActionForms"), "{body}");
     assert!(!body.contains(&native_confirm), "{body}");
     assert!(
-        body.contains(r#"hx-post="/users/1500000000000000001?action=update_has_verified_phone&amp;tab=account""#),
+        body.contains(
+            r#"hx-post="/users/1500000000000000001?action=send_password_reset&amp;tab=account""#
+        ),
         "{body}"
     );
     assert!(body.contains(r##"hx-target="#flash-container""##), "{body}");
@@ -372,7 +376,7 @@ async fn user_account_actions_use_no_swap_htmx_toasts() {
         .unwrap_or_else(|| panic!("account page did not set csrf_token cookie\n{body}"));
     let (status, response_headers, response_body) = post_form_with_headers(
         &app,
-        "/users/1500000000000000001?action=update_has_verified_phone&tab=account",
+        "/users/1500000000000000001?action=send_password_reset&tab=account",
         &[
             ("HX-Request", "true"),
             ("HX-Target", "flash-container"),
@@ -381,7 +385,7 @@ async fn user_account_actions_use_no_swap_htmx_toasts() {
                 &format!("{}; csrf_token={}", app.session_cookie, csrf_token),
             ),
         ],
-        &format!("_csrf={csrf_token}&has_verified_phone=true"),
+        &format!("_csrf={csrf_token}"),
     )
     .await;
     assert_eq!(status, StatusCode::NO_CONTENT, "{response_body}");
@@ -397,7 +401,7 @@ async fn user_account_actions_use_no_swap_htmx_toasts() {
         .unwrap_or_else(|| panic!("missing toast header\n{response_body}"));
     assert!(toast.contains("success"), "{toast}");
     assert!(
-        toast.contains("Phone verification status updated successfully"),
+        toast.contains("Password reset sent successfully"),
         "{toast}"
     );
 }
@@ -464,8 +468,8 @@ async fn mutating_admin_pages_render_usable_csrf_tokens() {
             &[
                 "/instance-config?action=update_gateway_rollout",
                 "/instance-config?action=update_sso",
-                "/instance-config?action=update_voice_noise_suppression",
                 "/instance-config?action=update_domain_migration",
+                "/instance-config?action=update_plutonium_page",
                 "/instance-config?action=update_experiment_delivery",
             ][..],
         ),
@@ -837,8 +841,8 @@ async fn mock_api(method: Method, uri: Uri) -> Response {
         (Method::GET, "/admin/users/1500000000000000001") => {
             json_response(json!({ "users": [searched_user()] }))
         }
-        (Method::PUT, "/admin/users/1500000000000000001/phone-verification") => {
-            json_response(json!({ "user": searched_user() }))
+        (Method::POST, "/admin/users/1500000000000000001/password-reset") => {
+            StatusCode::NO_CONTENT.into_response()
         }
         (Method::GET, "/admin/guilds") => {
             json_response(json!({ "guilds": [searched_guild()], "total": 1 }))
@@ -945,16 +949,16 @@ fn user(id: &str, username: &str) -> Value {
         "premium_until": null,
         "premium_grace_ends_at": null,
         "premium_lifetime_sequence": null,
-        "suspicious_activity_flags": 0,
-        "phone_verification_deferred": false,
         "has_totp": false,
         "authenticator_types": [],
-        "has_verified_phone": false,
         "temp_banned_until": null,
         "pending_deletion_at": null,
         "pending_bulk_message_deletion_at": null,
         "deletion_reason_code": null,
         "deletion_public_reason": null,
+        "deletion_audit_log_reason": null,
+        "deletion_scheduled_by": null,
+        "deletion_scheduled_at": null,
         "last_active_at": null,
         "last_active_ip": null,
         "last_active_ip_reverse": null,
@@ -1179,27 +1183,6 @@ fn instance_config() -> Value {
             "max_concurrent_guild_starts": 16,
             "voice_e2ee_scope": "guild_feature_only"
         },
-        "voice_noise_suppression": {
-            "enabled": false,
-            "config_version": 0,
-            "default_backend": "standard",
-            "enabled_backends": [
-                "none",
-                "standard",
-                "gate",
-                "speex",
-                "rnnoise",
-                "gtcrn",
-                "deep_filter"
-            ],
-            "allow_user_override": true,
-            "rollout_basis_points": 0,
-            "rollout_salt": "voice-ns-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": [],
-            "guild_overrides": [],
-            "suppression_strength": 80
-        },
         "domain_migration": {
             "enabled": false,
             "config_version": 0,
@@ -1209,6 +1192,14 @@ fn instance_config() -> Value {
             "excluded_user_ids": [],
             "anonymous_rollout_basis_points": 0,
             "standalone_forwarding": false
+        },
+        "plutonium_page": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_salt": "plutonium-page-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": []
         },
         "experiment_delivery": {
             "poll_interval_seconds": 300,
@@ -1315,12 +1306,10 @@ fn test_config(api_endpoint: String) -> AdminConfig {
         static_cdn_endpoint: "https://static.example.test".to_owned(),
         admin_endpoint: "https://admin.example.test".to_owned(),
         web_app_endpoint: "https://app.example.test".to_owned(),
-        kv_url: String::new(),
         oauth_client_id: "admin-client".to_owned(),
         oauth_client_secret: "admin-secret".to_owned(),
         oauth_redirect_uri: "https://admin.example.test/callback".to_owned(),
         build_version: "test".to_owned(),
-        release_channel: "test".to_owned(),
         self_hosted: false,
         proxy: ProxyConfig {
             trust_client_ip_header: false,

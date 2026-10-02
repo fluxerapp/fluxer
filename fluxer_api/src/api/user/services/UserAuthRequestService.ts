@@ -2,26 +2,18 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
-import * as AuthPhone from '@app/api/auth/AuthPhone';
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import * as UserAuth from '@app/api/user/services/UserAuth';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
-import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
-import {PhoneAddNotEligibleError} from '@fluxer/errors/src/domains/auth/PhoneAddNotEligibleError';
+import {mapUserToPrivateResponse, mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
 import type {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
 	MfaBackupCodesRequest,
 	MfaBackupCodesResponse,
-	PhoneSendVerificationRequest,
-	PhoneSendVerificationResponse,
-	PhoneVerifyRequest,
-	PhoneVerifyResponse,
 	SudoMfaMethodsResponse,
 	WebAuthnChallengeResponse,
 	WebAuthnCredentialListResponse,
@@ -62,28 +54,7 @@ export class UserAuthRequestService {
 	constructor(
 		private apiContext: ApiContext,
 		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
 	) {}
-
-	private async assertPhoneEligible(user: User): Promise<void> {
-		if (user.hasVerifiedPhone) {
-			return;
-		}
-		if (user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP)) {
-			return;
-		}
-		if (user.suspiciousActivityFlags !== 0) {
-			return;
-		}
-		const guildIds = await this.userRepository.getUserGuildIds(user.id);
-		if (guildIds.length > 0) {
-			const guilds = await this.guildRepository.listGuilds(guildIds);
-			if (guilds.some((g) => g.verificationLevel >= GuildVerificationLevel.VERY_HIGH)) {
-				return;
-			}
-		}
-		throw new PhoneAddNotEligibleError();
-	}
 
 	async enableTotp({
 		user,
@@ -121,66 +92,22 @@ export class UserAuthRequestService {
 		return this.toBackupCodesResponse(backupCodes);
 	}
 
-	async sendPhoneVerificationCode({
-		user,
-		data,
-		clientIp,
-	}: UserAuthRequest<PhoneSendVerificationRequest> & {
-		clientIp: string;
-	}): Promise<PhoneSendVerificationResponse> {
-		await this.assertPhoneEligible(user);
-		const result = await AuthPhone.sendPhoneVerificationCode(this.apiContext, data.phone, user.id, {
-			clientIp,
-			channel: data.channel,
-		});
-		if (result.channel === 'inbound_challenge') {
-			return {
-				channel: 'inbound_challenge',
-				challenge_code: result.challengeCode,
-				our_number: result.ourNumber,
-				expires_at: result.expiresAt.toISOString(),
-				reason: result.reason,
-			};
-		}
-		return {channel: result.channel};
-	}
-
-	async verifyPhoneCode({user, data}: UserAuthRequest<PhoneVerifyRequest>): Promise<PhoneVerifyResponse> {
-		await this.assertPhoneEligible(user);
-		await AuthPhone.verifyPhoneCode(this.apiContext, data.phone, data.code, user.id);
-		return {verified: true};
-	}
-
-	async startInboundPhoneChallenge(user: User): Promise<{
-		challenge_code: string;
-		our_number: string;
-		expires_at: string;
-	}> {
-		const issued = await AuthPhone.startInboundPhoneChallenge(this.apiContext, user.id);
-		return {
-			challenge_code: issued.challengeCode,
-			our_number: issued.ourNumber,
-			expires_at: issued.expiresAt.toISOString(),
-		};
-	}
-
 	async forgetAuthorizedIps(user: User): Promise<void> {
 		await this.userRepository.deleteAllAuthorizedIps(user.id);
 	}
 
 	async listWebAuthnCredentials(user: User): Promise<WebAuthnCredentialListResponse> {
 		const credentials = await this.userRepository.listWebAuthnCredentials(user.id);
-		return credentials.map((cred) => ({
-			id: cred.credentialId,
-			name: cred.name,
-			created_at: cred.createdAt.toISOString(),
-			last_used_at: cred.lastUsedAt?.toISOString() ?? null,
-		}));
+		const legacyRpId = this.apiContext.services.config.auth.passkeys.rpId;
+		return visibleWebAuthnCredentials(credentials).map((cred) => mapWebAuthnCredentialToResponse(cred, legacyRpId));
 	}
 
-	async generateWebAuthnRegistrationOptions(user: User): Promise<WebAuthnChallengeResponse> {
+	async generateWebAuthnRegistrationOptions(
+		user: User,
+		origin: string | undefined,
+	): Promise<WebAuthnChallengeResponse> {
 		requireEmailVerified(user, 'mfa');
-		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id);
+		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id, origin);
 		return this.toWebAuthnChallengeResponse(options);
 	}
 
@@ -217,8 +144,8 @@ export class UserAuthRequestService {
 		return AuthMfa.getAvailableMfaMethods(this.apiContext, user.id);
 	}
 
-	async getSudoWebAuthnOptions(user: User): Promise<WebAuthnChallengeResponse> {
-		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id);
+	async getSudoWebAuthnOptions(user: User, origin: string | undefined): Promise<WebAuthnChallengeResponse> {
+		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id, origin);
 		return this.toWebAuthnChallengeResponse(options);
 	}
 

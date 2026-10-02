@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createUserID} from '@app/api/BrandedTypes';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
@@ -10,6 +10,7 @@ import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import processPremiumStateReconciliationQueue from '@app/api/worker/tasks/ProcessPremiumStateReconciliationQueue';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import type Stripe from 'stripe';
 import {afterEach, describe, expect, test} from 'vitest';
@@ -48,6 +49,50 @@ function createCancelledSubscription(endedAtMs: number): Stripe.Subscription {
 	} as unknown as Stripe.Subscription;
 }
 
+function createActiveSubscription(periodEndMs: number): Stripe.Subscription {
+	return {
+		id: 'sub_test',
+		status: 'active',
+		customer: 'cus_test',
+		ended_at: null,
+		canceled_at: null,
+		cancel_at: null,
+		cancel_at_period_end: false,
+		trial_end: null,
+		start_date: Math.floor((Date.now() - 200 * ONE_DAY_MS) / 1000),
+		items: {
+			data: [
+				{
+					current_period_end: Math.floor(periodEndMs / 1000),
+					price: {recurring: {interval: 'month'}},
+				},
+			],
+		},
+	} as unknown as Stripe.Subscription;
+}
+
+function createPastDueSubscription(): Stripe.Subscription {
+	return {
+		id: 'sub_test',
+		status: 'past_due',
+		customer: 'cus_test',
+		ended_at: null,
+		canceled_at: null,
+		cancel_at: null,
+		cancel_at_period_end: false,
+		trial_end: null,
+		start_date: Math.floor((Date.now() - 200 * ONE_DAY_MS) / 1000),
+		items: {
+			data: [
+				{
+					current_period_end: Math.floor((Date.now() + 29 * ONE_DAY_MS) / 1000),
+					price: {recurring: {interval: 'month'}},
+				},
+			],
+		},
+	} as unknown as Stripe.Subscription;
+}
+
 function createPaidInvoice(periodEndMs: number): Stripe.Invoice {
 	return {
 		id: 'in_test',
@@ -68,11 +113,16 @@ function createStripeStub(subscription: Stripe.Subscription, invoices: Array<Str
 	} as unknown as Stripe;
 }
 
-function createCapturingDeps(user: User): {
+function createCapturingDeps(
+	user: User,
+	storeEntitlement: {expiresAt: Date} | null = null,
+): {
 	userRepository: UserRepository;
 	patches: Array<Partial<UserRow>>;
+	storeApplications: Array<UserID>;
 	extras: Record<string, unknown>;
 } {
+	const storeApplications: Array<UserID> = [];
 	const patches: Array<Partial<UserRow>> = [];
 	const userRepository = {
 		findUnique: async () => user,
@@ -84,8 +134,25 @@ function createCapturingDeps(user: User): {
 	const extras = {
 		userCacheService: {setUserPartialResponseFromUserInBackground: () => {}},
 		gatewayService: {dispatchPresence: async () => {}},
+		storeEntitlementService: {
+			getActiveStoreEntitlement: async () =>
+				storeEntitlement
+					? {
+							provider: 'app_store',
+							storePurchaseId: 1n,
+							entitledUntil: storeEntitlement.expiresAt,
+							expiresAt: storeEntitlement.expiresAt,
+							graceEndsAt: null,
+							autoRenew: true,
+							slot: 'monthly',
+						}
+					: null,
+			applyStoreEntitlementToUser: async (userId: UserID) => {
+				storeApplications.push(userId);
+			},
+		},
 	};
-	return {userRepository, patches, extras};
+	return {userRepository, patches, storeApplications, extras};
 }
 
 function createHelpers(): WorkerTaskHelpers {
@@ -298,5 +365,205 @@ describe('processPremiumStateReconciliationQueue', () => {
 		expect(patches[0].premium_type).toBeNull();
 		expect(patches[0].premium_until).toBeNull();
 		expect(patches[0].premium_since).toBeNull();
+	});
+	test('keeps premium for a past_due subscription until the recorded payment recovery deadline', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const lapseStartMs = Math.floor((Date.now() - ONE_HOUR_MS) / 1000) * 1000;
+		const user = createPremiumUser({
+			premium_until: new Date(lapseStartMs),
+			premium_will_cancel: true,
+			premium_billing_cycle: 'monthly',
+			premium_grace_ends_at: new Date(lapseStartMs + 7 * ONE_DAY_MS),
+		});
+		const {userRepository, patches, extras} = createCapturingDeps(user);
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: createStripeStub(createPastDueSubscription(), [createPaidInvoice(lapseStartMs)]),
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches).toHaveLength(0);
+		expect(await queueService.getQueueSize()).toBe(0);
+	});
+
+	test('keeps the recovery deadline when an older cancelled subscription shares the customer', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const lapseStartMs = Math.floor((Date.now() - ONE_HOUR_MS) / 1000) * 1000;
+		const recoveryDeadline = new Date(lapseStartMs + 7 * ONE_DAY_MS);
+		const user = createPremiumUser({
+			premium_until: new Date(lapseStartMs),
+			premium_will_cancel: true,
+			premium_billing_cycle: 'monthly',
+			premium_grace_ends_at: recoveryDeadline,
+			stripe_subscription_id: 'sub_current',
+		});
+		const {userRepository, patches, extras} = createCapturingDeps(user);
+		const currentSubscription = {...createPastDueSubscription(), id: 'sub_current'} as Stripe.Subscription;
+		const olderSubscription = {
+			...createCancelledSubscription(Date.now() - 90 * ONE_DAY_MS),
+			id: 'sub_older',
+		} as Stripe.Subscription;
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: {
+				subscriptions: {
+					retrieve: async () => currentSubscription,
+					list: async () => ({data: [olderSubscription, currentSubscription]}),
+				},
+				invoices: {
+					list: async () => ({data: [createPaidInvoice(Date.now() - 90 * ONE_DAY_MS)]}),
+				},
+			} as unknown as Stripe,
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches).toHaveLength(0);
+	});
+
+	test('clears a leftover recovery deadline once the subscription is active again', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const periodEndMs = Math.floor((Date.now() + 29 * ONE_DAY_MS) / 1000) * 1000;
+		const user = createPremiumUser({
+			premium_until: new Date(periodEndMs),
+			premium_billing_cycle: 'monthly',
+			premium_grace_ends_at: new Date(Date.now() + 6 * ONE_DAY_MS),
+		});
+		const {userRepository, patches, extras} = createCapturingDeps(user);
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: createStripeStub(createActiveSubscription(periodEndMs), []),
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches).toHaveLength(1);
+		expect(patches[0].premium_grace_ends_at).toBeNull();
+		expect(patches[0].premium_until).toBeUndefined();
+	});
+
+	test('strips a past_due subscription once the recovery deadline has passed', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const lapseStartMs = Math.floor((Date.now() - 7 * ONE_DAY_MS - 60_000) / 1000) * 1000;
+		const user = createPremiumUser({
+			premium_until: new Date(lapseStartMs),
+			premium_will_cancel: true,
+			premium_billing_cycle: 'monthly',
+			premium_grace_ends_at: new Date(lapseStartMs + 7 * ONE_DAY_MS),
+		});
+		const {userRepository, patches, extras} = createCapturingDeps(user);
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: createStripeStub(createPastDueSubscription(), [createPaidInvoice(lapseStartMs)]),
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches).toHaveLength(1);
+		expect(patches[0].premium_type).toBeNull();
+		expect(patches[0].premium_grace_ends_at).toBeNull();
+	});
+
+	test('honours the voluntary-cancel grace written by the delete webhook', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const endedAtMs = Math.floor((Date.now() - 60_000) / 1000) * 1000;
+		const user = createPremiumUser({
+			premium_until: new Date(endedAtMs),
+			premium_will_cancel: false,
+			premium_billing_cycle: null,
+			stripe_subscription_id: null,
+			premium_grace_ends_at: new Date(endedAtMs + 3 * ONE_DAY_MS),
+		});
+		const {userRepository, patches, extras} = createCapturingDeps(user);
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: createStripeStub(createCancelledSubscription(endedAtMs), [createPaidInvoice(endedAtMs)]),
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches.every((patch) => patch.premium_type === undefined)).toBe(true);
+		expect(patches.every((patch) => patch.premium_until === undefined)).toBe(true);
+		expect(patches.every((patch) => patch.premium_grace_ends_at === undefined)).toBe(true);
+	});
+
+	test('hands a user with an active App Store subscription and a stale Stripe customer to the store', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const endedAtMs = Date.now() - 40 * ONE_DAY_MS;
+		const storeExpiresAt = new Date(Date.now() + 20 * ONE_DAY_MS);
+		const user = createPremiumUser({
+			premium_until: storeExpiresAt,
+			premium_billing_cycle: null,
+			premium_will_cancel: false,
+			stripe_subscription_id: null,
+		});
+		const {userRepository, patches, storeApplications, extras} = createCapturingDeps(user, {
+			expiresAt: storeExpiresAt,
+		});
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: createStripeStub(createCancelledSubscription(endedAtMs), [createPaidInvoice(endedAtMs)]),
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches).toEqual([]);
+		expect(storeApplications).toEqual([USER_ID]);
+		expect(await queueService.getQueueSize()).toBe(0);
+	});
+
+	test('clears the perks-sanitized latch once the subscription is active again', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const periodEndMs = Math.floor((Date.now() + 20 * ONE_DAY_MS) / 1000) * 1000;
+		const user = createPremiumUser({
+			premium_until: new Date(periodEndMs),
+			premium_flags: PremiumFlags.PERKS_SANITIZED,
+		});
+		const {userRepository, patches, extras} = createCapturingDeps(user);
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: createStripeStub(createActiveSubscription(periodEndMs), []),
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches).toHaveLength(1);
+		expect(patches[0].premium_flags).toBe(0);
 	});
 });

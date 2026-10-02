@@ -71,7 +71,7 @@ export const AccountRow = observer(
 		const variantClassName = variant === 'manage' ? styles.manage : variant === 'compact' ? styles.compact : undefined;
 		const isClickable = typeof onClick === 'function';
 		const MainButtonComponent = isClickable ? 'button' : 'div';
-		const showMenuButton = Boolean(onMenuClick && variant !== 'compact' && !showCaretIndicator);
+		const showMenuButton = Boolean(onMenuClick && variant !== 'compact');
 		return (
 			<div
 				className={clsx(styles.row, variantClassName, showMenuButton && styles.withMenu, className)}

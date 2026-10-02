@@ -4,11 +4,16 @@ use super::client::{AdminApiClient, ApiResult};
 use super::types::{
     CreateRegistrationUrlRequest, CreateRegistrationUrlResponse, InstanceConfigResponse,
     InstanceConfigUpdateRequest, InstanceEmailSmtpTestRequest, InstanceEmailSmtpTestResponse,
+    InstancePremiumDiscovery,
 };
 
 impl AdminApiClient {
     pub async fn get_instance_config(&self) -> ApiResult<InstanceConfigResponse> {
         self.get("/admin/instance/config", None).await
+    }
+
+    pub async fn get_instance_premium_discovery(&self) -> ApiResult<InstancePremiumDiscovery> {
+        self.get("/.well-known/fluxer", None).await
     }
 
     pub async fn update_instance_config(

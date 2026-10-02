@@ -135,10 +135,6 @@ export function shouldDisableV8CodeCache(argv: ReadonlyArray<string> = process.a
 	);
 }
 
-export function shouldStartHiddenAtLogin(): boolean {
-	return false;
-}
-
 export function isPortableLaunchFlag(argv: ReadonlyArray<string> = process.argv): boolean {
 	return hasFlag(argv, PORTABLE_MODE_ARGS);
 }

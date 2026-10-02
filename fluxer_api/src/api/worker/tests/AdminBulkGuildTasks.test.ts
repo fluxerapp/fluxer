@@ -10,7 +10,6 @@ import {DisabledLiveKitService} from '@app/api/infrastructure/DisabledLiveKitSer
 import {InMemoryVoiceRoomStore} from '@app/api/infrastructure/InMemoryVoiceRoomStore';
 import {getMessages} from '@app/api/message/tests/MessageTestUtils';
 import {createGuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
-import {getIpInfoService} from '@app/api/middleware/ServiceMiddleware';
 import {getGatewayService, getSnowflakeService, getVoiceAvailabilityService} from '@app/api/middleware/ServiceRegistry';
 import {
 	getAdminRepository,
@@ -97,7 +96,6 @@ function installWorkerDependencies(): void {
 		voiceRoomStore: new InMemoryVoiceRoomStore(),
 		liveKitService: new DisabledLiveKitService(),
 		voiceAvailabilityService: getVoiceAvailabilityService(),
-		ipInfoService: getIpInfoService(),
 	});
 	setWorkerDependenciesForTest({
 		adminRepository: getAdminRepository(),

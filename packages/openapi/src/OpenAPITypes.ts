@@ -19,7 +19,6 @@ export interface ExtractedRoute {
 	middlewares: Array<string>;
 	hasLoginRequired: boolean;
 	hasDefaultUserOnly: boolean;
-	hasLoginRequiredAllowSuspicious: boolean;
 	rateLimitConfig: string | null;
 	responseSchemaName: string | null;
 	responseContentType: string;

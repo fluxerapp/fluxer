@@ -36,7 +36,6 @@ pub(crate) type CapturedRequest = (Method, http::Uri, HeaderMap, Bytes);
 
 fn test_config(root: &Path) -> Config {
     Config {
-        node_env: "test".to_owned(),
         bind_host: "127.0.0.1".to_owned(),
         port: 0,
         secret_key: SecretString::new("secret".to_owned()),

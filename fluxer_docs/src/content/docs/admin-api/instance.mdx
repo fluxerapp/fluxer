@@ -6,7 +6,7 @@ description: Instance configuration, branding, registration control, limits, and
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Instance configuration is everything an operator can change at runtime. It covers single sign-on, Gateway rollout, registration policy, branding and legal links, instance policy, third party integrations, media retention, and the ordered limit configuration. The [Instance](/http-api/instance/) resource serves the subset published to unauthenticated clients.
+Instance configuration is everything an operator can change at runtime. It covers single sign-on, Gateway rollout, registration policy, branding and legal links, instance policy, third party integrations, premium billing, media retention, and the ordered limit configuration. The [Instance](/http-api/instance/) resource serves the subset published to unauthenticated clients.
 
 Every write is a merge over the stored configuration, and an omitted key leaves the stored value unchanged. The limit configuration write is the one exception and replaces the stored document.
 
@@ -34,9 +34,10 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | --- | --- | --- |
 | sso | [SSO configuration](#sso-configuration-object) object | Single sign-on settings |
 | gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
-| voice_noise_suppression | [voice noise suppression configuration](#voice-noise-suppression-configuration-object) object | Client-side noise suppression rollout |
-| push_service_delivery | [push service delivery configuration](#push-service-delivery-configuration-object) object | Push service delivery rollout |
+| push_relay | [push relay configuration](#push-relay-configuration-object) object | Operator consent to the Fluxer-run push relay |
 | domain_migration | [domain migration configuration](#domain-migration-configuration-object) object | Web domain migration rollout |
+| plutonium_page | [Plutonium page configuration](#plutonium-page-configuration-object) object | Plutonium page rollout |
+| captcha | [captcha configuration](#captcha-configuration-object) object | ALTCHA proof-of-work captcha settings |
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
 | registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
@@ -44,6 +45,7 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | policy | [instance policy](#instance-policy-object) object | Community, direct message, premium, and gating policy |
 | integrations | [instance integrations](#instance-integrations-object) object | Third party provider settings and their resolved availability |
 | media | [instance media](#instance-media-object) object | Attachment retention settings |
+| billing | [instance billing](#instance-billing-object) object | Premium billing settings and the state resolved from them |
 
 ## SSO configuration object
 
@@ -72,7 +74,7 @@ Single sign-on settings for the deployment's OpenID Connect provider.
 
 <sup>2</sup> Each entry is stored lowercased and IDNA encoded, duplicates are collapsed, and an empty entry is dropped
 
-<sup>3</sup> The configured web application endpoint followed by `/auth/sso/callback`. No operation can set it
+<sup>3</sup> The configured web application endpoint followed by `/auth/sso/callback`. It is the only redirect URI the provider needs, mobile sign-in included. No operation can set it
 
 ## Gateway rollout configuration object
 
@@ -96,48 +98,21 @@ Every field is present on read. An absent document or missing field uses the def
 
 Admin reads and writes name this field `rpc_request_timeout_ms`. The legacy stored name is covered in the [operator configuration reference](/operator/configuration/#stored-instance-policy).
 
-## Voice noise suppression configuration object
+## Push relay configuration object
 
-The instance rollout of client-side noise suppression. [Experiments](/http-api/experiments/) defines what a client resolves from it and the closed [backend registry](/http-api/experiments/#noise-suppression-backends) every backend field draws on.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| enabled | boolean | Whether the rollout runs at all (default false) |
-| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
-| default_backend | string | Backend given to an account the rollout selects (default `standard`) |
-| enabled_backends | array[string] | Backends a client MAY run, up to 7 entries (default every backend) |
-| allow_user_override | boolean | Whether an account's own choice replaces the assigned backend (default true) |
-| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
-| rollout_salt | string | Salt of the sampling hash (1-64 characters, default `voice-ns-v1`) |
-| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
-| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
-| guild_overrides | array[[guild override](/http-api/experiments/#noise-suppression-guild-override-object) object] | Per-guild replacements, up to 200 entries (default empty) |
-| suppression_strength | integer | Suppression strength (0-100, default 80) |
-
-Every field is present on read. An absent document or missing field uses the defaults above.
-
-`excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
-
-How often a client revalidates this rollout is not set here. It is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) below.
-
-## Push service delivery configuration object
-
-The instance rollout of push service delivery.
+The operator's consent to the push relay supplemental privacy notice.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| enabled | boolean | Whether the rollout runs at all (default false) |
-| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
-| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
-| rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `push-service-delivery-v1`) |
-| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
-| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
+| relay_consent_accepted | boolean | Whether the operator accepted the push relay supplemental privacy notice (default false) |
+| relay_consent_accepted_at | ?string | ISO 8601 timestamp of that acceptance, or null when the notice stands unaccepted (default null) |
+| relay_consent_accepted_by | ?snowflake | Account that accepted the notice, or null when the notice stands unaccepted (default null) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
+
+The notice covers only the Fluxer-run relay that reaches Apple and Google for the official mobile apps. A subscription whose endpoint points at another distributor, such as a self-hosted UnifiedPush server or ntfy, never reaches that relay and needs no acceptance.
 
 ## Domain migration configuration object
 
@@ -152,13 +127,15 @@ The instance rollout that moves the official web client from its legacy origin t
 | rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
 | rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `domain-migration-v1`) |
 | included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
+| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
 | excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
 | anonymous_rollout_basis_points | integer | Share of logged-out devices the rollout moves, in basis points (0-10000, default 0) |
 | standalone_forwarding | boolean | Whether installed desktop web apps forward to the new origin once their data has moved (default false) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
-`excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both.
+`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says.
 
 An installed Chromium desktop web app moves its data like a browser tab, then stays on the legacy origin and offers to install the app from the new one. Set `standalone_forwarding` once the web app manifest lists the new origin in `scope_extensions` and the new origin serves the matching association file. From then on the installed app forwards like a browser tab. Installed mobile and Safari web apps never forward, whatever the value.
 
@@ -167,6 +144,43 @@ Only the official web client acts on this configuration. On any other instance i
 :::caution[`enabled` is the kill switch]
 Setting `enabled` to false stops new migrations and also stops forwarding from the legacy origin for clients that already moved. Excluding an account only stops a migration that has not started yet.
 :::
+
+## Plutonium page configuration object
+
+The instance rollout that replaces the Plutonium settings tab with a full Plutonium page, makes app pages linkable in chat, and uses a minimal gift purchase modal. [Experiments](/http-api/experiments/#plutonium-page-assignment-object) defines what a client resolves from it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout runs at all (default false) |
+| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
+| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
+| rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `plutonium-page-v1`) |
+| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
+| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
+| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
+
+Every field is present on read. An absent document or missing field uses the defaults above.
+
+`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says.
+
+## Captcha configuration object
+
+The ALTCHA proof-of-work check that the API issues and verifies itself on gated operations. [CAPTCHA handling](/topics/captcha/) defines the challenge exchange and lists the gated operations.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether gated operations require a solved challenge (default true) |
+| cost | integer | PBKDF2 iterations per solving attempt (1000-20000, default 5000) |
+| max_counter | integer | Upper bound of the hidden counter a client searches for (100-20000, default 1000) |
+
+Every field is present on read. An absent document or missing field uses the defaults above, so the check is on until an administrator sets `enabled` to false. Setting `enabled` to false turns the check off for the whole instance.
+
+Each challenge hides its counter between half of `max_counter` and `max_counter`, and a client tries counters from 0 upward. Solve time grows with `cost` times `max_counter`. Fluxer spends one attempt at `cost` to issue each challenge.
 
 ## Experiment delivery configuration object
 
@@ -306,11 +320,11 @@ Community, direct message, premium and gating policy for the whole deployment.
 | single_community_guild_id | ?string | Guild used as that community, or null before one has been created |
 | direct_messages_disabled | boolean | Whether direct messages are disabled |
 | direct_messages_locked<sup>1</sup> | boolean | Whether the direct message setting is locked against further change |
+| guild_create_access | boolean | Whether every account can create communities, or only admins and holders of the `feature_guild_create` limit |
 | premium_mode | string | [Premium mode](#premium-modes) |
 | services | object | Operator overrides for `gif_enabled`, `youtube_enabled`, and `bluesky_enabled`. Each is nullable, and null means no override |
 | services_resolved<sup>2</sup> | object | The same keys as concrete booleans, resolved from the override and the provider's own availability |
 | services_available<sup>3</sup> | object | Provider availability for `gif`, `youtube`, and `bluesky`, with no operator override applied |
-| deferred_phone_gate | [deferred phone gate](#deferred-phone-gate-object) object | Delayed phone verification policy |
 
 <sup>1</sup> The lock is set each time direct messages are re-enabled. [Update instance configuration](#update-instance-configuration) clears it when the policy object has `direct_messages_locked` set to false
 
@@ -325,17 +339,7 @@ Community, direct message, premium and gating policy for the whole deployment.
 | mirror | Resolve premium access from the account's own entitlement and premium flags |
 | everyone | Grant premium access to every account on a self-hosted deployment |
 
-## Deferred phone gate object
-
-A rule for accounts whose phone verification requirement was deferred. When such an account joins a guild within `window_hours` of registration, and the guild has the `DISCOVERABLE` feature or more than `member_threshold` members, Fluxer refuses the join until the account verifies a phone.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| enabled | boolean | Whether the delayed phone requirement is applied (default false) |
-| window_hours | number | Hours after registration in which the requirement can be applied (default 6) |
-| member_threshold | number | Guild member count above which the requirement is applied (default 50) |
+A self-hosted deployment issues gift codes and sells premium only in `mirror`.
 
 ## Instance integrations object
 
@@ -347,25 +351,8 @@ Every provider reports its stored settings, a `_set` boolean in place of each se
 | --- | --- | --- |
 | gif | object | `klipy_api_key_set` and `effective_available` |
 | youtube | object | `api_key_set` and `effective_available` |
-| captcha | [captcha integration](#captcha-integration-object) object | CAPTCHA provider settings |
 | email | [email integration](#email-integration-object) object | Outbound email settings |
 | bluesky | [Bluesky integration](#bluesky-integration-object) object | Bluesky client settings |
-
-## Captcha integration object
-
-CAPTCHA provider settings, and the provider resolved from them.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| provider | ?string | Operator override of `hcaptcha`, `turnstile`, or `none`, or null for no override |
-| effective_provider | string | Provider in use, one of `hcaptcha`, `turnstile`, or `none` |
-| hcaptcha_site_key | ?string | hCaptcha site key |
-| hcaptcha_secret_key_set | boolean | Whether an hCaptcha secret is stored or supplied by deployment configuration |
-| turnstile_site_key | ?string | Turnstile site key |
-| turnstile_secret_key_set | boolean | Whether a Turnstile secret is stored or supplied by deployment configuration |
-| effective_enabled | boolean | Whether CAPTCHA verification is in force |
 
 ## Email integration object
 
@@ -407,6 +394,58 @@ Client identity the deployment presents to Bluesky, and the number of signing ke
 | key_count | integer | Number of configured signing keys |
 
 Signing keys are write-only and must have unique identifiers.
+
+## Instance billing object
+
+Stripe billing for the premium tier. Each stored field is nullable, and null falls back to the [deployment configuration](/operator/configuration/#payments).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | ?boolean | Operator override of the billing switch, or null for no override |
+| effective_enabled | boolean | Whether billing is switched on once the override and the deployment configuration are combined |
+| stripe_secret_key_set | boolean | Whether a Stripe secret key is stored or supplied by deployment configuration |
+| stripe_webhook_secret_set | boolean | Whether a Stripe webhook secret is stored or supplied by deployment configuration |
+| stripe_secret_key_stored | boolean | Whether a Stripe secret key is stored, not counting deployment configuration |
+| stripe_webhook_secret_stored | boolean | Whether a Stripe webhook secret is stored, not counting deployment configuration |
+| automatic_tax<sup>4</sup> | ?boolean | Stored switch for Stripe automatic tax at checkout, or null for the default |
+| tax_id_collection<sup>4</sup> | ?boolean | Stored switch for collecting a buyer tax ID at checkout, or null for the default |
+| terms_consent_required<sup>4</sup> | ?boolean | Stored switch for requiring terms of service consent at checkout, or null for the default |
+| effective_automatic_tax | boolean | Whether checkout uses Stripe automatic tax |
+| effective_tax_id_collection | boolean | Whether checkout collects a buyer tax ID |
+| effective_terms_consent_required | boolean | Whether checkout requires terms of service consent |
+| default_currency | ?string | Currency used when no country mapping applies, or null |
+| prices<sup>1</sup> | ?object | Stored [billing price sets](#billing-price-set-object) keyed by currency, or null to use the deployment configuration |
+| country_currencies | ?object | Stored map of two-letter country codes to currencies, or null |
+| legacy_prices<sup>2</sup> | ?object | Stored map of legacy price slots to arrays of Stripe price IDs, or null to use the deployment configuration |
+| billing_active<sup>3</sup> | boolean | Whether premium purchases are available |
+| stripe_serviceable<sup>5</sup> | boolean | Whether existing Stripe subscriptions can be managed, cancelled and billed |
+| catalog_mode | string | `operator` while `prices` is stored, otherwise `env` |
+| webhook_url | string | The URL to register as the Stripe webhook endpoint |
+
+<sup>1</sup> Stored prices replace the deployment catalogue entirely and take any three-letter currency code. A buyer gets the currency mapped to their country, then `default_currency`, then the first configured currency. Fluxer's country checks for localised currencies do not apply to them
+
+<sup>2</sup> A slot is `monthly`, `yearly`, `gift_1_month`, or `gift_1_year`, an underscore, and a currency, such as `monthly_GBP`. Existing subscriptions on a listed price keep renewing
+
+<sup>3</sup> True when billing is switched on, a Stripe secret key is set, at least one currency has both a monthly and a yearly price, and premium tiering is in force. Premium tiering is always in force on a hosted deployment, and on a self-hosted one only in the `mirror` [premium mode](#premium-modes)
+
+<sup>4</sup> A hosted deployment always turns all three on. A self-hosted deployment defaults all three to off. Automatic tax needs Stripe Tax set up, and terms consent needs a terms of service URL in the Stripe public details
+
+<sup>5</sup> True while a Stripe secret key is set and premium tiering is in force. On a hosted deployment billing must also be switched on. Only the checkout routes follow `billing_active`
+
+## Billing price set object
+
+The Stripe price IDs for one currency. Each is nullable.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| monthly | ?string | Price ID of the monthly recurring plan |
+| yearly | ?string | Price ID of the yearly recurring plan |
+| gift_1_month | ?string | Price ID of the one-month gift |
+| gift_1_year | ?string | Price ID of the one-year gift |
 
 ## Instance media object
 
@@ -575,29 +614,35 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | --- | --- | --- |
 | sso?<sup>1</sup> | object | Every [SSO configuration](#sso-configuration-object) field except `client_secret_set` and `redirect_uri`, plus `client_secret` |
 | gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
-| voice_noise_suppression? | object | Any subset of the [noise suppression](#voice-noise-suppression-configuration-object) fields |
-| push_service_delivery? | object | Any subset of the [push service delivery](#push-service-delivery-configuration-object) fields |
+| push_relay? | object | `relay_consent_accepted` from the [push relay configuration](#push-relay-configuration-object) |
 | domain_migration? | object | Any subset of the [domain migration](#domain-migration-configuration-object) fields |
+| plutonium_page? | object | Any subset of the [Plutonium page](#plutonium-page-configuration-object) fields |
+| captcha? | object | Any subset of the [captcha configuration](#captcha-configuration-object) fields |
 | experiment_delivery? | object | Any subset of the [experiment delivery](#experiment-delivery-configuration-object) fields |
 | registration? | object | `mode` and `admin_registration_urls_enabled` |
 | app_public?<sup>2</sup> | object | `branding`, `setup`, `legal`, and `registration` sub-objects, each merged field by field |
-| integrations?<sup>3</sup> | object | `gif`, `youtube`, `captcha`, `email`, and `bluesky` sub-objects, the last of which also has the `keys` array |
+| integrations?<sup>3</sup> | object | `gif`, `youtube`, `email`, and `bluesky` sub-objects, the last of which also has the `keys` array |
 | media? | object | `attachment_decay` overrides, each nullable to restore the deployment default |
 | policy? | [instance policy update](#instance-policy-update-structure) object | Community, direct message, premium, and gating policy |
+| billing?<sup>4</sup> | object | Stored [instance billing](#instance-billing-object) fields, with `stripe_secret_key` and `stripe_webhook_secret` for the secrets |
 
 <sup>1</sup> The supplied fields are merged over the stored configuration and the result is validated as a whole. Every supplied endpoint URL uses `https`, has no credentials and no fragment, and resolves to a publicly routable address, otherwise the request returns 400 `INVALID_FORM_BODY` with `INVALID_URL_FORMAT` or `URL_NOT_PUBLICLY_ROUTABLE`
 
-<sup>2</sup> `branding.product_name` is 1 to 80 characters, every branding and legal URL is at most 2048 characters and nullable, `branding.theme_color` is at most 64 characters and nullable, and `setup.configured` and `registration.collect_date_of_birth` are booleans. Every string is trimmed before it is stored
+<sup>2</sup> `branding.product_name` is 1 to 80 characters, every branding and legal URL is at most 2048 characters and nullable, `branding.theme_color` is at most 64 characters and nullable, and `setup.configured` and `registration.collect_date_of_birth` are booleans. `branding.premium_product_name` is 1 to 40 characters, and null restores the default. `branding.premium_info_url` is an absolute `http` or `https` URL. Every string is trimmed before it is stored
 
-`voice_noise_suppression` takes every [voice noise suppression configuration](#voice-noise-suppression-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
+`push_relay` takes only `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request. Turning the flag on stamps the current time and the acting account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
 
-`push_service_delivery` works the same way, over the [push service delivery configuration](#push-service-delivery-configuration-object) fields and its own `config_version`.
+`domain_migration` takes every [domain migration configuration](#domain-migration-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 
-`domain_migration` works the same way, over the [domain migration configuration](#domain-migration-configuration-object) fields and its own `config_version`.
+`plutonium_page` works the same way, over the [Plutonium page configuration](#plutonium-page-configuration-object) fields and its own `config_version`.
+
+`captcha` takes any subset of the [captcha configuration](#captcha-configuration-object) fields, each bound as documented there. Fluxer merges the supplied fields over the stored ones. The section has no `config_version`.
 
 `experiment_delivery` takes both [experiment delivery configuration](#experiment-delivery-configuration-object) fields, each bound as documented there. It is a section of its own, so a write to it changes no `config_version` and changes no assignment, only the cadence on which clients ask for one.
 
-<sup>3</sup> A secret such as `klipy_api_key`, `api_key`, `hcaptcha_secret_key`, `turnstile_secret_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
+<sup>3</sup> A secret such as `klipy_api_key`, `api_key`, or the SMTP `password` is written when supplied and left alone when absent. `integrations.bluesky.keys` is the only way to write the Bluesky signing keys counted as `bluesky.key_count`. It takes up to 8 entries of `kid` (1-255 characters) and nullable `private_key` (up to 10000 characters), and replaces the stored key set outright
+
+<sup>4</sup> Accepted only on a self-hosted deployment. A hosted deployment rejects the section, and `app_public.branding.premium_product_name` and `premium_info_url`, with 400 `INVALID_FORM_BODY`. A Stripe secret, `enabled`, `automatic_tax`, `tax_id_collection` and `terms_consent_required` are written when supplied, cleared by null, and left alone when absent. A null `enabled` follows `FLUXER_STRIPE_ENABLED`. `prices`, `country_currencies`, and `legacy_prices` replace the stored value outright, a price slot left out is stored as null, and an empty `prices` object restores the deployment catalogue. A price ID is `price_` followed by letters and digits. A currency is three upper-case letters and a country code is two
 
 :::note[Single sign-on URL validation is conditional]
 Fluxer skips URL validation while the merged configuration leaves single sign-on disabled. A configuration both enabled and enforced fails validation against `sso` with `SSO_MISCONFIGURED` unless it resolves an authorisation endpoint, a token endpoint, a client identifier, and a claims source, which is `jwks_url` or `userinfo_url`. A set `issuer` meets the endpoint and claims source requirements, because Fluxer can discover them from the issuer.
@@ -611,17 +656,17 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | single_community_name?<sup>1</sup> | string | Name used only when the community has to be created (1-100 characters) |
 | direct_messages_disabled?<sup>2</sup> | boolean | Whether direct messages are disabled |
 | direct_messages_locked?<sup>2</sup> | boolean | Whether the direct message setting stays locked |
+| guild_create_access? | boolean | Whether every account can create communities |
 | premium_mode? | string | [Premium mode](#premium-modes) |
 | services? | object | Nullable `gif_enabled`, `youtube_enabled`, and `bluesky_enabled` overrides |
-| deferred_phone_gate?<sup>3</sup> | object | `enabled`, `window_hours`, and `member_threshold` |
 
 <sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists. When none is designated or the designated guild was deleted, it creates a community using `single_community_name` or the configured product name. When the stored guild ID is not a valid ID, or the guild lookup fails for a reason other than an unknown guild, the operation fails and Fluxer creates no community. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
 
 <sup>2</sup> The setting can be changed only while `direct_messages_locked` is false, and a change attempted after the lock is set fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` unless the same request sets `direct_messages_locked` to false. Re-enabling direct messages sets the lock again
 
-<sup>3</sup> `window_hours` is a positive number up to 8760 and `member_threshold` is a positive integer up to 1000000. An omitted key keeps its stored value
-
 `direct_messages_locked` accepts only false, and a body that sets it to true fails with 400 `INVALID_FORM_BODY`.
+
+On a self-hosted deployment, billing and the `everyone` premium mode exclude each other. A body that would leave billing switched on in `everyone` fails with 400 `INVALID_FORM_BODY` and writes nothing, whether it enables billing or switches the premium mode.
 
 ### Response
 
@@ -631,12 +676,12 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `voice_noise_suppression`, `push_service_delivery`, `domain_migration`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `push_relay`, `domain_migration`, `plutonium_page`, `captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, `billing`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects
 
-Fluxer publishes a `gateway_rollout` change to the Gateway cluster. Premium mode changes affect the limits in force without replacing the saved limit configuration. On self-hosted deployments, `everyone` hides premium-filtered rules. Switching back to `mirror` restores them unless an Admin has replaced the limit configuration in the meantime. Enabling single community mode creates the community when none is designated, with the acting Admin as owner.
+Fluxer publishes a `gateway_rollout` change to the Gateway cluster. A `push_relay` change reaches the push service without a restart. A `billing` change applies without a restart. Premium mode changes affect the limits in force without replacing the saved limit configuration. On self-hosted deployments, `everyone` hides premium-filtered rules. Switching back to `mirror` restores them unless an Admin has replaced the limit configuration in the meantime. Enabling single community mode creates the community when none is designated, with the acting Admin as owner.
 
 Initial setup completes on the first update that sets `app_public.setup.configured` to true from a session credential whose account holds neither `admin:authenticate` nor the wildcard. That update grants the account the wildcard Admin ACL and marks the deployment as bootstrapped.
 

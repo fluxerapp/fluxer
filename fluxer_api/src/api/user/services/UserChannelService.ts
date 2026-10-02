@@ -12,9 +12,11 @@ import {
 	createMessageResponseDataService,
 	messageResponseAccessForGuild,
 } from '@app/api/channel/services/message/MessageResponseDataService';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
@@ -22,11 +24,12 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
+import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
-import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
-import {createDirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -56,7 +59,6 @@ export class UserChannelService {
 	private readonly snowflakeService: ISnowflakeService;
 	private readonly userPermissionUtils: UserPermissionUtils;
 	private readonly limitConfigService: LimitConfigService;
-	private readonly dmSpamMitigationService: DirectMessageSpamMitigationService | null;
 
 	constructor(
 		apiContext: ApiContext,
@@ -105,7 +107,6 @@ export class UserChannelService {
 			this.channelRepository = channelRepository;
 			this.userPermissionUtils = userPermissionUtils;
 			this.limitConfigService = limitConfigService;
-			this.dmSpamMitigationService = createDirectMessageSpamMitigationService(apiContext, this.userRepository);
 			return;
 		}
 		const [
@@ -124,7 +125,6 @@ export class UserChannelService {
 		this.channelRepository = channelRepository;
 		this.userPermissionUtils = userPermissionUtils;
 		this.limitConfigService = limitConfigService;
-		this.dmSpamMitigationService = null;
 	}
 
 	async getPrivateChannels(userId: UserID): Promise<Array<Channel>> {
@@ -152,6 +152,7 @@ export class UserChannelService {
 		}
 		requireEmailVerified(callingUser, 'direct_message');
 		if (data.recipients !== undefined) {
+			assertAccountNotLimited(callingUser);
 			return await this.createGroupDMChannel({
 				userId,
 				recipients: data.recipients,
@@ -166,7 +167,34 @@ export class UserChannelService {
 		if (userId === recipientId) {
 			throw InputValidationError.fromCode('recipient_id', ValidationErrorCodes.CANNOT_DM_YOURSELF);
 		}
-		if (this.dmSpamMitigationService?.shouldSuppressDirectMessageDelivery(callingUser)) {
+		await assertMayStartConversation({
+			user: callingUser,
+			targetId: recipientId,
+			users: this.userRepository,
+			messages: this.channelRepository,
+		});
+		const suppressed = isDirectDeliverySuppressed(callingUser);
+		const channel = await this.openOneToOneDMChannel({userId, recipientId, suppressed, userCacheService, requestCache});
+		if (!callingUser.isSystem) {
+			void this.emitDmOpened({userId, recipientId, channelId: channel.id, delivered: !suppressed});
+		}
+		return channel;
+	}
+
+	private async openOneToOneDMChannel({
+		userId,
+		recipientId,
+		suppressed,
+		userCacheService,
+		requestCache,
+	}: {
+		userId: UserID;
+		recipientId: UserID;
+		suppressed: boolean;
+		userCacheService: UserCacheService;
+		requestCache: RequestCache;
+	}): Promise<Channel> {
+		if (suppressed) {
 			const targetUser = await this.userRepository.findUnique(recipientId);
 			if (!targetUser) throw new UnknownUserError();
 			return await this.createOrOpenLocalOnlyDMChannel({userId, recipientId, userCacheService, requestCache});
@@ -178,6 +206,30 @@ export class UserChannelService {
 		const targetUser = await this.userRepository.findUnique(recipientId);
 		if (!targetUser) throw new UnknownUserError();
 		return await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
+	}
+
+	private async emitDmOpened(params: {
+		userId: UserID;
+		recipientId: UserID;
+		channelId: ChannelID;
+		delivered: boolean;
+	}): Promise<void> {
+		try {
+			const friendship = await this.userRepository.getRelationship(
+				params.userId,
+				params.recipientId,
+				RelationshipTypes.FRIEND,
+			);
+			await emitActivity('dm_opened', params.userId.toString(), {
+				user_id: params.userId.toString(),
+				recipient_id: params.recipientId.toString(),
+				channel_id: params.channelId.toString(),
+				recipient_is_friend: friendship !== null,
+				delivered: params.delivered,
+			});
+		} catch (error) {
+			Logger.debug({error}, 'DM activity event could not be built');
+		}
 	}
 
 	async pinDmChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<void> {

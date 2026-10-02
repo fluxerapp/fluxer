@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApiContext, ApiServices, RequestScope} from '@app/api/ApiContext';
-import {CassandraPhoneLookupRepository} from '@app/api/auth/services/PhoneLookupRepository';
 import {Config} from '@app/api/Config';
-import {getInboundSmsChallengeServiceInstance} from '@app/api/middleware/ServiceMiddleware';
 import {
 	getGatewayService,
 	getKVClient,
@@ -17,9 +15,7 @@ import {
 	getContactChangeLogService,
 	getEmailDnsValidationService,
 	getEmailService,
-	getPhoneAttemptRiskService,
 	getRateLimitService,
-	getSmsService,
 	getUserActivityBuffer,
 	getUserRepository,
 } from '@app/api/middleware/ServiceSingletons';
@@ -39,14 +35,10 @@ function buildApiServices(): ApiServices {
 		media: getMediaService(),
 		email: getEmailService(),
 		emailDnsValidation: getEmailDnsValidationService(),
-		sms: getSmsService(),
 		worker: getWorkerService(),
 		snowflake: getSnowflakeService(),
 		rateLimit: getRateLimitService(),
 		contactChangeLog: getContactChangeLogService(),
-		inboundSmsChallenge: getInboundSmsChallengeServiceInstance(),
-		phoneLookup: new CassandraPhoneLookupRepository(),
-		phoneAttemptRisk: getPhoneAttemptRiskService(),
 		botMfaMirror: getBotMfaMirrorService(),
 		userActivityBuffer: getUserActivityBuffer(),
 		config: Config,

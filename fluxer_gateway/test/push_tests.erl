@@ -4,67 +4,123 @@
 -typing([eqwalizer]).
 -include_lib("eunit/include/eunit.hrl").
 
-clear_channel_notifications_disabled_by_default_test() ->
-    erase_persistent_term(push_noop),
-    erase_persistent_term(push_clear_notifications_enabled),
-    ?assertEqual(ok, push:clear_channel_notifications(1, 2, 3)).
+clear_channel_notifications_are_enabled_by_default_test() ->
+    {Truncates, Casts} = capture_clear(undefined, #{}),
+    ?assertEqual([{1, 2, 3}], Truncates),
+    ?assertEqual([{clear_channel_notifications, 1, 2, 3}], Casts).
 
-a_saturated_dispatcher_retries_the_clear_before_dropping_it_test() ->
-    ok = meck:new(push_dispatcher, [passthrough, no_link]),
-    try
-        ok = meck:expect(
-            push_dispatcher, enqueue_clear_notifications, fun(_U, _C, _M, _T) -> dropped end
-        ),
-        State = #{badge_counts_ttl_seconds => 0},
-        ?assertEqual(
-            {noreply, State},
-            push:handle_info({retry_clear_notifications, 1, 2, 3, 0}, State)
-        ),
-        receive
-            {retry_clear_notifications, 1, 2, 3, 1} -> ok
-        after 2000 -> erlang:error(no_retry_scheduled)
-        end
-    after
-        meck:unload(push_dispatcher)
-    end.
+the_clear_env_switch_turns_off_the_clear_cast_test() ->
+    {Truncates, Casts} = capture_clear(undefined, #{
+        push_enrolled_clear_notifications_enabled => false
+    }),
+    ?assertEqual([{1, 2, 3}], Truncates),
+    ?assertEqual([], Casts).
 
-a_clear_is_dropped_only_after_the_retry_budget_is_spent_test() ->
-    ok = meck:new(push_dispatcher, [passthrough, no_link]),
-    try
-        ok = meck:expect(
-            push_dispatcher, enqueue_clear_notifications, fun(_U, _C, _M, _T) -> dropped end
-        ),
-        State = #{badge_counts_ttl_seconds => 0},
-        ?assertEqual(
-            {noreply, State},
-            push:handle_info({retry_clear_notifications, 1, 2, 3, 3}, State)
-        ),
-        receive
-            {retry_clear_notifications, _, _, _, _} -> erlang:error(retried_past_budget)
-        after 700 -> ok
-        end
-    after
-        meck:unload(push_dispatcher)
-    end.
+the_clear_operator_switch_turns_off_the_clear_cast_test() ->
+    {Truncates, Casts} = capture_clear(false, #{
+        push_enrolled_clear_notifications_enabled => true
+    }),
+    ?assertEqual([{1, 2, 3}], Truncates),
+    ?assertEqual([], Casts).
 
-an_enrolled_user_gets_clears_while_the_fleet_switch_is_off_test() ->
+the_clear_operator_switch_turns_on_the_clear_cast_test() ->
+    {Truncates, Casts} = capture_clear(true, #{
+        push_enrolled_clear_notifications_enabled => false
+    }),
+    ?assertEqual([{1, 2, 3}], Truncates),
+    ?assertEqual([{clear_channel_notifications, 1, 2, 3}], Casts).
+
+clears_do_nothing_while_push_is_disabled_test() ->
+    {Truncates, Casts} = capture_clear(undefined, #{push_enabled => false}),
+    ?assertEqual([], Truncates),
+    ?assertEqual([], Casts).
+
+capture_clear(OperatorChoice, Env) ->
+    Self = self(),
     erase_persistent_term(push_noop),
     erase_persistent_term(push_enrolled_clear_notifications_enabled),
-    persistent_term:put(push_clear_notifications_enabled, false),
+    put_operator_choice(OperatorChoice),
+    Stub = spawn(fun() -> push_stub(Self) end),
+    true = register(push, Stub),
+    Modules = [fluxer_gateway_env, push_outbox, gateway_node_router],
+    lists:foreach(fun(Module) -> ok = meck:new(Module, [passthrough, no_link]) end, Modules),
     try
-        ?assertEqual(ok, push:clear_channel_notifications(1, 2, 3))
+        ok = meck:expect(fluxer_gateway_env, get, fun(Key) ->
+            maps:get(Key, maps:merge(#{push_enabled => true}, Env), undefined)
+        end),
+        ok = meck:expect(push_outbox, truncate_read, fun(UserId, ChannelId, MessageId) ->
+            Self ! {truncated, {UserId, ChannelId, MessageId}},
+            ok
+        end),
+        ok = meck:expect(gateway_node_router, owner_node_result, fun(_Key, push) ->
+            {ok, node()}
+        end),
+        ?assertEqual(ok, push:clear_channel_notifications(1, 2, 3)),
+        Stub ! {flush, Self},
+        receive
+            flushed -> ok
+        after 5000 -> error(push_stub_timeout)
+        end,
+        {drain_tagged(truncated), drain_tagged(cast)}
     after
-        erase_persistent_term(push_clear_notifications_enabled)
-    end.
-
-the_cohort_switch_can_be_turned_off_on_its_own_test() ->
-    erase_persistent_term(push_noop),
-    persistent_term:put(push_enrolled_clear_notifications_enabled, false),
-    try
-        ?assertEqual(ok, push:clear_channel_notifications(1, 2, 3))
-    after
+        lists:foreach(fun meck:unload/1, Modules),
+        unregister(push),
+        exit(Stub, kill),
         erase_persistent_term(push_enrolled_clear_notifications_enabled)
     end.
+
+put_operator_choice(undefined) ->
+    ok;
+put_operator_choice(Choice) ->
+    persistent_term:put(push_enrolled_clear_notifications_enabled, Choice).
+
+push_stub(Parent) ->
+    receive
+        {'$gen_cast', Msg} ->
+            Parent ! {cast, Msg},
+            push_stub(Parent);
+        {flush, From} ->
+            From ! flushed,
+            push_stub(Parent)
+    end.
+
+drain_tagged(Tag) ->
+    receive
+        {Tag, Value} -> [Value | drain_tagged(Tag)]
+    after 0 ->
+        []
+    end.
+
+a_clear_publishes_through_the_outbox_test() ->
+    State = #{max_entries => 10},
+    [Job] = with_captured_enqueues(fun() ->
+        ?assertEqual(
+            {noreply, State},
+            push:handle_cast({clear_channel_notifications, 1, 2, 3}, State)
+        )
+    end),
+    ?assertMatch(
+        #{
+            kind := clear,
+            subject := <<"push.job.clear">>,
+            user_ids := [1],
+            channel_id := 2,
+            message_id := 3,
+            job := #{
+                <<"v">> := 1,
+                <<"config_version">> := 0,
+                <<"user_id">> := <<"1">>,
+                <<"channel_id">> := <<"2">>,
+                <<"message_id">> := <<"3">>
+            }
+        },
+        Job
+    ).
+
+legacy_cache_invalidation_casts_are_ignored_test() ->
+    State = #{max_entries => 10},
+    ?assertEqual({noreply, State}, push:handle_cast({invalidate_user_subscriptions, 1}, State)),
+    ?assertEqual({noreply, State}, push:handle_cast({invalidate_user_badge_count, 1}, State)).
 
 push_owner_key_prefers_first_recipient_test() ->
     ?assertEqual(
@@ -217,29 +273,26 @@ prefetch_user_guild_settings_skips_direct_messages_test() ->
     end),
     ?assertEqual([], settings_requests()).
 
-init_logs_a_mismatched_vapid_pair_test() ->
-    with_push_env(
-        fun() ->
-            {Pub, _} = generate_vapid_pair(),
-            {_, OtherPriv} = generate_vapid_pair(),
-            patch_vapid(true, Pub, OtherPriv),
-            {ok, Pid} = with_captured_logs(fun() -> push:start_link() end),
-            ?assert(is_process_alive(Pid)),
-            ?assert(any_error_log_mentions("FLUXER_VAPID_PUBLIC_KEY")),
-            gen_server:stop(Pid)
-        end
-    ).
+with_captured_enqueues(Fun) ->
+    Self = self(),
+    ok = meck:new(push_outbox, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_outbox, enqueue, fun(OutboxJob) ->
+            Self ! {enqueued, OutboxJob},
+            ok
+        end),
+        Fun(),
+        drain_enqueued([])
+    after
+        meck:unload(push_outbox)
+    end.
 
-init_accepts_a_matching_vapid_pair_test() ->
-    with_push_env(
-        fun() ->
-            {Pub, Priv} = generate_vapid_pair(),
-            patch_vapid(true, Pub, Priv),
-            {ok, Pid} = push:start_link(),
-            ?assert(is_process_alive(Pid)),
-            gen_server:stop(Pid)
-        end
-    ).
+drain_enqueued(Acc) ->
+    receive
+        {enqueued, OutboxJob} -> drain_enqueued([OutboxJob | Acc])
+    after 0 ->
+        lists:reverse(Acc)
+    end.
 
 with_rpc_client_stub(Result, Fun) ->
     Self = self(),
@@ -263,70 +316,6 @@ settings_requests() ->
             ]
     after 0 ->
         []
-    end.
-
-with_push_env(Fun) ->
-    push_ets_cache:init(),
-    push_worker_pool:init_counter(),
-    OldConfig = fluxer_gateway_env:get_map(),
-    OldTrap = erlang:process_flag(trap_exit, true),
-    try
-        Fun()
-    after
-        _ = erlang:process_flag(trap_exit, OldTrap),
-        flush_exit_signals(),
-        _ = fluxer_gateway_env:update(fun(_) -> OldConfig end)
-    end.
-
-with_captured_logs(Fun) ->
-    Self = self(),
-    ok = logger:add_primary_filter(
-        capture_logs, {
-            fun(Event, Pid) ->
-                Pid ! {captured_log, Event},
-                stop
-            end,
-            Self
-        }
-    ),
-    try
-        Fun()
-    after
-        _ = logger:remove_primary_filter(capture_logs)
-    end.
-
-any_error_log_mentions(Needle) ->
-    receive
-        {captured_log, #{level := error, msg := {string, Message}}} ->
-            case string:find(Message, Needle) of
-                nomatch -> any_error_log_mentions(Needle);
-                _ -> true
-            end;
-        {captured_log, _} ->
-            any_error_log_mentions(Needle)
-    after 0 ->
-        false
-    end.
-
-patch_vapid(Enabled, Pub, Priv) ->
-    _ = fluxer_gateway_env:patch(#{
-        push_enabled => Enabled,
-        vapid_public_key => push_utils:base64url_encode(Pub),
-        vapid_private_key => push_utils:base64url_encode(Priv)
-    }),
-    ok.
-
-generate_vapid_pair() ->
-    case crypto:generate_key(ecdh, prime256v1) of
-        {<<4, _:64/binary>> = Pub, <<_:32/binary>> = Priv} -> {Pub, Priv};
-        _ -> generate_vapid_pair()
-    end.
-
-flush_exit_signals() ->
-    receive
-        {'EXIT', _, _} -> flush_exit_signals()
-    after 0 ->
-        ok
     end.
 
 erase_persistent_term(Key) ->

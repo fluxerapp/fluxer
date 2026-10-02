@@ -29,6 +29,7 @@ const DEFAULT_FCM_BASE_URL: &str = "https://fcm.googleapis.com";
 const DEFAULT_CLIENT_IP_HEADER_NAME: &str = "x-forwarded-for";
 const APNS_PRODUCTION_BASE_URL: &str = "https://api.push.apple.com";
 const APNS_DEVELOPMENT_BASE_URL: &str = "https://api.sandbox.push.apple.com";
+const DEFAULT_MANAGED_RELAY_HOST: &str = "push.fluxer.com";
 const VOIP_TOPIC_SUFFIX: &str = ".voip";
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, clap::ValueEnum)]
@@ -184,6 +185,8 @@ pub struct DeliveryConfig {
     pub apns: Option<ApnsConfig>,
     pub fcm: Option<FcmConfig>,
     pub own_relay_hosts: Vec<String>,
+    pub managed_relay_hosts: Vec<String>,
+    pub relay_consent_accepted: bool,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -264,6 +267,12 @@ impl DeliveryConfig {
             apns: apns_config(&env)?,
             fcm: fcm_config(&env)?,
             own_relay_hosts: own_relay_hosts(&env),
+            managed_relay_hosts: managed_relay_hosts(&env),
+            relay_consent_accepted: parse_bool(
+                "FLUXER_PUSH_SERVICE_RELAY_CONSENT_ACCEPTED",
+                env.get("FLUXER_PUSH_SERVICE_RELAY_CONSENT_ACCEPTED"),
+            )?
+            .unwrap_or(false),
         })
     }
 }
@@ -272,6 +281,16 @@ fn own_relay_hosts(env: &Env) -> Vec<String> {
     env.get("FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS")
         .unwrap_or_default()
         .split(',')
+        .map(|host| host.trim().to_ascii_lowercase())
+        .filter(|host| !host.is_empty())
+        .collect()
+}
+
+fn managed_relay_hosts(env: &Env) -> Vec<String> {
+    let Some(raw) = env.get("FLUXER_PUSH_SERVICE_MANAGED_RELAY_HOSTS") else {
+        return vec![DEFAULT_MANAGED_RELAY_HOST.to_owned()];
+    };
+    raw.split(',')
         .map(|host| host.trim().to_ascii_lowercase())
         .filter(|host| !host.is_empty())
         .collect()

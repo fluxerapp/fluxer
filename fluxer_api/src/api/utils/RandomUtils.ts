@@ -4,7 +4,6 @@ import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 
 const RANDOM_STRING_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-const RANDOM_DIGIT_ALPHABET = '0123456789';
 
 function randomFromAlphabet(length: number, alphabet: string): string {
 	assert(Number.isSafeInteger(length) && length >= 0, 'Random string length must be a nonnegative safe integer');
@@ -24,10 +23,6 @@ function randomFromAlphabet(length: number, alphabet: string): string {
 		result += alphabet.charAt(randomByte % alphabetLength);
 	}
 	return result;
-}
-
-export function randomNumericCode(length: number): string {
-	return randomFromAlphabet(length, RANDOM_DIGIT_ALPHABET);
 }
 
 export function randomString(length: number): string {

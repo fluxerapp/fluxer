@@ -46,19 +46,16 @@ export interface TemplateCreateFormInputs {
 	name: string;
 }
 
-export const THE_OTHER_PLATFORM_GUILD_ANNOUNCEMENT_CHANNEL_TYPE = 5;
 export const THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE = 13;
 
 export function mapTemplateChannelTypeToFluxer(channelType: number): number | null {
 	if (
 		channelType === ChannelTypes.GUILD_TEXT ||
+		channelType === ChannelTypes.GUILD_ANNOUNCEMENT ||
 		channelType === ChannelTypes.GUILD_VOICE ||
 		channelType === ChannelTypes.GUILD_CATEGORY
 	) {
 		return channelType;
-	}
-	if (channelType === THE_OTHER_PLATFORM_GUILD_ANNOUNCEMENT_CHANNEL_TYPE) {
-		return ChannelTypes.GUILD_TEXT;
 	}
 	if (channelType === THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE) {
 		return ChannelTypes.GUILD_VOICE;

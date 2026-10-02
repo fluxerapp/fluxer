@@ -57,6 +57,7 @@ import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {SearchContext} from '@app/features/member/state/MemberSearch';
 import * as HighlightCommands from '@app/features/messaging/commands/HighlightCommands';
+import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {
@@ -77,6 +78,10 @@ import {
 } from '@app/features/messaging/utils/AutocompleteOptionBuilders';
 import {isAutocompleteTriggerAllowed, type TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 import {toReactionEmoji} from '@app/features/messaging/utils/MessageReactionUtils';
+import {
+	getReactionShortcodeName,
+	getReactionShorthandTargetId,
+} from '@app/features/messaging/utils/ReactionShorthandUtils';
 import {
 	type AutocompleteTrigger,
 	detectAutocompleteTrigger,
@@ -704,14 +709,20 @@ export function useLexicalAutocomplete({
 			const caret = currentTextUpToCursor.length;
 			const matchStart = getComposerAutocompleteReplacementStart(currentTextUpToCursor, trigger.type, trigger.match);
 			if (trigger.type === 'emojiReaction' && isEmoji(option)) {
-				if (channel != null) {
-					const messages = Messages.getMessages(channel.id).toArray();
-					const mostRecent = messages[messages.length - 1];
-					if (mostRecent != null) {
-						ReactionCommands.addReaction(i18n, channel.id, mostRecent.id, toReactionEmoji(option.emoji));
-					}
+				const targetId = channel == null ? null : getReactionShorthandTargetId(channel.id);
+				if (channel != null && targetId !== null) {
+					ReactionCommands.addReaction(i18n, channel.id, targetId, toReactionEmoji(option.emoji));
+					MessageCommands.stopReply(channel.id);
+					handle.clear();
+					return;
 				}
-				handle.clear();
+				applyComposerReplacement(
+					handle,
+					{start: matchStart, end: caret},
+					{kind: 'text', text: `+:${getReactionShortcodeName(option.emoji)}:`},
+					{trailing: true},
+					{maxWireLength: maxActualLength, onExceedMaxLength},
+				);
 				return;
 			}
 			if (isCommand(option)) {

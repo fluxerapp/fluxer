@@ -81,15 +81,6 @@ const VERIFICATION_LEVEL_HIGH_DESCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Helper text for the "High" member verification level option in the community moderation settings tab. "Medium" refers to the matching level option.',
 });
-const VERIFICATION_LEVEL_VERY_HIGH_NAME_DESCRIPTOR = msg({
-	message: 'Very high',
-	comment:
-		'Member verification level option in the community moderation settings tab. Short standalone severity label.',
-});
-const VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Requires a verified phone number.',
-	comment: 'Helper text for the "Very high" member verification level option in the community moderation settings tab.',
-});
 const MEMBER_VERIFICATION_LEVEL_ARIA_DESCRIPTOR = msg({
 	message: 'Member verification level',
 	comment: 'Accessible label for the member verification level radio group in the community moderation settings tab.',
@@ -279,11 +270,6 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 			value: GuildVerificationLevel.HIGH,
 			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_HIGH_NAME_DESCRIPTOR), '#f97316'),
 			desc: i18n._(VERIFICATION_LEVEL_HIGH_DESCRIPTION_DESCRIPTOR),
-		},
-		{
-			value: GuildVerificationLevel.VERY_HIGH,
-			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_VERY_HIGH_NAME_DESCRIPTOR), '#ef4444'),
-			desc: i18n._(VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR),
 		},
 	];
 	const matureContentOptions: ReadonlyArray<ComboboxOption<string>> = [

@@ -343,12 +343,6 @@ function matchesUserFilters(doc: SearchableUser, filters: UserSearchFilters): bo
 		return false;
 	}
 	if (filters.hasAcl && !filters.hasAcl.every((acl) => doc.acls.includes(acl))) return false;
-	if (
-		filters.minSuspiciousActivityFlags !== undefined &&
-		doc.suspiciousActivityFlags < filters.minSuspiciousActivityFlags
-	) {
-		return false;
-	}
 	if (filters.createdAtGreaterThanOrEqual !== undefined && doc.createdAt < filters.createdAtGreaterThanOrEqual) {
 		return false;
 	}

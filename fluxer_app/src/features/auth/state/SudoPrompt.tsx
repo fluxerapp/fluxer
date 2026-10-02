@@ -52,7 +52,7 @@ export function isAbortError(error: unknown): boolean {
 	return false;
 }
 
-const SUDO_MODAL_KEY = 'sudo-verification-modal';
+export const SUDO_MODAL_KEY = 'sudo-verification-modal';
 
 export interface AvailableMethods {
 	password: boolean;

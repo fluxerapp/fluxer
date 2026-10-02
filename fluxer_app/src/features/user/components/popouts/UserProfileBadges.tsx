@@ -4,6 +4,9 @@ import {Routes} from '@app/app/Routes';
 import {PREMIUM_PRODUCT_FULL_NAME, PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {cdnUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
+import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
+import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {handleExternalLinkClick} from '@app/features/ui/utils/NativeUtils';
@@ -63,6 +66,7 @@ interface BaseBadge {
 	key: string;
 	tooltip: string;
 	url?: string;
+	onClick?: () => void;
 }
 
 interface IconBadge extends BaseBadge {
@@ -88,6 +92,9 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 	({user, profile, isModal = false, isMobile = false}) => {
 		const {i18n} = useLingui();
 		const selfHosted = RuntimeConfig.isSelfHosted();
+		const showPremium = shouldShowPremiumFeatures();
+		const premiumInfoUrl = RuntimeConfig.premiumInfoUrl;
+		const plutoniumPageEnabled = PlutoniumPageRollout.enabled;
 		const badges = useMemo(() => {
 			const result: Array<Badge> = [];
 			if (user.flags & PublicUserFlags.STAFF) {
@@ -117,10 +124,12 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 					url: Routes.bugs(),
 				});
 			}
-			if (!selfHosted && profile?.premiumType && profile.premiumType !== UserPremiumTypes.NONE) {
+			if (showPremium && profile?.premiumType && profile.premiumType !== UserPremiumTypes.NONE) {
 				let tooltipText = PREMIUM_PRODUCT_FULL_NAME;
-				let badgeUrl = Routes.plutonium();
-				if (profile.premiumType === UserPremiumTypes.LIFETIME) {
+				let badgeUrl: string | undefined =
+					premiumInfoUrl ?? (selfHosted || plutoniumPageEnabled ? undefined : Routes.plutonium());
+				const badgeOnClick = badgeUrl ? undefined : () => PremiumModalCommands.open();
+				if (!selfHosted && profile.premiumType === UserPremiumTypes.LIFETIME) {
 					if (profile.premiumSince) {
 						const premiumSinceFormatted = DateUtils.getFormattedShortDate(profile.premiumSince);
 						tooltipText = i18n._(VISIONARY_SINCE_DESCRIPTOR, {productName: PRODUCT_NAME, premiumSinceFormatted});
@@ -141,8 +150,13 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 					iconUrl: badgeAssetUrl('plutonium.svg'),
 					tooltip: tooltipText,
 					url: badgeUrl,
+					onClick: badgeOnClick,
 				});
-				if (profile.premiumType === UserPremiumTypes.LIFETIME && profile.premiumLifetimeSequence != null) {
+				if (
+					!selfHosted &&
+					profile.premiumType === UserPremiumTypes.LIFETIME &&
+					profile.premiumLifetimeSequence != null
+				) {
 					const visionaryIdLabel = `#${profile.premiumLifetimeSequence}`;
 					result.push({
 						type: 'text',
@@ -156,6 +170,9 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 			return result;
 		}, [
 			selfHosted,
+			showPremium,
+			premiumInfoUrl,
+			plutoniumPageEnabled,
 			user.flags,
 			profile?.premiumType,
 			profile?.premiumSince,
@@ -170,7 +187,23 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 			: styles.containerPopout;
 		const badgeClassName = isModal && isMobile ? styles.badgeMobile : styles.badgeDesktop;
 		const isDesktopInteractions = !isMobile;
-		const renderInteractiveWrapper = (url: string | undefined, children: React.ReactNode) => {
+		const renderInteractiveWrapper = (
+			url: string | undefined,
+			onClick: (() => void) | undefined,
+			children: React.ReactNode,
+		) => {
+			if (onClick && isDesktopInteractions) {
+				return (
+					<button
+						type="button"
+						className={clsx(styles.link, styles.linkButton)}
+						onClick={onClick}
+						data-flx="user.user-profile-badges.render-interactive-wrapper.button"
+					>
+						{children}
+					</button>
+				);
+			}
 			if (url && isDesktopInteractions) {
 				return (
 					<a
@@ -215,7 +248,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 					return (
 						<Tooltip key={badge.key} text={badge.tooltip} maxWidth="xl" data-flx="user.user-profile-badges.tooltip">
 							<FocusRing offset={-2} data-flx="user.user-profile-badges.focus-ring">
-								{renderInteractiveWrapper(badge.url, badgeContent)}
+								{renderInteractiveWrapper(badge.url, badge.onClick, badgeContent)}
 							</FocusRing>
 						</Tooltip>
 					);

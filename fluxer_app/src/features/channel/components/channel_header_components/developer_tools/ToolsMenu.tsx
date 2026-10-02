@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeCrash from '@app/features/app/state/RuntimeCrash';
-import {CaptchaModal} from '@app/features/auth/components/modals/CaptchaModal';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {useSudo} from '@app/features/auth/hooks/useSudo';
 import NewDeviceMonitoring from '@app/features/auth/state/NewDeviceMonitoring';
@@ -121,23 +120,6 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 	const [isResettingPremiumState, setIsResettingPremiumState] = useState(false);
 	const socket = GatewayConnection.socket;
 	const trustedDomainsCount = TrustedDomain.getTrustedDomainsCount();
-	const handleOpenCaptchaModal = useCallback(() => {
-		ModalCommands.pushAfterBottomSheetClose(
-			onClose,
-			ModalCommands.modal(() => (
-				<CaptchaModal
-					closeOnVerify={false}
-					onVerify={(token, captchaType) => {
-						logger.debug('Captcha solved from developer tools menu', {token, captchaType});
-					}}
-					onCancel={() => {
-						logger.debug('Captcha cancelled from developer tools menu');
-					}}
-					data-flx="channel.channel-header-components.developer-tools-context-menu.handle-open-captcha-modal.captcha-modal"
-				/>
-			)),
-		);
-	}, [onClose]);
 	const handleForgetAuthorizedIps = useCallback(async () => {
 		setIsForgettingAuthorizedIps(true);
 		try {
@@ -280,12 +262,6 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 						data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.menu-item.show-test-modal"
 					>
 						<Trans>Show new device modal</Trans>
-					</MenuItem>
-					<MenuItem
-						onClick={handleOpenCaptchaModal}
-						data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.menu-item.open-captcha-modal"
-					>
-						<Trans>Open captcha modal</Trans>
 					</MenuItem>
 					<MenuItem
 						icon={

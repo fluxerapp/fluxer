@@ -2,14 +2,7 @@
 	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"include": ["files", "exports", "types", "dependencies", "unlisted", "binaries", "catalog"],
 	"ignoreExportsUsedInFile": true,
-	"ignoreDependencies": [
-		"@bufbuild/protoc-gen-es",
-		"@tailwindcss/cli",
-		"@types/events",
-		"events",
-		"fflate",
-		"tailwindcss"
-	],
+	"ignoreDependencies": ["@bufbuild/protoc-gen-es", "@tailwindcss/cli", "@types/events", "events", "tailwindcss"],
 	"ignoreFiles": [
 		"fluxer_admin/src/styles/app.css",
 		"fluxer_admin/static/htmx.min.js",
@@ -20,6 +13,7 @@
 		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
 		"fluxer_app/src/index.tsx": ["unlisted"],
+		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
 		"fluxer_desktop/native/mac-app-audio/index.test.mjs": ["unlisted"],
 		"fluxer_desktop/src/common/DesktopConfig.ts": ["types"],
 		"fluxer_desktop/src/common/Types.ts": ["types"],
@@ -27,8 +21,6 @@
 		"fluxer_desktop/src/main/LinuxDesktopEntry.ts": ["exports"],
 		"fluxer_desktop/src/main/NotificationState.ts": ["exports", "types"],
 		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
-		"packages/schema/src/domains/admin/PushServiceDeliverySchemas.ts": ["exports"],
-		"packages/schema/src/domains/admin/VoiceNoiseSuppressionSchemas.ts": ["exports"],
 		"packages/schema/src/domains/download/DownloadSchemas.ts": ["exports"],
 		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
 		"packages/schema/src/domains/guild/GuildAuditLogSchemas.ts": ["exports"],

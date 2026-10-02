@@ -12,6 +12,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
 import {Validator} from '@app/api/Validator';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -29,6 +30,7 @@ import {
 	PresignedAttachmentUploadRequest,
 	PresignedAttachmentUploadResponse,
 } from '@fluxer/schema/src/domains/message/AttachmentUploadSchemas';
+import {CrosspostSourceResponse} from '@fluxer/schema/src/domains/message/CrosspostSourceSchemas';
 import {
 	BulkDeleteMessagesRequest,
 	BulkMessageFetchRequest,
@@ -333,13 +335,10 @@ export function MessageController(app: HonoApp) {
 			statusCode: 204,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],
-			description:
-				'Clears all read state and acknowledgement records for a channel, marking all messages as unread. Returns 204 No Content on success.',
+			deprecated: true,
+			description: 'Deprecated. Has no effect on the read state. Returns 204 No Content.',
 		}),
 		async (ctx) => {
-			const userId = ctx.get('user').id;
-			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			await ctx.get('readStateService').deleteReadState({userId, channelId});
 			return ctx.body(null, 204);
 		},
 	);
@@ -504,6 +503,61 @@ export function MessageController(app: HonoApp) {
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			await ctx.get('channelService').interactions.startTyping({userId, channelId});
 			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/channels/:channel_id/messages/:message_id/crosspost',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_CROSSPOST),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		OpenAPI({
+			operationId: 'crosspost_message',
+			summary: 'Publish a message to following channels',
+			responseSchema: MessageResponseSchema,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Channels', 'Messages'],
+			description:
+				'Publishes a message in an announcement channel to every channel that follows it. The author needs Send Messages. Anyone else needs Send Messages and Manage Messages. Only default messages that are not replies, forwards or copies can be published, and each message can be published once. Copies are delivered asynchronously. Publishing is limited per channel (10 in a row, then one every 6 minutes) and per community (30 in a row, then one every 2 minutes). Returns the updated message with the CROSSPOSTED flag set.',
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			assertAccountNotLimited(ctx.get('user'));
+			return ctx.json(
+				await ctx.get('messageRequestService').crosspostMessage({
+					userId: ctx.get('user').id,
+					channelId: createChannelID(channel_id),
+					messageId: createMessageID(message_id),
+					requestCache: ctx.get('requestCache'),
+				}),
+			);
+		},
+	);
+	app.get(
+		'/channels/:channel_id/messages/:message_id/crosspost-source',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_CROSSPOST_SOURCE),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		OpenAPI({
+			operationId: 'get_message_crosspost_source',
+			summary: 'Get the source community of a published message copy',
+			responseSchema: CrosspostSourceResponse,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Channels', 'Messages'],
+			description:
+				'Returns the public profile of the community a message copy was published from. Works on copies delivered to a following channel and on the system message posted when a channel starts following. Needs the same access as fetching the message. The response holds the community name, icon, banner, badge features, approximate counts and whether it can be joined through discovery.',
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			return ctx.json(
+				await ctx.get('messageRequestService').getCrosspostSource({
+					userId: ctx.get('user').id,
+					channelId: createChannelID(channel_id),
+					messageId: createMessageID(message_id),
+					requestCache: ctx.get('requestCache'),
+				}),
+			);
 		},
 	);
 	app.post(

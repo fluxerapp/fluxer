@@ -21,6 +21,7 @@ pub mod resource_link;
 pub mod section_card;
 pub mod stack;
 pub mod table;
+pub mod tooltip;
 pub mod typography;
 pub mod user_display;
 pub mod user_profile_badges;

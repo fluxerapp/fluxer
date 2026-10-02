@@ -7,7 +7,6 @@
 -export([start_link/0, request/5, request/6]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export([pick_sharded_profile/1, ensure_started/0, cleanup_max_age_ms/0]).
--export([push_max_concurrency/0]).
 
 -define(SERVER, ?MODULE).
 -define(CIRCUIT_TABLE, gateway_http_circuit_breaker).
@@ -16,11 +15,8 @@
 
 -define(DEFAULT_RPC_CONNECT_TIMEOUT_MS, 5000).
 -define(DEFAULT_RPC_RECV_TIMEOUT_MS, 30000).
--define(DEFAULT_PUSH_CONNECT_TIMEOUT_MS, 3000).
--define(DEFAULT_PUSH_RECV_TIMEOUT_MS, 5000).
 
 -define(DEFAULT_RPC_MAX_CONCURRENCY, 512).
--define(DEFAULT_PUSH_MAX_CONCURRENCY, 256).
 
 -define(DEFAULT_FAILURE_THRESHOLD, 500).
 -define(DEFAULT_RECOVERY_TIMEOUT_MS, 5000).
@@ -28,9 +24,8 @@
 -define(DEFAULT_CLEANUP_MAX_AGE_MS, 300000).
 
 -define(RPC_PROFILE_SHARDS, 8).
--define(PUSH_PROFILE_SHARDS, 4).
 
--type workload() :: rpc | push.
+-type workload() :: rpc.
 -type method() :: get | post | put | patch | delete | head | options.
 -type request_headers() :: [{binary() | string(), binary() | string()}].
 -type request_options() :: #{
@@ -97,10 +92,7 @@ request(Workload, Method, Url, Headers, Body, Opts) when is_map(Opts) ->
 -spec pick_sharded_profile(workload()) -> atom().
 pick_sharded_profile(rpc) ->
     Idx = erlang:phash2(self(), ?RPC_PROFILE_SHARDS),
-    sharded_profile_name(rpc, Idx);
-pick_sharded_profile(push) ->
-    Idx = erlang:phash2(self(), ?PUSH_PROFILE_SHARDS),
-    sharded_profile_name(push, Idx).
+    sharded_profile_name(rpc, Idx).
 
 -spec ensure_started() -> ok.
 ensure_started() ->
@@ -113,10 +105,6 @@ ensure_started() ->
 cleanup_max_age_ms() ->
     get_int_or_default(gateway_http_cleanup_max_age_ms, ?DEFAULT_CLEANUP_MAX_AGE_MS).
 
--spec push_max_concurrency() -> pos_integer().
-push_max_concurrency() ->
-    get_int_or_default(gateway_http_push_max_concurrency, ?DEFAULT_PUSH_MAX_CONCURRENCY).
-
 -spec init([]) -> {ok, state()}.
 init([]) ->
     process_flag(trap_exit, true),
@@ -125,7 +113,6 @@ init([]) ->
     ensure_table(?CIRCUIT_WINDOW_TABLE),
     ensure_table(?INFLIGHT_TABLE),
     ok = ensure_sharded_profiles(rpc, ?RPC_PROFILE_SHARDS),
-    ok = ensure_sharded_profiles(push, ?PUSH_PROFILE_SHARDS),
     schedule_cleanup(),
     {ok, #{}}.
 
@@ -315,9 +302,7 @@ ensure_sharded_profiles(Workload, ShardCount) ->
 
 -spec sharded_profile_name(workload(), non_neg_integer()) -> atom().
 sharded_profile_name(rpc, Idx) ->
-    list_to_atom("gateway_http_rpc_profile_" ++ integer_to_list(Idx));
-sharded_profile_name(push, Idx) ->
-    list_to_atom("gateway_http_push_profile_" ++ integer_to_list(Idx)).
+    list_to_atom("gateway_http_rpc_profile_" ++ integer_to_list(Idx)).
 
 -spec ensure_httpc_profile(atom(), workload()) -> ok.
 ensure_httpc_profile(Profile, Workload) ->
@@ -339,9 +324,7 @@ workload_httpc_options(rpc) ->
         {max_keep_alive_length, 128},
         {max_pipeline_length, 0},
         {keep_alive_timeout, 120000}
-    ];
-workload_httpc_options(push) ->
-    [{max_sessions, 512}, {max_keep_alive_length, 128}].
+    ].
 
 -spec merged_workload_options(workload(), request_options()) -> request_options().
 merged_workload_options(Workload, Opts) ->
@@ -357,16 +340,6 @@ default_options(rpc) ->
         gateway_http_rpc_max_concurrency,
         ?DEFAULT_RPC_MAX_CONCURRENCY,
         <<"application/json">>
-    );
-default_options(push) ->
-    default_options(
-        gateway_http_push_connect_timeout_ms,
-        ?DEFAULT_PUSH_CONNECT_TIMEOUT_MS,
-        gateway_http_push_recv_timeout_ms,
-        ?DEFAULT_PUSH_RECV_TIMEOUT_MS,
-        gateway_http_push_max_concurrency,
-        ?DEFAULT_PUSH_MAX_CONCURRENCY,
-        <<"application/octet-stream">>
     ).
 
 -spec default_options(atom(), integer(), atom(), integer(), atom(), integer(), binary()) ->

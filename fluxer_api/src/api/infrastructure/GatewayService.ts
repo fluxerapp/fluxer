@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
-import {createChannelID, createRoleID, createUserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
 import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
@@ -37,7 +37,6 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {ms} from 'itty-time';
 
-const PUSH_BADGE_COUNT_BATCH_SIZE = 100;
 const USER_PERMISSIONS_BATCH_SIZE = 100;
 
 const GATEWAY_ERROR_TO_DOMAIN_ERROR: Record<string, () => Error> = {
@@ -65,18 +64,6 @@ interface DispatchPresenceParams {
 	userId: UserID;
 	event: GatewayDispatchEvent;
 	data: unknown;
-}
-
-interface InvalidatePushBadgeCountParams {
-	userId: UserID;
-}
-
-interface InvalidatePushBadgeCountsParams {
-	userIds: Array<UserID>;
-}
-
-interface InvalidatePushSubscriptionsParams {
-	userId: UserID;
 }
 
 interface ClearPushChannelNotificationsParams {
@@ -287,8 +274,6 @@ export class GatewayService {
 	private readonly MAX_BATCH_CONCURRENCY = 50;
 	private readonly PENDING_REQUEST_TIMEOUT_MS = ms('30 seconds');
 	private readonly AUTH_CONTEXT_FALLBACK_MS = ms('5 minutes');
-	private readonly BADGE_COUNTS_FALLBACK_MS = ms('5 minutes');
-	private badgeCountsUnsupportedUntil = 0;
 
 	constructor() {
 		this.rpcClient = GatewayRpcClient.getInstance();
@@ -310,6 +295,9 @@ export class GatewayService {
 			}
 			if (error.code === GatewayRpcMethodErrorCodes.TIMEOUT) {
 				return new GatewayTimeoutError();
+			}
+			if (error.code === GatewayRpcMethodErrorCodes.GUILD_OVERLOADED) {
+				return new ServiceUnavailableError({headers: {'Retry-After': '1'}});
 			}
 			if (error.code === GatewayRpcMethodErrorCodes.OVERLOADED) {
 				return new ServiceUnavailableError();
@@ -704,48 +692,6 @@ export class GatewayService {
 		});
 	}
 
-	async invalidatePushBadgeCount({userId}: InvalidatePushBadgeCountParams): Promise<void> {
-		await this.call('push.invalidate_badge_count', {
-			user_id: userId.toString(),
-		});
-	}
-
-	async invalidatePushBadgeCounts({userIds}: InvalidatePushBadgeCountsParams): Promise<void> {
-		if (Date.now() < this.badgeCountsUnsupportedUntil) {
-			await this.invalidatePushBadgeCountsIndividually(userIds);
-			return;
-		}
-		const batches: Array<Array<UserID>> = [];
-		for (let index = 0; index < userIds.length; index += PUSH_BADGE_COUNT_BATCH_SIZE) {
-			batches.push(userIds.slice(index, index + PUSH_BADGE_COUNT_BATCH_SIZE));
-		}
-		try {
-			await Promise.all(
-				batches.map((batch) =>
-					this.call('push.invalidate_badge_counts', {user_ids: batch.map((userId) => userId.toString())}),
-				),
-			);
-		} catch (error) {
-			const transformedError = this.transformGatewayError(error);
-			if (!this.isAuthContextUnsupportedError(transformedError)) {
-				throw transformedError;
-			}
-			this.badgeCountsUnsupportedUntil = Date.now() + this.BADGE_COUNTS_FALLBACK_MS;
-			Logger.warn({error}, '[gateway-rpc] push.invalidate_badge_counts unavailable, falling back to per-user calls');
-			await this.invalidatePushBadgeCountsIndividually(userIds);
-		}
-	}
-
-	private async invalidatePushBadgeCountsIndividually(userIds: ReadonlyArray<UserID>): Promise<void> {
-		await Promise.all(userIds.map((userId) => this.invalidatePushBadgeCount({userId})));
-	}
-
-	async invalidatePushSubscriptions({userId}: InvalidatePushSubscriptionsParams): Promise<void> {
-		await this.call('push.invalidate_subscriptions', {
-			user_id: userId.toString(),
-		});
-	}
-
 	async clearPushChannelNotifications({
 		userId,
 		channelId,
@@ -767,11 +713,29 @@ export class GatewayService {
 		guildId: GuildID;
 		settings: unknown;
 	}): Promise<void> {
-		await this.call('push.sync_user_guild_settings', {
-			user_id: userId.toString(),
-			guild_id: guildId.toString(),
-			user_guild_settings: settings,
-		});
+		try {
+			await this.rpcClient.call('push.sync_user_guild_settings', {
+				user_id: userId.toString(),
+				guild_id: guildId.toString(),
+				user_guild_settings: settings,
+			});
+		} catch (error) {
+			if (!this.isPrivateScopeSyncUnsupportedError(guildId, error)) {
+				throw this.transformGatewayError(error);
+			}
+			Logger.warn(
+				{userId: userId.toString()},
+				'[gateway-rpc] push.sync_user_guild_settings rejected the private scope, gateway predates it',
+			);
+		}
+	}
+
+	private isPrivateScopeSyncUnsupportedError(guildId: GuildID, error: unknown): boolean {
+		return (
+			guildId === createGuildID(0n) &&
+			error instanceof GatewayRpcMethodError &&
+			error.code === GatewayRpcMethodErrorCodes.INVALID_PARAMS
+		);
 	}
 
 	async getGuildCounts(guildId: GuildID): Promise<{

@@ -87,6 +87,7 @@ guild_event_map() ->
         <<"GUILD_CREATE">> => guild_create,
         <<"GUILD_DELETE">> => guild_delete,
         <<"GUILD_EMOJIS_UPDATE">> => guild_emojis_update,
+        <<"GUILD_HEALTH_UPDATE">> => guild_health_update,
         <<"GUILD_MEMBER_ADD">> => guild_member_add,
         <<"GUILD_MEMBER_LIST_UPDATE">> => guild_member_list_update,
         <<"GUILD_MEMBER_REMOVE">> => guild_member_remove,

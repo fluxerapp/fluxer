@@ -4,7 +4,7 @@ use crate::{
     acl,
     api::{
         client::{AdminApiClient, ApiResult, ApiResultExt},
-        types::AdminUser,
+        types::{AdminUser, PremiumBranding},
     },
     middleware::{auth::AuthContext, csrf::CsrfToken, flash, htmx},
     routes::user_tabs,
@@ -22,6 +22,7 @@ use axum::{
 use serde::Deserialize;
 
 const USER_ID_LOOKUP_BATCH: usize = 100;
+const DEFAULT_PREMIUM_NAME: &str = "Premium";
 
 #[derive(Deserialize)]
 struct UserListQuery {
@@ -87,32 +88,47 @@ async fn users_list(
         .unwrap_or(&[]);
     let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let results = if params.has_id_lookup() {
-        lookup_users_in_batches(&client, &params.requested_ids)
-            .await
-            .log_error("lookup users by ids")
-            .map(|users| (users, false))
-    } else if params.has_search() {
-        let offset = u64::from(params.page) * u64::from(params.limit);
-        client
-            .search_users(
-                params.search_query(),
-                params.email_query(),
-                params.ip_query(),
-                params.limit,
-                offset,
-            )
-            .await
-            .log_error("search users")
-            .map(|r| {
-                let has_more = (r.users.len() as u64) < r.total.saturating_sub(offset);
-                (r.users, has_more)
-            })
-    } else {
-        None
+    let searching = params.has_id_lookup() || params.has_search();
+    let results = async {
+        if params.has_id_lookup() {
+            lookup_users_in_batches(&client, &params.requested_ids)
+                .await
+                .log_error("lookup users by ids")
+                .map(|users| (users, false))
+        } else if params.has_search() {
+            let offset = u64::from(params.page) * u64::from(params.limit);
+            client
+                .search_users(
+                    params.search_query(),
+                    params.email_query(),
+                    params.ip_query(),
+                    params.limit,
+                    offset,
+                )
+                .await
+                .log_error("search users")
+                .map(|r| {
+                    let has_more = (r.users.len() as u64) < r.total.saturating_sub(offset);
+                    (r.users, has_more)
+                })
+        } else {
+            None
+        }
     };
+    let badge = async {
+        if searching {
+            self_hosted_premium_badge_name(&state, &client).await
+        } else {
+            None
+        }
+    };
+    let (results, badge_name) = tokio::join!(results, badge);
     let result_users = results.as_ref().map(|r| r.0.as_slice());
     let has_more = results.as_ref().is_some_and(|r| r.1);
+    let premium_badge_name = match result_users {
+        Some(users) if !users.is_empty() => badge_name,
+        _ => None,
+    };
     let markup = templates::pages::users_list::users_list_page(
         config,
         &auth.0,
@@ -120,9 +136,32 @@ async fn users_list(
         result_users,
         has_more,
         can_view_email,
+        premium_badge_name.as_deref(),
         is_results_fragment,
     );
     Html(markup.into_string()).into_response()
+}
+
+async fn self_hosted_premium_badge_name(
+    state: &AppState,
+    client: &AdminApiClient,
+) -> Option<String> {
+    if !state.config().self_hosted {
+        return None;
+    }
+    premium_badge_name(state.premium_branding(client).await.as_ref())
+}
+
+fn premium_badge_name(branding: Option<&PremiumBranding>) -> Option<String> {
+    match branding {
+        Some(branding) => branding.premium_enabled.then(|| {
+            branding
+                .name
+                .clone()
+                .unwrap_or_else(|| DEFAULT_PREMIUM_NAME.to_owned())
+        }),
+        None => Some(DEFAULT_PREMIUM_NAME.to_owned()),
+    }
 }
 
 async fn lookup_users_in_batches(
@@ -148,10 +187,15 @@ async fn user_detail(
     let is_detail_fragment = htmx::targets(&headers, "main-content");
     let active_tab = query.tab.as_deref().unwrap_or("overview");
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let user = client
-        .get_user_by_id(&user_id)
-        .await
-        .log_error("load user detail");
+    let (user, badge_name) = tokio::join!(
+        async {
+            client
+                .get_user_by_id(&user_id)
+                .await
+                .log_error("load user detail")
+        },
+        self_hosted_premium_badge_name(&state, &client)
+    );
     let tq = to_tab_query(&query);
     let admin_acls = auth
         .0
@@ -167,6 +211,7 @@ async fn user_detail(
     } else {
         None
     };
+    let premium_badge_name = user.as_ref().and(badge_name);
     let markup = templates::pages::user_detail::user_detail_with_tab(
         config,
         &auth.0,
@@ -174,6 +219,7 @@ async fn user_detail(
         &user_id,
         active_tab,
         tab_body,
+        premium_badge_name.as_deref(),
         is_detail_fragment,
     );
     Html(markup.into_string()).into_response()
@@ -275,18 +321,29 @@ async fn user_peek(
 ) -> Response {
     let config = state.config();
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let user = client
-        .get_user_by_id(&user_id)
-        .await
-        .log_error("load user peek");
+    let (user, badge_name) = tokio::join!(
+        async {
+            client
+                .get_user_by_id(&user_id)
+                .await
+                .log_error("load user peek")
+        },
+        self_hosted_premium_badge_name(&state, &client)
+    );
     let admin_acls = auth
         .0
         .admin_user
         .as_ref()
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
+    let premium_badge_name = user.as_ref().and(badge_name);
     let markup = match user {
-        Some(ref u) => templates::pages::user_peek::user_peek_fragment(config, u, admin_acls),
+        Some(ref u) => templates::pages::user_peek::user_peek_fragment(
+            config,
+            u,
+            admin_acls,
+            premium_badge_name.as_deref(),
+        ),
         None => maud::html! {
             div class="p-4 text-red-600 text-sm" { "User not found." }
         },
@@ -317,5 +374,33 @@ fn append_query_params(url: &mut String, params: &[(String, String)]) {
         url.push_str(&urlencoding::encode(key));
         url.push('=');
         url.push_str(&urlencoding::encode(value));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn badge_name_follows_the_cached_branding_and_falls_back_to_the_default() {
+        let gold = PremiumBranding {
+            name: Some("Gold".to_owned()),
+            premium_enabled: true,
+        };
+        assert_eq!(premium_badge_name(Some(&gold)).as_deref(), Some("Gold"));
+        let unnamed = PremiumBranding {
+            name: None,
+            premium_enabled: true,
+        };
+        assert_eq!(
+            premium_badge_name(Some(&unnamed)).as_deref(),
+            Some("Premium")
+        );
+        let everyone = PremiumBranding {
+            name: Some("Gold".to_owned()),
+            premium_enabled: false,
+        };
+        assert_eq!(premium_badge_name(Some(&everyone)), None);
+        assert_eq!(premium_badge_name(None).as_deref(), Some("Premium"));
     }
 }

@@ -109,7 +109,13 @@ export const ReportAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'resolve_report',
 					targetType: 'report',
 					targetId: reportId,
-					metadata: {report_id: reportId, report_type: '1'},
+					metadata: {
+						report_id: reportId,
+						report_type: '1',
+						notify_reporter: 'true',
+						reporter_dm_sent: 'true',
+						reporter_email_sent: 'true',
+					},
 				},
 			};
 		},

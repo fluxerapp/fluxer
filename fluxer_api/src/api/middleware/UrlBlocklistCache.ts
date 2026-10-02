@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {BLOCKLIST_S3_KEYS, readLinesFromS3} from '@app/api/blocklist/BlocklistS3';
 import {Config} from '@app/api/Config';
 import {BANNED_URL_DOMAINS_REFRESH_CHANNEL, BANNED_URLS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
-import {RISK_S3_KEYS, readLinesFromS3} from '@app/api/risk/RiskBlocklistS3';
 import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
 import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
@@ -70,7 +70,7 @@ class UrlBlocklistCache {
 
 	private async loadFeedUrls(): Promise<Set<string>> {
 		if (!this.storageService || !Config.blocklistFeeds.enabled) return new Set();
-		const lines = await readLinesFromS3(this.storageService, RISK_S3_KEYS.feedUrls);
+		const lines = await readLinesFromS3(this.storageService, BLOCKLIST_S3_KEYS.feedUrls);
 		return new Set(lines);
 	}
 

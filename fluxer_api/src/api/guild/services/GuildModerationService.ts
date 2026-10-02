@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import {mapGuildBansToResponse} from '@app/api/guild/GuildModel';
@@ -12,8 +13,6 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildBan} from '@app/api/models/GuildBan';
-import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '@app/api/risk/IpBanCgnatGuard';
-import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
@@ -27,7 +26,6 @@ import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownG
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {isSameIpDecisionMatch} from '@fluxer/ip_utils/src/IpAddress';
 import type {GuildBanResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 const SECONDS_PER_DAY = 86_400;
@@ -42,7 +40,6 @@ export class GuildModerationService {
 		private readonly userCacheService: UserCacheService,
 		private readonly workerService: IWorkerService<WorkerTaskName>,
 		private readonly guildAuditLogService: GuildAuditLogService,
-		private readonly ipInfoService: IpInfoService,
 	) {
 		this.searchIndexService = new GuildMemberSearchIndexService();
 	}
@@ -218,42 +215,13 @@ export class GuildModerationService {
 		const userEmail = user?.email?.toLowerCase();
 		for (const ban of bans) {
 			if (ban.userId === userId) throw new BannedFromGuildError();
-			if (isSameIpDecisionMatch(userIp, ban.ipAddress) && (await this.shouldEnforceIpBan(userIp, ban.ipAddress))) {
+			if (isSameIpDecisionMatch(userIp, ban.ipAddress) && !isIpBanExempt(userIp)) {
 				throw new IpBannedFromGuildError();
 			}
 		}
 		if (userEmail) {
 			const emailBan = await this.guildRepository.getBanByEmail(guildId, userEmail);
 			if (emailBan) throw new BannedFromGuildError();
-		}
-	}
-
-	private async shouldEnforceIpBan(
-		userIp: string | null | undefined,
-		bannedIp: string | null | undefined,
-	): Promise<boolean> {
-		if (isIpBanExempt(userIp)) {
-			return false;
-		}
-		if (!userIp || !bannedIp || !isSingleIpBanCandidate(bannedIp)) {
-			return true;
-		}
-		try {
-			const {cgnat, sharedAccess} = await getIpBanBlastRadiusVerdict(userIp, this.ipInfoService, {
-				source: 'guild.ip_ban',
-				reason: 'join_cgnat_guard',
-			});
-			const highRisk = cgnat || sharedAccess;
-			if (highRisk) {
-				Logger.warn(
-					{userIp, bannedIp},
-					'Skipping guild IP ban match because IPInfo indicates high shared-network blast-radius risk',
-				);
-			}
-			return !highRisk;
-		} catch (error) {
-			Logger.warn({error, userIp, bannedIp}, 'IPInfo blast-radius guard failed while checking guild IP ban');
-			return true;
 		}
 	}
 

@@ -16,7 +16,8 @@ const bulkDeleteUserMessages: WorkerTaskHandler = async (payload, helpers) => {
 	helpers.logger.debug({payload: validated}, 'Processing bulkDeleteUserMessages task');
 	const userId = createUserID(BigInt(validated.userId));
 	const scheduledAtMs = validated.scheduledAt ?? Number.POSITIVE_INFINITY;
-	const {channelRepository, gatewayService, userRepository, storageService, purgeQueue} = getWorkerDependencies();
+	const {channelRepository, gatewayService, userRepository, storageService, purgeQueue, workerService} =
+		getWorkerDependencies();
 	const user = await userRepository.findUniqueAssert(userId);
 	if (!user.pendingBulkMessageDeletionAt) {
 		Logger.debug({userId}, 'User has no pending bulk message deletion, skipping (already completed)');
@@ -27,6 +28,7 @@ const bulkDeleteUserMessages: WorkerTaskHandler = async (payload, helpers) => {
 		gatewayService,
 		storageService,
 		purgeQueue,
+		workerService,
 	});
 	const totalDeleted = await deletionService.deleteUserMessagesBulk(userId, {
 		beforeTimestamp: scheduledAtMs,

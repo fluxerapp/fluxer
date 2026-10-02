@@ -1,7 +1,15 @@
 {
-	"account_disabled_suspicious": {
-		"subject": "Váš účet {product_name} byl dočasně deaktivován",
-		"body": "Dobrý den, {username},\n\nDočasně jsme deaktivovali váš účet {product_name}, protože jsme zaznamenali podezřelou aktivitu.\n\n{reason, select,\n  null {}\n  other {Důvod: {reason}}\n}\n\nAbyste znovu získali přístup k účtu, musíte si nastavit nové heslo:\n\n{forgotUrl}\n\nPo změně hesla se budete moci znovu přihlásit.\n\nPokud se domníváte, že jde o chybu, kontaktujte náš tým podpory.\n\n– Bezpečnostní tým {product_name}"
+	"account_deletion_cancelled": {
+		"subject": "Smazání vašeho účtu {product_name} bylo zrušeno",
+		"body": "Dobrý den, {username},\n\nNaplánované smazání vašeho účtu {product_name} bylo zrušeno. Váš účet nebude smazán.\n\nMáte-li jakékoli dotazy, kontaktujte {safety_email}.\n\n– Tým {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Váš účet {product_name} bude smazán kvůli neaktivitě",
+		"body": "Dobrý den, {username},\n\nVáš účet {product_name} byl dlouho neaktivní, a proto je jeho trvalé smazání naplánováno na:\n\n{deletionDate, date, full} v {deletionDate, time, short}{reason, select, null {} other {\n\nDůvod: {reason}}}\n\nPokud si chcete účet ponechat, kontaktujte před tímto datem {safety_email} z této e-mailové adresy.\n\n– Tým {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Smazání vašeho účtu {product_name} je naplánováno",
+		"body": "Dobrý den, {username},\n\nNa vaši žádost je trvalé smazání vašeho účtu {product_name} naplánováno na:\n\n{deletionDate, date, full} v {deletionDate, time, short}{reason, select, null {} other {\n\nDůvod: {reason}}}\n\nDo té doby je váš účet uzamčen. Pokud jste o smazání nežádali nebo si chcete účet ponechat, kontaktujte před tímto datem {safety_email} z této e-mailové adresy.\n\n– Tým {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Váš účet {product_name} bude trvale smazán",
@@ -33,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Vaše e-mailová adresa pro {product_name} byla změněna",
-		"body": "Dobrý den, {username},\n\nE-mailová adresa vašeho účtu {product_name} byla změněna na {newEmail}.\n\nPokud jste tuto změnu provedli vy, nemusíte nic dělat. Pokud ne, můžete ji vrátit zpět a zabezpečit svůj účet pomocí tohoto odkazu:\n\n{revertUrl}\n\nTím se obnoví vaše předchozí e-mailová adresa, budete odhlášeni ze všech zařízení, odstraní se propojená telefonní čísla, vypne se vícefaktorové ověřování a budete muset nastavit nové heslo.\n\n– Bezpečnostní tým {product_name}"
+		"body": "Dobrý den, {username},\n\nE-mailová adresa vašeho účtu {product_name} byla změněna na {newEmail}.\n\nPokud jste tuto změnu provedli vy, nemusíte nic dělat. Pokud ne, můžete ji vrátit zpět a zabezpečit svůj účet pomocí tohoto odkazu:\n\n{revertUrl}\n\nTím se obnoví vaše předchozí e-mailová adresa, budete odhlášeni ze všech zařízení, vypne se vícefaktorové ověřování a budete muset nastavit nové heslo.\n\n– Bezpečnostní tým {product_name}"
 	},
 	"email_verification": {
 		"subject": "Ověřte svou e-mailovou adresu pro {product_name}",
@@ -61,7 +69,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Potvrďte změnu hesla k účtu {product_name}",
-		"body": "Dobrý den, {username},\n\nObdrželi jsme žádost o změnu hesla k vašemu účtu {product_name}.\n\nZměnu potvrďte zadáním tohoto kódu v aplikaci:\n\n{code}\n\nPlatnost tohoto kódu vyprší v {expiresAt}.\n\nPokud jste o to nežádali, někdo může mít přístup k vašemu účtu. Okamžitě si změňte heslo a zapněte dvoufaktorové ověřování.\n\n– Tým {product_name}"
+		"body": "Dobrý den, {username},\n\nObdrželi jsme žádost o změnu hesla k vašemu účtu {product_name}.\n\nZměnu potvrďte zadáním tohoto kódu v aplikaci:\n\n{code}\n\nPlatnost tohoto kódu vyprší dne {expiresAt, date, full} v {expiresAt, time, short}.\n\nPokud jste o to nežádali, někdo může mít přístup k vašemu účtu. Okamžitě si změňte heslo a zapněte dvoufaktorové ověřování.\n\n– Tým {product_name}"
 	},
 	"password_reset": {
 		"subject": "Obnovte své heslo k účtu {product_name}",

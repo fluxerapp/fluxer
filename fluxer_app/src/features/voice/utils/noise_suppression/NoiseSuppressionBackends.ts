@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	VOICE_NOISE_SUPPRESSION_BACKENDS,
-	type VoiceNoiseSuppressionBackend,
-} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+export const VOICE_NOISE_SUPPRESSION_BACKENDS = [
+	'none',
+	'standard',
+	'gate',
+	'speex',
+	'rnnoise',
+	'gtcrn',
+	'deep_filter',
+] as const;
 
-export type {VoiceNoiseSuppressionBackend};
-export {VOICE_NOISE_SUPPRESSION_BACKENDS};
+export type VoiceNoiseSuppressionBackend = (typeof VOICE_NOISE_SUPPRESSION_BACKENDS)[number];
 
 export type NoiseSuppressionEngine = 'passthrough' | 'constraint' | 'worklet' | 'deep_filter';
 
@@ -80,8 +84,8 @@ const DESCRIPTORS: Readonly<Record<VoiceNoiseSuppressionBackend, NoiseSuppressio
 		engine: 'deep_filter',
 		browserNoiseSuppression: false,
 		preservesInputChannels: false,
-		supportedSampleRates: [48000],
-		requiresWasmSimd: false,
+		supportedSampleRates: [44100, 48000],
+		requiresWasmSimd: true,
 		usesSuppressionStrength: true,
 	},
 };
@@ -135,16 +139,6 @@ export function selectUsableNoiseSuppressionBackend(
 		if (candidate !== requested && isNoiseSuppressionBackendSupported(candidate, capabilities)) return candidate;
 	}
 	return 'none';
-}
-
-export function resolveNoiseSuppressionContextSampleRate(
-	backend: VoiceNoiseSuppressionBackend,
-	captureSampleRate: number,
-): number {
-	const descriptor = DESCRIPTORS[backend];
-	const supported = descriptor.supportedSampleRates;
-	if (supported == null || supported.includes(captureSampleRate)) return captureSampleRate;
-	return supported.includes(48000) ? 48000 : (supported[0] ?? captureSampleRate);
 }
 
 const WASM_SIMD_PROBE = new Uint8Array([

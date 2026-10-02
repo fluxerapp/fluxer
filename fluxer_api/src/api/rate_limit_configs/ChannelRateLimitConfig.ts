@@ -56,6 +56,14 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:message:ack::channel_id',
 		config: {limit: 100, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	CHANNEL_MESSAGE_CROSSPOST: {
+		bucket: 'channel:message:crosspost::channel_id',
+		config: {limit: 5, windowMs: ms('5 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_MESSAGE_CROSSPOST_SOURCE: {
+		bucket: 'channel:message:crosspost_source::channel_id',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	CHANNEL_SEARCH: {
 		bucket: 'channel:search::channel_id',
 		config: {limit: 20, windowMs: ms('10 seconds')},
@@ -119,6 +127,14 @@ export const ChannelRateLimitConfigs = {
 	CHANNEL_STREAM_PREVIEW_DELETE: {
 		bucket: 'channel:stream:preview:delete::stream_key',
 		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_FOLLOW: {
+		bucket: 'channel:follow::channel_id',
+		config: {limit: 5, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	CHANNEL_FOLLOWER_STATS: {
+		bucket: 'channel:follower_stats::channel_id',
+		config: {limit: 10, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	VOICE_ENTRANCE_SOUND_PLAY: {
 		bucket: 'voice:entrance_sound:play::user_id::channel_id',

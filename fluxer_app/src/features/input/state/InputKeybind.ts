@@ -14,6 +14,7 @@ import {
 	DISCONNECT_FROM_VOICE_DESCRIPTOR,
 	DROP_ITEM_DESCRIPTOR,
 	EDIT_MESSAGE_DESCRIPTOR,
+	EDIT_YOUR_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR,
 	EXPAND_OR_COLLAPSE_COMPACT_CALL_VIEW_DESCRIPTOR,
 	FOCUS_TEXT_AREA_DESCRIPTOR,
 	FOCUS_THE_TEXT_AREA_DESCRIPTOR,
@@ -49,6 +50,7 @@ import {
 	PUSH_TO_TALK_PRIORITY_DESCRIPTOR,
 	READ_MESSAGE_ALOUD_DESCRIPTOR,
 	REPLY_TO_MESSAGE_DESCRIPTOR,
+	REPLY_TO_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR,
 	RESET_ZOOM_DESCRIPTOR,
 	SCROLL_CHAT_DOWN_DESCRIPTOR,
 	SCROLL_CHAT_UP_DESCRIPTOR,
@@ -85,6 +87,9 @@ import {
 import {
 	getActiveCombosForResolvedAction,
 	getDisplayKeybindForResolvedAction,
+	isActiveCustomKeybind,
+	isBuiltinDisableMarker,
+	keyComboHasTriggerInput,
 } from '@app/features/input/state/KeybindResolution';
 import {
 	DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO,
@@ -111,10 +116,14 @@ import {makeAutoObservable, runInAction} from 'mobx';
 const KEYBIND_STORE_NAME = 'Keybind';
 const KEYBIND_COMMAND_VALUES = [
 	'message_edit',
+	'message_edit_prev',
+	'message_edit_next',
 	'message_delete',
 	'message_pin',
 	'message_react',
 	'message_reply',
+	'message_reply_prev',
+	'message_reply_next',
 	'message_forward',
 	'message_speak',
 	'message_copy_text',
@@ -291,6 +300,7 @@ export interface CustomKeybindEntry {
 const STORE_VERSION = 5 as const;
 
 const GLOBAL_KEYBIND_DEFAULT_MIGRATION_KEY = 'Keybind:globalDefaultMigration:v1';
+const BUILTIN_DISABLE_MARKER_MIGRATION_KEY = 'Keybind:builtinDisableMarkerMigration:v1';
 const generateId = (): string => {
 	if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
 		return crypto.randomUUID();
@@ -341,6 +351,16 @@ const fromSyncedCustomKeybind = (entry: SyncedCustomKeybind): CustomKeybindEntry
 	action: isKeybindCommand(entry.action) ? entry.action : null,
 	combo: fromSyncedKeyCombo(entry.combo),
 	enabled: entry.enabled,
+});
+const createBuiltinDisableMarker = (
+	action: KeybindCommand,
+	global: boolean | undefined,
+	id: string = generateId(),
+): CustomKeybindEntry => ({
+	id,
+	action,
+	combo: {key: '', enabled: false, global},
+	enabled: true,
 });
 const normalizeTransmitMode = (mode: string | undefined): TransmitMode => {
 	if (mode && TRANSMIT_MODES.includes(mode as TransmitMode)) {
@@ -408,6 +428,30 @@ const getDefaultKeybinds = (
 			combo: {key: 'r'},
 			requiresKeyboardMode: true,
 			requiresMessageFocus: true,
+			section: 'messages',
+		},
+		{
+			action: 'message_reply_prev',
+			label: i18n._(REPLY_TO_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR),
+			combo: {key: 'ArrowUp', ctrlOrMeta: true},
+			section: 'messages',
+		},
+		{
+			action: 'message_reply_next',
+			label: i18n._(REPLY_TO_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR),
+			combo: {key: 'ArrowDown', ctrlOrMeta: true},
+			section: 'messages',
+		},
+		{
+			action: 'message_edit_prev',
+			label: i18n._(EDIT_YOUR_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR),
+			combo: {key: 'ArrowUp', ctrlOrMeta: true, shift: true},
+			section: 'messages',
+		},
+		{
+			action: 'message_edit_next',
+			label: i18n._(EDIT_YOUR_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR),
+			combo: {key: 'ArrowDown', ctrlOrMeta: true, shift: true},
 			section: 'messages',
 		},
 		{
@@ -1024,7 +1068,14 @@ class Keybind {
 			enabled: () => this.syncAcrossDevices,
 			toMessage: (store) => toSyncedKeybindSettings(store),
 			applyMessage: (store, message) => {
-				store.customKeybinds = message.customKeybinds.map(fromSyncedCustomKeybind);
+				const markerIds = new Set(store.customKeybinds.filter(isBuiltinDisableMarker).map((entry) => entry.id));
+				store.customKeybinds = message.customKeybinds
+					.map(fromSyncedCustomKeybind)
+					.map((entry) =>
+						entry.action != null && markerIds.has(entry.id) && !keyComboHasTriggerInput(entry.combo)
+							? createBuiltinDisableMarker(entry.action, entry.combo.global, entry.id)
+							: entry,
+					);
 				store.transmitMode = normalizeTransmitMode(message.transmitMode);
 				store.pushToTalkReleaseDelay = clampReleaseDelay(message.pushToTalkReleaseDelayMs ?? DEFAULT_RELEASE_DELAY_MS);
 			},
@@ -1043,6 +1094,32 @@ class Keybind {
 		AppStorage.setItem(GLOBAL_KEYBIND_DEFAULT_MIGRATION_KEY, '1');
 	}
 
+	private migrateEmptyCustomKeybindsToBuiltinDisableMarkers(): void {
+		if (AppStorage.getItem(BUILTIN_DISABLE_MARKER_MIGRATION_KEY) === '1') return;
+		const activeActions = new Set(this.customKeybinds.filter(isActiveCustomKeybind).map((entry) => entry.action));
+		const markedActions = new Set<KeybindCommand>();
+		const migrated: Array<CustomKeybindEntry> = [];
+		for (const entry of this.customKeybinds) {
+			const base = entry.action == null ? null : this.getDefaultByAction(entry.action);
+			if (
+				entry.action == null ||
+				keyComboHasTriggerInput(entry.combo) ||
+				activeActions.has(entry.action) ||
+				!base ||
+				base.hideFromDefaults ||
+				!keyComboHasTriggerInput(base.combo)
+			) {
+				migrated.push(entry);
+				continue;
+			}
+			if (markedActions.has(entry.action)) continue;
+			markedActions.add(entry.action);
+			migrated.push(createBuiltinDisableMarker(entry.action, entry.combo.global, entry.id));
+		}
+		if (markedActions.size > 0) this.customKeybinds = migrated;
+		AppStorage.setItem(BUILTIN_DISABLE_MARKER_MIGRATION_KEY, '1');
+	}
+
 	setI18n(i18n: I18n): void {
 		this.i18n = i18n;
 		if (this.initialized) return;
@@ -1053,6 +1130,7 @@ class Keybind {
 					this.customKeybinds = [];
 				}
 				this.migrateGlobalCapableKeybindsToGlobal();
+				this.migrateEmptyCustomKeybindsToBuiltinDisableMarkers();
 				this.initialized = true;
 			});
 		});
@@ -1115,7 +1193,7 @@ class Keybind {
 			enabled: true,
 		};
 		runInAction(() => {
-			this.customKeybinds.push(entry);
+			this.customKeybinds = [...this.customKeybinds, entry];
 		});
 		return entry;
 	}
@@ -1144,7 +1222,7 @@ class Keybind {
 			enabled: true,
 		};
 		runInAction(() => {
-			this.customKeybinds.push(entry);
+			this.customKeybinds = [...this.customKeybinds, entry];
 		});
 		return entry;
 	}
@@ -1152,6 +1230,26 @@ class Keybind {
 	removeCustomKeybindsForAction(action: KeybindCommand): void {
 		runInAction(() => {
 			this.customKeybinds = this.customKeybinds.filter((entry) => entry.action !== action);
+		});
+	}
+
+	isBuiltinDisabled(action: KeybindCommand): boolean {
+		return this.customKeybinds.some((entry) => entry.action === action && isBuiltinDisableMarker(entry));
+	}
+
+	disableBuiltinForAction(action: KeybindCommand): void {
+		if (this.isBuiltinDisabled(action)) return;
+		const global = this.getDefaultByAction(action)?.combo.global;
+		runInAction(() => {
+			this.customKeybinds = [...this.customKeybinds, createBuiltinDisableMarker(action, global)];
+		});
+	}
+
+	enableBuiltinForAction(action: KeybindCommand): void {
+		runInAction(() => {
+			this.customKeybinds = this.customKeybinds.filter(
+				(entry) => entry.action !== action || !isBuiltinDisableMarker(entry),
+			);
 		});
 	}
 
@@ -1198,7 +1296,7 @@ class Keybind {
 	}
 
 	getPrimaryCustomKeybind(action: KeybindCommand): CustomKeybindEntry | null {
-		return this.customKeybinds.find((c) => c.action === action) ?? null;
+		return this.customKeybinds.find((c) => c.action === action && !isBuiltinDisableMarker(c)) ?? null;
 	}
 
 	setPrimaryCustomKeybindCombo(action: KeybindCommand, combo: KeyCombo): CustomKeybindEntry {
@@ -1214,7 +1312,7 @@ class Keybind {
 			enabled: true,
 		};
 		runInAction(() => {
-			this.customKeybinds.push(created);
+			this.customKeybinds = [...this.customKeybinds, created];
 		});
 		return created;
 	}

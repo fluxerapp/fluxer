@@ -12,9 +12,12 @@
     schedule_count_cache_refresh/1,
     maybe_prune_invalid_member_subscriptions/2,
     cleanup_removed_member_subscriptions/3,
-    apply_everyone_perm_bit/2
+    apply_everyone_perm_bit/2,
+    viewable_exceptions/1,
+    new_viewable_memo/1,
+    memoised_member_viewable_channel_map/3
 ]).
--export_type([guild_state/0]).
+-export_type([guild_state/0, viewable_memo/0]).
 
 -define(COUNT_CACHE_REFRESH_INTERVAL, 30000).
 
@@ -126,8 +129,12 @@ apply_everyone_perm_bit(Bit, State) ->
     Roles = guild_data_index:role_list(Data),
     {Updated, Changed} = update_everyone_role(Roles, GuildId, Bit),
     case Changed of
-        false -> State;
-        true -> State#{data => guild_data_index:put_roles(Updated, Data)}
+        false ->
+            State;
+        true ->
+            guild_member_list_engine_inputs:latch_stale(
+                State#{data => guild_data_index:put_roles(Updated, Data)}
+            )
     end.
 
 -spec event_requires_prune(term()) -> boolean().

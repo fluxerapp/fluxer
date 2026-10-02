@@ -200,6 +200,7 @@ function removeStaleSessionConnections(
 	for (const [connectionId, existing] of Object.entries(indexedGuildStates)) {
 		if (connectionId === voiceState.connection_id) continue;
 		if (existing.session_id !== voiceState.session_id) continue;
+		if (existing.channel_id !== voiceState.channel_id) continue;
 		next = removeConnection(next, connectionId);
 	}
 	return next;

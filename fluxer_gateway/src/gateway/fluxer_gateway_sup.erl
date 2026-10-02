@@ -38,13 +38,13 @@ common_children() ->
         child_spec(gateway_nats_pool, gateway_nats_pool),
         child_spec(gateway_event_pause, gateway_event_pause),
         child_spec(gateway_concurrency, gateway_concurrency),
-        child_spec(gateway_rollout_config, gateway_rollout_config),
-        child_spec(push_delivery_config, push_delivery_config)
+        child_spec(gateway_rollout_config, gateway_rollout_config)
     ] ++ cluster_children() ++
         [
             child_spec(gateway_dispatch_relay, gateway_dispatch_relay),
             child_spec(gateway_periodic_gc, gateway_periodic_gc),
-            child_spec(process_health_watchdog, process_health_watchdog)
+            child_spec(process_health_watchdog, process_health_watchdog),
+            child_spec(gateway_stall_monitor, gateway_stall_monitor)
         ].
 
 -spec role_children(atom()) -> [supervisor:child_spec()].
@@ -91,15 +91,16 @@ role_specs(presence, _Role) ->
     ];
 role_specs(guilds, _Role) ->
     [
+        child_spec(gateway_clock_offset, gateway_clock_offset),
+        child_spec(guild_health, guild_health),
         child_spec(guild_counts_cache, guild_counts_cache),
         child_spec(guild_manager, guild_manager),
         child_spec(voice_state_counts_sync, voice_state_counts_sync)
-    ];
+    ] ++ gateway_guild_pin_keeper:child_specs();
 role_specs(calls, Role) ->
     [child_spec(call_manager, call_manager)] ++ calls_voice_state_counts_sync_children(Role);
 role_specs(push, _Role) ->
     [
-        child_spec(push_dispatcher, push_dispatcher),
         child_spec(push_outbox, push_outbox),
         child_spec(push, push)
     ].

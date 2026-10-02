@@ -167,7 +167,7 @@ export function ReportAdminController(app: HonoApp) {
 			operationId: 'update_admin_report',
 			summary: 'Update report',
 			description:
-				'Moves a report to the resolved status with an optional public comment shown to the reporter. Marks the report as handled, notifies the reporter, and creates an audit log entry. Requires REPORT_RESOLVE permission.',
+				'Moves a report to the resolved status with an optional public comment shown to the reporter. Marks the report as handled, notifies the reporter by system DM and email unless notify_reporter is false, and creates an audit log entry. Requires REPORT_RESOLVE permission.',
 			responseSchema: ResolveReportResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -178,13 +178,14 @@ export function ReportAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const auditLogReason = ctx.get('auditLogReason');
 			const {report_id} = ctx.req.valid('param');
-			const {public_comment} = ctx.req.valid('json');
+			const {public_comment, notify_reporter} = ctx.req.valid('json');
 			return ctx.json(
 				await adminService.reportServiceAggregate.resolveReport(
 					createReportID(report_id),
 					adminUserId,
 					public_comment || null,
 					auditLogReason,
+					notify_reporter,
 				),
 			);
 		},

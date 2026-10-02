@@ -14,6 +14,7 @@ import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder'
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import {Invite} from '@app/api/models/Invite';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ChannelTypes, InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -260,6 +261,7 @@ export class InviteService {
 			if (channel.recipientIds.has(userId)) {
 				return invite;
 			}
+			if (user) assertAccountNotLimited(user);
 			await this.channelService.groupDms.addRecipientViaInvite({
 				channelId: invite.channelId,
 				recipientId: userId,

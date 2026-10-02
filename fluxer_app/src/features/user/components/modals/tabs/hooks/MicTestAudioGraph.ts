@@ -1,98 +1,46 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Logger} from '@app/features/platform/utils/AppLogger';
 import {createVoiceSoftClipNode} from '@app/features/voice/engine/VoiceSharedAudioContext';
-import {buildDeepFilterAudioChain, type DeepFilterAudioChain} from '@app/features/voice/utils/DeepFilterNoiseProcessor';
 import {
-	buildNoiseSuppressionWorkletChain,
-	type NoiseSuppressionWorkletChain,
-} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionChain';
-import type {NoiseSuppressionWorkletBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionWorkletTypes';
-
-const logger = new Logger('MicTestAudioGraph');
+	type VoiceInputChannelCount,
+	type VoiceInputConfig,
+	VoiceInputGraph,
+} from '@app/features/voice/utils/VoiceInputProcessor';
 
 export interface MicTestAudioGraph {
-	source: MediaStreamAudioSourceNode;
 	analyser: AnalyserNode;
-	inputGain: GainNode;
-	delay: DelayNode;
 	outputGain: GainNode;
-	softClipInput: GainNode;
 	softClipOutput: AudioNode;
 	playbackTarget: AudioNode;
-	dispose: () => Promise<void>;
+	configure: () => Promise<void>;
+	dispose: () => void;
 }
 
 interface CreateMicTestAudioGraphOptions {
-	audioContext: AudioContext;
+	signal: AbortSignal;
+	source: MediaStreamAudioSourceNode;
 	sourceTrack: MediaStreamTrack;
-	inputGain: number;
+	channelCount: VoiceInputChannelCount;
+	resolveConfig: () => VoiceInputConfig;
 	outputGain: number;
 	playbackTarget: AudioNode;
 	playbackDelaySeconds: number;
-	deepFilter: boolean;
-	deepFilterNoiseReductionLevel: number;
-	workletBackend: NoiseSuppressionWorkletBackend | null;
-	suppressionStrength: number;
 }
 
-export async function createMicTestAudioGraph({
-	audioContext,
+export function createMicTestAudioGraph({
+	signal,
+	source,
 	sourceTrack,
-	inputGain,
+	channelCount,
+	resolveConfig,
 	outputGain,
 	playbackTarget,
 	playbackDelaySeconds,
-	deepFilter,
-	deepFilterNoiseReductionLevel,
-	workletBackend,
-	suppressionStrength,
-}: CreateMicTestAudioGraphOptions): Promise<MicTestAudioGraph> {
-	const source = audioContext.createMediaStreamSource(new MediaStream([sourceTrack]));
-	const inputGainNode = audioContext.createGain();
-	inputGainNode.gain.value = inputGain;
-	source.connect(inputGainNode);
-
-	let deepFilterChain: DeepFilterAudioChain | null = null;
-	let workletChain: NoiseSuppressionWorkletChain | null = null;
-	let suppressedSource: MediaStreamAudioSourceNode | null = null;
-	let monitorHead: AudioNode = inputGainNode;
-	try {
-		if (deepFilter) {
-			deepFilterChain = await buildDeepFilterAudioChain({
-				audioContext,
-				noiseReductionLevel: deepFilterNoiseReductionLevel,
-			});
-			inputGainNode.connect(deepFilterChain.inputDestination);
-			suppressedSource = audioContext.createMediaStreamSource(new MediaStream([deepFilterChain.processedTrack]));
-			monitorHead = suppressedSource;
-		} else if (workletBackend) {
-			workletChain = await buildNoiseSuppressionWorkletChain({
-				audioContext,
-				backend: workletBackend,
-				suppressionStrength,
-			});
-			inputGainNode.connect(workletChain.inputDestination);
-			suppressedSource = audioContext.createMediaStreamSource(new MediaStream([workletChain.processedTrack]));
-			monitorHead = suppressedSource;
-		}
-	} catch (error) {
-		inputGainNode.disconnect();
-		source.disconnect();
-		suppressedSource?.disconnect();
-		if (deepFilterChain) {
-			await deepFilterChain.dispose().catch((disposeError) => {
-				logger.debug('Failed to dispose DeepFilter chain after mic test graph init failure', disposeError);
-			});
-		}
-		if (workletChain) {
-			await workletChain.dispose().catch((disposeError) => {
-				logger.debug('Failed to dispose noise suppression chain after mic test graph init failure', disposeError);
-			});
-		}
-		throw error;
-	}
-
+}: CreateMicTestAudioGraphOptions): MicTestAudioGraph {
+	signal.throwIfAborted();
+	const audioContext = source.context as AudioContext;
+	const inputGraph = new VoiceInputGraph(audioContext, channelCount, resolveConfig);
+	inputGraph.setSourceNode(sourceTrack, source);
 	const analyser = audioContext.createAnalyser();
 	const delay = audioContext.createDelay(Math.max(1, playbackDelaySeconds + 0.25));
 	const outputGainNode = audioContext.createGain();
@@ -103,42 +51,33 @@ export async function createMicTestAudioGraph({
 	const softClip = createVoiceSoftClipNode(audioContext);
 	const softClipInput = softClip?.input ?? outputGainNode;
 	const softClipOutput: AudioNode = softClip?.output ?? outputGainNode;
-	monitorHead.connect(analyser);
+	inputGraph.output.connect(analyser);
 	analyser.connect(delay);
 	delay.connect(outputGainNode);
 	if (softClip) outputGainNode.connect(softClip.input);
 	softClipOutput.connect(playbackTarget);
+	void inputGraph.configure();
 
-	const dispose = async () => {
-		source.disconnect();
+	let disposed = false;
+	const dispose = () => {
+		if (disposed) return;
+		disposed = true;
+		signal.removeEventListener('abort', dispose);
+		inputGraph.dispose();
 		analyser.disconnect();
-		inputGainNode.disconnect();
 		delay.disconnect();
 		outputGainNode.disconnect();
 		softClipInput.disconnect();
 		softClipOutput.disconnect();
-		suppressedSource?.disconnect();
-		if (deepFilterChain) {
-			await deepFilterChain.dispose().catch((error) => {
-				logger.warn('Failed to dispose DeepFilter chain for mic test graph', error);
-			});
-		}
-		if (workletChain) {
-			await workletChain.dispose().catch((error) => {
-				logger.warn('Failed to dispose noise suppression chain for mic test graph', error);
-			});
-		}
 	};
+	signal.addEventListener('abort', dispose, {once: true});
 
 	return {
-		source,
 		analyser,
-		inputGain: inputGainNode,
-		delay,
 		outputGain: outputGainNode,
-		softClipInput,
 		softClipOutput,
 		playbackTarget,
+		configure: () => inputGraph.configure(),
 		dispose,
 	};
 }

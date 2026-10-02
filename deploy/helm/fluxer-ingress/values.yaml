@@ -1,0 +1,53 @@
+ingressClassName: nginx
+annotationPrefix: nginx.ingress.kubernetes.io
+servicePort: 8080
+
+commonAnnotations: {}
+
+annotationPresets:
+  websocket:
+    proxy-read-timeout: "3600"
+    proxy-send-timeout: "3600"
+  stripPrefix:
+    use-regex: "true"
+    rewrite-target: /$2
+
+ingresses:
+  fluxer:
+    rules:
+      - host: web.example.com
+        service: app-proxy
+      - host: api.example.com
+        service: api
+      - host: admin.example.com
+        service: admin
+      - host: media.example.com
+        service: media-proxy
+  fluxer-web-api:
+    presets: [stripPrefix]
+    rules:
+      - host: web.example.com
+        service: api
+        paths:
+          - path: /api(/(.*))?$
+            pathType: ImplementationSpecific
+  fluxer-gateway:
+    presets: [websocket]
+    rules:
+      - host: gateway.example.com
+        service: gateway
+  fluxer-uploads:
+    annotations:
+      proxy-body-size: 100m
+      proxy-request-buffering: "off"
+    rules:
+      - host: uploads.example.com
+        service: uploads
+
+clusterIssuer:
+  enabled: false
+  name: letsencrypt
+  email: ""
+  server: https://acme-v02.api.letsencrypt.org/directory
+  privateKeySecretName: letsencrypt-account-key
+  solverIngressClass: nginx

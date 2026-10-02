@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {PhoneVerificationToken, UserID} from '@app/api/BrandedTypes';
+import type {UserID} from '@app/api/BrandedTypes';
 import type {
 	AuthSessionRow,
 	EmailRevertTokenRow,
 	EmailVerificationTokenRow,
 	PasswordResetTokenRow,
-	PhoneTokenRow,
 } from '@app/api/database/types/AuthTypes';
 import type {AuthSession, AuthSessionTombstone} from '@app/api/models/AuthSession';
 import type {EmailRevertToken} from '@app/api/models/EmailRevertToken';
@@ -65,14 +64,6 @@ export class UserAuthRepository implements IUserAuthRepository {
 
 	async deleteAllAuthSessions(userId: UserID): Promise<void> {
 		return this.authSessionRepository.deleteAllAuthSessions(userId);
-	}
-
-	async recordCountrySighting(userId: UserID, country: string): Promise<void> {
-		return this.authSessionRepository.recordCountrySighting(userId, country);
-	}
-
-	async hasCountrySightingOutsideSet(userId: UserID, countryCodes: Iterable<string>): Promise<boolean> {
-		return this.authSessionRepository.hasCountrySightingOutsideSet(userId, countryCodes);
 	}
 
 	async listMfaBackupCodes(userId: UserID): Promise<Array<MfaBackupCode>> {
@@ -135,18 +126,6 @@ export class UserAuthRepository implements IUserAuthRepository {
 		return this.tokenRepository.deleteEmailRevertToken(token);
 	}
 
-	async createPhoneToken(token: PhoneVerificationToken, phone: string, userId: UserID | null): Promise<void> {
-		return this.tokenRepository.createPhoneToken(token, phone, userId);
-	}
-
-	async getPhoneToken(token: PhoneVerificationToken): Promise<PhoneTokenRow | null> {
-		return this.tokenRepository.getPhoneToken(token);
-	}
-
-	async deletePhoneToken(token: PhoneVerificationToken): Promise<void> {
-		return this.tokenRepository.deletePhoneToken(token);
-	}
-
 	async checkIpAuthorized(userId: UserID, ip: string): Promise<boolean> {
 		return this.ipAuthorizationRepository.checkIpAuthorized(userId, ip);
 	}
@@ -193,8 +172,17 @@ export class UserAuthRepository implements IUserAuthRepository {
 		counter: bigint,
 		transports: Set<string> | null,
 		name: string,
+		rpId: string | null,
 	): Promise<void> {
-		return this.webAuthnRepository.createWebAuthnCredential(userId, credentialId, publicKey, counter, transports, name);
+		return this.webAuthnRepository.createWebAuthnCredential(
+			userId,
+			credentialId,
+			publicKey,
+			counter,
+			transports,
+			name,
+			rpId,
+		);
 	}
 
 	async updateWebAuthnCredentialCounter(userId: UserID, credentialId: string, counter: bigint): Promise<void> {
@@ -207,6 +195,10 @@ export class UserAuthRepository implements IUserAuthRepository {
 
 	async updateWebAuthnCredentialName(userId: UserID, credentialId: string, name: string): Promise<void> {
 		return this.webAuthnRepository.updateWebAuthnCredentialName(userId, credentialId, name);
+	}
+
+	async setWebAuthnCredentialSupersededBy(userId: UserID, credentialId: string, supersededBy: string): Promise<void> {
+		return this.webAuthnRepository.setWebAuthnCredentialSupersededBy(userId, credentialId, supersededBy);
 	}
 
 	async deleteWebAuthnCredential(userId: UserID, credentialId: string): Promise<void> {

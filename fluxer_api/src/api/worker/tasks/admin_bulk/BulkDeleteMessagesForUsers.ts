@@ -26,6 +26,7 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 		gatewayService: deps.gatewayService,
 		storageService: deps.storageService,
 		purgeQueue: deps.purgeQueue,
+		workerService: deps.workerService,
 	});
 	const adminUserId = createUserID(BigInt(payload.admin_user_id));
 	const total = payload.user_ids.length;

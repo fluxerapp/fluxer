@@ -12,7 +12,7 @@ An upgrade moves an instance to a newer release. `install.sh --update` does all 
 
 | Requirement | Value |
 | --- | --- |
-| Working directory | The one holding `.env`, `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` and `Caddyfile` |
+| Working directory | The one holding `.env` and the stack files |
 | Compose commands | Behind your own reverse proxy, set `COMPOSE_FILE` in `.env` once and every command picks up the overlay |
 | Free disk | Room for one database dump, one copy of the uploads, and the new images beside the old ones |
 | Downtime | A minute or two for the recreate, plus however long the uploads copy takes with the stack stopped |
@@ -24,6 +24,8 @@ Read the release notes between the version you run and the one you are moving to
 The images come from `FLUXER_IMAGE_TAG` in `.env`. The stack files come from a git ref, which is a branch or a tag in the Fluxer repository. The installer derives that ref from the image tag: `main` for `v1` or `latest`, and the tag string itself for anything else. `--ref` overrides the derivation. `docker compose pull` never updates a stack file, and refreshing a stack file never moves an image.
 
 The repository holds no ref by the name of a pinned image tag. A release tags each image on its own, as `fluxer-api@2026.813.205040`, so pass `--ref` with that tag or with the commit it points at. Without that override the download fails with exit 4.
+
+The stack files on `main` can run ahead of the `v1` images. The current `docker-compose.yml` passes an optional setting with no Compose default through empty when `.env` leaves it out, and only images built from the same change or later read an empty value as unset. Older images reject some of those empty values and `api`, `worker` and `media-proxy` fail to start. Refresh the stack files only once the images the tag names are at least as new, or pin both with `--ref`.
 
 ## What the script does
 
@@ -79,7 +81,7 @@ Read the [Linux and macOS installer](https://fluxer.dev/install.sh) or [Windows 
 
 ## Keep a local compose change
 
-An upgrade replaces the stack files, including direct edits to `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` or the `Caddyfile`. Use `--dry-run` to see which files will change.
+An upgrade replaces the stack files, including direct edits to `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `external-object-store.compose.yml` or the `Caddyfile`. Use `--dry-run` to see which files will change.
 
 The supported way to hold a local choice is a separate file, listed in `COMPOSE_FILE` in `.env`:
 
@@ -156,6 +158,7 @@ The run ends by naming the record it wrote and the command that rolls back to it
 | `--dry-run` | `-DryRun` | Print the plan. Change nothing |
 | `--backup-dir <path>` | `-BackupDir` | Where records go. Default `<dir>/backups` |
 | `--no-volume-backup` | `-NoVolumeBackup` | Take the database dump and skip the uploads copy |
+| `--no-volume-compression` | `-NoVolumeCompression` | Copy the uploads as a plain `.tar`. Less downtime, more disk |
 | `--skip-backup-accept-data-loss` | `-SkipBackupAcceptDataLoss` | Upgrade with no backup at all |
 
 `--dir` and `--ref` mean what they mean on an install, and the installer derives an omitted `--ref` from the `FLUXER_IMAGE_TAG` line in `.env`. Every failure prints a sentence on standard error and exits non-zero, and the script header lists what each code means. A Postgres major version change is exit 3.
@@ -194,6 +197,27 @@ Within minutes of the upgrade, `worker` starts deleting existing data that is pa
 
 Instances on Cassandra already behave this way.
 
+## Check the svc request ceiling
+
+`docker-compose.yml` used to pass `FLUXER_SVC_MAX_CONCURRENT_REQUESTS` only to the `users` and `messages` routers and shards. It now reaches every svc container, so a value set in `.env` also caps `snowflakes`, `gifs` and `unfurl`. Unset, `snowflakes` allows `320` requests in flight, `messages` `192` and the rest `64`. An instance that sets the name either raises it to at least `320` or removes it from `.env`, then runs `docker compose up -d`.
+
+## Add the passkey columns on Cassandra
+
+An instance on the Postgres backend needs nothing here. An instance on Cassandra or Scylla adds two columns to `webauthn_credentials` before it starts the new `api` and `worker` images. Replace `fluxer` with the value of `FLUXER_CASSANDRA_KEYSPACE`.
+
+```sql
+ALTER TABLE fluxer.webauthn_credentials ADD rp_id text;
+ALTER TABLE fluxer.webauthn_credentials ADD superseded_by text;
+```
+
+Both columns start empty on every row, and existing passkeys keep working as before. Wait until every node reports the same schema version, as `nodetool describecluster` shows, then upgrade.
+
+:::danger[Upgrading without the columns breaks every connection]
+The new release reads both columns whenever it loads passkeys, and every Gateway connection loads them. Without the columns no client finishes connecting, and passkey sign-in fails.
+:::
+
+An earlier release ignores the columns, so a rollback leaves them in place.
+
 ## What the backup covers
 
 Each upgrade writes one record directory, named `record-` and a UTC stamp, under `backups` or wherever `--backup-dir` points. It holds:
@@ -201,7 +225,7 @@ Each upgrade writes one record directory, named `record-` and a UTC stamp, under
 | Artefact | What it covers |
 | --- | --- |
 | `fluxer.dump` | Every account, message, guild and configuration row, in the Postgres custom format |
-| `seaweedfs-data.tgz` | Every upload, avatar, report and harvest |
+| `seaweedfs-data.tgz` | Every upload, avatar, report and harvest, or `seaweedfs-data.tar` under `--no-volume-compression` |
 | `.env` | Every secret the instance was built with |
 
 The stack files sit in the record beside them, so a rollback puts back the exact files the instance was running. The record directory is created `0700` and the `.env` copy inside it is `0600`. Keep records wherever you already keep secrets.
@@ -211,7 +235,7 @@ Nothing else is copied. The dump covers `postgres-data`. The other volumes eithe
 Put a dump on a timer as well. On Linux and macOS, this crontab line writes one a night and keeps two weeks of them:
 
 ```cron
-15 3 * * * cd /srv/fluxer && docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > "backups/fluxer-$(date -u +\%Y\%m\%dT\%H\%M\%SZ).dump" && find backups -name 'fluxer-*.dump' -mtime +14 -delete
+15 3 * * * cd /srv/fluxer && docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom' > "backups/fluxer-$(date -u +\%Y\%m\%dT\%H\%M\%SZ).dump" && find backups -name 'fluxer-*.dump' -mtime +14 -delete
 ```
 
 `/srv/fluxer` stands for the directory holding `.env`. Write it as an absolute path, because cron does not expand `~`. An unescaped `%` in a crontab is a newline, which is why every one above has a backslash.
@@ -233,9 +257,25 @@ FLUXER_S3_FORCE_PATH_STYLE=false
 
 `FLUXER_KV_URL`, `FLUXER_NATS_URL`, `FLUXER_SEARCH_URL` and `FLUXER_LIVEKIT_INTERNAL_URL` move the other bundled services the same way, and `FLUXER_NATS_JETSTREAM_URL` and `FLUXER_SVC_NATS_URL` follow `FLUXER_NATS_URL` when they are not set on their own.
 
-Pointing the stack elsewhere leaves the bundled service defined and running with nothing reading it. Take it out with an override file listed in `COMPOSE_FILE`, which [Keep a local compose change](#keep-a-local-compose-change) describes, rather than by editing `docker-compose.yml`, which the Place step replaces on every upgrade.
+Pointing the stack elsewhere leaves the bundled service defined and running with nothing reading it. The object store has a shipped overlay for that. `external-object-store.compose.yml` keeps `seaweedfs` and `seaweedfs-init` from starting, and `api`, `worker` and `media-proxy` stop waiting for `seaweedfs-init`. Add it to `COMPOSE_FILE` in `.env`, after any other overlay:
 
-The installer backs up only the bundled database and object store. Arrange separate backups for external stores before upgrading, and keep them with the release's backup record.
+```ini
+COMPOSE_FILE=docker-compose.yml:external-object-store.compose.yml
+```
+
+Behind a reverse proxy the line is `docker-compose.yml:docker-compose.proxy.yml:external-object-store.compose.yml`. The overlay needs Compose 2.24.4 or newer. An upgrade refreshes it with the other stack files, skips the uploads copy and does not wait for `seaweedfs-init`.
+
+Compose leaves containers that already exist in place, so remove the two old ones once after the switch:
+
+```bash
+docker compose rm -sf seaweedfs seaweedfs-init
+```
+
+The `seaweedfs-data` volume stays until you delete it. Copy its objects to the new store before you delete it.
+
+The other bundled services have no shipped overlay. Take one out with an override file listed in `COMPOSE_FILE`, which [Keep a local compose change](#keep-a-local-compose-change) describes, rather than by editing `docker-compose.yml`, which the Place step replaces on every upgrade.
+
+The installer backs up only the bundled database and object store. It skips the database dump when the stack defines no `postgres` service, and when `FLUXER_POSTGRES_HOST` or the host in `FLUXER_POSTGRES_URL` names anything other than `postgres`. The bundled service is idle in that shape, and its data directory still holds the role and database it was first started with, so the by-hand dump and restore commands on this page do not work against it either. Arrange separate backups for external stores before upgrading, and keep them with the release's backup record.
 
 ## Roll back
 
@@ -261,12 +301,12 @@ The database restores from the custom-format dump:
 ```bash
 docker compose stop
 docker compose up -d --wait postgres
-docker compose exec -T postgres pg_restore -U fluxer -d fluxer --clean --if-exists \
+docker compose exec -T postgres sh -c 'pg_restore -U $POSTGRES_USER -d $POSTGRES_DB --clean --if-exists' \
   < backups/record-20260831T120000Z/fluxer.dump
 docker compose up -d
 ```
 
-`--clean` prints notices about objects that do not exist yet, which is expected against a fresh directory.
+`--clean` prints notices about objects that do not exist yet, which is expected against a fresh directory. The role and database come from the `postgres` container's environment, which follows `FLUXER_POSTGRES_USERNAME` and `FLUXER_POSTGRES_DATABASE`, the same way the installer's dump reads them. These commands are for the bundled database. A database outside the stack restores with its own tools.
 
 PowerShell has no `<` redirection. On Windows, copy the dump into the container and name it as a file:
 
@@ -274,7 +314,7 @@ PowerShell has no `<` redirection. On Windows, copy the dump into the container 
 docker compose stop
 docker compose up -d --wait postgres
 docker compose cp backups\record-20260831T120000Z\fluxer.dump postgres:/tmp/fluxer.dump
-docker compose exec -T postgres pg_restore -U fluxer -d fluxer --clean --if-exists /tmp/fluxer.dump
+docker compose exec -T postgres sh -c 'pg_restore -U $POSTGRES_USER -d $POSTGRES_DB --clean --if-exists /tmp/fluxer.dump'
 docker compose exec -T postgres rm /tmp/fluxer.dump
 docker compose up -d
 ```
@@ -289,16 +329,16 @@ docker run --rm -v fluxer_seaweedfs-data:/data \
 docker compose up -d
 ```
 
-`tar` extracts over whatever is already on the volume, so the `find` empties it first. In PowerShell write `${PWD}` instead of `$PWD`. Success is an existing attachment URL answering 200 again. The `fluxer_` prefix is the Compose project name, which `docker-compose.yml` sets to `fluxer`.
+For a `seaweedfs-data.tar`, write `tar xf` in place of `tar xzf`. `tar` extracts over whatever is already on the volume, so the `find` empties it first. In PowerShell write `${PWD}` instead of `$PWD`. Success is an existing attachment URL answering 200 again. The `fluxer_` prefix is the Compose project name, which `docker-compose.yml` sets to `fluxer`.
 
 ## Move to a new Postgres major version
 
-`docker-compose.yml` pins `postgres:16-alpine`. A newer major does not read the data directory an older major wrote, so the data moves across through a dump. The upgrade refuses when the refreshed compose file changes that pin, because the move destroys the volume holding the database.
+`docker-compose.yml` runs `postgres:16-alpine` unless `FLUXER_POSTGRES_IMAGE` in `.env` names another image. A newer major does not read the data directory an older major wrote, so the data moves across through a dump. The upgrade refuses when the refreshed compose file would run a different major from the current one, because the move destroys the volume holding the database. It reads the current major from the image the old file names, and takes `FLUXER_POSTGRES_IMAGE` into account only for a file that reads it.
 
 Take the dump while the old major is still serving, then stop everything and drop the volume:
 
 ```bash
-docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom \
+docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom' \
   > backups/pre-major.dump
 docker compose down
 docker volume rm fluxer_postgres-data
@@ -308,16 +348,18 @@ On Windows, run `pg_dump` inside the container with `-f /tmp/pre-major.dump` and
 
 Once that volume is removed, the dump is the only copy of the database.
 
-Put the new `postgres` tag in `docker-compose.yml`, start the database on its own, and restore into the empty directory:
+`FLUXER_POSTGRES_IMAGE` takes effect only once `docker-compose.yml` reads it. An instance on older stack files runs `sh install.sh --update` first, or edits the tag in its `docker-compose.yml` as before.
+
+Set `FLUXER_POSTGRES_IMAGE` in `.env` to the new tag, such as `postgres:17-alpine`, start the database on its own, and restore into the empty directory:
 
 ```bash
 docker compose up -d --wait postgres
-docker compose exec -T postgres pg_restore -U fluxer -d fluxer --clean --if-exists \
+docker compose exec -T postgres sh -c 'pg_restore -U $POSTGRES_USER -d $POSTGRES_DB --clean --if-exists' \
   < backups/pre-major.dump
 docker compose up -d
 ```
 
-Run `sh install.sh --update` afterwards to finish the move on the refreshed files.
+Run `sh install.sh --update` afterwards to finish the move on the refreshed files. Remove the `FLUXER_POSTGRES_IMAGE` line once the refreshed `docker-compose.yml` runs the same major by default.
 
 ## Pin a release
 
@@ -325,11 +367,11 @@ Run `sh install.sh --update` afterwards to finish the move on the refreshed file
 
 A pinned instance also pins its stack files. [Match the images to the stack files](#match-the-images-to-the-stack-files) has the `--ref` a pinned tag needs.
 
-The tag applies only to the Fluxer images. `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs` and `livekit` are pinned in `docker-compose.yml`, and they move only when an upgrade refreshes that file.
+The tag applies only to the Fluxer images. `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs` and `livekit` take their tags from `docker-compose.yml`, and move when an upgrade refreshes that file. An image name in `.env`, such as `FLUXER_POSTGRES_IMAGE`, holds one of them in place instead. [Images](/operator/configuration/#images) lists the names.
 
 ## Change the domain or the passkey relying party
 
-`FLUXER_DOMAIN` supplies the default `FLUXER_PASSKEY_RP_ID`, which is the domain a passkey is tied to. A passkey works only under the identifier it was created with.
+`FLUXER_DOMAIN` supplies the default `FLUXER_PASSKEY_RP_ID`, which is the domain a passkey is tied to. `FLUXER_PUBLIC_ORIGIN` does not move it. A passkey works only under the identifier it was created with.
 
 :::danger[Changing either value invalidates every passkey]
 Passkeys registered under the old `FLUXER_PASSKEY_RP_ID` stop working and cannot be recovered. Every user has to register a new one, so keep another sign-in method working before you change it.

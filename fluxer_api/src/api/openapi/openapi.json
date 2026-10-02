@@ -295,7 +295,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Initiate password reset process by email. A password reset link will be sent to the user's email address. Requires CAPTCHA verification.",
+				"description": "Initiate password reset process by email. A password reset link will be sent to the user's email address. Requires a solved captcha challenge (X-Captcha-Token).",
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ForgotPasswordRequest"}}}
@@ -745,7 +745,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Authenticate with email and password. Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification.",
+				"description": "Authenticate with email and password. Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification. Requires a solved captcha challenge (X-Captcha-Token).",
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/LoginRequest"}}}
@@ -1053,6 +1053,292 @@
 				}
 			}
 		},
+		"/auth/passkey-bridge": {
+			"post": {
+				"operationId": "start_passkey_bridge_login",
+				"summary": "Start passkey bridge sign in",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeStartResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Start a sign in or two-factor ceremony for a passkey that belongs to the paired first-party origin. Only available on the official instance from the new origin.",
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeLoginStartRequest"}}}
+				}
+			}
+		},
+		"/auth/passkey-bridge/{ceremony_id}/cancel": {
+			"post": {
+				"operationId": "cancel_passkey_bridge",
+				"summary": "Cancel passkey bridge",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeFinishResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Cancel a passkey bridge ceremony that has not completed.",
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				]
+			}
+		},
+		"/auth/passkey-bridge/{ceremony_id}/complete": {
+			"post": {
+				"operationId": "complete_passkey_bridge",
+				"summary": "Complete passkey bridge",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeFinishResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Verify the WebAuthn response for a pending passkey bridge ceremony. A failed verification leaves the ceremony pending so it can be retried.",
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeCompleteRequest"}}}
+				}
+			}
+		},
+		"/auth/passkey-bridge/{ceremony_id}/options": {
+			"post": {
+				"operationId": "get_passkey_bridge_options",
+				"summary": "Get passkey bridge options",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeOptionsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Issue WebAuthn authentication options for a pending passkey bridge ceremony. The request must come from the origin that runs the ceremony.",
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				]
+			}
+		},
+		"/auth/passkey-bridge/{ceremony_id}/redeem": {
+			"post": {
+				"operationId": "redeem_passkey_bridge_login",
+				"summary": "Redeem passkey bridge sign in",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeLoginRedeemResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Redeem a finished sign in or two-factor passkey bridge ceremony once. Requires the nonce kept by the starting page and the completion code handed back when the ceremony finished.",
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeRedeemRequest"}}}
+				}
+			}
+		},
 		"/auth/register": {
 			"post": {
 				"operationId": "register_account",
@@ -1094,7 +1380,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Create a new user account with email and password. Requires CAPTCHA verification. User account is created but must verify email before logging in.",
+				"description": "Create a new user account with email and password. Requires a solved captcha challenge (X-Captcha-Token). User account is created but must verify email before logging in.",
 				"requestBody": {
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/RegisterRequest"}}}
@@ -2402,6 +2688,134 @@
 				}
 			}
 		},
+		"/channels/{channel_id}/follower-stats": {
+			"get": {
+				"operationId": "get_channel_follower_stats",
+				"summary": "Get announcement channel follower stats",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ChannelFollowerStatsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns how many channels and distinct guilds follow an announcement channel. Requires View Channel on the announcement channel.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/followers": {
+			"post": {
+				"operationId": "follow_channel",
+				"summary": "Follow an announcement channel",
+				"tags": ["Channels"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/FollowedChannelResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Follows an announcement channel into a text channel. Creates a channel follower webhook in the target channel that receives every message published in the announcement channel. Requires Manage Webhooks in the target channel and View Channel on the announcement channel.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ChannelFollowRequest"}}}
+				}
+			}
+		},
 		"/channels/{channel_id}/invites": {
 			"post": {
 				"operationId": "create_channel_invite",
@@ -2744,7 +3158,8 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Clears all read state and acknowledgement records for a channel, marking all messages as unread. Returns 204 No Content on success.",
+				"description": "Deprecated. Has no effect on the read state. Returns 204 No Content.",
+				"deprecated": true,
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -3372,6 +3787,144 @@
 						"required": true,
 						"schema": {"description": "The ID of the attachment", "$ref": "#/components/schemas/SnowflakeType"},
 						"description": "The ID of the attachment"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/messages/{message_id}/crosspost": {
+			"post": {
+				"operationId": "crosspost_message",
+				"summary": "Publish a message to following channels",
+				"tags": ["Channels", "Messages"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/MessageResponseSchema"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Publishes a message in an announcement channel to every channel that follows it. The author needs Send Messages. Anyone else needs Send Messages and Manage Messages. Only default messages that are not replies, forwards or copies can be published, and each message can be published once. Copies are delivered asynchronously. Publishing is limited per channel (10 in a row, then one every 6 minutes) and per community (30 in a row, then one every 2 minutes). Returns the updated message with the CROSSPOSTED flag set.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/messages/{message_id}/crosspost-source": {
+			"get": {
+				"operationId": "get_message_crosspost_source",
+				"summary": "Get the source community of a published message copy",
+				"tags": ["Channels", "Messages"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/CrosspostSourceResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the public profile of the community a message copy was published from. Works on copies delivered to a following channel and on the system message posted when a channel starts following. Needs the same access as fetching the message. The response holds the community name, icon, banner, badge features, approximate counts and whether it can be joined through discovery.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the message", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
 					}
 				]
 			}
@@ -4396,7 +4949,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires CAPTCHA verification.",
+				"description": "Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires a solved captcha challenge (X-Captcha-Token).",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -4757,7 +5310,7 @@
 				"responses": {
 					"200": {
 						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/WebhookResponse"}}}
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/WebhookCreateResponse"}}}
 					},
 					"400": {
 						"description": "Bad Request - The request was malformed or contained invalid data",
@@ -5949,7 +6502,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Only claimed, email-verified non-bot users can create guilds.",
+				"description": "Only claimed, email-verified non-bot users can create guilds. A self-hosted instance can restrict creation to admins and users granted the feature_guild_create limit.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -9951,7 +10504,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a new bot-backed OAuth2 application (client). Requires CAPTCHA verification. Returns client credentials including ID and secret. Application can be used for authorization flows and API access.",
+				"description": "Creates a new bot-backed OAuth2 application (client). Requires a solved captcha challenge (X-Captcha-Token). Returns client credentials including ID and secret. Application can be used for authorization flows and API access.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -11352,6 +11905,289 @@
 						"description": "Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins."
 					}
 				]
+			}
+		},
+		"/premium/store": {
+			"get": {
+				"operationId": "get_store_billing_context",
+				"summary": "Get in-app purchase context",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StoreBillingContextResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the account token and the App Store and Google Play products the mobile apps may sell, plus the reason a new subscription is blocked, if any.",
+				"security": [{"sessionToken": []}]
+			}
+		},
+		"/premium/store/app-store/transactions": {
+			"post": {
+				"operationId": "claim_app_store_transaction",
+				"summary": "Claim App Store transaction",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StorePurchaseClaimResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Verifies a StoreKit 2 signed transaction, links the purchase to the authenticated account and applies it. Calling it again for the same purchase returns the same result. Finish the transaction after a 200 or a 400 or 403 error. Leave it unfinished after a 429, a 5xx or a network failure.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ClaimAppStoreTransactionRequest"}}}
+				}
+			}
+		},
+		"/premium/store/google-play/purchases": {
+			"post": {
+				"operationId": "claim_google_play_purchase",
+				"summary": "Claim Google Play purchase",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StorePurchaseClaimResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Verifies a Google Play purchase token, links the purchase to the authenticated account, acknowledges it and applies it. Calling it again for the same purchase returns the same result.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ClaimGooglePlayPurchaseRequest"}}}
+				}
+			}
+		},
+		"/premium/store/purchases": {
+			"get": {
+				"operationId": "list_store_purchases",
+				"summary": "List in-app purchases",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StorePurchaseListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the App Store and Google Play purchases linked to the authenticated account.",
+				"security": [{"sessionToken": []}]
+			}
+		},
+		"/premium/store/purchases/{purchase_id}": {
+			"delete": {
+				"operationId": "release_store_purchase",
+				"summary": "Release in-app subscription",
+				"tags": ["Premium"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Unlinks an App Store or Google Play subscription from the authenticated account so another account can claim it. Requires sudo mode.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "purchase_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the store purchase", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the store purchase"
+					}
+				],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
+				}
 			}
 		},
 		"/premium/switch-to-list-price": {
@@ -13066,7 +13902,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as phone, MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.",
+				"description": "Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.",
 				"security": [{"botToken": []}, {"oauth2Token": ["identify"]}, {"sessionToken": []}]
 			},
 			"patch": {
@@ -13387,7 +14223,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Creates a new private channel (direct message) between the current user and one or more recipients. Group DM creation requires CAPTCHA verification. Returns the newly created channel object.",
+				"description": "Creates a new private channel (direct message) between the current user and one or more recipients. Group DM creation requires a solved captcha challenge (X-Captcha-Token). Returns the newly created channel object.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -14305,7 +15141,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Completes bounced-email recovery by verifying the replacement email code, updating the account email, and clearing email-related suspicious-activity requirements.",
+				"description": "Completes bounced-email recovery by verifying the replacement email code, and updating the account email.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -17029,6 +17865,164 @@
 				}
 			}
 		},
+		"/users/@me/mfa/webauthn/migration": {
+			"get": {
+				"operationId": "get_webauthn_migration",
+				"summary": "Get pending passkey update",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyMigrationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Return the passkey this session can update to the new domain after using it within the last five minutes, or null.",
+				"security": [{"sessionToken": []}]
+			},
+			"post": {
+				"operationId": "complete_webauthn_migration",
+				"summary": "Complete passkey update",
+				"tags": ["Users"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Register the replacement passkey under the name of the pending one. The old passkey stops appearing in lists and is removed together with its replacement.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyMigrationCompleteRequest"}}}
+				}
+			}
+		},
+		"/users/@me/mfa/webauthn/migration/registration-options": {
+			"post": {
+				"operationId": "get_webauthn_migration_registration_options",
+				"summary": "Get passkey update registration options",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/WebAuthnChallengeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Generate registration options for the passkey that replaces the pending one. Requires a pending passkey update for this session.",
+				"security": [{"sessionToken": []}]
+			}
+		},
 		"/users/@me/mfa/webauthn/two-factor": {
 			"put": {
 				"operationId": "set_webauthn_two_factor",
@@ -17489,6 +18483,135 @@
 				}
 			}
 		},
+		"/users/@me/passkey-bridge": {
+			"post": {
+				"operationId": "start_passkey_bridge_sudo",
+				"summary": "Start passkey bridge sudo verification",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeStartResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Start a sudo verification ceremony for a passkey that belongs to the paired first-party origin. Only available on the official instance from the new origin.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeSudoStartRequest"}}}
+				}
+			}
+		},
+		"/users/@me/passkey-bridge/{ceremony_id}/redeem": {
+			"post": {
+				"operationId": "redeem_passkey_bridge_sudo",
+				"summary": "Redeem passkey bridge sudo verification",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeSudoRedeemResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Redeem a finished sudo passkey bridge ceremony once for a sudo mode token. Requires the nonce kept by the starting page and the completion code handed back when the ceremony finished.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeRedeemRequest"}}}
+				}
+			}
+		},
 		"/users/@me/password-change/complete": {
 			"post": {
 				"operationId": "complete_password_change",
@@ -17711,175 +18834,6 @@
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasswordChangeVerifyRequest"}}}
-				}
-			}
-		},
-		"/users/@me/phone/inbound-challenge": {
-			"post": {
-				"operationId": "start_inbound_phone_challenge",
-				"summary": "Start an inbound SMS challenge",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {
-							"application/json": {"schema": {"$ref": "#/components/schemas/InboundSmsChallengeStartResponse"}}
-						}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "For very-high-risk registrations the platform requires the user to text a one-time code to the platform's number, instead of receiving a code from the platform. This endpoint generates the code and the destination number to display.",
-				"security": [{"sessionToken": []}]
-			}
-		},
-		"/users/@me/phone/send-verification": {
-			"post": {
-				"operationId": "send_phone_verification_code",
-				"summary": "Send phone verification code",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneSendVerificationResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel=\"sms\" to request SMS (only honoured for SMS-allowlisted destinations) or channel=\"inbound_challenge\" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge.",
-				"security": [{"sessionToken": []}],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneSendVerificationRequest"}}}
-				}
-			}
-		},
-		"/users/@me/phone/verify": {
-			"post": {
-				"operationId": "verify_phone_code",
-				"summary": "Verify phone code",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneVerifyResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Verify a phone number by confirming the SMS verification code. Returns phone verification status.",
-				"security": [{"sessionToken": []}],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneVerifyRequest"}}}
 				}
 			}
 		},
@@ -18636,114 +19590,6 @@
 					"content": {
 						"application/json": {"schema": {"$ref": "#/components/schemas/RelationshipNicknameUpdateRequest"}}
 					}
-				}
-			}
-		},
-		"/users/@me/required-actions/phone-gate-escape": {
-			"get": {
-				"operationId": "get_phone_gate_escape",
-				"summary": "Preview setting the deferred phone check aside",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PhoneGateEscapePreviewResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Reports whether this account can set a deferred phone verification requirement aside, and which communities would be left if it did. Returns available false with empty lists for any account outside that state.",
-				"security": [{"sessionToken": []}]
-			},
-			"post": {
-				"operationId": "execute_phone_gate_escape",
-				"summary": "Set the deferred phone check aside",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserPrivateResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Leaves the communities that trigger the deferred phone verification check and restores the deferral, so the account works normally again. Communities the user owns are kept, and a run that hits the per-call community limit leaves what it can and can be repeated. Returns the updated private user object.",
-				"security": [{"sessionToken": []}],
-				"requestBody": {
-					"required": false,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/EmptyBodyRequest"}}}
 				}
 			}
 		},
@@ -20644,8 +21490,8 @@
 										"$ref": "#/components/schemas/SnowflakeStringType"
 									},
 									"message_id": {
-										"description": "The ID of the referenced message",
-										"$ref": "#/components/schemas/SnowflakeStringType"
+										"description": "The ID of the referenced message, absent on a channel follow system message",
+										"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 									},
 									"guild_id": {
 										"description": "The ID of the guild containing the referenced message",
@@ -20653,7 +21499,7 @@
 									},
 									"type": {"$ref": "#/components/schemas/MessageReferenceType"}
 								},
-								"required": ["channel_id", "message_id", "type"],
+								"required": ["channel_id", "type"],
 								"additionalProperties": false
 							},
 							{"type": "null"}
@@ -20807,8 +21653,8 @@
 														"$ref": "#/components/schemas/SnowflakeStringType"
 													},
 													"message_id": {
-														"description": "The ID of the referenced message",
-														"$ref": "#/components/schemas/SnowflakeStringType"
+														"description": "The ID of the referenced message, absent on a channel follow system message",
+														"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 													},
 													"guild_id": {
 														"description": "The ID of the guild containing the referenced message",
@@ -20816,7 +21662,7 @@
 													},
 													"type": {"$ref": "#/components/schemas/MessageReferenceType"}
 												},
-												"required": ["channel_id", "message_id", "type"],
+												"required": ["channel_id", "type"],
 												"additionalProperties": false
 											},
 											{"type": "null"}
@@ -21585,9 +22431,10 @@
 					},
 					"name": {"type": "string", "description": "The display name of the webhook"},
 					"avatar": {"description": "The hash of the webhook avatar image", "type": ["string", "null"]},
+					"type": {"$ref": "#/components/schemas/WebhookType"},
 					"token": {"type": "string", "description": "The secure token used to execute the webhook"}
 				},
-				"required": ["id", "guild_id", "channel_id", "name", "token"],
+				"required": ["id", "guild_id", "channel_id", "name", "type", "token"],
 				"additionalProperties": false
 			},
 			"WebhookUpdateRequest": {
@@ -21621,13 +22468,50 @@
 					},
 					"name": {"type": "string", "description": "The display name of the webhook"},
 					"avatar": {"description": "The hash of the webhook avatar image", "type": ["string", "null"]},
-					"token": {"type": "string", "description": "The secure token used to execute the webhook"},
+					"type": {"$ref": "#/components/schemas/WebhookType"},
+					"token": {
+						"description": "The secure token used to execute the webhook, omitted for channel follower webhooks",
+						"type": "string"
+					},
 					"user": {
 						"description": "The user who created the webhook",
 						"$ref": "#/components/schemas/UserPartialResponse"
+					},
+					"source_guild": {
+						"description": "The guild of the followed announcement channel, present on channel follower webhooks while the creator can view it",
+						"type": "object",
+						"properties": {
+							"id": {
+								"description": "The ID of the guild that owns the followed announcement channel",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"name": {
+								"type": "string",
+								"description": "The name of the guild that owns the followed announcement channel"
+							},
+							"icon": {
+								"description": "The icon hash of the guild that owns the followed announcement channel",
+								"type": ["string", "null"]
+							}
+						},
+						"required": ["id", "name"],
+						"additionalProperties": false
+					},
+					"source_channel": {
+						"description": "The followed announcement channel, present on channel follower webhooks while the creator can view it",
+						"type": "object",
+						"properties": {
+							"id": {
+								"description": "The ID of the followed announcement channel",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"name": {"type": "string", "description": "The name of the followed announcement channel"}
+						},
+						"required": ["id", "name"],
+						"additionalProperties": false
 					}
 				},
-				"required": ["id", "guild_id", "channel_id", "name", "token", "user"],
+				"required": ["id", "guild_id", "channel_id", "name", "type", "user"],
 				"additionalProperties": false
 			},
 			"EntranceSoundPlayRequest": {
@@ -21817,28 +22701,15 @@
 						"description": "Whether the current email address is marked as bounced by the mail provider",
 						"type": "boolean"
 					},
-					"phone": {
-						"description": "Always null. Retained for old-client backward compatibility — phone numbers are no longer stored on the user record.",
-						"type": ["string", "null"]
-					},
-					"has_verified_phone": {
-						"type": "boolean",
-						"description": "Whether this account has completed phone verification"
-					},
+					"has_verified_phone": {"type": "boolean", "description": "Deprecated. Always false."},
 					"bio": {"description": "The user biography text", "type": ["string", "null"]},
 					"pronouns": {"description": "The preferred pronouns of the user", "type": ["string", "null"]},
 					"accent_color": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 						"description": "The user-selected accent color as an integer"
 					},
-					"timezone": {
-						"description": "The IANA timezone identifier saved by the user. Omitted unless the user has staff access.",
-						"type": ["string", "null"]
-					},
-					"timezone_privacy_flags": {
-						"description": "Bitfield controlling who can see the profile timezone. Omitted unless the user has staff access.",
-						"$ref": "#/components/schemas/ProfileFieldPrivacyFlags"
-					},
+					"timezone": {"description": "The IANA timezone identifier saved by the user", "type": ["string", "null"]},
+					"timezone_privacy_flags": {"$ref": "#/components/schemas/ProfileFieldPrivacyFlags"},
 					"banner": {"description": "The hash of the user profile banner image", "type": ["string", "null"]},
 					"banner_color": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
@@ -21851,6 +22722,7 @@
 						"items": {"$ref": "#/components/schemas/UserAuthenticatorTypes"}
 					},
 					"verified": {"type": "boolean", "description": "Whether the email address has been verified"},
+					"account_limited": {"description": "Whether the account is limited", "type": "boolean"},
 					"premium_type": {
 						"anyOf": [
 							{"$ref": "#/components/schemas/UserPremiumTypes", "description": "The type of premium subscription"},
@@ -21878,7 +22750,7 @@
 						"description": "The sequence number for lifetime premium subscribers"
 					},
 					"premium_grace_ends_at": {
-						"description": "ISO8601 timestamp at which the post-cancel grace period ends. Set when the subscription is fully canceled in Stripe; perks remain active and the original premium_since is restored on resubscribe until this timestamp passes. Null when not in grace.",
+						"description": "ISO8601 timestamp at which grace access ends after premium_until passes: after a failed renewal payment (7 days from the renewal for monthly plans, 14 for yearly), after a subscription ends (3 days), or during an App Store or Google Play grace period. Perks stay active and the original premium_since is kept on resubscribe until this timestamp passes. Null when no grace is recorded, in which case access lasts 3 days after premium_until.",
 						"type": ["string", "null"]
 					},
 					"premium_discriminator": {
@@ -21913,10 +22785,6 @@
 						"type": "boolean",
 						"description": "Whether premium perks are temporarily disabled for this account"
 					},
-					"force_inbound_phone_verification": {
-						"description": "Whether this account is forced through the inbound (expensive-destination) phone verification flow regardless of prefix, for debugging",
-						"type": "boolean"
-					},
 					"password_last_changed_at": {
 						"description": "ISO8601 timestamp of the last password change",
 						"type": ["string", "null"]
@@ -21928,7 +22796,7 @@
 					"required_actions": {
 						"type": "array",
 						"items": {"type": "string"},
-						"description": "Actions the user must complete before full access"
+						"description": "Deprecated. Always empty."
 					},
 					"nsfw_allowed": {"type": "boolean", "description": "Whether the user is allowed to view NSFW content"},
 					"has_dismissed_premium_onboarding": {
@@ -22428,49 +23296,6 @@
 				"type": "array",
 				"items": {"$ref": "#/components/schemas/SavedMessageEntryResponse"}
 			},
-			"PhoneGateEscapePreviewResponse": {
-				"type": "object",
-				"properties": {
-					"available": {
-						"type": "boolean",
-						"description": "Whether this account can set the deferred phone verification check aside right now"
-					},
-					"guilds": {
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"id": {
-									"description": "The unique identifier (snowflake) for the community",
-									"$ref": "#/components/schemas/SnowflakeStringType"
-								},
-								"name": {"type": "string", "description": "The community name"}
-							},
-							"required": ["id", "name"],
-							"additionalProperties": false
-						},
-						"description": "Communities that trigger the phone check and will be left when the escape runs"
-					},
-					"owned_guilds": {
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"id": {
-									"description": "The unique identifier (snowflake) for the community",
-									"$ref": "#/components/schemas/SnowflakeStringType"
-								},
-								"name": {"type": "string", "description": "The community name"}
-							},
-							"required": ["id", "name"],
-							"additionalProperties": false
-						},
-						"description": "Communities that trigger the phone check but are owned by this user, so they are kept"
-					}
-				},
-				"required": ["available", "guilds", "owned_guilds"],
-				"additionalProperties": false
-			},
 			"RelationshipNicknameUpdateRequest": {
 				"type": "object",
 				"properties": {
@@ -22653,119 +23478,6 @@
 				"additionalProperties": {"anyOf": [{"$ref": "#/components/schemas/MessageResponseSchema"}, {"type": "null"}]},
 				"description": "A map of channel IDs to the latest message in each channel"
 			},
-			"PhoneVerifyRequest": {
-				"type": "object",
-				"properties": {
-					"phone": {"description": "Phone number being verified", "$ref": "#/components/schemas/PhoneNumberType"},
-					"code": {"description": "The verification code", "type": "string"}
-				},
-				"required": ["phone", "code"]
-			},
-			"PhoneVerifyResponse": {
-				"type": "object",
-				"properties": {
-					"verified": {
-						"type": "boolean",
-						"const": true,
-						"description": "Indicates the phone number was verified successfully"
-					}
-				},
-				"required": ["verified"],
-				"additionalProperties": false
-			},
-			"PhoneSendVerificationRequest": {
-				"type": "object",
-				"properties": {
-					"phone": {
-						"description": "Phone number to send verification code",
-						"$ref": "#/components/schemas/PhoneNumberType"
-					},
-					"channel": {
-						"description": "Channel to deliver the OTP on. Defaults to the first available channel from server policy. Server may override to an available fallback when the requested channel is disabled.",
-						"type": "string",
-						"enum": ["sms", "inbound_challenge"]
-					}
-				},
-				"required": ["phone"]
-			},
-			"PhoneSendVerificationResponse": {
-				"anyOf": [
-					{
-						"type": "object",
-						"properties": {
-							"channel": {
-								"type": "string",
-								"const": "sms",
-								"description": "Channel actually used for delivery (may differ from request when server adjusts)"
-							}
-						},
-						"required": ["channel"],
-						"additionalProperties": false
-					},
-					{
-						"type": "object",
-						"properties": {
-							"channel": {
-								"type": "string",
-								"const": "inbound_challenge",
-								"description": "The user must send Fluxer an SMS instead of receiving one"
-							},
-							"challenge_code": {
-								"description": "The numeric code the user must text to our number",
-								"type": "string",
-								"minLength": 4,
-								"maxLength": 12
-							},
-							"our_number": {
-								"description": "The Twilio number the user must text the code to (E.164)",
-								"type": "string",
-								"minLength": 4,
-								"maxLength": 32
-							},
-							"expires_at": {
-								"type": "string",
-								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
-								"description": "ISO 8601 timestamp when this inbound challenge expires"
-							},
-							"reason": {
-								"type": "string",
-								"enum": [
-									"voip",
-									"canadian",
-									"unknown_line_type",
-									"expensive_destination",
-									"account_forced",
-									"behavioural_risk"
-								],
-								"description": "Why inbound verification is required"
-							}
-						},
-						"required": ["channel", "challenge_code", "our_number", "expires_at", "reason"],
-						"additionalProperties": false
-					}
-				]
-			},
-			"InboundSmsChallengeStartResponse": {
-				"type": "object",
-				"properties": {
-					"challenge_code": {
-						"description": "The numeric code the user must text to our number",
-						"type": "string",
-						"minLength": 4,
-						"maxLength": 12
-					},
-					"our_number": {
-						"description": "The Twilio number the user must text the code to (E.164)",
-						"type": "string",
-						"minLength": 4,
-						"maxLength": 32
-					},
-					"expires_at": {"type": "string", "description": "ISO timestamp at which the challenge becomes invalid"}
-				},
-				"required": ["challenge_code", "our_number", "expires_at"],
-				"additionalProperties": false
-			},
 			"PasswordChangeVerifyRequest": {
 				"type": "object",
 				"properties": {
@@ -22819,6 +23531,54 @@
 					}
 				},
 				"required": ["token", "auth_session_id_hash"],
+				"additionalProperties": false
+			},
+			"PasskeyBridgeRedeemRequest": {
+				"type": "object",
+				"properties": {
+					"nonce": {
+						"type": "string",
+						"minLength": 16,
+						"maxLength": 256,
+						"pattern": "^[A-Za-z0-9_-]+$",
+						"description": "Nonce whose SHA-256 digest was sent when the ceremony started"
+					},
+					"completion_code": {
+						"type": "string",
+						"pattern": "^[A-Za-z0-9_-]{43}$",
+						"description": "Code handed back when the ceremony finished"
+					}
+				},
+				"required": ["nonce", "completion_code"]
+			},
+			"PasskeyBridgeSudoRedeemResponse": {
+				"oneOf": [
+					{"$ref": "#/components/schemas/CancelledPasskeyBridgeSudoRedeemResponse"},
+					{"$ref": "#/components/schemas/CompletedPasskeyBridgeSudoRedeemResponse"}
+				]
+			},
+			"PasskeyBridgeSudoStartRequest": {
+				"type": "object",
+				"properties": {
+					"runner": {"$ref": "#/components/schemas/PasskeyBridgeRunner"},
+					"nonce_hash": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{64}$",
+						"description": "Lowercase hex SHA-256 digest of the nonce the starting page keeps"
+					}
+				},
+				"required": ["runner", "nonce_hash"]
+			},
+			"PasskeyBridgeStartResponse": {
+				"type": "object",
+				"properties": {
+					"ceremony_id": {"type": "string", "description": "Identifier of the passkey ceremony"},
+					"bridge_url": {
+						"description": "Page that runs the ceremony, or null for the native runner",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["ceremony_id", "bridge_url"],
 				"additionalProperties": false
 			},
 			"UserNoteUpdateRequest": {
@@ -23015,6 +23775,40 @@
 					}
 				},
 				"required": ["user", "backup_codes"],
+				"additionalProperties": false
+			},
+			"PasskeyMigrationCompleteRequest": {
+				"type": "object",
+				"properties": {
+					"response": {
+						"description": "WebAuthn registration response",
+						"$ref": "#/components/schemas/WebAuthnRegistrationResponse"
+					},
+					"challenge": {"description": "The challenge from registration options", "type": "string"}
+				},
+				"required": ["response", "challenge"]
+			},
+			"PasskeyMigrationResponse": {
+				"type": "object",
+				"properties": {
+					"pending": {
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"credential_id": {"type": "string", "description": "ID of the passkey waiting to be updated"},
+									"name": {"type": "string", "description": "User-assigned name of the passkey"},
+									"cross_device": {"type": "boolean", "description": "Whether the passkey was used from another device"}
+								},
+								"required": ["credential_id", "name", "cross_device"],
+								"additionalProperties": false
+							},
+							{"type": "null"}
+						],
+						"description": "The passkey this session can update, or null"
+					}
+				},
+				"required": ["pending"],
 				"additionalProperties": false
 			},
 			"SudoVerificationSchema": {
@@ -24466,13 +25260,10 @@
 						"anyOf": [{"$ref": "#/components/schemas/ColorType"}, {"type": "null"}]
 					},
 					"timezone": {
-						"description": "Staff-only IANA timezone identifier saved for profile local time. Ignored for non-staff users.",
+						"description": "IANA timezone identifier saved for profile local time",
 						"type": ["string", "null"]
 					},
-					"timezone_privacy_flags": {
-						"description": "Staff-only bitfield controlling who can see the profile timezone. Ignored for non-staff users.",
-						"$ref": "#/components/schemas/ProfileFieldPrivacyFlags"
-					},
+					"timezone_privacy_flags": {"$ref": "#/components/schemas/ProfileFieldPrivacyFlags"},
 					"premium_badge_hidden": {"type": "boolean", "description": "Whether to hide the premium badge"},
 					"premium_badge_masked": {"type": "boolean", "description": "Whether to mask the premium badge"},
 					"premium_badge_timestamp_hidden": {
@@ -25197,6 +25988,162 @@
 					{"$ref": "#/components/schemas/IneligibleSwitchToListPriceResponse"}
 				]
 			},
+			"StorePurchaseListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/StorePurchaseResponse"}},
+			"ClaimGooglePlayPurchaseRequest": {
+				"type": "object",
+				"properties": {
+					"purchase_token": {"description": "Purchase token from Google Play Billing", "type": "string"},
+					"product_id": {"description": "Google Play product identifier of the purchase", "type": "string"},
+					"package_name": {
+						"description": "Package name of the app that made the purchase. Must be one of the accepted package names",
+						"type": "string"
+					}
+				},
+				"required": ["purchase_token", "product_id"]
+			},
+			"StorePurchaseClaimResponse": {
+				"type": "object",
+				"properties": {
+					"purchase": {
+						"properties": {
+							"id": {
+								"description": "The unique identifier (snowflake) for this store purchase",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"provider": {
+								"description": "Store the purchase was made in",
+								"$ref": "#/components/schemas/StoreProvider"
+							},
+							"kind": {
+								"description": "Whether the purchase is a subscription or a gift",
+								"$ref": "#/components/schemas/StorePurchaseKind"
+							},
+							"slot": {"description": "Fluxer product the purchase is for", "$ref": "#/components/schemas/StoreSlot"},
+							"product_id": {"type": "string", "description": "Store product identifier"},
+							"environment": {
+								"description": "Whether the purchase was a real purchase or a test purchase",
+								"$ref": "#/components/schemas/StoreEnvironment"
+							},
+							"state": {
+								"description": "Current state of the purchase",
+								"$ref": "#/components/schemas/StorePurchaseState"
+							},
+							"entitled": {"type": "boolean", "description": "Whether the purchase currently grants Plutonium"},
+							"expires_at": {
+								"anyOf": [
+									{
+										"type": "string",
+										"format": "date-time",
+										"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+									},
+									{"type": "null"}
+								],
+								"description": "When the paid period ends, null for gifts"
+							},
+							"entitled_until": {
+								"anyOf": [
+									{
+										"type": "string",
+										"format": "date-time",
+										"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+									},
+									{"type": "null"}
+								],
+								"description": "When access from this purchase ends, including any grace period, null when not entitled"
+							},
+							"will_renew": {
+								"description": "Whether the subscription renews automatically, null for gifts",
+								"type": ["boolean", "null"]
+							},
+							"gift_code": {
+								"description": "Gift code minted by a gift purchase, null otherwise",
+								"type": ["string", "null"]
+							},
+							"created_at": {
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+								"description": "When Fluxer first saw the purchase"
+							}
+						},
+						"description": "The claimed purchase",
+						"$ref": "#/components/schemas/StorePurchaseResponse"
+					},
+					"gift_code": {
+						"description": "Gift code minted by a gift purchase, null otherwise",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["purchase", "gift_code"],
+				"additionalProperties": false
+			},
+			"ClaimAppStoreTransactionRequest": {
+				"type": "object",
+				"properties": {
+					"signed_transaction": {
+						"description": "JWS signed transaction from StoreKit 2 (Transaction.jwsRepresentation)",
+						"type": "string"
+					}
+				},
+				"required": ["signed_transaction"]
+			},
+			"StoreBillingContextResponse": {
+				"type": "object",
+				"properties": {
+					"app_account_token": {
+						"type": "string",
+						"description": "Lowercase UUID for this account. Pass it as appAccountToken on App Store purchases and as obfuscatedAccountId on Google Play purchases"
+					},
+					"app_store": {
+						"type": "object",
+						"properties": {
+							"enabled": {"type": "boolean", "description": "Whether App Store purchases are accepted"},
+							"bundle_ids": {
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "App bundle identifiers whose purchases are accepted"
+							},
+							"products": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/StoreBillingAppStoreProductResponse"},
+								"description": "App Store products on sale"
+							}
+						},
+						"required": ["enabled", "bundle_ids", "products"],
+						"additionalProperties": false,
+						"description": "App Store purchase settings"
+					},
+					"google_play": {
+						"type": "object",
+						"properties": {
+							"enabled": {"type": "boolean", "description": "Whether Google Play purchases are accepted"},
+							"package_names": {
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "App package names whose purchases are accepted"
+							},
+							"products": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/StoreBillingGooglePlayProductResponse"},
+								"description": "Google Play products on sale"
+							}
+						},
+						"required": ["enabled", "package_names", "products"],
+						"additionalProperties": false,
+						"description": "Google Play purchase settings"
+					},
+					"purchase_blocked_reason": {
+						"anyOf": [{"$ref": "#/components/schemas/StorePurchaseBlockedReason"}, {"type": "null"}],
+						"description": "Why this account cannot buy a subscription right now, null when it can"
+					},
+					"blocking_provider": {
+						"anyOf": [{"$ref": "#/components/schemas/StoreBlockingProvider"}, {"type": "null"}],
+						"description": "Provider of the active subscription that blocks a new one, null when nothing blocks"
+					}
+				},
+				"required": ["app_account_token", "app_store", "google_play", "purchase_blocked_reason", "blocking_provider"],
+				"additionalProperties": false
+			},
 			"PremiumStateResponse": {
 				"type": "object",
 				"properties": {
@@ -25368,9 +26315,17 @@
 						],
 						"additionalProperties": false
 					},
-					"pricing": {"$ref": "#/components/schemas/PremiumPricingState"}
+					"pricing": {"$ref": "#/components/schemas/PremiumPricingState"},
+					"store": {
+						"description": "Active App Store or Google Play subscription, null when no store subscription is active",
+						"anyOf": [{"$ref": "#/components/schemas/PremiumStoreSubscriptionState"}, {"type": "null"}]
+					},
+					"subscription_provider": {
+						"anyOf": [{"$ref": "#/components/schemas/PremiumSubscriptionProvider"}, {"type": "null"}],
+						"description": "Billing platform that owns the current recurring subscription, null for gift, lifetime or no subscription. When a Stripe and a store subscription are both active, the one paid through later"
+					}
 				},
-				"required": ["actual", "effective", "billing", "pricing"],
+				"required": ["actual", "effective", "billing", "pricing", "subscription_provider"],
 				"additionalProperties": false
 			},
 			"SelfServeRefundResponse": {
@@ -25481,7 +26436,10 @@
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
 					},
 					"currency": {"description": "Currency for the prices", "$ref": "#/components/schemas/PremiumCurrency"},
-					"gift_currency": {"description": "Currency for gift prices", "$ref": "#/components/schemas/PremiumCurrency"}
+					"gift_currency": {
+						"anyOf": [{"$ref": "#/components/schemas/PremiumCurrency"}, {"type": "null"}],
+						"description": "Currency for gift prices, null when no gift prices are configured"
+					}
 				},
 				"required": ["currency", "gift_currency"],
 				"additionalProperties": false
@@ -26957,6 +27915,7 @@
 			"ChannelCreateRequest": {
 				"oneOf": [
 					{"$ref": "#/components/schemas/GuildTextChannelCreateRequest"},
+					{"$ref": "#/components/schemas/GuildAnnouncementChannelCreateRequest"},
 					{"$ref": "#/components/schemas/GuildVoiceChannelCreateRequest"},
 					{"$ref": "#/components/schemas/GuildCategoryChannelCreateRequest"},
 					{"$ref": "#/components/schemas/GuildLinkChannelCreateRequest"}
@@ -27124,8 +28083,8 @@
 					},
 					"default_message_notifications": {"$ref": "#/components/schemas/DefaultMessageNotificationsInput"},
 					"verification_level": {
-						"$ref": "#/components/schemas/GuildVerificationLevelInput",
-						"description": "Required verification level for members to participate"
+						"description": "Required verification level for members to participate",
+						"$ref": "#/components/schemas/GuildVerificationLevelInput"
 					},
 					"mfa_level": {"$ref": "#/components/schemas/GuildMFALevelInput"},
 					"nsfw_level": {
@@ -27297,8 +28256,8 @@
 					"assignments": {
 						"type": "object",
 						"properties": {
-							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
-							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"}
+							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
+							"plutonium_page": {"$ref": "#/components/schemas/PlutoniumPageAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -27444,6 +28403,33 @@
 				},
 				"required": ["name"]
 			},
+			"WebhookCreateResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for the webhook",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"guild_id": {
+						"description": "The ID of the guild this webhook belongs to",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"channel_id": {
+						"description": "The ID of the channel this webhook posts to",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"name": {"type": "string", "description": "The display name of the webhook"},
+					"avatar": {"description": "The hash of the webhook avatar image", "type": ["string", "null"]},
+					"type": {"$ref": "#/components/schemas/WebhookType"},
+					"token": {"type": "string", "description": "The secure token used to execute the webhook"},
+					"user": {
+						"description": "The user who created the webhook",
+						"$ref": "#/components/schemas/UserPartialResponse"
+					}
+				},
+				"required": ["id", "guild_id", "channel_id", "name", "type", "token", "user"],
+				"additionalProperties": false
+			},
 			"ChannelSlowmodeStateResponse": {
 				"type": "object",
 				"properties": {
@@ -27528,6 +28514,47 @@
 					}
 				},
 				"required": ["name"]
+			},
+			"CrosspostSourceResponse": {
+				"type": "object",
+				"properties": {
+					"guild": {
+						"properties": {
+							"id": {
+								"description": "The ID of the source community",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"name": {"type": "string", "description": "The name of the source community"},
+							"icon": {"description": "The hash of the source community icon", "type": ["string", "null"]},
+							"banner": {"description": "The hash of the source community banner", "type": ["string", "null"]},
+							"description": {
+								"description": "The discovery description of the source community, or null when it is not listed in discovery",
+								"type": ["string", "null"]
+							},
+							"features": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
+								"description": "The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only"
+							},
+							"approximate_member_count": {
+								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+								"description": "Approximate number of members in the source community, or null when unavailable"
+							},
+							"approximate_presence_count": {
+								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+								"description": "Approximate number of online members in the source community, or null when unavailable"
+							},
+							"discoverable": {
+								"type": "boolean",
+								"description": "Whether the source community can be joined through discovery"
+							}
+						},
+						"description": "The community the message was published from",
+						"$ref": "#/components/schemas/CrosspostSourceGuildResponse"
+					}
+				},
+				"required": ["guild"],
+				"additionalProperties": false
 			},
 			"MessageAckRequest": {
 				"type": "object",
@@ -27710,6 +28737,46 @@
 					{"$ref": "#/components/schemas/GroupDmInviteMetadataResponse"}
 				]
 			},
+			"ChannelFollowRequest": {
+				"type": "object",
+				"properties": {
+					"webhook_channel_id": {
+						"description": "The ID of the text channel that receives published messages",
+						"$ref": "#/components/schemas/SnowflakeType"
+					}
+				},
+				"required": ["webhook_channel_id"]
+			},
+			"FollowedChannelResponse": {
+				"type": "object",
+				"properties": {
+					"channel_id": {
+						"description": "The ID of the followed announcement channel",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"webhook_id": {
+						"description": "The ID of the channel follower webhook created in the target channel",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					}
+				},
+				"required": ["channel_id", "webhook_id"],
+				"additionalProperties": false
+			},
+			"ChannelFollowerStatsResponse": {
+				"type": "object",
+				"properties": {
+					"channel_count": {
+						"description": "The number of channels following this announcement channel",
+						"$ref": "#/components/schemas/Int32Type"
+					},
+					"guild_count": {
+						"description": "The number of distinct guilds following this announcement channel",
+						"$ref": "#/components/schemas/Int32Type"
+					}
+				},
+				"required": ["channel_count", "guild_count"],
+				"additionalProperties": false
+			},
 			"CallRingBodySchema": {
 				"type": "object",
 				"properties": {
@@ -27879,7 +28946,103 @@
 								"description": "Voice region ID for the voice channel (1-64 characters)",
 								"type": ["string", "null"]
 							},
-							"name": {"description": "The name of the channel", "type": ["string", "null"]}
+							"name": {"description": "The name of the channel", "type": ["string", "null"]},
+							"type": {
+								"description": "Convert between text (0) and announcement (5). Other conversions are rejected.",
+								"anyOf": [{"type": "number", "const": 0}, {"type": "number", "const": 5}]
+							}
+						}
+					},
+					{
+						"type": "object",
+						"properties": {
+							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+							"parent_id": {
+								"description": "ID of the parent category for this channel",
+								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+							},
+							"bitrate": {
+								"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+								"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+							},
+							"user_limit": {
+								"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+							},
+							"voice_connection_limit": {
+								"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+								"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+							},
+							"permission_overwrites": {
+								"description": "Permission overwrites for roles and members",
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"description": "The ID of the role or user to overwrite permissions for",
+											"$ref": "#/components/schemas/SnowflakeType"
+										},
+										"type": {
+											"description": "The type of overwrite (0 = role, 1 = member)",
+											"x-enumNames": ["ROLE", "MEMBER"],
+											"enum": [0, 1],
+											"type": "integer"
+										},
+										"allow": {
+											"description": "Bitwise value of allowed permissions",
+											"$ref": "#/components/schemas/UnsignedInt64Type"
+										},
+										"deny": {
+											"description": "Bitwise value of denied permissions",
+											"$ref": "#/components/schemas/UnsignedInt64Type"
+										}
+									},
+									"required": ["id", "type"]
+								}
+							},
+							"rate_limit_per_user": {
+								"description": "Slowmode delay in seconds (0-21600)",
+								"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+							},
+							"nsfw": {
+								"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
+								"type": ["boolean", "null"]
+							},
+							"nsfw_override": {
+								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+								"type": ["boolean", "null"]
+							},
+							"content_warning_level": {
+								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+								"$ref": "#/components/schemas/ContentWarningLevelInput"
+							},
+							"content_warning_text": {
+								"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+								"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+							},
+							"icon": {
+								"description": "Base64-encoded icon image for group DM channels",
+								"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
+							},
+							"owner_id": {
+								"description": "ID of the new owner for group DM channels",
+								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+							},
+							"nicks": {
+								"description": "Custom nicknames for users in this channel",
+								"$ref": "#/components/schemas/ChannelNicknameOverrides"
+							},
+							"rtc_region": {
+								"description": "Voice region ID for the voice channel (1-64 characters)",
+								"type": ["string", "null"]
+							},
+							"name": {"description": "The name of the channel", "type": ["string", "null"]},
+							"type": {
+								"description": "Convert between text (0) and announcement (5). Other conversions are rejected.",
+								"anyOf": [{"type": "number", "const": 0}, {"type": "number", "const": 5}]
+							}
 						}
 					},
 					{
@@ -28511,6 +29674,71 @@
 					{"$ref": "#/components/schemas/AuthRegistrationPendingApprovalResponse"}
 				]
 			},
+			"PasskeyBridgeLoginRedeemResponse": {
+				"oneOf": [
+					{"$ref": "#/components/schemas/CancelledPasskeyBridgeLoginRedeemResponse"},
+					{"$ref": "#/components/schemas/CompletedPasskeyBridgeLoginRedeemResponse"}
+				]
+			},
+			"PasskeyBridgeOptionsResponse": {
+				"type": "object",
+				"properties": {
+					"options": {
+						"description": "WebAuthn authentication options for the ceremony",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationOptionsResponse"
+					}
+				},
+				"required": ["options"],
+				"additionalProperties": false
+			},
+			"PasskeyBridgeCompleteRequest": {
+				"type": "object",
+				"properties": {
+					"response": {
+						"description": "WebAuthn authentication response",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+					}
+				},
+				"required": ["response"]
+			},
+			"PasskeyBridgeFinishResponse": {
+				"type": "object",
+				"properties": {
+					"return_url": {
+						"description": "Where the page runner goes next, or null for the native runner",
+						"type": ["string", "null"]
+					},
+					"completion_code": {
+						"description": "Code the native runner redeems, or null for the page runner",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["return_url", "completion_code"],
+				"additionalProperties": false
+			},
+			"PasskeyBridgeLoginStartRequest": {
+				"type": "object",
+				"properties": {
+					"purpose": {
+						"type": "string",
+						"enum": ["login", "login_mfa"],
+						"description": "Whether the passkey signs in or completes two-factor sign in"
+					},
+					"runner": {"$ref": "#/components/schemas/PasskeyBridgeRunner"},
+					"ticket": {
+						"description": "The MFA ticket from the login response, for login_mfa",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 256
+					},
+					"nonce_hash": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{64}$",
+						"description": "Lowercase hex SHA-256 digest of the nonce the starting page keeps"
+					}
+				},
+				"required": ["purpose", "runner", "nonce_hash"]
+			},
 			"OriginHandoffRedeemRequest": {
 				"type": "object",
 				"properties": {
@@ -29041,6 +30269,14 @@
 					"status_page_incident_history_url": {
 						"description": "Optional public status page incident history URL",
 						"type": ["string", "null"]
+					},
+					"premium_product_name": {
+						"type": "string",
+						"description": "Name of the premium tier shown by client applications"
+					},
+					"premium_info_url": {
+						"description": "Optional absolute URL of a page describing the premium tier",
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -29052,7 +30288,9 @@
 					"favicon_url",
 					"theme_color",
 					"status_page_url",
-					"status_page_incident_history_url"
+					"status_page_incident_history_url",
+					"premium_product_name",
+					"premium_info_url"
 				],
 				"additionalProperties": false,
 				"description": "Branding values safe to expose to clients"
@@ -29097,9 +30335,18 @@
 					"direct_messages_disabled": {
 						"type": "boolean",
 						"description": "Whether direct messages and friend requests are disabled instance-wide"
+					},
+					"guild_create_access": {
+						"type": "boolean",
+						"description": "Whether every account can create communities. When false, only admins and accounts granted the feature_guild_create limit can"
 					}
 				},
-				"required": ["single_community", "single_community_guild_id", "direct_messages_disabled"],
+				"required": [
+					"single_community",
+					"single_community_guild_id",
+					"direct_messages_disabled",
+					"guild_create_access"
+				],
 				"additionalProperties": false,
 				"description": "Community topology and direct-message policy for this instance"
 			},
@@ -29149,7 +30396,18 @@
 				"type": "object",
 				"properties": {
 					"voice_enabled": {"type": "boolean", "description": "Whether voice/video calling is enabled"},
-					"stripe_enabled": {"type": "boolean", "description": "Whether Stripe payments are enabled"},
+					"stripe_enabled": {
+						"type": "boolean",
+						"description": "Whether premium purchases through Stripe are available"
+					},
+					"premium_enabled": {
+						"type": "boolean",
+						"description": "Whether this instance has a premium tier, so premium status, gifts and perks apply"
+					},
+					"stripe_serviceable": {
+						"type": "boolean",
+						"description": "Whether existing Stripe subscriptions can be managed, cancelled and billed on this instance"
+					},
 					"self_hosted": {"type": "boolean", "description": "Whether this is a self-hosted instance"},
 					"presigned_attachment_uploads": {
 						"type": "boolean",
@@ -29158,14 +30416,18 @@
 					"emails_enabled": {
 						"type": "boolean",
 						"description": "Whether the instance sends emails (verification, password reset, etc.)"
-					}
+					},
+					"phone_verification_enabled": {"type": "boolean", "description": "Deprecated. Always false."}
 				},
 				"required": [
 					"voice_enabled",
 					"stripe_enabled",
+					"premium_enabled",
+					"stripe_serviceable",
 					"self_hosted",
 					"presigned_attachment_uploads",
-					"emails_enabled"
+					"emails_enabled",
+					"phone_verification_enabled"
 				],
 				"additionalProperties": false,
 				"description": "Feature flags for this instance"
@@ -29174,16 +30436,11 @@
 				"type": "object",
 				"properties": {
 					"provider": {
-						"description": "Captcha provider name (hcaptcha, turnstile, none)",
+						"description": "Captcha provider (altcha or none)",
 						"$ref": "#/components/schemas/InstanceCaptchaProviderSchema"
-					},
-					"hcaptcha_site_key": {"description": "hCaptcha site key if using hCaptcha", "type": ["string", "null"]},
-					"turnstile_site_key": {
-						"description": "Cloudflare Turnstile site key if using Turnstile",
-						"type": ["string", "null"]
 					}
 				},
-				"required": ["provider", "hcaptcha_site_key", "turnstile_site_key"],
+				"required": ["provider"],
 				"additionalProperties": false,
 				"description": "Captcha configuration"
 			},
@@ -29218,7 +30475,7 @@
 				"additionalProperties": false,
 				"description": "Endpoint URLs for various services"
 			},
-			"InstanceCaptchaProviderSchema": {"type": "string", "enum": ["hcaptcha", "turnstile", "none"]},
+			"InstanceCaptchaProviderSchema": {"type": "string", "enum": ["altcha", "none"]},
 			"InstanceRegistrationModeSchema": {
 				"description": "Registration mode",
 				"x-enumNames": ["open", "approval", "closed"],
@@ -29338,6 +30595,34 @@
 				},
 				"required": ["id", "rawId", "type", "clientExtensionResults", "response"],
 				"additionalProperties": {}
+			},
+			"PasskeyBridgeRunner": {
+				"type": "string",
+				"enum": ["page", "native"],
+				"description": "Where the passkey ceremony runs: a page on the paired origin or the native desktop client"
+			},
+			"CompletedPasskeyBridgeLoginRedeemResponse": {
+				"type": "object",
+				"properties": {
+					"status": {"type": "string", "const": "completed", "description": "The ceremony finished"},
+					"token": {"type": "string", "description": "Authentication token for API requests"},
+					"user_id": {
+						"description": "ID of the authenticated user",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"user": {
+						"description": "Partial user data for the authenticated account",
+						"$ref": "#/components/schemas/UserPartialResponse"
+					}
+				},
+				"required": ["status", "token", "user_id", "user"],
+				"additionalProperties": false
+			},
+			"CancelledPasskeyBridgeLoginRedeemResponse": {
+				"type": "object",
+				"properties": {"status": {"type": "string", "const": "cancelled", "description": "The ceremony was cancelled"}},
+				"required": ["status"],
+				"additionalProperties": false
 			},
 			"AuthRegistrationPendingApprovalResponse": {
 				"type": "object",
@@ -29837,7 +31122,7 @@
 				"additionalProperties": false
 			},
 			"GuildFeatureSchema": {
-				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD (other values allowed)",
+				"description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, AUDIO_BITRATE_128_KBPS, AUDIO_BITRATE_256_KBPS, AUDIO_BITRATE_384_KBPS, BANNER, CLONE_EMOJI_DISABLED, CLONE_EMOJI_ENABLED, CLONE_STICKER_DISABLED, CLONE_STICKER_ENABLED, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, RAID_DETECTED, TEXT_CHANNEL_FLEXIBLE_NAMES, HIDE_OWNER_CROWN, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, DISCOVERABLE, PARTNERED, VERIFIED, VIP_VOICE, VOICE_E2EE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, UNAVAILABLE_HIDDEN, VISIONARY, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, ANNOUNCEMENT_CHANNELS_DISABLED (other values allowed)",
 				"x-enumNames": [
 					"ANIMATED_ICON",
 					"ANIMATED_BANNER",
@@ -29871,7 +31156,8 @@
 					"UNAVAILABLE_HIDDEN",
 					"VISIONARY",
 					"LARGE_GUILD_OVERRIDE",
-					"VERY_LARGE_GUILD"
+					"VERY_LARGE_GUILD",
+					"ANNOUNCEMENT_CHANNELS_DISABLED"
 				],
 				"x-enumDescriptions": [
 					"Guild can have an animated icon",
@@ -29906,14 +31192,15 @@
 					"Guild is hidden when it is force unavailable",
 					"Guild is a visionary guild",
 					"Guild has large guild overrides enabled",
-					"Guild has increased member capacity enabled"
+					"Guild has increased member capacity enabled",
+					"Guild cannot publish announcement messages or gain new followers"
 				],
 				"type": "string"
 			},
 			"ChannelType": {
 				"description": "The type of the channel",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 998, 999],
+				"enum": [0, 1, 2, 3, 4, 5, 998, 999],
 				"format": "int32",
 				"x-enumNames": [
 					"GUILD_TEXT",
@@ -29921,6 +31208,7 @@
 					"GUILD_VOICE",
 					"GROUP_DM",
 					"GUILD_CATEGORY",
+					"GUILD_ANNOUNCEMENT",
 					"GUILD_LINK",
 					"DM_PERSONAL_NOTES"
 				],
@@ -29930,6 +31218,7 @@
 					"A voice channel within a guild",
 					"A group direct message between users",
 					"A category that contains channels",
+					"A guild channel whose messages can be published to channels that follow it",
 					"A link channel for external resources",
 					"Personal notes DM channel"
 				]
@@ -29946,9 +31235,24 @@
 				"format": "int32",
 				"x-bitflagValues": [
 					{
+						"name": "CROSSPOSTED",
+						"value": "1",
+						"description": "This message has been published to channels that follow this announcement channel"
+					},
+					{
+						"name": "IS_CROSSPOST",
+						"value": "2",
+						"description": "This message was delivered from an announcement channel this channel follows"
+					},
+					{
 						"name": "SUPPRESS_EMBEDS",
 						"value": "4",
 						"description": "Do not include embeds when serialising this message"
+					},
+					{
+						"name": "SOURCE_MESSAGE_DELETED",
+						"value": "8",
+						"description": "The published message this copy came from has been deleted"
 					},
 					{
 						"name": "SUPPRESS_NOTIFICATIONS",
@@ -30330,8 +31634,8 @@
 												"$ref": "#/components/schemas/SnowflakeStringType"
 											},
 											"message_id": {
-												"description": "The ID of the referenced message",
-												"$ref": "#/components/schemas/SnowflakeStringType"
+												"description": "The ID of the referenced message, absent on a channel follow system message",
+												"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 											},
 											"guild_id": {
 												"description": "The ID of the guild containing the referenced message",
@@ -30339,7 +31643,7 @@
 											},
 											"type": {"$ref": "#/components/schemas/MessageReferenceType"}
 										},
-										"required": ["channel_id", "message_id", "type"],
+										"required": ["channel_id", "type"],
 										"additionalProperties": false
 									},
 									{"type": "null"}
@@ -30637,7 +31941,7 @@
 			"MessageType": {
 				"description": "The type of message",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 19],
+				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 12, 19],
 				"format": "int32",
 				"x-enumNames": [
 					"DEFAULT",
@@ -30648,6 +31952,7 @@
 					"CHANNEL_ICON_CHANGE",
 					"CHANNEL_PINNED_MESSAGE",
 					"USER_JOIN",
+					"CHANNEL_FOLLOW_ADD",
 					"REPLY"
 				],
 				"x-enumDescriptions": [
@@ -30659,6 +31964,7 @@
 					"A system message indicating the channel icon changed",
 					"A system message indicating a message was pinned",
 					"A system message indicating a user joined",
+					"System message posted when a channel starts following an announcement channel",
 					"A reply message"
 				]
 			},
@@ -30854,6 +32160,46 @@
 					}
 				}
 			},
+			"CrosspostSourceGuildResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"description": "The ID of the source community", "$ref": "#/components/schemas/SnowflakeStringType"},
+					"name": {"type": "string", "description": "The name of the source community"},
+					"icon": {"description": "The hash of the source community icon", "type": ["string", "null"]},
+					"banner": {"description": "The hash of the source community banner", "type": ["string", "null"]},
+					"description": {
+						"description": "The discovery description of the source community, or null when it is not listed in discovery",
+						"type": ["string", "null"]
+					},
+					"features": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/GuildFeatureSchema"},
+						"description": "The public badge features of the source community: VERIFIED, PARTNERED and DISCOVERABLE only"
+					},
+					"approximate_member_count": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "Approximate number of members in the source community, or null when unavailable"
+					},
+					"approximate_presence_count": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "Approximate number of online members in the source community, or null when unavailable"
+					},
+					"discoverable": {
+						"type": "boolean",
+						"description": "Whether the source community can be joined through discovery"
+					}
+				},
+				"required": [
+					"id",
+					"name",
+					"description",
+					"features",
+					"approximate_member_count",
+					"approximate_presence_count",
+					"discoverable"
+				],
+				"additionalProperties": false
+			},
 			"ChannelOverwriteType": {
 				"description": "The type of entity the overwrite applies to",
 				"x-enumNames": ["ROLE", "MEMBER"],
@@ -30871,6 +32217,14 @@
 				"required": ["id", "name", "emoji"],
 				"additionalProperties": false
 			},
+			"WebhookType": {
+				"description": "The type of webhook",
+				"type": "integer",
+				"enum": [1, 2],
+				"format": "int32",
+				"x-enumNames": ["INCOMING", "CHANNEL_FOLLOWER"],
+				"x-enumDescriptions": ["Incoming webhook", "Channel follower webhook"]
+			},
 			"DiscoveryCategoryResponse": {
 				"type": "object",
 				"properties": {
@@ -30881,55 +32235,17 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
-			"DomainMigrationAssignmentResponse": {
+			"PlutoniumPageAssignmentResponse": {
 				"type": "object",
 				"properties": {"enabled": {"type": "boolean"}},
 				"required": ["enabled"],
 				"additionalProperties": false
 			},
-			"VoiceNoiseSuppressionAssignmentResponse": {
+			"DomainMigrationAssignmentResponse": {
 				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"backend": {"anyOf": [{"$ref": "#/components/schemas/VoiceNoiseSuppressionBackendSchema"}, {"type": "null"}]},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]},
-					"guild_overrides": {
-						"type": "array",
-						"items": {
-							"type": "object",
-							"properties": {
-								"guild_id": {"type": "string", "pattern": "^\\d{1,20}$"},
-								"backend": {"$ref": "#/components/schemas/VoiceNoiseSuppressionBackendSchema"}
-							},
-							"required": ["guild_id", "backend"],
-							"additionalProperties": false
-						}
-					},
-					"enabled_backends": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/VoiceNoiseSuppressionBackendSchema"}
-					},
-					"allow_user_override": {"type": "boolean"},
-					"suppression_strength": {"type": "integer", "minimum": 0, "maximum": 100}
-				},
-				"required": [
-					"enabled",
-					"config_version",
-					"user_targeted",
-					"backend",
-					"source",
-					"guild_overrides",
-					"enabled_backends",
-					"allow_user_override",
-					"suppression_strength"
-				],
+				"properties": {"enabled": {"type": "boolean"}},
+				"required": ["enabled"],
 				"additionalProperties": false
-			},
-			"VoiceNoiseSuppressionBackendSchema": {
-				"type": "string",
-				"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"]
 			},
 			"GiftCodeDurationTypeSchema": {
 				"description": "Gift code duration unit",
@@ -31097,15 +32413,14 @@
 				"minimum": 0,
 				"maximum": 2147483647,
 				"format": "int32",
-				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH"],
 				"x-enumDescriptions": [
 					"Unrestricted",
 					"Must have verified email",
 					"Registered for more than 5 minutes",
-					"Member of the server for more than 10 minutes",
-					"Must have a verified phone number"
+					"Member of the server for more than 10 minutes"
 				],
-				"enum": [0, 1, 2, 3, 4]
+				"enum": [0, 1, 2, 3]
 			},
 			"DefaultMessageNotificationsInput": {
 				"description": "Default notification level for new members",
@@ -31343,14 +32658,6 @@
 					"Message was pinned",
 					"Message was unpinned"
 				]
-			},
-			"WebhookType": {
-				"description": "The type of webhook",
-				"type": "integer",
-				"enum": [1, 2],
-				"format": "int32",
-				"x-enumNames": ["INCOMING", "CHANNEL_FOLLOWER"],
-				"x-enumDescriptions": ["Incoming webhook", "Channel follower webhook"]
 			},
 			"GuildBanResponse": {
 				"type": "object",
@@ -31605,6 +32912,82 @@
 						"x-enumNames": ["GUILD_VOICE"],
 						"x-enumDescriptions": ["Channel type (voice channel)"],
 						"enum": [2]
+					},
+					"name": {"description": "The name of the channel", "type": "string"}
+				},
+				"required": ["type", "name"]
+			},
+			"GuildAnnouncementChannelCreateRequest": {
+				"type": "object",
+				"properties": {
+					"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
+					"parent_id": {
+						"description": "ID of the parent category for this channel",
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
+					},
+					"bitrate": {
+						"description": "Voice channel bitrate in bits per second (8000-384000), clamped to 96000 unless the guild holds an AUDIO_BITRATE feature",
+						"anyOf": [{"type": "integer", "minimum": 8000, "maximum": 384000}, {"type": "null"}]
+					},
+					"user_limit": {
+						"description": "Maximum users allowed in voice channel (0-99, 0 means unlimited)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 99}, {"type": "null"}]
+					},
+					"voice_connection_limit": {
+						"description": "Maximum active voice connections allowed per user in a voice channel (1-100)",
+						"anyOf": [{"type": "integer", "minimum": 1, "maximum": 100}, {"type": "null"}]
+					},
+					"permission_overwrites": {
+						"description": "Permission overwrites for roles and members",
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"id": {
+									"description": "The ID of the role or user to overwrite permissions for",
+									"$ref": "#/components/schemas/SnowflakeType"
+								},
+								"type": {
+									"description": "The type of overwrite (0 = role, 1 = member)",
+									"x-enumNames": ["ROLE", "MEMBER"],
+									"enum": [0, 1],
+									"type": "integer"
+								},
+								"allow": {
+									"description": "Bitwise value of allowed permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								},
+								"deny": {
+									"description": "Bitwise value of denied permissions",
+									"$ref": "#/components/schemas/UnsignedInt64Type"
+								}
+							},
+							"required": ["id", "type"]
+						}
+					},
+					"rate_limit_per_user": {
+						"description": "Slowmode delay in seconds (0-21600)",
+						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 21600}, {"type": "null"}]
+					},
+					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
+					"nsfw_override": {
+						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
+						"type": ["boolean", "null"]
+					},
+					"content_warning_level": {
+						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
+						"$ref": "#/components/schemas/ContentWarningLevelInput"
+					},
+					"content_warning_text": {
+						"description": "Custom channel content warning text (max 200 characters); null inherits from parent or guild",
+						"anyOf": [{"type": "string", "maxLength": 200}, {"type": "null"}]
+					},
+					"type": {
+						"type": "integer",
+						"x-enumNames": ["GUILD_ANNOUNCEMENT"],
+						"x-enumDescriptions": ["Channel type (announcement channel)"],
+						"enum": [5]
 					},
 					"name": {"description": "The name of the channel", "type": "string"}
 				},
@@ -31970,15 +33353,14 @@
 			"GuildVerificationLevel": {
 				"description": "Required verification level for members",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4],
+				"enum": [0, 1, 2, 3],
 				"format": "int32",
-				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH"],
 				"x-enumDescriptions": [
 					"Unrestricted",
 					"Must have verified email",
 					"Registered for more than 5 minutes",
-					"Member of the server for more than 10 minutes",
-					"Must have a verified phone number"
+					"Member of the server for more than 10 minutes"
 				]
 			},
 			"GroupDmInviteResponse": {
@@ -32140,10 +33522,72 @@
 				"enum": ["access_token", "refresh_token"],
 				"type": "string"
 			},
-			"PremiumCurrency": {"type": "string", "enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"]},
+			"PremiumCurrency": {"type": "string", "pattern": "^[A-Z]{3}$"},
 			"SelfServeRefundIneligibilityReason": {
 				"type": "string",
 				"enum": ["no_refundable_purchase", "outside_refund_window", "cooldown_active", "feature_unavailable"]
+			},
+			"PremiumSubscriptionProvider": {"type": "string", "enum": ["stripe", "app_store", "google_play"]},
+			"PremiumStoreSubscriptionState": {
+				"type": "object",
+				"properties": {
+					"provider": {
+						"description": "Store that bills the subscription",
+						"$ref": "#/components/schemas/StoreProvider"
+					},
+					"purchase_id": {
+						"description": "ID of the store purchase that grants the subscription",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"slot": {"description": "Fluxer subscription product", "$ref": "#/components/schemas/StoreSubscriptionSlot"},
+					"billing_cycle": {
+						"description": "Billing cycle of the subscription",
+						"$ref": "#/components/schemas/StoreBillingCycle"
+					},
+					"state": {
+						"description": "Current state of the store subscription",
+						"$ref": "#/components/schemas/StorePurchaseState"
+					},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the paid period ends"
+					},
+					"grace_ends_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the billing grace period ends, null outside grace"
+					},
+					"will_renew": {"type": "boolean", "description": "Whether the subscription renews automatically"},
+					"manage_url": {
+						"type": "string",
+						"description": "Store page where the subscription can be managed or canceled"
+					},
+					"environment": {
+						"description": "Whether the subscription is a real purchase or a test purchase",
+						"$ref": "#/components/schemas/StoreEnvironment"
+					}
+				},
+				"required": [
+					"provider",
+					"purchase_id",
+					"slot",
+					"billing_cycle",
+					"state",
+					"expires_at",
+					"grace_ends_at",
+					"will_renew",
+					"manage_url",
+					"environment"
+				],
+				"additionalProperties": false
 			},
 			"PremiumPricingState": {
 				"type": "object",
@@ -32410,6 +33854,137 @@
 					"switch_in_progress"
 				]
 			},
+			"StoreEnvironment": {"type": "string", "enum": ["production", "sandbox"]},
+			"StorePurchaseState": {
+				"type": "string",
+				"enum": [
+					"pending",
+					"active",
+					"grace",
+					"billing_retry",
+					"on_hold",
+					"paused",
+					"canceled",
+					"expired",
+					"revoked",
+					"superseded",
+					"purchased",
+					"fulfilled",
+					"refunded"
+				]
+			},
+			"StoreBillingCycle": {"type": "string", "enum": ["monthly", "yearly"]},
+			"StoreSubscriptionSlot": {"type": "string", "enum": ["monthly", "yearly"]},
+			"StoreProvider": {"type": "string", "enum": ["app_store", "google_play"]},
+			"StoreBlockingProvider": {"type": "string", "enum": ["stripe", "app_store", "google_play"]},
+			"StorePurchaseBlockedReason": {
+				"type": "string",
+				"enum": ["lifetime", "existing_subscription", "purchase_disabled"]
+			},
+			"StoreBillingGooglePlayProductResponse": {
+				"type": "object",
+				"properties": {
+					"product_id": {"type": "string", "description": "Google Play product identifier"},
+					"base_plan_id": {
+						"description": "Google Play base plan identifier, null for one-time products",
+						"type": ["string", "null"]
+					},
+					"slot": {
+						"description": "Fluxer product this Google Play product sells",
+						"$ref": "#/components/schemas/StoreSlot"
+					}
+				},
+				"required": ["product_id", "base_plan_id", "slot"],
+				"additionalProperties": false
+			},
+			"StoreBillingAppStoreProductResponse": {
+				"type": "object",
+				"properties": {
+					"product_id": {"type": "string", "description": "App Store product identifier"},
+					"slot": {
+						"description": "Fluxer product this App Store product sells",
+						"$ref": "#/components/schemas/StoreSlot"
+					}
+				},
+				"required": ["product_id", "slot"],
+				"additionalProperties": false
+			},
+			"StoreSlot": {"type": "string", "enum": ["monthly", "yearly", "gift_1_month", "gift_1_year"]},
+			"StorePurchaseResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this store purchase",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"provider": {"description": "Store the purchase was made in", "$ref": "#/components/schemas/StoreProvider"},
+					"kind": {
+						"description": "Whether the purchase is a subscription or a gift",
+						"$ref": "#/components/schemas/StorePurchaseKind"
+					},
+					"slot": {"description": "Fluxer product the purchase is for", "$ref": "#/components/schemas/StoreSlot"},
+					"product_id": {"type": "string", "description": "Store product identifier"},
+					"environment": {
+						"description": "Whether the purchase was a real purchase or a test purchase",
+						"$ref": "#/components/schemas/StoreEnvironment"
+					},
+					"state": {"description": "Current state of the purchase", "$ref": "#/components/schemas/StorePurchaseState"},
+					"entitled": {"type": "boolean", "description": "Whether the purchase currently grants Plutonium"},
+					"expires_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the paid period ends, null for gifts"
+					},
+					"entitled_until": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When access from this purchase ends, including any grace period, null when not entitled"
+					},
+					"will_renew": {
+						"description": "Whether the subscription renews automatically, null for gifts",
+						"type": ["boolean", "null"]
+					},
+					"gift_code": {
+						"description": "Gift code minted by a gift purchase, null otherwise",
+						"type": ["string", "null"]
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When Fluxer first saw the purchase"
+					}
+				},
+				"required": [
+					"id",
+					"provider",
+					"kind",
+					"slot",
+					"product_id",
+					"environment",
+					"state",
+					"entitled",
+					"expires_at",
+					"entitled_until",
+					"will_renew",
+					"gift_code",
+					"created_at"
+				],
+				"additionalProperties": false
+			},
+			"StorePurchaseKind": {"type": "string", "enum": ["subscription", "gift"]},
 			"IneligibleSwitchToListPriceResponse": {
 				"type": "object",
 				"properties": {
@@ -33118,8 +34693,8 @@
 													"$ref": "#/components/schemas/SnowflakeStringType"
 												},
 												"message_id": {
-													"description": "The ID of the referenced message",
-													"$ref": "#/components/schemas/SnowflakeStringType"
+													"description": "The ID of the referenced message, absent on a channel follow system message",
+													"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 												},
 												"guild_id": {
 													"description": "The ID of the guild containing the referenced message",
@@ -33127,7 +34702,7 @@
 												},
 												"type": {"$ref": "#/components/schemas/MessageReferenceType"}
 											},
-											"required": ["channel_id", "message_id", "type"],
+											"required": ["channel_id", "type"],
 											"additionalProperties": false
 										},
 										{"type": "null"}
@@ -33666,9 +35241,10 @@
 					"id": {"type": "string", "description": "The credential ID"},
 					"name": {"type": "string", "description": "User-assigned name for the credential"},
 					"created_at": {"type": "string", "description": "When the credential was registered"},
-					"last_used_at": {"description": "When the credential was last used", "type": ["string", "null"]}
+					"last_used_at": {"description": "When the credential was last used", "type": ["string", "null"]},
+					"rp_id": {"type": "string", "description": "Relying party ID the passkey belongs to"}
 				},
-				"required": ["id", "name", "created_at", "last_used_at"],
+				"required": ["id", "name", "created_at", "last_used_at", "rp_id"],
 				"additionalProperties": false
 			},
 			"WebAuthnRegistrationResponse": {
@@ -33716,7 +35292,21 @@
 				"x-enumDescriptions": ["Time-based one-time password authenticator", "WebAuthn authenticator"]
 			},
 			"HexString32Type": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
-			"PhoneNumberType": {"type": "string"},
+			"CompletedPasskeyBridgeSudoRedeemResponse": {
+				"type": "object",
+				"properties": {
+					"status": {"type": "string", "const": "completed", "description": "The ceremony finished"},
+					"sudo_token": {"type": "string", "description": "Sudo mode token"}
+				},
+				"required": ["status", "sudo_token"],
+				"additionalProperties": false
+			},
+			"CancelledPasskeyBridgeSudoRedeemResponse": {
+				"type": "object",
+				"properties": {"status": {"type": "string", "const": "cancelled", "description": "The ceremony was cancelled"}},
+				"required": ["status"],
+				"additionalProperties": false
+			},
 			"RelationshipTypesInput": {
 				"description": "Relationship type",
 				"type": "integer",

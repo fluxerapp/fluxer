@@ -588,7 +588,12 @@ const ComposerInner = ({
 					if (disabledRef.current) {
 						return false;
 					}
-					selectLastSelectionOrEnd();
+					const selection = $getSelection();
+					if ($isRangeSelection(selection)) {
+						$setSelection(selection.clone());
+					} else {
+						selectLastSelectionOrEnd();
+					}
 					return false;
 				},
 				COMMAND_PRIORITY_LOW,

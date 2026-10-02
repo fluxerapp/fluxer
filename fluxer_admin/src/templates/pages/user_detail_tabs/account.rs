@@ -154,30 +154,12 @@ fn session_entry(base: &str, s: &UserSession, is_tombstone: bool) -> Markup {
 }
 
 fn quick_actions_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
-    let phone_action = format!(
-        "{base}/users/{}?action=update_has_verified_phone&tab=account",
-        user.id
-    );
     html! {
         (card_with_header("Quick Actions", html! {
             div class="flex flex-wrap gap-3" {
                 @if !user.email_verified {
                     (action_form(base, &user.id, "verify_email", "account", None,
                         "Verify Email", csrf_token))
-                }
-                form method="post"
-                    action=(&phone_action)
-                    hx-post=(&phone_action)
-                    hx-target="#flash-container"
-                    hx-swap="none"
-                    hx-push-url="false" {
-                    (csrf_input(csrf_token))
-                    input type="hidden" name="has_verified_phone"
-                        value=@if user.has_verified_phone { "false" } @else { "true" };
-                    button type="submit" class=(BTN_CLS) {
-                        @if user.has_verified_phone { "Clear Phone Verified" }
-                        @else { "Mark Phone Verified" }
-                    }
                 }
                 (action_form(base, &user.id, "send_password_reset", "account", None,
                     "Send Password Reset", csrf_token))

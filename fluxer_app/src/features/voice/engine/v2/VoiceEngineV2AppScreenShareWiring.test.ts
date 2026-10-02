@@ -313,13 +313,14 @@ const BOOTSTRAP_ENDPOINT = 'https://primary.test/api';
 			webapp: 'https://app.primary.test',
 			upload_relay: 'https://upload.primary.test',
 		},
-		captcha: {provider: 'none', hcaptcha_site_key: null, turnstile_site_key: null},
+		captcha: {provider: 'none'},
 		features: {
 			voice_enabled: false,
 			stripe_enabled: false,
 			self_hosted: false,
 			presigned_attachment_uploads: false,
 			emails_enabled: false,
+			phone_verification_enabled: false,
 		},
 		gif: {provider: 'klipy', display_name: 'Klipy', attribution_required: false},
 		sso: {enabled: false, enforced: false, display_name: null, redirect_uri: ''},
@@ -342,14 +343,6 @@ const BOOTSTRAP_ENDPOINT = 'https://primary.test/api';
 			legal: {terms_url: null, privacy_url: null},
 			registration: {collect_date_of_birth: true},
 		},
-	},
-	geoip: {
-		countryCode: null,
-		regionCode: null,
-		latitude: null,
-		longitude: null,
-		ageRestrictedGeos: [],
-		ageBlockedGeos: [],
 	},
 };
 

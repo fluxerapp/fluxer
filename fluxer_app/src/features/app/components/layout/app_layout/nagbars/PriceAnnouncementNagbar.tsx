@@ -5,7 +5,9 @@ import {NagbarButton} from '@app/features/app/components/layout/NagbarButton';
 import {NagbarContent} from '@app/features/app/components/layout/NagbarContent';
 import {NAGBAR_TONES, NagbarToneKind} from '@app/features/app/components/layout/NagbarTones';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import * as PlutoniumPageCommands from '@app/features/premium/commands/PlutoniumPageCommands';
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
+import PlutoniumPageRollout from '@app/features/premium/state/PlutoniumPageRollout';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {VIEW_PLANS_DESCRIPTOR} from '@app/features/premium/utils/PremiumMessageDescriptors';
 import {formatMinorUnitPrice} from '@app/features/premium/utils/PricingUtils';
@@ -28,6 +30,10 @@ export const PriceAnnouncementNagbar = observer(function PriceAnnouncementNagbar
 	const handleOpenPlans = useCallback(() => {
 		if (campaignId != null) {
 			NagbarState.dismissPriceAnnouncement(campaignId);
+		}
+		if (PlutoniumPageRollout.enabled) {
+			PlutoniumPageCommands.openPlutoniumPage();
+			return;
 		}
 		ModalCommands.push(
 			modal(() => (

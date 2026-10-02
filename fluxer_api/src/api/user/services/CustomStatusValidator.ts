@@ -6,6 +6,7 @@ import {contentModerationService} from '@app/api/infrastructure/ContentModeratio
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -27,6 +28,8 @@ export class CustomStatusValidator {
 	) {}
 
 	async validate(userId: UserID, payload: CustomStatusPayload): Promise<ValidatedCustomStatus> {
+		const user = await this.userAccountRepository.findUnique(userId);
+		if (user) assertAccountNotLimited(user);
 		const text = payload.text ?? null;
 		contentModerationService.scanText(text, {
 			userId,
@@ -45,7 +48,6 @@ export class CustomStatusValidator {
 			if (!emoji) {
 				throw InputValidationError.fromCode('custom_status.emoji_id', ValidationErrorCodes.CUSTOM_EMOJI_NOT_FOUND);
 			}
-			const user = await this.userAccountRepository.findUnique(userId);
 			const ctx = createLimitMatchContext({user});
 			const hasGlobalExpressions = resolveLimitSafe(
 				this.limitConfigService.getConfigSnapshot(),

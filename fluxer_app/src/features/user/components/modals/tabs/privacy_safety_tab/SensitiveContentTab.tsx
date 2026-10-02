@@ -51,6 +51,7 @@ const SENSITIVE_CONTENT_TAB_ID = 'privacy_safety';
 interface SensitiveContentOption {
 	value: number;
 	label: string;
+	disabled?: boolean;
 }
 
 interface SensitiveContentChoiceRowProps {
@@ -73,15 +74,16 @@ const SensitiveContentChoiceRow: React.FC<SensitiveContentChoiceRowProps> = ({
 	const labelId = useId();
 	const optionRefs = useRef(new Map<number, HTMLButtonElement>());
 	const selectedIndex = options.findIndex((option) => option.value === value);
-	const focusedIndex = selectedIndex >= 0 ? selectedIndex : 0;
+	const enabledOptions = options.filter((option) => !option.disabled);
+	const focusedValue = enabledOptions.some((option) => option.value === value) ? value : enabledOptions[0]?.value;
 	const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, optionValue: number) => {
 		if (disabled) return;
-		const currentIndex = options.findIndex((option) => option.value === optionValue);
+		const currentIndex = enabledOptions.findIndex((option) => option.value === optionValue);
 		if (currentIndex < 0) return;
 		const direction = getTabNavigationDirection(event.key, 'horizontal');
 		if (!direction) return;
-		const nextIndex = getNextTabIndex(currentIndex, options.length, direction);
-		const nextOption = nextIndex == null ? null : options[nextIndex];
+		const nextIndex = getNextTabIndex(currentIndex, enabledOptions.length, direction);
+		const nextOption = nextIndex == null ? null : enabledOptions[nextIndex];
 		if (!nextOption) return;
 		event.preventDefault();
 		event.stopPropagation();
@@ -101,7 +103,7 @@ const SensitiveContentChoiceRow: React.FC<SensitiveContentChoiceRowProps> = ({
 					aria-disabled={disabled || undefined}
 					data-flx={dataFlx}
 				>
-					{options.map((option, index) => {
+					{options.map((option) => {
 						const isSelected = option.value === value;
 						return (
 							<button
@@ -116,8 +118,8 @@ const SensitiveContentChoiceRow: React.FC<SensitiveContentChoiceRowProps> = ({
 								type="button"
 								role="radio"
 								aria-checked={isSelected}
-								tabIndex={!disabled && index === focusedIndex ? 0 : -1}
-								disabled={disabled}
+								tabIndex={!disabled && option.value === focusedValue ? 0 : -1}
+								disabled={disabled || option.disabled}
 								className={clsx(styles.choiceButton, isSelected && styles.choiceButtonActive)}
 								onClick={() => onChange(option.value)}
 								onKeyDown={(event) => handleKeyDown(event, option.value)}
@@ -161,11 +163,10 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 	const [nonFriendDmFilter, setNonFriendDmFilter] = useState(UserSettings.sensitiveContentNonFriendDmFilter);
 	const [guildFilter, setGuildFilter] = useState(UserSettings.sensitiveContentGuildFilter);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const hasUnsavedChanges = isMatureContentAllowed
-		? friendDmFilter !== UserSettings.sensitiveContentFriendDmFilter ||
-			nonFriendDmFilter !== UserSettings.sensitiveContentNonFriendDmFilter ||
-			guildFilter !== UserSettings.sensitiveContentGuildFilter
-		: friendDmFilter !== UserSettings.sensitiveContentFriendDmFilter;
+	const hasUnsavedChanges =
+		friendDmFilter !== UserSettings.sensitiveContentFriendDmFilter ||
+		nonFriendDmFilter !== UserSettings.sensitiveContentNonFriendDmFilter ||
+		(isMatureContentAllowed && guildFilter !== UserSettings.sensitiveContentGuildFilter);
 	const handleReset = useCallback(() => {
 		setFriendDmFilter(UserSettings.sensitiveContentFriendDmFilter);
 		setNonFriendDmFilter(UserSettings.sensitiveContentNonFriendDmFilter);
@@ -183,6 +184,7 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 			} else {
 				await UserSettingsCommands.update({
 					sensitiveContentFriendDmFilter: friendDmFilter,
+					sensitiveContentNonFriendDmFilter: nonFriendDmFilter,
 				});
 			}
 		} finally {
@@ -212,8 +214,9 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 		],
 		[i18n.locale],
 	);
-	const teenFriendDmOptions = useMemo(
+	const teenDmOptions = useMemo(
 		() => [
+			{value: SensitiveMediaFilterLevel.SHOW, label: i18n._(SHOW_DESCRIPTOR), disabled: true},
 			{value: SensitiveMediaFilterLevel.BLUR, label: i18n._(BLUR_DESCRIPTOR)},
 			{value: SensitiveMediaFilterLevel.BLOCK, label: i18n._(BLOCK_DESCRIPTOR)},
 		],
@@ -234,7 +237,7 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 			<SensitiveContentChoiceRow
 				label={i18n._(DIRECT_MESSAGES_FROM_FRIENDS_DESCRIPTOR)}
 				value={friendDmFilter}
-				options={isMatureContentAllowed ? filterOptions : teenFriendDmOptions}
+				options={isMatureContentAllowed ? filterOptions : teenDmOptions}
 				onChange={setFriendDmFilter}
 				dataFlx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.select.set-friend-dm-filter"
 				data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.sensitive-content-choice-row.set-friend-dm-filter"
@@ -242,9 +245,8 @@ export const SensitiveContentTabContent: React.FC = observer(() => {
 			<SensitiveContentChoiceRow
 				label={i18n._(DIRECT_MESSAGES_FROM_OTHERS_DESCRIPTOR)}
 				value={nonFriendDmFilter}
-				options={filterOptions}
+				options={isMatureContentAllowed ? filterOptions : teenDmOptions}
 				onChange={setNonFriendDmFilter}
-				disabled={!isMatureContentAllowed}
 				dataFlx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.select.set-non-friend-dm-filter"
 				data-flx="user.privacy-safety-tab.sensitive-content-tab.sensitive-content-tab-content.sensitive-content-choice-row.set-non-friend-dm-filter"
 			/>

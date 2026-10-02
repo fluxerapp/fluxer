@@ -2,9 +2,10 @@
 
 import i18n from '@app/app/I18n';
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {ACCOUNT_LIMITED_NOTICE_DESCRIPTOR} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
 
@@ -45,6 +46,9 @@ export function showGroupRecipientAddFailedModal(error: unknown): void {
 					break;
 				case APIErrorCodes.RATE_LIMITED:
 					message = i18n._(RATE_LIMITED_DESCRIPTOR);
+					break;
+				case APIErrorCodes.ACCOUNT_LIMITED:
+					message = failureMessage(error) || i18n._(ACCOUNT_LIMITED_NOTICE_DESCRIPTOR);
 					break;
 				default:
 					message = i18n._(ADD_TO_GROUP_FAILED_MESSAGE_DESCRIPTOR);

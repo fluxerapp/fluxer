@@ -19,7 +19,6 @@ import {DragItemType} from '@app/features/app/components/layout/types/DndTypes';
 import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
 import {GuildChannelListSkeleton} from '@app/features/app/components/skeleton/GuildSidebarSkeleton';
-import {useChannelHoverPreload} from '@app/features/app/hooks/useChannelHoverPreload';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -55,7 +54,6 @@ import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CaretDownIcon, PlusIcon, UserPlusIcon} from '@phosphor-icons/react';
@@ -235,17 +233,11 @@ const FavoriteChannelResolvedItem = observer(
 			showFadedUnreadOnMutedChannels: Accessibility.showFadedUnreadOnMutedChannels,
 			unreadBadgesLevel,
 		});
-		const {scheduleChannelPreload, cancelChannelPreload, preloadChannelNow} = useChannelHoverPreload({
-			channel,
-			guild,
-			defaultHiddenForChannel: channel.type === ChannelTypes.GUILD_VOICE,
-		});
 		const handleClick = () => {
 			if (LinkChannelCommands.openLinkChannel(channel)) {
 				return;
 			}
 			markDirectSelection(DirectSelectionSurface.FAVORITES_LIST);
-			preloadChannelNow();
 			NavigationCommands.selectChannel(FAVORITES_GUILD_ID, favoriteChannel.channelId);
 		};
 		const handleContextMenu = (event: React.MouseEvent) => {
@@ -309,8 +301,6 @@ const FavoriteChannelResolvedItem = observer(
 				onFocus={() => setIsFocused(true)}
 				onBlur={() => setIsFocused(false)}
 				onLongPress={() => {}}
-				onMouseEnter={scheduleChannelPreload}
-				onMouseLeave={cancelChannelPreload}
 				data-flx="app.favorites-channel-list-content.favorite-channel-item.generic-channel-item.click"
 			>
 				<div

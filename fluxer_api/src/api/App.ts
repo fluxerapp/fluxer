@@ -5,7 +5,7 @@ import {registerControllers} from '@app/api/app/ControllerRegistry';
 import {configureMiddleware} from '@app/api/app/MiddlewarePipeline';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import type {ILogger} from '@app/api/ILogger';
-import {recordHttpClientError} from '@app/api/middleware/AbusiveIpAutoBanner';
+import {recordRequestStatus} from '@app/api/middleware/RequestErrorTelemetry';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {AppErrorHandler, AppNotFoundHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
@@ -27,11 +27,11 @@ interface APIAppResult {
 	shutdown: () => Promise<void>;
 }
 
-function AbuseAwareAppErrorHandler(err: Error, ctx: Context<HonoEnv>): Response | Promise<Response> {
+function TelemetryAwareAppErrorHandler(err: Error, ctx: Context<HonoEnv>): Response | Promise<Response> {
 	if (!(err instanceof IpBannedError)) {
 		const status = resolveErrorStatus(err);
 		if (status !== null && !ctx.get('user')) {
-			recordHttpClientError(ctx.req.raw, status);
+			recordRequestStatus(ctx.req.raw, status);
 		}
 	}
 	return AppErrorHandler(err, ctx);
@@ -49,9 +49,8 @@ export async function createAPIApp(options: CreateAPIAppOptions): Promise<APIApp
 		trustClientIpHeader: config.proxy.trust_client_ip_header,
 		clientIpHeaderName: config.proxy.client_ip_header,
 		maxInflightRequests: config.maxInflightRequests,
-		torExitBlockingEnabled: config.torExitList.enabled,
 	});
-	routes.onError(AbuseAwareAppErrorHandler);
+	routes.onError(TelemetryAwareAppErrorHandler);
 	routes.notFound(AppNotFoundHandler);
 	registerControllers(routes, config);
 	const app = new Hono<HonoEnv>({strict: true});
@@ -67,7 +66,7 @@ export async function createAPIApp(options: CreateAPIAppOptions): Promise<APIApp
 	);
 	app.route('/v1', routes);
 	app.route('/', routes);
-	app.onError(AbuseAwareAppErrorHandler);
+	app.onError(TelemetryAwareAppErrorHandler);
 	app.notFound(AppNotFoundHandler);
 	return {
 		app,

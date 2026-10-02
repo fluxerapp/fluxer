@@ -2,6 +2,7 @@
 
 import {startDomainMigrationTrigger} from '@app/features/app/domain_migration/DomainMigrationTrigger';
 import Initialization from '@app/features/app/state/Initialization';
+import PasskeyMigration from '@app/features/auth/passkey_migration/PasskeyMigration';
 import AccountManager from '@app/features/auth/state/AccountManager';
 import accountStorage from '@app/features/auth/state/AccountStorage';
 import Authentication from '@app/features/auth/state/Authentication';
@@ -38,7 +39,6 @@ import Presence from '@app/features/presence/state/Presence';
 import ReadStates, {type GatewayReadState} from '@app/features/read_state/state/ReadStates';
 import type {RelationshipWire} from '@app/features/relationship/models/Relationship';
 import Relationships from '@app/features/relationship/state/Relationships';
-import CountryCode from '@app/features/user/state/CountryCode';
 import UserGuildSettings, {type GatewayGuildSettings} from '@app/features/user/state/UserGuildSettings';
 import UserNote from '@app/features/user/state/UserNote';
 import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
@@ -110,9 +110,6 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	if (data.notes) {
 		UserNote.loadNotes(data.notes);
 	}
-	if (data.country_code) {
-		CountryCode.setCountryCode(data.country_code);
-	}
 	context.setConnectionGeoip({
 		country_code: data.country_code,
 		latitude: data.latitude,
@@ -130,7 +127,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	if (data.rtc_regions) {
 		RtcRegions.setRegions(data.rtc_regions);
 	}
-	ExperimentAssignments.start();
+	ExperimentAssignments.start(data.user.id);
 	Users.handleGatewayReady(data.user);
 	if (data.users && data.users.length > 0) {
 		Users.cacheUsers(data.users);
@@ -186,4 +183,5 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	context.setReady();
 	Messages.handleGatewayReady();
 	startDomainMigrationTrigger();
+	PasskeyMigration.handleGatewayReady(data.user.id);
 }

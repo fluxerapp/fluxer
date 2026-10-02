@@ -202,6 +202,7 @@ The validation entry has no member naming which duration bound the clip crossed.
 | --- | --- | --- |
 | 201 | [entrance sound](#entrance-sound-object) object | Clip was stored |
 | 400 | [error response](/http-api/#error-response) | Name or audio fails [validation](#validation) |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 
 ### Side effects
 
@@ -303,6 +304,7 @@ A `guild:{guild_id}` scope does not require current guild membership. A non-null
 | --- | --- | --- |
 | 204 | empty | Selection was written or cleared |
 | 400 | [error response](/http-api/#error-response) | Scope is unrecognised and the request returns `INVALID_FORMAT` at the `scope_id` path, or the account owns no such clip and the request returns `ENTRANCE_SOUND_NOT_FOUND` at the `sound_id` path |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 
 ### Side effects
 

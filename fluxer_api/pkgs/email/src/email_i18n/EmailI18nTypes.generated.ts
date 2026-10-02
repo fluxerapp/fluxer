@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export type EmailTemplateKey =
-	| 'account_disabled_suspicious'
+	| 'account_deletion_cancelled'
+	| 'account_deletion_scheduled_inactivity'
+	| 'account_deletion_scheduled_requested'
 	| 'account_scheduled_deletion'
 	| 'account_temp_banned'
 	| 'donation_confirmation'

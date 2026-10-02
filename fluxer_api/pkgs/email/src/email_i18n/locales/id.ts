@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "Akun {product_name} kamu telah dinonaktifkan sementara",
-		"body": "Halo {username},\n\nKami menonaktifkan sementara akun {product_name} kamu karena kami mendeteksi aktivitas mencurigakan.\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}}\n}\n\nUntuk mendapatkan kembali akses ke akunmu, kamu perlu mengatur ulang kata sandimu:\n\n{forgotUrl}\n\nSetelah mengatur ulang kata sandi, kamu bisa masuk lagi.\n\nJika kamu merasa ini keliru, silakan hubungi tim dukungan kami.\n\n– Tim Keamanan {product_name}"
+	"account_deletion_cancelled": {
+		"subject": "Penghapusan akun {product_name} kamu telah dibatalkan",
+		"body": "Halo {username},\n\nPenghapusan terjadwal untuk akun {product_name} kamu telah dibatalkan. Akunmu tidak akan dihapus.\n\nJika kamu punya pertanyaan, silakan hubungi {safety_email}.\n\n– Tim {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Akun {product_name} kamu akan dihapus karena tidak aktif",
+		"body": "Halo {username},\n\nAkun {product_name} kamu sudah lama tidak aktif, sehingga dijadwalkan untuk dihapus permanen pada:\n\n{deletionDate, date, full} pukul {deletionDate, time, short}{reason, select, null {} other {\n\nAlasan: {reason}}}\n\nJika kamu ingin mempertahankan akunmu, hubungi {safety_email} dari alamat email ini sebelum tanggal tersebut.\n\n– Tim {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Penghapusan akun {product_name} kamu telah dijadwalkan",
+		"body": "Halo {username},\n\nSesuai permintaanmu, akun {product_name} kamu dijadwalkan untuk dihapus permanen pada:\n\n{deletionDate, date, full} pukul {deletionDate, time, short}{reason, select, null {} other {\n\nAlasan: {reason}}}\n\nAkunmu dikunci hingga saat itu. Jika kamu tidak meminta ini, atau ingin mempertahankan akunmu, hubungi {safety_email} dari alamat email ini sebelum tanggal tersebut.\n\n– Tim {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Akun {product_name} kamu akan dihapus secara permanen",
@@ -37,7 +45,7 @@ const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Email {product_name} kamu telah diubah",
-		"body": "Halo {username},\n\nAlamat email di akun {product_name} kamu telah diubah menjadi {newEmail}.\n\nJika ini memang kamu, tidak ada yang perlu dilakukan. Jika bukan, kamu bisa membatalkan perubahan itu dan mengamankan akunmu lewat tautan ini:\n\n{revertUrl}\n\nTindakan ini akan mengembalikan email lamamu, mengeluarkanmu dari semua perangkat, menghapus nomor telepon yang tertaut, menonaktifkan MFA, dan mengharuskanmu membuat kata sandi baru.\n\n– Tim Keamanan {product_name}"
+		"body": "Halo {username},\n\nAlamat email di akun {product_name} kamu telah diubah menjadi {newEmail}.\n\nJika ini memang kamu, tidak ada yang perlu dilakukan. Jika bukan, kamu bisa membatalkan perubahan itu dan mengamankan akunmu lewat tautan ini:\n\n{revertUrl}\n\nTindakan ini akan mengembalikan email lamamu, mengeluarkanmu dari semua perangkat, menonaktifkan MFA, dan mengharuskanmu membuat kata sandi baru.\n\n– Tim Keamanan {product_name}"
 	},
 	"email_verification": {
 		"subject": "Verifikasi alamat email {product_name} kamu",
@@ -65,7 +73,7 @@ const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Konfirmasi perubahan kata sandi {product_name} kamu",
-		"body": "Halo {username},\n\nKami menerima permintaan untuk mengubah kata sandi di akun {product_name} kamu.\n\nUntuk mengonfirmasi perubahan ini, masukkan kode ini di aplikasi:\n\n{code}\n\nKode ini kedaluwarsa pada {expiresAt}.\n\nJika kamu tidak meminta ini, seseorang mungkin punya akses ke akunmu. Ubah kata sandimu segera dan aktifkan autentikasi dua faktor.\n\n– Tim {product_name}"
+		"body": "Halo {username},\n\nKami menerima permintaan untuk mengubah kata sandi di akun {product_name} kamu.\n\nUntuk mengonfirmasi perubahan ini, masukkan kode ini di aplikasi:\n\n{code}\n\nKode ini kedaluwarsa pada {expiresAt, date, full} pukul {expiresAt, time, short}.\n\nJika kamu tidak meminta ini, seseorang mungkin punya akses ke akunmu. Ubah kata sandimu segera dan aktifkan autentikasi dua faktor.\n\n– Tim {product_name}"
 	},
 	"password_reset": {
 		"subject": "Atur ulang kata sandi {product_name} kamu",

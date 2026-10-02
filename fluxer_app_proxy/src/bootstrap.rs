@@ -9,7 +9,6 @@ use serde::Serialize;
 pub struct BootstrapPayload<'a> {
     pub config: BootstrapConfig<'a>,
     pub instance: &'a serde_json::Value,
-    pub geoip: &'a serde_json::Value,
 }
 
 #[derive(Serialize)]
@@ -38,12 +37,7 @@ struct LegacyConfig<'a> {
     bootstrap_api_public_endpoint: Option<&'a str>,
 }
 
-pub fn build_bootstrap_script(
-    config: &AppProxyConfig,
-    discovery: &DiscoveryResponse,
-    geoip: &serde_json::Value,
-    nonce: &str,
-) -> String {
+pub fn build_bootstrap_script(config: &AppProxyConfig, discovery: &DiscoveryResponse) -> String {
     let api_public_endpoint =
         api_public_endpoint(config.bootstrap_api_public_endpoint.as_deref(), discovery);
 
@@ -54,7 +48,6 @@ pub fn build_bootstrap_script(
             bootstrap_api_public_endpoint: api_public_endpoint,
         },
         instance: &discovery.data,
-        geoip,
     };
 
     let legacy = LegacyConfig {
@@ -67,7 +60,7 @@ pub fn build_bootstrap_script(
     let legacy_json = escape_json_for_script(&serde_json::to_string(&legacy).unwrap());
 
     format!(
-        r#"<script nonce="{nonce}">window.__FLUXER_BOOTSTRAP__={bootstrap_json};window.__FLUXER_CONFIG__={legacy_json};</script>"#
+        r#"<script>window.__FLUXER_BOOTSTRAP__={bootstrap_json};window.__FLUXER_CONFIG__={legacy_json};</script>"#
     )
 }
 
@@ -144,7 +137,6 @@ const STATIC_PRECONNECT_TAGS: [&str; 2] = [
 
 pub fn inject_bootstrap(
     html: &str,
-    nonce: &str,
     script_tag: &str,
     static_cdn_endpoint: &str,
     media_endpoint: &str,
@@ -152,35 +144,34 @@ pub fn inject_bootstrap(
     let static_cdn = static_cdn_endpoint.trim_end_matches('/');
     let media = media_endpoint.trim_end_matches('/');
 
-    let nonced = html.replace("{{CSP_NONCE_PLACEHOLDER}}", nonce);
-    let nonced = apply_static_preconnect(nonced, static_cdn);
-    let nonced = nonced.replace("{{STATIC_CDN_ENDPOINT}}", static_cdn);
-    let nonced = apply_media_preconnect(&nonced, media, static_cdn);
+    let html = apply_static_preconnect(html.to_owned(), static_cdn);
+    let html = html.replace("{{STATIC_CDN_ENDPOINT}}", static_cdn);
+    let html = apply_media_preconnect(&html, media, static_cdn);
 
-    if nonced.contains("<!--{{FLUXER_BOOTSTRAP}}-->") {
-        return nonced.replace("<!--{{FLUXER_BOOTSTRAP}}-->", script_tag);
+    if html.contains("<!--{{FLUXER_BOOTSTRAP}}-->") {
+        return html.replace("<!--{{FLUXER_BOOTSTRAP}}-->", script_tag);
     }
-    if nonced.contains("{{FLUXER_BOOTSTRAP}}") {
-        return nonced.replace("{{FLUXER_BOOTSTRAP}}", script_tag);
+    if html.contains("{{FLUXER_BOOTSTRAP}}") {
+        return html.replace("{{FLUXER_BOOTSTRAP}}", script_tag);
     }
 
-    let insert_at = nonced
+    let insert_at = html
         .find("<head>")
         .map(|pos| pos + "<head>".len())
         .or_else(|| {
-            let pos = nonced.find("<head ")?;
-            nonced[pos..].find('>').map(|close| pos + close + 1)
+            let pos = html.find("<head ")?;
+            html[pos..].find('>').map(|close| pos + close + 1)
         });
     if let Some(insert_at) = insert_at {
-        let mut result = String::with_capacity(nonced.len() + script_tag.len() + 3);
-        result.push_str(&nonced[..insert_at]);
+        let mut result = String::with_capacity(html.len() + script_tag.len() + 3);
+        result.push_str(&html[..insert_at]);
         result.push_str("\n\t\t");
         result.push_str(script_tag);
-        result.push_str(&nonced[insert_at..]);
+        result.push_str(&html[insert_at..]);
         return result;
     }
 
-    nonced
+    html
 }
 
 fn apply_static_preconnect(mut html: String, static_cdn: &str) -> String {
@@ -219,7 +210,6 @@ mod tests {
     fn inject_into_shipped_shell() -> String {
         inject_bootstrap(
             SHIPPED_APP_SHELL,
-            "shellnonce",
             "<script>boot</script>",
             "https://cdn.example.test/",
             "https://media.example.test/",
@@ -256,16 +246,20 @@ mod tests {
         let result = inject_into_shipped_shell();
         assert!(!result.contains("{{STATIC_CDN_ENDPOINT}}"));
         assert!(!result.contains("{{MEDIA_ENDPOINT}}"));
-        assert!(!result.contains("{{CSP_NONCE_PLACEHOLDER}}"));
         assert!(!result.contains("{{FLUXER_BOOTSTRAP}}"));
         assert!(result.contains("<script>boot</script>"));
-        assert!(result.contains(r#"nonce="shellnonce""#));
+    }
+
+    #[test]
+    fn shipped_shell_carries_no_nonce_attribute_or_placeholder() {
+        assert!(!SHIPPED_APP_SHELL.contains("nonce"));
+        assert!(!SHIPPED_APP_SHELL.contains("{{CSP_NONCE_PLACEHOLDER}}"));
     }
 
     #[test]
     fn inject_bootstrap_before_head_close() {
         let html = "<html><head><title>App</title></head><body></body></html>";
-        let result = inject_bootstrap(html, "abc123", "<script>boot</script>", "", "");
+        let result = inject_bootstrap(html, "<script>boot</script>", "", "");
         assert!(result.contains("<script>boot</script>"));
         assert!(result.contains("<head>"));
     }
@@ -273,7 +267,7 @@ mod tests {
     #[test]
     fn inject_bootstrap_fluxer_placeholder() {
         let html = "<html><head>{{FLUXER_BOOTSTRAP}}</head></html>";
-        let result = inject_bootstrap(html, "n1", "<script>x</script>", "", "");
+        let result = inject_bootstrap(html, "<script>x</script>", "", "");
         assert!(result.contains("<script>x</script>"));
         assert!(!result.contains("{{FLUXER_BOOTSTRAP}}"));
     }
@@ -281,17 +275,9 @@ mod tests {
     #[test]
     fn inject_bootstrap_comment_placeholder() {
         let html = "<html><head><!--{{FLUXER_BOOTSTRAP}}--></head></html>";
-        let result = inject_bootstrap(html, "n2", "<script>y</script>", "", "");
+        let result = inject_bootstrap(html, "<script>y</script>", "", "");
         assert!(result.contains("<script>y</script>"));
         assert!(!result.contains("<!--{{FLUXER_BOOTSTRAP}}-->"));
-    }
-
-    #[test]
-    fn inject_bootstrap_replaces_csp_nonce_placeholder() {
-        let html = r#"<html><head><script nonce="{{CSP_NONCE_PLACEHOLDER}}"></script>{{FLUXER_BOOTSTRAP}}</head></html>"#;
-        let result = inject_bootstrap(html, "mynonce", "<script>z</script>", "", "");
-        assert!(result.contains(r#"nonce="mynonce""#));
-        assert!(!result.contains("{{CSP_NONCE_PLACEHOLDER}}"));
     }
 
     #[test]
@@ -299,7 +285,6 @@ mod tests {
         let html = r#"<html><head><link href="{{STATIC_CDN_ENDPOINT}}/web/favicon-32x32.png">{{FLUXER_BOOTSTRAP}}</head></html>"#;
         let result = inject_bootstrap(
             html,
-            "nonce",
             "<script>boot</script>",
             "https://cdn.example.test/",
             "",
@@ -315,7 +300,6 @@ mod tests {
 {{FLUXER_BOOTSTRAP}}</head></html>"#;
         let result = inject_bootstrap(
             html,
-            "nonce",
             "<script>boot</script>",
             "https://cdn.example.test/",
             "https://media.example.test/",
@@ -332,7 +316,6 @@ mod tests {
 {{FLUXER_BOOTSTRAP}}</head></html>"#;
         let result = inject_bootstrap(
             html,
-            "nonce",
             "<script>boot</script>",
             "https://cdn.example.test",
             "",
@@ -349,7 +332,6 @@ mod tests {
 {{FLUXER_BOOTSTRAP}}</head></html>"#;
         let result = inject_bootstrap(
             html,
-            "nonce",
             "<script>boot</script>",
             "https://cdn.example.test",
             "https://cdn.example.test/",
@@ -367,7 +349,6 @@ mod tests {
     fn static_cdn_keeps_a_credentialed_and_an_anonymous_preconnect() {
         let result = inject_bootstrap(
             SHELL_PRECONNECT_HEAD,
-            "nonce",
             "<script>boot</script>",
             "https://cdn.example.test/",
             "https://media.example.test",
@@ -384,7 +365,6 @@ mod tests {
     fn both_static_preconnects_are_dropped_when_the_endpoint_is_empty() {
         let result = inject_bootstrap(
             SHELL_PRECONNECT_HEAD,
-            "nonce",
             "<script>boot</script>",
             "",
             "https://media.example.test",
@@ -422,7 +402,6 @@ mod tests {
     #[test]
     fn bootstrap_payload_serialization_field_names() {
         let instance = serde_json::json!({"name": "test"});
-        let geoip = serde_json::json!({"country": "SE"});
         let payload = BootstrapPayload {
             config: BootstrapConfig {
                 release_channel: "stable",
@@ -430,20 +409,18 @@ mod tests {
                 bootstrap_api_public_endpoint: None,
             },
             instance: &instance,
-            geoip: &geoip,
         };
         let json = serde_json::to_string(&payload).unwrap();
         assert!(json.contains(r#""releaseChannel""#));
         assert!(json.contains(r#""bootstrapApiEndpoint""#));
         assert!(json.contains(r#""config""#));
         assert!(json.contains(r#""instance""#));
-        assert!(json.contains(r#""geoip""#));
+        assert!(!json.contains("geoip"));
     }
 
     #[test]
     fn bootstrap_config_serializes_public_endpoint_when_present() {
         let instance = serde_json::json!({});
-        let geoip = serde_json::json!({});
         let payload = BootstrapPayload {
             config: BootstrapConfig {
                 release_channel: "canary",
@@ -451,7 +428,6 @@ mod tests {
                 bootstrap_api_public_endpoint: Some("https://pub.example.com/api"),
             },
             instance: &instance,
-            geoip: &geoip,
         };
         let json = serde_json::to_string(&payload).unwrap();
         assert!(json.contains(r#""bootstrapApiPublicEndpoint""#));
@@ -460,7 +436,6 @@ mod tests {
     #[test]
     fn bootstrap_config_omits_public_endpoint_when_none() {
         let instance = serde_json::json!({});
-        let geoip = serde_json::json!({});
         let payload = BootstrapPayload {
             config: BootstrapConfig {
                 release_channel: "stable",
@@ -468,7 +443,6 @@ mod tests {
                 bootstrap_api_public_endpoint: None,
             },
             instance: &instance,
-            geoip: &geoip,
         };
         let json = serde_json::to_string(&payload).unwrap();
         assert!(!json.contains("bootstrapApiPublicEndpoint"));
@@ -611,8 +585,7 @@ mod tests {
         let discovery = discovery_offering("https://chat.example.test:8443/api");
         let mut config = AppProxyConfig::from_env();
         config.bootstrap_api_public_endpoint = Some("https://chat.example.test/api".to_owned());
-        let script =
-            build_bootstrap_script(&config, &discovery, &serde_json::json!({}), "scriptnonce");
+        let script = build_bootstrap_script(&config, &discovery);
         assert!(
             script.contains(r#""bootstrapApiPublicEndpoint":"https://chat.example.test:8443/api""#)
         );
@@ -620,5 +593,17 @@ mod tests {
             r#""PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT":"https://chat.example.test:8443/api""#
         ));
         assert!(!script.contains(r#""https://chat.example.test/api""#));
+    }
+
+    #[test]
+    fn the_boot_script_is_a_bare_inline_script_with_nothing_per_visitor() {
+        let discovery = discovery_offering("https://chat.example.test/api");
+        let config = AppProxyConfig::from_env();
+        let script = build_bootstrap_script(&config, &discovery);
+        assert!(script.starts_with("<script>window.__FLUXER_BOOTSTRAP__="));
+        assert!(script.ends_with("</script>"));
+        assert!(!script.contains("nonce"));
+        assert!(!script.contains("geoip"));
+        assert!(!script.contains("countryCode"));
     }
 }

@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
-import type {CachePurgeAdapterName} from '@fluxer/config/src/MasterConfig';
+import type {CachePurgeAdapterName, StoreProductSlotName} from '@fluxer/config/src/MasterConfig';
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
-export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch';
+export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch' | 'crosspost';
 export type PushProviderEnvironment = 'production' | 'development';
 
 export interface PushProviderAppConfig {
 	appId: string;
 	topic?: string;
 	environment?: PushProviderEnvironment;
-	projectId?: string;
+}
+
+export interface AppStoreAppConfig {
+	bundleId: string;
+	appAppleId: number;
 }
 
 export interface APICachePurgeConfig {
@@ -26,16 +30,13 @@ export interface APICachePurgeConfig {
 interface APIGeoipFilesystemConfig {
 	mode: 'filesystem';
 	maxmindDbPath?: string;
-	maxmindAsnDbPath?: string;
 }
 
 interface APIGeoipS3Config {
 	mode: 's3';
 	maxmindDbPath: string;
-	maxmindAsnDbPath?: string;
 	s3Bucket: string;
 	s3Key: string;
-	s3AsnKey?: string;
 }
 
 export type APIGeoipConfig = APIGeoipFilesystemConfig | APIGeoipS3Config;
@@ -72,20 +73,8 @@ export interface APIConfig {
 		backend: 'cassandra' | 'postgres';
 	};
 	kv: {
-		provider: 'redis';
 		url: string;
 		mode: 'standalone' | 'cluster';
-		clusterNodes: Array<{
-			host: string;
-			port: number;
-		}>;
-		clusterNatMap: Record<
-			string,
-			{
-				host: string;
-				port: number;
-			}
-		>;
 	};
 	nats: {
 		coreUrl: string;
@@ -139,22 +128,12 @@ export interface APIConfig {
 		gift: string;
 	};
 	internal: {
-		gateway: string;
 		gatewayRpcAuthToken: string;
 		donationProxyKey: string;
 	};
 	hosts: {
 		marketing: string;
 		unfurlIgnored: Array<string>;
-	};
-	embeds: {
-		oEmbedHtmlEnabled: boolean;
-		oEmbedHtmlAllowUntrustedOnSelfHosted: boolean;
-		oEmbedHtmlAllowedHosts: Array<string>;
-		cacheDefaultTtlSeconds: number;
-		cacheMaxTtlSeconds: number;
-		cacheMinTtlSeconds: number;
-		cacheRespectRemoteTtl: boolean;
 	};
 	s3: {
 		endpoint: string;
@@ -176,6 +155,7 @@ export interface APIConfig {
 		webhookSecret?: string;
 		fromEmail: string;
 		fromName: string;
+		replyToEmail: string;
 		appBaseUrl: string;
 		smtp?: {
 			host: string;
@@ -185,49 +165,16 @@ export interface APIConfig {
 			secure: boolean;
 		};
 	};
-	sms: {
-		enabled: boolean;
-		accountSid?: string;
-		authToken?: string;
-		verifyServiceSid?: string;
-		inboundChallengeNumber?: string;
-		inboundWebhookAuthToken?: string;
-		inboundWebhookPublicUrl?: string;
-	};
-	risk: {
-		enabled: boolean;
-		ipinfoApiKey?: string;
-		accountPolicyDsl?: unknown;
-	};
 	blocklistFeeds: {
-		enabled: boolean;
-	};
-	torExitList: {
 		enabled: boolean;
 	};
 	breachedPasswordCheck: {
 		enabled: boolean;
 	};
-	captcha: {
-		enabled: boolean;
-		provider: 'hcaptcha' | 'turnstile' | 'none';
-		hcaptcha?: {
-			siteKey: string;
-			secretKey: string;
-		};
-		turnstile?: {
-			siteKey: string;
-			secretKey: string;
-		};
-	};
-	contentModeration: {
-		nsfwThreshold: number;
-	};
 	voice: {
 		enabled: boolean;
 		apiKey?: string;
 		apiSecret?: string;
-		webhookUrl?: string;
 		url?: string;
 		internalUrl?: string;
 		defaultRegion?: {
@@ -290,7 +237,6 @@ export interface APIConfig {
 		failOpen: boolean;
 	};
 	admin: {
-		basePath: string;
 		oauthClientSecret?: string;
 	};
 	auth: {
@@ -335,26 +281,6 @@ export interface APIConfig {
 			configured: boolean;
 		};
 	};
-	abusePolicy: {
-		inboundPhoneCountryCodes: Array<string>;
-		phoneFlagging: {
-			enabled: boolean;
-			exemptCountryCodes: Array<string>;
-		};
-		phoneVerification: {
-			inboundRequiredPrefixes: Array<string>;
-		};
-		directContactSpam: {
-			enabled: boolean;
-			countryCodes: Array<string>;
-			distinctTargetThreshold: number;
-			targetWindowMs: number;
-			action: 'flag_spammer' | 'suppress_delivery';
-		};
-	};
-	domain: {
-		baseDomain: string;
-	};
 	discovery: {
 		enabled: boolean;
 		minMemberCount: number;
@@ -379,19 +305,33 @@ export interface APIConfig {
 			keyId?: string;
 			privateKey?: string;
 			privateKeyPath?: string;
-			defaultEnvironment: PushProviderEnvironment;
 			apps: Array<PushProviderAppConfig>;
 		};
-		fcm: {
-			enabled: boolean;
-			projectId?: string;
-			clientEmail?: string;
-			privateKey?: string;
-			privateKeyPath?: string;
-			serviceAccountJsonPath?: string;
-			tokenUri: string;
-			apps: Array<PushProviderAppConfig>;
-		};
+	};
+	appStore: {
+		enabled: boolean;
+		issuerId?: string;
+		keyId?: string;
+		privateKey?: string;
+		privateKeyPath?: string;
+		apps: Array<AppStoreAppConfig>;
+		products: Record<string, StoreProductSlotName>;
+	};
+	googlePlay: {
+		enabled: boolean;
+		packages: Array<string>;
+		clientEmail?: string;
+		privateKey?: string;
+		privateKeyPath?: string;
+		serviceAccountJsonPath?: string;
+		tokenUri: string;
+		products: Record<string, StoreProductSlotName>;
+		pushAudience?: string;
+		pushServiceAccountEmail?: string;
+	};
+	storeBilling: {
+		sandboxUserIds: Array<string>;
+		sandboxEntitlesAll: boolean;
 	};
 	worker: {
 		mode: APIWorkerMode;
@@ -403,6 +343,7 @@ export interface APIConfig {
 			unfurl?: number;
 			lifecycle?: number;
 			batch?: number;
+			crosspost?: number;
 		};
 	};
 	ncmec: {

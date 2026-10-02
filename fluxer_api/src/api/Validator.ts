@@ -12,7 +12,16 @@ import type {ValidationError} from '@fluxer/errors/src/domains/core/ValidationEr
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import type {Context, Env, Input, MiddlewareHandler, TypedResponse, ValidationTargets} from 'hono';
 import {getCookie} from 'hono/cookie';
-import {type core, type input, type output, ZodObject, ZodOptional, type ZodSafeParseResult, type ZodType} from 'zod';
+import {
+	type core,
+	type input,
+	type output,
+	ZodNullable,
+	ZodObject,
+	ZodOptional,
+	type ZodSafeParseResult,
+	type ZodType,
+} from 'zod';
 
 initializeFluxerErrorMap();
 
@@ -46,8 +55,9 @@ function extractVariablesFromIssue(issue: core.$ZodIssue): Record<string, unknow
 }
 
 function convertEmptyValuesToNull(obj: unknown, schema?: core.$ZodType, isRoot = true): unknown {
-	while (schema instanceof ZodOptional) schema = schema.unwrap();
-	if (schema && schemaMetadata.get(schema)?.preserveEmptyValues) return obj;
+	while (schema instanceof ZodOptional || schema instanceof ZodNullable) schema = schema.unwrap();
+	const metadata = schema ? schemaMetadata.get(schema) : undefined;
+	if (metadata?.preserveEmptyValues) return obj;
 	if (typeof obj === 'string' && obj === '') return null;
 	if (Array.isArray(obj)) return obj.map((item) => convertEmptyValuesToNull(item, undefined, false));
 	if (obj !== null && typeof obj === 'object') {
@@ -59,7 +69,9 @@ function convertEmptyValuesToNull(obj: unknown, schema?: core.$ZodType, isRoot =
 				convertEmptyValuesToNull(value, shape && Object.hasOwn(shape, key) ? shape[key] : undefined, false),
 			]),
 		);
-		if (!isRoot && Object.values(processed).every((value) => value === null)) return null;
+		if (!isRoot && !metadata?.preserveNullFields && Object.values(processed).every((value) => value === null)) {
+			return null;
+		}
 		return processed;
 	}
 	return obj;

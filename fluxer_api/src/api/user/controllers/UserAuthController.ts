@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	completePasskeyMigration,
+	getPasskeyMigration,
+	getPasskeyMigrationRegistrationOptions,
+} from '@app/api/auth/services/PasskeyMigrationService';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
-import {Config} from '@app/api/Config';
-import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
-	InboundSmsChallengeStartResponse,
 	MfaBackupCodesChallengeRegenerateRequest,
 	MfaBackupCodesChallengeResendRequest,
 	MfaBackupCodesChallengeStartResponse,
@@ -21,10 +23,6 @@ import {
 	MfaBackupCodesChallengeVerifyResponse,
 	MfaBackupCodesRequest,
 	MfaBackupCodesResponse,
-	PhoneSendVerificationRequest,
-	PhoneSendVerificationResponse,
-	PhoneVerifyRequest,
-	PhoneVerifyResponse,
 	SudoMfaMethodsResponse,
 	SudoVerificationSchema,
 	WebAuthnChallengeResponse,
@@ -34,6 +32,10 @@ import {
 	WebAuthnTwoFactorRequest,
 	WebAuthnTwoFactorResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {
+	PasskeyMigrationCompleteRequest,
+	PasskeyMigrationResponse,
+} from '@fluxer/schema/src/domains/auth/PasskeyMigrationSchemas';
 import {CredentialIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {EmptyBodyRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 
@@ -211,75 +213,6 @@ export function UserAuthController(app: HonoApp) {
 			);
 		},
 	);
-	app.post(
-		'/users/@me/phone/send-verification',
-		RateLimitMiddleware(RateLimitConfigs.PHONE_SEND_VERIFICATION),
-		LoginRequiredAllowSuspicious,
-		DefaultUserOnly,
-		Validator('json', PhoneSendVerificationRequest),
-		OpenAPI({
-			operationId: 'send_phone_verification_code',
-			summary: 'Send phone verification code',
-			responseSchema: PhoneSendVerificationResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description:
-				'Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel="sms" to request SMS (only honoured for SMS-allowlisted destinations) or channel="inbound_challenge" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge.',
-		}),
-		async (ctx) => {
-			return ctx.json(
-				await ctx.get('userAuthRequestService').sendPhoneVerificationCode({
-					user: ctx.get('user'),
-					data: ctx.req.valid('json'),
-					clientIp: requireClientIp(ctx.req.raw, {
-						trustClientIpHeader: Config.proxy.trust_client_ip_header,
-						clientIpHeaderName: Config.proxy.client_ip_header,
-					}),
-				}),
-			);
-		},
-	);
-	app.post(
-		'/users/@me/phone/inbound-challenge',
-		RateLimitMiddleware(RateLimitConfigs.PHONE_SEND_VERIFICATION),
-		LoginRequiredAllowSuspicious,
-		DefaultUserOnly,
-		OpenAPI({
-			operationId: 'start_inbound_phone_challenge',
-			summary: 'Start an inbound SMS challenge',
-			responseSchema: InboundSmsChallengeStartResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description:
-				"For very-high-risk registrations the platform requires the user to text a one-time code to the platform's number, instead of receiving a code from the platform. This endpoint generates the code and the destination number to display.",
-		}),
-		async (ctx) => {
-			return ctx.json(await ctx.get('userAuthRequestService').startInboundPhoneChallenge(ctx.get('user')));
-		},
-	);
-	app.post(
-		'/users/@me/phone/verify',
-		RateLimitMiddleware(RateLimitConfigs.PHONE_VERIFY_CODE),
-		LoginRequiredAllowSuspicious,
-		DefaultUserOnly,
-		Validator('json', PhoneVerifyRequest),
-		OpenAPI({
-			operationId: 'verify_phone_code',
-			summary: 'Verify phone code',
-			responseSchema: PhoneVerifyResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description: 'Verify a phone number by confirming the SMS verification code. Returns phone verification status.',
-		}),
-		async (ctx) => {
-			return ctx.json(
-				await ctx.get('userAuthRequestService').verifyPhoneCode({user: ctx.get('user'), data: ctx.req.valid('json')}),
-			);
-		},
-	);
 	app.delete(
 		'/users/@me/authorized-ips',
 		RateLimitMiddleware(RateLimitConfigs.USER_AUTHORIZED_IPS_FORGET),
@@ -347,7 +280,9 @@ export function UserAuthController(app: HonoApp) {
 			await requireSudoMode(ctx, user, body, {
 				issueSudoToken: false,
 			});
-			return ctx.json(await ctx.get('userAuthRequestService').generateWebAuthnRegistrationOptions(user));
+			return ctx.json(
+				await ctx.get('userAuthRequestService').generateWebAuthnRegistrationOptions(user, ctx.req.header('origin')),
+			);
 		},
 	);
 	app.post(
@@ -433,6 +368,78 @@ export function UserAuthController(app: HonoApp) {
 			return ctx.body(null, 204);
 		},
 	);
+	app.get(
+		'/users/@me/mfa/webauthn/migration',
+		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_MIGRATION),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'get_webauthn_migration',
+			summary: 'Get pending passkey update',
+			responseSchema: PasskeyMigrationResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Return the passkey this session can update to the new domain after using it within the last five minutes, or null.',
+		}),
+		async (ctx) => {
+			return ctx.json(await getPasskeyMigration(ctx.get('apiContext'), ctx.get('user').id, ctx.get('authSession')));
+		},
+	);
+	app.post(
+		'/users/@me/mfa/webauthn/migration/registration-options',
+		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_MIGRATION),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'get_webauthn_migration_registration_options',
+			summary: 'Get passkey update registration options',
+			responseSchema: WebAuthnChallengeResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Generate registration options for the passkey that replaces the pending one. Requires a pending passkey update for this session.',
+		}),
+		async (ctx) => {
+			return ctx.json(
+				await getPasskeyMigrationRegistrationOptions(
+					ctx.get('apiContext'),
+					ctx.get('user').id,
+					ctx.get('authSession'),
+					ctx.req.header('origin'),
+				),
+			);
+		},
+	);
+	app.post(
+		'/users/@me/mfa/webauthn/migration',
+		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_MIGRATION),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', PasskeyMigrationCompleteRequest),
+		OpenAPI({
+			operationId: 'complete_webauthn_migration',
+			summary: 'Complete passkey update',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Register the replacement passkey under the name of the pending one. The old passkey stops appearing in lists and is removed together with its replacement.',
+		}),
+		async (ctx) => {
+			await completePasskeyMigration(
+				ctx.get('apiContext'),
+				ctx.get('user').id,
+				ctx.get('authSession'),
+				ctx.req.header('origin'),
+				ctx.req.valid('json'),
+			);
+			return ctx.body(null, 204);
+		},
+	);
 	app.put(
 		'/users/@me/mfa/webauthn/two-factor',
 		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_TWO_FACTOR),
@@ -492,7 +499,9 @@ export function UserAuthController(app: HonoApp) {
 				'Generate WebAuthn challenge for sudo mode verification using a registered security key or biometric device.',
 		}),
 		async (ctx) => {
-			return ctx.json(await ctx.get('userAuthRequestService').getSudoWebAuthnOptions(ctx.get('user')));
+			return ctx.json(
+				await ctx.get('userAuthRequestService').getSudoWebAuthnOptions(ctx.get('user'), ctx.req.header('origin')),
+			);
 		},
 	);
 }

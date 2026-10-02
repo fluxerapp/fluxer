@@ -55,12 +55,10 @@ fn admin_config(port: u16, api_endpoint: &str, admin_endpoint: &str) -> AdminCon
         static_cdn_endpoint: "https://static.example.test".to_owned(),
         admin_endpoint: admin_endpoint.to_owned(),
         web_app_endpoint: "http://127.0.0.1:8088".to_owned(),
-        kv_url: "redis://127.0.0.1:6379/0".to_owned(),
         oauth_client_id: "1234567890123456789".to_owned(),
         oauth_client_secret: "test-admin-oauth-secret".to_owned(),
         oauth_redirect_uri: format!("{admin_endpoint}/oauth2_callback"),
         build_version: "parity".to_owned(),
-        release_channel: "parity".to_owned(),
         self_hosted: false,
         proxy: ProxyConfig {
             trust_client_ip_header: false,

@@ -89,7 +89,5 @@ export const BANNER_ASPECT_RATIO_LABEL = '17:6';
 export const WIDE_IMAGE_ASPECT_RATIO_LABEL = '16:9';
 export const MFA_CODE_DIGIT_COUNT = 6;
 export const FLUXER_TAG_DIGIT_COUNT = 4;
-export const PHONE_VERIFICATION_LIMIT = 2;
-export const PHONE_VERIFICATION_WINDOW_DAYS = 30;
 export const ADULT_CONTENT_MINIMUM_AGE = 18;
 export const UNLIMITED_USER_LIMIT = 0;

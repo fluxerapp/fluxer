@@ -66,6 +66,7 @@ const LoginPageMFA = observer(function LoginPageMFA() {
 	const handleMfaSuccess = useCallback(
 		async (payload: LoginSuccessPayload) => {
 			if (isHandoff) {
+				await AccountManager.refreshStoredAccount(payload.userId, payload.token, payload.userData);
 				await handoff.start(payload);
 				return;
 			} else {

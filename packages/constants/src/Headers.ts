@@ -26,7 +26,6 @@ export const Headers = {
 	X_FLUXER_SUDO_MODE_JWT: 'X-Fluxer-Sudo-Mode-JWT',
 	X_FLUXER_VERSION: 'X-Fluxer-Version',
 	X_CAPTCHA_TOKEN: 'X-Captcha-Token',
-	X_CAPTCHA_TYPE: 'X-Captcha-Type',
 	X_AUDIT_LOG_REASON: 'X-Audit-Log-Reason',
 	X_INTERNAL_API_KEY: 'X-Internal-API-Key',
 	X_AMZ_REQUEST_ID: 'x-amz-request-id',

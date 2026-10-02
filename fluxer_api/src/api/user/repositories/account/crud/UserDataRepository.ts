@@ -7,6 +7,7 @@ import {Db, type DbOp, nextVersion} from '@app/api/database/CassandraTypes';
 import {applyPatchToRow, buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {EMPTY_USER_ROW, USER_COLUMNS} from '@app/api/database/types/UserTypes';
+import {emitAccountChangedIfRelevant} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import {User} from '@app/api/models/User';
 import {Users} from '@app/api/Tables';
 import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
@@ -152,11 +153,9 @@ export class UserDataRepository {
 			Users,
 			{initialData: oldData},
 		);
-		return {
-			finalVersion: result.finalVersion,
-			previousData: result.previousData,
-			updatedData: {...data, version: result.finalVersion ?? data.version},
-		};
+		const updatedData = {...data, version: result.finalVersion ?? data.version};
+		await emitAccountChangedIfRelevant(result.previousData, updatedData);
+		return {finalVersion: result.finalVersion, previousData: result.previousData, updatedData};
 	}
 
 	async patchUser(
@@ -187,6 +186,7 @@ export class UserDataRepository {
 			user_id: userId,
 			version: result.finalVersion ?? nextVersion(previousData?.version),
 		};
+		await emitAccountChangedIfRelevant(previousData, updatedData);
 		return {finalVersion: result.finalVersion, previousData, updatedData};
 	}
 
@@ -228,7 +228,29 @@ export class UserDataRepository {
 			throw new ConflictError({code: APIErrorCodes.CONFLICT, message: 'Account deletion state has changed'});
 		}
 		const updatedData = {...previousData, ...applyPatchToRow(previousData, patch), version: finalVersion};
+		await emitAccountChangedIfRelevant(previousData, updatedData, 'deletion');
 		return {finalVersion, previousData, updatedData};
+	}
+
+	async compareAndSetFlags(user: User, flags: bigint): Promise<{previousData: UserRow; updatedData: UserRow} | null> {
+		assertWritableUserId(user.id);
+		const previousData = user.toRow();
+		const version = nextVersion(user.version);
+		const expected = previousData.flags ?? 0n;
+		const conditions: Array<Partial<UserRow>> = [{flags: expected}];
+		if (expected === 0n && previousData.version != null) {
+			conditions.push({flags: null, version: previousData.version});
+		}
+		for (const condition of conditions) {
+			const applied = await executeConditional(
+				Users.conditionalPatchByPk({user_id: user.id}, {flags: Db.set(flags), version: Db.set(version)}, condition),
+			);
+			if (!applied) continue;
+			const updatedData = {...previousData, flags, version};
+			await emitAccountChangedIfRelevant(previousData, updatedData);
+			return {previousData, updatedData};
+		}
+		return null;
 	}
 
 	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {

@@ -12,7 +12,6 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
 import type {
 	InstanceAppPublic,
-	InstanceCaptcha,
 	InstanceCommunity,
 	InstanceDiscoveryResponse,
 	InstanceFeatures,
@@ -28,7 +27,6 @@ import {makeAutoObservable, reaction, runInAction} from 'mobx';
 export type {
 	GifProvider,
 	GifProviderInfo,
-	InstanceCaptcha,
 	InstanceCommunity,
 	InstanceDiscoveryResponse,
 	InstanceFeatures,
@@ -51,9 +49,6 @@ export interface RuntimeConfigSnapshot {
 	gifProvider: GifProvider;
 	gifProviderDisplayName: string;
 	gifAttributionRequired: boolean;
-	captchaProvider: 'hcaptcha' | 'turnstile' | 'none';
-	hcaptchaSiteKey: string | null;
-	turnstileSiteKey: string | null;
 	apiCodeVersion: number;
 	features: InstanceFeatures;
 	sso: InstanceSsoConfig | null;
@@ -100,9 +95,12 @@ export function runtimeConfigSnapshotsAreSameInstance(
 const DEFAULT_INSTANCE_FEATURES: InstanceFeatures = {
 	voice_enabled: false,
 	stripe_enabled: false,
+	premium_enabled: false,
+	stripe_serviceable: false,
 	self_hosted: false,
 	presigned_attachment_uploads: false,
 	emails_enabled: false,
+	phone_verification_enabled: false,
 };
 
 export const DEFAULT_INSTANCE_REGISTRATION: InstanceRegistration = {
@@ -114,6 +112,7 @@ export const DEFAULT_INSTANCE_COMMUNITY: InstanceCommunity = {
 	single_community: false,
 	single_community_guild_id: null,
 	direct_messages_disabled: false,
+	guild_create_access: true,
 };
 
 export function normalizeInstanceCommunity(community?: InstanceCommunity | null): InstanceCommunity {
@@ -147,6 +146,8 @@ export const DEFAULT_APP_PUBLIC_CONFIG: InstanceAppPublic = {
 		theme_color: null,
 		status_page_url: null,
 		status_page_incident_history_url: null,
+		premium_product_name: 'Plutonium',
+		premium_info_url: null,
 	},
 	setup: {
 		configured: false,
@@ -291,9 +292,6 @@ class RuntimeConfig {
 	gifProvider: GifProvider = DEFAULT_GIF_PROVIDER_INFO.name;
 	gifProviderDisplayName: string = DEFAULT_GIF_PROVIDER_INFO.displayName;
 	gifAttributionRequired: boolean = DEFAULT_GIF_PROVIDER_INFO.attributionRequired;
-	captchaProvider: 'hcaptcha' | 'turnstile' | 'none' = 'none';
-	hcaptchaSiteKey: string | null = null;
-	turnstileSiteKey: string | null = null;
 	apiCodeVersion: number = API_CODE_VERSION;
 	features: InstanceFeatures = {...DEFAULT_INSTANCE_FEATURES};
 	sso: InstanceSsoConfig | null = null;
@@ -338,9 +336,6 @@ class RuntimeConfig {
 			gifProvider: this.gifProvider,
 			gifProviderDisplayName: this.gifProviderDisplayName,
 			gifAttributionRequired: this.gifAttributionRequired,
-			captchaProvider: this.captchaProvider,
-			hcaptchaSiteKey: this.hcaptchaSiteKey,
-			turnstileSiteKey: this.turnstileSiteKey,
 			apiCodeVersion: this.apiCodeVersion,
 			features: {...this.features},
 			sso: this.sso ? {...this.sso} : null,
@@ -398,6 +393,9 @@ class RuntimeConfig {
 			this.features = {
 				...this.features,
 				self_hosted: config.self_hosted,
+				premium_enabled: !config.self_hosted || config.policy.premium_mode === 'mirror',
+				stripe_enabled: config.billing.billing_active,
+				stripe_serviceable: config.billing.stripe_serviceable,
 			};
 			this.registration = normalizeInstanceRegistration(config.registration);
 			this.community = normalizeInstanceCommunity({
@@ -406,6 +404,7 @@ class RuntimeConfig {
 					? config.policy.single_community_guild_id
 					: null,
 				direct_messages_disabled: config.policy.direct_messages_disabled,
+				guild_create_access: config.policy.guild_create_access,
 			});
 			this.services = normalizeInstanceServices({
 				gif_enabled: config.policy.services_resolved.gif_enabled,
@@ -441,9 +440,6 @@ class RuntimeConfig {
 			this.gifProvider = gifProviderInfo.name;
 			this.gifProviderDisplayName = gifProviderInfo.displayName;
 			this.gifAttributionRequired = gifProviderInfo.attributionRequired;
-			this.captchaProvider = instance.captcha.provider;
-			this.hcaptchaSiteKey = instance.captcha.hcaptcha_site_key;
-			this.turnstileSiteKey = instance.captcha.turnstile_site_key;
 			this.apiCodeVersion = instance.api_code_version;
 			this.features = {
 				...DEFAULT_INSTANCE_FEATURES,
@@ -493,6 +489,28 @@ class RuntimeConfig {
 
 	isSelfHosted(): boolean {
 		return DeveloperOptions.selfHostedModeOverride || this.features.self_hosted;
+	}
+
+	get premiumEnabled(): boolean {
+		return this.features.premium_enabled;
+	}
+
+	get stripeEnabled(): boolean {
+		return this.features.stripe_enabled;
+	}
+
+	get stripeServiceable(): boolean {
+		return this.features.stripe_serviceable;
+	}
+
+	get premiumProductName(): string {
+		return (
+			this.appPublic.branding.premium_product_name?.trim() || DEFAULT_APP_PUBLIC_CONFIG.branding.premium_product_name
+		);
+	}
+
+	get premiumInfoUrl(): string | null {
+		return this.appPublic.branding.premium_info_url ?? null;
 	}
 
 	get emailsEnabled(): boolean {

@@ -26,6 +26,7 @@ impl EnvMap {
         self.0
             .iter()
             .find_map(|(k, v)| (k == key).then_some(v.as_str()))
+            .filter(|v| !v.trim().is_empty())
     }
 }
 
@@ -150,14 +151,8 @@ fn is_origin_host(host: url::Host<&str>) -> bool {
     }
 }
 
-pub(super) fn non_empty(raw: Option<&str>) -> Option<String> {
-    raw.map(str::trim)
-        .filter(|value| !value.is_empty())
-        .map(ToOwned::to_owned)
-}
-
 pub(super) fn parse_bucket_style(raw: Option<&str>) -> anyhow::Result<Option<BucketStyle>> {
-    let Some(raw) = non_empty(raw) else {
+    let Some(raw) = raw.map(str::trim) else {
         return Ok(None);
     };
     match raw.to_ascii_lowercase().as_str() {
@@ -210,7 +205,7 @@ pub(super) fn decode_upload_relay_secret(
     raw: Option<&str>,
     mode: DeploymentMode,
 ) -> anyhow::Result<SecretBytes> {
-    let Some(raw) = raw.map(str::trim).filter(|s| !s.is_empty()) else {
+    let Some(raw) = raw.map(str::trim) else {
         anyhow::ensure!(
             !mode.serves_upload_relay(),
             "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload and relay modes"

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
+    api::types::PremiumBranding,
     config::AdminConfig,
     middleware::auth::AuthContext,
     templates::{
@@ -19,21 +20,52 @@ use maud::{Markup, html};
 pub const MAX_GIFT_CODES: u32 = 100;
 const DEFAULT_GIFT_COUNT: u32 = 10;
 
+pub struct GiftCodesPremium {
+    pub name: String,
+    pub needs_mirror_mode: bool,
+}
+
+impl GiftCodesPremium {
+    pub fn from_branding(self_hosted: bool, branding: Option<&PremiumBranding>) -> Self {
+        let default_name = if self_hosted { "Premium" } else { "Plutonium" };
+        Self {
+            name: branding
+                .and_then(|branding| branding.name.as_deref())
+                .unwrap_or(default_name)
+                .to_owned(),
+            needs_mirror_mode: self_hosted
+                && branding.is_some_and(|branding| !branding.premium_enabled),
+        }
+    }
+}
+
 pub fn gift_codes_page(
     config: &AdminConfig,
     auth: &AuthContext,
     csrf_token: &str,
+    premium: &GiftCodesPremium,
     generated_codes: Option<&[String]>,
 ) -> Markup {
     let base = &config.base_path;
     let codes_value = generated_codes.map(|c| c.join("\n")).unwrap_or_default();
+    let description = format!(
+        "Create one-use {} gift URLs with a fixed positive duration. \
+         Lifetime gifts cannot be generated here.",
+        premium.name
+    );
 
     let content = html! {
-        (page_header(
-            "Gift Codes",
-            Some("Create one-use Plutonium gift URLs with a fixed positive \
-                  duration. Lifetime gifts cannot be generated here."),
-        ))
+        (page_header("Gift Codes", Some(&description)))
+
+        @if premium.needs_mirror_mode {
+            (card(html! {
+                p class="text-sm text-amber-700" {
+                    "The premium model is Everyone, so every member already has " (premium.name)
+                    " and gift codes cannot be generated or redeemed. Switch the premium model to \
+                     Mirror in Instance Config to use gift codes."
+                }
+            }))
+        }
 
         (card(html! {
             div class="flex flex-col gap-4" {
@@ -106,4 +138,40 @@ pub fn gift_codes_page(
         }))
     };
     admin_layout(config, auth, "Gift Codes", "gift-codes", None, content)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn branding(name: &str, premium_enabled: bool) -> PremiumBranding {
+        PremiumBranding {
+            name: Some(name.to_owned()),
+            premium_enabled,
+        }
+    }
+
+    #[test]
+    fn premium_name_comes_from_branding_with_per_deployment_fallbacks() {
+        let hosted = GiftCodesPremium::from_branding(false, None);
+        assert_eq!(hosted.name, "Plutonium");
+        assert!(!hosted.needs_mirror_mode);
+        let self_hosted = GiftCodesPremium::from_branding(true, None);
+        assert_eq!(self_hosted.name, "Premium");
+        assert!(!self_hosted.needs_mirror_mode);
+        let gold = GiftCodesPremium::from_branding(true, Some(&branding("Gold", true)));
+        assert_eq!(gold.name, "Gold");
+        assert!(!gold.needs_mirror_mode);
+    }
+
+    #[test]
+    fn everyone_mode_is_only_flagged_on_self_hosted_instances() {
+        assert!(
+            GiftCodesPremium::from_branding(true, Some(&branding("Gold", false))).needs_mirror_mode
+        );
+        assert!(
+            !GiftCodesPremium::from_branding(false, Some(&branding("Plutonium", false)))
+                .needs_mirror_mode
+        );
+    }
 }

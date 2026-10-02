@@ -4,7 +4,10 @@ import crypto from 'node:crypto';
 import {promisify} from 'node:util';
 import type {ApiContext} from '@app/api/ApiContext';
 import type {UserID} from '@app/api/BrandedTypes';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
+import {isAccountClosed, isTemporarilyBanned} from '@app/api/user/UserHelpers';
 import * as AgeUtils from '@app/api/utils/AgeUtils';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -21,7 +24,6 @@ interface ValidateAgeParams {
 }
 
 interface AccountBanStatus {
-	isPermanentlyBanned: boolean;
 	isTempBanned: boolean;
 	tempBanExpired: boolean;
 }
@@ -92,35 +94,53 @@ export async function authorizeIpByToken(
 }
 
 function checkAccountBanStatus(_ctx: ApiContext, user: User): AccountBanStatus {
-	const isPermanentlyBanned = !!(user.flags & UserFlags.DELETED);
 	const hasTempBan = !!(user.flags & UserFlags.DISABLED && user.tempBannedUntil);
-	const tempBanExpired = hasTempBan && user.tempBannedUntil! <= new Date();
+	const isTempBanned = isTemporarilyBanned(user);
 	return {
-		isPermanentlyBanned,
-		isTempBanned: hasTempBan && !tempBanExpired,
-		tempBanExpired,
+		isTempBanned,
+		tempBanExpired: hasTempBan && !isTempBanned,
 	};
 }
 
 export async function handleBanStatus(ctx: ApiContext, user: User): Promise<User> {
 	const {users} = ctx.services;
-	if (user.deletionStartedAt) throw new AccountPermanentlySuspendedError();
+	if (isAccountClosed(user)) throw new AccountPermanentlySuspendedError();
 	const banStatus = checkAccountBanStatus(ctx, user);
-	if (banStatus.isPermanentlyBanned) {
-		throw new AccountPermanentlySuspendedError();
-	}
 	if (banStatus.isTempBanned) {
 		throw new AccountTemporarilySuspendedError();
 	}
 	if (banStatus.tempBanExpired) {
-		return users.patchUpsert(
-			user.id,
-			{
-				flags: user.flags & ~UserFlags.DISABLED,
-				temp_banned_until: null,
-			},
-			user.toRow(),
-		);
+		const patched = await users.patchUpsert(user.id, {temp_banned_until: null}, user.toRow());
+		return (await users.updateFlags(user.id, (flags) => flags & ~UserFlags.DISABLED)) ?? patched;
 	}
 	return user;
+}
+
+export async function reactivateOnSignIn(
+	ctx: ApiContext,
+	user: User,
+	deletionQueue: Pick<KVAccountDeletionQueueService, 'removeFromQueue'>,
+): Promise<User> {
+	const {users} = ctx.services;
+	let currentUser = user;
+	if ((currentUser.flags & UserFlags.DISABLED) !== 0n && !currentUser.tempBannedUntil) {
+		currentUser = (await users.updateFlags(currentUser.id, (flags) => flags & ~UserFlags.DISABLED)) ?? currentUser;
+		Logger.info({userId: currentUser.id}, 'Auto-undisabled user on sign-in');
+	}
+	if ((currentUser.flags & UserFlags.SELF_DELETED) !== 0n) {
+		const pendingDeletionAt = currentUser.pendingDeletionAt;
+		currentUser = await users.updateDeletionSchedule(currentUser, {
+			flags: currentUser.flags & ~UserFlags.SELF_DELETED,
+			pending_deletion_at: null,
+			deletion_reason_code: null,
+			deletion_public_reason: null,
+			deletion_audit_log_reason: null,
+		});
+		if (pendingDeletionAt) {
+			await users.removePendingDeletion(currentUser.id, pendingDeletionAt);
+		}
+		await deletionQueue.removeFromQueue(currentUser.id);
+		Logger.info({userId: currentUser.id}, 'Auto-cancelled deletion on sign-in');
+	}
+	return currentUser;
 }

@@ -179,8 +179,6 @@ export interface VoiceEngineV2MicrophoneOptions {
 	echoCancellation?: boolean;
 	noiseSuppression?: boolean;
 	autoGainControl?: boolean;
-	deepFilter?: boolean;
-	deepFilterNoiseReductionLevel?: number;
 	maxBitrateBps?: number;
 }
 

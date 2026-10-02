@@ -2,8 +2,10 @@
 
 import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
 import {MessageAnonymizationService} from '@app/api/channel/services/message/MessageAnonymizationService';
 import {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import {MessageCrosspostService} from '@app/api/channel/services/message/MessageCrosspostService';
 import {MessageDeleteService} from '@app/api/channel/services/message/MessageDeleteService';
 import {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
 import {MessageEditService} from '@app/api/channel/services/message/MessageEditService';
@@ -17,6 +19,7 @@ import {MessageSearchService} from '@app/api/channel/services/message/MessageSea
 import {MessageSendService} from '@app/api/channel/services/message/MessageSendService';
 import {MessageSystemService} from '@app/api/channel/services/message/MessageSystemService';
 import {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import {MessageWriteLock} from '@app/api/channel/services/message/MessageWriteLock';
 import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
@@ -29,7 +32,6 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -49,6 +51,9 @@ export class MessageService {
 	public readonly deletion: MessageDeleteService;
 	public readonly retrieval: MessageRetrievalService;
 	public readonly anonymization: MessageAnonymizationService;
+	public readonly writeLock: MessageWriteLock;
+	public readonly crosspostPropagation: CrosspostPropagation;
+	public readonly crosspost: MessageCrosspostService;
 
 	constructor(
 		channelRepository: IChannelRepositoryAggregate,
@@ -69,9 +74,10 @@ export class MessageService {
 		persistenceService: MessagePersistenceService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
-		directMessageSpamMitigationService: DirectMessageSpamMitigationService,
 	) {
 		this.validation = new MessageValidationService(cacheService, limitConfigService);
+		this.writeLock = new MessageWriteLock(cacheService, channelRepository.messages);
+		this.crosspostPropagation = new CrosspostPropagation({rateLimitService, workerService});
 		this.mention = new MessageMentionService(
 			userRepository,
 			guildRepository,
@@ -130,12 +136,12 @@ export class MessageService {
 			attachmentUploadTraceRepository,
 			operationsHelpers,
 			limitConfigService,
-			directMessageSpamMitigationService,
+			messageWriteLock: this.writeLock,
+			crosspostPropagation: this.crosspostPropagation,
 		});
 		this.edit = new MessageEditService({
 			channelRepository,
 			userRepository,
-			cacheService,
 			validationService: this.validation,
 			persistenceService: this.persistence,
 			channelAuthService: this.channelAuth,
@@ -144,6 +150,8 @@ export class MessageService {
 			searchService: this.search,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			mentionService: this.mention,
+			messageWriteLock: this.writeLock,
+			crosspostPropagation: this.crosspostPropagation,
 		});
 		this.deletion = new MessageDeleteService({
 			channelRepository,
@@ -155,6 +163,15 @@ export class MessageService {
 			searchService: this.search,
 			gatewayService,
 			guildAuditLogService,
+			crosspostPropagation: this.crosspostPropagation,
+		});
+		this.crosspost = new MessageCrosspostService({
+			channelRepository,
+			channelAuthService: this.channelAuth,
+			dispatchService: this.dispatch,
+			rateLimitService,
+			messageWriteLock: this.writeLock,
+			crosspostPropagation: this.crosspostPropagation,
 		});
 		this.retrieval = new MessageRetrievalService(
 			channelRepository,

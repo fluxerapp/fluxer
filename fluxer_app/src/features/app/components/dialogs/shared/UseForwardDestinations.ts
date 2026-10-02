@@ -41,6 +41,7 @@ import {useNow} from '@app/features/ui/state/Tick';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel, GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
@@ -153,6 +154,7 @@ function resolveForwardChannelRow(channelId: string): ForwardRowIdentity | null 
 		case ChannelTypes.GUILD_VOICE:
 			return {id: channel.id, type: 'voice_channel'};
 		case ChannelTypes.GUILD_TEXT:
+		case ChannelTypes.GUILD_ANNOUNCEMENT:
 			return {id: channel.id, type: 'text_channel'};
 		default:
 			return null;
@@ -168,6 +170,7 @@ function resolveForwardDestinationRow(destination: ForwardDestination): ForwardR
 function isForwardRowValid(row: ForwardRowIdentity): boolean {
 	switch (row.type) {
 		case 'user':
+			if (row.id === FLUXERBOT_ID) return false;
 			return !RuntimeConfig.directMessagesDisabled || findDirectMessageChannel(row.id) != null;
 		case 'group_dm':
 			return true;

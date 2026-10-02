@@ -2,7 +2,6 @@
 
 use clap::Parser;
 use fluxer_push::{cli, healthcheck, run};
-use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main(flavor = "multi_thread")]
 async fn main() -> anyhow::Result<()> {
@@ -11,10 +10,7 @@ async fn main() -> anyhow::Result<()> {
         return healthcheck::run(args.mode).await;
     }
 
-    tracing_subscriber::registry()
-        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
-        .with(tracing_subscriber::fmt::layer().json())
-        .init();
+    fluxer_svc::init_tracing();
 
     let cfg = cli::load_config(&args)?;
     run(cfg).await

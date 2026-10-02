@@ -5,6 +5,7 @@ pub mod applications;
 pub mod auth;
 pub mod bans;
 mod bans_actions;
+mod billing_actions;
 pub mod codes;
 pub mod discovery;
 mod guild_tabs;

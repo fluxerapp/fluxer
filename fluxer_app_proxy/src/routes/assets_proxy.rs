@@ -510,6 +510,7 @@ mod tests {
                 client_ip_header_name: "x-forwarded-for".to_owned(),
             })),
             index_html: None,
+            local_asset_prefixes: None,
             budgets: crate::state::AppProxyBudgets::default(),
         }
     }

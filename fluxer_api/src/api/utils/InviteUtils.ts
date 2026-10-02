@@ -42,3 +42,16 @@ export function findInvite(content: string | null): string | null {
 	}
 	return null;
 }
+
+export function findInvites(content: string | null, limit: number): Array<string> {
+	if (!content) return [];
+	const pattern = getInvitePattern();
+	pattern.lastIndex = 0;
+	const codes = new Set<string>();
+	for (const match of content.matchAll(pattern)) {
+		const code = match[1] || match[2];
+		if (code) codes.add(code);
+		if (codes.size >= limit) break;
+	}
+	return [...codes];
+}

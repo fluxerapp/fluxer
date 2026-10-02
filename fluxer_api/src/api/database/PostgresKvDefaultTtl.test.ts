@@ -331,9 +331,9 @@ RETURNING updated_at::text`,
 		await seed('recent_mentions', 'rm-week', '8 days');
 		await seed('attachment_upload_traces_by_key', 'at-31', '31 days');
 		await seed('attachment_upload_traces_by_key', 'at-29', '29 days');
-		await seed('phone_lookup_cache', 'pl-8', '8 days');
+		await seed('oauth2_access_tokens', 'oa-8', '8 days');
 		await seed('donor_magic_link_tokens', 'dm-hour', '1 hour');
-		await seed('ipinfo_requests_by_hour', 'ip-day', '1 day');
+		await seed('push_subscriptions', 'ps-day', '1 day');
 		await seed('jobs_by_id', 'job', '100 days');
 		await seed('users', 'user', '100 days');
 		await seed('recent_mentions', 'rm-forever', '1 day', 'infinity');
@@ -346,8 +346,8 @@ RETURNING updated_at::text`,
 		});
 		expect(await remaining()).toEqual([
 			{table_name: 'attachment_upload_traces_by_key', row_key: 'at-29'},
-			{table_name: 'ipinfo_requests_by_hour', row_key: 'ip-day'},
 			{table_name: 'jobs_by_id', row_key: 'job'},
+			{table_name: 'push_subscriptions', row_key: 'ps-day'},
 			{table_name: 'recent_mentions', row_key: 'rm-day'},
 			{table_name: 'recent_mentions', row_key: 'rm-forever'},
 			{table_name: 'recent_mentions', row_key: 'rm-hour'},
@@ -359,13 +359,13 @@ RETURNING updated_at::text`,
 	expires_at = updated_at + CASE table_name WHEN 'recent_mentions' THEN interval '7 days' WHEN 'attachment_upload_traces_by_key' THEN interval '30 days' ELSE interval '90 days' END AS exact,
 	CASE WHEN row_key = 'rm-day' THEN updated_at = $1::timestamptz END AS unchanged
 FROM ${KV_TABLE}
-WHERE row_key IN ('rm-day', 'at-29', 'ip-day')
+WHERE row_key IN ('rm-day', 'at-29', 'ps-day')
 ORDER BY row_key`,
 			[mentionWrittenAt],
 		);
 		expect(exact.rows).toEqual([
 			{row_key: 'at-29', exact: true, unchanged: null},
-			{row_key: 'ip-day', exact: true, unchanged: null},
+			{row_key: 'ps-day', exact: true, unchanged: null},
 			{row_key: 'rm-day', exact: true, unchanged: true},
 		]);
 		const untouched = await raw.query<{row_key: string; state: string}>(
@@ -449,18 +449,18 @@ FROM generate_series(1, 2300) g`,
 	});
 
 	it('saves where a run stopped and starts the next run there', async () => {
-		const first = DEFAULT_TTL_TABLES[0]!.name;
-		const last = DEFAULT_TTL_TABLES.at(-1)!.name;
-		await seed(first, 'a', '1 hour');
-		await seed(first, 'z', '1 hour');
-		await seed(last, 'k', '1 hour');
+		const first = DEFAULT_TTL_TABLES[0]!;
+		const last = DEFAULT_TTL_TABLES.at(-1)!;
+		await seed(first.name, 'a', `${first.defaultTtlSeconds / 2} seconds`);
+		await seed(first.name, 'z', `${first.defaultTtlSeconds / 2} seconds`);
+		await seed(last.name, 'k', `${last.defaultTtlSeconds / 2} seconds`);
 
 		expect(await expireLegacyDefaultTtlRows(raw, Date.now() - 1)).toEqual({deleted: 0, expiring: 0, complete: false});
-		expect(await resumePoint()).toEqual({table: first, row_key: '', unset: 0});
+		expect(await resumePoint()).toEqual({table: first.name, row_key: '', unset: 0});
 
 		await raw.query(
 			`UPDATE ${KV_TABLE} SET row_data = jsonb_build_object('table', $1::text, 'row_key', 'm', 'unset', 0) WHERE table_name = '__fluxer_schema_migrations' AND row_key = $2`,
-			[first, DEFAULT_TTL_EXPIRY_RESUME],
+			[first.name, DEFAULT_TTL_EXPIRY_RESUME],
 		);
 		expect(await expireLegacyDefaultTtlRows(raw, Date.now() + 60_000)).toEqual({
 			deleted: 0,
@@ -469,7 +469,7 @@ FROM generate_series(1, 2300) g`,
 		});
 		const untouched = await raw.query<{expires_at: Date | null}>(
 			`SELECT expires_at FROM ${KV_TABLE} WHERE table_name = $1 AND row_key = 'a'`,
-			[first],
+			[first.name],
 		);
 		expect(untouched.rows).toEqual([{expires_at: null}]);
 		expect(await resumePoint()).toBeNull();

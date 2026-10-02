@@ -8,6 +8,7 @@ use crate::embed_normalizer::normalize_embeds;
 use crate::media_proxy::MediaProxyClient;
 use crate::resolvers::{self, ResolveContext, ResolverResult};
 use crate::types::{InvalidatedResponse, NsfwMode, UnfurlRequest, UnfurlResponse, UnfurlResult};
+use fluxer_svc::config::optional_env;
 use fluxer_svc::shard::ShardService;
 use moka::future::Cache;
 use std::sync::Arc;
@@ -32,19 +33,13 @@ impl UnfurlShard {
 
         let resolvers = resolvers::build_resolver_chain();
 
-        let media_proxy_endpoint = std::env::var("FLUXER_MEDIA_PROXY_ENDPOINT")
-            .ok()
-            .filter(|v| !v.is_empty());
-        let media_proxy_secret = std::env::var("FLUXER_MEDIA_PROXY_SECRET_KEY")
-            .ok()
-            .filter(|v| !v.is_empty());
-        let media_proxy_public_endpoint = std::env::var("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
-            .ok()
-            .filter(|v| !v.is_empty())
+        let media_proxy_endpoint = optional_env("FLUXER_MEDIA_PROXY_ENDPOINT");
+        let media_proxy_secret = optional_env("FLUXER_MEDIA_PROXY_SECRET_KEY");
+        let media_proxy_public_endpoint = optional_env("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
             .map(|v| fluxer_common::config::normalize_public_endpoint_from_env(&v));
         let static_cdn_endpoint = fluxer_common::config::normalize_public_endpoint_from_env(
-            &std::env::var("FLUXER_UNFURL_STATIC_CDN_ENDPOINT")
-                .or_else(|_| std::env::var("FLUXER_STATIC_CDN_ENDPOINT"))
+            &optional_env("FLUXER_UNFURL_STATIC_CDN_ENDPOINT")
+                .or_else(|| optional_env("FLUXER_STATIC_CDN_ENDPOINT"))
                 .unwrap_or_default(),
         );
         let (media_proxy_endpoint, media_proxy_secret) = match (

@@ -257,6 +257,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 			}
 			if (
 				channel.type !== ChannelTypes.GUILD_TEXT &&
+				channel.type !== ChannelTypes.GUILD_ANNOUNCEMENT &&
 				channel.type !== ChannelTypes.GUILD_VOICE &&
 				channel.type !== ChannelTypes.GUILD_LINK
 			) {

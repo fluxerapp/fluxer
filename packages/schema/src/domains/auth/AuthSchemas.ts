@@ -12,13 +12,7 @@ import {
 	createStringType,
 	SnowflakeStringType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import {
-	EmailType,
-	GlobalNameType,
-	PasswordType,
-	PhoneNumberType,
-	UsernameType,
-} from '@fluxer/schema/src/primitives/UserValidators';
+import {EmailType, GlobalNameType, PasswordType, UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
 
 const RegisterThemeType = createNamedStringLiteralUnion(
@@ -418,59 +412,12 @@ export const MfaBackupCodesChallengeRegenerateRequest = MfaBackupCodesChallengeR
 
 export type MfaBackupCodesChallengeRegenerateRequest = z.infer<typeof MfaBackupCodesChallengeRegenerateRequest>;
 
-export const PhoneSendVerificationRequest = z.object({
-	phone: PhoneNumberType.describe('Phone number to send verification code'),
-	channel: z
-		.enum(['sms', 'inbound_challenge'])
-		.optional()
-		.describe(
-			'Channel to deliver the OTP on. Defaults to the first available channel from server policy. Server may override to an available fallback when the requested channel is disabled.',
-		),
-});
-
-export type PhoneSendVerificationRequest = z.infer<typeof PhoneSendVerificationRequest>;
-
-const PhoneSendVerificationDeliveredResponse = z.object({
-	channel: z
-		.literal('sms')
-		.describe('Channel actually used for delivery (may differ from request when server adjusts)'),
-});
-
-const PhoneSendVerificationInboundChallengeResponse = z.object({
-	channel: z.literal('inbound_challenge').describe('The user must send Fluxer an SMS instead of receiving one'),
-	challenge_code: createStringType(4, 12).describe('The numeric code the user must text to our number'),
-	our_number: createStringType(4, 32).describe('The Twilio number the user must text the code to (E.164)'),
-	expires_at: z.iso.datetime().describe('ISO 8601 timestamp when this inbound challenge expires'),
-	reason: z
-		.enum(['voip', 'canadian', 'unknown_line_type', 'expensive_destination', 'account_forced', 'behavioural_risk'])
-		.describe('Why inbound verification is required'),
-});
-
-export const PhoneSendVerificationResponse = z.union([
-	PhoneSendVerificationDeliveredResponse,
-	PhoneSendVerificationInboundChallengeResponse,
-]);
-
-export type PhoneSendVerificationResponse = z.infer<typeof PhoneSendVerificationResponse>;
-
-export const PhoneVerifyRequest = z.object({
-	phone: PhoneNumberType.describe('Phone number being verified'),
-	code: createStringType(1, 32).describe('The verification code'),
-});
-
-export type PhoneVerifyRequest = z.infer<typeof PhoneVerifyRequest>;
-
-export const PhoneVerifyResponse = z.object({
-	verified: z.literal(true).describe('Indicates the phone number was verified successfully'),
-});
-
-export type PhoneVerifyResponse = z.infer<typeof PhoneVerifyResponse>;
-
 export const WebAuthnCredentialResponse = z.object({
 	id: z.string().describe('The credential ID'),
 	name: z.string().describe('User-assigned name for the credential'),
 	created_at: z.string().describe('When the credential was registered'),
 	last_used_at: z.string().nullable().describe('When the credential was last used'),
+	rp_id: z.string().describe('Relying party ID the passkey belongs to'),
 });
 
 export type WebAuthnCredentialResponse = z.infer<typeof WebAuthnCredentialResponse>;
@@ -527,13 +474,5 @@ export const SudoMfaMethodsResponse = z.object({
 });
 
 export type SudoMfaMethodsResponse = z.infer<typeof SudoMfaMethodsResponse>;
-
-export const InboundSmsChallengeStartResponse = z.object({
-	challenge_code: createStringType(4, 12).describe('The numeric code the user must text to our number'),
-	our_number: createStringType(4, 32).describe('The Twilio number the user must text the code to (E.164)'),
-	expires_at: z.string().describe('ISO timestamp at which the challenge becomes invalid'),
-});
-
-export type InboundSmsChallengeStartResponse = z.infer<typeof InboundSmsChallengeStartResponse>;
 
 export const LogoutAuthSessionsWithVerificationRequest = LogoutAuthSessionsRequest.extend(SudoVerificationSchema.shape);

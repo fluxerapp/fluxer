@@ -2,10 +2,10 @@
 
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind from '@app/features/input/state/InputKeybind';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
+import {useCanSendGift} from '@app/features/premium/hooks/useCanSendGift';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
@@ -87,7 +87,7 @@ export const TextareaPlusMenu = observer(
 		const showStickersButton = Accessibility.showStickersButton;
 		const showEmojiButton = Accessibility.showEmojiButton;
 		const showMessageSendButton = Accessibility.showMessageSendButton;
-		const isSelfHosted = RuntimeConfig.isSelfHosted();
+		const canSendGift = useCanSendGift();
 		const hasTextContent = textareaValue && textareaValue.trim().length > 0;
 		const cannotSendMessagesHint = i18n._(CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR);
 		const cannotUploadFilesHint = i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_UPLOAD_FILES_DESCRIPTOR);
@@ -133,7 +133,7 @@ export const TextareaPlusMenu = observer(
 						{i18n._(UPLOAD_YOUR_MESSAGE_AS_A_FILE_DESCRIPTOR)}
 					</MenuItem>
 				)}
-				{!isSelfHosted && (
+				{canSendGift && (
 					<MenuItem
 						icon={<GiftIcon data-flx="channel.textarea.textarea-plus-menu.gift-icon" />}
 						onClick={() => PremiumModalCommands.open(true)}

@@ -82,7 +82,7 @@ stale_guild_connect_timeout_cannot_abort_a_later_connect_test() ->
     try
         State0 = stale_timer_state(<<"stale-connect">>, GuildId, 4242),
         {State1, FirstTimeout} = begin_guild_connect(GuildId, State0, TestRef, Tracer),
-        State2 = complete_guild_connect(GuildId, GuildPid, State1),
+        State2 = complete_guild_connect(GuildId, GuildPid, State1, TestRef),
         {State3, SecondTimeout} = begin_guild_connect(GuildId, State2, TestRef, Tracer),
         {noreply, State4} = session:handle_info(FirstTimeout, State3),
         ?assertEqual(0, maps:get(GuildId, maps:get(guild_connect_inflight, State4), missing)),
@@ -108,7 +108,7 @@ guild_connect_success_cancels_the_connect_timeout_test() ->
         ?assertMatch({session_connect_async, _}, await_stub_cast(TestRef, 2000)),
         {_Token, TimerRef} = maps:get(GuildId, maps:get(guild_connect_timers, State1)),
         ?assert(is_integer(erlang:read_timer(TimerRef))),
-        State2 = complete_guild_connect(GuildId, GuildPid, State1),
+        State2 = complete_guild_connect(GuildId, GuildPid, State1, TestRef),
         ?assertEqual(#{}, maps:get(guild_connect_timers, State2)),
         ?assertEqual(false, erlang:read_timer(TimerRef))
     after
@@ -307,11 +307,13 @@ begin_guild_connect(GuildId, State, TestRef, Tracer) ->
     ?assertMatch({session_connect_async, _}, await_stub_cast(TestRef, 2000)),
     {State1, await_connect_timeout(Tracer, 2000)}.
 
-complete_guild_connect(GuildId, GuildPid, State) ->
+complete_guild_connect(GuildId, GuildPid, State, TestRef) ->
     {noreply, State1} = session_connection_guild:handle_guild_connect_result(
         GuildId, 0, {ok, GuildPid, guild_state_payload(GuildId)}, State
     ),
     ?assertMatch({GuildPid, _}, maps:get(GuildId, maps:get(guilds, State1))),
+    SessionId = maps:get(id, State),
+    ?assertMatch({set_session_push_hold, SessionId, _}, await_stub_cast(TestRef, 2000)),
     dropped_guild_state(GuildId, State1).
 
 stale_timer_state(SessionId, GuildId, UserId) ->

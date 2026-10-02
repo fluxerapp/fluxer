@@ -20,6 +20,7 @@ import {handleGuildCountsUpdate} from '@app/features/guild/events/GuildCountsUpd
 import {handleGuildCreate} from '@app/features/guild/events/GuildCreate';
 import {handleGuildDelete} from '@app/features/guild/events/GuildDelete';
 import {handleGuildEmojisUpdate} from '@app/features/guild/events/GuildEmojisUpdate';
+import {handleGuildHealthUpdate} from '@app/features/guild/events/GuildHealthUpdate';
 import {handleGuildMemberAdd} from '@app/features/guild/events/GuildMemberAdd';
 import {handleGuildMemberListUpdate} from '@app/features/guild/events/GuildMemberListUpdate';
 import {handleGuildMemberRemove} from '@app/features/guild/events/GuildMemberRemove';
@@ -112,6 +113,7 @@ export function createHandlerRegistry(): GatewayHandlerRegistry {
 	registry.set('GUILD_MEMBERS_CHUNK', handleGuildMembersChunk as GatewayEventHandler);
 	registry.set('GUILD_MEMBER_LIST_UPDATE', handleGuildMemberListUpdate as GatewayEventHandler);
 	registry.set('GUILD_COUNTS_UPDATE', handleGuildCountsUpdate as GatewayEventHandler);
+	registry.set('GUILD_HEALTH_UPDATE', handleGuildHealthUpdate as GatewayEventHandler);
 	registry.set('CHANNEL_MEMBER_COUNTS_UPDATE', handleChannelMemberCountsUpdate as GatewayEventHandler);
 	registry.set('GUILD_ROLE_CREATE', handleGuildRoleCreate as GatewayEventHandler);
 	registry.set('GUILD_ROLE_UPDATE', handleGuildRoleUpdate as GatewayEventHandler);

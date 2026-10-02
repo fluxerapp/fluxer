@@ -1,0 +1,172 @@
+{{- $v := .Values }}
+{{- range $name, $w := .Values.workloads }}
+{{- if not (kindIs "invalid" $w) }}
+{{- $ctx := dict "root" $ "name" $name "w" $w }}
+{{- $envFrom := concat ($v.envFrom | default list) ($w.envFrom | default list) }}
+{{- $podAnnotations := merge (dict) ($w.podAnnotations | default dict) ($v.podAnnotations | default dict) }}
+{{- $wProbes := $w.probes | default dict }}
+{{- $gProbes := $v.probes | default dict }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-web.labels" $ctx | nindent 4 }}
+spec:
+  {{- if not $w.hpa }}
+  replicas: {{ if kindIs "invalid" $w.replicas }}1{{ else }}{{ int $w.replicas }}{{ end }}
+  {{- end }}
+  {{- if not (kindIs "invalid" $w.minReadySeconds) }}
+  minReadySeconds: {{ int $w.minReadySeconds }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fluxer-web.selectorLabels" $ctx | nindent 6 }}
+  {{- with include "fluxer-web.pick" (dict "root" $ "w" $w "key" "strategy") }}
+  strategy:
+    {{- . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "fluxer-web.labels" $ctx | nindent 8 }}
+      {{- with $podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with include "fluxer-web.pick" (dict "root" $ "w" $w "key" "imagePullSecrets") }}
+      imagePullSecrets:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "fluxer-web.pick" (dict "root" $ "w" $w "key" "podSecurityContext") }}
+      securityContext:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- if not (kindIs "invalid" $w.terminationGracePeriodSeconds) }}
+      terminationGracePeriodSeconds: {{ int $w.terminationGracePeriodSeconds }}
+      {{- end }}
+      {{- with include "fluxer-web.pick" (dict "root" $ "w" $w "key" "nodeSelector") }}
+      nodeSelector:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "fluxer-web.pick" (dict "root" $ "w" $w "key" "affinity") }}
+      affinity:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "fluxer-web.pick" (dict "root" $ "w" $w "key" "tolerations") }}
+      tolerations:
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with include "fluxer-web.topologySpread" $ctx | trim }}
+      topologySpreadConstraints:
+        {{- . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: {{ include "fluxer-web.image" $ctx }}
+          imagePullPolicy: {{ ($w.image | default dict).pullPolicy | default ($v.image | default dict).pullPolicy | default "IfNotPresent" }}
+          {{- with include "fluxer-web.env" $ctx | trim }}
+          env:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- with $envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          {{- with $w.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- range $probe := list "startup" "liveness" "readiness" }}
+          {{- with hasKey $wProbes $probe | ternary (get $wProbes $probe) (get $gProbes $probe) }}
+          {{ $probe }}Probe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          {{- with $w.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with include "fluxer-web.pick" (dict "root" $ "w" $w "key" "securityContext") }}
+          securityContext:
+            {{- . | nindent 12 }}
+          {{- end }}
+          {{- with $w.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with $w.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-web.labels" $ctx | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "fluxer-web.selectorLabels" $ctx | nindent 4 }}
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP
+{{- with $w.hpa }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-web.labels" $ctx | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $name }}
+  minReplicas: {{ required (printf "%s.hpa.minReplicas is required" $name) .minReplicas }}
+  maxReplicas: {{ required (printf "%s.hpa.maxReplicas is required" $name) .maxReplicas }}
+  {{- with .targetCPUUtilizationPercentage }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ . }}
+  {{- end }}
+  {{- with .behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- with $w.pdb }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ $name }}-pdb
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "fluxer-web.labels" $ctx | nindent 4 }}
+spec:
+  {{- toYaml . | nindent 2 }}
+  selector:
+    matchLabels:
+      {{- include "fluxer-web.selectorLabels" $ctx | nindent 6 }}
+{{- end }}
+{{- end }}
+{{- end }}

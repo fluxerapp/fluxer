@@ -19,6 +19,7 @@ import {LimitConfigAdminAuditCases} from '@app/api/admin/tests/audit_coverage/Li
 import {MessageAdminAuditCases} from '@app/api/admin/tests/audit_coverage/MessageAdminAuditCases';
 import {ReportAdminAuditCases} from '@app/api/admin/tests/audit_coverage/ReportAdminAuditCases';
 import {SearchAdminAuditCases} from '@app/api/admin/tests/audit_coverage/SearchAdminAuditCases';
+import {StoreBillingAdminAuditCases} from '@app/api/admin/tests/audit_coverage/StoreBillingAdminAuditCases';
 import {SystemDmAdminAuditCases} from '@app/api/admin/tests/audit_coverage/SystemDmAdminAuditCases';
 import {UserAdminAuditCases} from '@app/api/admin/tests/audit_coverage/UserAdminAuditCases';
 import {UserWriteAdminAuditCases} from '@app/api/admin/tests/audit_coverage/UserWriteAdminAuditCases';
@@ -45,6 +46,7 @@ const ALL_CASES = [
 	...MessageAdminAuditCases,
 	...ReportAdminAuditCases,
 	...SearchAdminAuditCases,
+	...StoreBillingAdminAuditCases,
 	...SystemDmAdminAuditCases,
 	...UserAdminAuditCases,
 	...UserWriteAdminAuditCases,

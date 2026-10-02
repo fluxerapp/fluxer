@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {CallMessage} from '@app/features/channel/components/CallMessage';
+import {ChannelFollowAddMessage} from '@app/features/channel/components/ChannelFollowAddMessage';
 import {ChannelIconChangeMessage} from '@app/features/channel/components/ChannelIconChangeMessage';
 import {ChannelNameChangeMessage} from '@app/features/channel/components/ChannelNameChangeMessage';
 import {GuildJoinMessage} from '@app/features/channel/components/GuildJoinMessage';
@@ -72,6 +73,13 @@ export function getMessageComponent(
 				<ChannelIconChangeMessage
 					message={message}
 					data-flx="messaging.message-component-utils.get-message-component.channel-icon-change-message"
+				/>
+			);
+		case MessageTypes.CHANNEL_FOLLOW_ADD:
+			return (
+				<ChannelFollowAddMessage
+					message={message}
+					data-flx="messaging.message-component-utils.get-message-component.channel-follow-add-message"
 				/>
 			);
 		case MessageTypes.DEFAULT:

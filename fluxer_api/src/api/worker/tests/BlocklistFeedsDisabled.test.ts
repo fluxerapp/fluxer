@@ -14,7 +14,6 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import type {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
-import syncDisposableEmailDomains from '@app/api/worker/tasks/SyncDisposableEmailDomains';
 import syncFileShaBlocklists from '@app/api/worker/tasks/SyncFileShaBlocklists';
 import syncUrlBlocklists from '@app/api/worker/tasks/SyncUrlBlocklists';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
@@ -98,31 +97,6 @@ describe('blocklist feeds turned off', () => {
 	function publishCalls(): Array<Array<string>> {
 		return (harness.kvProvider as MockKVProvider).publishSpy.mock.calls;
 	}
-
-	it('removes every stored disposable domain without fetching a feed', async () => {
-		const adminRepository = getAdminRepository();
-		for (const domain of ['mailinator.com', 'guerrillamail.com', 'tempmail.dev']) {
-			await adminRepository.addDisposableEmailDomain(domain);
-		}
-		Config.blocklistFeeds.enabled = false;
-		const reportProgress = vi.fn(async () => {});
-
-		await syncDisposableEmailDomains({}, createHelpers({reportProgress}));
-
-		expect(await adminRepository.listDisposableEmailDomains()).toEqual([]);
-		expect(fetchSpy).not.toHaveBeenCalled();
-		expect(reportProgress).toHaveBeenLastCalledWith(3, 3, '+0 added, -3 removed');
-	});
-
-	it('reports a stored domain as disposable only while feeds are on', async () => {
-		const adminRepository = getAdminRepository();
-		await adminRepository.addDisposableEmailDomain('mailinator.com');
-
-		Config.blocklistFeeds.enabled = true;
-		expect(await adminRepository.isEmailDomainDisposable('mailinator.com')).toBe(true);
-		Config.blocklistFeeds.enabled = false;
-		expect(await adminRepository.isEmailDomainDisposable('mailinator.com')).toBe(false);
-	});
 
 	it('removes MalwareBazaar feed rows and keeps every other file-SHA ban', async () => {
 		await seedFileShas();

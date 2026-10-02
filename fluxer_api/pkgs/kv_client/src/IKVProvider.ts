@@ -74,6 +74,8 @@ export interface IKVProvider {
 	rpush(key: string, ...values: Array<string>): Promise<number>;
 	lpop(key: string, count?: number): Promise<Array<string>>;
 	llen(key: string): Promise<number>;
+	lrange(key: string, start: number, stop: number): Promise<Array<string>>;
+	ltrim(key: string, start: number, stop: number): Promise<void>;
 	hset(key: string, field: string, value: string): Promise<number>;
 	hdel(key: string, ...fields: Array<string>): Promise<number>;
 	hget(key: string, field: string): Promise<string | null>;

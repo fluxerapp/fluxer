@@ -3,6 +3,7 @@
 import {createHash} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthSession from '@app/api/auth/AuthSession';
+import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import {
 	createChannelID,
@@ -67,16 +68,17 @@ import {
 	timeRpcStepSync,
 } from '@app/api/rpc/RpcTimings';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {CustomStatusValidator} from '@app/api/user/services/CustomStatusValidator';
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {
 	mapRelationshipToResponse,
 	mapUserGuildSettingsToResponse,
 	mapUserSettingsToResponse,
 	mapUserToPrivateResponse,
+	mapWebAuthnCredentialToResponse,
 } from '@app/api/user/UserMappers';
-import {isUserAdult} from '@app/api/utils/AgeUtils';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
 import {calculateDistance, parseCoordinate} from '@app/api/utils/GeoUtils';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
@@ -97,7 +99,6 @@ import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import {pushServiceDeliveryEnrols} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {VoiceStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
@@ -269,7 +270,6 @@ export class RpcService {
 			userCacheService: this.userCacheService,
 			gatewayService: this.gatewayService,
 			discriminatorService: this.discriminatorService,
-			paymentRepository: new PaymentRepository(),
 		});
 	}
 
@@ -431,13 +431,6 @@ export class RpcService {
 					}),
 				};
 			case 'send_apns_push': {
-				const deliveryConfig = await this.instanceConfigRepository.getPushServiceDeliveryConfig();
-				if (pushServiceDeliveryEnrols(deliveryConfig, request.user_id.toString())) {
-					Logger.warn(
-						{userId: request.user_id.toString(), configVersion: deliveryConfig.config_version},
-						'push service delivery path mismatch',
-					);
-				}
 				const result = await sendApnsPush({
 					userId: request.user_id.toString(),
 					subscriptionId: request.subscription_id,
@@ -636,6 +629,16 @@ export class RpcService {
 					data: {channel},
 				};
 			}
+			case 'get_read_state': {
+				const readState = await this.readStateService.getReadState(
+					createUserID(request.user_id),
+					createChannelID(request.channel_id),
+				);
+				return {
+					type: 'get_read_state',
+					data: {last_message_id: readState?.lastMessageId?.toString() ?? null},
+				};
+			}
 			case 'get_gateway_rollout_config': {
 				const rolloutConfig = await this.instanceConfigRepository.getGatewayRolloutConfig();
 				return {
@@ -644,7 +647,7 @@ export class RpcService {
 				};
 			}
 			case 'get_push_service_delivery_config': {
-				const config = await this.instanceConfigRepository.getPushServiceDeliveryConfig();
+				const config = await this.instanceConfigRepository.getLegacyPushServiceDeliveryWire();
 				return {
 					type: 'get_push_service_delivery_config',
 					data: {config},
@@ -984,6 +987,10 @@ export class RpcService {
 			);
 			throw new UnauthorizedError();
 		}
+		if (tokenType === 'user' && isSignInRefused(userData.user)) {
+			Logger.warn({tokenType, tokenHashPrefix, userId: userId.toString()}, 'RPC session rejected by account standing');
+			throw new UnauthorizedError();
+		}
 		let user = userData.user;
 		if (user.avatarHash && user.avatarColor == null) {
 			const avatarRepairSteps: RpcTimingSteps = {};
@@ -1199,12 +1206,9 @@ export class RpcService {
 			longitude: geoipLongitude,
 			rtc_regions: rtcRegions,
 			webauthn_credentials: timeRpcStepSync(responseBuildSteps, 'map_webauthn_credentials', () =>
-				userData.webAuthnCredentials.map((cred) => ({
-					id: cred.credentialId,
-					name: cred.name,
-					created_at: cred.createdAt.toISOString(),
-					last_used_at: cred.lastUsedAt?.toISOString() ?? null,
-				})),
+				visibleWebAuthnCredentials(userData.webAuthnCredentials).map((cred) =>
+					mapWebAuthnCredentialToResponse(cred, Config.auth.passkeys.rpId),
+				),
 			),
 			version,
 		};
@@ -1560,7 +1564,7 @@ export class RpcService {
 			const needsIncomingCallRepair = settings.incomingCallFlags === 0;
 			const needsGroupDmRepair = settings.groupDmAddPermissionFlags === 0;
 			if (needsIncomingCallRepair || needsGroupDmRepair) {
-				const isAdult = isUserAdult(user.dateOfBirth);
+				const isAdult = canUserAccessNsfwContent({isBot: false, dateOfBirth: user.dateOfBirth});
 				const updatedRow = {
 					...settings.toRow(),
 					...(needsIncomingCallRepair && {
@@ -1984,7 +1988,7 @@ export class RpcService {
 							channelId,
 							messageId: createMessageID(messageId),
 							mentionCount: 0,
-							silent: true,
+							implicit: {unreadThrough: createMessageID(messageId)},
 						})
 						.catch((error) => {
 							Logger.error(

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use fluxer_common::config::normalize_public_endpoint_from_env;
-use std::env;
+use fluxer_common::config::{
+    normalize_base_path, normalize_public_endpoint_from_env, read_bool_env, read_env,
+    read_first_env, trim_trailing_slash,
+};
 
 const DEFAULT_ADMIN_OAUTH_CLIENT_ID: &str = "1234567890123456789";
 
@@ -17,12 +19,10 @@ pub struct AdminConfig {
     pub static_cdn_endpoint: String,
     pub admin_endpoint: String,
     pub web_app_endpoint: String,
-    pub kv_url: String,
     pub oauth_client_id: String,
     pub oauth_client_secret: String,
     pub oauth_redirect_uri: String,
     pub build_version: String,
-    pub release_channel: String,
     pub self_hosted: bool,
     pub proxy: ProxyConfig,
 }
@@ -47,8 +47,8 @@ impl AdminConfig {
             "FLUXER_ADMIN_ENDPOINT",
             "https://admin.fluxer.app",
         )));
-        let oauth_redirect_uri = normalize_public_endpoint_from_env(&read_env_preferred(
-            &["FLUXER_ADMIN_OAUTH_REDIRECT_URI"],
+        let oauth_redirect_uri = normalize_public_endpoint_from_env(&read_env(
+            "FLUXER_ADMIN_OAUTH_REDIRECT_URI",
             &format!("{admin_endpoint}/oauth2_callback"),
         ));
         let secret_key_base = read_env("FLUXER_ADMIN_SECRET_KEY_BASE", "");
@@ -82,38 +82,22 @@ impl AdminConfig {
                 "FLUXER_APP_ENDPOINT",
                 "https://app.fluxer.app",
             ))),
-            kv_url: read_env("FLUXER_KV_URL", ""),
             oauth_client_id: read_env(
                 "FLUXER_ADMIN_OAUTH_CLIENT_ID",
                 DEFAULT_ADMIN_OAUTH_CLIENT_ID,
             ),
             oauth_client_secret: read_env("FLUXER_ADMIN_OAUTH_CLIENT_SECRET", ""),
             oauth_redirect_uri,
-            build_version: read_env_preferred(
+            build_version: read_first_env(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),
             ),
-            release_channel: read_env_preferred(
-                &["RELEASE_CHANNEL", "FLUXER_RELEASE_CHANNEL"],
-                "stable",
-            ),
-            self_hosted: read_bool_env(&["FLUXER_SELF_HOSTED"], false),
+            self_hosted: read_bool_env("FLUXER_SELF_HOSTED", false),
             proxy: ProxyConfig {
-                trust_client_ip_header: read_bool_env(
-                    &["FLUXER_TRUST_CLIENT_IP_HEADER", "TRUST_CLIENT_IP_HEADER"],
-                    false,
-                ),
-                client_ip_header_name: read_env_preferred(
-                    &[
-                        "FLUXER_CLIENT_IP_HEADER_NAME",
-                        "FLUXER_CLIENT_IP_HEADER",
-                        "CLIENT_IP_HEADER_NAME",
-                        "CLIENT_IP_HEADER",
-                    ],
-                    "x-forwarded-for",
-                )
-                .trim()
-                .to_ascii_lowercase(),
+                trust_client_ip_header: read_bool_env("FLUXER_TRUST_CLIENT_IP_HEADER", false),
+                client_ip_header_name: read_env("FLUXER_CLIENT_IP_HEADER_NAME", "x-forwarded-for")
+                    .trim()
+                    .to_ascii_lowercase(),
             },
         })
     }
@@ -146,55 +130,21 @@ impl RuntimeEnv {
     }
 }
 
-pub fn normalize_base_path(value: &str) -> String {
-    let trimmed = value.trim().trim_matches('/');
-    if trimmed.is_empty() {
-        String::new()
-    } else {
-        format!("/{trimmed}")
-    }
-}
-
-pub fn trim_trailing_slash(value: &str) -> String {
-    value.trim_end_matches('/').to_owned()
-}
-
-pub(crate) fn read_env(name: &str, fallback: &str) -> String {
-    env::var(name).unwrap_or_else(|_| fallback.to_owned())
-}
-
-pub(crate) fn read_env_preferred(names: &[&str], fallback: &str) -> String {
-    names
-        .iter()
-        .find_map(|name| env::var(name).ok().filter(|value| !value.trim().is_empty()))
-        .unwrap_or_else(|| fallback.to_owned())
-}
-
-pub(crate) fn read_bool_env(names: &[&str], fallback: bool) -> bool {
-    let Some(value) = names.iter().find_map(|name| env::var(name).ok()) else {
-        return fallback;
-    };
-    matches!(
-        value.trim().to_ascii_lowercase().as_str(),
-        "1" | "true" | "yes" | "on"
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
     use std::sync::Mutex;
 
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
-    const MANAGED_ENV: [&str; 11] = [
+    const MANAGED_ENV: [&str; 10] = [
         "FLUXER_ENV",
         "FLUXER_ADMIN_HOST",
         "FLUXER_ADMIN_PORT",
         "FLUXER_ADMIN_ENDPOINT",
         "FLUXER_ADMIN_OAUTH_CLIENT_ID",
         "FLUXER_ADMIN_OAUTH_REDIRECT_URI",
-        "FLUXER_MASTER_CONFIG",
         "FLUXER_APP_ENDPOINT",
         "FLUXER_MEDIA_ENDPOINT",
         "FLUXER_STATIC_CDN_ENDPOINT",
@@ -291,12 +241,10 @@ mod tests {
 
             admin_endpoint: String::new(),
             web_app_endpoint: String::new(),
-            kv_url: String::new(),
             oauth_client_id: String::new(),
             oauth_client_secret: String::new(),
             oauth_redirect_uri: String::new(),
             build_version: String::new(),
-            release_channel: String::new(),
             self_hosted: false,
             proxy: ProxyConfig {
                 trust_client_ip_header: false,
@@ -321,12 +269,10 @@ mod tests {
 
             admin_endpoint: String::new(),
             web_app_endpoint: String::new(),
-            kv_url: String::new(),
             oauth_client_id: String::new(),
             oauth_client_secret: String::new(),
             oauth_redirect_uri: String::new(),
             build_version: String::new(),
-            release_channel: String::new(),
             self_hosted: false,
             proxy: ProxyConfig {
                 trust_client_ip_header: false,

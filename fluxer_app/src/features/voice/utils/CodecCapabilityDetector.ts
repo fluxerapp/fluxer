@@ -24,7 +24,7 @@ import {
 	type ScreenShareCodecProfileEntry,
 	type ScreenShareCodecRanking,
 } from '@app/features/voice/utils/ScreenShareCodecSelection';
-import {normaliseStreamingModeForContext} from '@app/features/voice/utils/ScreenShareOptions';
+import {isH264SoftwareClamped, normaliseStreamingModeForContext} from '@app/features/voice/utils/ScreenShareOptions';
 import {getProbedVideoDecoderExclusionsSync} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import type {TrackPublishDefaults, TrackPublishOptions} from 'livekit-client';
 import {BackupCodecPolicy, supportsVideoCodec, type VideoCodec, type VideoEncoding} from 'livekit-client';
@@ -182,29 +182,19 @@ function getScreenShareCodecPolicyUnsupported(
 				'H.265 (HEVC) screen sharing is off by default because it may cause compatibility issues for viewers. We’re working on improving this. Turn on H.265 screen sharing in Advanced settings to use it.',
 		};
 	}
-	if (context.firefox) {
-		switch (codec) {
-			case 'av1':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox doesn\u2019t support AV1 encoding for WebRTC yet.',
-				};
-			case 'vp9':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox\u2019s WebRTC stack doesn\u2019t expose VP9 as a publishable codec.',
-				};
-			case 'h265':
-				return {
-					supported: false,
-					reason: 'unsupported-browser',
-					detail: 'Firefox doesn\u2019t support H.265 encoding for WebRTC.',
-				};
-			default:
-				break;
-		}
+	if (context.firefox && codec === 'h265') {
+		return {
+			supported: false,
+			reason: 'unsupported-browser',
+			detail: 'Firefox doesn\u2019t support H.265 encoding for WebRTC.',
+		};
+	}
+	if (context.firefox && context.platform === 'linux' && codec === 'h264') {
+		return {
+			supported: false,
+			reason: 'unsupported-browser',
+			detail: 'The voice server doesn\u2019t accept H.264 from Firefox on Linux or Android.',
+		};
 	}
 	return null;
 }
@@ -420,6 +410,7 @@ export function buildScreenShareCodecProfile(): ScreenShareCodecProfile {
 			h265: entry('h265'),
 			av1: entry('av1'),
 		},
+		h264SoftwareClamped: isH264SoftwareClamped(),
 	};
 }
 

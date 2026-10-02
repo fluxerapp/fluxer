@@ -38,7 +38,6 @@ import type {InviteService} from '@app/api/invite/InviteService';
 import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {createGuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
-import {getIpInfoService} from '@app/api/middleware/ServiceMiddleware';
 import {
 	ensureVoiceResourcesInitialized,
 	getGatewayService,
@@ -97,7 +96,9 @@ import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2Toke
 import type {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {ReportRepository} from '@app/api/report/ReportRepository';
-import {STRIPE_API_VERSION} from '@app/api/stripe/StripeApiVersion';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {createStoreEntitlementService} from '@app/api/store_billing/StoreEntitlementServiceFactory';
+import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
@@ -106,6 +107,7 @@ import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
 import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
+import type {WebhookRepository} from '@app/api/webhook/WebhookRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
@@ -113,7 +115,7 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {RateLimitService} from '@pkgs/rate_limit/src/RateLimitService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 
 export interface WorkerDependencies {
 	kvClient: IKVProvider;
@@ -148,6 +150,7 @@ export interface WorkerDependencies {
 	emailService: IEmailService;
 	instanceConfigRepository: InstanceConfigRepository;
 	inviteService: InviteService;
+	webhookRepository: WebhookRepository;
 	workerService: IWorkerService<WorkerTaskName>;
 	unfurlerService: IUnfurlerService;
 	embedService: EmbedService;
@@ -168,6 +171,7 @@ export interface WorkerDependencies {
 	donationRepository: IDonationRepository;
 	guildService: GuildService;
 	billingRepository: BillingRepository;
+	storeEntitlementService: StoreEntitlementService;
 	stripe: Stripe | null;
 }
 
@@ -234,7 +238,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	}
 	const inviteRepository = getInviteRepository();
 	const webhookRepository = getWebhookRepository();
-	const ipInfoService = getIpInfoService();
 	const contactChangeLogService = getContactChangeLogService();
 	const apiContext = createApiContext();
 	const {channelService, guildService, inviteService} = createGuildStackServices({
@@ -260,17 +263,16 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		voiceRoomStore,
 		liveKitService,
 		voiceAvailabilityService,
-		ipInfoService,
 	});
 	const billingRepository = new BillingRepository(snowflakeService, kvClient);
-	let stripe: Stripe | null = null;
-	if (Config.stripe.enabled && Config.stripe.secretKey) {
-		stripe = new Stripe(Config.stripe.secretKey, {
-			apiVersion: STRIPE_API_VERSION,
-			httpClient: Config.dev.testModeEnabled ? Stripe.createFetchHttpClient() : undefined,
-		});
-		Logger.info('Stripe initialized');
-	}
+	const storeEntitlementService = createStoreEntitlementService({
+		userRepository,
+		userCacheService,
+		gatewayService,
+		kvClient,
+		snowflakeService,
+		premiumStateReconciliationQueueService,
+	});
 	Logger.info('Worker dependencies initialized successfully');
 	return {
 		kvClient,
@@ -305,6 +307,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		emailService,
 		instanceConfigRepository,
 		inviteService,
+		webhookRepository,
 		workerService,
 		unfurlerService,
 		embedService,
@@ -322,9 +325,12 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		guildService,
 		donationRepository,
 		billingRepository,
+		storeEntitlementService,
 		guildAuditLogService,
 		contactChangeLogService,
 		ncmecSubmissionService,
-		stripe,
+		get stripe() {
+			return getStripeClient();
+		},
 	};
 }

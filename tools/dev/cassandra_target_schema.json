@@ -1503,17 +1503,6 @@
 			"options": ""
 		},
 		{
-			"name": "banned_phone_prefixes",
-			"columns": [
-				{
-					"name": "prefix",
-					"type": "text"
-				}
-			],
-			"primary_key": "(prefix)",
-			"options": ""
-		},
-		{
 			"name": "banned_phrases",
 			"columns": [
 				{
@@ -3556,6 +3545,68 @@
 			"options": ""
 		},
 		{
+			"name": "crosspost_sources_by_channel",
+			"columns": [
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_message_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((source_channel_id), source_message_id)",
+			"options": ""
+		},
+		{
+			"name": "crossposted_messages",
+			"columns": [
+				{
+					"name": "source_message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "webhook_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "target_message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "state",
+					"type": "text"
+				},
+				{
+					"name": "reserved_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "source_fingerprint",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((source_message_id), webhook_id)",
+			"options": ""
+		},
+		{
 			"name": "data_service_search_index_files",
 			"columns": [
 				{
@@ -3627,17 +3678,6 @@
 				}
 			],
 			"primary_key": "((shard_id), index_name)",
-			"options": ""
-		},
-		{
-			"name": "disposable_email_domains",
-			"columns": [
-				{
-					"name": "domain",
-					"type": "text"
-				}
-			],
-			"primary_key": "(domain)",
 			"options": ""
 		},
 		{
@@ -4866,6 +4906,14 @@
 					"type": "text"
 				},
 				{
+					"name": "revoked_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "premium_reversed_seconds",
+					"type": "int"
+				},
+				{
 					"name": "duration_type",
 					"type": "text"
 				},
@@ -5848,64 +5896,6 @@
 			"options": ""
 		},
 		{
-			"name": "inbound_sms_challenges",
-			"columns": [
-				{
-					"name": "challenge_code",
-					"type": "text"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "our_number",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "expires_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "consumed_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "consumed_from_phone",
-					"type": "text"
-				}
-			],
-			"primary_key": "(challenge_code)",
-			"options": "default_time_to_live = 900 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "inbound_sms_challenges_by_user",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "challenge_code",
-					"type": "text"
-				},
-				{
-					"name": "expires_at",
-					"type": "timestamp"
-				}
-			],
-			"primary_key": "(user_id, created_at)",
-			"options": "CLUSTERING ORDER BY (created_at DESC) AND default_time_to_live = 900 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
-		},
-		{
 			"name": "instance_configuration",
 			"columns": [
 				{
@@ -6023,120 +6013,6 @@
 			],
 			"primary_key": "((token_), user_id)",
 			"options": "default_time_to_live = 1800 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "ipinfo_cache",
-			"columns": [
-				{
-					"name": "cache_key",
-					"type": "text"
-				},
-				{
-					"name": "payload",
-					"type": "text"
-				}
-			],
-			"primary_key": "(cache_key)",
-			"options": "default_time_to_live = 1209600 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '12'}"
-		},
-		{
-			"name": "ipinfo_requests_by_hour",
-			"columns": [
-				{
-					"name": "bucket_date",
-					"type": "text"
-				},
-				{
-					"name": "bucket_hour",
-					"type": "tinyint"
-				},
-				{
-					"name": "requested_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "event_id",
-					"type": "uuid"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				},
-				{
-					"name": "reason",
-					"type": "text"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "cache_key",
-					"type": "text"
-				},
-				{
-					"name": "request_url",
-					"type": "text"
-				},
-				{
-					"name": "http_status",
-					"type": "int"
-				},
-				{
-					"name": "outcome",
-					"type": "text"
-				},
-				{
-					"name": "available",
-					"type": "boolean"
-				},
-				{
-					"name": "risk_note",
-					"type": "text"
-				},
-				{
-					"name": "latency_ms",
-					"type": "int"
-				},
-				{
-					"name": "response_ip",
-					"type": "text"
-				},
-				{
-					"name": "country_code",
-					"type": "text"
-				},
-				{
-					"name": "asn",
-					"type": "int"
-				},
-				{
-					"name": "is_anonymous",
-					"type": "boolean"
-				},
-				{
-					"name": "is_tor",
-					"type": "boolean"
-				},
-				{
-					"name": "is_vpn",
-					"type": "boolean"
-				},
-				{
-					"name": "is_proxy",
-					"type": "boolean"
-				},
-				{
-					"name": "is_residential_proxy",
-					"type": "boolean"
-				},
-				{
-					"name": "metadata_json",
-					"type": "text"
-				}
-			],
-			"primary_key": "((bucket_date, bucket_hour), requested_at, event_id)",
-			"options": "CLUSTERING ORDER BY (requested_at DESC, event_id ASC) AND default_time_to_live = 7776000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '3'}"
 		},
 		{
 			"name": "jobs_active",
@@ -6290,37 +6166,6 @@
 			],
 			"primary_key": "(job_id)",
 			"options": "default_time_to_live = 7776000"
-		},
-		{
-			"name": "latest_risk_context_by_user",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "updated_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "subnet",
-					"type": "text"
-				},
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "asn",
-					"type": "int"
-				}
-			],
-			"primary_key": "(user_id)",
-			"options": ""
 		},
 		{
 			"name": "message_reactions",
@@ -7055,107 +6900,6 @@
 			"options": "CLUSTERING ORDER BY (created_at DESC)"
 		},
 		{
-			"name": "phone_lookup_cache",
-			"columns": [
-				{
-					"name": "phone",
-					"type": "text"
-				},
-				{
-					"name": "looked_up_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "valid",
-					"type": "boolean"
-				},
-				{
-					"name": "line_type",
-					"type": "text"
-				},
-				{
-					"name": "country_code",
-					"type": "text"
-				},
-				{
-					"name": "carrier_name",
-					"type": "text"
-				},
-				{
-					"name": "sms_pumping_risk_score",
-					"type": "int"
-				}
-			],
-			"primary_key": "(phone)",
-			"options": "default_time_to_live = 604800 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '6'}"
-		},
-		{
-			"name": "phone_tokens",
-			"columns": [
-				{
-					"name": "token_",
-					"type": "text"
-				},
-				{
-					"name": "phone",
-					"type": "text"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				}
-			],
-			"primary_key": "(token_)",
-			"options": "default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "phone_verification_attempts",
-			"columns": [
-				{
-					"name": "attempt_id",
-					"type": "uuid"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "phone",
-					"type": "text"
-				},
-				{
-					"name": "country_code",
-					"type": "text"
-				},
-				{
-					"name": "line_type",
-					"type": "text"
-				},
-				{
-					"name": "carrier_name",
-					"type": "text"
-				},
-				{
-					"name": "sms_pumping_risk_score",
-					"type": "int"
-				},
-				{
-					"name": "verdict",
-					"type": "text"
-				},
-				{
-					"name": "reject_reason",
-					"type": "text"
-				},
-				{
-					"name": "lookup_cache_hit",
-					"type": "boolean"
-				}
-			],
-			"primary_key": "(attempt_id)",
-			"options": "default_time_to_live = 7776000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '3'}"
-		},
-		{
 			"name": "pinned_dms",
 			"columns": [
 				{
@@ -7378,134 +7122,6 @@
 			"options": "CLUSTERING ORDER BY (message_id DESC) AND default_time_to_live = 604800 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'HOURS', 'compaction_window_size': '6'}"
 		},
 		{
-			"name": "registration_events_by_email_domain",
-			"columns": [
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				}
-			],
-			"primary_key": "(email_domain, created_at, user_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "registration_events_by_ip",
-			"columns": [
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				}
-			],
-			"primary_key": "(ip, created_at, user_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "registration_events_by_plus_address_base",
-			"columns": [
-				{
-					"name": "plus_address_base",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				}
-			],
-			"primary_key": "(plus_address_base, created_at, user_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
-			"name": "registration_events_by_subnet",
-			"columns": [
-				{
-					"name": "subnet",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				}
-			],
-			"primary_key": "(subnet, created_at, user_id)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC) AND default_time_to_live = 2592000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '1'}"
-		},
-		{
 			"name": "relationships",
 			"columns": [
 				{
@@ -7576,204 +7192,6 @@
 			"options": "CLUSTERING ORDER BY (source_user_id ASC, type ASC)"
 		},
 		{
-			"name": "risk_assessments",
-			"columns": [
-				{
-					"name": "assessment_id",
-					"type": "uuid"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "email",
-					"type": "text"
-				},
-				{
-					"name": "locale",
-					"type": "text"
-				},
-				{
-					"name": "risk_level",
-					"type": "text"
-				},
-				{
-					"name": "risk_score",
-					"type": "int"
-				},
-				{
-					"name": "suspicious",
-					"type": "boolean"
-				},
-				{
-					"name": "method",
-					"type": "text"
-				},
-				{
-					"name": "recommended_action",
-					"type": "text"
-				},
-				{
-					"name": "reasoning",
-					"type": "text"
-				},
-				{
-					"name": "signals_json",
-					"type": "text"
-				},
-				{
-					"name": "model_used",
-					"type": "text"
-				}
-			],
-			"primary_key": "(assessment_id)",
-			"options": ""
-		},
-		{
-			"name": "risk_assessments_by_user",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "assessment_id",
-					"type": "uuid"
-				},
-				{
-					"name": "risk_level",
-					"type": "text"
-				},
-				{
-					"name": "risk_score",
-					"type": "int"
-				}
-			],
-			"primary_key": "(user_id, created_at)",
-			"options": "CLUSTERING ORDER BY (created_at DESC)"
-		},
-		{
-			"name": "risk_outcomes_by_asn",
-			"columns": [
-				{
-					"name": "asn",
-					"type": "int"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "outcome_code",
-					"type": "text"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				}
-			],
-			"primary_key": "(asn, created_at, user_id, outcome_code)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC, outcome_code ASC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
-		},
-		{
-			"name": "risk_outcomes_by_email_domain",
-			"columns": [
-				{
-					"name": "email_domain",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "outcome_code",
-					"type": "text"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				}
-			],
-			"primary_key": "(email_domain, created_at, user_id, outcome_code)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC, outcome_code ASC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
-		},
-		{
-			"name": "risk_outcomes_by_ip",
-			"columns": [
-				{
-					"name": "ip",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "outcome_code",
-					"type": "text"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				}
-			],
-			"primary_key": "(ip, created_at, user_id, outcome_code)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC, outcome_code ASC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
-		},
-		{
-			"name": "risk_outcomes_by_subnet",
-			"columns": [
-				{
-					"name": "subnet",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "outcome_code",
-					"type": "text"
-				},
-				{
-					"name": "source",
-					"type": "text"
-				}
-			],
-			"primary_key": "(subnet, created_at, user_id, outcome_code)",
-			"options": "CLUSTERING ORDER BY (created_at DESC, user_id ASC, outcome_code ASC) AND default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
-		},
-		{
 			"name": "saved_messages",
 			"columns": [
 				{
@@ -7797,22 +7215,185 @@
 			"options": "CLUSTERING ORDER BY (message_id DESC)"
 		},
 		{
-			"name": "suspicious_email_domains",
+			"name": "store_account_tokens",
 			"columns": [
 				{
-					"name": "domain",
+					"name": "token_",
 					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
 				}
 			],
-			"primary_key": "(domain)",
+			"primary_key": "((token_))",
 			"options": ""
 		},
 		{
-			"name": "suspicious_ips",
+			"name": "store_account_tokens_by_user",
 			"columns": [
 				{
-					"name": "ip",
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "token_",
 					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "store_purchases",
+			"columns": [
+				{
+					"name": "store_key",
+					"type": "text"
+				},
+				{
+					"name": "id",
+					"type": "bigint"
+				},
+				{
+					"name": "provider",
+					"type": "text"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "slot",
+					"type": "text"
+				},
+				{
+					"name": "environment",
+					"type": "text"
+				},
+				{
+					"name": "app_id",
+					"type": "text"
+				},
+				{
+					"name": "product_id",
+					"type": "text"
+				},
+				{
+					"name": "base_plan_id",
+					"type": "text"
+				},
+				{
+					"name": "store_reference",
+					"type": "text"
+				},
+				{
+					"name": "latest_transaction_id",
+					"type": "text"
+				},
+				{
+					"name": "app_transaction_id",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "bound_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "released_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "account_token",
+					"type": "text"
+				},
+				{
+					"name": "ownership_type",
+					"type": "text"
+				},
+				{
+					"name": "state",
+					"type": "text"
+				},
+				{
+					"name": "store_state",
+					"type": "text"
+				},
+				{
+					"name": "entitled",
+					"type": "boolean"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "grace_ends_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "auto_renew",
+					"type": "boolean"
+				},
+				{
+					"name": "auto_renew_product_id",
+					"type": "text"
+				},
+				{
+					"name": "started_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "purchased_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "revoked_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "revocation_reason",
+					"type": "text"
+				},
+				{
+					"name": "linked_store_key",
+					"type": "text"
+				},
+				{
+					"name": "superseded_by_store_key",
+					"type": "text"
+				},
+				{
+					"name": "acknowledged",
+					"type": "boolean"
+				},
+				{
+					"name": "gift_code",
+					"type": "text"
+				},
+				{
+					"name": "region",
+					"type": "text"
+				},
+				{
+					"name": "last_event_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "synced_at",
+					"type": "timestamp"
 				},
 				{
 					"name": "created_at",
@@ -7823,48 +7404,31 @@
 					"type": "timestamp"
 				},
 				{
-					"name": "expires_at",
-					"type": "timestamp"
-				},
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((store_key))",
+			"options": ""
+		},
+		{
+			"name": "store_purchases_by_user",
+			"columns": [
 				{
-					"name": "source",
-					"type": "text"
-				},
-				{
-					"name": "reason",
-					"type": "text"
-				},
-				{
-					"name": "source_user_id",
+					"name": "user_id",
 					"type": "bigint"
 				},
 				{
-					"name": "deletion_reason_code",
-					"type": "int"
-				},
-				{
-					"name": "provider_name",
+					"name": "store_key",
 					"type": "text"
 				},
 				{
-					"name": "asn",
-					"type": "int"
-				},
-				{
-					"name": "asn_name",
-					"type": "text"
-				},
-				{
-					"name": "asn_type",
-					"type": "text"
-				},
-				{
-					"name": "risk_note",
-					"type": "text"
+					"name": "created_at",
+					"type": "timestamp"
 				}
 			],
-			"primary_key": "(ip)",
-			"options": "default_time_to_live = 15552000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '7'}"
+			"primary_key": "((user_id), store_key)",
+			"options": ""
 		},
 		{
 			"name": "user_connections",
@@ -7983,29 +7547,6 @@
 			],
 			"primary_key": "((user_id), event_id)",
 			"options": "CLUSTERING ORDER BY (event_id DESC)"
-		},
-		{
-			"name": "user_country_history",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "country",
-					"type": "text"
-				},
-				{
-					"name": "first_seen_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "last_seen_at",
-					"type": "timestamp"
-				}
-			],
-			"primary_key": "(user_id, country)",
-			"options": "default_time_to_live = 31536000 AND gc_grace_seconds = 864000 AND compaction = {'class': 'TimeWindowCompactionStrategy', 'compaction_window_unit': 'DAYS', 'compaction_window_size': '14'}"
 		},
 		{
 			"name": "user_dm_history",
@@ -8639,6 +8180,14 @@
 					"type": "text"
 				},
 				{
+					"name": "deletion_scheduled_by",
+					"type": "bigint"
+				},
+				{
+					"name": "deletion_scheduled_at",
+					"type": "timestamp"
+				},
+				{
 					"name": "first_refund_at",
 					"type": "timestamp"
 				},
@@ -8989,6 +8538,14 @@
 				{
 					"name": "version",
 					"type": "int"
+				},
+				{
+					"name": "rp_id",
+					"type": "text"
+				},
+				{
+					"name": "superseded_by",
+					"type": "text"
 				}
 			],
 			"primary_key": "((user_id), credential_id)",
@@ -9030,6 +8587,14 @@
 					"type": "text"
 				},
 				{
+					"name": "source_guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
 					"name": "version",
 					"type": "int"
 				}
@@ -9065,6 +8630,25 @@
 				}
 			],
 			"primary_key": "((guild_id), webhook_id)",
+			"options": ""
+		},
+		{
+			"name": "webhooks_by_source_channel_id",
+			"columns": [
+				{
+					"name": "source_channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "webhook_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((source_channel_id), webhook_id)",
 			"options": ""
 		}
 	],

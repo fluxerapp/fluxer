@@ -15,7 +15,7 @@ import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledE
 import {SudoModeRequiredError} from '@fluxer/errors/src/domains/auth/SudoModeRequiredError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 
-const LEGACY_PHONE_AUTHENTICATOR_TYPE = 1;
+const RETIRED_AUTHENTICATOR_TYPE = 1;
 
 interface EnableMfaTotpParams {
 	user: User;
@@ -101,10 +101,7 @@ export async function disableMfaTotp(ctx: ApiContext, {user, code, sudoContext}:
 	const userId = user.id;
 	const authenticatorTypes = new Set<number>(user.authenticatorTypes ?? []);
 	authenticatorTypes.delete(UserAuthenticatorTypes.TOTP);
-	const hasLegacyPhoneAuthenticator = authenticatorTypes.has(LEGACY_PHONE_AUTHENTICATOR_TYPE);
-	if (hasLegacyPhoneAuthenticator) {
-		authenticatorTypes.delete(LEGACY_PHONE_AUTHENTICATOR_TYPE);
-	}
+	authenticatorTypes.delete(RETIRED_AUTHENTICATOR_TYPE);
 	const updatedUser = await users.patchUpsert(
 		userId,
 		{

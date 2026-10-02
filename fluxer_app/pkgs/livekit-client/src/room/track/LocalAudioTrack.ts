@@ -38,6 +38,13 @@ export default class LocalAudioTrack extends LocalTrack<Track.Kind.Audio> {
 		this.checkForSilence();
 	}
 
+	protected override muteTargetFor(
+		rawTrack: MediaStreamTrack,
+		processedTrack: MediaStreamTrack | undefined,
+	): MediaStreamTrack {
+		return processedTrack ?? rawTrack;
+	}
+
 	override async mute(): Promise<typeof this> {
 		const unlock = await this.muteLock.lock();
 		try {
@@ -189,8 +196,12 @@ export default class LocalAudioTrack extends LocalTrack<Track.Kind.Audio> {
 			}
 			const processedTrack = processor.processedTrack;
 			try {
-				if (processedTrack) await this.sender?.replaceTrack(processedTrack);
+				if (processedTrack) {
+					processedTrack.enabled = !this.isMuted;
+					await this.sender?.replaceTrack(processedTrack);
+				}
 				this.processor = processor;
+				this.applyMuteState(this._mediaStreamTrack, processedTrack);
 				if (processedTrack) {
 					processedTrack.addEventListener('enable-lk-krisp-noise-filter', this.handleKrispNoiseFilterEnable);
 					processedTrack.addEventListener('disable-lk-krisp-noise-filter', this.handleKrispNoiseFilterDisable);
@@ -199,6 +210,7 @@ export default class LocalAudioTrack extends LocalTrack<Track.Kind.Audio> {
 			} catch (error) {
 				const cleanupErrors: Array<unknown> = [];
 				if (this.processor === processor) this.processor = undefined;
+				this.applyMuteState(this._mediaStreamTrack, undefined);
 				processedTrack?.removeEventListener('enable-lk-krisp-noise-filter', this.handleKrispNoiseFilterEnable);
 				processedTrack?.removeEventListener('disable-lk-krisp-noise-filter', this.handleKrispNoiseFilterDisable);
 				try {

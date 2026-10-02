@@ -30,6 +30,10 @@ export class ChannelRepository extends IChannelRepository {
 		return this.repository.messageInteractions;
 	}
 
+	get crossposts() {
+		return this.repository.crossposts;
+	}
+
 	async findUnique(channelId: ChannelID): Promise<Channel | null> {
 		return this.repository.channelData.findUnique(channelId);
 	}

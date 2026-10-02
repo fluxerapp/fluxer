@@ -3,10 +3,13 @@
 mod android_association;
 mod apple_association;
 mod assets_proxy;
+mod client_geoip;
 mod file_stream;
 mod health;
 mod spa_index;
 mod spa_static;
+
+pub use spa_index::present_local_asset_prefixes;
 
 use crate::state::AppState;
 use axum::{
@@ -35,6 +38,10 @@ pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/_health", get(health::health))
         .route("/_ready", get(health::ready))
+        .route(
+            client_geoip::CLIENT_GEOIP_PATH,
+            get(client_geoip::client_geoip),
+        )
         .route(
             "/.well-known/apple-app-site-association",
             get(apple_association::apple_app_site_association),

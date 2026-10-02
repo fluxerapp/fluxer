@@ -590,6 +590,7 @@ export const DMList = observer(() => {
 					)}
 					{showPremiumFeatures && (
 						<ClickableItem
+							isSelected={location.pathname === Routes.PLUTONIUM}
 							onClick={() => PremiumModalCommands.open()}
 							data-flx="channel.direct-message.dm-list.clickable-item.open"
 						>

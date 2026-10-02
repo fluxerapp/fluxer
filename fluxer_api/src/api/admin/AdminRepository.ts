@@ -2,7 +2,7 @@
 
 import type {AdminAuditLog, BannedIpEntry, BannedIpKind, IAdminRepository} from '@app/api/admin/IAdminRepository';
 import {createUserID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import {ContentBlocklistCategory} from '@app/api/constants/ContentModeration';
 import {
 	deleteOneOrMany,
@@ -20,21 +20,16 @@ import type {
 	BannedUrlDomainRow,
 	BannedUrlRow,
 } from '@app/api/database/types/AdminArchiveTypes';
-import {isAccountPolicyContactDomainReputationExempt} from '@app/api/risk/AccountPolicyService';
-import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
 import {
 	AdminAuditLogs,
 	BannedAvatarHashes,
 	BannedEmails,
 	BannedFileShas,
 	BannedIps,
-	BannedPhonePrefixes,
 	BannedPhrases,
 	BannedProfileSubstrings,
 	BannedUrlDomains,
 	BannedUrls,
-	DisposableEmailDomains,
-	SuspiciousEmailDomains,
 } from '@app/api/Tables';
 import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
 import {canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
@@ -51,20 +46,24 @@ const IS_EMAIL_BANNED_QUERY = BannedEmails.select({
 	where: BannedEmails.where.eq('email_lower'),
 });
 const LOAD_ALL_BANNED_EMAILS_QUERY = BannedEmails.select();
-const IS_EMAIL_DOMAIN_SUSPICIOUS_QUERY = SuspiciousEmailDomains.select({
-	where: SuspiciousEmailDomains.where.eq('domain'),
-});
-const LOAD_ALL_SUSPICIOUS_EMAIL_DOMAINS_QUERY = SuspiciousEmailDomains.select();
-const IS_EMAIL_DOMAIN_DISPOSABLE_QUERY = DisposableEmailDomains.select({
-	where: DisposableEmailDomains.where.eq('domain'),
-});
-const createLoadDisposableEmailDomainsQuery = (limit?: number) =>
-	limit ? DisposableEmailDomains.select({limit}) : DisposableEmailDomains.select();
+
+function getEmailBlocklistKeys(email: string): Array<string> {
+	const emailLower = email.trim().toLowerCase();
+	const atIndex = emailLower.lastIndexOf('@');
+	if (atIndex <= 0) {
+		return [emailLower];
+	}
+	const labels = emailLower.slice(atIndex + 1).split('.');
+	const keys = [emailLower];
+	for (let index = 0; index < labels.length - 1; index++) {
+		keys.push(`@${labels.slice(index).join('.')}`);
+	}
+	return keys;
+}
 const IS_PHRASE_BANNED_QUERY = BannedPhrases.select({
 	where: BannedPhrases.where.eq('phrase'),
 });
 const LOAD_ALL_BANNED_PHRASES_QUERY = BannedPhrases.select();
-const LOAD_ALL_BANNED_PHONE_PREFIXES_QUERY = BannedPhonePrefixes.select();
 const IS_URL_BANNED_QUERY = BannedUrls.select({
 	where: BannedUrls.where.eq('url_canonical'),
 });
@@ -239,11 +238,15 @@ export class AdminRepository implements IAdminRepository {
 	}
 
 	async isEmailBanned(email: string): Promise<boolean> {
-		const emailLower = email.toLowerCase();
-		const result = await fetchOne<{
-			email_lower: string;
-		}>(IS_EMAIL_BANNED_QUERY.bind({email_lower: emailLower}));
-		return !!result;
+		for (const key of getEmailBlocklistKeys(email)) {
+			const result = await fetchOne<{
+				email_lower: string;
+			}>(IS_EMAIL_BANNED_QUERY.bind({email_lower: key}));
+			if (result) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	async banEmail(email: string): Promise<void> {
@@ -261,59 +264,6 @@ export class AdminRepository implements IAdminRepository {
 			email_lower: string;
 		}>(LOAD_ALL_BANNED_EMAILS_QUERY.bind({}));
 		return rows.map((row) => row.email_lower);
-	}
-
-	async isEmailDomainSuspicious(domain: string): Promise<boolean> {
-		const domainLower = domain.toLowerCase();
-		if (isAccountPolicyContactDomainReputationExempt(domainLower)) return false;
-		const result = await fetchOne<{
-			domain: string;
-		}>(IS_EMAIL_DOMAIN_SUSPICIOUS_QUERY.bind({domain: domainLower}));
-		return !!result;
-	}
-
-	async addSuspiciousEmailDomain(domain: string): Promise<void> {
-		const domainLower = domain.toLowerCase();
-		await upsertOne(SuspiciousEmailDomains.insert({domain: domainLower}));
-	}
-
-	async removeSuspiciousEmailDomain(domain: string): Promise<void> {
-		const domainLower = domain.toLowerCase();
-		await deleteOneOrMany(SuspiciousEmailDomains.deleteByPk({domain: domainLower}));
-	}
-
-	async loadAllSuspiciousEmailDomains(): Promise<Array<string>> {
-		const rows = await fetchMany<{
-			domain: string;
-		}>(LOAD_ALL_SUSPICIOUS_EMAIL_DOMAINS_QUERY.bind({}));
-		return rows.map((row) => row.domain);
-	}
-
-	async isEmailDomainDisposable(domain: string): Promise<boolean> {
-		if (!Config.blocklistFeeds.enabled) return false;
-		const domainLower = domain.toLowerCase();
-		if (isAccountPolicyContactDomainReputationExempt(domainLower)) return false;
-		const result = await fetchOne<{
-			domain: string;
-		}>(IS_EMAIL_DOMAIN_DISPOSABLE_QUERY.bind({domain: domainLower}));
-		return !!result;
-	}
-
-	async addDisposableEmailDomain(domain: string): Promise<void> {
-		const domainLower = domain.toLowerCase();
-		await upsertOne(DisposableEmailDomains.insert({domain: domainLower}));
-	}
-
-	async removeDisposableEmailDomain(domain: string): Promise<void> {
-		const domainLower = domain.toLowerCase();
-		await deleteOneOrMany(DisposableEmailDomains.deleteByPk({domain: domainLower}));
-	}
-
-	async listDisposableEmailDomains(limit?: number): Promise<Array<string>> {
-		const rows = await fetchMany<{
-			domain: string;
-		}>(createLoadDisposableEmailDomainsQuery(limit).bind({}));
-		return rows.map((row) => row.domain);
 	}
 
 	async isPhraseBanned(phrase: string): Promise<boolean> {
@@ -339,13 +289,6 @@ export class AdminRepository implements IAdminRepository {
 			phrase: string;
 		}>(LOAD_ALL_BANNED_PHRASES_QUERY.bind({}));
 		return rows.map((row) => row.phrase);
-	}
-
-	async loadAllBannedPhonePrefixes(): Promise<Array<string>> {
-		const rows = await fetchMany<{
-			prefix: string;
-		}>(LOAD_ALL_BANNED_PHONE_PREFIXES_QUERY.bind({}));
-		return rows.map((row) => row.prefix);
 	}
 
 	async isUrlBanned(url: string): Promise<boolean> {

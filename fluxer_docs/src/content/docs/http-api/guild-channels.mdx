@@ -22,6 +22,7 @@ These are the [channel types](/http-api/channels/#channel-types) that can exist 
 | --- | --- | --- |
 | 0 | GUILD_TEXT | Text channel that has messages and slowmode |
 | 2 | GUILD_VOICE | Voice channel that has messages, voice sessions, and Go Live streams |
+| 5 | GUILD_ANNOUNCEMENT | Text channel whose messages can be [published](/topics/announcement-channels/) to the channels that follow it |
 | 4 | GUILD_CATEGORY | Category that groups other guild channels and supplies inherited permission overwrites |
 | 998 | GUILD_LINK | Channel whose only content is an external destination URL |
 
@@ -169,7 +170,7 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 
 <sup>1</sup> Normalisation strips control, join, bidirectional, and tag code points, collapses whitespace runs to one space, and trims. An empty result is rejected with `NAME_EMPTY_AFTER_NORMALIZATION`
 
-<sup>2</sup> A text channel name is also lowercased, its whitespace replaced with hyphens, and ASCII punctuation other than `-`, `.`, and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). That pass rewrites the stored name and never fails the request
+<sup>2</sup> A text or announcement channel name is also lowercased, its whitespace replaced with hyphens, and ASCII punctuation other than `-`, `.`, and `_` removed, unless the guild has [TEXT_CHANNEL_FLEXIBLE_NAMES](/http-api/guilds/#guild-features). That pass rewrites the stored name and never fails the request
 
 <sup>3</sup> An `http` or `https` URL of at most 2048 characters with a host and no embedded credentials. It is stored for every channel type
 
@@ -193,7 +194,7 @@ A value longer than 10000 characters is rejected with `STRING_LENGTH_INVALID` be
 
 The guild holds at most the instance-configured `max_guild_channels` [limit](/http-api/instance/#limit-keys), defaulting to 500, and a parent category holds at most `max_channels_per_category`, defaulting to 50. Reaching the guild limit returns 400 `MAX_GUILD_CHANNELS` and reaching the category limit returns 400 `MAX_CATEGORY_CHANNELS`. Each error message states the resolved limit. The new channel is created with no RTC region.
 
-The new channel takes a position derived from its siblings. A category, and a channel created with no parent, is placed after the highest position in the guild. A voice channel created inside a category is placed after the last voice sibling, or after the last text or link sibling when the category holds no voice channel. A text or link channel is placed after the last text or link sibling, and a channel with no such sibling is placed directly after the category itself. The rest of the guild is not renumbered, so two channels can hold the same stored position until the next [hierarchy update](#modify-guild-channel-positions) renumbers them.
+The new channel takes a position derived from its siblings. A category, and a channel created with no parent, is placed after the highest position in the guild. A voice channel created inside a category is placed after the last voice sibling, or after the last text, announcement, or link sibling when the category holds no voice channel. A text, announcement, or link channel is placed after the last text, announcement, or link sibling, and a channel with no such sibling is placed directly after the category itself. The rest of the guild is not renumbered, so two channels can hold the same stored position until the next [hierarchy update](#modify-guild-channel-positions) renumbers them.
 
 :::caution[Overwrites are checked against the parent category]
 Fluxer compares the allowed bits of every supplied overwrite against the caller's effective permissions in the parent category, or in the guild when no parent is supplied. A bit the caller does not hold there fails the entire request with 403 `MISSING_PERMISSIONS`.
@@ -258,7 +259,7 @@ Renumbering can change positions of channels not named in the request. An entry 
 The top-level body is an array of [channel position objects](#channel-position-object) of any length, including zero. Every channel, parent, and sibling an entry names must exist in this guild. A category cannot be given a parent, and a parent that is not a category is refused. A channel cannot be positioned relative to itself or to one of its own children. Moving a channel into a full category is refused with 400 `MAX_CATEGORY_CHANNELS`.
 
 :::caution[Inside a category, voice channels come last]
-Placing a voice channel above a text or link sibling, or placing a text or link channel below a voice sibling, returns `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`.
+Placing a voice channel above a text, announcement, or link sibling, or placing one of those below a voice sibling, returns `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`.
 :::
 
 Channels at the guild root are exempt from this restriction.

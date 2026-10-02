@@ -153,8 +153,7 @@ subscribe_and_drain(GuildPid, Requests) ->
         end,
         Requests
     ),
-    GuildPid ! flush_lazy_subscribe_buffer,
-    SubscribedState = get_guild_state(GuildPid),
+    SubscribedState = drain_lazy_subscribe_buffer(GuildPid),
     assert_requests_subscribed(Requests, SubscribedState),
     await_initial_syncs(Requests, SubscribedState),
     _ = collect_captures(100),
@@ -258,6 +257,14 @@ presence_update(GuildPid, UserId, Status) ->
     GuildPid ! {presence, UserId, #{<<"status">> => Status, <<"mobile">> => false}},
     _ = gen_server:call(GuildPid, {get_counts}, 60000),
     ok.
+
+drain_lazy_subscribe_buffer(GuildPid) ->
+    GuildPid ! flush_lazy_subscribe_buffer,
+    State = get_guild_state(GuildPid),
+    case maps:is_key(lazy_subscribe_buffer, State) of
+        true -> drain_lazy_subscribe_buffer(GuildPid);
+        false -> State
+    end.
 
 get_guild_state(GuildPid) ->
     gen_server:call(GuildPid, {get_sessions}, 60000).

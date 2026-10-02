@@ -34,7 +34,6 @@ describe('deriveDomain', () => {
 	const baseConfig: DomainConfig = {
 		base_domain: 'fluxer.dev',
 		public_scheme: 'https',
-		internal_scheme: 'http',
 	};
 	test.each([
 		'api',
@@ -44,7 +43,6 @@ describe('deriveDomain', () => {
 		'media',
 		'static_cdn',
 		'admin',
-		'docs',
 		'marketing',
 		'invite',
 		'gift',
@@ -72,9 +70,7 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'localhost',
 			public_scheme: 'http',
-			internal_scheme: 'http',
 			public_port: 8088,
-			internal_port: 8088,
 		},
 		expected: {
 			api: 'http://localhost:8088/api',
@@ -84,7 +80,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'http://localhost:8088/media',
 			static_cdn: 'http://localhost:8088',
 			admin: 'http://localhost:8088/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'http://localhost:8088/marketing',
 			invite: 'http://localhost:8088/invite',
 			gift: 'http://localhost:8088/gift',
@@ -95,9 +90,7 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'fluxer.app',
 			public_scheme: 'https',
-			internal_scheme: 'http',
 			public_port: 443,
-			internal_port: 8080,
 		},
 		expected: {
 			api: 'https://fluxer.app/api',
@@ -107,7 +100,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'https://fluxer.app/media',
 			static_cdn: 'https://fluxer.app',
 			admin: 'https://fluxer.app/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'https://fluxer.app/marketing',
 			invite: 'https://fluxer.app/invite',
 			gift: 'https://fluxer.app/gift',
@@ -118,9 +110,7 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'staging.fluxer.dev',
 			public_scheme: 'https',
-			internal_scheme: 'http',
 			public_port: 8443,
-			internal_port: 8080,
 		},
 		expected: {
 			api: 'https://staging.fluxer.dev:8443/api',
@@ -130,7 +120,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'https://staging.fluxer.dev:8443/media',
 			static_cdn: 'https://staging.fluxer.dev:8443',
 			admin: 'https://staging.fluxer.dev:8443/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'https://staging.fluxer.dev:8443/marketing',
 			invite: 'https://staging.fluxer.dev:8443/invite',
 			gift: 'https://staging.fluxer.dev:8443/gift',
@@ -141,7 +130,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'fluxer.app',
 			public_scheme: 'https',
-			internal_scheme: 'http',
 			public_port: 443,
 			static_cdn_domain: 'cdn.fluxer.app',
 		},
@@ -153,7 +141,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'https://fluxer.app/media',
 			static_cdn: 'https://cdn.fluxer.app',
 			admin: 'https://fluxer.app/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'https://fluxer.app/marketing',
 			invite: 'https://fluxer.app/invite',
 			gift: 'https://fluxer.app/gift',
@@ -164,7 +151,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'fluxer.app',
 			public_scheme: 'https',
-			internal_scheme: 'http',
 			public_port: 443,
 			invite_domain: 'fluxer.gg',
 			gift_domain: 'fluxer.gift',
@@ -177,7 +163,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'https://fluxer.app/media',
 			static_cdn: 'https://fluxer.app',
 			admin: 'https://fluxer.app/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'https://fluxer.app/marketing',
 			invite: 'https://fluxer.gg/invite',
 			gift: 'https://fluxer.gift/gift',
@@ -188,7 +173,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'canary.fluxer.app',
 			public_scheme: 'https',
-			internal_scheme: 'http',
 			public_port: 443,
 			static_cdn_domain: 'cdn-canary.fluxer.app',
 		},
@@ -200,7 +184,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'https://canary.fluxer.app/media',
 			static_cdn: 'https://cdn-canary.fluxer.app',
 			admin: 'https://canary.fluxer.app/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'https://canary.fluxer.app/marketing',
 			invite: 'https://canary.fluxer.app/invite',
 			gift: 'https://canary.fluxer.app/gift',
@@ -211,7 +194,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'example.com',
 			public_scheme: 'http',
-			internal_scheme: 'http',
 			public_port: 80,
 		},
 		expected: {
@@ -222,7 +204,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'http://example.com/media',
 			static_cdn: 'http://example.com',
 			admin: 'http://example.com/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'http://example.com/marketing',
 			invite: 'http://example.com/invite',
 			gift: 'http://example.com/gift',
@@ -233,7 +214,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'example.com',
 			public_scheme: 'https',
-			internal_scheme: 'http',
 		},
 		expected: {
 			api: 'https://example.com/api',
@@ -243,7 +223,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'https://example.com/media',
 			static_cdn: 'https://example.com',
 			admin: 'https://example.com/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'https://example.com/marketing',
 			invite: 'https://example.com/invite',
 			gift: 'https://example.com/gift',
@@ -254,7 +233,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: '127.0.0.1',
 			public_scheme: 'http',
-			internal_scheme: 'http',
 			public_port: 8088,
 		},
 		expected: {
@@ -265,7 +243,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'http://127.0.0.1:8088/media',
 			static_cdn: 'http://127.0.0.1:8088',
 			admin: 'http://127.0.0.1:8088/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'http://127.0.0.1:8088/marketing',
 			invite: 'http://127.0.0.1:8088/invite',
 			gift: 'http://127.0.0.1:8088/gift',
@@ -276,7 +253,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 		config: {
 			base_domain: 'localhost',
 			public_scheme: 'http',
-			internal_scheme: 'http',
 			public_port: 8088,
 			static_cdn_domain: 'cdn.example.com',
 		},
@@ -288,7 +264,6 @@ const endpointScenarios: Array<EndpointScenario> = [
 			media: 'http://localhost:8088/media',
 			static_cdn: 'https://cdn.example.com',
 			admin: 'http://localhost:8088/admin',
-			docs: 'https://fluxer.dev',
 			marketing: 'http://localhost:8088/marketing',
 			invite: 'http://localhost:8088/invite',
 			gift: 'http://localhost:8088/gift',
@@ -469,10 +444,7 @@ describe('endpoints derived from a public origin', () => {
 	test('an origin with a non-standard port ports every derived endpoint', () => {
 		const origin = parsePublicOrigin('https://chat.example.com:29080');
 		assert.ok(origin);
-		const endpoints = deriveEndpointsFromDomain({
-			...origin,
-			internal_scheme: 'http',
-		});
+		const endpoints = deriveEndpointsFromDomain(origin);
 		expect(endpoints.api_client).toBe('https://chat.example.com:29080/api');
 		expect(endpoints.app).toBe('https://chat.example.com:29080');
 		expect(endpoints.gateway).toBe('wss://chat.example.com:29080/gateway');
@@ -481,10 +453,7 @@ describe('endpoints derived from a public origin', () => {
 	test('an origin written with an explicit :443 derives portless endpoints', () => {
 		const origin = parsePublicOrigin('https://chat.example.com:443');
 		assert.ok(origin);
-		const endpoints = deriveEndpointsFromDomain({
-			...origin,
-			internal_scheme: 'http',
-		});
+		const endpoints = deriveEndpointsFromDomain(origin);
 		expect(endpoints.admin).toBe('https://chat.example.com/admin');
 		expect(endpoints.app).toBe('https://chat.example.com');
 		expect(endpoints.gateway).toBe('wss://chat.example.com/gateway');

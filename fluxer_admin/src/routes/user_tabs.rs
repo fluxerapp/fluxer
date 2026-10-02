@@ -111,11 +111,47 @@ pub async fn render(
                 query.delete_all_messages_channel_count.unwrap_or(0),
                 query.delete_all_messages_message_count.unwrap_or(0),
             ));
+            let deletion_scheduler = match u.deletion_scheduled_by.as_deref() {
+                Some(scheduler_id) if u.pending_deletion_at.is_some() && scheduler_id != u.id => {
+                    client
+                        .get_user_by_id(scheduler_id)
+                        .await
+                        .log_error("load deletion scheduler")
+                }
+                _ => None,
+            };
+            let ban_logs = if u.temp_banned_until.is_some()
+                && acl::has_permission(admin_acls, acl::AUDIT_LOG_VIEW)
+            {
+                client
+                    .search_audit_logs(&SearchAuditLogsParams {
+                        query: None,
+                        admin_user_id: None,
+                        target_id: Some(user_id.to_owned()),
+                        target_type: Some("user".to_owned()),
+                        access: Some("write".to_owned()),
+                        sort_by: Some("created_at".to_owned()),
+                        sort_order: Some("desc".to_owned()),
+                        limit: 100,
+                        offset: 0,
+                    })
+                    .await
+                    .log_error("load ban audit logs")
+                    .map(|response| response.logs)
+                    .unwrap_or_default()
+            } else {
+                Vec::new()
+            };
+            let context = tabs::moderation::ModerationContext {
+                deletion_scheduler: deletion_scheduler.as_ref(),
+                current_ban: tabs::moderation::find_current_ban(&u, &ban_logs),
+            };
             Some(tabs::moderation::moderation_tab(
                 config,
                 &u,
                 csrf_token,
                 admin_acls,
+                &context,
                 query.message_shred_job_id.as_deref(),
                 message_shred_status.as_ref(),
                 delete_all_messages_dry_run,

@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
+import Keybind from '@app/features/input/state/InputKeybind';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {
 	createVoiceEngineV2AppAudioSettingsSnapshot,
 	hasVoiceEngineV2InputProcessorSettingsChanged,
 	hasVoiceEngineV2MicrophoneCaptureSettingsChanged,
+	hasVoiceEngineV2MicrophonePublishSettingsChanged,
 	type VoiceEngineV2AppAudioSettingsSnapshot,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppAudioSettingsSync';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import StreamAudioPrefs from '@app/features/voice/state/StreamAudioPrefs';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import NoiseSuppressionAvailability from '@app/features/voice/utils/noise_suppression/NoiseSuppressionAvailability';
 import type {Room} from 'livekit-client';
+import {reaction} from 'mobx';
 
 export interface VoiceEngineV2AppAudioPreferencesSnapshot {
 	readonly audioSettings: VoiceEngineV2AppAudioSettingsSnapshot;
@@ -20,12 +23,13 @@ export interface VoiceEngineV2AppAudioPreferencesSnapshot {
 	readonly participantMutes: Readonly<Record<string, boolean>>;
 	readonly connectionVolumes: Readonly<Record<string, Readonly<Record<string, number>>>>;
 	readonly streamAudioRevision: number;
+	readonly pushToMuteActive: boolean;
 }
 
 export interface VoiceEngineV2AppAudioPreferencesMediaAdapter {
-	refreshMicrophone(room: Room): Promise<void>;
-	refreshLocalVoiceInputProcessor(room: Room): Promise<void>;
-	applyLocalInputVolume(room: Room): void;
+	requestMicrophoneRefresh(room: Room, request: {republish: boolean}): Promise<void>;
+	configureVoiceInput(room: Room): void;
+	handleInputKeybindChange(room: Room): void;
 	applyAllLocalAudioPreferences(room: Room): void;
 }
 
@@ -45,33 +49,34 @@ export function createVoiceEngineV2AppAudioPreferencesSnapshot(): VoiceEngineV2A
 		participantMutes: ParticipantVolume.localMutes,
 		connectionVolumes: ParticipantVolume.connectionVolumesByLocalConnectionId,
 		streamAudioRevision: StreamAudioPrefs.audioPrefsRevision,
+		pushToMuteActive: Keybind.isPushToMuteEffective(),
 	};
 }
 
 export function createVoiceEngineV2AppAudioPreferencesSyncSources(): VoiceEngineV2AppAudioPreferencesSyncSources {
 	return {
-		stores: [VoiceSettings, VoiceDevicePermissionState, ParticipantVolume, StreamAudioPrefs, ExperimentAssignments],
+		stores: [
+			VoiceSettings,
+			VoiceDevicePermissionState,
+			ParticipantVolume,
+			StreamAudioPrefs,
+			NoiseSuppressionAvailability,
+			{
+				subscribe: (listener) => reaction(() => [Keybind.transmitMode, Keybind.isPushToMuteEffective()], listener),
+			},
+		],
 		getSnapshot: createVoiceEngineV2AppAudioPreferencesSnapshot,
 	};
 }
 
-function refreshMicrophoneCapture(
+function refreshMicrophone(
 	room: Room,
 	adapter: VoiceEngineV2AppAudioPreferencesMediaAdapter,
 	logger: VoiceEngineV2AppAudioPreferencesLogger,
+	republish: boolean,
 ): void {
-	void adapter.refreshMicrophone(room).catch((error) => {
+	void adapter.requestMicrophoneRefresh(room, {republish}).catch((error) => {
 		logger.warn('Failed to refresh microphone after audio settings change', {error});
-	});
-}
-
-function refreshVoiceInputProcessor(
-	room: Room,
-	adapter: VoiceEngineV2AppAudioPreferencesMediaAdapter,
-	logger: VoiceEngineV2AppAudioPreferencesLogger,
-): void {
-	void adapter.refreshLocalVoiceInputProcessor(room).catch((error) => {
-		logger.warn('Failed to refresh voice input processor after audio settings change', {error});
 	});
 }
 
@@ -84,17 +89,17 @@ export function syncVoiceEngineV2AppAudioPreferences(
 ): void {
 	assert.ok(room !== null && typeof room === 'object', 'audio preferences sync room must be an object');
 	assert.equal(
-		typeof adapter.refreshMicrophone,
+		typeof adapter.requestMicrophoneRefresh,
 		'function',
-		'audio preferences sync adapter missing refreshMicrophone',
+		'audio preferences sync adapter missing requestMicrophoneRefresh',
 	);
 	assert.equal(typeof logger.warn, 'function', 'audio preferences sync logger missing warn');
-	if (hasVoiceEngineV2MicrophoneCaptureSettingsChanged(previous.audioSettings, current.audioSettings)) {
-		refreshMicrophoneCapture(room, adapter, logger);
+	if (previous.pushToMuteActive !== current.pushToMuteActive) adapter.handleInputKeybindChange(room);
+	const republish = hasVoiceEngineV2MicrophonePublishSettingsChanged(previous.audioSettings, current.audioSettings);
+	if (republish || hasVoiceEngineV2MicrophoneCaptureSettingsChanged(previous.audioSettings, current.audioSettings)) {
+		refreshMicrophone(room, adapter, logger, republish);
 	} else if (hasVoiceEngineV2InputProcessorSettingsChanged(previous.audioSettings, current.audioSettings)) {
-		refreshVoiceInputProcessor(room, adapter, logger);
-	} else if (current.audioSettings.inputVolume !== previous.audioSettings.inputVolume) {
-		adapter.applyLocalInputVolume(room);
+		adapter.configureVoiceInput(room);
 	}
 	if (
 		current.audioSettings.outputVolume !== previous.audioSettings.outputVolume ||

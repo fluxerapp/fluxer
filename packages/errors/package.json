@@ -12,7 +12,6 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@fluxer/config": "workspace:*",
 		"@fluxer/constants": "workspace:*",
 		"@fluxer/hono_types": "workspace:*",
 		"@fluxer/i18n": "workspace:*",

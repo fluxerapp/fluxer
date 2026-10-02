@@ -73,8 +73,8 @@ const EmailRevertPage = observer(function EmailRevertPage() {
 			</h1>
 			<p className={styles.description} data-flx="auth.email-revert-page.description">
 				<Trans>
-					We'll restore your previous email, sign out old sessions, remove phone numbers, disable MFA, and secure your
-					account with a new password.
+					We'll restore your previous email, sign out old sessions, disable MFA, and secure your account with a new
+					password.
 				</Trans>
 			</p>
 			<form className={styles.form} onSubmit={form.handleSubmit} data-flx="auth.email-revert-page.form.submit">

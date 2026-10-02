@@ -3,7 +3,7 @@
 import {Config} from '@app/api/Config';
 import type {GifProviderMeta, IGifProvider} from '@app/api/gif/IGifProvider';
 import {Logger} from '@app/api/Logger';
-import {readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {readOptionalEnv, readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
 import {isJsonRecord, parseJsonUnknown} from '@app/api/utils/JsonBoundaryUtils';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
@@ -19,7 +19,7 @@ import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-const GIF_SERVICE_SUBJECT = process.env.FLUXER_GIF_SERVICE_SUBJECT || 'svc.gifs';
+const GIF_SERVICE_SUBJECT = readOptionalEnv('FLUXER_GIF_SERVICE_SUBJECT') ?? 'svc.gifs';
 const DEFAULT_GIF_SERVICE_TIMEOUT_MS = 12_000;
 const DEFAULT_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS = 3_000;
 const MAX_REQUEST_TIMEOUT_MS = 2_147_483_647;
@@ -279,7 +279,7 @@ export function createNatsGifProvider(apiKeyResolver: GifApiKeyResolver): NatsGi
 	const manager = new NatsConnectionManager({
 		url: Config.nats.coreUrl,
 		token: Config.nats.authToken || undefined,
-		name: process.env.FLUXER_GIF_SERVICE_NATS_CLIENT_NAME || 'fluxer-api-gifs',
+		name: readOptionalEnv('FLUXER_GIF_SERVICE_NATS_CLIENT_NAME') ?? 'fluxer-api-gifs',
 	});
 	const provider = new NatsGifProvider(
 		manager,

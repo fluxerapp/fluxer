@@ -386,6 +386,11 @@
 	overflow: hidden;
 }
 
+.followButton {
+	margin-left: var(--channel-header-name-gap);
+	flex-shrink: 0;
+}
+
 .topicDivider {
 	margin: 0 var(--channel-header-topic-divider-gap);
 	flex-shrink: 0;

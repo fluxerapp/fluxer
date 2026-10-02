@@ -22,6 +22,7 @@ import {ACCESS_TOKEN_TTL_SECONDS, type OAuth2Service} from '@app/api/oauth/OAuth
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
 import {parseClientCredentials} from '@app/api/oauth/utils/ParseClientCredentials';
+import {isSignInRefused} from '@app/api/user/UserHelpers';
 import {mapUserToOAuthResponse, mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {canAuthorizeBotInvite, normalizeBotInvitePermissions} from '@fluxer/constants/src/BotPermissionUtils';
@@ -277,11 +278,11 @@ export class OAuth2RequestService {
 						}
 					}
 					await this.guildService.members.addUserToGuild({
-						skipRiskGate: true,
 						userId: botUserId,
 						guildId,
 						skipGuildLimitCheck: true,
 						skipBanCheck: true,
+						skipAccountLimitCheck: true,
 						joinSourceType: JoinSourceTypes.BOT_INVITE,
 						inviterId: params.userId,
 						requestCache: params.requestCache,
@@ -356,9 +357,12 @@ export class OAuth2RequestService {
 				scopes,
 				expires: expiresAt.toISOString(),
 			};
-			if (tokenData.userId && tokenData.scope.has('identify')) {
+			if (tokenData.userId) {
 				const user = await this.apiContext.services.users.findUnique(tokenData.userId);
-				if (user) {
+				if (user && isSignInRefused(user)) {
+					throw new InvalidTokenError();
+				}
+				if (user && tokenData.scope.has('identify')) {
 					response.user = mapUserToOAuthResponse(user, {includeEmail: tokenData.scope.has('email')});
 				}
 			}

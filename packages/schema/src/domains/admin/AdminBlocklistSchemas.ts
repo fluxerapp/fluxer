@@ -10,24 +10,13 @@ import {
 	BanUrlDomainRequest,
 	BanUrlRequest,
 	CheckAvatarHashRequest,
-	SuspiciousEmailDomainRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {createStringType, Int32Type, SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 export const AdminBlocklistListType = z
-	.enum([
-		'ip',
-		'email',
-		'email-domain-suspicious',
-		'phrase',
-		'url',
-		'url-domain',
-		'file-sha',
-		'avatar-hash',
-		'profile-substring',
-	])
+	.enum(['ip', 'email', 'phrase', 'url', 'url-domain', 'file-sha', 'avatar-hash', 'profile-substring'])
 	.describe('The blocklist an entry belongs to');
 
 export type AdminBlocklistListType = z.infer<typeof AdminBlocklistListType>;
@@ -119,7 +108,6 @@ export const AdminBlocklistEntryCreateRequest = z
 	.union([
 		BanIpRequest,
 		BanEmailRequest,
-		SuspiciousEmailDomainRequest,
 		BanPhraseRequest,
 		BanUrlRequest,
 		BanUrlDomainRequest,

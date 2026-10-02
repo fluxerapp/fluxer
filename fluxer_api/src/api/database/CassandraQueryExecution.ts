@@ -366,3 +366,23 @@ export class BatchBuilder {
 		return this.queries;
 	}
 }
+
+const MAX_BATCH_STATEMENTS = 60;
+
+export async function executeGroupedBatches(
+	groups: ReadonlyArray<ReadonlyArray<PreparedQuery>>,
+	maxStatements = MAX_BATCH_STATEMENTS,
+): Promise<void> {
+	let batch = new BatchBuilder();
+	let size = 0;
+	for (const group of groups) {
+		if (size > 0 && size + group.length > maxStatements) {
+			await batch.execute();
+			batch = new BatchBuilder();
+			size = 0;
+		}
+		for (const query of group) batch.addPrepared(query);
+		size += group.length;
+	}
+	await batch.execute();
+}

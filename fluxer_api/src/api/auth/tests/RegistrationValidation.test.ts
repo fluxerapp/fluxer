@@ -6,6 +6,7 @@ import {
 	createUniqueEmail,
 	createUniqueUsername,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {applySharedListUpdate, resetSharedListsForTests} from '@app/api/infrastructure/activity/SharedLists';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -50,18 +51,23 @@ describe('Registration validation', () => {
 		expect(emailError?.message).toBe("Format d'adresse e-mail invalide.");
 	});
 	it('rejects blocked registration email TLDs as invalid email', async () => {
-		await createBuilderWithoutAuth(harness)
-			.post('/auth/register')
-			.body({
-				email: 'holdermichael_6023@example.blocked',
-				username: createUniqueUsername(),
-				global_name: 'Test User',
-				password: 'a-strong-password',
-				date_of_birth: '2000-01-01',
-				consent: true,
-			})
-			.expect(400)
-			.execute();
+		applySharedListUpdate('email_tld_blocked', 'blocked\n');
+		try {
+			await createBuilderWithoutAuth(harness)
+				.post('/auth/register')
+				.body({
+					email: 'holdermichael_6023@example.blocked',
+					username: createUniqueUsername(),
+					global_name: 'Test User',
+					password: 'a-strong-password',
+					date_of_birth: '2000-01-01',
+					consent: true,
+				})
+				.expect(400)
+				.execute();
+		} finally {
+			resetSharedListsForTests();
+		}
 	});
 	it('rejects weak password', async () => {
 		const json = await createBuilderWithoutAuth<ValidationErrorResponse>(harness)

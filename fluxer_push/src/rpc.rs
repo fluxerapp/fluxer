@@ -62,8 +62,13 @@ impl RpcClient {
         }
     }
 
-    pub async fn rollout_config(&self, method: RpcMethod) -> Result<Value, RpcError> {
-        let data: RolloutConfigData = self.call(method, &json!({"type": method.label()})).await?;
+    pub async fn push_service_delivery_config(&self) -> Result<Value, RpcError> {
+        let data: PushServiceDeliveryConfigData = self
+            .call(
+                RpcMethod::GetPushServiceDeliveryConfig,
+                &json!({"type": "get_push_service_delivery_config"}),
+            )
+            .await?;
         Ok(data.config)
     }
 
@@ -190,7 +195,7 @@ impl RpcClient {
 }
 
 #[derive(Deserialize)]
-struct RolloutConfigData {
+struct PushServiceDeliveryConfigData {
     config: Value,
 }
 

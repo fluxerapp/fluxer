@@ -1,7 +1,15 @@
 {
-	"account_disabled_suspicious": {
-		"subject": "{product_name}-fiókodat ideiglenesen letiltottuk",
-		"body": "Szia, {username}!\n\nIdeiglenesen letiltottuk a {product_name}-fiókodat, mert gyanús tevékenységet észleltünk.\n\n{reason, select,\n  null {}\n  other {Indok: {reason}}\n}\n\nA fiókodhoz való hozzáférés visszaszerzéséhez vissza kell állítanod a jelszavadat:\n\n{forgotUrl}\n\nA jelszó visszaállítása után újra be tudsz jelentkezni.\n\nHa úgy gondolod, hogy ez tévedésből történt, vedd fel a kapcsolatot az ügyfélszolgálatunkkal.\n\n– {product_name} biztonsági csapata"
+	"account_deletion_cancelled": {
+		"subject": "Visszavontuk {product_name}-fiókod törlését",
+		"body": "Szia, {username}!\n\n{product_name}-fiókod ütemezett törlését visszavontuk. A fiókodat nem töröljük.\n\nHa kérdésed van, írj erre a címre: {safety_email}.\n\n– {product_name} csapata"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "{product_name}-fiókodat inaktivitás miatt törölni fogjuk",
+		"body": "Szia, {username}!\n\n{product_name}-fiókod hosszú ideje inaktív, ezért végleges törlése a következő időpontra van ütemezve:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nIndok: {reason}}}\n\nHa meg szeretnéd tartani a fiókodat, még az időpont előtt írj erről az e-mail-címről erre a címre: {safety_email}.\n\n– {product_name} csapata"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Ütemeztük {product_name}-fiókod törlését",
+		"body": "Szia, {username}!\n\nKérésedre {product_name}-fiókod végleges törlése a következő időpontra van ütemezve:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nIndok: {reason}}}\n\nAddig a fiókod zárolva van. Ha nem te kérted ezt, vagy meg szeretnéd tartani a fiókodat, még az időpont előtt írj erről az e-mail-címről erre a címre: {safety_email}.\n\n– {product_name} csapata"
 	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name}-fiókodat véglegesen törölni fogjuk",
@@ -33,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Megváltozott {product_name}-fiókod e-mail-címe",
-		"body": "Szia, {username}!\n\n{product_name}-fiókod e-mail-címe a következőre változott: {newEmail}.\n\nHa te módosítottad, nincs további teendőd. Ha nem te voltál, az alábbi linken visszavonhatod a módosítást, és biztonságba helyezheted a fiókodat:\n\n{revertUrl}\n\nEzzel visszaállítjuk a korábbi e-mail-címedet, mindenhol kijelentkeztetünk, eltávolítjuk a kapcsolt telefonszámokat, kikapcsoljuk a többfaktoros azonosítást, és új jelszót kell beállítanod.\n\n– {product_name} biztonsági csapata"
+		"body": "Szia, {username}!\n\n{product_name}-fiókod e-mail-címe a következőre változott: {newEmail}.\n\nHa te módosítottad, nincs további teendőd. Ha nem te voltál, az alábbi linken visszavonhatod a módosítást, és biztonságba helyezheted a fiókodat:\n\n{revertUrl}\n\nEzzel visszaállítjuk a korábbi e-mail-címedet, mindenhol kijelentkeztetünk, kikapcsoljuk a többfaktoros azonosítást, és új jelszót kell beállítanod.\n\n– {product_name} biztonsági csapata"
 	},
 	"email_verification": {
 		"subject": "Erősítsd meg {product_name}-fiókod e-mail-címét",
@@ -61,7 +69,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Erősítsd meg {product_name}-fiókod jelszavának módosítását",
-		"body": "Szia, {username}!\n\nKérést kaptunk {product_name}-fiókod jelszavának módosítására.\n\nA módosítás megerősítéséhez add meg ezt a kódot az alkalmazásban:\n\n{code}\n\nA kód lejárati időpontja: {expiresAt}.\n\nHa nem te kérted ezt, lehet, hogy valaki más is hozzáfér a fiókodhoz. Azonnal változtasd meg a jelszavadat, és kapcsold be a kétlépcsős azonosítást.\n\n– {product_name} csapata"
+		"body": "Szia, {username}!\n\nKérést kaptunk {product_name}-fiókod jelszavának módosítására.\n\nA módosítás megerősítéséhez add meg ezt a kódot az alkalmazásban:\n\n{code}\n\nEz a kód {expiresAt, date, full} {expiresAt, time, short} időpontban jár le.\n\nHa nem te kérted ezt, lehet, hogy valaki más is hozzáfér a fiókodhoz. Azonnal változtasd meg a jelszavadat, és kapcsold be a kétlépcsős azonosítást.\n\n– {product_name} csapata"
 	},
 	"password_reset": {
 		"subject": "Állítsd vissza {product_name}-fiókod jelszavát",

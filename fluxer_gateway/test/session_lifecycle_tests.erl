@@ -304,6 +304,32 @@ handle_resume_restores_resume_status_after_offline_timer_test() ->
         ?assert(false)
     end.
 
+handle_resume_after_the_offline_timer_reports_the_push_hold_to_guilds_test() ->
+    Parent = self(),
+    Guild = spawn(fun() ->
+        receive
+            {'$gen_cast', Msg} -> Parent ! {guild_cast, Msg}
+        end
+    end),
+    State0 = resume_test_state(#{
+        status => offline,
+        resume_status => online,
+        presence_pid => self(),
+        guilds => #{1 => {Guild, make_ref()}}
+    }),
+    {reply, {ok, _Missed, 0}, State1} = session_lifecycle:handle_resume(0, self(), State0),
+    ?assertEqual(online, maps:get(status, State1)),
+    receive
+        {guild_cast, Msg} ->
+            ?assertEqual({set_session_push_hold, <<"session-resume-test">>, true}, Msg)
+    after 200 ->
+        ?assert(false)
+    end,
+    receive
+        {'$gen_call', {Worker, Tag}, {session_connect, _PresenceUpdate}} -> Worker ! {Tag, ok}
+    after 200 -> ok
+    end.
+
 handle_resume_cancels_pending_offline_timer_test() ->
     Token = make_ref(),
     TimerRef = erlang:send_after(5000, self(), {resume_offline_timeout, Token}),

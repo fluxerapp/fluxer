@@ -6,13 +6,13 @@ import type {MessageReferenceTypeValue} from '@fluxer/constants/src/ChannelConst
 
 export class MessageRef {
 	readonly channelId: ChannelID;
-	readonly messageId: MessageID;
+	readonly messageId: MessageID | null;
 	readonly guildId: GuildID | null;
 	readonly type: MessageReferenceTypeValue;
 
 	constructor(ref: MessageReference) {
 		this.channelId = ref.channel_id;
-		this.messageId = ref.message_id;
+		this.messageId = ref.message_id ?? null;
 		this.guildId = ref.guild_id ?? null;
 		this.type = ref.type as MessageReferenceTypeValue;
 	}

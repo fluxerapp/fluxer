@@ -14,9 +14,9 @@ export type WizardStep =
 	| 'media_expiry'
 	| 'integration_gif'
 	| 'integration_youtube'
-	| 'integration_captcha'
 	| 'integration_email'
 	| 'integration_bluesky'
+	| 'push_relay_consent'
 	| 'services'
 	| 'premium'
 	| 'finish';
@@ -33,9 +33,9 @@ export const CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
 	'media_expiry',
 	'integration_gif',
 	'integration_youtube',
-	'integration_captcha',
 	'integration_email',
 	'integration_bluesky',
+	'push_relay_consent',
 	'services',
 	'premium',
 	'finish',

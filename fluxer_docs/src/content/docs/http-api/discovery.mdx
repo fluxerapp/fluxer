@@ -297,7 +297,6 @@ The caller needs no permission and no relationship to the matched guilds.
 | 200 | [discovery search result](#discovery-search-result-object) object | Search completed, possibly with no match |
 | 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | No search backend is configured for the instance and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 
 ### Rate limit
@@ -319,7 +318,7 @@ A client that wants a translated label supplies its own translation keyed on `id
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[discovery category](#discovery-category-object) object] | Categories were returned |
-| 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED`, or the account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
 
 ### Rate limit
 
@@ -353,12 +352,10 @@ A pending, rejected, removed, or absent application fails with 400 `DISCOVERY_NO
 | 400 | [error response](/http-api/#error-response) | The caller already holds the maximum number of guilds and the request returns `MAX_GUILDS` |
 | 400 | [error response](/http-api/#error-response) | The guild is full and the request returns `MAX_GUILD_MEMBERS` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot, presents a bearer credential, or holds a revoked account and the request returns `ACCESS_DENIED` |
-| 403<sup>1</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | The account is limited and not already a member, and the request returns `ACCOUNT_LIMITED` |
 | 403 | [error response](/http-api/#error-response) | The guild has the invites-disabled feature and the request returns `INVITES_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The caller is banned from the guild directly or by address and the request returns `USER_BANNED_FROM_GUILD` or `USER_IP_BANNED_FROM_GUILD` |
 | 404 | [error response](/http-api/#error-response) | The approved application names a guild whose record no longer exists and the request returns `UNKNOWN_GUILD` |
-
-<sup>1</sup> An account without a verified phone number can have a phone requirement that Fluxer holds back until the account joins a guild. At join time Fluxer checks that requirement against the target guild. An account that passes the account-wide check can therefore still receive `ACCOUNT_SUSPICIOUS_ACTIVITY` here
 
 :::note[A guild that never existed returns 400, not 404]
 A guild with no approved listing returns `DISCOVERY_NOT_DISCOVERABLE`.
@@ -417,7 +414,6 @@ Its submission time is also its review time, it gains the discoverable feature, 
 | 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED`, or the guild has fewer members than the instance requires and the request returns `DISCOVERY_INSUFFICIENT_MEMBERS` |
 | 400 | [error response](/http-api/#error-response) | The caller cannot use [MANAGE_GUILD](/http-api/permissions/) because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The guild is marked unavailable and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The description matches a content blocklist and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | The caller lacks [MANAGE_GUILD](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
@@ -473,7 +469,6 @@ Every field is optional, and an omitted field preserves the stored value.
 | 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED` |
 | 400 | [error response](/http-api/#error-response) | The caller cannot use [MANAGE_GUILD](/http-api/permissions/) because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The guild is marked unavailable and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The description matches a content blocklist and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | The caller lacks [MANAGE_GUILD](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
@@ -513,7 +508,6 @@ The stored review time, review reason, removal time, and removal reason are dele
 | 400 | [error response](/http-api/#error-response) | Discovery is disabled for the instance and the request returns `DISCOVERY_DISABLED` |
 | 400 | [error response](/http-api/#error-response) | The caller cannot use [MANAGE_GUILD](/http-api/permissions/) because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The guild is marked unavailable and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The caller lacks [MANAGE_GUILD](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |
@@ -548,7 +542,6 @@ The route answers even while discovery is disabled for the instance, reporting `
 | 200 | [discovery status](#discovery-status-object) object | Status was returned |
 | 400 | [error response](/http-api/#error-response) | The caller cannot use [MANAGE_GUILD](/http-api/permissions/) because of the guild MFA level and the request returns `TWO_FACTOR_REQUIRED` |
 | 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential or a revoked account and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The guild is marked unavailable and the request returns `MISSING_ACCESS` |
 | 403 | [error response](/http-api/#error-response) | The caller lacks [MANAGE_GUILD](/http-api/permissions/) and the request returns `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist and the request returns `UNKNOWN_GUILD` |

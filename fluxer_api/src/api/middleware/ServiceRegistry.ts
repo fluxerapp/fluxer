@@ -22,7 +22,7 @@ import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRep
 import {Logger} from '@app/api/Logger';
 import {setInjectedSearchProvider} from '@app/api/SearchFactory';
 import type {ISearchProvider} from '@app/api/search/ISearchProvider';
-import {readOptionalIntegerEnv} from '@app/api/utils/IntegerOptions';
+import {readOptionalEnv, readOptionalIntegerEnv} from '@app/api/utils/IntegerOptions';
 import {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {VoiceServerLoadTracker} from '@app/api/voice/VoiceServerLoad';
@@ -37,11 +37,11 @@ export function createSnowflakeService(): SnowflakeService {
 	const connectionManager = new NatsConnectionManager({
 		url: Config.nats.coreUrl,
 		token: Config.nats.authToken || undefined,
-		name: process.env.FLUXER_SNOWFLAKE_SERVICE_NATS_CLIENT_NAME || 'fluxer-api-snowflakes',
+		name: readOptionalEnv('FLUXER_SNOWFLAKE_SERVICE_NATS_CLIENT_NAME') ?? 'fluxer-api-snowflakes',
 	});
 	return new SnowflakeService({
 		connectionManager,
-		subject: process.env.FLUXER_SNOWFLAKE_SERVICE_SUBJECT || undefined,
+		subject: readOptionalEnv('FLUXER_SNOWFLAKE_SERVICE_SUBJECT'),
 		batchSize: readOptionalIntegerEnv('FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE'),
 		lowWatermark: readOptionalIntegerEnv('FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK'),
 		maxBufferAgeMs: readOptionalIntegerEnv('FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS'),
@@ -64,8 +64,6 @@ export function getKVClient(): IKVProvider {
 		_kvClient = new KVClient({
 			url: Config.kv.url,
 			mode: Config.kv.mode,
-			clusterNodes: Config.kv.clusterNodes,
-			clusterNatMap: Config.kv.clusterNatMap,
 		});
 	}
 	return _kvClient;

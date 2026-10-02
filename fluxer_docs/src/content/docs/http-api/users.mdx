@@ -108,26 +108,26 @@ The private representation of the current account, returned by [Get current user
 | traits<sup>3</sup> <sup>4</sup> | array[string] | The account traits, in sorted order |
 | email<sup>5</sup> | ?string | The account email address, or null when none exists |
 | email_bounced?<sup>3</sup> | boolean | Whether the mail provider marked the current email as bounced |
-| phone<sup>6</sup> | ?string | Always null |
-| has_verified_phone | boolean | Whether phone verification is complete |
+| has_verified_phone | boolean | Deprecated. Always false |
 | bio | ?string | The profile biography, or null when none is set |
 | pronouns | ?string | The profile pronouns, or null when none are set |
 | accent_color | ?integer | The profile accent colour as packed 24-bit RGB, or null when none is set |
-| timezone?<sup>7</sup> | ?string | The IANA timezone identifier stored for the account, or null when none is set |
-| timezone_privacy_flags?<sup>7</sup> | integer | [Profile field privacy flags](#profile-field-privacy-flags) applied to the profile timezone |
-| banner<sup>8</sup> | ?string | The image hash of the profile banner, or null when none is set or the entitlement is missing |
+| timezone?<sup>6</sup> | ?string | The IANA timezone identifier stored for the account, or null when none is set |
+| timezone_privacy_flags?<sup>6</sup> | integer | [Profile field privacy flags](#profile-field-privacy-flags) applied to the profile timezone |
+| banner<sup>7</sup> | ?string | The image hash of the profile banner, or null when none is set or the entitlement is missing |
 | banner_color | ?integer | The packed 24-bit RGB colour derived from the stored banner, or null |
-| mfa_enabled<sup>3</sup> <sup>9</sup> | boolean | Whether any authenticator is configured |
-| authenticator_types?<sup>3</sup> <sup>9</sup> | array[integer] | [Authenticator types](#authenticator-types) configured for the account |
+| mfa_enabled<sup>3</sup> <sup>8</sup> | boolean | Whether any authenticator is configured |
+| authenticator_types?<sup>3</sup> <sup>8</sup> | array[integer] | [Authenticator types](#authenticator-types) configured for the account |
 | verified<sup>5</sup> | boolean | Whether the account email is verified |
-| premium_type<sup>10</sup> | ?integer | [Premium type](#premium-types) |
-| premium_since<sup>3</sup> <sup>10</sup> | ?ISO8601 timestamp | The time premium was first activated, or null |
-| premium_until<sup>3</sup> <sup>11</sup> | ?ISO8601 timestamp | The end of current premium access, or null when no premium period is stored |
+| account_limited? | boolean | Whether the account is [limited](#account-limitation) |
+| premium_type<sup>9</sup> | ?integer | [Premium type](#premium-types) |
+| premium_since<sup>3</sup> <sup>9</sup> | ?ISO8601 timestamp | The time premium was first activated, or null |
+| premium_until<sup>3</sup> <sup>10</sup> | ?ISO8601 timestamp | The end of current premium access, or null when no premium period is stored |
 | premium_will_cancel<sup>3</sup> | boolean | Whether subscription premium will cancel at the billing boundary |
 | premium_billing_cycle<sup>3</sup> | ?string | The premium billing cycle, or null |
 | premium_lifetime_sequence<sup>3</sup> | ?integer | The lifetime premium sequence, or null |
-| premium_grace_ends_at<sup>12</sup> | ?ISO8601 timestamp | The end of the post-cancellation grace interval, or null when the account is not in grace |
-| premium_discriminator<sup>13</sup> | boolean | Whether the current discriminator was selected under a premium entitlement |
+| premium_grace_ends_at<sup>11</sup> | ?ISO8601 timestamp | The end of grace access after premium_until passes, or null when no grace is recorded |
+| premium_discriminator<sup>12</sup> | boolean | Whether the current discriminator was selected under a premium entitlement |
 | premium_badge_hidden<sup>3</sup> | boolean | Whether the premium badge is hidden from the public profile |
 | premium_badge_masked<sup>3</sup> | boolean | Whether a lifetime badge is presented as an ordinary subscription badge |
 | premium_badge_timestamp_hidden<sup>3</sup> | boolean | Whether the premium activation time is hidden from the public profile |
@@ -135,15 +135,14 @@ The private representation of the current account, returned by [Get current user
 | premium_purchase_disabled<sup>3</sup> | boolean | Whether premium purchasing is disabled for the account |
 | premium_enabled_override<sup>3</sup> | boolean | Whether an administrative override grants premium entitlements |
 | premium_perks_disabled<sup>3</sup> | boolean | Whether premium entitlements are suspended for the account |
-| force_inbound_phone_verification?<sup>14</sup> | boolean | The debugging switch that forces the inbound phone verification flow |
 | password_last_changed_at<sup>3</sup> | ?ISO8601 timestamp | The time of the most recent password change, or null |
-| last_voice_activity_sharing_change_at<sup>15</sup> | ?ISO8601 timestamp | The time of the most recent bulk voice activity sharing change, or null |
-| required_actions<sup>3</sup> <sup>16</sup> | array[string] | The ordered [required actions](#required-actions) the account must complete before unrestricted use |
-| nsfw_allowed<sup>3</sup> <sup>17</sup> | boolean | Whether the account can access age-restricted content |
-| has_dismissed_premium_onboarding<sup>3</sup> <sup>18</sup> | boolean | Whether premium onboarding was dismissed |
+| last_voice_activity_sharing_change_at<sup>13</sup> | ?ISO8601 timestamp | The time of the most recent bulk voice activity sharing change, or null |
+| required_actions<sup>3</sup> | array[string] | Deprecated. Always empty |
+| nsfw_allowed<sup>3</sup> <sup>14</sup> | boolean | Whether the account can access age-restricted content |
+| has_dismissed_premium_onboarding<sup>3</sup> <sup>15</sup> | boolean | Whether premium onboarding was dismissed |
 | has_ever_purchased<sup>3</sup> | boolean | Whether the account has completed a purchase |
-| has_unread_gift_inventory<sup>3</sup> <sup>19</sup> | boolean | Whether the gift inventory has unread items |
-| unread_gift_inventory_count<sup>3</sup> <sup>19</sup> | integer | The number of unread gift inventory items |
+| has_unread_gift_inventory<sup>3</sup> <sup>16</sup> | boolean | Whether the gift inventory has unread items |
+| unread_gift_inventory_count<sup>3</sup> <sup>16</sup> | integer | The number of unread gift inventory items |
 | pending_bulk_message_deletion<sup>3</sup> | ?[pending bulk message deletion](#pending-bulk-message-deletion-object) object | The message deletion the account scheduled for itself, or null when none is pending |
 | age_verified_adult? | boolean | Whether adult age verification is complete, omitted when false |
 | terms_agreed_at | ?ISO8601 timestamp | The time of the most recent terms acceptance, or null |
@@ -159,45 +158,31 @@ The private representation of the current account, returned by [Get current user
 
 <sup>5</sup> For an OAuth2 bearer credential without the `email` [scope](/http-api/oauth2/#oauth2-scopes), `email` is `null`
 
-<sup>6</sup> Always null
+<sup>6</sup> This server version writes the pair for every account
 
-<sup>7</sup> The pair is present only while the account has the staff flag, and it is absent for every other account
+<sup>7</sup> The banner hash is not returned at all while the account lacks the animated banner entitlement, which every profile banner requires
 
-<sup>8</sup> The banner hash is not returned at all while the account lacks the animated banner entitlement, which every profile banner requires
+<sup>8</sup> `mfa_enabled` is true exactly when at least one authenticator is configured. An account with no authenticator reports `authenticator_types` as an empty array, and only a bearer read drops the field
 
-<sup>9</sup> `mfa_enabled` is true exactly when at least one authenticator is configured. An account with no authenticator reports `authenticator_types` as an empty array, and only a bearer read drops the field
+<sup>9</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not active
 
-<sup>10</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not active
+<sup>10</sup> `premium_until` is the later of the subscription end and any stacked gift extension. Fluxer reports it even when premium entitlements are no longer active
 
-<sup>11</sup> `premium_until` is the later of the subscription end and any stacked gift extension. Fluxer reports it even when premium entitlements are no longer active
+<sup>11</sup> After `premium_until` passes, premium entitlements stay active until this time. While the value is null, they stay active for 3 days after `premium_until`
 
-<sup>12</sup> After `premium_until` passes, premium entitlements stay active until this time. While the value is null, they stay active for 3 days after `premium_until`
+<sup>12</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and after that premium access ends, Fluxer replaces the discriminator with a newly generated one the next time the account starts a Gateway session
 
-<sup>13</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and after that premium access ends, Fluxer replaces the discriminator with a newly generated one the next time the account starts a Gateway session
+<sup>13</sup> The value drives the 24-hour cooldown on changing the default voice activity sharing state
 
-<sup>14</sup> The field is declared but never populated, so it is absent from every response
+<sup>14</sup> A bot account is always permitted, and a user account is permitted only when its recorded date of birth places it at 18 years or older
 
-<sup>15</sup> The value drives the 24-hour cooldown on changing the default voice activity sharing state
+<sup>15</sup> The value is false while premium entitlements are not active, even when a dismissal was recorded earlier
 
-<sup>16</sup> The array is empty when the account has no stored suspicious activity flag, when it has no email address, or when the account policy exempts its email address from required actions
-
-<sup>17</sup> A bot account is always permitted, and a user account is permitted only when its recorded date of birth places it at 18 years or older
-
-<sup>18</sup> The value is false while premium entitlements are not active, even when a dismissal was recorded earlier
-
-<sup>19</sup> Reports whether unread gifts exist and how many. An account with no gifts reports `false` and `0`
+<sup>16</sup> Reports whether unread gifts exist and how many. An account with no gifts reports `false` and `0`
 
 :::note[A bearer read returns zero values]
 `acls`, `traits`, and `required_actions` become empty arrays. `email_bounced` and `authenticator_types` are dropped. Every field marked <sup>3</sup> above that is a boolean becomes `false`, every timestamp or nullable field becomes `null`, and `unread_gift_inventory_count` becomes `0`.
 :::
-
-:::caution[An outstanding required action blocks ordinary routes]
-While `required_actions` is non-empty, every route that requires a signed-in account, except the recovery routes below, returns 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. The error body's `data` member has `suspicious_activity_flags`, with one bit set for each entry in `required_actions`.
-:::
-
-Recovery routes stay open to a restricted account. They are [Get current user](/http-api/users/current-user/#get-current-user), [Modify current user](/http-api/users/current-user/#modify-current-user), [Get current user settings](/http-api/users/settings/#get-current-user-settings), every [email change](/http-api/users/email-and-password/) and [phone verification](/http-api/users/phone-verification/) route, [Resend email verification](/http-api/authentication/#resend-email-verification), session listing and termination, and the OAuth2 routes.
-
-A requirement disappears from the list as soon as it is met. An Admin operation applies no suspicious activity gate.
 
 ## Pending bulk message deletion object
 
@@ -232,23 +217,21 @@ The value `1` is unassigned. Any stored authenticator value outside this registr
 | 1 | SUBSCRIPTION | Active premium subscription |
 | 2 | LIFETIME | Lifetime premium subscription |
 
-## Required actions
+## Account limitation
 
-Each entry is an exact string in the `required_actions` array of the [user object](#user-object), ordered by the registry order below. Fluxer removes a requirement the account already satisfies, and removes a requirement implied by a stricter retained one.
+An account is limited while its [user object](#user-object) reports `account_limited` as true. A limited account can still read, join voice, change its own settings, and manage its sessions. The operations below return 403 [`ACCOUNT_LIMITED`](/http-api/errors/), and the error message tells the user to check their email.
 
-| Value | Description |
-| --- | --- |
-| REQUIRE_VERIFIED_EMAIL | The account needs a verified email address |
-| REQUIRE_REVERIFIED_EMAIL | The account needs to verify its email address again |
-| REQUIRE_VERIFIED_PHONE | The account needs a verified phone number |
-| REQUIRE_REVERIFIED_PHONE | The account needs to verify its phone number again |
-| REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE | The account needs either a verified email address or a verified phone number |
-| REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE | The account needs to verify its email address again or hold a verified phone number |
-| REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE | The account needs a verified email address or needs to verify its phone number again |
-| REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE | The account needs to verify either its email address or its phone number again |
-| REQUIRE_INBOUND_PHONE_VERIFICATION<sup>1</sup> | The account needs to complete phone verification by sending an SMS to the instance's inbound number |
-
-<sup>1</sup> The entry appears only while a phone requirement is also outstanding. A stored inbound requirement with no other phone requirement adds `REQUIRE_VERIFIED_PHONE` to the array
+- [Create message](/http-api/messages/#create-message) and [Modify message](/http-api/messages/#modify-message) in any channel except the account's personal notes
+- [Crosspost message](/http-api/messages/#crosspost-message)
+- [Add own reaction](/http-api/messages/#add-own-reaction)
+- [Create webhook](/http-api/webhooks/#create-webhook)
+- [Accept invite](/http-api/invites/#accept-invite) and [Join discovery guild](/http-api/discovery/#join-discovery-guild), unless the account is already a member
+- [Create guild](/http-api/guilds/#create-guild)
+- Creating a group direct message through [Create private channel](/http-api/users/private-channels/#create-private-channel), and [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient)
+- Changing a profile field through [Modify current user](/http-api/users/current-user/#modify-current-user) or [Modify current guild member](/http-api/guild-members/#modify-current-guild-member)
+- Setting a custom status through [Modify current user settings](/http-api/users/settings/#modify-current-user-settings) or a [presence update](/gateway/commands/#presence-update)
+- [Initiate connection](/http-api/connections/#initiate-connection), [Verify and create connection](/http-api/connections/#verify-and-create-connection), and [Start Bluesky authorisation](/http-api/connections/#start-bluesky-authorisation)
+- [Upload entrance sound](/http-api/entrance-sounds/#upload-entrance-sound) and [Set entrance sound selection](/http-api/entrance-sounds/#set-entrance-sound-selection)
 
 ## Profile field privacy flags
 
@@ -565,7 +548,7 @@ The profile read returned by [Get user profile](#get-user-profile) for one targe
 
 <sup>4</sup> The array is empty when the profile is restricted. It otherwise holds only verified connections whose [profile field privacy flags](#profile-field-privacy-flags) admit the caller
 
-<sup>5</sup> The value is null unless the profile is unrestricted, the target has the staff flag, the target has stored a timezone, and its [profile field privacy flags](#profile-field-privacy-flags) admit the caller
+<sup>5</sup> The value is null unless the profile is unrestricted, the target has stored a timezone, and its [profile field privacy flags](#profile-field-privacy-flags) admit the caller
 
 <sup>6</sup> The field is present only on a restricted read
 

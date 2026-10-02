@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '@app/api/Config';
+import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -9,20 +9,35 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
+import {
+	isAppStoreConfigured,
+	isGooglePlayConfigured,
+	isGooglePlayPackageConfigured,
+} from '@app/api/store_billing/StoreBillingConfig';
+import {resolveStoreAccessEnd} from '@app/api/store_billing/StoreBillingMappers';
+import {isTerminalStorePurchaseState} from '@app/api/store_billing/StoreBillingTypes';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {checkIsPremium, createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {ms} from 'itty-time';
 
 const BATCH_SIZE = 100;
+const STORE_REFRESH_STALE_MS = ms('30 minutes');
+const STORE_REFRESH_DEFER_LIMIT_MS = ms('1 day');
 
 interface SweepResult {
 	processed: number;
 	stripped: number;
 	sanitized: number;
 	reconcileEnqueued: number;
+	storeRefreshEnqueued: number;
 	skipped: number;
 	failed: number;
 }
@@ -33,6 +48,8 @@ interface SweepDeps {
 	userCacheService: UserCacheService;
 	gatewayService: IGatewayService;
 	premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService;
+	storeEntitlementService: StoreEntitlementService;
+	workerService: IWorkerService<WorkerTaskName>;
 }
 
 async function sanitizeGuildMemberPerks(user: User, deps: SweepDeps): Promise<boolean> {
@@ -100,6 +117,44 @@ async function sanitizeGuildMemberPerks(user: User, deps: SweepDeps): Promise<bo
 	return true;
 }
 
+function isStoreProviderConfigured(row: StorePurchaseRow): boolean {
+	if (row.provider === 'app_store') {
+		return isAppStoreConfigured();
+	}
+	return isGooglePlayConfigured() && isGooglePlayPackageConfigured(row.app_id);
+}
+
+function shouldDeferToStoreRefresh(row: StorePurchaseRow, now: number): boolean {
+	if (row.kind !== 'subscription' || isTerminalStorePurchaseState(row.state) || !isStoreProviderConfigured(row)) {
+		return false;
+	}
+	const syncedMs = row.synced_at?.getTime() ?? 0;
+	const accessEndMs = resolveStoreAccessEnd(row)?.getTime();
+	if (accessEndMs === undefined) {
+		return false;
+	}
+	return (
+		syncedMs < now - STORE_REFRESH_STALE_MS &&
+		syncedMs < accessEndMs &&
+		accessEndMs > now - STORE_REFRESH_DEFER_LIMIT_MS
+	);
+}
+
+async function deferToStoreRefresh(user: User, deps: SweepDeps): Promise<number> {
+	const now = Date.now();
+	const rows = (await deps.storeEntitlementService.listStorePurchases(user.id)).filter((row) =>
+		shouldDeferToStoreRefresh(row, now),
+	);
+	for (const row of rows) {
+		await deps.workerService.addJob(
+			'refreshStorePurchase',
+			{storeKey: row.store_key},
+			{jobKey: `refreshStorePurchase:${row.store_key}`},
+		);
+	}
+	return rows.length;
+}
+
 async function processUser(user: User, deps: SweepDeps, result: SweepResult): Promise<void> {
 	if (user.isBot) {
 		result.skipped += 1;
@@ -133,6 +188,12 @@ async function processUser(user: User, deps: SweepDeps, result: SweepResult): Pr
 		return;
 	}
 	if (checkIsPremium(user)) {
+		result.skipped += 1;
+		return;
+	}
+	const storeRefreshes = await deferToStoreRefresh(user, deps);
+	if (storeRefreshes > 0) {
+		result.storeRefreshEnqueued += storeRefreshes;
 		result.skipped += 1;
 		return;
 	}
@@ -183,11 +244,12 @@ async function processExpiredPremiumSweepCore(deps: SweepDeps): Promise<SweepRes
 		stripped: 0,
 		sanitized: 0,
 		reconcileEnqueued: 0,
+		storeRefreshEnqueued: 0,
 		skipped: 0,
 		failed: 0,
 	};
-	if (Config.instance.selfHosted) {
-		Logger.debug('Skipping expired premium sweep on a self-hosted instance');
+	if (!isPremiumTieringActive()) {
+		Logger.debug('Skipping expired premium sweep because premium tiering is not active');
 		return result;
 	}
 	Logger.debug('Starting expired premium sweep');
@@ -219,6 +281,7 @@ async function processExpiredPremiumSweepCore(deps: SweepDeps): Promise<SweepRes
 			stripped: result.stripped,
 			sanitized: result.sanitized,
 			reconcileEnqueued: result.reconcileEnqueued,
+			storeRefreshEnqueued: result.storeRefreshEnqueued,
 			skipped: result.skipped,
 			failed: result.failed,
 		},
@@ -229,14 +292,23 @@ async function processExpiredPremiumSweepCore(deps: SweepDeps): Promise<SweepRes
 
 const processExpiredPremiumSweep: WorkerTaskHandler = async (_payload, helpers) => {
 	helpers.logger.debug('Processing expired premium sweep task');
-	const {userRepository, guildRepository, userCacheService, gatewayService, premiumStateReconciliationQueueService} =
-		getWorkerDependencies();
+	const {
+		userRepository,
+		guildRepository,
+		userCacheService,
+		gatewayService,
+		premiumStateReconciliationQueueService,
+		storeEntitlementService,
+		workerService,
+	} = getWorkerDependencies();
 	await processExpiredPremiumSweepCore({
 		userRepository,
 		guildRepository,
 		userCacheService,
 		gatewayService,
 		premiumStateReconciliationQueueService,
+		storeEntitlementService,
+		workerService,
 	});
 };
 

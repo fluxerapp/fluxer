@@ -131,7 +131,7 @@ When any entry is manual or has a positive mention count, entries for the same c
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | Acknowledgements were processed and the resulting entries returned |
-| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED`, or the account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
 
 ### Side effects
 
@@ -168,7 +168,7 @@ Every entry advances its channel watermark monotonically and sets the channel's 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Acknowledgements were processed |
-| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED`, or the account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
 
 ### Side effects
 

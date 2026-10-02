@@ -257,7 +257,7 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 					}
 				}
 			});
-			const placeholderMids = this.getPlaceholderMids();
+			const placeholderMids = this.getPlaceholderMids(sdpParsed.media);
 			if (placeholderMids.size > 0) {
 				conformBundledCodecFmtp(sdpParsed.media, (media) => placeholderMids.has(getMidString(media.mid!)));
 			}
@@ -410,6 +410,7 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 			if (placeholderMids.size > 0) {
 				conformBundledCodecFmtp(sdpParsed.media, (media) => placeholderMids.has(getMidString(media.mid!)));
 			}
+			sdpParsed.media.forEach(ensureOpusStereoReception);
 			if (this.latestOfferId > offerId) {
 				this.log.warn('latestOfferId mismatch', {
 					latestOfferId: this.latestOfferId,
@@ -461,8 +462,11 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 		}
 	}
 
-	private getPlaceholderMids(): Set<string> {
-		return placeholderMidsFromTransceivers(this._pc?.getTransceivers() ?? []);
+	private getPlaceholderMids(remoteMedia?: ReadonlyArray<MediaDescription>): Set<string> {
+		return placeholderMidsFromTransceivers(
+			this._pc?.getTransceivers() ?? [],
+			remoteMedia ?? parse(this._pc?.remoteDescription?.sdp ?? '').media,
+		);
 	}
 
 	createDataChannel(label: string, dataChannelDict: RTCDataChannelInit) {
@@ -827,6 +831,16 @@ export function ensureAudioNackAndStereo(
 	}
 }
 
+export function ensureOpusStereoReception(media: MediaDescription): void {
+	if (media.type !== 'audio' || media.port === 0 || media.direction === 'sendonly' || media.direction === 'inactive') {
+		return;
+	}
+	const opusPayload = getCodecPayload(media, 'opus');
+	if (opusPayload <= 0) return;
+	const fmtp = ensureFmtp(media, opusPayload);
+	fmtp.config = setFmtpParameter(fmtp.config, 'stereo', '1');
+}
+
 export function collectStereoMids(
 	trackBitrates: Array<TrackBitrateInfo>,
 	media: Array<MediaDescription>,
@@ -853,10 +867,28 @@ export function collectStereoMids(
 	return stereoMids;
 }
 
-export function placeholderMidsFromTransceivers(transceivers: ReadonlyArray<RTCRtpTransceiver>): Set<string> {
+export function placeholderMidsFromTransceivers(
+	transceivers: ReadonlyArray<RTCRtpTransceiver>,
+	remoteMedia: ReadonlyArray<MediaDescription> = [],
+): Set<string> {
+	const receivingMids = new Set(
+		remoteMedia
+			.filter(
+				(media) =>
+					media.mid !== undefined &&
+					media.port !== 0 &&
+					(media.direction === 'sendonly' || media.direction === 'sendrecv' || media.direction === undefined),
+			)
+			.map((media) => getMidString(media.mid!)),
+	);
 	const mids = new Set<string>();
 	for (const transceiver of transceivers) {
-		if (transceiver.currentDirection === 'stopped') {
+		if (
+			transceiver.currentDirection === 'stopped' ||
+			transceiver.currentDirection === 'recvonly' ||
+			transceiver.currentDirection === 'sendrecv' ||
+			(transceiver.mid !== null && receivingMids.has(transceiver.mid))
+		) {
 			continue;
 		}
 		if (transceiver.mid && !transceiver.sender.track) {

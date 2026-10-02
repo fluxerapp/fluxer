@@ -16,7 +16,6 @@ import {BulkJobResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 
 const BULK_TASK_ACLS: Record<AdminBulkTaskType, string> = {
 	[AdminBulkTaskType.UPDATE_USER_FLAGS]: AdminACLs.BULK_UPDATE_USER_FLAGS,
-	[AdminBulkTaskType.UPDATE_SUSPICIOUS_ACTIVITY_FLAGS]: AdminACLs.BULK_UPDATE_SUSPICIOUS_ACTIVITY,
 	[AdminBulkTaskType.UPDATE_GUILD_FEATURES]: AdminACLs.BULK_UPDATE_GUILD_FEATURES,
 	[AdminBulkTaskType.ADD_GUILD_MEMBERS]: AdminACLs.BULK_ADD_GUILD_MEMBERS,
 	[AdminBulkTaskType.SCHEDULE_USER_DELETION]: AdminACLs.BULK_DELETE_USERS,
@@ -34,18 +33,6 @@ async function queueBulkJob(
 		case AdminBulkTaskType.UPDATE_USER_FLAGS:
 			return await workerService.addJob(
 				'bulkUpdateUserFlags',
-				{
-					user_ids: body.user_ids.map((id) => id.toString()),
-					add_flags: body.add_flags,
-					remove_flags: body.remove_flags,
-					admin_user_id: adminUserId.toString(),
-					audit_log_reason: auditLogReason,
-				},
-				options,
-			);
-		case AdminBulkTaskType.UPDATE_SUSPICIOUS_ACTIVITY_FLAGS:
-			return await workerService.addJob(
-				'bulkUpdateSuspiciousActivityFlags',
 				{
 					user_ids: body.user_ids.map((id) => id.toString()),
 					add_flags: body.add_flags,
@@ -86,6 +73,7 @@ async function queueBulkJob(
 					reason_code: body.reason_code,
 					days_until_deletion: body.days_until_deletion,
 					public_reason: body.public_reason ?? null,
+					notify_user: body.notify_user,
 					admin_user_id: adminUserId.toString(),
 					audit_log_reason: auditLogReason,
 				},
@@ -111,7 +99,6 @@ export function BulkAdminController(app: HonoApp) {
 		Validator('json', AdminBulkJobCreateRequest),
 		requireAnyAdminACL([
 			AdminACLs.BULK_UPDATE_USER_FLAGS,
-			AdminACLs.BULK_UPDATE_SUSPICIOUS_ACTIVITY,
 			AdminACLs.BULK_UPDATE_GUILD_FEATURES,
 			AdminACLs.BULK_ADD_GUILD_MEMBERS,
 			AdminACLs.BULK_DELETE_USERS,
@@ -121,7 +108,7 @@ export function BulkAdminController(app: HonoApp) {
 			operationId: 'create_admin_bulk_job',
 			summary: 'Queue a bulk job',
 			description:
-				'Enqueue one background administrative job. The `task` discriminator selects both the body variant and the ACL evaluated for the request: `update_user_flags` needs bulk:update:user_flags, `update_suspicious_activity_flags` needs bulk:update:suspicious_activity, `update_guild_features` needs bulk:update:guild_features, `add_guild_members` needs bulk:add:guild_members, `schedule_user_deletion` needs bulk:delete:users, and `delete_user_messages` needs bulk:delete:user_messages. Returns a job_id immediately; observe progress at /admin/jobs/:job_id.',
+				'Enqueue one background administrative job. The `task` discriminator selects both the body variant and the ACL evaluated for the request: `update_user_flags` needs bulk:update:user_flags, `update_guild_features` needs bulk:update:guild_features, `add_guild_members` needs bulk:add:guild_members, `schedule_user_deletion` needs bulk:delete:users, and `delete_user_messages` needs bulk:delete:user_messages. Returns a job_id immediately; observe progress at /admin/jobs/:job_id.',
 			responseSchema: BulkJobResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

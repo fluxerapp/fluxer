@@ -36,7 +36,6 @@ import {
 import {
 	buildCustomRuntimeKeybinds,
 	buildDefaultRuntimeKeybinds,
-	getCustomActionOverrides,
 	HOLD_ACTIONS,
 	HOLD_ACTIONS_FOR_PTT_MODE,
 	HOLD_ACTIONS_FOR_VOICE_ACTIVITY_MODE,
@@ -58,6 +57,7 @@ import Keybind, {
 	type KeybindConfig,
 	type KeyCombo,
 } from '@app/features/input/state/InputKeybind';
+import {getSuppressedBuiltinActions} from '@app/features/input/state/KeybindResolution';
 import {isGamepadButtonPressed} from '@app/features/input/utils/GamepadButtonUtils';
 import {shouldPreferLayoutKeyForShortcut} from '@app/features/input/utils/KeybindComboUtils';
 import {shouldUseKeyboardShortcutsOverlayFallbackFromEvent} from '@app/features/input/utils/KeyboardShortcutLayoutUtils';
@@ -162,16 +162,18 @@ class KeybindManager {
 		}
 	}
 
-	private get activeKeybinds(): Array<RuntimeKeybind> {
+	private get resolvedKeybinds(): Array<RuntimeKeybind> {
 		const skipDefaults = Keybind.getDisableBuiltinKeybinds();
 		const defaults = skipDefaults ? [] : Keybind.getDefaultsForRuntimeDispatch();
 		const customs = Keybind.getCustomKeybinds();
-		const overriddenActions = getCustomActionOverrides(customs);
-		const activeKeybinds = [
-			...buildDefaultRuntimeKeybinds(defaults, overriddenActions),
+		return [
+			...buildDefaultRuntimeKeybinds(defaults, getSuppressedBuiltinActions(customs)),
 			...buildCustomRuntimeKeybinds(customs, (action) => Keybind.getDefaultByAction(action)),
 		];
-		return activeKeybinds.filter((entry) => this.isActionAllowedForCurrentView(entry.action));
+	}
+
+	private get activeKeybinds(): Array<RuntimeKeybind> {
+		return this.resolvedKeybinds.filter((entry) => this.isActionAllowedForCurrentView(entry.action));
 	}
 
 	private get activeGlobalKeybinds(): Array<RuntimeKeybind> {
@@ -184,14 +186,14 @@ class KeybindManager {
 		);
 	}
 
-	private get activeMouseShortcutKeybinds(): Array<RuntimeKeybind> {
-		return this.activeKeybinds.filter(
+	private get localMouseShortcutKeybinds(): Array<RuntimeKeybind> {
+		return this.resolvedKeybinds.filter(
 			(k) => !HOLD_ACTIONS.includes(k.action as HoldAction) && k.combo.mouseButton != null,
 		);
 	}
 
-	private get activeGamepadShortcutKeybinds(): Array<RuntimeKeybind> {
-		return this.activeKeybinds.filter(
+	private get localGamepadShortcutKeybinds(): Array<RuntimeKeybind> {
+		return this.resolvedKeybinds.filter(
 			(k) => !HOLD_ACTIONS.includes(k.action as HoldAction) && k.combo.gamepadButton != null,
 		);
 	}
@@ -413,9 +415,10 @@ class KeybindManager {
 		this.routeSuspended = !this.isAppRoute(Navigation.pathname);
 		this.refreshLocalShortcuts();
 		this.disposers.push(
-			autorun(() => {
-				this.refreshLocalShortcuts();
-			}),
+			reaction(
+				() => this.resolvedKeybinds,
+				() => this.refreshLocalShortcuts(),
+			),
 		);
 		this.disposers.push(
 			autorun(() => {
@@ -702,7 +705,7 @@ class KeybindManager {
 
 	private refreshLocalMouseShortcutListener(): void {
 		this.detachLocalMouseShortcutListener();
-		if (this.activeMouseShortcutKeybinds.length === 0) return;
+		if (this.localMouseShortcutKeybinds.length === 0) return;
 		this.localMouseShortcutListenerAttached = true;
 		const onMouseDown = (event: MouseEvent): void => {
 			this.handleLocalMouseShortcutEvent(event, 'press');
@@ -727,7 +730,7 @@ class KeybindManager {
 
 	private refreshLocalKeyboardShortcutListener(): void {
 		this.detachLocalKeyboardShortcutListener();
-		if (this.activeKeybinds.every((entry) => !this.canBindLocalShortcut(entry))) return;
+		if (this.resolvedKeybinds.every((entry) => !this.canBindLocalShortcut(entry))) return;
 		this.localKeyboardShortcutListenerAttached = true;
 		const onKeyDown = (event: KeyboardEvent): void => {
 			this.handleLocalKeyboardShortcutEvent(event, 'press');
@@ -752,7 +755,7 @@ class KeybindManager {
 
 	private refreshLocalEditableShortcutCaptureListener(): void {
 		this.detachLocalEditableShortcutCaptureListener();
-		if (this.activeKeybinds.every((entry) => !this.shouldCaptureLocalShortcutInEditable(entry))) return;
+		if (this.resolvedKeybinds.every((entry) => !this.shouldCaptureLocalShortcutInEditable(entry))) return;
 		const onKeyDown = (event: KeyboardEvent): void => {
 			this.handleLocalEditableShortcutCaptureEvent(event, 'press');
 		};
@@ -799,7 +802,8 @@ class KeybindManager {
 	}
 
 	private handleLocalMouseShortcutEvent(event: MouseEvent, type: 'press' | 'release'): void {
-		for (const binding of this.activeMouseShortcutKeybinds) {
+		for (const binding of this.localMouseShortcutKeybinds) {
+			if (!this.isActionAllowedForCurrentView(binding.action)) continue;
 			const combo = binding.combo;
 			if (combo.mouseButton == null) continue;
 			if (event.button !== combo.mouseButton) continue;
@@ -955,7 +959,7 @@ class KeybindManager {
 	private hasGamepadBindings(): boolean {
 		return (
 			this.holdBindings.some((binding) => binding.gamepadButton !== null) ||
-			this.activeGamepadShortcutKeybinds.length > 0
+			this.localGamepadShortcutKeybinds.length > 0
 		);
 	}
 
@@ -1056,7 +1060,8 @@ class KeybindManager {
 			binding.gamepadHeld = pressed;
 			this.fireHoldHandler(binding, pressed ? 'press' : 'release', 'local');
 		}
-		for (const binding of this.activeGamepadShortcutKeybinds) {
+		for (const binding of this.localGamepadShortcutKeybinds) {
+			if (!this.isActionAllowedForCurrentView(binding.action)) continue;
 			const target = binding.combo.gamepadButton;
 			if (target == null) continue;
 			const id = hookShortcutIdForKeybind(binding) ?? `gamepad:${binding.action}:${target}`;
@@ -1156,6 +1161,11 @@ class KeybindManager {
 			return false;
 		}
 		this.globalKeyHookStarted = true;
+		if (NativePermission.isLinuxWaylandDesktop) {
+			void NativePermission.recheckLinuxInputAccess().then((status) => {
+				if (status === 'blocked') NativePermission.requestLinuxInputAccessNagbar(reason);
+			});
+		}
 		const keyEventUnsub = electronApi.onGlobalKeyEvent?.((event) => {
 			this.handleGlobalKeyEvent(
 				event as {
@@ -1543,8 +1553,9 @@ class KeybindManager {
 				desiredCombos.set(shortcut, k.combo);
 			}
 		}
-		for (const k of this.activeMouseShortcutKeybinds) {
+		for (const k of this.localMouseShortcutKeybinds) {
 			if (!k.allowGlobal || (k.combo.global ?? false) !== true) continue;
+			if (!this.isActionAllowedForCurrentView(k.action)) continue;
 			const shortcut = hookShortcutIdForKeybind(k);
 			if (shortcut && !desiredCombos.has(shortcut)) {
 				desiredCombos.set(shortcut, k.combo);
@@ -1650,7 +1661,7 @@ class KeybindManager {
 		this.detachLocalEditableShortcutCaptureListener();
 		this.releaseGamepadShortcutStates();
 		const groups = new Map<string, Array<RuntimeKeybind>>();
-		for (const entry of this.activeKeybinds) {
+		for (const entry of this.resolvedKeybinds) {
 			if (!this.canBindLocalShortcut(entry)) continue;
 			for (const shortcut of comboToCombokeysStrings(entry.combo)) {
 				const entries = groups.get(shortcut);

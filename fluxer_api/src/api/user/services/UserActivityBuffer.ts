@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import {Logger} from '@app/api/Logger';
 import {AuthSessions} from '@app/api/Tables';
@@ -15,7 +15,13 @@ const PENDING_AUTH_SESSION_HASH_KEY = 'auth_session_activity:pending';
 const AUTH_SESSION_TOUCH_KEY_PREFIX = 'auth_session_activity:touched:';
 const WRITE_CONCURRENCY = 64;
 const AUTH_SESSION_TOUCH_DEBOUNCE_TTL_SECONDS = seconds('5 minutes');
+const AUTH_SESSION_EXISTENCE_READ_SLICE = 100;
 type ActivityWriter = typeof upsertOne;
+
+const FETCH_AUTH_SESSION_OWNERS_CQL = AuthSessions.selectCql({
+	columns: ['session_id_hash', 'user_id'],
+	where: AuthSessions.where.in('session_id_hash', 'session_id_hashes'),
+});
 
 interface UserActivityAccountWriter {
 	updateLastActiveAt(params: {userId: UserID; lastActiveAt: Date; lastActiveIp?: string}): Promise<void>;
@@ -135,6 +141,13 @@ export class UserActivityBuffer {
 		}
 	}
 
+	async forgetAuthSessions(sessionIdHashes: ReadonlyArray<Buffer>): Promise<void> {
+		if (sessionIdHashes.length === 0) return;
+		const encoded = sessionIdHashes.map((sessionIdHash) => this.encodeSessionIdHash(sessionIdHash));
+		await this.kv.hdel(PENDING_AUTH_SESSION_HASH_KEY, ...encoded);
+		await this.kv.del(...encoded.map((value) => `${AUTH_SESSION_TOUCH_KEY_PREFIX}${value}`));
+	}
+
 	async drainAndFlush(): Promise<
 		FlushStats & {
 			users: FlushStats;
@@ -167,14 +180,30 @@ export class UserActivityBuffer {
 
 	private async drainAndFlushAuthSessions(): Promise<FlushStats> {
 		const drained = await this.atomicDrainAuthSessions();
-		return flushActivityEntries(
-			drained,
+		const live = await this.liveAuthSessionHashes(drained.map(({sessionIdHash}) => sessionIdHash));
+		const writable = drained.filter(({sessionIdHash}) => live.has(this.encodeSessionIdHash(sessionIdHash)));
+		const stats = await flushActivityEntries(
+			writable,
 			({sessionIdHash, entry}) =>
 				this.writer(
 					AuthSessions.patchByPk({session_id_hash: sessionIdHash}, {approx_last_used_at: Db.set(new Date(entry.ts))}),
 				),
 			'Failed to flush an auth session activity entry',
 		);
+		return {...stats, drained: drained.length, skipped: stats.skipped + drained.length - writable.length};
+	}
+
+	private async liveAuthSessionHashes(sessionIdHashes: ReadonlyArray<Buffer>): Promise<Set<string>> {
+		const live = new Set<string>();
+		for (let index = 0; index < sessionIdHashes.length; index += AUTH_SESSION_EXISTENCE_READ_SLICE) {
+			const rows = await fetchMany<{session_id_hash: Buffer; user_id: UserID | null}>(FETCH_AUTH_SESSION_OWNERS_CQL, {
+				session_id_hashes: sessionIdHashes.slice(index, index + AUTH_SESSION_EXISTENCE_READ_SLICE),
+			});
+			for (const row of rows) {
+				if (row.user_id != null) live.add(this.encodeSessionIdHash(row.session_id_hash));
+			}
+		}
+		return live;
 	}
 
 	private async drainPendingHash(key: string): Promise<Array<[string, string]>> {

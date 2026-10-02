@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {msg} from '@lingui/core/macro';
 
 export const COLORS_DESCRIPTOR = msg({
@@ -57,6 +58,14 @@ export const KEEP_NEKO_STILL_DESCRIPTOR = msg({
 export const ENABLE_FAVORITES_DESCRIPTOR = msg({
 	message: 'Enable favorites',
 	comment: 'Toggle label and settings search entry for controlling whether favorites are visible throughout the app.',
+});
+export const SHOW_HELP_CENTER_BUTTON_DESCRIPTOR = msg({
+	message: 'Show help center button',
+	comment: 'Toggle label and settings search entry for showing the help center button in the sidebar.',
+});
+export const SHOW_DOWNLOAD_BUTTON_DESCRIPTOR = msg({
+	message: 'Show download button',
+	comment: 'Toggle label and settings search entry for showing the download app button in the sidebar.',
 });
 export const NEKO_DESCRIPTOR = msg({
 	message: 'Neko',
@@ -175,10 +184,7 @@ export const VOLUME_DESCRIPTOR = msg({
 	message: 'Volume',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-export const PLUTONIUM_DESCRIPTOR = msg({
-	message: 'Plutonium',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+export const PREMIUM_PRODUCT_NAME_KEYWORD = PREMIUM_PRODUCT_NAME;
 export const DM_DESCRIPTOR = msg({
 	message: 'DM',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

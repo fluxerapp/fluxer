@@ -71,6 +71,7 @@ import type {
 	VideoCaptureOptions,
 } from '../track/options.ts';
 import {isBackupCodec, ScreenSharePresets, VideoPresets} from '../track/options.ts';
+import type {AudioProcessorOptions, TrackProcessor} from '../track/processor/types.ts';
 import {Track} from '../track/Track.ts';
 import {
 	getLogContextFromTrack,
@@ -109,6 +110,7 @@ import {
 	selectPreferredVideoCodec,
 	sleep,
 	stopTransceiversForSender,
+	supportsScalabilityMode,
 	supportsVideoCodec,
 	usesLegacySVCEncodings,
 } from '../utils.ts';
@@ -627,12 +629,25 @@ export default class LocalParticipant extends Participant {
 			this.roomOptions?.audioCaptureDefaults,
 			this.roomOptions?.videoCaptureDefaults,
 		);
+		const audioProcessor =
+			typeof mergedOptionsWithProcessors.audio === 'object' ? mergedOptionsWithProcessors.audio.processor : undefined;
+		if (audioProcessor && typeof mergedOptionsWithProcessors.audio === 'object') {
+			mergedOptionsWithProcessors.audio = {...mergedOptionsWithProcessors.audio, processor: undefined};
+		}
 
 		try {
-			const tracks = await createLocalTracks(mergedOptionsWithProcessors, {
-				loggerName: this.roomOptions.loggerName,
-				loggerContextCb: () => this.logContext,
-			});
+			let tracks: Array<LocalTrack>;
+			try {
+				tracks = await createLocalTracks(mergedOptionsWithProcessors, {
+					loggerName: this.roomOptions.loggerName,
+					loggerContextCb: () => this.logContext,
+				});
+			} catch (err) {
+				await audioProcessor?.destroy().catch((destroyError) => {
+					this.log.warn('failed to destroy an unused audio processor', {...this.logContext, error: destroyError});
+				});
+				throw err;
+			}
 			const localTracks = tracks.map((track) => {
 				if (isAudioTrack(track)) {
 					this.microphoneError = undefined;
@@ -646,6 +661,11 @@ export default class LocalParticipant extends Participant {
 				}
 				return track;
 			});
+			if (audioProcessor) {
+				for (const track of localTracks) {
+					if (isLocalAudioTrack(track)) await this.installCreatedAudioProcessor(track, audioProcessor);
+				}
+			}
 			return localTracks;
 		} catch (err) {
 			if (err instanceof Error) {
@@ -658,6 +678,21 @@ export default class LocalParticipant extends Participant {
 			}
 
 			throw err;
+		}
+	}
+
+	private async installCreatedAudioProcessor(
+		track: LocalAudioTrack,
+		processor: TrackProcessor<Track.Kind.Audio, AudioProcessorOptions>,
+	): Promise<void> {
+		try {
+			await track.setProcessor(processor);
+		} catch (error) {
+			this.log.warn('audio processor could not start, publishing the unprocessed track', {
+				...this.logContext,
+				error,
+			});
+			track.emit(TrackEvent.TrackProcessorUpdate);
 		}
 	}
 
@@ -944,6 +979,9 @@ export default class LocalParticipant extends Participant {
 		}
 
 		const videoCodec = opts.videoCodec;
+		if (!supportsScalabilityMode()) {
+			delete opts.scalabilityMode;
+		}
 
 		track.on(TrackEvent.Muted, this.onTrackMuted);
 		track.on(TrackEvent.Unmuted, this.onTrackUnmuted);
@@ -966,7 +1004,7 @@ export default class LocalParticipant extends Participant {
 		if (settings.noiseSuppression) {
 			audioFeatures.push(AudioTrackFeature.TF_NOISE_SUPPRESSION);
 		}
-		if (settings.channelCount && settings.channelCount > 1) {
+		if (isStereo) {
 			audioFeatures.push(AudioTrackFeature.TF_STEREO);
 		}
 		if (disableDtx) {
@@ -1021,7 +1059,12 @@ export default class LocalParticipant extends Participant {
 				}
 
 				const svcSimulcast = isSVCSimulcast(videoCodec, opts);
-				if (isSVCCodec(videoCodec) && !svcSimulcast && track.source !== Track.Source.ScreenShare) {
+				if (
+					isSVCCodec(videoCodec) &&
+					!svcSimulcast &&
+					track.source !== Track.Source.ScreenShare &&
+					supportsScalabilityMode()
+				) {
 					opts.scalabilityMode = opts.scalabilityMode ?? 'L3T3_KEY';
 				}
 
@@ -1851,7 +1894,7 @@ export default class LocalParticipant extends Participant {
 				if (!track.isMuted) {
 					this.log.debug('track ended, attempting to use a different device', getLogContextFromTrack(track));
 					if (isLocalAudioTrack(track)) {
-						await track.restartTrack({deviceId: 'default'});
+						await track.restartTrack({...(track.constraints as AudioCaptureOptions), deviceId: 'default'});
 					} else {
 						await track.restartTrack();
 					}

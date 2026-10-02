@@ -10,6 +10,11 @@ import {createChildLogger} from '@electron/common/Logger';
 import {type EvdevKeyEvent, type EvdevMouseEvent, getEvdevHook, nameToEvdevKeycode} from '@electron/main/EvdevHook';
 import {GlobalKeyHookLifecycle} from '@electron/main/GlobalKeyHookLifecycle';
 import {getLinuxInputHookMode} from '@electron/main/LaunchOptions';
+import {
+	hasLinuxEvdevAccess,
+	isFullKeyboardKeyCapabilities,
+	type LinuxEvdevAccessProbe,
+} from '@electron/main/LinuxInputAccess';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {getTccStatus} from '@electron/main/MacTcc';
 import {getMainWindow} from '@electron/main/Window';
@@ -315,6 +320,15 @@ async function startEvdevBackend(): Promise<boolean> {
 	return true;
 }
 
+async function reopenEvdevDevices(): Promise<void> {
+	if (activeBackend !== 'evdev') return;
+	const evdev = getEvdevHook();
+	evdev.stop();
+	if (!(await evdev.start())) {
+		logger.warn('evdev input backend did not reopen after input access changed');
+	}
+}
+
 function startNativeBackend(): boolean {
 	const moduleName = nativeModuleNameForPlatform();
 	if (moduleName === null) return false;
@@ -374,7 +388,16 @@ async function startHook(): Promise<boolean> {
 			}
 			return false;
 		}
-		if (await startEvdevBackend()) {
+		const probe = await probeLinuxEvdevAccess();
+		const keyboardsReadable = hasLinuxEvdevAccess(probe);
+		if (!keyboardsReadable) {
+			logger.warn('Not every keyboard input device is readable', {
+				keyboardDevices: probe.keyboardDevices,
+				readableKeyboardDevices: probe.readableKeyboardDevices,
+				readableEventDevices: probe.readableEventDevices,
+			});
+		}
+		if ((keyboardsReadable || wayland) && (await startEvdevBackend())) {
 			activeBackend = 'evdev';
 			return true;
 		}
@@ -495,34 +518,46 @@ async function checkInputMonitoringAccess(): Promise<boolean> {
 	return false;
 }
 
-interface LinuxEvdevAccessProbe {
-	totalEventDevices: number;
-	readableEventDevices: number;
-	inInputGroup: boolean;
-}
-
 async function probeLinuxEvdevAccess(): Promise<LinuxEvdevAccessProbe> {
-	if (process.platform !== 'linux') {
-		return {totalEventDevices: 0, readableEventDevices: 0, inInputGroup: true};
-	}
-	const inInputGroup = isFlatpakRuntime() ? false : await isUserInInputGroup();
+	const probe: LinuxEvdevAccessProbe = {
+		totalEventDevices: 0,
+		readableEventDevices: 0,
+		keyboardDevices: 0,
+		readableKeyboardDevices: 0,
+		inInputGroup: true,
+	};
+	if (process.platform !== 'linux') return probe;
+	probe.inInputGroup = isFlatpakRuntime() ? false : await isUserInInputGroup();
 	let entries: Array<string>;
 	try {
 		entries = await readdir('/dev/input');
 	} catch {
-		return {totalEventDevices: 0, readableEventDevices: 0, inInputGroup};
+		return probe;
 	}
-	let total = 0;
-	let readable = 0;
 	for (const name of entries) {
 		if (!name.startsWith('event')) continue;
-		total += 1;
+		probe.totalEventDevices += 1;
+		let readable = false;
 		try {
 			accessSync(path.join('/dev/input', name), fsConstants.R_OK);
-			readable += 1;
+			readable = true;
 		} catch {}
+		if (readable) probe.readableEventDevices += 1;
+		if (await isKeyboardEventDevice(name)) {
+			probe.keyboardDevices += 1;
+			if (readable) probe.readableKeyboardDevices += 1;
+		}
 	}
-	return {totalEventDevices: total, readableEventDevices: readable, inInputGroup};
+	return probe;
+}
+
+async function isKeyboardEventDevice(name: string): Promise<boolean> {
+	try {
+		const capabilities = await readFile(path.join('/sys/class/input', name, 'device/capabilities/key'), 'utf8');
+		return isFullKeyboardKeyCapabilities(capabilities);
+	} catch {
+		return false;
+	}
 }
 
 async function isUserInInputGroup(): Promise<boolean> {
@@ -563,6 +598,8 @@ async function _collectLinuxEvdevDiagnostics(): Promise<Record<string, unknown>>
 		flatpak: isFlatpakRuntime(),
 		totalEventDevices: probe.totalEventDevices,
 		readableEventDevices: probe.readableEventDevices,
+		keyboardDevices: probe.keyboardDevices,
+		readableKeyboardDevices: probe.readableKeyboardDevices,
 		inInputGroup: probe.inInputGroup,
 	};
 }
@@ -604,7 +641,7 @@ async function getLinuxEvdevStatus(): Promise<LinuxEvdevStatus> {
 		};
 	}
 	const probe = await probeLinuxEvdevAccess();
-	const hasAccess = probe.inInputGroup || probe.readableEventDevices > 0;
+	const hasAccess = hasLinuxEvdevAccess(probe);
 	let username: string | null = null;
 	try {
 		username = userInfo().username;
@@ -701,7 +738,7 @@ async function grantLinuxEvdevAccess(): Promise<LinuxEvdevGrantResult> {
 		};
 	}
 	const before = await probeLinuxEvdevAccess();
-	if (before.inInputGroup || before.readableEventDevices > 0) {
+	if (hasLinuxEvdevAccess(before)) {
 		return {success: true, needsRelogin: false};
 	}
 	const username = (() => {
@@ -719,7 +756,8 @@ async function grantLinuxEvdevAccess(): Promise<LinuxEvdevGrantResult> {
 		return {success: false, needsRelogin: false, error: uaccess.error};
 	}
 	const afterUaccess = await waitForLinuxEvdevAccessRefresh();
-	if (afterUaccess.inInputGroup || afterUaccess.readableEventDevices > 0) {
+	if (hasLinuxEvdevAccess(afterUaccess)) {
+		await reopenEvdevDevices();
 		return {success: true, needsRelogin: false};
 	}
 	const groupFallback = await runPkexec(['usermod', '-aG', 'input', username]);

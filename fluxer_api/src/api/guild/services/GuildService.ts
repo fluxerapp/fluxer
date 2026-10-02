@@ -58,7 +58,6 @@ import type {
 import type {GuildUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 
 interface StoredAuditLogWebhookResponse extends Omit<AuditLogWebhookResponse, 'type'> {
 	type: number;
@@ -113,7 +112,6 @@ export class GuildService {
 		webhookRepository: IWebhookRepository,
 		guildAuditLogService: GuildAuditLogService,
 		limitConfigService: LimitConfigService,
-		ipInfoService: IpInfoService,
 	) {
 		const {
 			cache: cacheService,
@@ -153,7 +151,6 @@ export class GuildService {
 			rateLimitService,
 			guildAuditLogService,
 			limitConfigService,
-			ipInfoService,
 		);
 		this.roles = new GuildRoleService(
 			guildRepository,
@@ -171,7 +168,6 @@ export class GuildService {
 			userCacheService,
 			workerService,
 			guildAuditLogService,
-			ipInfoService,
 		);
 		this.content = new GuildContentService(
 			guildRepository,

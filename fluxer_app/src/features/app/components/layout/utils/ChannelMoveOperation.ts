@@ -9,7 +9,9 @@ import {
 } from '@fluxer/schema/src/domains/channel/GuildChannelOrdering';
 
 const isTextChannel = (channel: Channel) =>
-	channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_LINK;
+	channel.type === ChannelTypes.GUILD_TEXT ||
+	channel.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+	channel.type === ChannelTypes.GUILD_LINK;
 const isCategoryChannel = (channel: Channel) => channel.type === ChannelTypes.GUILD_CATEGORY;
 const gatherCategoryBlock = (channels: ReadonlyArray<Channel>, categoryId: string) => {
 	return channels.filter((ch) => ch.id === categoryId || ch.parentId === categoryId);

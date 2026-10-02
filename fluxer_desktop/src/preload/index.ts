@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {PASSKEY_RP_IDS} from '@electron/common/Constants';
 import type {
 	AppMetricsSnapshot,
 	ClipboardWriteFileOptions,
@@ -49,6 +50,7 @@ import type {
 	StreamerModeCaptureAppStatus,
 	StreamingPriorityDiagnostics,
 	TextareaContextMenuParams,
+	ThemeLinkedFileChange,
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
 	UpdaterContext,
@@ -352,6 +354,13 @@ const api: ElectronAPI = {
 	readThemeLocalFiles: (paths: Array<string>) => ipcRenderer.invoke('theme-local-files-read', paths),
 	clearThemeLocalFiles: () => ipcRenderer.invoke('theme-local-files-clear'),
 	importThemeDirectory: () => ipcRenderer.invoke('theme-directory-import'),
+	pickThemeLinkedFiles: (options?: {multiple?: boolean}) => ipcRenderer.invoke('theme-linked-files-pick', options),
+	watchThemeLinkedFiles: (paths: Array<string>) => ipcRenderer.invoke('theme-linked-files-watch', paths),
+	onThemeLinkedFileChange: (callback: (change: ThemeLinkedFileChange) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, change: ThemeLinkedFileChange) => callback(change);
+		ipcRenderer.on('theme-linked-file-changed', handler);
+		return () => ipcRenderer.removeListener('theme-linked-file-changed', handler);
+	},
 	cacheVoiceBackgroundMedia: (options) => ipcRenderer.invoke('voice-background-media-cache:write', options),
 	readVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:read', id),
 	deleteVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:delete', id),
@@ -451,6 +460,7 @@ const api: ElectronAPI = {
 		options: PublicKeyCredentialCreationOptionsJSON,
 		requestContext?: {pin?: string},
 	): Promise<RegistrationResponseJSON> => ipcRenderer.invoke('passkey-register', options, requestContext),
+	passkeyRpIds: PASSKEY_RP_IDS,
 	domainMigration: {
 		version: 1,
 		setAppOrigin: (origin: string): Promise<void> => ipcRenderer.invoke('domain-migration:set-app-origin', origin),

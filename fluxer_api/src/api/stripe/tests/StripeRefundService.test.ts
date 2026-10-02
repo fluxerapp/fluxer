@@ -487,4 +487,90 @@ describe('StripeRefundService self-serve refund', () => {
 			expect(idempotencyKeys[1]).toContain('retry-1');
 		});
 	});
+	describe('self-serve refund teardown targeting', () => {
+		function trackingSubscriptionDeleteHandler(deleted: Array<string>) {
+			return http.delete(`${STRIPE_API_BASE}/v1/subscriptions/:id`, ({params}) => {
+				deleted.push(String(params.id));
+				return HttpResponse.json({id: params.id, object: 'subscription', status: 'canceled'});
+			});
+		}
+
+		function buildRefundUpdatedEvent(opts: {
+			eventId: string;
+			refundId: string;
+			userId: string;
+			invoiceId: string;
+			subscriptionId: string;
+		}): StripeWebhookEventData {
+			return {
+				id: opts.eventId,
+				type: 'refund.updated',
+				data: {
+					object: {
+						id: opts.refundId,
+						object: 'refund',
+						status: 'succeeded',
+						amount: 2500,
+						currency: 'usd',
+						metadata: {
+							refund_kind: 'self_serve',
+							user_id: opts.userId,
+							invoice_id: opts.invoiceId,
+							subscription_id: opts.subscriptionId,
+						},
+					},
+				},
+			};
+		}
+
+		test('leaves a newer subscription alone when the refunded one is no longer current', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const deleted: Array<string> = [];
+			server.use(trackingSubscriptionDeleteHandler(deleted));
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: 'sub_bought_after_the_refund',
+			});
+			await sendWebhook(
+				buildRefundUpdatedEvent({
+					eventId: 'evt_stale_teardown',
+					refundId: 're_stale_teardown',
+					userId: account.userId,
+					invoiceId: 'in_stale_teardown',
+					subscriptionId: 'sub_refunded_and_already_gone',
+				}),
+			);
+			expect(deleted).toEqual([]);
+			const userRepository = new UserRepository();
+			const user = await userRepository.findUnique(userId);
+			expect(user!.stripeSubscriptionId).toBe('sub_bought_after_the_refund');
+		});
+
+		test('cancels the subscription when the refunded one is still current', async () => {
+			server.use(...createStripeApiHandlers().handlers);
+			const deleted: Array<string> = [];
+			server.use(trackingSubscriptionDeleteHandler(deleted));
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+			await setStripeIds(harness, account, {
+				stripe_customer_id: MOCK_CUSTOMER_ID,
+				stripe_subscription_id: MOCK_SUBSCRIPTION_ID,
+			});
+			await sendWebhook(
+				buildRefundUpdatedEvent({
+					eventId: 'evt_current_teardown',
+					refundId: 're_current_teardown',
+					userId: account.userId,
+					invoiceId: 'in_current_teardown',
+					subscriptionId: MOCK_SUBSCRIPTION_ID,
+				}),
+			);
+			expect(deleted).toEqual([MOCK_SUBSCRIPTION_ID]);
+			const userRepository = new UserRepository();
+			const user = await userRepository.findUnique(userId);
+			expect(user!.stripeSubscriptionId).toBeNull();
+		});
+	});
 });

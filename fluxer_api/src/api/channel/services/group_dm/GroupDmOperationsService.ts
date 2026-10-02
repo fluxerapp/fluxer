@@ -19,6 +19,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {User} from '@app/api/models/User';
 import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -69,6 +70,7 @@ export class GroupDmOperationsService {
 		if (!channel.recipientIds.has(userId)) {
 			throw new MissingAccessError();
 		}
+		await this.assertInviterNotLimited(userId);
 		const friendship = await this.userRepository.getRelationship(userId, recipientId, RelationshipTypes.FRIEND);
 		if (!friendship) {
 			throw new NotFriendsWithUserError();
@@ -105,6 +107,7 @@ export class GroupDmOperationsService {
 		if (!channel.recipientIds.has(userId)) {
 			throw new MissingAccessError();
 		}
+		await this.assertInviterNotLimited(userId);
 		const {channel: updatedChannel} = await this.addRecipientViaInviteWithResult({
 			channelId,
 			recipientId: botUserId,
@@ -112,6 +115,11 @@ export class GroupDmOperationsService {
 			requestCache,
 		});
 		return updatedChannel;
+	}
+
+	private async assertInviterNotLimited(userId: UserID): Promise<void> {
+		const user = await this.userRepository.findUnique(userId);
+		if (user) assertAccountNotLimited(user);
 	}
 
 	async addRecipientViaInvite({

@@ -198,6 +198,10 @@ function cleanVideoDeviceLabel(rawLabel: string, deviceId: string): string {
 	return label;
 }
 
+export function normalizeDeviceMatchLabel(kind: MediaDeviceKind, deviceId: string, label: string): string {
+	return kind === 'videoinput' ? cleanVideoDeviceLabel(label, deviceId) : cleanAudioDeviceLabel(label);
+}
+
 function normalizeAudioDeviceLabel(
 	device: AudioDeviceShapeInput,
 	endpointLabelsByGroupId?: ReadonlyMap<string, string>,

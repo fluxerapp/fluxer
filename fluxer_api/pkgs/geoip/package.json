@@ -11,13 +11,10 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "catalog:",
-		"@pkgs/cassandra": "workspace:*",
 		"@fluxer/geo_utils": "workspace:*",
 		"@fluxer/instance_bootstrap": "workspace:*",
 		"@fluxer/ip_utils": "workspace:*",
-		"@pkgs/postgres": "workspace:*",
-		"maxmind": "catalog:",
-		"zod": "catalog:"
+		"maxmind": "catalog:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

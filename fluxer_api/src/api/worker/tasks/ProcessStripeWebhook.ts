@@ -2,7 +2,8 @@
 
 import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
-import {ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {Config} from '@app/api/Config';
+import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
 import {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
 import {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
@@ -22,11 +23,15 @@ const PayloadSchema = z.object({
 const processStripeWebhook: WorkerTaskHandler = async (payload, helpers) => {
 	const {body, signature} = PayloadSchema.parse(payload);
 	const deps = getWorkerDependencies();
-	if (!deps.stripe) {
+	const stripe = deps.stripe;
+	if (!stripe) {
+		if (Config.instance.selfHosted) {
+			throw new Error('Stripe is not configured on this worker yet; retrying webhook event');
+		}
 		helpers.logger.warn('Stripe is not configured; discarding webhook event');
 		return;
 	}
-	const productRegistry = new ProductRegistry();
+	const productRegistry = getProductRegistry();
 	const sessionTerminator: ISessionTerminator = {
 		async terminateAllUserSessions(userId) {
 			await revokeAllAuthSessions({users: deps.userRepository, gateway: deps.gatewayService}, userId);
@@ -38,34 +43,34 @@ const processStripeWebhook: WorkerTaskHandler = async (payload, helpers) => {
 		deps.guildRepository,
 		deps.guildService,
 	);
-	const checkoutService = new StripeCheckoutService(
-		deps.stripe,
-		deps.userRepository,
-		productRegistry,
-		deps.cacheService,
-	);
+	const checkoutService = new StripeCheckoutService(stripe, deps.userRepository, productRegistry, deps.cacheService);
 	const subscriptionService = new StripeSubscriptionService(
-		deps.stripe,
+		stripe,
 		deps.userRepository,
 		productRegistry,
 		deps.cacheService,
 		deps.gatewayService,
+		deps.storeEntitlementService,
 	);
 	const giftService = new StripeGiftService(
-		deps.stripe,
+		stripe,
 		deps.userRepository,
 		deps.cacheService,
 		deps.gatewayService,
 		checkoutService,
 		premiumService,
 		subscriptionService,
+		deps.storeEntitlementService,
 	);
-	const ageVerificationService = deps.stripe
-		? new AgeVerificationService(deps.stripe, deps.userRepository, deps.gatewayService, deps.cacheService)
-		: null;
-	const refundService = new StripeRefundService(deps.stripe, deps.userRepository, subscriptionService);
+	const ageVerificationService = new AgeVerificationService(
+		stripe,
+		deps.userRepository,
+		deps.gatewayService,
+		deps.cacheService,
+	);
+	const refundService = new StripeRefundService(stripe, deps.userRepository, subscriptionService);
 	const webhookService = new StripeWebhookService(
-		deps.stripe,
+		stripe,
 		checkoutService,
 		deps.userRepository,
 		deps.userCacheService,
@@ -84,6 +89,7 @@ const processStripeWebhook: WorkerTaskHandler = async (payload, helpers) => {
 		deps.snowflakeService,
 		deps.billingRepository,
 		refundService,
+		deps.storeEntitlementService,
 	);
 	await webhookService.handleWebhook({body, signature});
 };

@@ -62,7 +62,7 @@ import {setWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {initializeWorkerDependencies} from '@app/api/worker/WorkerDependencies';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
-import {PremiumFlags, SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {EmailServiceNotTestableError} from '@fluxer/errors/src/domains/auth/EmailServiceNotTestableError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
@@ -71,14 +71,12 @@ import {DeletionFailedError} from '@fluxer/errors/src/domains/core/DeletionFaile
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InvalidAclsFormatError} from '@fluxer/errors/src/domains/core/InvalidAclsFormatError';
 import {InvalidFlagsFormatError} from '@fluxer/errors/src/domains/core/InvalidFlagsFormatError';
-import {InvalidSuspiciousFlagsFormatError} from '@fluxer/errors/src/domains/core/InvalidSuspiciousFlagsFormatError';
 import {InvalidSystemFlagError} from '@fluxer/errors/src/domains/core/InvalidSystemFlagError';
 import {InvalidTimestampError} from '@fluxer/errors/src/domains/core/InvalidTimestampError';
 import {NoPendingDeletionError} from '@fluxer/errors/src/domains/core/NoPendingDeletionError';
 import {ProcessingFailedError} from '@fluxer/errors/src/domains/core/ProcessingFailedError';
 import {TestHarnessDisabledError} from '@fluxer/errors/src/domains/core/TestHarnessDisabledError';
 import {TestHarnessForbiddenError} from '@fluxer/errors/src/domains/core/TestHarnessForbiddenError';
-import {UnknownSuspiciousFlagError} from '@fluxer/errors/src/domains/core/UnknownSuspiciousFlagError';
 import {UpdateFailedError} from '@fluxer/errors/src/domains/core/UpdateFailedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
@@ -238,7 +236,6 @@ async function initializeWorkerDepsWithHarnessEmail(ctx: Context<HonoEnv>, snowf
 
 const userFlagEntries = Object.entries(UserFlags);
 const premiumFlagEntries = Object.entries(PremiumFlags);
-const suspiciousFlagEntries = Object.entries(SuspiciousActivityFlags);
 
 function parseUserFlagNames(names: Array<string>): bigint | null {
 	let mask = 0n;
@@ -258,18 +255,6 @@ function parsePremiumFlagNames(names: Array<string>): number | null {
 		const entry = premiumFlagEntries.find(([flagName]) => flagName === name);
 		if (!entry) return null;
 		mask |= entry[1] as number;
-	}
-	return mask;
-}
-
-function parseSuspiciousFlagNames(names: Array<string>): number | null {
-	let mask = 0;
-	for (const name of names) {
-		const entry = suspiciousFlagEntries.find(([flagName]) => flagName === name);
-		if (!entry) {
-			return null;
-		}
-		mask |= entry[1];
 	}
 	return mask;
 }
@@ -443,8 +428,6 @@ export function TestHarnessController(app: HonoApp) {
 			clear_flags: clearFlags,
 			set_premium_flags: setPremiumFlags,
 			clear_premium_flags: clearPremiumFlags,
-			suspicious_activity_flags: suspiciousFlagsValue,
-			suspicious_activity_flag_names: suspiciousFlagNames,
 			email_bounced: emailBounced,
 			email_verified: emailVerified,
 		} = body as {
@@ -452,8 +435,6 @@ export function TestHarnessController(app: HonoApp) {
 			clear_flags?: Array<string>;
 			set_premium_flags?: Array<string>;
 			clear_premium_flags?: Array<string>;
-			suspicious_activity_flags?: number | null;
-			suspicious_activity_flag_names?: Array<string>;
 			email_bounced?: boolean;
 			email_verified?: boolean;
 		};
@@ -493,20 +474,6 @@ export function TestHarnessController(app: HonoApp) {
 		if (setPremiumFlags || clearPremiumFlags) {
 			pendingUpdates['premium_flags'] = nextPremiumFlags;
 		}
-		let suspiciousValue: number | null | undefined = suspiciousFlagsValue;
-		if (Array.isArray(suspiciousFlagNames)) {
-			const parsed = parseSuspiciousFlagNames(suspiciousFlagNames);
-			if (parsed === null) {
-				throw new UnknownSuspiciousFlagError();
-			}
-			suspiciousValue = parsed;
-		}
-		if (suspiciousValue !== undefined) {
-			if (suspiciousValue !== null && typeof suspiciousValue !== 'number') {
-				throw new InvalidSuspiciousFlagsFormatError();
-			}
-			pendingUpdates['suspicious_activity_flags'] = suspiciousValue;
-		}
 		if (emailBounced !== undefined) {
 			if (typeof emailBounced !== 'boolean') {
 				throw new InvalidFlagsFormatError();
@@ -527,7 +494,6 @@ export function TestHarnessController(app: HonoApp) {
 			success: true,
 			updated: true,
 			flags: (pendingUpdates['flags'] as bigint | undefined)?.toString() ?? user.flags?.toString(),
-			suspicious_activity_flags: pendingUpdates['suspicious_activity_flags'] ?? user.suspiciousActivityFlags ?? null,
 			email_bounced: pendingUpdates['email_bounced'] ?? user.emailBounced,
 			email_verified: pendingUpdates['email_verified'] ?? user.emailVerified,
 		});
@@ -1725,6 +1691,7 @@ export function TestHarnessController(app: HonoApp) {
 				kvClient: workerDeps.kvClient,
 				userRepository: workerDeps.userRepository,
 				deletionQueueService: workerDeps.deletionQueueService,
+				gatewayService: workerDeps.gatewayService,
 				emailService: workerDeps.emailService,
 				isEmailEnabled: () => workerDeps.instanceConfigRepository.isEmailEnabled(),
 				activityTracker: workerDeps.activityTracker,
@@ -2745,8 +2712,7 @@ export function TestHarnessController(app: HonoApp) {
 		}
 		const userId = createUserID(BigInt(userIdParam));
 		const body = await ctx.req.json();
-		const {has_verified_phone, email} = body as {
-			has_verified_phone?: boolean;
+		const {email} = body as {
 			email?: string | null;
 		};
 		const userRepository = new UserRepository();
@@ -2755,9 +2721,6 @@ export function TestHarnessController(app: HonoApp) {
 			throw new UnknownUserError();
 		}
 		const updates: Record<string, unknown> = {};
-		if (has_verified_phone !== undefined) {
-			updates['has_verified_phone'] = has_verified_phone;
-		}
 		if (email !== undefined) {
 			updates['email'] = email;
 		}
@@ -2773,7 +2736,6 @@ export function TestHarnessController(app: HonoApp) {
 		return ctx.json({
 			success: true,
 			updated: true,
-			has_verified_phone: updates['has_verified_phone'] ?? user.hasVerifiedPhone,
 			email: updates['email'] ?? user.email,
 		});
 	});

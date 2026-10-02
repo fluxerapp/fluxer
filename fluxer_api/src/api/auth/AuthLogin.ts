@@ -14,6 +14,7 @@ import {
 	createUserID,
 } from '@app/api/BrandedTypes';
 import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
@@ -23,6 +24,7 @@ import type {InviteService} from '@app/api/invite/InviteService';
 import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {AuthSession as AuthSessionModel} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
@@ -106,6 +108,16 @@ function getTokenCacheKey(token: string): string {
 	return `ip-auth-token:${token}`;
 }
 
+function emitLogin(user: User, ok: boolean, details: {failure?: string; mfa?: boolean; newIp?: boolean} = {}): void {
+	void emitActivity('login', user.id.toString(), {
+		user_id: user.id.toString(),
+		ok,
+		failure: details.failure ?? null,
+		mfa: details.mfa ?? false,
+		new_ip: details.newIp ?? false,
+	});
+}
+
 export async function resendIpAuthorization(
 	ctx: ApiContext,
 	ticket: string,
@@ -178,6 +190,7 @@ export async function completeIpAuthorization(
 	AuthUtility.assertNonBotUser(ctx, user);
 	await users.createAuthorizedIp(user.id, payload.origin.ip);
 	const [sessionToken] = await AuthSession.createAuthSession(ctx, {user, origin: payload.origin});
+	emitLogin(user, true, {newIp: true});
 	await cache.delete(cacheKey);
 	await cache.delete(getTokenCacheKey(token));
 	return {token: sessionToken, user_id: user.id.toString(), ticket: tokenMapping.ticket};
@@ -221,6 +234,7 @@ export async function login(
 	AuthUtility.assertNonBotUser(ctx, user);
 	if (!user.passwordHash) {
 		await AuthPassword.verifyPassword(ctx, {password: data.password, passwordHash: DUMMY_ARGON2_HASH});
+		emitLogin(user, false, {failure: 'no_password'});
 		throw InputValidationError.fromCodes([
 			{path: 'email', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
 			{path: 'password', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
@@ -231,39 +245,17 @@ export async function login(
 		passwordHash: user.passwordHash,
 	});
 	if (!isMatch) {
+		emitLogin(user, false, {failure: 'bad_password'});
 		throw InputValidationError.fromCodes([
 			{path: 'email', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
 			{path: 'password', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
 		]);
 	}
-	let currentUser = await AuthUtility.handleBanStatus(ctx, user);
-	if ((currentUser.flags & UserFlags.DISABLED) !== 0n && !currentUser.tempBannedUntil) {
-		const updatedFlags = currentUser.flags & ~UserFlags.DISABLED;
-		currentUser = await users.patchUpsert(
-			currentUser.id,
-			{
-				flags: updatedFlags,
-			},
-			currentUser.toRow(),
-		);
-		Logger.info({userId: currentUser.id}, 'Auto-undisabled user on login');
-	}
-	if ((currentUser.flags & UserFlags.SELF_DELETED) !== 0n) {
-		const pendingDeletionAt = currentUser.pendingDeletionAt;
-		const updatedFlags = currentUser.flags & ~UserFlags.SELF_DELETED;
-		currentUser = await users.updateDeletionSchedule(currentUser, {
-			flags: updatedFlags,
-			pending_deletion_at: null,
-			deletion_reason_code: null,
-			deletion_public_reason: null,
-			deletion_audit_log_reason: null,
-		});
-		if (pendingDeletionAt) {
-			await users.removePendingDeletion(currentUser.id, pendingDeletionAt);
-		}
-		await kvDeletionQueue.removeFromQueue(currentUser.id);
-		Logger.info({userId: currentUser.id}, 'Auto-cancelled deletion on login');
-	}
+	const currentUser = await AuthUtility.reactivateOnSignIn(
+		ctx,
+		await AuthUtility.handleBanStatus(ctx, user),
+		kvDeletionQueue,
+	);
 	if (currentUser.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) {
 		throw new RegistrationPendingApprovalError();
 	}
@@ -274,8 +266,10 @@ export async function login(
 		currentUser.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) ||
 		currentUser.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN);
 	const isAppStoreReviewer = (currentUser.flags & UserFlags.APP_STORE_REVIEWER) !== 0n;
+	let newIp = false;
 	if (!hasMfa && !isAppStoreReviewer) {
 		const isIpAuthorized = await users.checkIpAuthorized(currentUser.id, clientIp);
+		newIp = !isIpAuthorized;
 		if (!isIpAuthorized) {
 			const instanceConfigRepository = getInstanceConfigRepository();
 			const [integrationsConfig, effectiveEmailConfig] = await Promise.all([
@@ -317,6 +311,7 @@ export async function login(
 					clientLocation,
 					currentUser.locale,
 				);
+				emitLogin(currentUser, false, {failure: 'ip_authorization_required', newIp: true});
 				throw new IpAuthorizationRequiredError({
 					ticket,
 					email: currentUser.email!,
@@ -344,6 +339,7 @@ export async function login(
 		user: currentUser,
 		origin: AuthSession.resolveSessionOrigin(ctx, request),
 	});
+	emitLogin(currentUser, true, {newIp});
 	return {
 		user_id: currentUser.id.toString(),
 		token,
@@ -353,7 +349,7 @@ export async function login(
 const MFA_TICKET_MAX_ATTEMPTS = 5;
 const MFA_USER_MAX_ATTEMPTS = 10;
 
-async function consumeMfaAttempt(
+export async function consumeMfaAttempt(
 	ctx: ApiContext,
 	{userId, ticket, field}: {userId: string; ticket: string; field: string},
 ): Promise<void> {
@@ -381,7 +377,7 @@ export async function loginMfaTotp(
 	ctx: ApiContext,
 	{code, ticket, request}: LoginMfaTotpParams,
 ): Promise<LoginTokenResult> {
-	const {users, cache, rateLimit} = ctx.services;
+	const {users, cache} = ctx.services;
 	const userId = await cache.get<string>(`mfa-ticket:${ticket}`);
 	if (!userId) {
 		throw InputValidationError.fromCode('ticket', ValidationErrorCodes.SESSION_TIMEOUT);
@@ -405,21 +401,38 @@ export async function loginMfaTotp(
 	if (!isValid) {
 		throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_CODE);
 	}
+	const [token] = await completeMfaLogin(ctx, user, ticket, request);
+	return {user_id: user.id.toString(), token};
+}
+
+export async function createLoginSession(
+	ctx: ApiContext,
+	user: User,
+	request: Request,
+): Promise<[token: string, AuthSessionModel]> {
+	return AuthSession.createAuthSession(ctx, {user, origin: AuthSession.resolveSessionOrigin(ctx, request)});
+}
+
+export async function completeMfaLogin(
+	ctx: ApiContext,
+	user: User,
+	ticket: string,
+	request: Request,
+): Promise<[token: string, AuthSessionModel]> {
+	const {cache, rateLimit} = ctx.services;
 	await cache.delete(`mfa-ticket:${ticket}`);
 	await rateLimit.resetLimit(`mfa:ticket:${ticket}`);
 	await rateLimit.resetLimit(`mfa:user:${user.id}`);
-	const [token] = await AuthSession.createAuthSession(ctx, {
-		user,
-		origin: AuthSession.resolveSessionOrigin(ctx, request),
-	});
-	return {user_id: user.id.toString(), token};
+	const session = await createLoginSession(ctx, user, request);
+	emitLogin(user, true, {mfa: true});
+	return session;
 }
 
 export async function loginMfaWebAuthn(
 	ctx: ApiContext,
 	{response, challenge, ticket, request}: LoginMfaWebAuthnParams,
 ): Promise<LoginTokenResult> {
-	const {users, cache, rateLimit} = ctx.services;
+	const {users, cache} = ctx.services;
 	const userId = await cache.get<string>(`mfa-ticket:${ticket}`);
 	if (!userId) {
 		throw InputValidationError.fromCode('ticket', ValidationErrorCodes.SESSION_TIMEOUT);
@@ -434,13 +447,7 @@ export async function loginMfaWebAuthn(
 	}
 	await consumeMfaAttempt(ctx, {userId: user.id.toString(), ticket, field: 'ticket'});
 	await AuthMfa.verifyWebAuthnAuthentication(ctx, user.id, response, challenge, 'mfa', ticket);
-	await cache.delete(`mfa-ticket:${ticket}`);
-	await rateLimit.resetLimit(`mfa:ticket:${ticket}`);
-	await rateLimit.resetLimit(`mfa:user:${user.id}`);
-	const [token] = await AuthSession.createAuthSession(ctx, {
-		user,
-		origin: AuthSession.resolveSessionOrigin(ctx, request),
-	});
+	const [token] = await completeMfaLogin(ctx, user, ticket, request);
 	return {user_id: user.id.toString(), token};
 }
 

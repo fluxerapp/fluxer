@@ -387,7 +387,6 @@ async fn run_message_job(
         guild_id = %job.guild_id,
         channel_id = %job.channel_id,
         message_id = %job.message_id,
-        config_version = job.config_version,
         recipients = job.user_ids.len(),
         subscriptions = summary.subscriptions,
         accepted = summary.accepted,
@@ -432,7 +431,6 @@ async fn run_clear_job(state: &AppState, sends: &Semaphore, job: ClearJob) -> an
         user_id = %job.user_id,
         channel_id = %job.channel_id,
         message_id = %job.message_id,
-        config_version = job.config_version,
         recipients = 1,
         subscriptions = summary.subscriptions,
         accepted = summary.accepted,
@@ -455,7 +453,6 @@ async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyh
             user_id = %job.user_id,
             channel_id = %job.channel_id,
             message_id = %job.message_id,
-            config_version = job.config_version,
             expires_at_ms = job.expires_at_ms,
             "push ring dropped past its ring window"
         );
@@ -487,7 +484,6 @@ async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyh
         user_id = %job.user_id,
         channel_id = %job.channel_id,
         message_id = %job.message_id,
-        config_version = job.config_version,
         recipients = 1,
         subscriptions = summary.subscriptions,
         accepted = summary.accepted,

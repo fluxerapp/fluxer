@@ -7,21 +7,23 @@ use crate::transport::{
     Transport, TransportMessage, TransportSubscriber, reply_bytes, reply_json_error,
 };
 use anyhow::Context;
+use futures::future::{BoxFuture, FutureExt, Shared};
 use futures::stream::{FuturesUnordered, StreamExt};
-use moka::future::Cache;
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::future::Future;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::{Semaphore, TryAcquireError};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
-pub(crate) const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
-const INFLIGHT_TTL: Duration = Duration::from_millis(200);
-const INFLIGHT_MAX_ENTRIES: u64 = 10_000;
+pub const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_BROADCAST_CONCURRENCY: usize = 32;
 const MAX_ROUTER_REQUEST_BYTES: usize = 2 * 1024 * 1024;
 const LEGACY_SHARD_DECODE_ERROR: &[u8] = br#"{"error":"shard_request_decode_error"}"#;
 type InflightKey = (String, String);
+type InflightCall = Shared<BoxFuture<'static, Result<Vec<u8>, Arc<anyhow::Error>>>>;
+type Inflight = Arc<Mutex<HashMap<InflightKey, InflightCall>>>;
 
 pub trait RouterService: Send + Sync + 'static {
     type Request: serde::Serialize + serde::de::DeserializeOwned + Send + Sync + 'static;
@@ -186,6 +188,29 @@ async fn forward_to_all_shards<S: RouterService>(
     }
 }
 
+async fn coalesce<F>(inflight: &Inflight, key: InflightKey, call: F) -> anyhow::Result<Vec<u8>>
+where
+    F: Future<Output = anyhow::Result<Vec<u8>>> + Send + 'static,
+{
+    let shared = {
+        let mut calls = inflight.lock().unwrap();
+        calls
+            .entry(key.clone())
+            .or_insert_with(|| {
+                let inflight = inflight.clone();
+                async move {
+                    let result = call.await.map_err(Arc::new);
+                    inflight.lock().unwrap().remove(&key);
+                    result
+                }
+                .boxed()
+                .shared()
+            })
+            .clone()
+    };
+    shared.await.map_err(|err| anyhow::anyhow!("{err}"))
+}
+
 async fn reply_json_response(
     message: &impl TransportMessage,
     transport: &impl Transport,
@@ -210,7 +235,7 @@ async fn handle_router_request<S, T>(
     transport: T,
     service: Arc<S>,
     ring: Arc<HashRing>,
-    inflight: Cache<InflightKey, Vec<u8>>,
+    inflight: Inflight,
     metrics: Arc<ServiceMetrics>,
 ) where
     S: RouterService,
@@ -268,20 +293,18 @@ async fn handle_router_request<S, T>(
             msg.payload().to_vec()
         };
         let inflight_key = (route_key, coalesce_key);
-        inflight
-            .try_get_with(inflight_key, async move {
-                dispatch_to_shard::<S>(
-                    &forward_transport,
-                    forward_service.as_ref(),
-                    forward_ring.as_ref(),
-                    &forward_request,
-                    &forward_route_key,
-                    &forward_payload,
-                )
-                .await
-            })
+        coalesce(&inflight, inflight_key, async move {
+            dispatch_to_shard::<S>(
+                &forward_transport,
+                forward_service.as_ref(),
+                forward_ring.as_ref(),
+                &forward_request,
+                &forward_route_key,
+                &forward_payload,
+            )
             .await
-            .map_err(|err| anyhow::anyhow!("{err}"))
+        })
+        .await
     } else {
         dispatch_to_shard::<S>(
             &transport,
@@ -348,10 +371,7 @@ where
     let metrics = Arc::new(ServiceMetrics::default());
     metrics.init();
 
-    let inflight: Cache<InflightKey, Vec<u8>> = Cache::builder()
-        .max_capacity(INFLIGHT_MAX_ENTRIES)
-        .time_to_live(INFLIGHT_TTL)
-        .build();
+    let inflight = Inflight::default();
 
     let mut tasks = JoinSet::new();
 
@@ -813,6 +833,142 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn router_does_not_reuse_a_finished_coalesced_response() {
+        let transport = InMemoryTransport::new();
+        let mut shard_sub = transport
+            .subscribe("svc.passthrough-mock.shard.0")
+            .await
+            .unwrap();
+
+        let calls = Arc::new(AtomicUsize::new(0));
+        let shard_transport = transport.clone();
+        let shard_calls = calls.clone();
+        let shard_task = tokio::spawn(async move {
+            while let Some(msg) = shard_sub.next().await {
+                let call = shard_calls.fetch_add(1, Ordering::SeqCst) + 1;
+                let response = serde_json::to_vec(&MockResponse {
+                    key: format!("v{call}"),
+                })
+                .unwrap();
+                reply_message(&msg, &shard_transport, &response)
+                    .await
+                    .unwrap();
+            }
+        });
+
+        let router_config = test_config(4);
+        let router_transport = transport.clone();
+        let router_task = tokio::spawn(async move {
+            run_router(&router_config, PassThroughRouter, router_transport).await
+        });
+
+        tokio::time::sleep(Duration::from_millis(25)).await;
+
+        let request = serde_json::to_vec(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+
+        let first = transport
+            .request("svc.passthrough-mock", &request, Duration::from_secs(1))
+            .await
+            .unwrap();
+        let second = transport
+            .request("svc.passthrough-mock", &request, Duration::from_secs(1))
+            .await
+            .unwrap();
+
+        assert_eq!(
+            serde_json::from_slice::<MockResponse>(&first).unwrap(),
+            MockResponse {
+                key: "v1".to_owned()
+            }
+        );
+        assert_eq!(
+            serde_json::from_slice::<MockResponse>(&second).unwrap(),
+            MockResponse {
+                key: "v2".to_owned()
+            }
+        );
+        assert_eq!(calls.load(Ordering::SeqCst), 2);
+
+        shard_task.abort();
+        router_task.abort();
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn router_coalesces_concurrent_in_flight_requests() {
+        let transport = InMemoryTransport::new();
+        let mut shard_sub = transport
+            .subscribe("svc.passthrough-mock.shard.0")
+            .await
+            .unwrap();
+
+        let calls = Arc::new(AtomicUsize::new(0));
+        let (forwarded_tx, forwarded_rx) = tokio::sync::oneshot::channel();
+        let (release_tx, release_rx) = tokio::sync::oneshot::channel::<()>();
+        let shard_transport = transport.clone();
+        let shard_calls = calls.clone();
+        let shard_task = tokio::spawn(async move {
+            let msg = shard_sub.next().await.unwrap();
+            shard_calls.fetch_add(1, Ordering::SeqCst);
+            let _ = forwarded_tx.send(());
+            release_rx.await.unwrap();
+            reply_message(&msg, &shard_transport, br#"{"key":"shared"}"#)
+                .await
+                .unwrap();
+            while shard_sub.next().await.is_some() {
+                shard_calls.fetch_add(1, Ordering::SeqCst);
+            }
+        });
+
+        let router_config = test_config(4);
+        let router_transport = transport.clone();
+        let router_task = tokio::spawn(async move {
+            run_router(&router_config, PassThroughRouter, router_transport).await
+        });
+
+        tokio::time::sleep(Duration::from_millis(25)).await;
+
+        let request = serde_json::to_vec(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+
+        let client_a = {
+            let transport = transport.clone();
+            let request = request.clone();
+            tokio::spawn(async move {
+                transport
+                    .request("svc.passthrough-mock", &request, Duration::from_secs(1))
+                    .await
+            })
+        };
+        forwarded_rx.await.unwrap();
+
+        let client_b = {
+            let transport = transport.clone();
+            tokio::spawn(async move {
+                transport
+                    .request("svc.passthrough-mock", &request, Duration::from_secs(1))
+                    .await
+            })
+        };
+        tokio::time::sleep(Duration::from_millis(50)).await;
+
+        release_tx.send(()).unwrap();
+        let response_a = client_a.await.unwrap().unwrap();
+        let response_b = client_b.await.unwrap().unwrap();
+
+        assert_eq!(response_a, br#"{"key":"shared"}"#);
+        assert_eq!(response_b, br#"{"key":"shared"}"#);
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+
+        shard_task.abort();
+        router_task.abort();
+    }
+
+    #[tokio::test]
     async fn router_retries_pass_through_requests_that_legacy_shards_reject() {
         let transport = InMemoryTransport::new();
         let mut shard_sub = transport
@@ -942,7 +1098,6 @@ mod tests {
             nats_auth_token: None,
             cache_max_entries: 100,
             cache_ttl: Duration::from_secs(30),
-            cache_hard_ttl: Duration::from_secs(600),
             max_concurrent_requests,
             scylla_hosts: Vec::new(),
             scylla_keyspace: "fluxer".to_owned(),

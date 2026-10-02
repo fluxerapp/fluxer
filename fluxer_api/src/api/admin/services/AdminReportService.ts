@@ -2,6 +2,7 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
 import {
 	type ChannelID,
 	createReportID,
@@ -103,10 +104,37 @@ export class AdminReportService {
 		adminUserId: UserID,
 		publicComment: string | null,
 		auditLogReason: string | null,
+		notifyReporter: boolean,
 	) {
 		const {reportService, auditService} = this.deps;
 		const {users: userRepository, email: emailService} = this.deps.apiContext.services;
 		const resolvedReport = await reportService.resolveReport(reportId, adminUserId, publicComment, auditLogReason);
+		let reporterDmSent = false;
+		let reporterEmailSent = false;
+		const reporter =
+			notifyReporter && resolvedReport.reporterId ? await userRepository.findUnique(resolvedReport.reporterId) : null;
+		if (reporter) {
+			const commentForTemplate = publicComment ?? '';
+			reporterDmSent = await this.sendResolvedReportSystemDm({
+				reporter,
+				reportId,
+				publicComment: commentForTemplate,
+			});
+			const email = reporter.email;
+			if (email) {
+				reporterEmailSent = await trySendAdminNotification(
+					() =>
+						emailService.sendReportResolvedEmail(
+							email,
+							reporter.username,
+							reportId.toString(),
+							commentForTemplate,
+							reporter.locale,
+						),
+					{action: 'resolve_report', targetId: reportId.toString()},
+				);
+			}
+		}
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'report',
@@ -116,28 +144,11 @@ export class AdminReportService {
 			metadata: new Map([
 				['report_id', reportId.toString()],
 				['report_type', resolvedReport.reportType.toString()],
+				['notify_reporter', notifyReporter ? 'true' : 'false'],
+				['reporter_dm_sent', reporterDmSent ? 'true' : 'false'],
+				['reporter_email_sent', reporterEmailSent ? 'true' : 'false'],
 			]),
 		});
-		if (resolvedReport.reporterId) {
-			const reporter = await userRepository.findUnique(resolvedReport.reporterId);
-			if (reporter) {
-				const commentForTemplate = publicComment ?? '';
-				await this.sendResolvedReportSystemDm({
-					reporter,
-					reportId,
-					publicComment: commentForTemplate,
-				});
-				if (reporter.email) {
-					await emailService.sendReportResolvedEmail(
-						reporter.email,
-						reporter.username,
-						reportId.toString(),
-						commentForTemplate,
-						reporter.locale,
-					);
-				}
-			}
-		}
 		return {
 			report_id: resolvedReport.reportId.toString(),
 			status: resolvedReport.status,
@@ -154,9 +165,8 @@ export class AdminReportService {
 		reporter: User;
 		reportId: ReportID;
 		publicComment: string;
-	}): Promise<void> {
+	}): Promise<boolean> {
 		const {users: userRepository} = this.deps.apiContext.services;
-		const systemUser = await userRepository.findUniqueAssert(SYSTEM_USER_ID);
 		const template = getEmailTemplate('report_resolved', reporter.locale, {
 			username: reporter.username,
 			reportId: reportId.toString(),
@@ -173,10 +183,11 @@ export class AdminReportService {
 				},
 				'Skipping report review system DM because the email template could not be resolved',
 			);
-			return;
+			return false;
 		}
 		const requestCache = createRequestCache();
 		try {
+			const systemUser = await userRepository.findUniqueAssert(SYSTEM_USER_ID);
 			const dmChannel = await this.deps.userChannelService.ensureDmOpenForBothUsers({
 				userId: systemUser.id,
 				recipientId: reporter.id,
@@ -191,11 +202,13 @@ export class AdminReportService {
 				},
 				requestCache,
 			});
+			return true;
 		} catch (error) {
 			Logger.warn(
 				{reportId: reportId.toString(), reporterId: reporter.id.toString(), error},
 				'Failed to send report review system DM',
 			);
+			return false;
 		} finally {
 			requestCache.clear();
 		}

@@ -42,7 +42,6 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | email<sup>3</sup> | ?string | The registered email address, or null when the account has none |
 | email_verified<sup>3</sup> | boolean | Whether the registered address has been verified |
 | email_bounced<sup>3</sup> | boolean | Whether delivery to the registered address hard bounced |
-| has_verified_phone | boolean | Whether the account is treated as having completed phone verification |
 | date_of_birth<sup>4</sup> | ?string | The date of birth in `YYYY-MM-DD` form, or null when none is stored |
 | locale | ?string | The saved [locale](/topics/locales/#supported-locales), or null when the account has never set one |
 | premium_type | ?integer | [Premium type](#premium-types) |
@@ -50,21 +49,22 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | premium_until | ?ISO8601 timestamp | The time the premium subscription expires, or null when the account has none |
 | premium_grace_ends_at | ?ISO8601 timestamp | The time the payment grace period ends, or null when no grace period is running |
 | premium_lifetime_sequence | ?integer | The sequence number of the lifetime purchase, or null when the account holds none |
-| suspicious_activity_flags | integer | [Suspicious activity flags](#suspicious-activity-flags) |
-| phone_verification_deferred<sup>5</sup> | boolean | Whether a stored phone requirement is deferred until the account joins a discoverable or large community |
-| temp_banned_until<sup>6</sup> | ?ISO8601 timestamp | The time the ban expires, or null when no ban stands |
+| temp_banned_until<sup>5</sup> | ?ISO8601 timestamp | The time the ban expires, or null when no ban stands |
 | pending_deletion_at | ?ISO8601 timestamp | The time the scheduled deletion runs, or null when none is scheduled |
-| pending_bulk_message_deletion_at<sup>7</sup> | ?ISO8601 timestamp | The time the account's own scheduled bulk message deletion runs |
+| pending_bulk_message_deletion_at<sup>6</sup> | ?ISO8601 timestamp | The time the account's own scheduled bulk message deletion runs |
 | deletion_reason_code | ?integer | [Deletion reason](#deletion-reasons) |
 | deletion_public_reason | ?string | The reason shown to the account holder, or null when none was supplied |
-| acls<sup>8</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 111 entries |
-| traits<sup>9</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
-| has_totp<sup>10</sup> | boolean | Whether a TOTP authenticator is registered |
-| authenticator_types<sup>10</sup> <sup>13</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
+| deletion_audit_log_reason | ?string | The private reason stored with the pending deletion, and null without `audit_log:view` |
+| deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the pending deletion, or null when it was not recorded |
+| deletion_scheduled_at | ?ISO8601 timestamp | The time the pending deletion was scheduled, or null when it was not recorded |
+| acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 107 entries |
+| traits<sup>8</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
+| has_totp<sup>9</sup> | boolean | Whether a TOTP authenticator is registered |
+| authenticator_types<sup>9</sup> <sup>12</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
 | last_active_at | ?ISO8601 timestamp | The time of the last recorded activity, or null when none is recorded |
-| last_active_ip<sup>11</sup> | ?string | The IP address the account was last active from |
-| last_active_ip_reverse<sup>11</sup> <sup>12</sup> | ?string | The reverse DNS name of that IP address |
-| last_active_location<sup>11</sup> <sup>12</sup> | ?string | The approximate location of that IP address |
+| last_active_ip<sup>10</sup> | ?string | The IP address the account was last active from |
+| last_active_ip_reverse<sup>10</sup> <sup>11</sup> | ?string | The reverse DNS name of that IP address |
+| last_active_location<sup>10</sup> <sup>11</sup> | ?string | The approximate location of that IP address |
 
 <sup>1</sup> An unpadded JSON number here, unlike the zero-padded string `discriminator` of the [Admin user summary](/admin-api/#admin-user-summary-object) and the [Admin resolved user](#admin-resolved-user-object) embedded in other Admin objects
 
@@ -74,23 +74,21 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 
 <sup>4</sup> Requires `user:view:dob`, and without it the field is null
 
-<sup>5</sup> Derived from bit `1 << 16` of `suspicious_activity_flags`, which sits outside the [suspicious activity flag](#suspicious-activity-flags) registry
+<sup>5</sup> Set by [Ban user](#ban-user) for both ban modes. An expiry that has already passed is reported as null, so an elapsed temporary ban reads the same as no ban
 
-<sup>6</sup> Set by [Ban user](#ban-user) for both ban modes. An expiry that has already passed is reported as null, so an elapsed temporary ban reads the same as no ban
+<sup>6</sup> Written when the account holder schedules its own bulk message deletion, and cleared by [Cancel scheduled message deletion](#cancel-scheduled-message-deletion)
 
-<sup>7</sup> Written when the account holder schedules its own bulk message deletion, and cleared by [Cancel scheduled message deletion](#cancel-scheduled-message-deletion)
+<sup>7</sup> The set written by [Set user ACLs](#set-user-acls), returned in stored order. This set alone decides whether the account can reach the Admin API, and the `STAFF` [account flag](#account-flags) plays no part in that
 
-<sup>8</sup> The set written by [Set user ACLs](#set-user-acls), returned in stored order. This set alone decides whether the account can reach the Admin API, and the `STAFF` [account flag](#account-flags) plays no part in that
+<sup>8</sup> Sorted in ascending order, unlike `acls`
 
-<sup>9</sup> Sorted in ascending order, unlike `acls`
+<sup>9</sup> Never redacted, and returned in full to any caller the operation admitted
 
-<sup>10</sup> Never redacted, and returned in full to any caller the operation admitted
+<sup>10</sup> Requires `user:view:ip`, and without it the field is null and no network lookup is attempted
 
-<sup>11</sup> Requires `user:view:ip`, and without it the field is null and no network lookup is attempted
+<sup>11</sup> Resolved live from `last_active_ip` for each response, and null when the lookup fails or returns nothing. The reverse DNS result is cached for one day
 
-<sup>12</sup> Resolved live from `last_active_ip` for each response, and null when the lookup fails or returns nothing. The reverse DNS result is cached for one day
-
-<sup>13</sup> `WEBAUTHN` is present only while the account chose passkeys as a second factor. A registered credential does not add it, so `has_totp` false with an empty array still describes an account holding passkeys
+<sup>12</sup> `WEBAUTHN` is present only while the account chose passkeys as a second factor. A registered credential does not add it, so `has_totp` false with an empty array still describes an account holding passkeys
 
 ### Example
 
@@ -108,10 +106,7 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
   "email": "subject@example.com",
   "email_verified": true,
   "email_bounced": false,
-  "has_verified_phone": false,
   "date_of_birth": "1998-03-21",
-  "suspicious_activity_flags": 0,
-  "phone_verification_deferred": false,
   "temp_banned_until": null,
   "pending_deletion_at": null,
   "deletion_reason_code": null,
@@ -140,19 +135,18 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | 1 &lt;&lt; 6 | SPAMMER | Account is flagged as a spammer |
 | 1 &lt;&lt; 33 | HIGH_GLOBAL_RATE_LIMIT | Account has elevated global rate limits |
 | 1 &lt;&lt; 34 | DELETED | Account has been deleted |
-| 1 &lt;&lt; 35 | DISABLED_SUSPICIOUS_ACTIVITY | Account is disabled for suspicious activity |
 | 1 &lt;&lt; 36 | SELF_DELETED | Account was self-deleted |
 | 1 &lt;&lt; 38 | DISABLED | Account is disabled |
 | 1 &lt;&lt; 39 | HAS_SESSION_STARTED | Account has started a session |
 | 1 &lt;&lt; 47 | RATE_LIMIT_BYPASS | Account can bypass rate limits |
 | 1 &lt;&lt; 48 | REPORT_BANNED | Account is banned from reporting |
 | 1 &lt;&lt; 49 | VERIFIED_NOT_UNDERAGE | Account is verified as not underage |
+| 1 &lt;&lt; 50 | ACCOUNT_LIMITED | Account is [limited](/http-api/users/#account-limitation) |
 | 1 &lt;&lt; 51 | HAS_DISMISSED_PREMIUM_ONBOARDING | Account has dismissed premium onboarding |
 | 1 &lt;&lt; 53 | APP_STORE_REVIEWER | Account belongs to an app store reviewer |
 | 1 &lt;&lt; 57 | STAFF_HIDDEN | Staff status is hidden from public flags |
 | 1 &lt;&lt; 60 | AGE_VERIFIED_ADULT | Account has verified its age as an adult through card verification |
-| 1 &lt;&lt; 61 | FORCE_INBOUND_PHONE_VERIFICATION | Account is forced through inbound phone verification regardless of prefix |
-| 1 &lt;&lt; 62 | NOT_SUSPICIOUS | Account is permanently exempt from automatic suspicious activity flagging |
+| 1 &lt;&lt; 62 | LIMIT_EXEMPT | Account is never limited |
 
 ## Premium flags
 
@@ -175,30 +169,6 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | 0 | NONE | No premium subscription |
 | 1 | SUBSCRIPTION | Active premium subscription |
 | 2 | LIFETIME | Lifetime premium subscription |
-
-## Suspicious activity flags
-
-A 32-bit bitfield of verification requirements applied to an account. [Update suspicious activity flags](#update-suspicious-activity-flags) and [Disable user for suspicious activity](#disable-user-for-suspicious-activity) both write the complete value, so a bit the request omits is cleared.
-
-| Value | Name | Description |
-| --- | --- | --- |
-| 1 &lt;&lt; 0 | REQUIRE_VERIFIED_EMAIL<sup>1</sup> | Require a verified email |
-| 1 &lt;&lt; 1 | REQUIRE_REVERIFIED_EMAIL<sup>1</sup> | Require a reverified email |
-| 1 &lt;&lt; 2 | REQUIRE_VERIFIED_PHONE<sup>2</sup> | Require a verified phone |
-| 1 &lt;&lt; 3 | REQUIRE_REVERIFIED_PHONE<sup>3</sup> | Require a reverified phone |
-| 1 &lt;&lt; 4 | REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE<sup>1</sup> | Require verified email or verified phone |
-| 1 &lt;&lt; 5 | REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE<sup>1</sup> | Require reverified email or verified phone |
-| 1 &lt;&lt; 6 | REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE<sup>1</sup> | Require verified email or reverified phone |
-| 1 &lt;&lt; 7 | REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE<sup>1</sup> | Require reverified email or reverified phone |
-| 1 &lt;&lt; 8 | REQUIRE_INBOUND_PHONE_VERIFICATION<sup>2</sup> | Require inbound SMS verification, where the account holder texts a code to the instance's inbound SMS number |
-
-<sup>1</sup> Cleared automatically whenever the account's email becomes verified, either through ordinary verification or through [Verify user email](#verify-user-email)
-
-<sup>2</sup> Cleared automatically by [Update user phone verification](#update-user-phone-verification) when it sets `has_verified_phone` to true, together with the deferral bit `1 << 16`
-
-<sup>3</sup> Deferrable alongside `REQUIRE_VERIFIED_PHONE`. [Update user phone verification](#update-user-phone-verification) leaves it set
-
-Bit `1 << 16` sits outside this registry. It defers a phone requirement until the account joins a discoverable or large community, and the [Admin user object](#admin-user-object) reports it as `phone_verification_deferred`. [Update suspicious activity flags](#update-suspicious-activity-flags) and [Disable user for suspicious activity](#disable-user-for-suspicious-activity) bound `flags` only as a non-negative 32-bit integer, and neither masks the submitted value, so a request with that bit sets it directly.
 
 ## Deletion reasons
 
@@ -397,14 +367,14 @@ One entry for each direct message or group direct message channel the account ha
 
 ## Admin user change log object
 
-One recorded change to the account's email address, phone verification state, or username and discriminator. The account holder's own changes appear here, and so do [Change user username](#change-user-username) and [Change user email](#change-user-email).
+One recorded change to the account's email address or its username and discriminator. The account holder's own changes appear here, and so do [Change user username](#change-user-username) and [Change user email](#change-user-email).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | event_id<sup>1</sup> | string | The ID of the change entry as an unsigned 64-bit decimal string |
-| field | string | The field that changed, one of `email`, `has_verified_phone`, or `fluxer_tag` |
+| field | string | The field that changed, either `email` or `fluxer_tag` |
 | old_value<sup>2</sup> | ?string | The value before the change, or null when the field was unset |
 | new_value<sup>2</sup> | ?string | The value after the change, or null when the field was cleared |
 | reason<sup>3</sup> | ?string | The recorded reason for the change, or null when unrecorded |
@@ -428,6 +398,88 @@ One recorded change to the account's email address, phone verification state, or
   "reason": "admin_action",
   "actor_user_id": "1489200013322551296",
   "event_at": "2026-08-14T07:55:31.882000+00:00"
+}
+```
+
+## Admin store purchase object
+
+One [in-app purchase](/http-api/in-app-purchases/) with the store state behind it. It has more fields than the public [store purchase](/http-api/in-app-purchases/#store-purchase-object) object, and still never exposes a purchase token or the account token.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the store purchase |
+| user_id | ?snowflake | The ID of the linked account, or null when unlinked |
+| provider | string | Either `app_store` or `google_play` |
+| kind | string | Either `subscription` or `gift` |
+| slot | string | [Store slot](/http-api/in-app-purchases/#store-slots) |
+| environment | string | Either `production` or `sandbox` |
+| app_id | string | Bundle ID or package name of the purchasing app |
+| product_id | string | Store product ID |
+| base_plan_id | ?string | Google Play base plan ID, or null |
+| latest_transaction_id<sup>1</sup> | ?string | Latest store transaction or order ID |
+| ownership_type<sup>2</sup> | ?string | Store ownership type, or null |
+| state | string | [Store purchase state](/http-api/in-app-purchases/#store-purchase-states) |
+| store_state<sup>3</sup> | ?string | Raw state the store reported, or null |
+| entitled | boolean | Whether the purchase grants premium now |
+| expires_at | ?ISO8601 timestamp | End of the paid period |
+| grace_ends_at | ?ISO8601 timestamp | End of the store grace period |
+| auto_renew | ?boolean | Whether the subscription renews |
+| started_at | ?ISO8601 timestamp | The time the subscription or purchase started |
+| purchased_at | ?ISO8601 timestamp | The time of the latest payment |
+| revoked_at | ?ISO8601 timestamp | The time the store refunded or revoked it |
+| revocation_reason | ?string | Reason recorded for the revocation, or null |
+| superseded | boolean | Whether a newer Google Play purchase replaced it |
+| acknowledged<sup>4</sup> | boolean | Whether Fluxer acknowledged it with the store |
+| gift_code | ?string | Gift code minted by a gift purchase, or null |
+| bound_at | ?ISO8601 timestamp | The time the purchase was linked to its account |
+| last_event_at | ?ISO8601 timestamp | Time of the latest store event applied |
+| synced_at | ?ISO8601 timestamp | The time Fluxer last read it from the store |
+| created_at | ISO8601 timestamp | The time Fluxer first saw the purchase |
+| updated_at | ISO8601 timestamp | The time the record last changed |
+
+<sup>1</sup> The App Store transaction ID, or the Google Play order ID
+
+<sup>2</sup> The App Store value, such as `PURCHASED` or `FAMILY_SHARED`. Null for Google Play
+
+<sup>3</sup> The App Store subscription status number as a string, or the Google Play state name. Null for an App Store gift that was never revoked
+
+<sup>4</sup> Always true for the App Store. For a Google Play gift, true once the purchase was consumed
+
+### Example
+
+```json
+{
+  "id": "1501203318237184000",
+  "user_id": "1489200013322551296",
+  "provider": "app_store",
+  "kind": "subscription",
+  "slot": "monthly",
+  "environment": "production",
+  "app_id": "com.fluxer",
+  "product_id": "com.fluxer.plutonium.monthly",
+  "base_plan_id": null,
+  "latest_transaction_id": "2000000712345678",
+  "ownership_type": "PURCHASED",
+  "state": "active",
+  "store_state": "1",
+  "entitled": true,
+  "expires_at": "2026-10-29T09:00:00.000Z",
+  "grace_ends_at": null,
+  "auto_renew": true,
+  "started_at": "2026-09-29T09:00:00.000Z",
+  "purchased_at": "2026-09-29T09:00:00.000Z",
+  "revoked_at": null,
+  "revocation_reason": null,
+  "superseded": false,
+  "acknowledged": true,
+  "gift_code": null,
+  "bound_at": "2026-09-29T09:00:02.000Z",
+  "last_event_at": "2026-09-29T09:00:00.000Z",
+  "synced_at": "2026-09-29T09:00:02.000Z",
+  "created_at": "2026-09-29T09:00:02.000Z",
+  "updated_at": "2026-09-29T09:00:02.000Z"
 }
 ```
 
@@ -587,7 +639,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 Replaces the username, allocates or claims a discriminator, and returns the resulting account. Requires `user:update:username`.
 
-A target account may hold a custom discriminator on every self-hosted instance, and on any other instance only when the `feature_custom_discriminator` limit resolves to a value above zero for that account.
+A target account may hold a custom discriminator on a self-hosted instance in the `everyone` [premium mode](/admin-api/instance/#premium-modes), and on any other instance only when the `feature_custom_discriminator` limit resolves to a value above zero for that account.
 
 ### Path parameters
 
@@ -714,7 +766,7 @@ The operation accepts no request body and never clears verification, so the one 
 
 ### Side effects
 
-`email_verified` becomes true and `email_bounced` becomes false. The same write clears each of these [suspicious activity flag](#suspicious-activity-flags) bits: `REQUIRE_VERIFIED_EMAIL`, `REQUIRE_REVERIFIED_EMAIL`, `REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE`, `REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE`, `REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE`, and `REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE`.
+`email_verified` becomes true and `email_bounced` becomes false.
 
 [User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `verify_email`, target type `user`, and a metadata key `email` with the address as it stood before the write, or the literal `null` when the account had none.
 
@@ -729,7 +781,7 @@ The operation accepts no request body and never clears verification, so the one 
 Requests a new verification email for the account. Requires `user:update:email`. Returns an empty 204 response.
 
 :::caution[An already verified account gets no email]
-When the account's email is already verified and none of the [suspicious activity flag](#suspicious-activity-flags) bits `REQUIRE_REVERIFIED_EMAIL`, `REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE`, `REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE`, or `REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE` is set, Fluxer returns 204 without storing a token or sending anything.
+When the account's email is already verified, Fluxer returns 204 without storing a token or sending anything.
 :::
 
 :::note[Delivery is dropped silently]
@@ -1008,7 +1060,7 @@ A path naming the acting account fails with 403 `ACCESS_DENIED` before the accou
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 111 values |
+| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 107 values |
 
 <sup>1</sup> Required. A value outside the [ACL registry](/admin-api/#acl-registry) fails body validation, and a repeated value is collapsed
 
@@ -1126,6 +1178,8 @@ Additions are applied before removals, so a flag named in both arrays ends up cl
 
 [User Update](/gateway/events/#user-update) is emitted to the account's own sessions. A change to the account's public flags also sends [Guild Member Update](/gateway/events/#guild-member-update) to the account's guilds.
 
+Removing `ACCOUNT_LIMITED` or adding `LIMIT_EXEMPT` also lifts any [new conversation limit](/http-api/users/private-channels/#new-conversation-limit) on the account.
+
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_flags`, target type `user`, and the metadata keys `add_flags`, `remove_flags`, and `new_flags`. An empty array is omitted from the metadata map.
 
 ### Rate limit
@@ -1178,13 +1232,11 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
-## Update user phone verification
+## List user store purchases
 
-<RouteHeader method="PUT" path="/v1/admin/users/{user_id}/phone-verification" auditReason />
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/store-purchases" auditReason />
 
-Sets whether the account is treated as having completed phone verification, and returns the resulting account. Requires `user:update:phone`.
-
-This operation is the one way to set `has_verified_phone` back to false once it is true.
+Lists the [in-app purchases](/http-api/in-app-purchases/) linked to an account, newest first. Requires `user:lookup`. A self-hosted instance never serves this route.
 
 ### Path parameters
 
@@ -1192,44 +1244,32 @@ This operation is the one way to set `has_verified_phone` back to false once it 
 | --- | --- | --- |
 | user_id | snowflake | The ID of the target account |
 
-### JSON body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| has_verified_phone<sup>1</sup> | boolean | Whether the account counts as phone verified |
-
-<sup>1</sup> Required. Setting it to true also clears the `REQUIRE_VERIFIED_PHONE` and `REQUIRE_INBOUND_PHONE_VERIFICATION` [suspicious activity flags](#suspicious-activity-flags) together with the deferral bit `1 << 16`, and setting it to false clears no flag
-
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| purchases | array[[Admin store purchase](#admin-store-purchase-object) object] | The linked purchases |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Phone verification state was set |
+| 200 | response body | The purchases were listed |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-
-`REQUIRE_REVERIFIED_PHONE` is outside the cleared set, so an account under a reverification requirement keeps it after this operation marks it verified.
 
 ### Side effects
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_has_verified_phone`, target type `user`, and a metadata key `has_verified_phone`. When suspicious activity flags were also cleared, the entry also has `suspicious_activity_flags_before` and `suspicious_activity_flags_after`.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_store_purchases`, target type `user`, and the metadata key `result_count`.
 
 ### Rate limit
 
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
-## Update suspicious activity flags
+## Refresh user store purchases
 
-<RouteHeader method="PUT" path="/v1/admin/users/{user_id}/suspicious-activity-flags" auditReason />
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/store-purchases/refresh" auditReason />
 
-Replaces the account's [suspicious activity flags](#suspicious-activity-flags) and returns the resulting account. Requires `user:update:suspicious_activity`.
-
-The operation sets verification requirements without disabling the account. [Disable user for suspicious activity](#disable-user-for-suspicious-activity) also locks the account out.
+Reads every purchase linked to an account again from its store, applies the result to the account, and returns the updated purchases. Requires `user:update:flags`, the same ACL as [Update user premium flags](#update-user-premium-flags). A self-hosted instance never serves this route.
 
 ### Path parameters
 
@@ -1237,87 +1277,25 @@ The operation sets verification requirements without disabling the account. [Dis
 | --- | --- | --- |
 | user_id | snowflake | The ID of the target account |
 
-### JSON body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| flags<sup>1</sup> | integer | Replacement [suspicious activity flags](#suspicious-activity-flags) |
-
-<sup>1</sup> Required. The value replaces the complete stored bitfield, so an omitted bit is cleared and a value of zero sets no requirement at all
-
 ### Response body
 
 | Field | Type | Description |
 | --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
+| purchases | array[[Admin store purchase](#admin-store-purchase-object) object] | The linked purchases after the refresh |
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Flags were replaced |
+| 200 | response body | The purchases were refreshed |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-
-The stored deferral bit `1 << 16` is preserved only when it was already set and the submitted value sets the same `REQUIRE_VERIFIED_PHONE` and `REQUIRE_REVERIFIED_PHONE` bits as the stored value, with at least one of them set. Any other submitted value clears the deferral bit, so any phone requirement in the submitted value stops waiting for a guild join.
-
-[Bulk jobs](/admin-api/bulk-jobs/) applies the same change to up to 1,000 accounts as a queued `update_suspicious_activity_flags` task.
+| 503 | [error response](/admin-api/#error-response) | `STORE_BILLING_UNAVAILABLE`, because a store could not be reached |
 
 ### Side effects
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. Fluxer records a `challenged` risk outcome against the account when the write changes the set and leaves at least one registry flag set.
+A subscription the store no longer recognises becomes `expired` and stops granting premium. A changed premium state sends [User Update](/gateway/events/#user-update) to the account's own sessions.
 
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_suspicious_activity_flags`, target type `user`, and a metadata key `flags` with the submitted value. A preserved deferral bit makes that value differ from the flags the account ends up with.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
-
-## Disable user for suspicious activity
-
-<RouteHeader method="PUT" path="/v1/admin/users/{user_id}/suspicious-activity-disablement" auditReason />
-
-Disables the account, replaces its [suspicious activity flags](#suspicious-activity-flags), destroys its password, and returns the resulting account. Requires `user:disable:suspicious`.
-
-:::caution[The stored password is destroyed]
-The account holder cannot sign in with their old password after regaining access, and recovery requires [Send password reset](#send-password-reset) or the ordinary self-service reset flow.
-:::
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
-
-### JSON body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| flags<sup>1</sup> | integer | Replacement [suspicious activity flags](#suspicious-activity-flags) |
-
-<sup>1</sup> Required. The value replaces the complete stored bitfield. Unlike [Update suspicious activity flags](#update-suspicious-activity-flags), the deferral bit is never preserved
-
-### Response body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
-
-### Response
-
-| Status | Body | Condition |
-| --- | --- | --- |
-| 200 | response body | The account was disabled |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-
-Fluxer adds the `DISABLED_SUSPICIOUS_ACTIVITY` [account flag](#account-flags), so every other stored flag survives. No dedicated operation clears it. [Unban user](#unban-user) clears only `DISABLED`, and [Update user flags](#update-user-flags) can remove the bit like any other.
-
-### Side effects
-
-The account is marked with `DISABLED_SUSPICIOUS_ACTIVITY`, its suspicious activity flags are replaced, and its password hash is set to null. Every authentication session is then deleted, so the account is signed out on every device.
-
-Fluxer records a `disabled_suspicious` risk outcome, together with a `challenged` outcome when the submitted `flags` is non-zero. Fluxer emails the account holder when the account has an email address.
-
-[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted, so no connection of the account remains to receive it. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `disable_suspicious_activity`, target type `user`, and a metadata key `flags`.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `refresh_store_purchases`, target type `user`, and the metadata key `purchase_count`.
 
 ### Rate limit
 
@@ -1416,7 +1394,7 @@ The notification email quotes the `X-Audit-Log-Reason` value verbatim as the rea
 
 ### Side effects
 
-`temp_banned_until` is cleared and `DISABLED` is removed from the account flags. `DISABLED_SUSPICIOUS_ACTIVITY` is a different flag and is not cleared, so an account disabled by [Disable user for suspicious activity](#disable-user-for-suspicious-activity) stays disabled.
+`temp_banned_until` is cleared and `DISABLED` is removed from the account flags.
 
 Deleted sessions are not restored. The account holder is emailed when the account has an email address. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
 
@@ -1426,11 +1404,49 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
+## Add a note to a user ban
+
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/ban/notes" />
+
+Appends a note to the ban that currently stands on the account. Requires `user:temp_ban`. The ban entry and earlier notes are never changed.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ban_audit_log_id<sup>1</sup> | snowflake | The ID of the `temp_ban` audit entry of the current ban |
+| note | string | The note (1-512 characters) |
+
+<sup>1</sup> The entry must target this account, and its `banned_until` metadata must equal the current `temp_banned_until`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | none | The note was recorded |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because `ban_audit_log_id` does not name a ban of this account |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because the named ban is no longer the current ban |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `annotate_ban`, target type `user`, the note as `audit_log_reason`, and a metadata key `ban_audit_log_id`. The `X-Audit-Log-Reason` header is not read.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
 ## Schedule user deletion
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Creates or replaces an account deletion schedule and returns the resulting account. Requires `user:delete`. A schedule cannot be changed once erasure starts.
+Creates an account deletion schedule and returns the resulting account. Requires `user:delete`. A pending schedule is replaced only when the request names it in `replace_pending_deletion_at`, and a schedule cannot be changed once erasure starts.
 
 Fluxer raises the submitted delay to the minimum for the [deletion reason](#deletion-reasons), so a request for one day under any reason other than `USER_REQUESTED` is stored as 60 days.
 
@@ -1449,12 +1465,15 @@ The `X-Audit-Log-Reason` value is also stored on the account as the private dele
 | reason_code<sup>1</sup> | integer | [Deletion reason](#deletion-reasons) |
 | public_reason?<sup>2</sup> | string | Statement of reasons shown to the account holder (at most 512 characters) |
 | days_until_deletion?<sup>3</sup> | integer | Requested whole-day delay (1-365, default 60) |
+| replace_pending_deletion_at?<sup>4</sup> | ISO8601 timestamp | The `pending_deletion_at` of the schedule this request replaces |
 
 <sup>1</sup> Required, and validated against the [deletion reason](#deletion-reasons) registry. `USER_REQUESTED` selects the 14-day minimum, and every other value selects the 60-day minimum
 
 <sup>2</sup> Stored on the account and included in the deletion email. Omitting it stores null
 
 <sup>3</sup> The stored deadline is the request instant plus the greater of this value and the minimum for the reason code. There is no absolute-timestamp field
+
+<sup>4</sup> Required when the account already has a pending deletion, including one the caller scheduled. It must equal the current `pending_deletion_at`
 
 ### Response body
 
@@ -1468,21 +1487,21 @@ The `X-Audit-Log-Reason` value is also stored on the account as the private dele
 | --- | --- | --- |
 | 200 | response body | The deletion schedule was stored |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because a pending deletion was not named, erasure has started, or the deletion state changed |
 
 `user:delete` also allows scheduling deletion of the acting Admin or an account with broader permissions.
 
 ### Side effects
 
-The account can no longer authenticate, and its existing authentication sessions are deleted. Erasure is scheduled for the resulting deadline.
+The account can no longer authenticate, and its existing authentication sessions and OAuth2 access and refresh tokens are deleted. The acting Admin and the time are stored as `deletion_scheduled_by` and `deletion_scheduled_at`. Erasure is scheduled for the resulting deadline.
 
 Fluxer cancels a Stripe subscription on the account without proration and refunds the charge behind its latest invoice as fraudulent. When the cancellation or refund fails, Fluxer logs the failure and still keeps the deletion schedule.
 
 The account holder is emailed the deadline and the supplied `public_reason` when the account has an email address.
 
-For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address. It marks the account's last active IP address, its authorised IP addresses, and the IP addresses of its active and terminated sessions as suspicious, and it resolves the pending reports against the account. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
+For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address and resolves the pending reports against the account. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
 
-[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days` and `reason_code`. The identifier bans record their own blocklist entries, and when Fluxer resolves at least one report, it records a second entry with action `auto_resolve_reports_on_deletion` and a metadata key `resolved_count`.
+[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days`, `reason_code`, and `pending_deletion_at`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The identifier bans record their own blocklist entries, and when Fluxer resolves at least one report, it records a second entry with action `auto_resolve_reports_on_deletion` and a metadata key `resolved_count`.
 
 ### Rate limit
 
@@ -1492,7 +1511,7 @@ For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's e
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Cancels a scheduled deletion and returns the resulting account. Requires `user:delete`. Erasure cannot be cancelled once it starts.
+Cancels the scheduled deletion named in the request and returns the resulting account. Requires `user:delete`. Erasure cannot be cancelled once it starts.
 
 :::caution[Cancellation does not undo enforcement]
 Clearing the deadline permits the account to authenticate again, but it does not restore deleted sessions, reinstate a cancelled subscription, lift the email and IP blocklist entries the schedule wrote, or reopen the reports it resolved.
@@ -1504,6 +1523,15 @@ Clearing the deadline permits the account to authenticate again, but it does not
 | --- | --- | --- |
 | user_id | snowflake | The ID of the target account |
 
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| expected_pending_deletion_at<sup>1</sup> | ISO8601 timestamp | The `pending_deletion_at` of the deletion being cancelled |
+| notify_user? | boolean | Whether to email the account holder (default false) |
+
+<sup>1</sup> Required. It must equal the current `pending_deletion_at`, so a cancel written against one schedule never clears a different one
+
 ### Response body
 
 | Field | Type | Description |
@@ -1514,17 +1542,18 @@ Clearing the deadline permits the account to authenticate again, but it does not
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The deletion was cancelled, or no deletion was scheduled |
+| 200 | response body | The deletion was cancelled |
+| 400 | [error response](/admin-api/#error-response) | `NO_PENDING_DELETION`, because no deletion is scheduled |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because a different deletion is pending, erasure has started, or the deletion state changed |
 
 ### Side effects
 
-The deletion schedule and reasons are cleared, allowing the account to authenticate again unless another restriction applies.
+The deletion schedule, its reasons, and the recorded scheduler are cleared, allowing the account to authenticate again unless another restriction applies.
 
-Fluxer emails the account holder when the account has an email address. The email quotes the `X-Audit-Log-Reason` value verbatim and falls back to the literal text `deletion canceled` when the header is absent or resolves to null.
+When `notify_user` is true and the account has an email address, Fluxer emails the account holder. The email never includes the `X-Audit-Log-Reason` value.
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_deletion`, target type `user`, and no metadata.
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_deletion`, target type `user`, the metadata keys `cancelled_pending_deletion_at`, `cancelled_scheduled_by`, `cancelled_scheduled_at`, and `cancelled_reason_code` for the cancelled schedule, and `notify_user`.
 
 ### Rate limit
 
@@ -1914,7 +1943,7 @@ Lists the passkeys and security keys registered on the account, as a bare JSON a
 
 <sup>1</sup> An account with no credential receives an empty array
 
-The complete credential set is returned in one response, bounded by the ten credentials an account may register. No public key, attestation object, or signature counter is exposed.
+The complete credential set is returned in one response, bounded by the ten credentials an account may register. [Replaced passkeys](/http-api/users/mfa/#replaced-passkeys) are left out, and `credential_count` counts only the returned ones. No public key, attestation object, or signature counter is exposed.
 
 ### Side effects
 
@@ -1944,7 +1973,7 @@ Deletes one passkey or security key from the account. Requires `user:update:mfa`
 | 204 | empty | The credential was deleted |
 | 404<sup>1</sup> | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-<sup>1</sup> A credential that does not exist on the account also answers `UNKNOWN_USER`, never `UNKNOWN_WEBAUTHN_CREDENTIAL`, so a 404 does not distinguish an unknown account from an unknown credential
+<sup>1</sup> A credential that does not exist on the account also answers `UNKNOWN_USER`, so a 404 with that code does not distinguish an unknown account from an unknown credential. A [replaced passkey](/http-api/users/mfa/#replaced-passkeys) answers `UNKNOWN_WEBAUTHN_CREDENTIAL` and records no audit entry
 
 :::caution[A deleted passkey cannot be restored]
 The passkey or security key stops authenticating immediately and cannot be restored from its deleted record. The account holder must register it again to use it later.
@@ -1952,7 +1981,7 @@ The passkey or security key stops authenticating immediately and cannot be resto
 
 ### Side effects
 
-The credential record is deleted. When it was the account's final WebAuthn credential and the account had enabled passkeys as a second factor, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and copies the account's authenticator types onto the bot user of every application the account owns. An account that never enabled passkeys as a second factor holds no `WEBAUTHN` type to remove.
+The credential record is deleted, together with the [replaced passkeys](/http-api/users/mfa/#replaced-passkeys) it took over from, and every replaced passkey goes once no listed credential remains. When it was the account's final WebAuthn credential and the account had enabled passkeys as a second factor, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and copies the account's authenticator types onto the bot user of every application the account owns. An account that never enabled passkeys as a second factor holds no `WEBAUTHN` type to remove.
 
 [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) is emitted to the target account with its remaining credentials.
 

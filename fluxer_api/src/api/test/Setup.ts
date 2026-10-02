@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {generateKeyPairSync} from 'node:crypto';
 import {existsSync} from 'node:fs';
 import type {UserID} from '@app/api/BrandedTypes';
 import {buildAPIConfigFromMaster, initializeConfig} from '@app/api/Config';
 import {setInjectedMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {APIConfig} from '@app/api/config/APIConfig';
 import {
 	resetCassandraQueryExecutorForTesting,
 	setCassandraQueryExecutorForTesting,
@@ -53,8 +55,6 @@ function setDefaultTestEnv(): void {
 		FLUXER_NATS_URL: natsUrl,
 		FLUXER_NATS_CORE_URL: natsUrl,
 		FLUXER_NATS_JETSTREAM_URL: natsUrl,
-		FLUXER_INTERNAL_API_ENDPOINT: 'http://127.0.0.1:8088/api',
-		FLUXER_INTERNAL_GATEWAY_ENDPOINT: 'http://127.0.0.1:8088/gateway',
 		FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: 'http://127.0.0.1:8088/media',
 		FLUXER_S3_ENDPOINT: 'http://127.0.0.1:3900',
 		FLUXER_S3_REGION: 'local',
@@ -65,8 +65,6 @@ function setDefaultTestEnv(): void {
 		FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
 		FLUXER_ADMIN_SECRET_KEY_BASE: 'test-admin-secret',
 		FLUXER_ADMIN_OAUTH_CLIENT_SECRET: 'test-admin-oauth-secret',
-		FLUXER_APP_PROXY_PORT: '8773',
-		FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: 'http://127.0.0.1:8088/media',
 		FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-rpc-token',
 		FLUXER_SUDO_MODE_SECRET: 'test-sudo-secret',
 		FLUXER_CONNECTION_INITIATION_SECRET: 'test-connection-secret',
@@ -89,8 +87,6 @@ function setDefaultTestEnv(): void {
 		FLUXER_SEARCH_ENGINE: 'elasticsearch',
 		FLUXER_SEARCH_URL: 'http://127.0.0.1:9200',
 		FLUXER_SEARCH_API_KEY: 'test',
-		FLUXER_CAPTCHA_ENABLED: 'false',
-		FLUXER_CAPTCHA_PROVIDER: 'none',
 		FLUXER_DISCOVERY_ENABLED: 'true',
 		FLUXER_RELAX_REGISTRATION_RATE_LIMITS: 'true',
 		FLUXER_DISABLE_RATE_LIMITS: 'true',
@@ -120,9 +116,17 @@ class RepositoryBackedUsersServiceClient implements IUsersServiceClient {
 setDefaultTestEnv();
 process.env.FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 ??= 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=';
 
+function generateTestPrivateKeyPem(type: 'ec' | 'rsa'): string {
+	const {privateKey} =
+		type === 'ec'
+			? generateKeyPairSync('ec', {namedCurve: 'prime256v1'})
+			: generateKeyPairSync('rsa', {modulusLength: 2048});
+	return privateKey.export({format: 'pem', type: 'pkcs8'}).toString();
+}
+
 const master = await loadConfig();
 const apiConfig = buildAPIConfigFromMaster(master);
-const testApiConfig = {
+const testApiConfig: APIConfig = {
 	...apiConfig,
 	auth: {
 		...apiConfig.auth,
@@ -141,6 +145,43 @@ const testApiConfig = {
 		enabled: true,
 		secretKey: 'sk_test_fluxer',
 		webhookSecret: 'whsec_test_fluxer',
+	},
+	appStore: {
+		...apiConfig.appStore,
+		enabled: true,
+		issuerId: '57246542-96fe-1a63-e053-0824d011072a',
+		keyId: 'FLUXERTEST',
+		privateKey: generateTestPrivateKeyPem('ec'),
+		privateKeyPath: undefined,
+		apps: [{bundleId: 'com.fluxer', appAppleId: 1234567890}],
+		products: {
+			'com.fluxer.plutonium.monthly': 'monthly',
+			'com.fluxer.plutonium.yearly': 'yearly',
+			'com.fluxer.gift.1month': 'gift_1_month',
+			'com.fluxer.gift.1year': 'gift_1_year',
+		},
+	},
+	googlePlay: {
+		...apiConfig.googlePlay,
+		enabled: true,
+		packages: ['com.fluxer'],
+		clientEmail: 'play-billing@fluxer-test.iam.gserviceaccount.com',
+		privateKey: generateTestPrivateKeyPem('rsa'),
+		privateKeyPath: undefined,
+		serviceAccountJsonPath: undefined,
+		tokenUri: 'https://oauth2.googleapis.com/token',
+		products: {
+			'plutonium:monthly': 'monthly',
+			'plutonium:yearly': 'yearly',
+			gift_1_month: 'gift_1_month',
+			gift_1_year: 'gift_1_year',
+		},
+		pushAudience: 'https://api.fluxer.test/webhooks/google-play',
+		pushServiceAccountEmail: 'rtdn@fluxer-test.iam.gserviceaccount.com',
+	},
+	storeBilling: {
+		sandboxUserIds: [],
+		sandboxEntitlesAll: false,
 	},
 	ncmec: {
 		...apiConfig.ncmec,

@@ -375,7 +375,6 @@ function buildRoute(
 		middlewares: [],
 		hasLoginRequired: false,
 		hasDefaultUserOnly: false,
-		hasLoginRequiredAllowSuspicious: false,
 		rateLimitConfig: null,
 		responseSchemaName: null,
 		responseContentType: 'application/json',
@@ -404,7 +403,6 @@ function buildRoute(
 			route.middlewares.push(name);
 			if (name === 'LoginRequired') route.hasLoginRequired = true;
 			if (name === 'DefaultUserOnly') route.hasDefaultUserOnly = true;
-			if (name === 'LoginRequiredAllowSuspicious') route.hasLoginRequiredAllowSuspicious = true;
 			continue;
 		}
 		if (Node.isArrowFunction(arg) || Node.isFunctionExpression(arg)) {

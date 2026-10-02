@@ -3,9 +3,17 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_TH_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "บัญชี {product_name} ของคุณถูกปิดใช้งานชั่วคราว",
-		"body": "สวัสดี {username},\n\nเราปิดใช้งานบัญชี {product_name} ของคุณชั่วคราว เนื่องจากเราตรวจพบกิจกรรมที่น่าสงสัย\n\n{reason, select,\n  null {}\n  other {เหตุผล: {reason}}\n}\n\nหากต้องการเข้าถึงบัญชีอีกครั้ง ให้รีเซ็ตรหัสผ่าน:\n\n{forgotUrl}\n\nหลังจากรีเซ็ตรหัสผ่านแล้ว คุณจะสามารถเข้าสู่ระบบได้อีกครั้ง\n\nหากคุณเชื่อว่านี่เป็นข้อผิดพลาด โปรดติดต่อทีมสนับสนุนของเรา\n\n– ทีมความปลอดภัย {product_name}"
+	"account_deletion_cancelled": {
+		"subject": "การลบบัญชี {product_name} ของคุณถูกยกเลิกแล้ว",
+		"body": "สวัสดี {username},\n\nการลบบัญชี {product_name} ของคุณที่กำหนดไว้ถูกยกเลิกแล้ว บัญชีของคุณจะไม่ถูกลบ\n\nหากคุณมีคำถามใด ๆ โปรดติดต่อ {safety_email}\n\n– ทีม {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "บัญชี {product_name} ของคุณจะถูกลบเนื่องจากไม่มีการใช้งาน",
+		"body": "สวัสดี {username},\n\nบัญชี {product_name} ของคุณไม่มีการใช้งานมาเป็นเวลานาน จึงถูกกำหนดให้ลบอย่างถาวรในวันที่:\n\n{deletionDate, date, full} เวลา {deletionDate, time, short}{reason, select, null {} other {\n\nเหตุผล: {reason}}}\n\nหากคุณต้องการเก็บบัญชีไว้ โปรดติดต่อ {safety_email} จากที่อยู่อีเมลนี้ก่อนวันดังกล่าว\n\n– ทีม {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "บัญชี {product_name} ของคุณถูกกำหนดให้ลบแล้ว",
+		"body": "สวัสดี {username},\n\nตามที่คุณร้องขอ บัญชี {product_name} ของคุณถูกกำหนดให้ลบอย่างถาวรในวันที่:\n\n{deletionDate, date, full} เวลา {deletionDate, time, short}{reason, select, null {} other {\n\nเหตุผล: {reason}}}\n\nบัญชีของคุณจะถูกล็อกจนถึงวันนั้น หากคุณไม่ได้ร้องขอ หรือต้องการเก็บบัญชีไว้ โปรดติดต่อ {safety_email} จากที่อยู่อีเมลนี้ก่อนวันดังกล่าว\n\n– ทีม {product_name}"
 	},
 	"account_scheduled_deletion": {
 		"subject": "บัญชี {product_name} ของคุณจะถูกลบอย่างถาวร",
@@ -37,7 +45,7 @@ const EMAIL_I18N_TH_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "อีเมลบัญชี {product_name} ของคุณถูกเปลี่ยนแล้ว",
-		"body": "สวัสดี {username},\n\nที่อยู่อีเมลในบัญชี {product_name} ของคุณถูกเปลี่ยนเป็น {newEmail}\n\nหากคุณทำการเปลี่ยนแปลงนี้ ไม่ต้องดำเนินการใด ๆ หากคุณไม่ได้เปลี่ยน คุณสามารถย้อนกลับการเปลี่ยนแปลงและรักษาความปลอดภัยบัญชีของคุณโดยใช้ลิงก์นี้:\n\n{revertUrl}\n\nซึ่งจะกู้คืนอีเมลก่อนหน้าของคุณ นำคุณออกจากระบบในทุกอุปกรณ์ ลบหมายเลขโทรศัพท์ที่เชื่อมโยง ปิดใช้งาน MFA และกำหนดให้คุณต้องตั้งรหัสผ่านใหม่\n\n– ทีมความปลอดภัย {product_name}"
+		"body": "สวัสดี {username},\n\nที่อยู่อีเมลในบัญชี {product_name} ของคุณถูกเปลี่ยนเป็น {newEmail}\n\nหากคุณทำการเปลี่ยนแปลงนี้ ไม่ต้องดำเนินการใด ๆ หากคุณไม่ได้เปลี่ยน คุณสามารถย้อนกลับการเปลี่ยนแปลงและรักษาความปลอดภัยบัญชีของคุณโดยใช้ลิงก์นี้:\n\n{revertUrl}\n\nซึ่งจะกู้คืนอีเมลก่อนหน้าของคุณ นำคุณออกจากระบบในทุกอุปกรณ์ ปิดใช้งาน MFA และกำหนดให้คุณต้องตั้งรหัสผ่านใหม่\n\n– ทีมความปลอดภัย {product_name}"
 	},
 	"email_verification": {
 		"subject": "ยืนยันที่อยู่อีเมลสำหรับ {product_name}",
@@ -65,7 +73,7 @@ const EMAIL_I18N_TH_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "ยืนยันการเปลี่ยนรหัสผ่านสำหรับ {product_name}",
-		"body": "สวัสดี {username},\n\nเราได้รับคำขอให้เปลี่ยนรหัสผ่านในบัญชี {product_name} ของคุณ\n\nหากต้องการยืนยันการเปลี่ยนแปลงนี้ ให้ป้อนรหัสนี้ในแอป:\n\n{code}\n\nรหัสนี้จะหมดอายุในเวลา {expiresAt}\n\nหากคุณไม่ได้ร้องขอ อาจมีผู้อื่นเข้าถึงบัญชีของคุณอยู่ เปลี่ยนรหัสผ่านทันทีและเปิดใช้งานการยืนยันตัวตนแบบสองขั้นตอน\n\n– ทีม {product_name}"
+		"body": "สวัสดี {username},\n\nเราได้รับคำขอให้เปลี่ยนรหัสผ่านในบัญชี {product_name} ของคุณ\n\nหากต้องการยืนยันการเปลี่ยนแปลงนี้ ให้ป้อนรหัสนี้ในแอป:\n\n{code}\n\nรหัสนี้จะหมดอายุในวันที่ {expiresAt, date, full} เวลา {expiresAt, time, short}\n\nหากคุณไม่ได้ร้องขอ อาจมีผู้อื่นเข้าถึงบัญชีของคุณอยู่ เปลี่ยนรหัสผ่านทันทีและเปิดใช้งานการยืนยันตัวตนแบบสองขั้นตอน\n\n– ทีม {product_name}"
 	},
 	"password_reset": {
 		"subject": "รีเซ็ตรหัสผ่านสำหรับ {product_name}",

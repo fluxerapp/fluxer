@@ -7,10 +7,10 @@ import {
 	PREMIUM_PRODUCT_NAME,
 	PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -143,7 +143,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 			screenShareContentHint,
 		} = voiceSettings;
 		const hasHigherQuality = hasHigherVideoQuality();
-		const isSelfHosted = RuntimeConfig.isSelfHosted();
+		const showPremium = shouldShowPremiumFeatures();
 		const {
 			devices,
 			deviceState,
@@ -160,7 +160,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 		const cameraResolutionOptions: ReadonlyArray<ComboboxOption<CameraResolution>> = [
 			{value: 'low', label: LOW_480P_LABEL},
 			{value: 'medium', label: MEDIUM_720P_LABEL},
-			...(hasHigherQuality || !isSelfHosted
+			...(hasHigherQuality || showPremium
 				? [
 						{
 							value: 'high' as const,
@@ -181,7 +181,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 		const screenShareState = resolveUserVideoTabScreenShareState({
 			quality: screenShareQuality,
 			hintSetting: screenShareContentHint,
-			selfHosted: isSelfHosted,
+			selfHosted: !showPremium,
 		});
 		const screenshareResolutionOptions: ReadonlyArray<ComboboxOption<OfferedScreenShareResolution>> =
 			screenShareState.resolutionOptions.map((option) => ({
@@ -308,7 +308,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 						dataFlx="user.video-tab.select.screenshare-resolution-change"
 						data-flx="user.user-video-tab.video-tab.compact-combobox-row.screenshare-resolution-change"
 					/>
-					{!hasHigherQuality && !isSelfHosted && (
+					{!hasHigherQuality && showPremium && (
 						<div className={styles.premiumCard} data-flx="user.video-tab.premium-card">
 							<div className={styles.premiumHeader} data-flx="user.video-tab.premium-header">
 								<CrownIcon
@@ -347,7 +347,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 						dataFlx="user.video-tab.select.frame-rate-change"
 						data-flx="user.user-video-tab.video-tab.compact-combobox-row.video-frame-rate-change"
 					/>
-					{!hasHigherQuality && !isSelfHosted && (
+					{!hasHigherQuality && showPremium && (
 						<div className={styles.frameRateNote} data-flx="user.video-tab.frame-rate-note">
 							<CrownIcon
 								weight="fill"
@@ -358,7 +358,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 							{i18n._(HIGH_FRAME_RATE_REQUIRES_PREMIUM_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
 						</div>
 					)}
-					{!hasHigherQuality && isSelfHosted && (
+					{!hasHigherQuality && !showPremium && (
 						<div className={styles.frameRateNote} data-flx="user.video-tab.instance-limit-note">
 							{i18n._(SELF_HOSTED_VIDEO_QUALITY_LIMIT_DESCRIPTOR)}
 						</div>

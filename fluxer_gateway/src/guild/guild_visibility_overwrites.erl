@@ -39,7 +39,12 @@ compute_and_dispatch_visibility_changes_for_channels(ChannelIds, OldState, NewSt
                 NewState
             ),
             dispatch_channel_changes_for_sessions(
-                SessionEntries, ValidChannelIds, OldState, NewState, ConnectedVoiceByUser
+                SessionEntries,
+                ValidChannelIds,
+                OldState,
+                NewState,
+                ConnectedVoiceByUser,
+                guild_visibility_memo:new(ValidChannelIds, OldState, NewState)
             )
     end.
 
@@ -195,15 +200,22 @@ dispatch_added_channels(Added, Pid, SessionId, SessionData, StateWithCache, Guil
     [channel_id()],
     guild_state(),
     guild_state(),
-    #{user_id() => sets:set(channel_id())}
+    #{user_id() => sets:set(channel_id())},
+    guild_visibility_memo:memo()
 ) -> guild_state().
 dispatch_channel_changes_for_sessions(
-    SessionEntries, ChannelIds, OldState, NewState, ConnectedVoiceByUser
+    SessionEntries, ChannelIds, OldState, NewState, ConnectedVoiceByUser, Memo
 ) ->
     case guild_id(NewState) of
         GuildId when is_integer(GuildId), GuildId > 0 ->
             dispatch_channel_changes_with_guild_id(
-                SessionEntries, ChannelIds, OldState, NewState, GuildId, ConnectedVoiceByUser
+                SessionEntries,
+                ChannelIds,
+                OldState,
+                NewState,
+                GuildId,
+                ConnectedVoiceByUser,
+                Memo
             );
         _ ->
             NewState
@@ -215,13 +227,14 @@ dispatch_channel_changes_for_sessions(
     guild_state(),
     guild_state(),
     integer(),
-    #{user_id() => sets:set(channel_id())}
+    #{user_id() => sets:set(channel_id())},
+    guild_visibility_memo:memo()
 ) -> guild_state().
 dispatch_channel_changes_with_guild_id(
-    SessionEntries, ChannelIds, OldState, NewState, GuildId, ConnectedVoiceByUser
+    SessionEntries, ChannelIds, OldState, NewState, GuildId, ConnectedVoiceByUser, Memo
 ) ->
-    lists:foldl(
-        fun({SessionId, SessionData}, AccState) ->
+    {FinalState, _Memo} = lists:foldl(
+        fun({SessionId, SessionData}, {AccState, AccMemo}) ->
             dispatch_per_channel_changes(
                 SessionId,
                 SessionData,
@@ -229,12 +242,14 @@ dispatch_channel_changes_with_guild_id(
                 OldState,
                 AccState,
                 GuildId,
-                ConnectedVoiceByUser
+                ConnectedVoiceByUser,
+                AccMemo
             )
         end,
-        NewState,
+        {NewState, Memo},
         SessionEntries
-    ).
+    ),
+    FinalState.
 
 -spec dispatch_per_channel_changes(
     binary(),
@@ -243,15 +258,16 @@ dispatch_channel_changes_with_guild_id(
     guild_state(),
     guild_state(),
     integer(),
-    #{user_id() => sets:set(channel_id())}
-) -> guild_state().
+    #{user_id() => sets:set(channel_id())},
+    guild_visibility_memo:memo()
+) -> {guild_state(), guild_visibility_memo:memo()}.
 dispatch_per_channel_changes(
-    SessionId, SessionData, ChannelIds, OldState, NewState, GuildId, ConnectedVoiceByUser
+    SessionId, SessionData, ChannelIds, OldState, NewState, GuildId, ConnectedVoiceByUser, Memo
 ) ->
     UserId = maps:get(user_id, SessionData, undefined),
     case is_integer(UserId) of
         false ->
-            NewState;
+            {NewState, Memo};
         true ->
             Pid = maps:get(pid, SessionData, undefined),
             OldMember = guild_permissions:find_member_by_user_id(UserId, OldState),
@@ -271,25 +287,58 @@ dispatch_per_channel_changes(
                 old_state => OldState,
                 guild_id => GuildId
             },
-            {FinalMap, StateAfter} = process_channel_list(
-                ChannelIds, InitialViewableMap, NewState, ChangeContext
+            {Memoised, Memo1} = guild_visibility_memo:pairs(
+                ChannelIds, OldState, NewState, ChangeContext, Memo
             ),
-            guild_sessions:set_session_viewable_channels(
-                SessionId, FinalMap, StateAfter
-            )
+            {FinalMap, StateAfter} = process_channel_list(
+                ChannelIds, Memoised, InitialViewableMap, NewState, ChangeContext
+            ),
+            {
+                guild_sessions:set_session_viewable_channels(SessionId, FinalMap, StateAfter),
+                Memo1
+            }
     end.
 
 -spec process_channel_list(
-    [channel_id()], map(), guild_state(), map()
+    [channel_id()], guild_visibility_memo:pairs() | none, map(), guild_state(), map()
 ) -> {map(), guild_state()}.
-process_channel_list(ChannelIds, InitialViewableMap, NewState, ChangeContext) ->
+process_channel_list(ChannelIds, none, InitialViewableMap, NewState, ChangeContext) ->
     lists:foldl(
         fun(ChannelId, Acc) ->
             apply_channel_change(ChannelId, Acc, ChangeContext)
         end,
         {InitialViewableMap, NewState},
         ChannelIds
-    ).
+    );
+process_channel_list(ChannelIds, {Pairs, Settled}, InitialViewableMap, NewState, ChangeContext) ->
+    #{connected_set := ConnectedSet} = ChangeContext,
+    case {Settled, connected_channels(ChannelIds, ConnectedSet)} of
+        {{Visible, Hidden}, []} ->
+            {maps:merge(maps:without(Hidden, InitialViewableMap), Visible), NewState};
+        {_, Connected} ->
+            lists:foldl(
+                fun(ChannelId, Acc) ->
+                    case lists:member(ChannelId, Connected) of
+                        true ->
+                            apply_channel_change(ChannelId, Acc, ChangeContext);
+                        false ->
+                            {OldVisible, NewVisible} = maps:get(ChannelId, Pairs),
+                            apply_visibility(
+                                ChannelId, OldVisible, NewVisible, Acc, ChangeContext
+                            )
+                    end
+                end,
+                {InitialViewableMap, NewState},
+                ChannelIds
+            )
+    end.
+
+-spec connected_channels([channel_id()], sets:set(channel_id())) -> [channel_id()].
+connected_channels(ChannelIds, ConnectedSet) ->
+    case sets:is_empty(ConnectedSet) of
+        true -> [];
+        false -> [Id || Id <- ChannelIds, sets:is_element(Id, ConnectedSet)]
+    end.
 
 -spec apply_channel_change(
     channel_id(), {map(), guild_state()}, map()
@@ -297,14 +346,10 @@ process_channel_list(ChannelIds, InitialViewableMap, NewState, ChangeContext) ->
 apply_channel_change(ChannelId, {ViewableMapAcc, StateAcc}, ChangeContext) ->
     #{
         user_id := UserId,
-        pid := Pid,
-        session_id := SessionId,
-        session_data := SessionData,
         old_member := OldMember,
         new_member := NewMember,
         connected_set := ConnectedSet,
-        old_state := OldState,
-        guild_id := GuildId
+        old_state := OldState
     } = ChangeContext,
     OldVisible = guild_visibility_channels:channel_is_visible(
         UserId, ChannelId, OldMember, OldState
@@ -313,6 +358,21 @@ apply_channel_change(ChannelId, {ViewableMapAcc, StateAcc}, ChangeContext) ->
         guild_visibility_channels:ensure_new_channel_visibility(
             UserId, ChannelId, ConnectedSet, NewMember, StateAcc
         ),
+    apply_visibility(
+        ChannelId, OldVisible, NewVisible, {ViewableMapAcc, StateAfterPreserve}, ChangeContext
+    ).
+
+-spec apply_visibility(
+    channel_id(), boolean(), boolean(), {map(), guild_state()}, map()
+) -> {map(), guild_state()}.
+apply_visibility(ChannelId, OldVisible, NewVisible, {ViewableMapAcc, StateAcc}, ChangeContext) ->
+    #{
+        pid := Pid,
+        session_id := SessionId,
+        session_data := SessionData,
+        old_state := OldState,
+        guild_id := GuildId
+    } = ChangeContext,
     UpdatedViewableMap = guild_visibility_channels:update_viewable_map_for_channel(
         ViewableMapAcc, ChannelId, NewVisible
     ),
@@ -324,7 +384,7 @@ apply_channel_change(ChannelId, {ViewableMapAcc, StateAcc}, ChangeContext) ->
         SessionId,
         SessionData,
         OldState,
-        StateAfterPreserve,
+        StateAcc,
         GuildId,
         UpdatedViewableMap
     ).

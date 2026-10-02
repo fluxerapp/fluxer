@@ -114,6 +114,7 @@ export class GiftCode {
 	readonly visionarySequenceNumber: number | null;
 	readonly checkoutSessionId: string | null;
 	readonly revokedAt: Date | null;
+	readonly premiumReversedSeconds: number | null;
 	readonly version: number;
 
 	constructor(row: GiftCodeRow) {
@@ -130,6 +131,7 @@ export class GiftCode {
 		this.visionarySequenceNumber = row.visionary_sequence_number ?? null;
 		this.checkoutSessionId = row.checkout_session_id ?? null;
 		this.revokedAt = row.revoked_at ?? null;
+		this.premiumReversedSeconds = row.premium_reversed_seconds ?? null;
 		this.version = row.version;
 	}
 
@@ -147,6 +149,7 @@ export class GiftCode {
 			visionary_sequence_number: this.visionarySequenceNumber,
 			checkout_session_id: this.checkoutSessionId,
 			revoked_at: this.revokedAt,
+			premium_reversed_seconds: this.premiumReversedSeconds,
 			version: this.version,
 		};
 	}

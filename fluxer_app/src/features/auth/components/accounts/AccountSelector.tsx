@@ -18,7 +18,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {PlusIcon, SignOutIcon} from '@phosphor-icons/react';
+import {PlusIcon, SignInIcon, SignOutIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback} from 'react';
@@ -101,17 +101,20 @@ export const AccountSelector = observer(
 			(account: Account) => (event: React.MouseEvent<HTMLButtonElement>) => {
 				event.preventDefault();
 				event.stopPropagation();
+				if (disabled) {
+					return;
+				}
 				ContextMenuCommands.openFromEvent(event, (props) => (
 					<MenuGroup data-flx="auth.accounts.account-selector.open-menu.menu-group">
 						<MenuItem
-							icon={<SignOutIcon size={18} data-flx="auth.accounts.account-selector.open-menu.sign-out-icon" />}
+							icon={<SignInIcon size={18} data-flx="auth.accounts.account-selector.open-menu.sign-in-icon" />}
 							onClick={() => {
 								props.onClose();
 								onSelectAccount(account);
 							}}
 							data-flx="auth.accounts.account-selector.open-menu.menu-item.close"
 						>
-							<Trans>Select account</Trans>
+							{account.isValid === false ? <Trans>Sign in again</Trans> : <Trans>Select account</Trans>}
 						</MenuItem>
 						<MenuItem
 							danger
@@ -127,7 +130,7 @@ export const AccountSelector = observer(
 					</MenuGroup>
 				));
 			},
-			[openSignOutConfirm, onSelectAccount],
+			[disabled, openSignOutConfirm, onSelectAccount],
 		);
 		return (
 			<div className={styles.container} data-flx="auth.accounts.account-selector.container">
@@ -142,38 +145,36 @@ export const AccountSelector = observer(
 						{error}
 					</div>
 				)}
-				<div className={styles.accountListWrapper} data-flx="auth.accounts.account-selector.account-list-wrapper">
-					{accounts.length === 0 ? (
-						<div className={styles.noAccounts} data-flx="auth.accounts.account-selector.no-accounts">
-							<Trans>No accounts</Trans>
+				{accounts.length === 0 ? (
+					<div className={styles.noAccounts} data-flx="auth.accounts.account-selector.no-accounts">
+						<Trans>No accounts</Trans>
+					</div>
+				) : (
+					<Scroller
+						className={styles.scroller}
+						key={scrollerKey ?? 'account-selector-scroller'}
+						data-flx="auth.accounts.account-selector.scroller"
+					>
+						<div className={styles.accountList} data-flx="auth.accounts.account-selector.account-list">
+							{accounts.map((account) => {
+								const isCurrent = account.userId === currentAccountId;
+								return (
+									<AccountRow
+										key={account.userId}
+										account={account}
+										variant="manage"
+										isCurrent={isCurrent}
+										isExpired={account.isValid === false}
+										onClick={clickableRows && !disabled ? () => onSelectAccount(account) : undefined}
+										showCaretIndicator={clickableRows && isCurrent}
+										onMenuClick={isCurrent ? undefined : openMenu(account)}
+										data-flx="auth.accounts.account-selector.account-row.select-account"
+									/>
+								);
+							})}
 						</div>
-					) : (
-						<Scroller
-							className={styles.scroller}
-							key={scrollerKey ?? 'account-selector-scroller'}
-							data-flx="auth.accounts.account-selector.scroller"
-						>
-							<div className={styles.accountList} data-flx="auth.accounts.account-selector.account-list">
-								{accounts.map((account) => {
-									const isCurrent = account.userId === currentAccountId;
-									return (
-										<AccountRow
-											key={account.userId}
-											account={account}
-											variant="manage"
-											isCurrent={isCurrent}
-											isExpired={account.isValid === false}
-											onClick={clickableRows && !disabled ? () => onSelectAccount(account) : undefined}
-											showCaretIndicator={clickableRows}
-											onMenuClick={!clickableRows && !disabled ? openMenu(account) : undefined}
-											data-flx="auth.accounts.account-selector.account-row.select-account"
-										/>
-									);
-								})}
-							</div>
-						</Scroller>
-					)}
-				</div>
+					</Scroller>
+				)}
 				{onAddAccount && (
 					<Button
 						variant="secondary"

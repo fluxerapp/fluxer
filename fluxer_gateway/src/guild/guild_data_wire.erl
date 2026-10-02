@@ -158,6 +158,7 @@ named_key_kind(<<"recipient_ids">>) -> drop;
 named_key_kind(<<"role_index">>) -> drop;
 named_key_kind(<<"channel_index">>) -> drop;
 named_key_kind(<<"member_role_index">>) -> drop;
+named_key_kind(<<"member_list_revision">>) -> drop;
 named_key_kind(<<"role_perms_cache">>) -> drop;
 named_key_kind(<<"overwrite_perms_cache">>) -> drop;
 named_key_kind(_) -> unknown.
@@ -267,6 +268,7 @@ sample_keys() ->
         <<"role_index">>,
         <<"channel_index">>,
         <<"member_role_index">>,
+        <<"member_list_revision">>,
         <<"role_perms_cache">>,
         <<"overwrite_perms_cache">>,
         <<"guild_folders">>,
@@ -347,6 +349,7 @@ reference_keep_payload_field(Key) ->
         <<"role_index">>,
         <<"channel_index">>,
         <<"member_role_index">>,
+        <<"member_list_revision">>,
         <<"role_perms_cache">>,
         <<"overwrite_perms_cache">>
     ]).
@@ -519,5 +522,12 @@ reference_path_push(Key, Path) ->
 -spec reference_has_any_path([binary()], path()) -> boolean().
 reference_has_any_path(Keys, Path) ->
     lists:any(fun(Key) -> lists:member(Key, Path) end, Keys).
+
+member_list_revision_is_internal_at_every_depth_test() ->
+    Data = #{
+        member_list_revision => make_ref(),
+        <<"nested">> => [#{<<"member_list_revision">> => make_ref(), <<"id">> => 9}]
+    },
+    ?assertEqual(#{<<"nested">> => [#{<<"id">> => <<"9">>}]}, payload(Data)).
 
 -endif.

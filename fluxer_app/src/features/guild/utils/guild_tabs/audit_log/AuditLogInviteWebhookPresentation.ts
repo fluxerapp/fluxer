@@ -21,6 +21,8 @@ import {
 	WEBHOOK_AVATAR_CHANGED_ROW,
 	WEBHOOK_AVATAR_REMOVED_ROW,
 	WEBHOOK_CHANNEL_CHANGED_ROW,
+	WEBHOOK_CHANNEL_FOLLOW_CREATE_SUMMARY,
+	WEBHOOK_CHANNEL_FOLLOW_DELETE_SUMMARY,
 	WEBHOOK_CREATE_IN_CHANNEL_SUMMARY,
 	WEBHOOK_CREATE_SUMMARY,
 	WEBHOOK_CREATE_UNNAMED_SUMMARY,
@@ -51,6 +53,7 @@ import {
 	readString,
 	readTimestamp,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogValues';
+import {WebhookTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
 import type {GuildAuditLogEntryResponse} from '@fluxer/schema/src/domains/guild/GuildAuditLogSchemas';
 import type {MessageDescriptor} from '@lingui/core';
@@ -64,6 +67,7 @@ interface InviteSettings {
 }
 
 interface WebhookSnapshotSummaries {
+	followInChannel: MessageDescriptor;
 	inChannel: MessageDescriptor;
 	named: MessageDescriptor;
 	unnamed: MessageDescriptor;
@@ -221,9 +225,13 @@ function webhookSnapshotSummary(
 	summaries: WebhookSnapshotSummaries,
 ): AuditLogSentence {
 	const actor = actorPlaceholder(entry);
+	const channelId = readSnapshotChannelId(entry, side);
+	const webhookType = readNumber(readOption(entry, 'type')) ?? readNumber(readChangeSide(entry, 'type', side));
+	if (webhookType === WebhookTypes.CHANNEL_FOLLOWER && channelId !== null) {
+		return {descriptor: summaries.followInChannel, values: {actor, channel: channelPlaceholder(channelId)}};
+	}
 	const name = readString(readChangeSide(entry, 'name', side));
 	if (name === null) return {descriptor: summaries.unnamed, values: {actor}};
-	const channelId = readSnapshotChannelId(entry, side);
 	return channelId === null
 		? {descriptor: summaries.named, values: {actor, name: {kind: 'name', value: name}}}
 		: {
@@ -266,6 +274,7 @@ function readKnownWebhookName(entry: GuildAuditLogEntryResponse, context: AuditL
 export function presentWebhookCreate(entry: GuildAuditLogEntryResponse): AuditLogDomainResult {
 	return {
 		summary: webhookSnapshotSummary(entry, 'new', {
+			followInChannel: WEBHOOK_CHANNEL_FOLLOW_CREATE_SUMMARY,
 			inChannel: WEBHOOK_CREATE_IN_CHANNEL_SUMMARY,
 			named: WEBHOOK_CREATE_SUMMARY,
 			unnamed: WEBHOOK_CREATE_UNNAMED_SUMMARY,
@@ -311,6 +320,7 @@ export function presentWebhookDelete(entry: GuildAuditLogEntryResponse): AuditLo
 	const creatorId = readSnowflake(readChangeSide(entry, 'creator_id', 'old'));
 	return {
 		summary: webhookSnapshotSummary(entry, 'old', {
+			followInChannel: WEBHOOK_CHANNEL_FOLLOW_DELETE_SUMMARY,
 			inChannel: WEBHOOK_DELETE_FROM_CHANNEL_SUMMARY,
 			named: WEBHOOK_DELETE_SUMMARY,
 			unnamed: WEBHOOK_DELETE_UNNAMED_SUMMARY,

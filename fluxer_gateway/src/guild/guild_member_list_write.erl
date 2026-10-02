@@ -6,9 +6,12 @@
 -export([
     broadcast_member_list_updates/3,
     broadcast_member_list_updates/5,
+    queue_member_list_updates/5,
     broadcast_all_member_list_updates/1,
     broadcast_member_list_updates_for_channel/2,
     broadcast_channel_engine_connection_change/2,
+    queue_synced_connection_change/2,
+    presence_change_resyncs_lists/2,
     flush_pending_member_list_syncs/1,
     resync_hoisted_member_lists/1,
     rebuild_channels_for_permission_change/2,
@@ -22,6 +25,8 @@
 -type channel_id() :: integer().
 -type engine_ref() :: ets:table().
 -type absence() :: {absent, engine_ref()} | present.
+-type pending_mark() :: true | synced.
+-type list_sync() :: immediate | deferred.
 
 -define(MAX_MEMBER_LIST_SYNC_SKIPPED_ABSENT, 1000000000).
 
@@ -50,11 +55,34 @@ broadcast_member_list_updates(
 ) ->
     {ok, UpdatedState};
 broadcast_member_list_updates(UserId, OldState, UpdatedState, OldPresence, NewPresence) ->
+    member_list_updates(immediate, UserId, OldState, UpdatedState, OldPresence, NewPresence).
+
+-spec queue_member_list_updates(
+    user_id() | undefined,
+    guild_state(),
+    guild_state(),
+    map() | undefined,
+    map() | undefined
+) -> {ok, guild_state()}.
+queue_member_list_updates(undefined, _OldState, UpdatedState, _OldPresence, _NewPresence) ->
+    {ok, UpdatedState};
+queue_member_list_updates(UserId, OldState, UpdatedState, OldPresence, NewPresence) ->
+    member_list_updates(deferred, UserId, OldState, UpdatedState, OldPresence, NewPresence).
+
+-spec member_list_updates(
+    list_sync(),
+    user_id(),
+    guild_state(),
+    guild_state(),
+    map() | undefined,
+    map() | undefined
+) -> {ok, guild_state()}.
+member_list_updates(ListSync, UserId, OldState, UpdatedState, OldPresence, NewPresence) ->
     guild_member_list_write_context:with_guild_id(UpdatedState, fun(_GuildId) ->
         OldMember = find_member_in_state_data(UserId, OldState),
         NewMember = find_member_in_state_data(UserId, UpdatedState),
         State1 = dispatch_presence_delta(
-            UserId, OldMember, NewMember, OldPresence, NewPresence, UpdatedState
+            UserId, OldMember, NewMember, OldPresence, NewPresence, ListSync, UpdatedState
         ),
         {ok, State1}
     end).
@@ -65,16 +93,19 @@ broadcast_member_list_updates(UserId, OldState, UpdatedState, OldPresence, NewPr
     map() | undefined,
     map() | undefined,
     map() | undefined,
+    list_sync(),
     guild_state()
 ) -> guild_state().
-dispatch_presence_delta(UserId, OldMember, NewMember, OldPresence, NewPresence, State) ->
+dispatch_presence_delta(
+    UserId, OldMember, NewMember, OldPresence, NewPresence, ListSync, State
+) ->
     case presence_delta_is_inert(OldPresence, NewPresence, OldMember, NewMember) of
         true ->
-            State;
+            invalidate_synced_lists(UserId, State);
         false ->
             SubsTab = maps:get(member_list_subscriptions, State),
             dispatch_user_change_to_subscribed_lists(
-                UserId, OldMember, NewMember, SubsTab, State
+                UserId, OldMember, NewMember, SubsTab, ListSync, State
             )
     end.
 
@@ -87,15 +118,20 @@ dispatch_presence_delta(UserId, OldMember, NewMember, OldPresence, NewPresence, 
 presence_delta_is_inert(OldPresence, NewPresence, Member, Member) when
     is_map(OldPresence), is_map(NewPresence), is_map(Member)
 ->
-    member_list_presence_fields(OldPresence) =:= member_list_presence_fields(NewPresence);
+    not presence_change_resyncs_lists(OldPresence, NewPresence);
 presence_delta_is_inert(_OldPresence, _NewPresence, _OldMember, _NewMember) ->
     false.
 
--spec member_list_presence_fields(map()) -> {binary(), term()}.
+-spec presence_change_resyncs_lists(map(), map()) -> boolean().
+presence_change_resyncs_lists(OldPresence, NewPresence) ->
+    member_list_presence_fields(OldPresence) =/= member_list_presence_fields(NewPresence).
+
+-spec member_list_presence_fields(map()) -> {binary(), term(), term()}.
 member_list_presence_fields(Presence) ->
     {
         maps:get(<<"status">>, Presence, <<"offline">>),
-        maps:get(<<"custom_status">>, Presence, null)
+        maps:get(<<"custom_status">>, Presence, null),
+        maps:get(<<"mobile">>, Presence, false)
     }.
 
 -spec find_member_in_state_data(user_id(), guild_state()) -> map() | undefined.
@@ -165,29 +201,38 @@ broadcast_channel_with_guild_id(GuildId, ChannelId, State) ->
 
 -spec broadcast_channel_engine_connection_change(user_id(), guild_state()) -> guild_state().
 broadcast_channel_engine_connection_change(UserId, State) ->
+    queue_connection_change(UserId, true, State).
+
+-spec queue_synced_connection_change(user_id(), guild_state()) -> guild_state().
+queue_synced_connection_change(UserId, State) ->
+    queue_connection_change(UserId, synced, State).
+
+-spec queue_connection_change(user_id(), pending_mark(), guild_state()) -> guild_state().
+queue_connection_change(UserId, Mark, State) ->
     case maps:get(member_list_subscriptions, State, undefined) of
         undefined ->
             State;
         SubsTab ->
-            broadcast_channel_engine_connection_change(UserId, State, SubsTab)
+            queue_connection_change(UserId, Mark, State, SubsTab)
     end.
 
--spec broadcast_channel_engine_connection_change(user_id(), guild_state(), ets:table()) ->
+-spec queue_connection_change(user_id(), pending_mark(), guild_state(), ets:table()) ->
     guild_state().
-broadcast_channel_engine_connection_change(UserId, State, SubsTab) ->
+queue_connection_change(UserId, Mark, State, SubsTab) ->
     {ok, NewState} = guild_member_list_write_context:with_guild_id(State, fun(GuildId) ->
-        {ok, fold_connection_change_lists(GuildId, UserId, State, SubsTab)}
+        {ok, fold_connection_change_lists(GuildId, UserId, Mark, State, SubsTab)}
     end),
     NewState.
 
--spec fold_connection_change_lists(integer(), user_id(), guild_state(), ets:table()) ->
-    guild_state().
-fold_connection_change_lists(GuildId, UserId, State, SubsTab) ->
+-spec fold_connection_change_lists(
+    integer(), user_id(), pending_mark(), guild_state(), ets:table()
+) -> guild_state().
+fold_connection_change_lists(GuildId, UserId, Mark, State, SubsTab) ->
     Sessions = maps:get(sessions, State, #{}),
     lists:foldl(
         fun(ListId, AccState) ->
             sync_connection_change_for_subscribed_list(
-                GuildId, UserId, ListId, Sessions, AccState
+                GuildId, UserId, ListId, Mark, Sessions, AccState
             )
         end,
         State,
@@ -199,35 +244,45 @@ fold_connection_change_lists(GuildId, UserId, State, SubsTab) ->
     map() | undefined,
     map() | undefined,
     ets:table(),
+    list_sync(),
     guild_state()
 ) -> guild_state().
 dispatch_user_change_to_subscribed_lists(
-    UserId, OldMember, NewMember, SubsTab, State
+    UserId, OldMember, NewMember, SubsTab, ListSync, State
 ) ->
-    lists:foldl(
-        fun(ListId, AccState) ->
-            dispatch_user_change_to_subscribed_list(
-                UserId, OldMember, NewMember, ListId, AccState
-            )
-        end,
-        State,
-        guild_member_list_subs:list_ids(SubsTab)
-    ).
+    guild_member_list_read:with_member_item_memo(fun() ->
+        lists:foldl(
+            fun(ListId, AccState) ->
+                dispatch_user_change_to_subscribed_list(
+                    UserId, OldMember, NewMember, ListId, ListSync, AccState
+                )
+            end,
+            State,
+            guild_member_list_subs:list_ids(SubsTab)
+        )
+    end).
 
 -spec dispatch_user_change_to_subscribed_list(
     user_id(),
     map() | undefined,
     map() | undefined,
     list_id(),
+    list_sync(),
     guild_state()
 ) -> guild_state().
-dispatch_user_change_to_subscribed_list(UserId, OldMember, NewMember, ListId, State) ->
+dispatch_user_change_to_subscribed_list(UserId, OldMember, NewMember, ListId, ListSync, State) ->
     Absence = user_change_absence(UserId, ListId, OldMember, NewMember, State),
     State1 = apply_user_change_to_channel_store(UserId, ListId, OldMember, NewMember, State),
     case sync_body_unchanged(UserId, ListId, Absence, State1) of
         true -> record_member_list_sync_skipped_absent(State1);
-        false -> guild_member_list_sync_batch:queue_list_sync(ListId, State1)
+        false -> queue_user_change_sync(ListSync, ListId, State1)
     end.
+
+-spec queue_user_change_sync(list_sync(), list_id(), guild_state()) -> guild_state().
+queue_user_change_sync(immediate, ListId, State) ->
+    guild_member_list_sync_batch:queue_list_sync(ListId, State);
+queue_user_change_sync(deferred, ListId, State) ->
+    queue_connection_list_sync(ListId, true, State).
 
 -spec user_change_absence(
     user_id(), list_id(), map() | undefined, map() | undefined, guild_state()
@@ -263,12 +318,12 @@ apply_channel_member_change(_UserId, _ListId, _OldMember, _NewMember, _State) ->
     ok.
 
 -spec sync_connection_change_for_subscribed_list(
-    integer(), user_id(), list_id(), map(), guild_state()
+    integer(), user_id(), list_id(), pending_mark(), map(), guild_state()
 ) -> guild_state().
-sync_connection_change_for_subscribed_list(_GuildId, UserId, ListId, _Sessions, State) ->
+sync_connection_change_for_subscribed_list(_GuildId, UserId, ListId, Mark, _Sessions, State) ->
     case guild_member_list_channel_engine:is_engine_list(ListId, State) of
         true ->
-            queue_connection_list_sync_unless_absent(UserId, ListId, State);
+            queue_connection_list_sync_unless_absent(UserId, ListId, Mark, State);
         false ->
             State
     end.
@@ -301,21 +356,27 @@ rebuild_channel_store(ListId, State) ->
         false -> State
     end.
 
--spec queue_connection_list_sync_unless_absent(user_id(), list_id(), guild_state()) ->
-    guild_state().
-queue_connection_list_sync_unless_absent(UserId, ListId, State) ->
+-spec queue_connection_list_sync_unless_absent(
+    user_id(), list_id(), pending_mark(), guild_state()
+) -> guild_state().
+queue_connection_list_sync_unless_absent(UserId, ListId, Mark, State) ->
     case list_member_absence(UserId, ListId, State) of
         {absent, _Ref} -> record_member_list_sync_skipped_absent(State);
-        present -> queue_connection_list_sync(ListId, State)
+        present -> queue_connection_list_sync(ListId, Mark, State)
     end.
 
--spec queue_connection_list_sync(list_id(), guild_state()) -> guild_state().
-queue_connection_list_sync(ListId, State) ->
+-spec queue_connection_list_sync(list_id(), pending_mark(), guild_state()) -> guild_state().
+queue_connection_list_sync(ListId, Mark, State) ->
     case maps:get(pending_member_list_sync_batch, State, undefined) of
         #{pending_list_ids := PendingListIds} = Batch when is_map(PendingListIds) ->
             State#{
                 pending_member_list_sync_batch => Batch#{
-                    pending_list_ids => PendingListIds#{ListId => true}
+                    pending_list_ids => maps:update_with(
+                        ListId,
+                        fun(Old) -> merge_pending_mark(Old, Mark) end,
+                        Mark,
+                        PendingListIds
+                    )
                 }
             };
         _ ->
@@ -324,11 +385,39 @@ queue_connection_list_sync(ListId, State) ->
             ),
             State#{
                 pending_member_list_sync_batch => #{
-                    pending_list_ids => #{ListId => true},
+                    pending_list_ids => #{ListId => Mark},
                     timer_ref => TimerRef
                 }
             }
     end.
+
+-spec merge_pending_mark(term(), pending_mark()) -> pending_mark().
+merge_pending_mark(true, _Mark) ->
+    true;
+merge_pending_mark(_Old, Mark) ->
+    Mark.
+
+-spec invalidate_synced_lists(user_id(), guild_state()) -> guild_state().
+invalidate_synced_lists(UserId, State) ->
+    case maps:get(pending_member_list_sync_batch, State, undefined) of
+        #{pending_list_ids := PendingListIds} = Batch when is_map(PendingListIds) ->
+            Pending = maps:map(
+                fun(ListId, Mark) -> invalidate_synced_mark(UserId, ListId, Mark, State) end,
+                PendingListIds
+            ),
+            State#{pending_member_list_sync_batch => Batch#{pending_list_ids => Pending}};
+        _ ->
+            State
+    end.
+
+-spec invalidate_synced_mark(user_id(), list_id(), term(), guild_state()) -> term().
+invalidate_synced_mark(UserId, ListId, synced, State) ->
+    case list_member_absence(UserId, ListId, State) of
+        present -> true;
+        {absent, _Ref} -> synced
+    end;
+invalidate_synced_mark(_UserId, _ListId, Mark, _State) ->
+    Mark.
 
 -spec connection_sync_delay_ms(guild_state()) -> pos_integer().
 connection_sync_delay_ms(State) ->
@@ -498,14 +587,18 @@ subscribed_list_sync_is_skipped_only_for_absent_member_test() ->
             ?assert(
                 maps:is_key(
                     pending_member_list_sync_batch,
-                    dispatch_user_change_to_subscribed_list(7, Member, Member, <<"500">>, State)
+                    dispatch_user_change_to_subscribed_list(
+                        7, Member, Member, <<"500">>, immediate, State
+                    )
                 )
             ),
             ok = guild_member_list_engine:add_member(Ref, 7, <<"seven">>, [], true),
             ?assertNot(
                 maps:is_key(
                     pending_member_list_sync_batch,
-                    dispatch_user_change_to_subscribed_list(7, Member, Member, <<"500">>, State)
+                    dispatch_user_change_to_subscribed_list(
+                        7, Member, Member, <<"500">>, immediate, State
+                    )
                 )
             )
         end)
@@ -529,6 +622,20 @@ list_id_fold_matches_fold_lists_test() ->
     after
         guild_member_list_subs:destroy(Tab)
     end.
+
+presence_change_resyncs_lists_on_status_custom_status_or_mobile_test() ->
+    Online = #{
+        <<"status">> => <<"online">>,
+        <<"mobile">> => false,
+        <<"afk">> => false,
+        <<"custom_status">> => null
+    },
+    ?assert(presence_change_resyncs_lists(Online, Online#{<<"status">> => <<"idle">>})),
+    ?assert(presence_change_resyncs_lists(Online, Online#{<<"custom_status">> => #{}})),
+    ?assert(presence_change_resyncs_lists(Online, Online#{<<"mobile">> => true})),
+    ?assert(presence_change_resyncs_lists(#{}, Online)),
+    ?assertNot(presence_change_resyncs_lists(Online, Online#{<<"afk">> => true})),
+    ?assertNot(presence_change_resyncs_lists(#{}, #{<<"status">> => <<"offline">>})).
 
 connection_sync_delay_defaults_test() ->
     ?assertEqual(250, connection_sync_delay_ms(#{})),
@@ -556,19 +663,19 @@ connection_sync_delay_rejects_invalid_env_test() ->
     ).
 
 connection_list_sync_arms_one_timer_per_window_test() ->
-    State1 = queue_connection_list_sync(<<"500">>, #{}),
+    State1 = queue_connection_list_sync(<<"500">>, true, #{}),
     Batch1 = maps:get(pending_member_list_sync_batch, State1),
     TimerRef = maps:get(timer_ref, Batch1),
     try
         ?assert(is_reference(TimerRef)),
         ?assertEqual(#{<<"500">> => true}, maps:get(pending_list_ids, Batch1)),
-        State2 = queue_connection_list_sync(<<"600">>, State1),
+        State2 = queue_connection_list_sync(<<"600">>, true, State1),
         Batch2 = maps:get(pending_member_list_sync_batch, State2),
         ?assertEqual(TimerRef, maps:get(timer_ref, Batch2)),
         ?assertEqual(
             #{<<"500">> => true, <<"600">> => true}, maps:get(pending_list_ids, Batch2)
         ),
-        State3 = queue_connection_list_sync(<<"500">>, State2),
+        State3 = queue_connection_list_sync(<<"500">>, true, State2),
         ?assertEqual(Batch2, maps:get(pending_member_list_sync_batch, State3))
     after
         _ = erlang:cancel_timer(TimerRef)
@@ -579,7 +686,7 @@ connection_change_sync_is_debounced_test() ->
     try
         ok = guild_member_list_engine:add_member(Ref, 7, <<"seven">>, [], true),
         Next = sync_connection_change_for_subscribed_list(
-            1, 7, <<"500">>, #{}, engine_state(Ref)
+            1, 7, <<"500">>, true, #{}, engine_state(Ref)
         ),
         Batch = maps:get(pending_member_list_sync_batch, Next),
         ?assertEqual(#{<<"500">> => true}, maps:get(pending_list_ids, Batch)),
@@ -592,7 +699,7 @@ connection_change_skip_absent_arms_no_timer_test() ->
     Ref = guild_member_list_engine:new(),
     try
         Next = sync_connection_change_for_subscribed_list(
-            1, 7, <<"500">>, #{}, engine_state(Ref)
+            1, 7, <<"500">>, true, #{}, engine_state(Ref)
         ),
         ?assertNot(maps:is_key(pending_member_list_sync_batch, Next)),
         ?assertEqual(1, maps:get(member_list_sync_skipped_absent, Next))
@@ -606,7 +713,7 @@ connection_change_skip_absent_keeps_pending_batch_test() ->
     Batch = #{pending_list_ids => #{<<"600">> => true}, timer_ref => TimerRef},
     State = (engine_state(Ref))#{pending_member_list_sync_batch => Batch},
     try
-        Next = sync_connection_change_for_subscribed_list(1, 7, <<"500">>, #{}, State),
+        Next = sync_connection_change_for_subscribed_list(1, 7, <<"500">>, true, #{}, State),
         ?assertEqual(Batch, maps:get(pending_member_list_sync_batch, Next))
     after
         _ = erlang:cancel_timer(TimerRef),
@@ -628,11 +735,106 @@ member_update_sync_stays_immediate_test() ->
         ?assertNot(
             maps:is_key(
                 pending_member_list_sync_batch,
-                dispatch_user_change_to_subscribed_list(7, Member, Member, <<"500">>, State)
+                dispatch_user_change_to_subscribed_list(
+                    7, Member, Member, <<"500">>, immediate, State
+                )
             )
         )
     after
         _ = erlang:cancel_timer(TimerRef),
+        guild_member_list_engine:destroy(Ref)
+    end.
+
+deferred_user_change_sync_is_debounced_test() ->
+    Ref = guild_member_list_engine:new(),
+    Old = #{<<"user">> => #{<<"id">> => <<"7">>}, <<"roles">> => []},
+    New = Old#{<<"nick">> => <<"seven">>},
+    try
+        ok = guild_member_list_engine:add_member(Ref, 7, <<"seven">>, [], true),
+        Next = dispatch_user_change_to_subscribed_list(
+            7, Old, New, <<"500">>, deferred, engine_state(Ref)
+        ),
+        Batch = maps:get(pending_member_list_sync_batch, Next),
+        ?assertEqual(#{<<"500">> => true}, maps:get(pending_list_ids, Batch)),
+        _ = erlang:cancel_timer(maps:get(timer_ref, Batch))
+    after
+        guild_member_list_engine:destroy(Ref)
+    end.
+
+synced_connection_mark_never_downgrades_pending_sync_test() ->
+    State1 = queue_connection_list_sync(<<"500">>, synced, #{}),
+    TimerRef = maps:get(timer_ref, maps:get(pending_member_list_sync_batch, State1)),
+    try
+        State2 = queue_connection_list_sync(<<"600">>, true, State1),
+        State3 = queue_connection_list_sync(<<"600">>, synced, State2),
+        State4 = queue_connection_list_sync(<<"500">>, true, State3),
+        Batch = maps:get(pending_member_list_sync_batch, State4),
+        ?assertEqual(TimerRef, maps:get(timer_ref, Batch)),
+        ?assertEqual(
+            #{<<"500">> => true, <<"600">> => true}, maps:get(pending_list_ids, Batch)
+        )
+    after
+        _ = erlang:cancel_timer(TimerRef)
+    end.
+
+inert_presence_change_invalidates_synced_lists_holding_the_user_test() ->
+    Ref = guild_member_list_engine:new(),
+    Other = guild_member_list_engine:new(),
+    Pending = #{<<"500">> => synced, <<"600">> => synced, <<"700">> => true},
+    State = #{
+        channel_member_list_engines => #{<<"500">> => Ref, <<"600">> => Other},
+        member_presence => #{},
+        pending_member_list_sync_batch => #{pending_list_ids => Pending}
+    },
+    try
+        ok = guild_member_list_engine:add_member(Ref, 7, <<"seven">>, [], true),
+        Next = invalidate_synced_lists(7, State),
+        ?assertEqual(
+            #{<<"500">> => true, <<"600">> => synced, <<"700">> => true},
+            maps:get(pending_list_ids, maps:get(pending_member_list_sync_batch, Next))
+        ),
+        ?assertEqual(#{}, invalidate_synced_lists(7, #{}))
+    after
+        guild_member_list_engine:destroy(Ref),
+        guild_member_list_engine:destroy(Other)
+    end.
+
+inert_presence_delta_invalidates_synced_lists_test() ->
+    Ref = guild_member_list_engine:new(),
+    Member = #{<<"user">> => #{<<"id">> => <<"7">>}, <<"roles">> => []},
+    Old = #{
+        <<"status">> => <<"online">>,
+        <<"mobile">> => false,
+        <<"afk">> => false,
+        <<"custom_status">> => null
+    },
+    State = (engine_state(Ref))#{
+        pending_member_list_sync_batch => #{pending_list_ids => #{<<"500">> => synced}}
+    },
+    try
+        ok = guild_member_list_engine:add_member(Ref, 7, <<"seven">>, [], true),
+        Next = dispatch_presence_delta(
+            7, Member, Member, Old, Old#{<<"afk">> => true}, immediate, State
+        ),
+        ?assertEqual(
+            #{<<"500">> => true},
+            maps:get(pending_list_ids, maps:get(pending_member_list_sync_batch, Next))
+        )
+    after
+        guild_member_list_engine:destroy(Ref)
+    end.
+
+synced_connection_change_marks_lists_test() ->
+    Ref = guild_member_list_engine:new(),
+    try
+        ok = guild_member_list_engine:add_member(Ref, 7, <<"seven">>, [], true),
+        Next = sync_connection_change_for_subscribed_list(
+            1, 7, <<"500">>, synced, #{}, engine_state(Ref)
+        ),
+        Batch = maps:get(pending_member_list_sync_batch, Next),
+        ?assertEqual(#{<<"500">> => synced}, maps:get(pending_list_ids, Batch)),
+        _ = erlang:cancel_timer(maps:get(timer_ref, Batch))
+    after
         guild_member_list_engine:destroy(Ref)
     end.
 

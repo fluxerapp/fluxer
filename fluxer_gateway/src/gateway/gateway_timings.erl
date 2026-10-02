@@ -523,8 +523,8 @@ pod_name() ->
 first_runtime_name([], Fallback) ->
     Fallback;
 first_runtime_name([Name | Rest], Fallback) ->
-    case os:getenv(Name) of
-        false -> first_runtime_name(Rest, Fallback);
+    case fluxer_gateway_config:env_value(Name) of
+        undefined -> first_runtime_name(Rest, Fallback);
         Value -> normalize_key(Value)
     end.
 
