@@ -17,7 +17,7 @@ use tokio::sync::{Semaphore, TryAcquireError};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
-pub(crate) const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
+pub const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_BROADCAST_CONCURRENCY: usize = 32;
 const MAX_ROUTER_REQUEST_BYTES: usize = 2 * 1024 * 1024;
 const LEGACY_SHARD_DECODE_ERROR: &[u8] = br#"{"error":"shard_request_decode_error"}"#;

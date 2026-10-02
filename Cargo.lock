@@ -1785,8 +1785,10 @@ name = "fluxer-gifs"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
  "fluxer-svc",
  "fluxer_common",
+ "futures",
  "hmac 0.13.0",
  "moka",
  "reqwest",

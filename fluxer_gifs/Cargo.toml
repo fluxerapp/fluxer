@@ -11,6 +11,7 @@ publish = false
 fluxer_common = { path = "../fluxer_common" }
 anyhow = "1.0.104"
 fluxer-svc = { path = "../fluxer_svc", default-features = false }
+futures = "0.3"
 hmac = "0.13.0"
 moka = { version = "0.12.16", features = ["future", "sync"] }
 reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls"] }
@@ -21,3 +22,7 @@ tokio = { version = "1.53.1", features = ["macros", "rt-multi-thread", "signal",
 tracing = "0.1.44"
 url = "2.5"
 urlencoding = "2.1"
+
+[dev-dependencies]
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "query", "tokio"] }
+tokio = { version = "1.53.1", features = ["net"] }
