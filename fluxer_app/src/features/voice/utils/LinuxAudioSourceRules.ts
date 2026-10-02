@@ -135,6 +135,27 @@ export function mapLinuxAudioNodeToItems(
 	return items;
 }
 
+export function linuxAudioSourcePatternsEqual(a: VirtmicNode, b: VirtmicNode): boolean {
+	const keysA = Object.keys(a);
+	const keysB = Object.keys(b);
+	if (keysA.length !== keysB.length) return false;
+	return keysA.every((key) => a[key] === b[key]);
+}
+
+export function withSelectedLinuxAudioSources(
+	items: ReadonlyArray<LinuxAudioSourceItem>,
+	selected: ReadonlyArray<VirtmicNode>,
+): Array<LinuxAudioSourceItem> {
+	const missing = selected.filter((source) => !items.some((item) => linuxAudioSourcePatternsEqual(item.value, source)));
+	return [
+		...items,
+		...missing.map((source) => ({
+			name: getLinuxAudioSourceDisplayName(source) ?? JSON.stringify(source),
+			value: source,
+		})),
+	];
+}
+
 export function uniqueLinuxAudioSourceItems(items: Array<LinuxAudioSourceItem>): Array<LinuxAudioSourceItem> {
 	const seen = new Set<string>();
 	const result: Array<LinuxAudioSourceItem> = [];
