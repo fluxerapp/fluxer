@@ -13,7 +13,11 @@ import {
 	precacheAssets,
 	seedAppShell,
 } from '@app/features/platform/service_worker/WorkerAppShell';
-import {shouldDeleteWorkerCache, WORKER_CACHE_PREFIX} from '@app/features/platform/service_worker/WorkerCacheCleanup';
+import {
+	shouldDeleteWorkerCache,
+	WORKER_CACHE_PREFIX,
+	WORKER_NAVIGATION_CACHE_PREFIX,
+} from '@app/features/platform/service_worker/WorkerCacheCleanup';
 import {getWorkerFetchRoute} from '@app/features/platform/service_worker/WorkerFetchRouting';
 import {
 	getBadgeCount,
@@ -45,7 +49,7 @@ const ensureServiceWorkerReady: Promise<void> = Promise.resolve();
 const SERVICE_WORKER_VERSION = typeof __FLUXER_SW_VERSION__ === 'string' ? __FLUXER_SW_VERSION__ : 'dev';
 const PRECACHE_MANIFEST = typeof __FLUXER_PRECACHE_MANIFEST__ === 'undefined' ? [] : __FLUXER_PRECACHE_MANIFEST__;
 const PRECACHE_CACHE = `${WORKER_CACHE_PREFIX}-precache-${SERVICE_WORKER_VERSION}`;
-const NAVIGATION_CACHE = `${WORKER_CACHE_PREFIX}-navigation-${SERVICE_WORKER_VERSION}`;
+const NAVIGATION_CACHE = `${WORKER_NAVIGATION_CACHE_PREFIX}${SERVICE_WORKER_VERSION}`;
 const EXPECTED_CACHES = new Set([PRECACHE_CACHE, NAVIGATION_CACHE]);
 const NAVIGATION_NETWORK_TIMEOUT_MS = 650;
 const serviceWorkerCaches = self.caches;
