@@ -160,7 +160,7 @@ async function bootstrapApp(): Promise<void> {
 		loadLazyModule(() => import('@app/features/auth/state/AccountManager')),
 		loadLazyModule(() => import('@app/features/channel/state/ChannelDisplayName')),
 		loadLazyModule(() => import('@app/features/channel/state/ChannelFrecency')),
-		loadLazyModule(() => import('@app/features/app/state/GeoIP')),
+		loadLazyModule(() => import('@app/features/app/state/GeoIP')).then(({default: GeoIP}) => GeoIP.load()),
 		loadLazyModule(() => import('@app/features/input/state/InputKeybind')),
 		loadLazyModule(() => import('@app/features/auth/state/NewDeviceMonitoring')),
 		loadLazyModule(() => import('@app/features/ui/state/Notification')),

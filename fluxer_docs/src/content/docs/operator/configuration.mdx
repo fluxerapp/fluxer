@@ -1570,7 +1570,7 @@ Defaults to the crate version. The reported build of `admin` and `app-proxy`. `B
 
 ## Content Security Policy
 
-`app-proxy` builds a per-request nonce-based policy for the client HTML and the assets it serves. Each variable appends sources to one directive on top of the built-in ones. All are empty by default, and Compose forwards every one.
+`app-proxy` builds the policy for the client HTML and the assets it serves. The client HTML policy allows each inline script by its SHA-256 hash, so every visitor to a host gets the same document and header. Each variable appends sources to one directive on top of the built-in ones. All are empty by default, and Compose forwards every one.
 
 Every name below goes in `.env`. `app-proxy` reads its environment at container start, so a change takes effect on `docker compose up -d app-proxy`. A `docker compose restart app-proxy` does not apply it.
 

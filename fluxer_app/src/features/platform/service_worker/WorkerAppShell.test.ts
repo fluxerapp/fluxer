@@ -19,14 +19,14 @@ const UNRENDERED_INDEX_TEMPLATE = [
 	'<!doctype html><html lang="en"><head>',
 	'<link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}">',
 	'<link rel="apple-touch-icon" href="{{STATIC_CDN_ENDPOINT}}/web/apple-touch-icon.png">',
-	'<script nonce="{{CSP_NONCE_PLACEHOLDER}}"></script>',
+	'<script></script>',
 	'</head><body><div id="root"></div></body></html>',
 ].join('');
 
 const RENDERED_INDEX_DOCUMENT = [
 	'<!doctype html><html lang="en"><head>',
 	'<link rel="preconnect" href="https://cdn.fluxer.test">',
-	'<script nonce="abc123">window.__FLUXER_BOOTSTRAP__={"instance":{}};</script>',
+	'<script>window.__FLUXER_BOOTSTRAP__={"instance":{}};</script>',
 	'</head><body><div id="root"></div></body></html>',
 ].join('');
 

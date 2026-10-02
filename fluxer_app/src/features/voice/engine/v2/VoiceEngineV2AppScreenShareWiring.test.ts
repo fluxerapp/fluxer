@@ -344,14 +344,6 @@ const BOOTSTRAP_ENDPOINT = 'https://primary.test/api';
 			registration: {collect_date_of_birth: true},
 		},
 	},
-	geoip: {
-		countryCode: null,
-		regionCode: null,
-		latitude: null,
-		longitude: null,
-		ageRestrictedGeos: [],
-		ageBlockedGeos: [],
-	},
 };
 
 const {VoiceEngineV2AppScreenShareExecutionAdapter, shouldRestoreScreenShareAfterReconnect} = await import(
