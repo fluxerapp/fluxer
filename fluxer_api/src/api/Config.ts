@@ -248,6 +248,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			webhookSecret: master.integrations.email.webhook_secret ?? undefined,
 			fromEmail: master.integrations.email.from_email,
 			fromName: master.integrations.email.from_name,
+			replyToEmail: master.integrations.email.reply_to_email,
 			appBaseUrl: resolveEmailAppBaseUrl(master),
 			smtp: master.integrations.email.smtp
 				? {

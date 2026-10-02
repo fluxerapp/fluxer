@@ -290,6 +290,30 @@ describe('ConfigLoader', () => {
 		expect(config.services.api.storage_change_feed?.skip_buckets).toBeUndefined();
 	});
 
+	test('reads the email reply-to address', async () => {
+		stubMinimalEnv({FLUXER_EMAIL_REPLY_TO_EMAIL: 'support@example.com'});
+
+		const config = await loadConfig();
+
+		expect(config.integrations.email.reply_to_email).toBe('support@example.com');
+	});
+
+	test('leaves the email reply-to address empty when unset or blank', async () => {
+		stubMinimalEnv({FLUXER_EMAIL_REPLY_TO_EMAIL: ' '});
+
+		const config = await loadConfig();
+
+		expect(config.integrations.email.reply_to_email).toBe('');
+	});
+
+	test.each(['support', 'Support <support@example.com>', 'a@example.com,b@example.com', ' support@example.com'])(
+		'rejects %j as the email reply-to address',
+		async (value) => {
+			stubMinimalEnv({FLUXER_EMAIL_REPLY_TO_EMAIL: value});
+			await expect(loadConfig()).rejects.toThrow('FLUXER_EMAIL_REPLY_TO_EMAIL must be a single email address');
+		},
+	);
+
 	test('keeps explicit passkey relying party values', async () => {
 		stubMinimalEnv({
 			FLUXER_BASE_DOMAIN: 'chat.example.com',

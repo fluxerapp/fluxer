@@ -375,6 +375,7 @@ export class EmailService implements IEmailService {
 		return this.provider.sendEmail({
 			to: email,
 			from: {email: this.config.fromEmail, name: this.config.fromName},
+			...(this.config.replyTo ? {replyTo: this.config.replyTo} : {}),
 			subject,
 			text: body,
 		});

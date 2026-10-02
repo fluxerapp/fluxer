@@ -187,6 +187,7 @@ function createEmailServiceForConfig(
 		enabled: emailConfigSource.enabled,
 		fromEmail: emailConfigSource.fromEmail,
 		fromName: emailConfigSource.fromName,
+		replyTo: emailConfigSource.replyToEmail || null,
 		appBaseUrl: emailConfigSource.appBaseUrl,
 		marketingBaseUrl: Config.endpoints.marketing,
 	};

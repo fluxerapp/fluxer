@@ -730,6 +730,10 @@ The same conditions turn on a DNS check at registration. The check runs when ema
 
 `.env.example` `Fluxer`. The sender name. Default `Fluxer`, which an empty value also gives. Compose forwards it from `.env`.
 
+#### `FLUXER_EMAIL_REPLY_TO_EMAIL`
+
+Default empty. The address replies go to, sent as the `Reply-To` header on every email. An empty value sends no `Reply-To` header. Must be a single bare address such as `support@example.com`, or the API fails at boot. The admin dashboard has no field for it. Compose forwards it from `.env`, and `.env.example` lists it commented out.
+
 #### `FLUXER_EMAIL_APP_BASE_URL`
 
 `.env.example` empty. The base URL used in links. Must be http or https with no username, password, query, or fragment, or the API fails at boot. Falls back to the app endpoint. Compose forwards it from `.env`.
