@@ -13427,7 +13427,10 @@
 			"BanEmailRequest": {
 				"type": "object",
 				"properties": {
-					"email": {"description": "Email address to ban", "allOf": [{"$ref": "#/components/schemas/EmailType"}]}
+					"email": {
+						"description": "Email address to ban, or a domain written as @example.com to ban every address at it and its subdomains",
+						"allOf": [{"$ref": "#/components/schemas/EmailBlocklistEntryType"}]
+					}
 				},
 				"required": ["email"]
 			},
@@ -13436,7 +13439,7 @@
 				"properties": {"ip": {"description": "IPv4/IPv6 address or CIDR range to ban", "type": "string"}},
 				"required": ["ip"]
 			},
-			"EmailType": {"type": "string"},
+			"EmailBlocklistEntryType": {"type": "string"},
 			"CheckAvatarHashRequest": {
 				"type": "object",
 				"properties": {"hashes": {"minItems": 1, "maxItems": 1000, "type": "array", "items": {"type": "string"}}},
@@ -16036,6 +16039,7 @@
 					{"name": "PERKS_DISABLED", "value": "256", "description": "User has temporarily disabled premium perks"}
 				]
 			},
+			"EmailType": {"type": "string"},
 			"AdminRelationshipEntrySchema": {
 				"type": "object",
 				"properties": {

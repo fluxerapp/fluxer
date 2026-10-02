@@ -60,7 +60,7 @@ import {
 	SnowflakeType,
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
+import {EmailBlocklistEntryType} from '@fluxer/schema/src/primitives/UserValidators';
 import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
@@ -299,7 +299,9 @@ export const BanIpRequest = z.object({
 export type BanIpRequest = z.infer<typeof BanIpRequest>;
 
 export const BanEmailRequest = z.object({
-	email: EmailType.describe('Email address to ban'),
+	email: EmailBlocklistEntryType.describe(
+		'Email address to ban, or a domain written as @example.com to ban every address at it and its subdomains',
+	),
 });
 
 export type BanEmailRequest = z.infer<typeof BanEmailRequest>;

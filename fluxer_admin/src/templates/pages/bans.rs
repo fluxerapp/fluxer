@@ -37,10 +37,10 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
     BanConfig {
         title: "Email Bans",
         route: "/email-bans",
-        input_label: "Email Address",
+        input_label: "Email Address or Domain",
         input_name: "email",
-        input_type: "email",
-        placeholder: "user@example.com",
+        input_type: "text",
+        placeholder: "user@example.com or @example.com",
         entity_name: "Email",
         active_page: "email-bans",
         show_bulk_tools: false,

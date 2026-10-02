@@ -67,7 +67,8 @@ const BLOCKLIST_CATALOG = [
 	},
 	{
 		list_type: 'email' as const,
-		description: 'Email addresses that cannot be used to register or be set on an account.',
+		description:
+			'Email addresses that cannot be used to register or be set on an account. An entry written as @example.com covers every address at that domain and its subdomains.',
 		value_field: 'email',
 		fields: [],
 		scoped: false,

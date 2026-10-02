@@ -46,6 +46,20 @@ const IS_EMAIL_BANNED_QUERY = BannedEmails.select({
 	where: BannedEmails.where.eq('email_lower'),
 });
 const LOAD_ALL_BANNED_EMAILS_QUERY = BannedEmails.select();
+
+function getEmailBlocklistKeys(email: string): Array<string> {
+	const emailLower = email.trim().toLowerCase();
+	const atIndex = emailLower.lastIndexOf('@');
+	if (atIndex <= 0) {
+		return [emailLower];
+	}
+	const labels = emailLower.slice(atIndex + 1).split('.');
+	const keys = [emailLower];
+	for (let index = 0; index < labels.length - 1; index++) {
+		keys.push(`@${labels.slice(index).join('.')}`);
+	}
+	return keys;
+}
 const IS_PHRASE_BANNED_QUERY = BannedPhrases.select({
 	where: BannedPhrases.where.eq('phrase'),
 });
@@ -224,11 +238,15 @@ export class AdminRepository implements IAdminRepository {
 	}
 
 	async isEmailBanned(email: string): Promise<boolean> {
-		const emailLower = email.toLowerCase();
-		const result = await fetchOne<{
-			email_lower: string;
-		}>(IS_EMAIL_BANNED_QUERY.bind({email_lower: emailLower}));
-		return !!result;
+		for (const key of getEmailBlocklistKeys(email)) {
+			const result = await fetchOne<{
+				email_lower: string;
+			}>(IS_EMAIL_BANNED_QUERY.bind({email_lower: key}));
+			if (result) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	async banEmail(email: string): Promise<void> {

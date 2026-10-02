@@ -11,7 +11,7 @@ impl AdminApiClient {
             "email",
             generated_types::AdminBlocklistEntryCreateRequest::from(
                 generated_types::BanEmailRequest {
-                    email: generated_types::EmailType::from(email.to_owned()),
+                    email: generated_types::EmailBlocklistEntryType::from(email.to_owned()),
                 },
             ),
             audit_log_reason,

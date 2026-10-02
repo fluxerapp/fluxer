@@ -50,6 +50,21 @@ export const EmailType = withOpenApiType(
 		}, ValidationErrorCodes.INVALID_EMAIL_LOCAL_PART),
 	'EmailType',
 );
+
+const EMAIL_BLOCKLIST_DOMAIN_REGEX =
+	/^@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/;
+
+export const EmailBlocklistEntryType = withOpenApiType(
+	z
+		.string()
+		.overwrite(normalizeString)
+		.refine(
+			(value: string) =>
+				EMAIL_BLOCKLIST_DOMAIN_REGEX.test(value) ? value.length <= 254 : EmailType.safeParse(value).success,
+			ValidationErrorCodes.INVALID_EMAIL_FORMAT,
+		),
+	'EmailBlocklistEntryType',
+);
 export const DiscriminatorType = withOpenApiType(
 	z
 		.union([z.string(), z.number()])
