@@ -269,6 +269,7 @@ const ACCEPTED_TABLE_FINDINGS = new Map<string, Readonly<Partial<Record<TableRul
 	['admin-api/applications.mdx', {'table-identifier': 1}],
 	['admin-api/bulk-jobs.mdx', {'table-fit': 1}],
 	['admin-api/discovery.mdx', {'table-identifier': 1}],
+	['admin-api/gateway.mdx', {'table-identifier': 2}],
 	['admin-api/guilds.mdx', {'table-identifier': 3}],
 	['admin-api/index.mdx', {'table-identifier': 3}],
 	['admin-api/instance.mdx', {'table-identifier': 8}],
