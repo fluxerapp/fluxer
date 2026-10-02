@@ -30,6 +30,7 @@
 -define(PREWARM_TIMEOUT_MS, 55000).
 -define(RELEASE_TIMEOUT_MS, 150000).
 -define(RELOAD_TIMEOUT_MS, 60000).
+-define(MAX_SOURCE_MAILBOX, 50).
 -define(RELEASE_ROUNDS, 3).
 -define(RELEASE_RETRY_MS, 200).
 
@@ -238,11 +239,61 @@ do_arm(#{guild_ids := []} = State) ->
 do_arm(#{beam := {error, Reason}} = State) ->
     {{error, {beam_unavailable, Reason}}, State};
 do_arm(#{guild_ids := GuildIds} = State) ->
+    case source_busy(GuildIds) of
+        ok -> reload_and_arm(State);
+        Busy -> {Busy, State}
+    end.
+
+-spec reload_and_arm(state()) -> {{ok, map()} | {error, term()}, state()}.
+reload_and_arm(#{guild_ids := GuildIds} = State) ->
     ok = pin_local(GuildIds),
     Reloads = [{GuildId, reload_local_copy(GuildId)} || GuildId <- GuildIds],
     case [Reload || {_GuildId, Result} = Reload <- Reloads, Result =/= ok] of
-        [] -> arm_peers(State);
+        [] -> arm_if_calm(State);
         Failed -> {{error, #{reload_failed => Failed}}, State}
+    end.
+
+-spec arm_if_calm(state()) -> {{ok, map()} | {error, term()}, state()}.
+arm_if_calm(#{guild_ids := GuildIds} = State) ->
+    case source_busy(GuildIds) of
+        ok -> arm_peers(State);
+        Busy -> {Busy, State}
+    end.
+
+-spec source_busy([guild_id()]) -> ok | {error, map()}.
+source_busy(GuildIds) ->
+    Max = application:get_env(
+        fluxer_gateway, guild_pin_keeper_max_source_mailbox, ?MAX_SOURCE_MAILBOX
+    ),
+    case busy_copies(GuildIds, gateway_peers(nodes()), Max) of
+        [] -> ok;
+        Busy -> {error, #{source_busy => Busy, max_mailbox => Max, next => retry_when_calm}}
+    end.
+
+-spec busy_copies([guild_id()], [node()], non_neg_integer()) -> [{node(), term()}].
+busy_copies(GuildIds, Nodes, Max) ->
+    [
+        {Node, Len}
+     || GuildId <- GuildIds,
+        Key <- [process_registry:build_process_key(guild, GuildId)],
+        Node <- stray_nodes(Key, Nodes),
+        Len <- [copy_mailbox(Node, Key)],
+        not (is_integer(Len) andalso Len =< Max)
+    ].
+
+-spec copy_mailbox(node(), process_registry:process_key()) -> term().
+copy_mailbox(Node, Key) ->
+    case rpc:call(Node, ets, lookup, [process_registry_table, Key], ?RPC_TIMEOUT_MS) of
+        [{_, Pid}] when is_pid(Pid) ->
+            case
+                rpc:call(Node, erlang, process_info, [Pid, message_queue_len], ?RPC_TIMEOUT_MS)
+            of
+                {message_queue_len, Len} -> Len;
+                undefined -> 0;
+                Other -> {unreadable, Other}
+            end;
+        _ ->
+            0
     end.
 
 -spec reload_local_copy(guild_id()) -> ok | {error, term()}.
@@ -996,6 +1047,22 @@ arm_refuses_without_a_prewarmed_copy_test() ->
         )
     after
         application:unset_env(fluxer_gateway, guild_owner_pins)
+    end.
+
+arm_waits_for_a_calm_source_copy_test() ->
+    ok = process_registry:init(),
+    {ok, Pid} = gen_event:start(),
+    Key = process_registry:build_process_key(guild, ?PG),
+    true = ets:insert(process_registry_table, {Key, Pid}),
+    try
+        ?assertEqual([], busy_copies([?PG], [node()], 100)),
+        true = erlang:suspend_process(Pid),
+        [Pid ! {backlog, N} || N <- lists:seq(1, 101)],
+        ?assertEqual([{node(), 101}], busy_copies([?PG], [node()], 100)),
+        ?assertEqual([], busy_copies([?PG], [node()], 101))
+    after
+        ets:delete(process_registry_table, Key),
+        exit(Pid, kill)
     end.
 
 router_with_pins_needs_no_load_test() ->
