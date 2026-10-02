@@ -91,6 +91,7 @@ transfer_opts(GuildId, From, To, Nodes, Saved, Opts) ->
             rpc_timeout,
             guard_timeout,
             freeze_budget,
+            commit_timeout,
             forward_rounds,
             transfer_sessions,
             max_heap_words,
@@ -115,20 +116,41 @@ finish(GuildId, From, To, Nodes, {ok, Report}, Opts) ->
         reload => Reload,
         routes_after => routes(GuildId, Nodes)
     }};
-finish(GuildId, From, To, Nodes, {error, Report}, _Opts) ->
-    {error, Report#{from => From, to => To, routes_after => routes(GuildId, Nodes)}}.
+finish(GuildId, From, To, Nodes, {error, Report}, Opts) ->
+    Repair = repair_source(GuildId, From, Report, Opts),
+    {error, Report#{
+        from => From,
+        to => To,
+        source_reload => Repair,
+        routes_after => routes(GuildId, Nodes)
+    }}.
+
+-spec repair_source(guild_id(), node(), report(), map()) -> skipped | term().
+repair_source(GuildId, From, #{abort := #{routes := Routes} = Abort}, Opts) when
+    Routes =/= skipped
+->
+    case maps:get(exposed, Abort, true) of
+        true -> reload(GuildId, From, Opts);
+        false -> skipped
+    end;
+repair_source(_GuildId, _From, _Report, _Opts) ->
+    skipped.
 
 -spec maybe_reload(guild_id(), node(), map()) -> skipped | term().
 maybe_reload(GuildId, To, #{reload := true} = Opts) ->
+    reload(GuildId, To, Opts);
+maybe_reload(_GuildId, _To, _Opts) ->
+    skipped.
+
+-spec reload(guild_id(), node(), map()) -> term().
+reload(GuildId, Node, Opts) ->
     Timeout = maps:get(reload_timeout, Opts, ?DEFAULT_RELOAD_TIMEOUT),
     Args = [guild_manager, {reload_guild, GuildId}, Timeout],
-    try erpc:call(To, gen_server, call, Args, Timeout + 5000) of
+    try erpc:call(Node, gen_server, call, Args, Timeout + 5000) of
         Reply -> Reply
     catch
         Class:Reason -> {error, {Class, Reason}}
-    end;
-maybe_reload(_GuildId, _To, _Opts) ->
-    skipped.
+    end.
 
 -spec keeper_idle([node()]) -> ok | {error, term()}.
 keeper_idle(Nodes) ->
@@ -295,5 +317,36 @@ cutover_refuses_once_the_pin_keeper_has_armed_test() ->
     ?assertMatch(
         {error, #{phase := preflight, reason := {pin_keeper_unreadable, _}}}, reverse(Opts)
     ).
+
+exposed_abort_reloads_the_source_test() ->
+    Test = self(),
+    Manager = spawn(fun() -> reload_stub(Test) end),
+    true = register(guild_manager, Manager),
+    try
+        Exposed = #{abort => #{routes => ok, exposed => true}},
+        ?assertEqual(ok, repair_source(42, node(), Exposed, #{})),
+        ?assertEqual(
+            {reloaded, 42},
+            receive
+                {reloaded, _} = Reloaded -> Reloaded
+            after 1000 -> none
+            end
+        ),
+        Unexposed = #{abort => #{routes => ok, exposed => false}},
+        ?assertEqual(skipped, repair_source(42, node(), Unexposed, #{})),
+        Unrouted = #{abort => #{routes => skipped, exposed => true}},
+        ?assertEqual(skipped, repair_source(42, node(), Unrouted, #{}))
+    after
+        unregister(guild_manager),
+        exit(Manager, kill)
+    end.
+
+reload_stub(Test) ->
+    receive
+        {'$gen_call', From, {reload_guild, GuildId}} ->
+            Test ! {reloaded, GuildId},
+            gen_server:reply(From, ok),
+            reload_stub(Test)
+    end.
 
 -endif.
