@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {UserID} from '@app/api/BrandedTypes';
 import type {GiftCodeDurationType, GiftCodeRow} from '@app/api/database/types/PaymentTypes';
 import {mapGiftCodeDurationToMonths} from '@app/api/models/GiftCode';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
@@ -15,13 +15,14 @@ interface GenerateGiftCodesOptions {
 	count: number;
 	durationType: GiftCodeDurationType;
 	durationQuantity: number;
+	createdByUserId: UserID;
 }
 
 export class AdminCodeGenerationService {
 	constructor(private readonly userRepository: IUserRepository) {}
 
 	async generateGiftCodes(options: GenerateGiftCodesOptions): Promise<Array<string>> {
-		const {count, durationType, durationQuantity} = this.validateOptions(options);
+		const {count, durationType, durationQuantity, createdByUserId} = this.validateOptions(options);
 		const durationMonths = mapGiftCodeDurationToMonths(durationType, durationQuantity);
 		const codes: Array<string> = [];
 		for (let i = 0; i < count; i += 1) {
@@ -32,7 +33,7 @@ export class AdminCodeGenerationService {
 				duration_type: durationType,
 				duration_quantity: durationQuantity,
 				created_at: new Date(),
-				created_by_user_id: SYSTEM_USER_ID,
+				created_by_user_id: createdByUserId,
 				redeemed_at: null,
 				redeemed_by_user_id: null,
 				stripe_payment_intent_id: null,
