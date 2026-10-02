@@ -23,7 +23,10 @@ transfer_test_() ->
         instantiate(fun cast_during_source_terminate_reaches_target/1),
         instantiate(fun monitor_flush_in_source_terminate_loses_no_cast/1),
         instantiate(fun connect_worker_results_stay_with_the_source/1),
-        instantiate(fun abort_after_forwarding_reports_the_forwarded_count/1)
+        instantiate(fun abort_after_forwarding_reports_the_forwarded_count/1),
+        instantiate(fun late_source_stop_keeps_the_committed_target/1),
+        instantiate(fun controller_death_after_commit_keeps_the_target/1),
+        instantiate(fun lost_guard_aborts_before_other_nodes_route_to_the_target/1)
     ]}.
 
 instantiate(Test) ->
@@ -174,6 +177,82 @@ abort_after_forwarding_reports_the_forwarded_count(#{src := Src, src_shard := Sr
     ?assertMatch(
         {error, #{phase := target_died, abort := #{forwarded := 1, thaw := ok}}}, Result
     ).
+
+late_source_stop_keeps_the_committed_target(#{
+    src := Src, src_shard := SrcShard, dst_shard := DstShard
+}) ->
+    Opts = #{
+        stop_timeout => 100,
+        after_start => fun(_NewPid) -> hold(SrcShard, 600) end
+    },
+    Result = guild_handoff_freeze:transfer(?GUILD_ID, Src, SrcShard, node(), Opts),
+    ?assertMatch({ok, #{new_pid := _}}, Result),
+    {ok, #{new_pid := NewPid}} = Result,
+    ?assertEqual(ok, wait_dead(Src)),
+    ?assert(is_process_alive(NewPid)),
+    ?assertEqual({ok, NewPid}, gen_server:call(DstShard, {lookup, ?GUILD_ID})),
+    ?assertEqual([a], gen_server:call(NewPid, get_log)).
+
+controller_death_after_commit_keeps_the_target(#{
+    src := Src, src_shard := SrcShard, dst_shard := DstShard
+}) ->
+    Test = self(),
+    Opts = #{
+        after_start => fun(NewPid) ->
+            Test ! {started, self(), NewPid},
+            hold(SrcShard, 1000)
+        end
+    },
+    spawn(fun() ->
+        Test ! {result, guild_handoff_freeze:transfer(?GUILD_ID, Src, SrcShard, node(), Opts)}
+    end),
+    {started, Controller, NewPid} = receive_tagged(started),
+    ok = wait_mailbox(SrcShard, 1),
+    exit(Controller, kill),
+    {result, Result} = receive_tagged(result),
+    ?assertMatch({error, #{phase := crashed, committed := true}}, Result),
+    ?assertEqual(ok, wait_dead(Src)),
+    ?assert(is_process_alive(NewPid)),
+    ?assertEqual({ok, NewPid}, gen_server:call(DstShard, {lookup, ?GUILD_ID})).
+
+lost_guard_aborts_before_other_nodes_route_to_the_target(#{
+    src := Src, src_shard := SrcShard, dst_shard := DstShard
+}) ->
+    Test = self(),
+    Opts = #{
+        before_start => fun() ->
+            {monitored_by, Watchers} = process_info(self(), monitored_by),
+            [exit(W, kill) || W <- Watchers, W =/= Test],
+            ok
+        end,
+        after_start => fun(_NewPid) ->
+            Test ! routed,
+            ok
+        end
+    },
+    Result = guild_handoff_freeze:transfer(?GUILD_ID, Src, SrcShard, node(), Opts),
+    ?assertMatch(
+        {error, #{
+            phase := after_start, reason := {guard_lost, killed}, abort := #{exposed := false}
+        }},
+        Result
+    ),
+    ?assertEqual({timeout, routed}, receive_tagged(routed, 200)),
+    ?assertEqual({error, not_found}, gen_server:call(DstShard, {lookup, ?GUILD_ID})),
+    ?assertEqual(false, guild_handoff_freeze:is_frozen(Src)),
+    ?assertEqual([a], gen_server:call(Src, get_log, 5000)).
+
+hold(Pid, Ms) ->
+    Test = self(),
+    spawn(fun() ->
+        true = erlang:suspend_process(Pid),
+        Test ! {held, Pid},
+        timer:sleep(Ms),
+        true = erlang:resume_process(Pid)
+    end),
+    receive
+        {held, Pid} -> ok
+    end.
 
 export_drops_only_keys_the_importer_rebuilds_test() ->
     Raw = #{
@@ -373,10 +452,13 @@ wait_dead(Pid) ->
     end.
 
 receive_tagged(Tag) ->
+    receive_tagged(Tag, 10000).
+
+receive_tagged(Tag, Timeout) ->
     receive
         Msg when element(1, Msg) =:= Tag -> Msg;
         Tag -> Tag
-    after 10000 -> {timeout, Tag}
+    after Timeout -> {timeout, Tag}
     end.
 
 flush() ->

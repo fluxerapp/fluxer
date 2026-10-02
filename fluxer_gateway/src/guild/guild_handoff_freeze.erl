@@ -53,6 +53,7 @@
     rpc_timeout => pos_integer(),
     guard_timeout => pos_integer(),
     freeze_budget => pos_integer(),
+    commit_timeout => pos_integer(),
     forward_rounds => non_neg_integer(),
     transfer_sessions => boolean(),
     max_heap_words => non_neg_integer(),
@@ -78,6 +79,7 @@ default_opts() ->
         rpc_timeout => 10000,
         guard_timeout => 10000,
         freeze_budget => 90000,
+        commit_timeout => 300000,
         forward_rounds => 3,
         transfer_sessions => true,
         max_heap_words => 0,
@@ -92,21 +94,34 @@ transfer(GuildId, SrcPid, SrcShard, TargetNode, Opts0) ->
     Opts = maps:merge(default_opts(), Opts0),
     Parent = self(),
     Tag = make_ref(),
+    Notify = fun(Event) ->
+        Parent ! {Tag, Event},
+        ok
+    end,
     {Pid, Ref} = spawn_monitor(fun() ->
         process_flag(trap_exit, true),
         ok = maybe_limit_heap(maps:get(max_heap_words, Opts)),
-        Parent ! {Tag, run(GuildId, SrcPid, SrcShard, TargetNode, Opts)}
+        Parent ! {Tag, run(GuildId, SrcPid, SrcShard, TargetNode, Opts, Notify)}
     end),
+    await(GuildId, TargetNode, {Pid, Ref, Tag}, false, Opts).
+
+-spec await(guild_id(), node(), {pid(), reference(), reference()}, boolean(), opts()) ->
+    result().
+await(GuildId, TargetNode, {Pid, Ref, Tag} = Run, Committed, Opts) ->
     receive
+        {Tag, committed} ->
+            await(GuildId, TargetNode, Run, true, Opts);
         {Tag, Result} ->
             erlang:demonitor(Ref, [flush]),
             Result;
         {'DOWN', Ref, process, Pid, Reason} ->
-            crashed(GuildId, TargetNode, Reason, Opts)
+            crashed(GuildId, TargetNode, Reason, Committed, Opts)
     end.
 
--spec crashed(guild_id(), node(), term(), opts()) -> result().
-crashed(GuildId, TargetNode, Reason, Opts) ->
+-spec crashed(guild_id(), node(), term(), boolean(), opts()) -> result().
+crashed(_GuildId, _TargetNode, Reason, true, _Opts) ->
+    {error, #{phase => crashed, reason => Reason, committed => true}};
+crashed(GuildId, TargetNode, Reason, false, Opts) ->
     Routes = safe_hook(maps:get(on_abort, Opts)),
     Target = ensure_absent(GuildId, TargetNode, Opts),
     {error, #{
@@ -151,9 +166,10 @@ ensure_absent(GuildId, Node, Opts0) ->
             Error
     end.
 
--spec run(guild_id(), pid(), pid(), node(), opts()) -> result().
-run(GuildId, SrcPid, SrcShard, TargetNode, Opts) ->
+-spec run(guild_id(), pid(), pid(), node(), opts(), fun((committed) -> ok)) -> result().
+run(GuildId, SrcPid, SrcShard, TargetNode, Opts, Notify) ->
     Ctx = #{
+        notify => Notify,
         guild_id => GuildId,
         src => SrcPid,
         src_shard => SrcShard,
@@ -193,9 +209,10 @@ run_export(#{src := SrcPid, opts := Opts} = Ctx) ->
 
 -spec run_before_start(map(), map()) -> result().
 run_before_start(Export, #{opts := Opts} = Ctx) ->
-    case within_budget(Ctx) of
-        true -> run_hook(before_start, maps:get(before_start, Opts), Export, Ctx);
-        false -> abort(before_start, freeze_budget_exceeded, Ctx)
+    case {within_budget(Ctx), guard_held(Ctx)} of
+        {true, ok} -> run_hook(before_start, maps:get(before_start, Opts), Export, Ctx);
+        {false, _} -> abort(before_start, freeze_budget_exceeded, Ctx);
+        {true, {error, Reason}} -> abort(before_start, Reason, Ctx)
     end.
 
 -spec run_hook(before_start, hook(), map(), map()) -> result().
@@ -218,8 +235,14 @@ run_start(Export, #{guild_id := GuildId, target := Target, opts := Opts} = Ctx) 
 
 -spec run_after_start(pid(), map()) -> result().
 run_after_start(NewPid, #{opts := Opts} = Ctx) ->
+    case guard_held(Ctx) of
+        ok -> run_route(NewPid, maps:get(after_start, Opts), Ctx#{exposed => true});
+        {error, Reason} -> abort(after_start, Reason, Ctx)
+    end.
+
+-spec run_route(pid(), started_hook(), map()) -> result().
+run_route(NewPid, Hook, Ctx) ->
     T0 = now_ms(),
-    Hook = maps:get(after_start, Opts),
     case safe_started_hook(Hook, NewPid) of
         ok -> run_commit(NewPid, put_ms(route_ms, T0, Ctx));
         {error, Reason} -> abort(after_start, Reason, put_ms(route_ms, T0, Ctx))
@@ -263,15 +286,24 @@ forwarded_count(Stats) ->
 
 -spec commit_final(pid(), non_neg_integer(), map()) -> result().
 commit_final(NewPid, Seen, #{src := SrcPid} = Ctx) ->
-    case {target_exit(NewPid), is_frozen(SrcPid)} of
-        {{exited, Reason}, _} ->
+    case {target_exit(NewPid), guard_held(Ctx), is_frozen(SrcPid)} of
+        {{exited, Reason}, _, _} ->
             abort(target_died, Reason, Ctx);
-        {alive, true} ->
+        {alive, {error, Reason}, _} ->
+            abort(final_capture, Reason, Ctx);
+        {alive, ok, true} ->
             stop_and_drain(NewPid, Seen, Ctx);
-        {alive, {error, noproc}} ->
+        {alive, ok, {error, noproc}} ->
             source_gone(NewPid, Ctx);
-        {alive, Frozen} ->
+        {alive, ok, Frozen} ->
             abort(final_capture, {not_frozen, Frozen}, Ctx)
+    end.
+
+-spec guard_held(map()) -> ok | {error, term()}.
+guard_held(#{freeze := #{guard := Guard, guard_ref := Ref}}) ->
+    receive
+        {'DOWN', Ref, process, Guard, Reason} -> {error, {guard_lost, Reason}}
+    after 0 -> ok
     end.
 
 -spec target_exit(pid()) -> alive | {exited, term()}.
@@ -293,6 +325,7 @@ stop_and_drain(NewPid, Seen, #{src := SrcPid, opts := Opts} = Ctx) ->
     case capture(SrcPid, Seen, Opts) of
         {ok, _Len, New} ->
             Stats = forward(New, NewPid, final),
+            ok = commit(NewPid, Ctx),
             Parent = self(),
             Tag = make_ref(),
             {Pid, Ref} = spawn_monitor(fun() -> Parent ! {Tag, stop_source(Ctx)} end),
@@ -310,6 +343,16 @@ stop_and_drain(NewPid, Seen, #{src := SrcPid, opts := Opts} = Ctx) ->
             abort(final_capture, Reason, Ctx)
     end.
 
+-spec commit(pid(), map()) -> ok.
+commit(NewPid, #{freeze := Freeze, notify := Notify}) ->
+    release_guard(Freeze),
+    unlink(NewPid),
+    receive
+        {'EXIT', NewPid, _Reason} -> ok
+    after 0 -> ok
+    end,
+    Notify(committed).
+
 -spec drain(pid(), non_neg_integer(), map(), map()) -> result().
 drain(NewPid, Seen, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
     case capture(SrcPid, Seen, Opts) of
@@ -321,7 +364,7 @@ drain(NewPid, Seen, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
             drained(NewPid, poll_stopper(Drain, maps:get(stop_timeout, Opts)), Ctx);
         {error, Reason} ->
             Polled = poll_stopper(Drain, maps:get(stop_timeout, Opts)),
-            drain_unknown(NewPid, Reason, Polled, Ctx)
+            drain_unknown(NewPid, Seen, Reason, Polled, Ctx)
     end.
 
 -spec drain_alive(pid(), non_neg_integer(), map(), map()) -> result().
@@ -333,19 +376,42 @@ drain_alive(NewPid, Seen, #{stop := ok} = Drain, #{src := SrcPid, opts := Opts} 
         false -> timer:sleep(?DRAIN_POLL_MS)
     end,
     drain(NewPid, Seen, Drain, Ctx);
-drain_alive(_NewPid, _Seen, #{stop := Reason} = Drain, Ctx) ->
-    abort_drain(stop, Reason, Drain, Ctx).
+drain_alive(NewPid, Seen, #{stop := Reason} = Drain, Ctx) ->
+    await_source(NewPid, Seen, Reason, Drain, Ctx).
 
--spec abort_drain(atom(), term(), map(), map()) -> result().
-abort_drain(Phase, Reason, Drain, Ctx) ->
-    abort(Phase, Reason, add_forwarded(forwarded_count(maps:get(stats, Drain)), Ctx)).
-
--spec drain_unknown(pid(), term(), map(), map()) -> result().
-drain_unknown(NewPid, Reason, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
+-spec drain_unknown(pid(), non_neg_integer(), term(), map(), map()) -> result().
+drain_unknown(NewPid, Seen, Reason, Drain, #{src := SrcPid, opts := Opts} = Ctx) ->
     case source_alive(SrcPid, Opts) of
-        false -> drained(NewPid, Drain, Ctx);
-        _ -> abort_drain(stop, {capture_failed, Reason, maps:get(stop, Drain)}, Drain, Ctx)
+        false ->
+            drained(NewPid, Drain, Ctx);
+        _ ->
+            await_source(
+                NewPid, Seen, {capture_failed, Reason, maps:get(stop, Drain)}, Drain, Ctx
+            )
     end.
+
+-spec await_source(pid(), non_neg_integer(), term(), map(), map()) -> result().
+await_source(NewPid, Seen, Reason, Drain, #{opts := Opts} = Ctx) ->
+    case now_ms() - maps:get(t0, Drain) > maps:get(commit_timeout, Opts) of
+        true ->
+            stuck(NewPid, Reason, Drain, Ctx);
+        false ->
+            timer:sleep(?DRAIN_POLL_MS),
+            drain(NewPid, Seen, Drain, Ctx)
+    end.
+
+-spec stuck(pid(), term(), map(), map()) -> result().
+stuck(NewPid, Reason, Drain, Ctx) ->
+    Forwarded = maps:get(forwarded, Ctx, 0) + forwarded_count(maps:get(stats, Drain)),
+    Report = maps:get(report, Ctx),
+    {error, Report#{
+        phase => stop,
+        reason => Reason,
+        committed => true,
+        new_pid => NewPid,
+        forwarded => Forwarded,
+        total_ms => now_ms() - maps:get(t0, Ctx)
+    }}.
 
 -spec drained(pid(), map(), map()) -> result().
 drained(NewPid, Drain, Ctx) ->
@@ -403,6 +469,7 @@ abort(Phase, Reason, #{opts := Opts} = Ctx) ->
             routes => Routes,
             target => Target,
             thaw => Thaw,
+            exposed => maps:get(exposed, Ctx, false),
             forwarded => maps:get(forwarded, Ctx, 0)
         },
         total_ms => now_ms() - maps:get(t0, Ctx)
