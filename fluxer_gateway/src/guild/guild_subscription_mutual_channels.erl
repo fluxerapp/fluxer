@@ -3,7 +3,7 @@
 -module(guild_subscription_mutual_channels).
 -typing([eqwalizer]).
 
--export([filter_member_ids/3, filter_session_member_ids/2]).
+-export([filter_member_ids/3, filter_session_member_ids/2, filter_session_member_ids/3]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -12,6 +12,7 @@
 -type guild_state() :: map().
 -type user_id() :: integer().
 -type memo() :: #{exceptions := sets:set(user_id()), cache := #{term() => boolean()}}.
+-type view_cache() :: #{term() => [integer()]}.
 -export_type([guild_state/0, user_id/0]).
 
 -spec filter_member_ids(user_id(), [user_id()], guild_state()) -> [user_id()].
@@ -30,12 +31,18 @@ filter_member_ids(SessionUserId, MemberIds, State) ->
 
 -spec filter_session_member_ids([{term(), user_id(), [term()]}], guild_state()) ->
     #{term() => [user_id()]}.
-filter_session_member_ids([], _State) ->
-    #{};
 filter_session_member_ids(Requests, State) ->
+    {Results, _Views} = filter_session_member_ids(Requests, #{}, State),
+    Results.
+
+-spec filter_session_member_ids([{term(), user_id(), [term()]}], view_cache(), guild_state()) ->
+    {#{term() => [user_id()]}, view_cache()}.
+filter_session_member_ids([], Views, _State) ->
+    {#{}, Views};
+filter_session_member_ids(Requests, Views, State) ->
     Exceptions = exceptions(State),
     Sessions = maps:get(sessions, State, #{}),
-    {Results, _Cache} = lists:foldl(
+    {Results, Cache} = lists:foldl(
         fun({SessionId, SessionUserId, MemberIds}, {Acc, Cache}) ->
             SessionMap = request_session_map(SessionId, SessionUserId, Sessions, State),
             {Kept, Cache1} = keep_session_members(
@@ -43,10 +50,18 @@ filter_session_member_ids(Requests, State) ->
             ),
             {Acc#{SessionId => Kept}, Cache1}
         end,
-        {#{}, #{}},
+        {#{}, Views},
         Requests
     ),
-    Results.
+    {Results, role_views(Cache)}.
+
+-spec role_views(view_cache()) -> view_cache().
+role_views(Cache) ->
+    maps:filter(fun(Key, _Channels) -> is_role_key(Key) end, Cache).
+
+-spec is_role_key(term()) -> boolean().
+is_role_key({roles, _RawRoles}) -> true;
+is_role_key(_Key) -> false.
 
 -spec request_session_map(term(), user_id(), map(), guild_state()) -> map().
 request_session_map(SessionId, SessionUserId, Sessions, State) ->
