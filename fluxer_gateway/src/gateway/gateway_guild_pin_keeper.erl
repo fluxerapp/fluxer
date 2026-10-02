@@ -21,6 +21,7 @@
 -define(LOADED_BEAM_NAME, "/tmp/fluxer-guild-pin/gateway_node_router.beam").
 -define(RPC_TIMEOUT_MS, 2000).
 -define(PATCH_TIMEOUT_MS, 10000).
+-define(ARM_PIN_TIMEOUT_MS, 3000).
 -define(CALL_TIMEOUT_MS, 60000).
 -define(SWEEP_INTERVAL_MS, 1000).
 -define(REPATCH_DELAY_MS, 100).
@@ -279,7 +280,7 @@ routed_here(GuildId, Peers) ->
 -spec arm_if_calm(state()) -> {{ok, map()} | {error, term()}, state()}.
 arm_if_calm(#{guild_ids := GuildIds} = State) ->
     case source_busy(GuildIds) of
-        ok -> arm_peers(State);
+        ok -> arm_peers(gateway_peers(nodes()), State);
         Busy -> {Busy, State}
     end.
 
@@ -334,13 +335,22 @@ reload_local_copy(GuildId) ->
             Error
     end.
 
--spec arm_peers(state()) -> {{ok, map()} | {error, term()}, state()}.
-arm_peers(#{beam := Beam, base_md5s := BaseMd5s, guild_ids := GuildIds} = State) ->
+-spec arm_peers([node()], state()) -> {{ok, map()} | {error, term()}, state()}.
+arm_peers(Peers, #{beam := Beam, base_md5s := BaseMd5s} = State) ->
+    Ready = run_parallel(
+        fun(Node) -> ensure_router(Node, Beam, BaseMd5s) end, Peers, ?PATCH_TIMEOUT_MS
+    ),
+    case [{Node, Result} || {Node, Result} <- Ready, Result =/= ok] of
+        [] -> pin_peers(Peers, State);
+        Unready -> {{error, #{unready => Unready, next => retry}}, State}
+    end.
+
+-spec pin_peers([node()], state()) -> {{ok, map()} | {error, term()}, state()}.
+pin_peers(Peers, #{beam := Beam, base_md5s := BaseMd5s, guild_ids := GuildIds} = State) ->
     ok = application:set_env(fluxer_gateway, guild_pin_keeper_ever_armed, true),
     State0 = State#{ever_armed := true},
-    Peers = gateway_peers(nodes()),
     Results = run_parallel(
-        fun(Node) -> patch_peer(Node, Beam, BaseMd5s, GuildIds) end, Peers, ?PATCH_TIMEOUT_MS
+        fun(Node) -> patch_peer(Node, Beam, BaseMd5s, GuildIds) end, Peers, ?ARM_PIN_TIMEOUT_MS
     ),
     case [{Node, Result} || {Node, Result} <- Results, not is_patched(Result)] of
         [] ->
@@ -1087,6 +1097,15 @@ arm_waits_for_a_calm_source_copy_test() ->
         ets:delete(process_registry_table, Key),
         exit(Pid, kill)
     end.
+
+arm_pins_no_peer_until_every_peer_is_ready_test() ->
+    Down = 'fluxer_gateway@10.255.0.9',
+    State = #{guild_ids => [?PG], beam => #{binary => <<>>, md5 => <<0:128>>}, base_md5s => []},
+    ?assertMatch(
+        {{error, #{unready := [{Down, {error, _}}], next := retry}}, State},
+        arm_peers([Down], State)
+    ),
+    ?assertEqual(undefined, application:get_env(fluxer_gateway, guild_pin_keeper_ever_armed)).
 
 arm_adopts_a_copy_that_already_owns_the_guild_test() ->
     ok = process_registry:init(),
