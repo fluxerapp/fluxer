@@ -151,12 +151,9 @@ continue_handoff_to_target(TargetNode, GuildIds, State, Iteration, AccResult) ->
 continue_handoff_to_topology(_TargetNodes, [], State, _Iteration, AccResult) ->
     {AccResult, State};
 continue_handoff_to_topology(TargetNodes, GuildIds, State, Iteration, AccResult) ->
-    Resolver = fun(GId) ->
-        gateway_node_router:select_owner_node(GId, TargetNodes)
-    end,
     run_and_continue(
         GuildIds,
-        Resolver,
+        topology_owner_resolver(TargetNodes),
         AccResult,
         State,
         fun(S1, I, M, B) ->
@@ -164,6 +161,12 @@ continue_handoff_to_topology(TargetNodes, GuildIds, State, Iteration, AccResult)
         end,
         Iteration
     ).
+
+-spec topology_owner_resolver([node()]) -> fun((guild_id()) -> node()).
+topology_owner_resolver(TargetNodes) ->
+    fun(GId) ->
+        gateway_node_router:select_guild_owner_node(GId, TargetNodes)
+    end.
 
 -spec run_and_continue(
     [guild_id()],
@@ -291,3 +294,20 @@ mark_handoff_attempt(#{attempted := Attempted, handed_off := HandedOff}) ->
 -spec mark_handoff_success(handoff_result()) -> handoff_result().
 mark_handoff_success(#{attempted := Attempted, handed_off := HandedOff}) ->
     #{attempted => Attempted + 1, handed_off => HandedOff + 1}.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+topology_handoff_keeps_a_guild_pinned_to_this_node_test() ->
+    GuildId = 1100000000000000001,
+    Resolver = topology_owner_resolver(['guilds_a@h', 'guilds_b@h']),
+    ?assertMatch({handoff, _}, resolve_handoff_target(GuildId, node(), Resolver)),
+    application:set_env(fluxer_gateway, guild_owner_pins, #{GuildId => node()}),
+    try
+        ?assertEqual(skip, resolve_handoff_target(GuildId, node(), Resolver)),
+        ?assertMatch({handoff, _}, resolve_handoff_target(GuildId + 1, node(), Resolver))
+    after
+        application:unset_env(fluxer_gateway, guild_owner_pins)
+    end.
+
+-endif.
