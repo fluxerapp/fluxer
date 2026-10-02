@@ -29,6 +29,7 @@
 -define(STOP_TIMEOUT_MS, 5000).
 -define(PREWARM_TIMEOUT_MS, 55000).
 -define(RELEASE_TIMEOUT_MS, 150000).
+-define(RELOAD_TIMEOUT_MS, 60000).
 -define(RELEASE_ROUNDS, 3).
 -define(RELEASE_RETRY_MS, 200).
 
@@ -236,8 +237,31 @@ do_arm(#{guild_ids := []} = State) ->
     {{error, no_pinned_guilds}, State};
 do_arm(#{beam := {error, Reason}} = State) ->
     {{error, {beam_unavailable, Reason}}, State};
-do_arm(#{beam := Beam, base_md5s := BaseMd5s, guild_ids := GuildIds} = State) ->
+do_arm(#{guild_ids := GuildIds} = State) ->
     ok = pin_local(GuildIds),
+    Reloads = [{GuildId, reload_local_copy(GuildId)} || GuildId <- GuildIds],
+    case [Reload || {_GuildId, Result} = Reload <- Reloads, Result =/= ok] of
+        [] -> arm_peers(State);
+        Failed -> {{error, #{reload_failed => Failed}}, State}
+    end.
+
+-spec reload_local_copy(guild_id()) -> ok | {error, term()}.
+reload_local_copy(GuildId) ->
+    case {local_copy(GuildId), guild_handoff_freeze:shard_pid(GuildId, node())} of
+        {undefined, _} ->
+            {error, not_prewarmed};
+        {_Pid, {ok, Shard}} ->
+            Request = {reload_guild, GuildId},
+            case shard_utils:safe_gen_call_remote(Shard, Request, ?RELOAD_TIMEOUT_MS) of
+                ok -> ok;
+                Other -> {error, Other}
+            end;
+        {_Pid, {error, _} = Error} ->
+            Error
+    end.
+
+-spec arm_peers(state()) -> {{ok, map()} | {error, term()}, state()}.
+arm_peers(#{beam := Beam, base_md5s := BaseMd5s, guild_ids := GuildIds} = State) ->
     ok = application:set_env(fluxer_gateway, guild_pin_keeper_ever_armed, true),
     State0 = State#{ever_armed := true},
     Peers = gateway_peers(nodes()),
@@ -958,6 +982,20 @@ release_unpins_and_verifies_the_route_test() ->
         application:unset_env(fluxer_gateway, guild_pinned_only_nodes),
         persistent_term:erase({gateway_cluster_membership, members}),
         persistent_term:erase({gateway_cluster_membership, members_by_role})
+    end.
+
+arm_refuses_without_a_prewarmed_copy_test() ->
+    ok = process_registry:init(),
+    State = #{guild_ids => [?PG], beam => #{binary => <<>>, md5 => <<0:128>>}},
+    try
+        ?assertEqual(
+            {{error, #{reload_failed => [{?PG, {error, not_prewarmed}}]}}, State}, do_arm(State)
+        ),
+        ?assertEqual(
+            undefined, application:get_env(fluxer_gateway, guild_pin_keeper_ever_armed)
+        )
+    after
+        application:unset_env(fluxer_gateway, guild_owner_pins)
     end.
 
 router_with_pins_needs_no_load_test() ->
