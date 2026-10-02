@@ -102,7 +102,9 @@ export function AuthController(app: HonoApp) {
 				'Complete the SSO authentication flow with the authorization code from the SSO provider. Returns authentication token and user information.',
 		}),
 		async (ctx) => {
-			const result = await ctx.get('authRequestService').completeSso(ctx.req.valid('json'), ctx.req.raw);
+			const result = await ctx
+				.get('authRequestService')
+				.completeSso(ctx.req.valid('json'), ctx.req.raw, ctx.get('requestCache'));
 			return ctx.json(result);
 		},
 	);

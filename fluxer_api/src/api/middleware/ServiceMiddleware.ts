@@ -541,6 +541,7 @@ class RequestServices implements RequestScopedServices {
 			getInstanceConfigRepository(),
 			getDiscriminatorService(),
 			getKVActivityTracker(),
+			this.singleCommunityService,
 		);
 		return this.cachedSsoService;
 	}

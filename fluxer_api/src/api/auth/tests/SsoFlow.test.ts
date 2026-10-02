@@ -9,6 +9,8 @@ import {
 	setUserACLs,
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -542,6 +544,29 @@ describe('Auth SSO flow', () => {
 					state: startData.state,
 				})
 				.expect(403)
+				.execute();
+		});
+		it('joins a provisioned user to the single community', async () => {
+			const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
+			await getInstanceConfigRepository().setInstancePolicyConfig({
+				single_community_enabled: true,
+				single_community_guild_id: guild.id,
+			});
+			await enableSso(harness, admin.token);
+			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+				.post('/auth/sso/start')
+				.body({})
+				.execute();
+			const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: `sso-single-community-${Date.now()}@example.com`,
+					state: startData.state,
+				})
+				.execute();
+			await createBuilder(harness, owner.token)
+				.get(`/guilds/${guild.id}/members/${completeData.user_id}`)
+				.expect(200)
 				.execute();
 		});
 	});

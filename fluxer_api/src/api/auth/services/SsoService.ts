@@ -20,6 +20,7 @@ import {
 	type InstanceSsoConfig,
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
 } from '@app/api/instance/InstanceConfigRepository';
+import type {SingleCommunityService} from '@app/api/instance/SingleCommunityService';
 import {
 	deriveSsoRedirectUri,
 	getSsoRequestUrlPolicy,
@@ -28,6 +29,7 @@ import {
 } from '@app/api/instance/SsoConfigValidation';
 import {Logger} from '@app/api/Logger';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
 import {UserSettings} from '@app/api/models/UserSettings';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
@@ -260,6 +262,7 @@ export class SsoService {
 		private readonly instanceConfigRepository: InstanceConfigRepository,
 		private readonly discriminatorService: IDiscriminatorService,
 		private readonly kvActivityTracker: KVActivityTracker,
+		private readonly singleCommunityService: SingleCommunityService,
 	) {}
 
 	async getPublicStatus(): Promise<PublicSsoStatus> {
@@ -326,7 +329,17 @@ export class SsoService {
 		return {authorization_url: authorizationUrlString, state, redirect_uri: config.redirectUri};
 	}
 
-	async completeLogin({code, state, request}: {code: string; state: string; request: Request}): Promise<{
+	async completeLogin({
+		code,
+		state,
+		request,
+		requestCache,
+	}: {
+		code: string;
+		state: string;
+		request: Request;
+		requestCache: RequestCache;
+	}): Promise<{
 		token: string;
 		user_id: string;
 		redirect_to: string;
@@ -344,7 +357,7 @@ export class SsoService {
 			config,
 		});
 		const claims = await this.resolveClaims(tokenResponse, config, statePayload.nonce);
-		const user = await this.resolveUserFromClaims(claims, config);
+		const user = await this.resolveUserFromClaims(claims, config, requestCache);
 		const [token] = await AuthSession.createAuthSession(this.apiContext, {
 			user,
 			origin: AuthSession.resolveSessionOrigin(this.apiContext, request),
@@ -352,7 +365,11 @@ export class SsoService {
 		return {token, user_id: user.id.toString(), redirect_to: statePayload.redirectTo ?? ''};
 	}
 
-	private async resolveUserFromClaims(claims: ResolvedSsoClaims, config: ResolvedSsoConfig): Promise<User> {
+	private async resolveUserFromClaims(
+		claims: ResolvedSsoClaims,
+		config: ResolvedSsoConfig,
+		requestCache: RequestCache,
+	): Promise<User> {
 		if (!claims.emailVerified) {
 			throw InputValidationError.fromCode('email_verified', ValidationErrorCodes.INVALID_SSO_TOKEN);
 		}
@@ -388,6 +405,7 @@ export class SsoService {
 		if (pendingApproval) {
 			throw new RegistrationPendingApprovalError();
 		}
+		await this.singleCommunityService.joinStockCommunity(user.id, requestCache);
 		return user;
 	}
 

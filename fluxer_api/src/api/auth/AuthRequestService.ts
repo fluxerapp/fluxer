@@ -168,8 +168,10 @@ export class AuthRequestService {
 		});
 	}
 
-	completeSso(data: SsoCompleteRequest, request: Request) {
-		return this.toSsoCompleteResponse(this.ssoService.completeLogin({code: data.code, state: data.state, request}));
+	completeSso(data: SsoCompleteRequest, request: Request, requestCache: RequestCache) {
+		return this.toSsoCompleteResponse(
+			this.ssoService.completeLogin({code: data.code, state: data.state, request, requestCache}),
+		);
 	}
 
 	async register({data, request, requestCache}: AuthRegisterRequest): Promise<AuthRegisterResponse> {
