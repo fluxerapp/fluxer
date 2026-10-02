@@ -100,6 +100,35 @@ describe('User Settings - Sensitive Content Filters', () => {
 			expect(response.errors[0]?.path).toBe('sensitive_content_friend_dm_filter');
 			expect(response.errors[0]?.code).toBe(ValidationErrorCodes.AGE_RESTRICTED);
 		});
+		test('lets a non-adult account tighten the non-friend DM filter', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+			const {json} = await updateUserSettings(harness, account.token, {
+				sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.BLUR,
+			});
+			expect(json.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLUR);
+			const {json: blocked} = await updateUserSettings(harness, account.token, {
+				sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.BLOCK,
+			});
+			expect(blocked.sensitive_content_non_friend_dm_filter).toBe(SensitiveMediaFilterLevel.BLOCK);
+		});
+		test('rejects a non-adult account relaxing the non-friend DM filter', async () => {
+			const account = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+			const response = await createBuilder<{
+				code: string;
+				errors: Array<{
+					path: string;
+					code: string;
+					message: string;
+				}>;
+			}>(harness, account.token)
+				.patch('/users/@me/settings')
+				.body({sensitive_content_non_friend_dm_filter: SensitiveMediaFilterLevel.SHOW})
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
+			expect(response.code).toBe('VALIDATION_ERROR');
+			expect(response.errors[0]?.path).toBe('sensitive_content_non_friend_dm_filter');
+			expect(response.errors[0]?.code).toBe(ValidationErrorCodes.AGE_RESTRICTED);
+		});
 		test('allows an account without a birth date to relax every filter when none is collected', async () => {
 			const repository = getInstanceConfigRepository();
 			const previous = (await repository.getAppPublicConfig()).registration.collect_date_of_birth;
