@@ -479,6 +479,76 @@ stale_detection_tracks_every_permission_input_test_() ->
         end)
     end}.
 
+twin_channel_engines_match_a_fresh_build_test_() ->
+    {timeout, 120, fun() ->
+        with_harness(fun() ->
+            {State0, Env} = materialize(twin_spec()),
+            Lists = twin_lists(),
+            State = lists:foldl(fun guild_member_list_channel_engine:ensure/2, State0, Lists),
+            Refs = [guild_member_list_channel_engine:ref(L, State) || L <- Lists],
+            ?assertEqual(length(Lists), length(lists:usort(Refs))),
+            Final = lists:foldl(fun assert_engine_matches_fresh_build/2, State, Lists),
+            teardown(Final, Env)
+        end)
+    end}.
+
+stale_twin_engine_is_not_cloned_test_() ->
+    {timeout, 120, fun() ->
+        with_harness(fun() ->
+            {State0, Env} = materialize(twin_spec()),
+            [A, B | _] = twin_lists(),
+            State1 = guild_member_list_channel_engine:ensure(A, State0),
+            Hidden = with_channels(
+                fun(C) ->
+                    case integer_to_binary(channel_int_id(C)) of
+                        A -> C#{<<"permission_overwrites">> => [hidden_overwrite()]};
+                        _ -> C
+                    end
+                end,
+                State1
+            ),
+            [
+                ok = guild_member_list_channel_engine:update_user(user_id(I), A, Hidden)
+             || I <- lists:seq(1, 60)
+            ],
+            State2 = guild_member_list_channel_engine:ensure(B, Hidden),
+            ?assert(guild_member_list_engine_inputs:is_stale(A, State2)),
+            ?assertNotEqual(engine_content(A, State2), engine_content(B, State2)),
+            teardown(assert_engine_matches_fresh_build(B, State2), Env)
+        end)
+    end}.
+
+twin_spec() ->
+    Restricted = [overwrite(role_id(1), 0, 0, view())],
+    single_session_spec(
+        renumber([
+            channel(?CHAN_BASE + 700, 0, null, []),
+            channel(?CHAN_BASE + 701, 0, null, []),
+            channel(?CHAN_BASE + 702, 0, null, Restricted),
+            channel(?CHAN_BASE + 703, 0, null, Restricted)
+        ])
+    ).
+
+twin_lists() ->
+    [integer_to_binary(?CHAN_BASE + I) || I <- [700, 701, 702, 703]].
+
+assert_engine_matches_fresh_build(ListId, State) ->
+    Built = engine_content(ListId, State),
+    Rebuilt = guild_member_list_channel_engine:rebuild(ListId, State),
+    ?assertEqual(engine_content(ListId, Rebuilt), Built),
+    Rebuilt.
+
+engine_content(ListId, State) ->
+    Ref = guild_member_list_channel_engine:ref(ListId, State),
+    Items = guild_member_list_engine:get_all_item_keys(Ref),
+    Members = [UserId || {member, UserId} <- Items],
+    {
+        guild_member_list_engine:get_counts(Ref),
+        guild_member_list_engine:get_groups(Ref),
+        Items,
+        [{U, guild_member_list_engine:is_member_online(Ref, U)} || U <- Members]
+    }.
+
 input_changes() ->
     Flip = flip_channel(),
     [

@@ -5,6 +5,7 @@
 
 -export([
     new/0,
+    clone/1,
     destroy/1,
     bulk_load/3,
     add_member/5,
@@ -47,6 +48,17 @@ new() ->
         {{section_count, ?ONLINE_IDX}, 0},
         {{section_count, ?OFFLINE_IDX}, 0}
     ]),
+    Ref.
+
+-spec clone(ets:table()) -> ets:table().
+clone(Source) ->
+    {SourceOSet, SourceITab} = lookup_tabs(Source),
+    Ref = new(),
+    {OSet, ITab} = lookup_tabs(Ref),
+    true = ets:insert(ITab, ets:tab2list(SourceITab)),
+    ok = guild_member_list_oset:from_sorted(OSet, guild_member_list_oset:to_list(SourceOSet)),
+    true = ets:insert(Ref, [Row || Row <- ets:tab2list(Source), element(1, Row) =/= tabs]),
+    ok = bump_version(Ref),
     Ref.
 
 -spec destroy(term()) -> ok.
