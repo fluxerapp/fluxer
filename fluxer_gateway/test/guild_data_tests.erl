@@ -81,6 +81,35 @@ read_model_observes_role_and_collection_changes_test() ->
         cleanup_read_model(State)
     end.
 
+read_model_observes_last_message_and_pin_advances_test() ->
+    State = read_model_state(),
+    try
+        ok = guild_read_model:put_state(State),
+        Data = maps:get(data, State),
+        Advanced = guild_state_channels:handle_message_create(
+            #{<<"channel_id">> => <<"500">>, <<"id">> => <<"900">>}, Data
+        ),
+        Pinned = guild_state_channels:handle_channel_pins_update(
+            #{
+                <<"channel_id">> => <<"500">>,
+                <<"last_pin_timestamp">> => <<"2026-10-02T00:00:00Z">>
+            },
+            Advanced
+        ),
+        Updated = State#{data => Pinned},
+        ok = guild_read_model:update(State, Updated),
+        {reply, Expected, _} = guild_data:get_guild_data(#{user_id => 200}, Updated),
+        ?assertEqual(
+            {ok, Expected}, guild_read_model:query(100, {get_guild_data, #{user_id => 200}})
+        ),
+        #{guild_data := #{<<"channels">> := Channels}} = Expected,
+        [Channel] = [C || C <- Channels, maps:get(<<"id">>, C) =:= 500],
+        ?assertEqual(900, maps:get(<<"last_message_id">>, Channel)),
+        ?assertEqual(<<"2026-10-02T00:00:00Z">>, maps:get(<<"last_pin_timestamp">>, Channel))
+    after
+        cleanup_read_model(State)
+    end.
+
 read_model_survives_blocked_owner_and_rejects_dead_tables_test() ->
     State = read_model_state(),
     Self = self(),

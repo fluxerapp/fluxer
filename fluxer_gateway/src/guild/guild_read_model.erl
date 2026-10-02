@@ -12,6 +12,7 @@
     <<"roles">>,
     <<"channels">>,
     <<"channel_index">>,
+    channels_stale,
     <<"emojis">>,
     <<"stickers">>,
     role_perms_cache,
