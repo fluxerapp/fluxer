@@ -11,6 +11,7 @@
 -define(DEFAULT_RELOAD_TIMEOUT, 120000).
 -define(DEFAULT_MAX_MAILBOX, 100).
 -define(PROBE_KEY, 0).
+-define(KEEPER_KEYS, [guild_pin_keeper_armed, guild_pin_keeper_ever_armed]).
 
 -type guild_id() :: integer().
 -type saved_pins() :: #{node() => {ok, term()} | undefined}.
@@ -61,6 +62,7 @@ preflight(_GuildId, Node, Node, _Nodes, _Opts) ->
     {error, same_node};
 preflight(GuildId, From, To, Nodes, Opts) ->
     maybe
+        ok ?= keeper_idle(lists:usort([node(), From, To])),
         ok ?= connected([From, To]),
         ok ?= expect_routes(GuildId, Nodes, From),
         {ok, SrcShard} ?= guild_handoff_freeze:shard_pid(GuildId, From),
@@ -127,6 +129,31 @@ maybe_reload(GuildId, To, #{reload := true} = Opts) ->
     end;
 maybe_reload(_GuildId, _To, _Opts) ->
     skipped.
+
+-spec keeper_idle([node()]) -> ok | {error, term()}.
+keeper_idle(Nodes) ->
+    Answers = [
+        {Node, Key, Answer}
+     || Key <- ?KEEPER_KEYS,
+        {Node, Answer} <- lists:zip(
+            Nodes,
+            erpc:multicall(
+                Nodes, application, get_env, [fluxer_gateway, Key], ?DEFAULT_ROUTE_TIMEOUT
+            )
+        )
+    ],
+    Active = [{Node, Key} || {Node, Key, {ok, {ok, true}}} <- Answers],
+    Unreadable = [{Node, Key, A} || {Node, Key, A} <- Answers, not keeper_answer(A)],
+    case {Active, Unreadable} of
+        {[], []} -> ok;
+        {[], _} -> {error, {pin_keeper_unreadable, Unreadable}};
+        _ -> {error, {pin_keeper_active, Active}}
+    end.
+
+-spec keeper_answer(term()) -> boolean().
+keeper_answer({ok, undefined}) -> true;
+keeper_answer({ok, {ok, _Value}}) -> true;
+keeper_answer(_Answer) -> false.
 
 -spec connected([node()]) -> ok | {error, term()}.
 connected(Nodes) ->
@@ -247,3 +274,26 @@ write_group(undefined, Nodes, Acc) ->
 -spec collect_failures([node()], list(), list()) -> list().
 collect_failures(Nodes, Results, Acc) ->
     [{N, R} || {N, R} <- lists:zip(Nodes, Results), R =/= {ok, ok}] ++ Acc.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+cutover_refuses_once_the_pin_keeper_has_armed_test() ->
+    Opts = #{guild_id => 42, target_node => 'fluxer_gateway@10.9.9.7'},
+    application:set_env(fluxer_gateway, guild_pin_keeper_ever_armed, true),
+    try
+        ?assertMatch(
+            {error, #{
+                phase := preflight,
+                reason := {pin_keeper_active, [{_, guild_pin_keeper_ever_armed}]}
+            }},
+            reverse(Opts)
+        )
+    after
+        application:unset_env(fluxer_gateway, guild_pin_keeper_ever_armed)
+    end,
+    ?assertMatch(
+        {error, #{phase := preflight, reason := {pin_keeper_unreadable, _}}}, reverse(Opts)
+    ).
+
+-endif.
