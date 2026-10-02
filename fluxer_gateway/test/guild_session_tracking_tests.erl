@@ -32,6 +32,9 @@ fresh_pending_down_keeps_reconnecting_owner_tracked_test_() ->
 unavailable_removal_of_fresh_pending_keeps_owner_tracked_test_() ->
     {timeout, 60, fun unavailable_removal_of_fresh_pending_keeps_owner_tracked/0}.
 
+fresh_pending_sibling_keeps_mutual_members_test_() ->
+    {timeout, 60, fun fresh_pending_sibling_keeps_mutual_members/0}.
+
 handoff_reconnect_counts_each_session_once() ->
     with_sessions(
         [{<<"a1">>, ?USER_A}, {<<"a2">>, ?USER_A}, {<<"b1">>, ?USER_B}],
@@ -173,6 +176,38 @@ unavailable_removal_of_fresh_pending_keeps_owner_tracked() ->
                 State = get_state(Guild),
                 ?assertNot(maps:is_key(<<"a1">>, maps:get(sessions, State))),
                 assert_tracking(#{?USER_A => 1}, State)
+            end)
+        end
+    ).
+
+fresh_pending_sibling_keeps_mutual_members() ->
+    with_sessions(
+        [{<<"a1">>, ?USER_A}, {<<"a2">>, ?USER_A}, {<<"c1">>, ?USER_C}],
+        fun(Sessions) ->
+            with_guild(base_state(without(<<"a1">>, Sessions)), fun(Guild) ->
+                send_connect(Guild, <<"a2">>, Sessions, 1),
+                ?assertMatch({ok, _, _}, await_result(<<"a2">>, 1)),
+                hold_connect_workers(Guild, 16),
+                send_connect(Guild, <<"a1">>, Sessions, 1),
+                State = get_state(Guild),
+                SessionMap = maps:get(<<"a2">>, maps:get(sessions, State)),
+                ?assertEqual(
+                    #{?CHANNEL_ID => true}, maps:get(viewable_channels, SessionMap)
+                ),
+                ?assertEqual(
+                    true,
+                    maps:get(pending_connect, maps:get(<<"a1">>, maps:get(sessions, State)))
+                ),
+                ?assertEqual(
+                    #{?CHANNEL_ID => true},
+                    guild_visibility_channels:get_cached_viewable_channel_map(?USER_A, State)
+                ),
+                ?assertEqual(
+                    [?USER_C],
+                    guild_subscription_mutual_channels:filter_member_ids(
+                        ?USER_A, [?USER_C], State
+                    )
+                )
             end)
         end
     ).

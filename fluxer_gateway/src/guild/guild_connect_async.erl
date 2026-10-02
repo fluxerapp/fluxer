@@ -394,8 +394,7 @@ upsert_pending_session(S, U, P, Request, State) ->
                 active_guilds => maps:get(active_guilds, Request, sets:new()),
                 bot => maps:get(bot, Request, false),
                 is_staff => maps:get(is_staff, Request, false),
-                pending_connect => true,
-                viewable_channels => #{}
+                pending_connect => true
             },
             guild_sessions_connect:put_session_ref(S, MRef, State#{
                 sessions => Sessions0#{S => Entry}
