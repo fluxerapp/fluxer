@@ -343,7 +343,7 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 			);
 		};
 		const handleSendFriendRequest = () => {
-			RelationshipCommands.sendFriendRequest(user.id);
+			void RelationshipActionUtils.sendFriendRequest(i18n, user.id);
 		};
 		const handleAcceptFriendRequest = () => {
 			RelationshipActionUtils.showAcceptFriendRequestConfirmation(i18n, user);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
@@ -58,6 +59,10 @@ const checkReactionResponse = (i18n: I18n, error: HttpError): boolean => {
 		if (errorCode === APIErrorCodes.ACCOUNT_LIMITED) {
 			logger.debug('Account limited, not retrying');
 			showAccountLimitedModal(failureMessage(error));
+			return true;
+		}
+		if (errorCode === APIErrorCodes.NEW_CONVERSATIONS_LIMITED) {
+			showDmActionErrorModal(error);
 			return true;
 		}
 		if (errorCode === APIErrorCodes.COMMUNICATION_DISABLED) {

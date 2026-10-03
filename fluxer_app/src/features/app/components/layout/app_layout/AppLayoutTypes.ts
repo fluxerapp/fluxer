@@ -9,6 +9,7 @@ export const NagbarType = {
 	SCHEDULED_MAINTENANCE: 'scheduled-maintenance',
 	UNCLAIMED_ACCOUNT: 'unclaimed-account',
 	EMAIL_VERIFICATION: 'email-verification',
+	ACCOUNT_LIMITED: 'account-limited',
 	DESKTOP_NOTIFICATION: 'desktop-notification',
 	PREMIUM_GRACE_PERIOD: 'premium-grace-period',
 	PREMIUM_EXPIRED: 'premium-expired',
@@ -48,6 +49,7 @@ export interface NagbarConditions {
 	canShowScheduledMaintenance: boolean;
 	userIsUnclaimed: boolean;
 	userNeedsVerification: boolean;
+	canShowAccountLimited: boolean;
 	canShowDesktopNotification: boolean;
 	canShowPremiumGracePeriod: boolean;
 	canShowPremiumExpired: boolean;

@@ -21,7 +21,7 @@ msgstr "... actives el modo denso. ¡Genial!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
-#: src/features/channel/components/MessageAttachments.tsx:390
+#: src/features/channel/components/MessageAttachments.tsx:361
 #: src/features/channel/components/UserMessage.tsx:75
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
@@ -993,7 +993,7 @@ msgstr "Sigue este canal {count, plural, one {# canal} other {# canales}}. Conve
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# comunidad encontrada} other {# comunidades encontradas}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1954
+#: src/features/app/components/layout/GuildsLayout.tsx:1955
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# comunidad no está disponible temporalmente debido a un fallo en el condensador de flujo.} other {# comunidades no están disponibles temporalmente debido a un fallo en el condensador de flujo.}}"
 
@@ -1041,7 +1041,7 @@ msgstr "{count, plural, one {# comunidad en común} other {# comunidades en com�
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# más} other {# más}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:507
+#: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# participante en la llamada} other {# participantes en la llamada}}"
 
@@ -1237,7 +1237,7 @@ msgid "{days, plural, one {Created by {creatorDisplayName}. Expires in # day.} o
 msgstr "{days, plural, one {Creada por {creatorDisplayName}. Caduca en # día.} many {Creada por {creatorDisplayName}. Caduca en # días.} other {Creada por {creatorDisplayName}. Caduca en # días.}}"
 
 #. Text under a generated invite link. {days} is how long the link stays valid, in whole days.
-#: src/features/invite/components/modals/InviteModal.tsx:164
+#: src/features/invite/components/modals/InviteModal.tsx:167
 msgid "{days, plural, one {Your invite link expires in # day.} other {Your invite link expires in # days.}}"
 msgstr "{days, plural, one {Tu enlace de invitación caduca en # día.} many {Tu enlace de invitación caduca en # días.} other {Tu enlace de invitación caduca en # días.}}"
 
@@ -1441,7 +1441,7 @@ msgid "{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {
 msgstr "{hours, plural, one {# hora} other {# horas}} y {minutes, plural, one {# minuto} other {# minutos}}"
 
 #. Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.
-#: src/features/invite/components/modals/InviteModal.tsx:160
+#: src/features/invite/components/modals/InviteModal.tsx:163
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
 msgstr "{hours, plural, one {Tu enlace de invitación caduca en # hora.} many {Tu enlace de invitación caduca en # horas.} other {Tu enlace de invitación caduca en # horas.}}"
 
@@ -1556,7 +1556,7 @@ msgid "{minutes, plural, one {# minute} other {# minutes}} and {seconds, plural,
 msgstr "{minutes, plural, one {# minuto} other {# minutos}} y {seconds, plural, one {# segundo} other {# segundos}}"
 
 #. Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.
-#: src/features/invite/components/modals/InviteModal.tsx:155
+#: src/features/invite/components/modals/InviteModal.tsx:158
 msgid "{minutes, plural, one {Your invite link expires in # minute.} other {Your invite link expires in # minutes.}}"
 msgstr "{minutes, plural, one {Tu enlace de invitación caduca en # minuto.} many {Tu enlace de invitación caduca en # minutos.} other {Tu enlace de invitación caduca en # minutos.}}"
 
@@ -1967,7 +1967,7 @@ msgid "{seconds, plural, one {# second} other {# seconds}}"
 msgstr "{seconds, plural, one {# segundo} many {# segundos} other {# segundos}}"
 
 #. Text under a generated invite link. {seconds} is how long the link stays valid, in whole seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:150
+#: src/features/invite/components/modals/InviteModal.tsx:153
 msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your invite link expires in # seconds.}}"
 msgstr "{seconds, plural, one {Tu enlace de invitación caduca en # segundo.} many {Tu enlace de invitación caduca en # segundos.} other {Tu enlace de invitación caduca en # segundos.}}"
 
@@ -2215,8 +2215,8 @@ msgstr "<0>{username}</0> sigue en el grupo. Inténtalo de nuevo en un momento."
 
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.
-#: src/features/channel/components/MessageAttachments.tsx:241
-#: src/features/channel/components/MessageAttachments.tsx:297
+#: src/features/channel/components/MessageAttachments.tsx:212
+#: src/features/channel/components/MessageAttachments.tsx:268
 msgid "<0>Forwarded from</0>{sourceInfo}"
 msgstr "<0>Reenviado desde</0>{sourceInfo}"
 
@@ -2270,7 +2270,7 @@ msgid "1 result available"
 msgstr "1 resultado disponible"
 
 #. Invite max-uses dropdown option for exactly one use.
-#: src/features/invite/components/modals/InviteModal.tsx:60
+#: src/features/invite/components/modals/InviteModal.tsx:63
 msgid "1 use"
 msgstr "1 uso"
 
@@ -2315,12 +2315,12 @@ msgid "10 minutes"
 msgstr "10 minutos"
 
 #. Invite max-uses dropdown option for ten uses.
-#: src/features/invite/components/modals/InviteModal.tsx:68
+#: src/features/invite/components/modals/InviteModal.tsx:71
 msgid "10 uses"
 msgstr "10 usos"
 
 #. Invite max-uses dropdown option for 100 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:80
+#: src/features/invite/components/modals/InviteModal.tsx:83
 msgid "100 uses"
 msgstr "100 usos"
 
@@ -2368,7 +2368,7 @@ msgid "2 members (typing)"
 msgstr "2 miembros (escribiendo)"
 
 #. Ban duration option in the destructive ban-member modal for a two-week temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:51
+#: src/features/moderation/components/modals/BanMemberModal.tsx:50
 msgid "2 weeks"
 msgstr "2 semanas"
 
@@ -2383,7 +2383,7 @@ msgid "24-hour"
 msgstr "24 horas"
 
 #. Invite max-uses dropdown option for 25 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:72
+#: src/features/invite/components/modals/InviteModal.tsx:75
 msgid "25 uses"
 msgstr "25 usos"
 
@@ -2404,7 +2404,7 @@ msgid "2FA requirement"
 msgstr "Requisito de 2FA"
 
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:43
+#: src/features/moderation/components/modals/BanMemberModal.tsx:42
 msgid "3 days"
 msgstr "3 días"
 
@@ -2439,7 +2439,7 @@ msgid "40px, 3 members"
 msgstr "40 px, 3 miembros"
 
 #. Ban duration option in the destructive ban-member modal for a five-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:47
+#: src/features/moderation/components/modals/BanMemberModal.tsx:46
 msgid "5 days"
 msgstr "5 días"
 
@@ -2449,12 +2449,12 @@ msgid "5 minutes"
 msgstr "5 minutos"
 
 #. Invite max-uses dropdown option for five uses.
-#: src/features/invite/components/modals/InviteModal.tsx:64
+#: src/features/invite/components/modals/InviteModal.tsx:67
 msgid "5 uses"
 msgstr "5 usos"
 
 #. Invite max-uses dropdown option for 50 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:76
+#: src/features/invite/components/modals/InviteModal.tsx:79
 msgid "50 uses"
 msgstr "50 usos"
 
@@ -2803,7 +2803,7 @@ msgid "Account too new"
 msgstr "Cuenta demasiado nueva"
 
 #. Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.
-#: src/features/invite/commands/InviteCommands.tsx:35
+#: src/features/invite/commands/InviteCommands.tsx:36
 msgid "Account verification required"
 msgstr "Verificación de cuenta necesaria"
 
@@ -2997,12 +2997,12 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "Añadir un bot a una comunidad con los permisos solicitados"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:98
+#: src/features/messaging/components/modals/ForwardModal.tsx:100
 msgid "Add a comment (optional)"
 msgstr "Añadir un comentario (opcional)"
 
 #. Landing-view title of the add community modal. Top-level entry point with options to create, join, or import.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:89
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:93
 msgid "Add a community"
 msgstr "Añadir una comunidad"
 
@@ -3082,7 +3082,7 @@ msgid "Add an account to continue."
 msgstr "Añade una cuenta para continuar."
 
 #. Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.
-#: src/features/invite/commands/InviteCommands.tsx:40
+#: src/features/invite/commands/InviteCommands.tsx:41
 msgid "Add an email and password to your account first."
 msgstr "Añade primero un correo electrónico y una contraseña a tu cuenta."
 
@@ -3911,7 +3911,7 @@ msgid "Already set to cancel"
 msgstr "Cancelación ya programada"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:88
+#: src/features/messaging/commands/MessageCommands.tsx:89
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "También denunciar este mensaje al equipo de seguridad de {productName}"
 
@@ -4150,7 +4150,7 @@ msgid "Animated icons are not supported"
 msgstr "Los iconos animados no son compatibles"
 
 #. Validation error in the create-community form when the user picks an animated image.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:112
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:116
 msgid "Animated icons are not supported when creating a new community. Use a static image."
 msgstr "No se admiten iconos animados al crear una nueva comunidad. Usa una imagen estática."
 
@@ -4332,17 +4332,17 @@ msgid "Any uploaded attachment"
 msgstr "Cualquier archivo adjunto subido"
 
 #. Helper text under the custom ban duration input. Both placeholders are integer numbers of seconds bounding the allowed range.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:73
+#: src/features/moderation/components/modals/BanMemberModal.tsx:72
 msgid "Any value from {minTempBanDurationSeconds} to {maxTempBanDurationSeconds} seconds."
 msgstr "Cualquier valor de {minTempBanDurationSeconds} a {maxTempBanDurationSeconds} segundos."
 
 #. Helper text under the custom invite expiration input. {maxInviteAgeSeconds} is the platform max in seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:111
+#: src/features/invite/components/modals/InviteModal.tsx:114
 msgid "Any value from 0 to {maxInviteAgeSeconds} seconds. 0 means never expires."
 msgstr "Cualquier valor entre 0 y {maxInviteAgeSeconds} segundos. 0 significa que nunca caduca."
 
 #. Helper text under the custom invite max-uses input. {maxInviteUses} is the platform max number of uses per invite.
-#: src/features/invite/components/modals/InviteModal.tsx:124
+#: src/features/invite/components/modals/InviteModal.tsx:127
 msgid "Any value from 0 to {maxInviteUses}. 0 means no limit."
 msgstr "Cualquier valor entre 0 y {maxInviteUses}. 0 significa sin límite."
 
@@ -4938,7 +4938,7 @@ msgid "Audio settings"
 msgstr "Ajustes de audio"
 
 #. Toggle / summary row label in the Linux audio source picker. {summaryLabel} is one of the audio-source summary labels.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:45
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:47
 msgid "Audio sources: {summaryLabel}"
 msgstr "Fuentes de audio: {summaryLabel}"
 
@@ -5399,7 +5399,7 @@ msgid "Back to sticker"
 msgstr "Volver a la pegatina"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:115
+#: src/features/voice/components/VoiceCallView.tsx:111
 msgid "Back to voice channel"
 msgstr "Volver al canal de voz"
 
@@ -5502,7 +5502,7 @@ msgid "Ban"
 msgstr "Banear"
 
 #. Title of the destructive ban-member modal. {tag} is the target user tag (username#tag). Destructive moderation action; keep tone direct.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:55
+#: src/features/moderation/components/modals/BanMemberModal.tsx:54
 msgid "Ban {tag}"
 msgstr "Banear a {tag}"
 
@@ -5517,14 +5517,14 @@ msgid "Ban details"
 msgstr "Detalles del baneo"
 
 #. Label above the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:60
+#: src/features/moderation/components/modals/BanMemberModal.tsx:59
 msgid "Ban duration"
 msgstr "Duración del baneo"
 
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:270
+#: src/features/moderation/components/modals/BanMemberModal.tsx:274
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:124
@@ -5992,7 +5992,7 @@ msgid "Bot invite (no external redirect)"
 msgstr "Invitación de bot (sin redirección externa)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:162
+#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:163
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:104
 msgid "Bot permissions"
 msgstr "Permisos del bot"
@@ -6549,14 +6549,14 @@ msgstr "No se pueden subir archivos aquí"
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:145
-#: src/features/invite/components/modals/InviteModal.tsx:552
+#: src/features/invite/components/modals/InviteModal.tsx:557
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:597
+#: src/features/messaging/components/modals/ForwardModal.tsx:603
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
-#: src/features/moderation/components/modals/BanMemberModal.tsx:262
+#: src/features/moderation/components/modals/BanMemberModal.tsx:266
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:173
@@ -6619,13 +6619,13 @@ msgstr "Cancelar cambio programado"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:915
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Cancelar suscripción"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
 msgid "Cancel subscription?"
 msgstr "¿Cancelar suscripción?"
 
@@ -6674,7 +6674,7 @@ msgid "Cannot delete account"
 msgstr "No se puede eliminar la cuenta"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:50
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:52
 msgid "Capture"
 msgstr "Capturar"
 
@@ -7229,7 +7229,7 @@ msgid "Channel access"
 msgstr "Acceso al canal"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
 msgid "Channel access denied"
 msgstr "Acceso al canal denegado"
 
@@ -7294,7 +7294,7 @@ msgstr "ID del canal copiado al portapapeles"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "enlace del canal"
@@ -7472,7 +7472,7 @@ msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for st
 msgstr "Consulta nuestro <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> para ver las actualizaciones de estado."
 
 #. Description text in the share theme modal.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:35
+#: src/features/theme/components/modals/ShareThemeModal.tsx:36
 msgid "Check out my custom theme!"
 msgstr "¡Mira mi tema personalizado!"
 
@@ -7677,7 +7677,7 @@ msgid "Choose File, then Add to Dock."
 msgstr "Selecciona Archivo y luego Añadir al Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:39
+#: src/features/channel/utils/CreateDMModalUtils.tsx:40
 msgid "Choose friends to message."
 msgstr "Elige amigos para enviar mensajes."
 
@@ -7861,10 +7861,10 @@ msgstr "Reclamar regalo"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Title of the error modal shown when an unclaimed account tries to start a DM.
 #. Title shown when an unclaimed account cannot start a DM or group DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:32
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:36
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:63
-#: src/features/channel/utils/CreateDMModalUtils.tsx:43
+#: src/features/channel/utils/CreateDMModalUtils.tsx:44
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:441
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:343
@@ -7953,7 +7953,7 @@ msgid "Claim your account to send friend requests."
 msgstr "Completa el registro de tu cuenta para enviar solicitudes de amistad."
 
 #. Blocked-state text shown when an unclaimed account cannot start a DM or group DM.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:47
+#: src/features/channel/utils/CreateDMModalUtils.tsx:48
 msgid "Claim your account to start DMs."
 msgstr "Completa el registro de tu cuenta para iniciar MD."
 
@@ -8593,17 +8593,17 @@ msgid "Commands"
 msgstr "Comandos"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:70
+#: src/features/messaging/components/modals/ForwardModal.tsx:72
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "Los comentarios están desactivados porque uno o varios de los canales seleccionados tienen el modo lento activado. El comentario se bloquearía por el modo lento justo después del reenvío."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:64
+#: src/features/messaging/components/modals/ForwardModal.tsx:66
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "Los comentarios están deshabilitados porque el modo lento está activado en {forwardChannelDisplayName}. El comentario se bloquearía por el modo lento justo después del reenvío."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:94
+#: src/features/messaging/components/modals/ForwardModal.tsx:96
 msgid "Comments are unavailable while slowmode is on."
 msgstr "Los comentarios no están disponibles mientras el modo lento esté activado."
 
@@ -8763,7 +8763,7 @@ msgid "Community members"
 msgstr "Miembros de la comunidad"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the community-membership CTA banner.
-#: src/features/devtools/components/NagbarControls.ts:12
+#: src/features/devtools/components/NagbarControls.ts:13
 msgid "Community membership CTA nagbar"
 msgstr "Barra de aviso para unirse a la comunidad"
 
@@ -8773,7 +8773,7 @@ msgid "Community message notifications"
 msgstr "Notificaciones de mensajes de la comunidad"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "Barra de notificación de requisito de MFA de la comunidad"
 
@@ -8785,7 +8785,7 @@ msgstr "Silenciar micrófono en la comunidad"
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:199
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:120
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:124
 msgid "Community name"
 msgstr "Nombre de la comunidad"
 
@@ -9167,7 +9167,7 @@ msgstr "Connecticut"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:94
+#: src/features/voice/components/VoiceCallView.tsx:90
 msgid "Connecting..."
 msgstr "Conectando..."
 
@@ -9223,12 +9223,12 @@ msgid "Connection lost. Reconnecting…"
 msgstr "Conexión perdida. Reconectando…"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:47
+#: src/features/connection/commands/ConnectionCommands.ts:48
 msgid "Connection removed"
 msgstr "Conexión eliminada"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:119
+#: src/features/voice/components/VoiceCallView.tsx:115
 msgid "Connection stats"
 msgstr "Estadísticas de conexión"
 
@@ -9238,12 +9238,12 @@ msgid "Connection type"
 msgstr "Tipo de conexión"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:43
+#: src/features/connection/commands/ConnectionCommands.ts:44
 msgid "Connection updated"
 msgstr "Conexión actualizada"
 
 #. Success toast after an account connection is verified.
-#: src/features/connection/commands/ConnectionCommands.ts:35
+#: src/features/connection/commands/ConnectionCommands.ts:36
 msgid "Connection verified"
 msgstr "Conexión verificada"
 
@@ -9279,7 +9279,7 @@ msgid "Connections"
 msgstr "Conexiones"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:51
+#: src/features/connection/commands/ConnectionCommands.ts:52
 msgid "Connections reordered"
 msgstr "Conexiones reordenadas"
 
@@ -9526,7 +9526,7 @@ msgstr "URL copiada al portapapeles"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
-#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:228
+#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:230
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:59
 msgid "Copy"
 msgstr "Copiar"
@@ -9854,7 +9854,7 @@ msgid "Copying image..."
 msgstr "Copiando imagen..."
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the corrupted-installation banner.
-#: src/features/devtools/components/NagbarControls.ts:17
+#: src/features/devtools/components/NagbarControls.ts:18
 msgid "Corrupted installation nagbar"
 msgstr "Barra de notificación de instalación dañada"
 
@@ -9988,7 +9988,7 @@ msgid "Couldn't copy gift URL"
 msgstr "No se pudo copiar la URL del regalo"
 
 #. Title of the generic fallback error modal shown when generating a shareable theme link fails.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:47
+#: src/features/theme/components/modals/ShareThemeModal.tsx:48
 msgid "Couldn't create a theme link"
 msgstr "No se ha podido crear un enlace del tema"
 
@@ -10167,7 +10167,7 @@ msgid "Couldn't process image"
 msgstr "No se pudo procesar la imagen"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:120
+#: src/features/messaging/commands/MessageCommands.tsx:121
 msgid "Couldn't publish this message"
 msgstr "No se ha podido publicar este mensaje"
 
@@ -10299,7 +10299,7 @@ msgid "Couldn't send the verification email"
 msgstr "No se pudo enviar el correo de verificación"
 
 #. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/connection/commands/ConnectionCommands.ts:30
+#: src/features/connection/commands/ConnectionCommands.ts:31
 msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "No se pudo iniciar la autorización de {blueskyProviderName}"
 
@@ -10309,7 +10309,7 @@ msgid "Couldn't start checkout"
 msgstr "No se pudo iniciar el pago"
 
 #. Toast error shown when creating a new account connection fails.
-#: src/features/connection/commands/ConnectionCommands.ts:26
+#: src/features/connection/commands/ConnectionCommands.ts:27
 msgid "Couldn't start the connection"
 msgstr "No se pudo iniciar la conexión"
 
@@ -10319,7 +10319,7 @@ msgid "Couldn't start the desktop update"
 msgstr "No se pudo iniciar la actualización de escritorio"
 
 #. Title of the generic fallback error modal shown when opening or creating a DM fails.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:64
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:68
 msgid "Couldn't start this conversation"
 msgstr "No se pudo iniciar esta conversación"
 
@@ -10424,7 +10424,7 @@ msgid "Couldn't verify that code. Try again."
 msgstr "No se ha podido verificar el código. Inténtalo de nuevo."
 
 #. Toast error shown when verifying an account connection fails.
-#: src/features/connection/commands/ConnectionCommands.ts:39
+#: src/features/connection/commands/ConnectionCommands.ts:40
 msgid "Couldn't verify the connection"
 msgstr "No se pudo verificar la conexión"
 
@@ -10469,7 +10469,7 @@ msgid "Create & share"
 msgstr "Crear y compartir"
 
 #. Action button label in the add community modal. Starts the create-community flow.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:94
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:98
 msgid "Create a community"
 msgstr "Crear una comunidad"
 
@@ -10541,14 +10541,14 @@ msgid "Create community"
 msgstr "Crear comunidad"
 
 #. Accessible label for the create-community form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:116
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:120
 msgid "Create community form"
 msgstr "Formulario para crear una comunidad"
 
 #. Accessible label for the create-DM trigger in the DM list header.
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:97
-#: src/features/channel/utils/CreateDMModalUtils.tsx:35
+#: src/features/channel/utils/CreateDMModalUtils.tsx:36
 msgid "Create DM"
 msgstr "Crear MD"
 
@@ -10563,14 +10563,14 @@ msgid "Create favorite category form"
 msgstr "Formulario para crear categoría de favoritos"
 
 #. Accessible label for the create-from-template form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:158
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:162
 msgid "Create from template form"
 msgstr "Formulario para crear a partir de una plantilla"
 
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
 #. Tooltip on the channel header plus button when viewing a one-on-one DM. Starts the create group DM flow with the current recipient.
 #: src/features/channel/components/channel_header/shared.ts:51
-#: src/features/channel/utils/CreateDMModalUtils.tsx:31
+#: src/features/channel/utils/CreateDMModalUtils.tsx:32
 msgid "Create group DM"
 msgstr "Crear MD de grupo"
 
@@ -10593,7 +10593,7 @@ msgstr "Crear nueva cuenta"
 msgid "Create new group"
 msgstr "Crear grupo nuevo"
 
-#: src/features/invite/components/modals/InviteModal.tsx:555
+#: src/features/invite/components/modals/InviteModal.tsx:560
 msgid "Create new link"
 msgstr "Crear nuevo enlace"
 
@@ -10811,12 +10811,12 @@ msgid "Current uses:"
 msgstr "Usos actuales:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:114
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "Actualmente descartado"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:118
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "Mostrando actualmente"
 
@@ -10853,7 +10853,7 @@ msgid "Custom"
 msgstr "Personalizado"
 
 #. Label of the numeric input shown after choosing "Custom..." in the ban duration dropdown. The unit is seconds.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:68
+#: src/features/moderation/components/modals/BanMemberModal.tsx:67
 msgid "Custom ban duration (seconds)"
 msgstr "Duración de baneo personalizada (segundos)"
 
@@ -10889,7 +10889,7 @@ msgid "Custom entrance sounds with {premiumProductName}"
 msgstr "Sonidos de entrada personalizados con {premiumProductName}"
 
 #. Label of the numeric input shown after choosing "Custom..." in the invite expiration dropdown. The unit is seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:106
+#: src/features/invite/components/modals/InviteModal.tsx:109
 msgid "Custom expiration (seconds)"
 msgstr "Caducidad personalizada (segundos)"
 
@@ -10898,7 +10898,7 @@ msgid "Custom hoist order"
 msgstr "Orden personalizado de los roles mostrados por separado"
 
 #. Label of the numeric input shown after choosing "Custom..." in the invite max-uses dropdown.
-#: src/features/invite/components/modals/InviteModal.tsx:120
+#: src/features/invite/components/modals/InviteModal.tsx:123
 msgid "Custom max uses"
 msgstr "Usos máximos personalizados"
 
@@ -11506,7 +11506,7 @@ msgstr "Delaware"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:84
+#: src/features/messaging/commands/MessageCommands.tsx:85
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
@@ -11652,8 +11652,8 @@ msgid "Delete message"
 msgstr "Eliminar mensaje"
 
 #. Section heading and accessible label for the message-history-deletion radio group in the destructive ban-member modal. Destructive option group.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:78
-#: src/features/moderation/components/modals/BanMemberModal.tsx:229
+#: src/features/moderation/components/modals/BanMemberModal.tsx:77
+#: src/features/moderation/components/modals/BanMemberModal.tsx:233
 msgid "Delete message history"
 msgstr "Eliminar historial de mensajes"
 
@@ -11755,12 +11755,12 @@ msgid "Delete this message"
 msgstr "Eliminar este mensaje"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:80
+#: src/features/messaging/commands/MessageCommands.tsx:81
 msgid "Delete this message? Can't be undone."
 msgstr "¿Eliminar este mensaje? No se puede deshacer."
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:93
+#: src/features/messaging/commands/MessageCommands.tsx:94
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "¿Eliminar este mensaje? No se puede deshacer. Este mensaje también se eliminará de todas las comunidades que sigan este canal."
 
@@ -11977,7 +11977,7 @@ msgid "Desktop device"
 msgstr "Dispositivo de escritorio"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the desktop-download banner.
-#: src/features/devtools/components/NagbarControls.ts:7
+#: src/features/devtools/components/NagbarControls.ts:8
 msgid "Desktop download nagbar"
 msgstr "Barra de descarga de la aplicación de escritorio"
 
@@ -11987,7 +11987,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "Inactividad en el escritorio antes de enviar notificaciones al móvil."
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:40
+#: src/features/devtools/components/NagbarControls.ts:41
 msgid "Desktop notification nagbar"
 msgstr "Barra de notificaciones de escritorio"
 
@@ -12102,13 +12102,13 @@ msgstr "Estado de desarrollador"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:149
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Herramientas de desarrollador"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:150
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:153
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Las herramientas de desarrollador están disponibles desde la insignia de personal en el encabezado del canal."
 
@@ -12505,7 +12505,7 @@ msgstr "Desconectar socket"
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:103
+#: src/features/voice/components/VoiceCallView.tsx:99
 msgid "Disconnected"
 msgstr "Desconectado"
 
@@ -12822,7 +12822,7 @@ msgid "Domain"
 msgstr "Dominio"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "Barra de notificación de cambio de dominio"
 
@@ -13344,8 +13344,8 @@ msgstr "Editar detalles del grupo"
 msgid "Edit group form"
 msgstr "Formulario para editar el grupo"
 
-#: src/features/invite/components/modals/InviteModal.tsx:523
-#: src/features/invite/components/modals/InviteModal.tsx:538
+#: src/features/invite/components/modals/InviteModal.tsx:528
+#: src/features/invite/components/modals/InviteModal.tsx:543
 msgid "Edit invite link"
 msgstr "Editar enlace de invitación"
 
@@ -13397,7 +13397,7 @@ msgid "Edit profile local time"
 msgstr "Editar hora local del perfil"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:99
+#: src/features/messaging/commands/MessageCommands.tsx:100
 msgid "Edit published message?"
 msgstr "¿Editar mensaje publicado?"
 
@@ -13548,7 +13548,7 @@ msgid "Email unavailable"
 msgstr "Correo electrónico no disponible"
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:36
+#: src/features/devtools/components/NagbarControls.ts:37
 msgid "Email verification nagbar"
 msgstr "Barra de notificación de verificación de correo electrónico"
 
@@ -14080,12 +14080,12 @@ msgid "End grace now"
 msgstr "Finalizar período de gracia ahora"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
 msgid "End grace period"
 msgstr "Finalizar período de gracia"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 msgid "End grace period now?"
 msgstr "¿Finalizar el período de gracia ahora?"
 
@@ -14170,7 +14170,7 @@ msgid "Enter a product name between 1 and 80 characters."
 msgstr "Introduce un nombre de producto de entre 1 y 80 caracteres."
 
 #. Placeholder in the optional reason input in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:88
+#: src/features/moderation/components/modals/BanMemberModal.tsx:87
 msgid "Enter a reason for the ban"
 msgstr "Introduce un motivo para el baneo"
 
@@ -14180,7 +14180,7 @@ msgid "Enter a secure password"
 msgstr "Introduce una contraseña segura"
 
 #. Validation error in the import-template form when the entered URL or code is malformed. {theOtherPlatform} is a third-party product name placeholder.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:124
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:128
 msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "Introduce una URL o código de plantilla de {theOtherPlatform} válido."
 
@@ -14204,7 +14204,7 @@ msgstr "Introduce un nombre de usuario válido ({exampleFluxerTagFull})."
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:111
+#: src/features/voice/components/VoiceCallView.tsx:107
 msgid "Enter fullscreen"
 msgstr "Entrar en pantalla completa"
 
@@ -14347,7 +14347,7 @@ msgstr "Toda la pantalla"
 msgid "Entire system"
 msgstr "Todo el sistema"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:260
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:257
 msgid "Entire system audio"
 msgstr "Audio de todo el sistema"
 
@@ -14525,7 +14525,7 @@ msgid "exclude a user"
 msgstr "excluir a un usuario"
 
 #. Section header in the Linux audio source picker for apps excluded from the system mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:59
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:61
 msgid "Exclude from system"
 msgstr "Excluir del sistema"
 
@@ -14546,7 +14546,7 @@ msgstr "Salir"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:107
+#: src/features/voice/components/VoiceCallView.tsx:103
 msgid "Exit fullscreen"
 msgstr "Salir de pantalla completa"
 
@@ -14624,7 +14624,7 @@ msgid "Expiration curve"
 msgstr "Curva de caducidad"
 
 #. Label above the expiration duration dropdown in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:102
+#: src/features/invite/components/modals/InviteModal.tsx:105
 msgid "Expire after"
 msgstr "Caduca después de"
 
@@ -14839,7 +14839,7 @@ msgid "Failed to complete SSO sign-in"
 msgstr "No se pudo completar el inicio de sesión único (SSO)"
 
 #. Error message in the add friends to group modal utils helper.
-#: src/features/channel/utils/AddFriendsToGroupModalUtils.ts:21
+#: src/features/channel/utils/AddFriendsToGroupModalUtils.ts:22
 msgid "Failed to copy invite link"
 msgstr "No se pudo copiar el enlace de invitación"
 
@@ -15687,12 +15687,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Para tu seguridad, confirma que eres tú para continuar."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:102
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "Forzar desactivación"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:98
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "Forzar activación"
 
@@ -15840,11 +15840,11 @@ msgstr "Reenviar contenido multimedia"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:33
-#: src/features/messaging/components/modals/ForwardModal.tsx:85
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 msgid "Forward message"
 msgstr "Reenviar mensaje"
 
-#: src/features/channel/components/MessageAttachments.tsx:360
+#: src/features/channel/components/MessageAttachments.tsx:331
 msgid "Forwarded"
 msgstr "Reenviado"
 
@@ -16437,7 +16437,7 @@ msgstr "Se requiere un código de regalo"
 msgid "Gift code is too long"
 msgstr "El código de regalo es demasiado largo"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:141
 msgid "Gift code:"
 msgstr "Código de regalo:"
 
@@ -16466,7 +16466,7 @@ msgid "Gift inventory flow"
 msgstr "Flujo de inventario de regalos"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:56
+#: src/features/devtools/components/NagbarControls.ts:57
 msgid "Gift inventory nagbar"
 msgstr "Barra de notificaciones de inventario de regalos"
 
@@ -16477,7 +16477,7 @@ msgstr "Duración del regalo"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:35
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "Enlace de regalo"
@@ -17488,7 +17488,7 @@ msgid "How about:"
 msgstr "¿Qué te parece esto?"
 
 #. Helper text under the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:64
+#: src/features/moderation/components/modals/BanMemberModal.tsx:63
 msgid "How long they stay banned."
 msgstr "Cuánto tiempo permanecerá baneado el miembro."
 
@@ -17600,7 +17600,7 @@ msgstr "El archivo del icono es demasiado grande"
 #. Validation error in the create-community form when the chosen icon exceeds the size limit. {imageMaxSizeLabel} is a formatted file size such as "8 MB".
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:47
 #: src/features/channel/components/modals/EditGroupModal.tsx:45
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:107
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:111
 msgid "Icon file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "El archivo del icono es demasiado grande. Elige un archivo de menos de {imageMaxSizeLabel}."
 
@@ -17886,7 +17886,7 @@ msgid "Import"
 msgstr "Importar"
 
 #. Action button label in the add community modal. Imports a template from the third-party platform named by {theOtherPlatform}.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:102
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:106
 msgid "Import {theOtherPlatform} template"
 msgstr "Importar plantilla de {theOtherPlatform}"
 
@@ -17938,7 +17938,7 @@ msgid "Import more"
 msgstr "Importar más"
 
 #. Accessible label for the import-template form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:138
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:142
 msgid "Import template form"
 msgstr "Formulario para importar una plantilla"
 
@@ -18106,7 +18106,7 @@ msgid "Include all except selected"
 msgstr "Incluir todo excepto lo seleccionado"
 
 #. Section header in the Linux audio source picker for the per-app inclusion list.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:55
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:57
 msgid "Include apps"
 msgstr "Incluir aplicaciones"
 
@@ -18472,7 +18472,7 @@ msgid "Invalid image"
 msgstr "Imagen no válida"
 
 #. Validation error in the paste-template-JSON form. "JSON" is a protocol token and must not be translated.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:129
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:133
 msgid "Invalid JSON. Paste the full response from the URL above."
 msgstr "JSON no válido. Pega la respuesta completa de la URL de arriba."
 
@@ -18531,7 +18531,7 @@ msgid "Invisible"
 msgstr "Invisible"
 
 #. Per-recipient action button label in the invite modal recipient list. Sends the invite as a DM to that friend. Short standalone verb.
-#: src/features/invite/components/modals/InviteModal.tsx:97
+#: src/features/invite/components/modals/InviteModal.tsx:100
 msgid "Invite"
 msgstr "Invitar"
 
@@ -18568,12 +18568,12 @@ msgid "Invite deleted"
 msgstr "Invitación eliminada"
 
 #. Fallback header on the invite modal when no community context is available. Refers to inviting friends to Fluxer.
-#: src/features/invite/components/modals/InviteModal.tsx:84
+#: src/features/invite/components/modals/InviteModal.tsx:87
 msgid "Invite friends"
 msgstr "Invitar a amigos"
 
 #. Title of the invite modal. {guildName} is the community name.
-#: src/features/invite/components/modals/InviteModal.tsx:89
+#: src/features/invite/components/modals/InviteModal.tsx:92
 msgid "Invite friends to {guildName}"
 msgstr "Invita a tus amigos a {guildName}"
 
@@ -18584,25 +18584,25 @@ msgstr "Invitación oculta al compartir"
 
 #. Label of the invite code/URL input in the join-community form.
 #. Placeholder in the read-only invite link input when no link is available yet.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:166
-#: src/features/invite/components/modals/InviteModal.tsx:138
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:170
+#: src/features/invite/components/modals/InviteModal.tsx:141
 msgid "Invite link"
 msgstr "Enlace de invitación"
 
 #. Label above a masked invite link while streaming privacy is active.
 #. Label above a masked invite link while streaming privacy is active.
-#: src/features/invite/components/modals/InviteModal.tsx:146
+#: src/features/invite/components/modals/InviteModal.tsx:149
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:31
 msgid "Invite link is hidden while sharing:"
 msgstr "El enlace de invitación está oculto mientras compartes:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:162
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:165
 msgid "Invite link masked while sharing"
 msgstr "Enlace de invitación oculto mientras compartes pantalla"
 
 #. Header of the invite modal when the user is editing the invite link expiry, max uses, and temporary flag.
-#: src/features/invite/components/modals/InviteModal.tsx:93
+#: src/features/invite/components/modals/InviteModal.tsx:96
 msgid "Invite link settings"
 msgstr "Ajustes del enlace de invitación"
 
@@ -18747,7 +18747,7 @@ msgstr "Las invitaciones están en pausa porque {productName} ha detectado un po
 msgid "Invites are paused for this community."
 msgstr "Las invitaciones están en pausa para esta comunidad."
 
-#: src/features/invite/components/modals/InviteModal.tsx:370
+#: src/features/invite/components/modals/InviteModal.tsx:375
 msgid "Invites are paused in this community by an admin. While this invite can be created, it cannot be accepted until invites are re-enabled."
 msgstr "Las invitaciones están pausadas en esta comunidad por un administrador. Aunque se puede crear esta invitación, no se podrá aceptar hasta que se vuelvan a habilitar las invitaciones."
 
@@ -18757,7 +18757,7 @@ msgid "Invites disabled"
 msgstr "Invitaciones deshabilitadas"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:72
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "Barra de notificaciones de invitaciones deshabilitadas"
 
@@ -18879,7 +18879,7 @@ msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Únete a {communityName} para chatear con el equipo y mantenerte al día."
 
 #. Action button label in the add community modal. Starts the join-by-invite-code flow.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:98
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:102
 msgid "Join a community"
 msgstr "Unirse a una comunidad"
 
@@ -18903,7 +18903,7 @@ msgid "Join community"
 msgstr "Unirse a la comunidad"
 
 #. Accessible label for the join-community form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:162
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:166
 msgid "Join community form"
 msgstr "Formulario para unirte a la comunidad"
 
@@ -19011,7 +19011,7 @@ msgid "Jump to {displayName}"
 msgstr "Ir a {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
 msgid "Jump to {labelText}"
 msgstr "Ir a {labelText}"
 
@@ -19068,12 +19068,12 @@ msgid "Jump to the current call"
 msgstr "Ir a la llamada actual"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:112
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
 msgid "Jump to the linked channel"
 msgstr "Ir al canal enlazado"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:104
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
 msgid "Jump to the linked message"
 msgstr "Ir al mensaje enlazado"
 
@@ -19083,7 +19083,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Ir al mensaje de {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:99
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
 msgid "Jump to the message in {labelText}"
 msgstr "Ir al mensaje en {labelText}"
 
@@ -19142,7 +19142,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Mantén los niveles gratuito y premium. Puedes personalizar los niveles, vender premium a través de Stripe o entregar códigos de regalo más tarde desde el panel de administración."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:273
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
 msgid "Keep grace period"
 msgstr "Mantener período de gracia"
 
@@ -19157,7 +19157,7 @@ msgid "Keep running"
 msgstr "Seguir ejecutando"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:251
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
 msgid "Keep subscription"
 msgstr "Mantener suscripción"
 
@@ -19240,7 +19240,7 @@ msgstr "Teclas"
 #. Button or menu action label in the kick member modal. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile actions sheet. Keep it concise. Keep the tone plain and specific.
 #. Member actions sheet menu item. Opens the kick-member confirmation (moderation action). Short verb used as a menu label.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:98
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:97
 #: src/features/moderation/components/modals/KickMemberModal.tsx:16
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:77
 msgid "Kick"
@@ -19727,7 +19727,7 @@ msgstr "Vincular archivo"
 #. Replacement text for an invite URL while streaming privacy is active.
 #. Replacement text for an invite URL while streaming privacy is active.
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:49
-#: src/features/invite/components/modals/InviteModal.tsx:142
+#: src/features/invite/components/modals/InviteModal.tsx:145
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:27
 msgid "Link hidden while sharing"
 msgstr "Enlace oculto mientras compartes"
@@ -19760,7 +19760,7 @@ msgid "Link styling"
 msgstr "Estilo de los enlaces"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:154
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:157
 msgid "Link unavailable"
 msgstr "Enlace no disponible"
 
@@ -20557,7 +20557,7 @@ msgid "Max {maxSize}."
 msgstr "Tamaño máximo: {maxSize}."
 
 #. Label above the max-uses dropdown in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:116
+#: src/features/invite/components/modals/InviteModal.tsx:119
 msgid "Max number of uses"
 msgstr "Número máximo de usos"
 
@@ -20835,7 +20835,7 @@ msgid "Members"
 msgstr "Miembros"
 
 #. Helper text under the temporary membership switch in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:134
+#: src/features/invite/components/modals/InviteModal.tsx:137
 msgid "Members are removed when offline unless given a role."
 msgstr "Los miembros se eliminan al desconectarse a menos que se les asigne un rol."
 
@@ -20980,7 +20980,7 @@ msgstr "Mensaje"
 #. Action that opens a DM conversation with the selected user.
 #. Member actions sheet menu item. Sends a direct message to the target user. Standalone verb used as a menu label.
 #. Voice participant menu action that opens a DM conversation with the selected user.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:88
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:87
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
@@ -21084,7 +21084,7 @@ msgstr "Los ajustes de visualización de mensajes solo están disponibles en la 
 msgid "Message editing"
 msgstr "Edición de mensajes"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:315
+#: src/features/messaging/components/modals/ForwardModal.tsx:317
 msgid "Message forwarded"
 msgstr "Mensaje reenviado"
 
@@ -21133,7 +21133,7 @@ msgstr "Botones de entrada de mensajes"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:56
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "El mensaje es demasiado largo"
@@ -21144,7 +21144,7 @@ msgid "Message layout"
 msgstr "Diseño de los mensajes"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:89
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:92
 msgid "message link"
 msgstr "enlace del mensaje"
 
@@ -21188,7 +21188,7 @@ msgid "Message previews in the DM list"
 msgstr "Vistas previas de mensajes en la lista de mensajes directos"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:112
+#: src/features/messaging/commands/MessageCommands.tsx:113
 msgid "Message published"
 msgstr "Mensaje publicado"
 
@@ -21301,7 +21301,7 @@ msgstr "Mensajes que puedes marcar"
 msgid "Messaging is paused"
 msgstr "El envío de mensajes está en pausa"
 
-#. Notice shown in place of the message composer, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.
+#. Notice shown in place of the message composer, as a banner at the top of the app, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.
 #: src/features/user/utils/AccountLimitUtils.ts:10
 msgid "Messaging is paused on your account. Check your email for a quick step to continue."
 msgstr "El envío de mensajes está en pausa en tu cuenta. Revisa tu correo electrónico para completar un paso rápido y continuar."
@@ -22672,7 +22672,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Sin permiso de {sendMessagesPermission}"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
 msgid "No access"
 msgstr "Sin acceso"
 
@@ -22807,7 +22807,7 @@ msgstr "No hay cambios que guardar"
 msgid "No channels available"
 msgstr "No hay canales disponibles"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:389
+#: src/features/messaging/components/modals/ForwardModal.tsx:395
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "No se encontraron canales"
@@ -22955,7 +22955,7 @@ msgid "No invoices yet."
 msgstr "Aún no hay facturas."
 
 #. Invite max-uses option meaning unlimited uses. Short standalone label.
-#: src/features/invite/components/modals/InviteModal.tsx:56
+#: src/features/invite/components/modals/InviteModal.tsx:59
 msgid "No limit"
 msgstr "Sin límite"
 
@@ -23306,7 +23306,7 @@ msgstr "No convertir"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:37
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:146
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:220
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:268
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:265
 msgid "None"
 msgstr "Ninguno"
 
@@ -23858,12 +23858,12 @@ msgid "Open {host} in your browser."
 msgstr "Abre {host} en tu navegador."
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
 msgid "Open {labelText}"
 msgstr "Abrir {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:116
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
 msgid "Open {labelText} in settings"
 msgstr "Abrir {labelText} en los ajustes"
 
@@ -24067,7 +24067,7 @@ msgid "Open emoji in browser"
 msgstr "Abrir emoji en el navegador"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:102
+#: src/features/messaging/components/modals/ForwardModal.tsx:104
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "Abrir selector de emojis"
@@ -24392,7 +24392,7 @@ msgstr "Opciones"
 msgid "or"
 msgstr "o"
 
-#: src/features/theme/components/modals/ShareThemeModal.tsx:214
+#: src/features/theme/components/modals/ShareThemeModal.tsx:216
 msgid "Or copy the link:"
 msgstr "O copia el enlace:"
 
@@ -24401,7 +24401,7 @@ msgstr "O copia el enlace:"
 msgid "or pick a GIF from {gifProviderName}"
 msgstr "o elige un GIF de {gifProviderName}"
 
-#: src/features/invite/components/modals/InviteModal.tsx:502
+#: src/features/invite/components/modals/InviteModal.tsx:507
 msgid "Or send an invite link to a friend:"
 msgstr "O envía un enlace de invitación a un amigo:"
 
@@ -24409,7 +24409,7 @@ msgstr "O envía un enlace de invitación a un amigo:"
 msgid "or send an invite to a friend:"
 msgstr "o envía una invitación a un amigo:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:133
 msgid "or send the gift link to a friend:"
 msgstr "o envía el enlace de regalo a un amigo:"
 
@@ -24611,7 +24611,7 @@ msgid "Page down"
 msgstr "Av Pág"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
 msgid "page link"
 msgstr "enlace a la página"
 
@@ -24778,12 +24778,12 @@ msgid "Paste GIF URLs below, one per line."
 msgstr "Pega las URL de los GIF a continuación, una por línea."
 
 #. Accessible label for the paste-template-JSON form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:146
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:150
 msgid "Paste template JSON form"
 msgstr "Formulario para pegar el JSON de la plantilla"
 
 #. Placeholder in the textarea where the user pastes the third-party template JSON document.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:154
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:158
 msgid "Paste the JSON response here"
 msgstr "Pega la respuesta JSON aquí"
 
@@ -24985,7 +24985,7 @@ msgid "Perks paused"
 msgstr "Ventajas en pausa"
 
 #. Ban duration option in the destructive ban-member modal meaning the ban never expires. Short standalone label.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:38
+#: src/features/moderation/components/modals/BanMemberModal.tsx:37
 msgid "Permanent"
 msgstr "Permanente"
 
@@ -25384,7 +25384,7 @@ msgstr "Reproduciendo a pesar del movimiento reducido."
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:60
-#: src/features/theme/components/modals/ShareThemeModal.tsx:67
+#: src/features/theme/components/modals/ShareThemeModal.tsx:68
 msgid "Please wait a moment and try again."
 msgstr "Espera un momento y vuelve a intentarlo."
 
@@ -25416,7 +25416,7 @@ msgid "Pop back in"
 msgstr "Volver a la ventana principal"
 
 #. Tooltip / aria label on the voice call footer button that opens the call in a separate window.
-#: src/features/voice/components/VoiceCallCornerControls.tsx:12
+#: src/features/voice/components/VoiceCallCornerControls.tsx:11
 msgid "Pop out call"
 msgstr "Abrir llamada en una ventana separada"
 
@@ -25547,12 +25547,12 @@ msgid "Premium badge"
 msgstr "Insignia prémium"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:48
+#: src/features/devtools/components/NagbarControls.ts:49
 msgid "Premium expired nagbar"
 msgstr "Barra de notificación de Premium caducado"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:44
+#: src/features/devtools/components/NagbarControls.ts:45
 msgid "Premium grace period nagbar"
 msgstr "Barra de notificación del período de gracia prémium"
 
@@ -25562,7 +25562,7 @@ msgid "Premium model"
 msgstr "Modelo prémium"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:52
+#: src/features/devtools/components/NagbarControls.ts:53
 msgid "Premium onboarding nagbar"
 msgstr "Barra de notificación de incorporación a Premium"
 
@@ -26514,7 +26514,7 @@ msgstr "Motivo"
 
 #. Label of the optional reason input in the destructive ban-member modal. Reason is recorded in the activity log.
 #. Label of the optional reason textarea in the timeout-member modal. The reason is recorded in the activity log.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:83
+#: src/features/moderation/components/modals/BanMemberModal.tsx:82
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:36
 msgid "Reason (optional)"
 msgstr "Motivo (opcional)"
@@ -26574,7 +26574,7 @@ msgstr "Volver a comprobar"
 
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
-#: src/features/invite/components/modals/InviteModal.tsx:355
+#: src/features/invite/components/modals/InviteModal.tsx:360
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "Los destinatarios irán a {0} <0>{1}</0>"
 
@@ -26601,7 +26601,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Reconexión correcta. Elige una pantalla de nuevo si quieres reanudar tu transmisión anterior."
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:98
+#: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Reconnecting..."
 msgstr "Reconectando..."
 
@@ -26741,7 +26741,7 @@ msgstr "Referencia copiada."
 msgid "Referral parameters"
 msgstr "Parámetros de referencia"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:312
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:309
 msgid "Refresh audio sources"
 msgstr "Actualizar fuentes de audio"
 
@@ -28559,7 +28559,7 @@ msgstr "Saturación"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:108
+#: src/features/messaging/commands/MessageCommands.tsx:109
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
@@ -28687,7 +28687,7 @@ msgid "Scan the QR code with your authenticator app."
 msgstr "Escanea el código QR con tu aplicación de autenticación."
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.
-#: src/features/devtools/components/NagbarControls.ts:22
+#: src/features/devtools/components/NagbarControls.ts:23
 msgid "Scheduled maintenance nagbar"
 msgstr "Barra de notificación de mantenimiento programado"
 
@@ -28962,7 +28962,7 @@ msgstr "Vista previa al recorrer el vídeo"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:89
+#: src/features/messaging/components/modals/ForwardModal.tsx:91
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:46
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29606,14 +29606,14 @@ msgstr "Reembolsos de autoservicio disponibles en los 3 días siguientes al pago
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #. Send-message button label in the voice message composer modal.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:43
+#: src/features/theme/components/modals/ShareThemeModal.tsx:44
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:316
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:77
 msgid "Send"
 msgstr "Enviar"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:106
+#: src/features/messaging/components/modals/ForwardModal.tsx:108
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "Enviar ({selectedCount}/{selectionLimit})"
 
@@ -29694,7 +29694,7 @@ msgstr "Enviar archivos de hasta {size}"
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:94
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
@@ -29710,7 +29710,7 @@ msgstr "Enviar GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:31
 msgid "Send gift"
 msgstr "Enviar regalo"
 
@@ -29873,7 +29873,7 @@ msgid "Serve the token file"
 msgstr "Proporcionar el archivo de token"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.
-#: src/features/devtools/components/NagbarControls.ts:27
+#: src/features/devtools/components/NagbarControls.ts:28
 msgid "Service incident nagbar"
 msgstr "Aviso de incidente del servicio"
 
@@ -30118,7 +30118,7 @@ msgid "Settings"
 msgstr "Ajustes"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
 msgid "settings link"
 msgstr "enlace de ajustes"
 
@@ -30239,7 +30239,7 @@ msgid "Share your screen or camera in up to 4K at 60 frames per second. Free acc
 msgstr "Comparte tu pantalla o cámara en hasta 4K a 60 fotogramas por segundo. Las cuentas gratuitas transmiten en hasta 720p a 30."
 
 #. Button or menu action label in the share theme modal. Keep it concise.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:39
+#: src/features/theme/components/modals/ShareThemeModal.tsx:40
 msgid "Share your theme"
 msgstr "Comparte tu tema"
 
@@ -30263,7 +30263,7 @@ msgid "Shared window"
 msgstr "Ventana compartida"
 
 #. Capture option in the Linux audio source picker on a window share. Captures only the audio of the window being shared.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:40
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:42
 msgid "Shared window audio"
 msgstr "Audio de la ventana compartida"
 
@@ -30364,7 +30364,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "Los atajos se pausan durante la grabación."
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:60
+#: src/features/messaging/components/modals/ForwardModal.tsx:62
 msgid "Shorten the message and try again."
 msgstr "Acorta el mensaje y vuelve a intentarlo."
 
@@ -31506,7 +31506,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "Algo salió mal al preparar esta pegatina. Prueba con otro archivo o inténtalo de nuevo en un momento."
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:124
+#: src/features/messaging/commands/MessageCommands.tsx:125
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "Ha ocurrido un error al publicar. Inténtalo de nuevo en un momento."
 
@@ -31552,7 +31552,7 @@ msgstr "Algo salió mal."
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:18
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
-#: src/features/theme/components/modals/ShareThemeModal.tsx:51
+#: src/features/theme/components/modals/ShareThemeModal.tsx:52
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
@@ -33157,12 +33157,12 @@ msgid "Template"
 msgstr "Plantilla"
 
 #. Label of the textarea in the paste-template-JSON form. "JSON" must not be translated.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:150
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:154
 msgid "Template JSON"
 msgstr "Plantilla JSON"
 
 #. Label of the URL input in the import-template form.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:142
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:146
 msgid "Template URL"
 msgstr "URL de la plantilla"
 
@@ -33191,7 +33191,7 @@ msgid "Temporary invites need a live connection. Check yours and try again."
 msgstr "Las invitaciones temporales requieren una conexión activa. Comprueba la tuya y vuelve a intentarlo."
 
 #. Switch label in the invite link settings. When enabled, members joining via this invite are kicked when they go offline unless given a role.
-#: src/features/invite/components/modals/InviteModal.tsx:129
+#: src/features/invite/components/modals/InviteModal.tsx:132
 msgid "Temporary membership"
 msgstr "Membresía temporal"
 
@@ -33202,7 +33202,7 @@ msgid "Tennessee"
 msgstr "Tennessee"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:64
+#: src/features/devtools/components/NagbarControls.ts:65
 msgid "Terms acceptance nagbar"
 msgstr "Barra de aviso para aceptar las Condiciones del servicio"
 
@@ -33760,7 +33760,7 @@ msgstr "Tema no disponible"
 msgid "Themes"
 msgstr "Temas"
 
-#: src/features/invite/components/modals/InviteModal.tsx:194
+#: src/features/invite/components/modals/InviteModal.tsx:197
 msgid "There are no channels available to create an invite for."
 msgstr "No hay canales disponibles para crear una invitación."
 
@@ -33815,7 +33815,7 @@ msgid "They left the call"
 msgstr "Ha abandonado la llamada"
 
 #. Body of the error modal shown when a DM cannot be opened (blocked or no shared community).
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:20
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:24
 msgid "They might not be accepting messages from you, or you no longer share a community."
 msgstr "Puede que esta persona no acepte mensajes tuyos o que ya no compartáis una comunidad."
 
@@ -34092,7 +34092,7 @@ msgid "This device does not support notifications."
 msgstr "Este dispositivo no es compatible con las notificaciones."
 
 #. Validation error in the paste-template-JSON form when the JSON parses but lacks the expected third-party template fields.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:133
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:137
 msgid "This doesn't look like a valid template response. Make sure you copied the entire JSON document."
 msgstr "Parece que no es una respuesta de plantilla válida. Asegúrate de haber copiado el documento JSON completo."
 
@@ -34170,7 +34170,7 @@ msgid "This gift has been redeemed"
 msgstr "Este regalo ya ha sido canjeado"
 
 #. Title of the error modal shown when a group DM would exceed the maximum number of recipients.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:48
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:52
 msgid "This group has too many people"
 msgstr "Este grupo tiene demasiada gente"
 
@@ -34208,7 +34208,7 @@ msgstr "Esta instancia aún no tiene cuentas. La primera cuenta que crees se con
 msgid "This invite is hidden while sharing is protected."
 msgstr "Esta invitación está oculta mientras está activada la privacidad de la transmisión."
 
-#: src/features/invite/components/modals/InviteModal.tsx:514
+#: src/features/invite/components/modals/InviteModal.tsx:519
 msgid "This invite link never expires."
 msgstr "Este enlace de invitación nunca caduca."
 
@@ -34305,7 +34305,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Este canal de enlaces está marcado para contenido para adultos y puede abrir material que podría ser inapropiado para algunos usuarios."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:158
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:161
 msgid "This link is not available for your account."
 msgstr "Este enlace no está disponible para tu cuenta."
 
@@ -34361,7 +34361,7 @@ msgid "This message has already been deleted."
 msgstr "Este mensaje ya se ha eliminado."
 
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:116
+#: src/features/messaging/commands/MessageCommands.tsx:117
 msgid "This message has already been published"
 msgstr "Este mensaje ya se ha publicado"
 
@@ -34486,7 +34486,7 @@ msgid "This theme is still loading."
 msgstr "Este tema aún se está cargando."
 
 #. Title of the error modal shown when a theme CSS exceeds the maximum shareable size.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:55
+#: src/features/theme/components/modals/ShareThemeModal.tsx:56
 msgid "This theme is too large to share"
 msgstr "Este tema es demasiado grande para compartir"
 
@@ -34528,7 +34528,7 @@ msgid "This user is not available to receive calls right now. They may have call
 msgstr "Este usuario no puede recibir llamadas ahora mismo. Es posible que tenga las llamadas desactivadas."
 
 #. Body of the error modal shown when the recipient of a DM no longer exists.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:28
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:32
 msgid "This user no longer exists. Refresh and try again."
 msgstr "Este usuario ya no existe. Actualiza y vuelve a intentarlo."
 
@@ -35712,7 +35712,7 @@ msgid "Unclaimed account"
 msgstr "Cuenta con registro pendiente"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:32
+#: src/features/devtools/components/NagbarControls.ts:33
 msgid "Unclaimed account nagbar"
 msgstr "Barra de aviso de registro pendiente"
 
@@ -37152,7 +37152,7 @@ msgstr "El usuario cambia de canal"
 
 #. Reason chip in the unaddable recipients alert when the user record is missing.
 #. Title of the error modal shown when the recipient of a DM no longer exists.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:24
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:28
 #: src/features/channel/components/channel_view/DMChannelView.tsx:279
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:11
 msgid "User not found"
@@ -37274,27 +37274,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "Usando {effectiveLabel} hasta que {requestedLabel} esté listo."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:106
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "Usando el estado real de la cuenta"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:126
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "Usando el estado real del inventario de regalos"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:122
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "Usando el estado prémium real"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:130
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "Usando el estado real"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:110
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "Usando el estado de verificación real"
 
@@ -37456,9 +37456,9 @@ msgstr "Verifica que eres tú"
 
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:40
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:80
-#: src/features/channel/utils/CreateDMModalUtils.tsx:51
+#: src/features/channel/utils/CreateDMModalUtils.tsx:52
 #: src/features/moderation/components/report/ReportStepEmail.tsx:43
 msgid "Verify your email"
 msgstr "Verifica tu correo electrónico"
@@ -37543,7 +37543,7 @@ msgid "Verify your email to purchase {premiumProductFullName}."
 msgstr "Verifica tu correo electrónico para comprar {premiumProductFullName}."
 
 #. Blocked-state text shown when an unverified account cannot start a DM or group DM.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:55
+#: src/features/channel/utils/CreateDMModalUtils.tsx:56
 msgid "Verify your email to start DMs."
 msgstr "Verifica tu correo electrónico para iniciar MD."
 
@@ -37791,7 +37791,7 @@ msgid "View call"
 msgstr "Ver llamada"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:124
+#: src/features/voice/components/VoiceCallView.tsx:120
 msgid "View call controls"
 msgstr "Ver controles de llamada"
 
@@ -37987,7 +37987,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary ({premiumProductName} de por vida)"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:60
+#: src/features/devtools/components/NagbarControls.ts:61
 msgid "Visionary 2FA nagbar"
 msgstr "Barra de notificación de 2FA de Visionary"
 
@@ -38243,7 +38243,7 @@ msgid "Voice region"
 msgstr "Región de voz"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:68
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "Barra de notificación de restauración de sesión de voz"
 
@@ -38331,12 +38331,12 @@ msgid "Waiting for passkey…"
 msgstr "Esperando la clave de acceso…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:76
+#: src/features/messaging/components/modals/ForwardModal.tsx:78
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "Esperando a que el modo lento en {forwardChannelDisplayName} expire."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:81
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "Esperando a que el modo lento caduque en uno o más canales seleccionados."
 
@@ -38520,7 +38520,7 @@ msgstr "Hemos enviado un código a {email}."
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Rellenaremos automáticamente {prefillEmail} cuando se abra el inicio de sesión en el navegador."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:89
 msgid "We'd love to give you more than a lifetime of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "Nos encantaría darte más de una vida de {PREMIUM_PRODUCT_NAME}, pero eso rompería el continuo espacio-tiempo. ¿Mejor le envías el regalo a un amigo?"
 
@@ -39178,7 +39178,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "Ya tienes un grupo con estos usuarios. ¿De verdad quieres crear uno nuevo? ¡También está bien!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:27
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Ya tienes {premiumProductName} de por vida"
 
@@ -39326,7 +39326,7 @@ msgid "You can't add expressions there"
 msgstr "No puedes añadir expresiones ahí"
 
 #. Error message in the messaging commands.
-#: src/features/messaging/commands/ReactionCommands.tsx:27
+#: src/features/messaging/commands/ReactionCommands.tsx:28
 msgid "You can't add new reactions while you're timed out."
 msgstr "No puedes añadir reacciones nuevas mientras estés en aislamiento temporal."
 
@@ -39392,7 +39392,7 @@ msgstr "No puedes administrar webhooks en ninguna comunidad. Pide a un administr
 
 #. Reason chip in the unaddable recipients alert when blocked or DMs are not allowed.
 #. Title of the error modal shown when a DM cannot be opened (blocked or no shared community).
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:16
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:20
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:15
 msgid "You can't message this user"
 msgstr "No puedes enviar mensajes a este usuario"
@@ -39521,7 +39521,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Cambiaste tu etiqueta mientras usabas {PREMIUM_PRODUCT_NAME}. Se volverá a generar aleatoriamente cuando caduque tu {PREMIUM_PRODUCT_NAME}, a menos que se renueve."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
 msgid "You do not have access to the channel where this message was sent."
 msgstr "No tienes acceso al canal donde se envió este mensaje."
 
@@ -39618,12 +39618,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Acabas de pulsar Tab. El modo de teclado está activado para que puedas navegar por {productName} sin ratón."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:245
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Conservarás tus ventajas hasta la próxima fecha de renovación. Reactiva tu suscripción antes de esa fecha para mantener tu historial de suscriptor."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:266
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Perderás todas las ventajas de {PREMIUM_PRODUCT_NAME} inmediatamente y tu historial de suscripción se restablecerá. Esto no se puede deshacer."
 
@@ -39709,7 +39709,7 @@ msgid "You need to claim your account before you can create a community."
 msgstr "Debes completar el registro de tu cuenta antes de poder crear una comunidad."
 
 #. Body of the error modal shown when an unclaimed account tries to start a DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:36
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:40
 msgid "You need to claim your account before you can start a direct message."
 msgstr "Debes completar el registro de tu cuenta antes de poder iniciar una conversación por mensaje directo."
 
@@ -39731,7 +39731,7 @@ msgid "You need to verify your email address before you can send friend requests
 msgstr "Tienes que verificar tu dirección de correo electrónico antes de poder enviar solicitudes de amistad."
 
 #. Body of the error modal shown when an unverified account tries to start a DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:44
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:48
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "Debes verificar tu dirección de correo electrónico antes de poder iniciar un mensaje directo."
 
@@ -39745,7 +39745,7 @@ msgid "You need to verify your email to send messages in this community."
 msgstr "Tienes que verificar tu correo electrónico para enviar mensajes en esta comunidad."
 
 #. Body of the error modal shown when the user or a recipient has too many open group DMs.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:60
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:64
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "Tú o alguien a quien estás añadiendo ya tiene el número máximo de MD de grupo abiertos. Sal de uno e inténtalo de nuevo."
 
@@ -39888,7 +39888,7 @@ msgstr "Estás editando mensajes demasiado rápido"
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:56
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:77
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:149
-#: src/features/theme/components/modals/ShareThemeModal.tsx:63
+#: src/features/theme/components/modals/ShareThemeModal.tsx:64
 msgid "You're going too fast"
 msgstr "Vas demasiado rápido"
 
@@ -39951,7 +39951,7 @@ msgid "You're viewing older messages"
 msgstr "Estás viendo mensajes antiguos"
 
 #. Body of the error modal shown when a group DM would exceed the maximum number of recipients.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:52
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:56
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "Has añadido más personas de las permitidas en un MD de grupo. Elimina a algunas y vuelve a intentarlo."
 
@@ -40003,7 +40003,7 @@ msgid "You've reached the favorite GIF limit."
 msgstr "Has alcanzado el límite de GIF favoritos."
 
 #. Title of the error modal shown when the user or a recipient has too many open group DMs.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:56
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:60
 msgid "You've reached the group DM limit"
 msgstr "Has alcanzado el límite de MD de grupo"
 
@@ -40118,7 +40118,7 @@ msgid "Your card is eligible. Redirecting you to the payment page now."
 msgstr "Tu tarjeta cumple los requisitos. Te estamos redirigiendo a la página de pago."
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:103
+#: src/features/messaging/commands/MessageCommands.tsx:104
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "Tus cambios llegarán a todas las comunidades que siguen este canal y pueden tardar un minuto. Cada mensaje publicado permite 3 ediciones rápidas, y luego 1 cada 20 minutos."
 
@@ -40236,22 +40236,22 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Tu última compra está fuera del plazo de reembolso. Contacta con soporte si tienes problemas de facturación."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:72
+#: src/features/messaging/state/MessageQueue.tsx:74
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Tu mensaje no se pudo entregar porque fue marcado por nuestros sistemas de seguridad. Si crees que es un error, contacta con soporte."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:59
+#: src/features/messaging/state/MessageQueue.tsx:61
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "No se ha podido entregar tu mensaje. Esto suele ocurrir porque no compartes una comunidad con el destinatario o porque el destinatario solo acepta mensajes directos de amigos. Puede que también tengas que ajustar tu propia configuración de privacidad de mensajes directos en {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:64
+#: src/features/messaging/state/MessageQueue.tsx:66
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "No se ha podido entregar tu mensaje. Debes completar el registro de tu cuenta para enviar mensajes directos."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:68
+#: src/features/messaging/state/MessageQueue.tsx:70
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "No se ha podido entregar tu mensaje. Debes completar el registro de tu cuenta para enviar mensajes."
 
@@ -40409,7 +40409,7 @@ msgid "Your subscription will switch to yearly billing at the next renewal."
 msgstr "Tu suscripción cambiará a facturación anual en la próxima renovación."
 
 #. Body of the error modal shown when a theme CSS exceeds the maximum shareable size.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:59
+#: src/features/theme/components/modals/ShareThemeModal.tsx:60
 msgid "Your theme CSS is too large to share. Trim it down and try again."
 msgstr "El CSS de tu tema es demasiado grande para compartirlo. Recórtalo y vuelve a intentarlo."
 

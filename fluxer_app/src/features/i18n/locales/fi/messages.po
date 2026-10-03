@@ -21,7 +21,7 @@ msgstr "...otat tiiviin tilan käyttöön. Hienoa!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
-#: src/features/channel/components/MessageAttachments.tsx:390
+#: src/features/channel/components/MessageAttachments.tsx:361
 #: src/features/channel/components/UserMessage.tsx:75
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
@@ -993,7 +993,7 @@ msgstr "{count, plural, one {# kanava seuraa} other {# kanavaa seuraa}} tämän 
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# yhteisö löytyi} other {# yhteisöä löytyi}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1954
+#: src/features/app/components/layout/GuildsLayout.tsx:1955
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# yhteisö on tilapäisesti pois käytöstä toimintahäiriön vuoksi.} other {# yhteisöä on tilapäisesti pois käytöstä toimintahäiriön vuoksi.}}"
 
@@ -1041,7 +1041,7 @@ msgstr "{count, plural, one {# yhteinen yhteisö} other {# yhteistä yhteisöä}
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# muu} other {# muuta}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:507
+#: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# osallistuja puhelussa} other {# osallistujaa puhelussa}}"
 
@@ -1237,7 +1237,7 @@ msgid "{days, plural, one {Created by {creatorDisplayName}. Expires in # day.} o
 msgstr "{days, plural, one {Luoja: {creatorDisplayName}. Vanhenee # päivän kuluttua.} other {Luoja: {creatorDisplayName}. Vanhenee # päivän kuluttua.}}"
 
 #. Text under a generated invite link. {days} is how long the link stays valid, in whole days.
-#: src/features/invite/components/modals/InviteModal.tsx:164
+#: src/features/invite/components/modals/InviteModal.tsx:167
 msgid "{days, plural, one {Your invite link expires in # day.} other {Your invite link expires in # days.}}"
 msgstr "{days, plural, one {Kutsulinkkisi vanhenee # päivän kuluttua.} other {Kutsulinkkisi vanhenee # päivän kuluttua.}}"
 
@@ -1441,7 +1441,7 @@ msgid "{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {
 msgstr "{hours, plural, one {# tunti} other {# tuntia}} ja {minutes, plural, one {# minuutti} other {# minuuttia}}"
 
 #. Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.
-#: src/features/invite/components/modals/InviteModal.tsx:160
+#: src/features/invite/components/modals/InviteModal.tsx:163
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
 msgstr "{hours, plural, one {Kutsulinkkisi vanhenee # tunnin kuluttua.} other {Kutsulinkkisi vanhenee # tunnin kuluttua.}}"
 
@@ -1556,7 +1556,7 @@ msgid "{minutes, plural, one {# minute} other {# minutes}} and {seconds, plural,
 msgstr "{minutes, plural, one {# minuutti} other {# minuuttia}} ja {seconds, plural, one {# sekunti} other {# sekuntia}}"
 
 #. Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.
-#: src/features/invite/components/modals/InviteModal.tsx:155
+#: src/features/invite/components/modals/InviteModal.tsx:158
 msgid "{minutes, plural, one {Your invite link expires in # minute.} other {Your invite link expires in # minutes.}}"
 msgstr "{minutes, plural, one {Kutsulinkkisi vanhenee # minuutin kuluttua.} other {Kutsulinkkisi vanhenee # minuutin kuluttua.}}"
 
@@ -1967,7 +1967,7 @@ msgid "{seconds, plural, one {# second} other {# seconds}}"
 msgstr "{seconds, plural, one {# sekunti} other {# sekuntia}}"
 
 #. Text under a generated invite link. {seconds} is how long the link stays valid, in whole seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:150
+#: src/features/invite/components/modals/InviteModal.tsx:153
 msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your invite link expires in # seconds.}}"
 msgstr "{seconds, plural, one {Kutsulinkkisi vanhenee # sekunnin kuluttua.} other {Kutsulinkkisi vanhenee # sekunnin kuluttua.}}"
 
@@ -2215,8 +2215,8 @@ msgstr "<0>{username}</0> on edelleen ryhmässä. Yritä uudelleen hetken kulutt
 
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.
-#: src/features/channel/components/MessageAttachments.tsx:241
-#: src/features/channel/components/MessageAttachments.tsx:297
+#: src/features/channel/components/MessageAttachments.tsx:212
+#: src/features/channel/components/MessageAttachments.tsx:268
 msgid "<0>Forwarded from</0>{sourceInfo}"
 msgstr "<0>Välitetty kohteesta</0>{sourceInfo}"
 
@@ -2270,7 +2270,7 @@ msgid "1 result available"
 msgstr "1 tulos saatavilla"
 
 #. Invite max-uses dropdown option for exactly one use.
-#: src/features/invite/components/modals/InviteModal.tsx:60
+#: src/features/invite/components/modals/InviteModal.tsx:63
 msgid "1 use"
 msgstr "1 käyttökerta"
 
@@ -2315,12 +2315,12 @@ msgid "10 minutes"
 msgstr "10 minuuttia"
 
 #. Invite max-uses dropdown option for ten uses.
-#: src/features/invite/components/modals/InviteModal.tsx:68
+#: src/features/invite/components/modals/InviteModal.tsx:71
 msgid "10 uses"
 msgstr "10 käyttökertaa"
 
 #. Invite max-uses dropdown option for 100 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:80
+#: src/features/invite/components/modals/InviteModal.tsx:83
 msgid "100 uses"
 msgstr "100 käyttökertaa"
 
@@ -2368,7 +2368,7 @@ msgid "2 members (typing)"
 msgstr "2 jäsentä (kirjoittaa)"
 
 #. Ban duration option in the destructive ban-member modal for a two-week temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:51
+#: src/features/moderation/components/modals/BanMemberModal.tsx:50
 msgid "2 weeks"
 msgstr "2 viikkoa"
 
@@ -2383,7 +2383,7 @@ msgid "24-hour"
 msgstr "24 tunnin kello"
 
 #. Invite max-uses dropdown option for 25 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:72
+#: src/features/invite/components/modals/InviteModal.tsx:75
 msgid "25 uses"
 msgstr "25 käyttökertaa"
 
@@ -2404,7 +2404,7 @@ msgid "2FA requirement"
 msgstr "2FA-vaatimus"
 
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:43
+#: src/features/moderation/components/modals/BanMemberModal.tsx:42
 msgid "3 days"
 msgstr "3 päivää"
 
@@ -2439,7 +2439,7 @@ msgid "40px, 3 members"
 msgstr "40 px, 3 jäsentä"
 
 #. Ban duration option in the destructive ban-member modal for a five-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:47
+#: src/features/moderation/components/modals/BanMemberModal.tsx:46
 msgid "5 days"
 msgstr "5 päivää"
 
@@ -2449,12 +2449,12 @@ msgid "5 minutes"
 msgstr "5 minuuttia"
 
 #. Invite max-uses dropdown option for five uses.
-#: src/features/invite/components/modals/InviteModal.tsx:64
+#: src/features/invite/components/modals/InviteModal.tsx:67
 msgid "5 uses"
 msgstr "5 käyttökertaa"
 
 #. Invite max-uses dropdown option for 50 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:76
+#: src/features/invite/components/modals/InviteModal.tsx:79
 msgid "50 uses"
 msgstr "50 käyttökertaa"
 
@@ -2803,7 +2803,7 @@ msgid "Account too new"
 msgstr "Tili on liian uusi"
 
 #. Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.
-#: src/features/invite/commands/InviteCommands.tsx:35
+#: src/features/invite/commands/InviteCommands.tsx:36
 msgid "Account verification required"
 msgstr "Tili vaatii vahvistuksen"
 
@@ -2997,12 +2997,12 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "Lisätä botin yhteisöön pyydetyillä käyttöoikeuksilla"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:98
+#: src/features/messaging/components/modals/ForwardModal.tsx:100
 msgid "Add a comment (optional)"
 msgstr "Lisää kommentti (valinnainen)"
 
 #. Landing-view title of the add community modal. Top-level entry point with options to create, join, or import.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:89
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:93
 msgid "Add a community"
 msgstr "Lisää yhteisö"
 
@@ -3082,7 +3082,7 @@ msgid "Add an account to continue."
 msgstr "Lisää tili jatkaaksesi."
 
 #. Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.
-#: src/features/invite/commands/InviteCommands.tsx:40
+#: src/features/invite/commands/InviteCommands.tsx:41
 msgid "Add an email and password to your account first."
 msgstr "Lisää ensin sähköpostiosoite ja salasana tilillesi."
 
@@ -3911,7 +3911,7 @@ msgid "Already set to cancel"
 msgstr "Peruutus on jo ajoitettu"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:88
+#: src/features/messaging/commands/MessageCommands.tsx:89
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Ilmoita tämä viesti myös {productName}-turvatiimille"
 
@@ -4150,7 +4150,7 @@ msgid "Animated icons are not supported"
 msgstr "Animoituja kuvakkeita ei tueta"
 
 #. Validation error in the create-community form when the user picks an animated image.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:112
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:116
 msgid "Animated icons are not supported when creating a new community. Use a static image."
 msgstr "Uutta yhteisöä luotaessa ei tueta animoituja kuvakkeita. Käytä staattista kuvaa."
 
@@ -4332,17 +4332,17 @@ msgid "Any uploaded attachment"
 msgstr "Mikä tahansa lähetetty liite"
 
 #. Helper text under the custom ban duration input. Both placeholders are integer numbers of seconds bounding the allowed range.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:73
+#: src/features/moderation/components/modals/BanMemberModal.tsx:72
 msgid "Any value from {minTempBanDurationSeconds} to {maxTempBanDurationSeconds} seconds."
 msgstr "Mikä tahansa arvo väliltä {minTempBanDurationSeconds}–{maxTempBanDurationSeconds} sekuntia."
 
 #. Helper text under the custom invite expiration input. {maxInviteAgeSeconds} is the platform max in seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:111
+#: src/features/invite/components/modals/InviteModal.tsx:114
 msgid "Any value from 0 to {maxInviteAgeSeconds} seconds. 0 means never expires."
 msgstr "Mikä tahansa arvo väliltä 0–{maxInviteAgeSeconds} sekuntia. 0 tarkoittaa, ettei vanhene koskaan."
 
 #. Helper text under the custom invite max-uses input. {maxInviteUses} is the platform max number of uses per invite.
-#: src/features/invite/components/modals/InviteModal.tsx:124
+#: src/features/invite/components/modals/InviteModal.tsx:127
 msgid "Any value from 0 to {maxInviteUses}. 0 means no limit."
 msgstr "Mikä tahansa arvo väliltä 0–{maxInviteUses}. 0 tarkoittaa, ettei rajoitusta ole."
 
@@ -4938,7 +4938,7 @@ msgid "Audio settings"
 msgstr "Ääniasetukset"
 
 #. Toggle / summary row label in the Linux audio source picker. {summaryLabel} is one of the audio-source summary labels.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:45
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:47
 msgid "Audio sources: {summaryLabel}"
 msgstr "Äänilähteet: {summaryLabel}"
 
@@ -5399,7 +5399,7 @@ msgid "Back to sticker"
 msgstr "Takaisin tarraan"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:115
+#: src/features/voice/components/VoiceCallView.tsx:111
 msgid "Back to voice channel"
 msgstr "Takaisin äänikanavalle"
 
@@ -5502,7 +5502,7 @@ msgid "Ban"
 msgstr "Anna porttikielto"
 
 #. Title of the destructive ban-member modal. {tag} is the target user tag (username#tag). Destructive moderation action; keep tone direct.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:55
+#: src/features/moderation/components/modals/BanMemberModal.tsx:54
 msgid "Ban {tag}"
 msgstr "Anna porttikielto käyttäjälle {tag}"
 
@@ -5517,14 +5517,14 @@ msgid "Ban details"
 msgstr "Porttikiellon tiedot"
 
 #. Label above the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:60
+#: src/features/moderation/components/modals/BanMemberModal.tsx:59
 msgid "Ban duration"
 msgstr "Porttikiellon kesto"
 
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:270
+#: src/features/moderation/components/modals/BanMemberModal.tsx:274
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:124
@@ -5992,7 +5992,7 @@ msgid "Bot invite (no external redirect)"
 msgstr "Bottikutsu (ei ulkoista uudelleenohjausta)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:162
+#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:163
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:104
 msgid "Bot permissions"
 msgstr "Botin käyttöoikeudet"
@@ -6549,14 +6549,14 @@ msgstr "Tiedostoja ei voi lähettää tähän"
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:145
-#: src/features/invite/components/modals/InviteModal.tsx:552
+#: src/features/invite/components/modals/InviteModal.tsx:557
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:597
+#: src/features/messaging/components/modals/ForwardModal.tsx:603
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
-#: src/features/moderation/components/modals/BanMemberModal.tsx:262
+#: src/features/moderation/components/modals/BanMemberModal.tsx:266
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:173
@@ -6619,13 +6619,13 @@ msgstr "Peruuta ajoitettu vaihto"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:915
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Peruuta tilaus"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
 msgid "Cancel subscription?"
 msgstr "Peruuta tilaus?"
 
@@ -6674,7 +6674,7 @@ msgid "Cannot delete account"
 msgstr "Tiliä ei voi poistaa"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:50
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:52
 msgid "Capture"
 msgstr "Kaappaa"
 
@@ -7229,7 +7229,7 @@ msgid "Channel access"
 msgstr "Kanavan käyttöoikeus"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
 msgid "Channel access denied"
 msgstr "Kanavan käyttö estetty"
 
@@ -7294,7 +7294,7 @@ msgstr "Kanavan tunnus kopioitu leikepöydälle"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "kanavalinkki"
@@ -7472,7 +7472,7 @@ msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for st
 msgstr "Tilannepäivitykset löydät täältä: <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0>."
 
 #. Description text in the share theme modal.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:35
+#: src/features/theme/components/modals/ShareThemeModal.tsx:36
 msgid "Check out my custom theme!"
 msgstr "Katso mukautettu teemani!"
 
@@ -7677,7 +7677,7 @@ msgid "Choose File, then Add to Dock."
 msgstr "Valitse Arkisto ja sitten Lisää Dockiin."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:39
+#: src/features/channel/utils/CreateDMModalUtils.tsx:40
 msgid "Choose friends to message."
 msgstr "Valitse kaverit, joille lähetät viestin."
 
@@ -7861,10 +7861,10 @@ msgstr "Lunasta lahja"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Title of the error modal shown when an unclaimed account tries to start a DM.
 #. Title shown when an unclaimed account cannot start a DM or group DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:32
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:36
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:63
-#: src/features/channel/utils/CreateDMModalUtils.tsx:43
+#: src/features/channel/utils/CreateDMModalUtils.tsx:44
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:441
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:343
@@ -7953,7 +7953,7 @@ msgid "Claim your account to send friend requests."
 msgstr "Viimeistele tilisi rekisteröinti, jotta voit lähettää kaveripyyntöjä."
 
 #. Blocked-state text shown when an unclaimed account cannot start a DM or group DM.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:47
+#: src/features/channel/utils/CreateDMModalUtils.tsx:48
 msgid "Claim your account to start DMs."
 msgstr "Viimeistele tilisi rekisteröinti, jotta voit aloittaa yksityisviestit."
 
@@ -8593,17 +8593,17 @@ msgid "Commands"
 msgstr "Komennot"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:70
+#: src/features/messaging/components/modals/ForwardModal.tsx:72
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "Kommentointi on poistettu käytöstä, koska yhdellä tai useammalla valitulla kanavalla on hidas tila päällä. Hidas tila estäisi kommentin heti edelleenlähetyksen jälkeen."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:64
+#: src/features/messaging/components/modals/ForwardModal.tsx:66
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "Kommentointi on poistettu käytöstä, koska kanavalla {forwardChannelDisplayName} on hidas tila päällä. Hidas tila estäisi kommentin heti edelleenlähetyksen jälkeen."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:94
+#: src/features/messaging/components/modals/ForwardModal.tsx:96
 msgid "Comments are unavailable while slowmode is on."
 msgstr "Kommentit eivät ole käytettävissä, kun hidas tila on päällä."
 
@@ -8763,7 +8763,7 @@ msgid "Community members"
 msgstr "Yhteisön jäsenet"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the community-membership CTA banner.
-#: src/features/devtools/components/NagbarControls.ts:12
+#: src/features/devtools/components/NagbarControls.ts:13
 msgid "Community membership CTA nagbar"
 msgstr "Yhteisön jäsenyyden toimintakehotteen ilmoituspalkki"
 
@@ -8773,7 +8773,7 @@ msgid "Community message notifications"
 msgstr "Yhteisön viesti-ilmoitukset"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "Yhteisön MFA-vaatimuksen ilmoituspalkki"
 
@@ -8785,7 +8785,7 @@ msgstr "Mykistä mikrofoni yhteisössä"
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:199
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:120
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:124
 msgid "Community name"
 msgstr "Yhteisön nimi"
 
@@ -9167,7 +9167,7 @@ msgstr "Connecticut"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:94
+#: src/features/voice/components/VoiceCallView.tsx:90
 msgid "Connecting..."
 msgstr "Yhdistetään..."
 
@@ -9223,12 +9223,12 @@ msgid "Connection lost. Reconnecting…"
 msgstr "Yhteys katkesi. Yhdistetään uudelleen…"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:47
+#: src/features/connection/commands/ConnectionCommands.ts:48
 msgid "Connection removed"
 msgstr "Yhteys poistettu"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:119
+#: src/features/voice/components/VoiceCallView.tsx:115
 msgid "Connection stats"
 msgstr "Yhteystilastot"
 
@@ -9238,12 +9238,12 @@ msgid "Connection type"
 msgstr "Yhteyden tyyppi"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:43
+#: src/features/connection/commands/ConnectionCommands.ts:44
 msgid "Connection updated"
 msgstr "Yhteys päivitetty"
 
 #. Success toast after an account connection is verified.
-#: src/features/connection/commands/ConnectionCommands.ts:35
+#: src/features/connection/commands/ConnectionCommands.ts:36
 msgid "Connection verified"
 msgstr "Yhteys varmistettu"
 
@@ -9279,7 +9279,7 @@ msgid "Connections"
 msgstr "Yhteydet"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:51
+#: src/features/connection/commands/ConnectionCommands.ts:52
 msgid "Connections reordered"
 msgstr "Yhteydet järjestetty uudelleen"
 
@@ -9526,7 +9526,7 @@ msgstr "URL-osoite kopioitu leikepöydälle"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
-#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:228
+#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:230
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:59
 msgid "Copy"
 msgstr "Kopioi"
@@ -9854,7 +9854,7 @@ msgid "Copying image..."
 msgstr "Kopioidaan kuvaa..."
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the corrupted-installation banner.
-#: src/features/devtools/components/NagbarControls.ts:17
+#: src/features/devtools/components/NagbarControls.ts:18
 msgid "Corrupted installation nagbar"
 msgstr "Ilmoitus vioittuneesta asennuksesta"
 
@@ -9988,7 +9988,7 @@ msgid "Couldn't copy gift URL"
 msgstr "Lahjan URL-osoitetta ei voitu kopioida"
 
 #. Title of the generic fallback error modal shown when generating a shareable theme link fails.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:47
+#: src/features/theme/components/modals/ShareThemeModal.tsx:48
 msgid "Couldn't create a theme link"
 msgstr "Teemalinkin luominen epäonnistui"
 
@@ -10167,7 +10167,7 @@ msgid "Couldn't process image"
 msgstr "Kuvan käsittely epäonnistui"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:120
+#: src/features/messaging/commands/MessageCommands.tsx:121
 msgid "Couldn't publish this message"
 msgstr "Tämän viestin julkaiseminen epäonnistui"
 
@@ -10299,7 +10299,7 @@ msgid "Couldn't send the verification email"
 msgstr "Vahvistussähköpostin lähetys epäonnistui"
 
 #. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/connection/commands/ConnectionCommands.ts:30
+#: src/features/connection/commands/ConnectionCommands.ts:31
 msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Kohteen {blueskyProviderName} valtuutusta ei voitu aloittaa"
 
@@ -10309,7 +10309,7 @@ msgid "Couldn't start checkout"
 msgstr "Kassan avaaminen epäonnistui"
 
 #. Toast error shown when creating a new account connection fails.
-#: src/features/connection/commands/ConnectionCommands.ts:26
+#: src/features/connection/commands/ConnectionCommands.ts:27
 msgid "Couldn't start the connection"
 msgstr "Yhteyden luominen epäonnistui"
 
@@ -10319,7 +10319,7 @@ msgid "Couldn't start the desktop update"
 msgstr "Työpöytäsovelluksen päivitystä ei voitu aloittaa"
 
 #. Title of the generic fallback error modal shown when opening or creating a DM fails.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:64
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:68
 msgid "Couldn't start this conversation"
 msgstr "Keskustelun aloittaminen epäonnistui"
 
@@ -10424,7 +10424,7 @@ msgid "Couldn't verify that code. Try again."
 msgstr "Koodin vahvistaminen epäonnistui. Yritä uudelleen."
 
 #. Toast error shown when verifying an account connection fails.
-#: src/features/connection/commands/ConnectionCommands.ts:39
+#: src/features/connection/commands/ConnectionCommands.ts:40
 msgid "Couldn't verify the connection"
 msgstr "Yhteyden vahvistaminen epäonnistui"
 
@@ -10469,7 +10469,7 @@ msgid "Create & share"
 msgstr "Luo ja jaa"
 
 #. Action button label in the add community modal. Starts the create-community flow.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:94
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:98
 msgid "Create a community"
 msgstr "Luo yhteisö"
 
@@ -10541,14 +10541,14 @@ msgid "Create community"
 msgstr "Luo yhteisö"
 
 #. Accessible label for the create-community form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:116
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:120
 msgid "Create community form"
 msgstr "Luo yhteisö -lomake"
 
 #. Accessible label for the create-DM trigger in the DM list header.
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:97
-#: src/features/channel/utils/CreateDMModalUtils.tsx:35
+#: src/features/channel/utils/CreateDMModalUtils.tsx:36
 msgid "Create DM"
 msgstr "Luo yksityisviesti"
 
@@ -10563,14 +10563,14 @@ msgid "Create favorite category form"
 msgstr "Luo suosikkikategoria -lomake"
 
 #. Accessible label for the create-from-template form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:158
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:162
 msgid "Create from template form"
 msgstr "Luo mallista -lomake"
 
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
 #. Tooltip on the channel header plus button when viewing a one-on-one DM. Starts the create group DM flow with the current recipient.
 #: src/features/channel/components/channel_header/shared.ts:51
-#: src/features/channel/utils/CreateDMModalUtils.tsx:31
+#: src/features/channel/utils/CreateDMModalUtils.tsx:32
 msgid "Create group DM"
 msgstr "Luo ryhmäkeskustelu"
 
@@ -10593,7 +10593,7 @@ msgstr "Luo uusi tili"
 msgid "Create new group"
 msgstr "Luo uusi ryhmä"
 
-#: src/features/invite/components/modals/InviteModal.tsx:555
+#: src/features/invite/components/modals/InviteModal.tsx:560
 msgid "Create new link"
 msgstr "Luo uusi linkki"
 
@@ -10811,12 +10811,12 @@ msgid "Current uses:"
 msgstr "Nykyiset käyttökerrat:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:114
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "Tällä hetkellä suljettu"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:118
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "Tällä hetkellä näkyvissä"
 
@@ -10853,7 +10853,7 @@ msgid "Custom"
 msgstr "Mukautettu"
 
 #. Label of the numeric input shown after choosing "Custom..." in the ban duration dropdown. The unit is seconds.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:68
+#: src/features/moderation/components/modals/BanMemberModal.tsx:67
 msgid "Custom ban duration (seconds)"
 msgstr "Mukautettu porttikiellon kesto (sekunteina)"
 
@@ -10889,7 +10889,7 @@ msgid "Custom entrance sounds with {premiumProductName}"
 msgstr "Mukautetut sisääntuloäänet {premiumProductName}-tilauksella"
 
 #. Label of the numeric input shown after choosing "Custom..." in the invite expiration dropdown. The unit is seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:106
+#: src/features/invite/components/modals/InviteModal.tsx:109
 msgid "Custom expiration (seconds)"
 msgstr "Mukautettu vanhenemisaika (sekunteina)"
 
@@ -10898,7 +10898,7 @@ msgid "Custom hoist order"
 msgstr "Mukautettu nostojärjestys"
 
 #. Label of the numeric input shown after choosing "Custom..." in the invite max-uses dropdown.
-#: src/features/invite/components/modals/InviteModal.tsx:120
+#: src/features/invite/components/modals/InviteModal.tsx:123
 msgid "Custom max uses"
 msgstr "Mukautettu käyttökertojen enimmäismäärä"
 
@@ -11506,7 +11506,7 @@ msgstr "Delaware"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:84
+#: src/features/messaging/commands/MessageCommands.tsx:85
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
@@ -11652,8 +11652,8 @@ msgid "Delete message"
 msgstr "Poista viesti"
 
 #. Section heading and accessible label for the message-history-deletion radio group in the destructive ban-member modal. Destructive option group.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:78
-#: src/features/moderation/components/modals/BanMemberModal.tsx:229
+#: src/features/moderation/components/modals/BanMemberModal.tsx:77
+#: src/features/moderation/components/modals/BanMemberModal.tsx:233
 msgid "Delete message history"
 msgstr "Poista viestihistoria"
 
@@ -11755,12 +11755,12 @@ msgid "Delete this message"
 msgstr "Poista tämä viesti"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:80
+#: src/features/messaging/commands/MessageCommands.tsx:81
 msgid "Delete this message? Can't be undone."
 msgstr "Poistetaanko tämä viesti? Toimintoa ei voi kumota."
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:93
+#: src/features/messaging/commands/MessageCommands.tsx:94
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "Poistetaanko tämä viesti? Tätä ei voi peruuttaa. Viesti poistetaan myös jokaisesta yhteisöstä, joka seuraa tätä kanavaa."
 
@@ -11977,7 +11977,7 @@ msgid "Desktop device"
 msgstr "Työpöytälaite"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the desktop-download banner.
-#: src/features/devtools/components/NagbarControls.ts:7
+#: src/features/devtools/components/NagbarControls.ts:8
 msgid "Desktop download nagbar"
 msgstr "Työpöytäversion latauksen ilmoituspalkki"
 
@@ -11987,7 +11987,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "Työpöytäsovelluksen käyttämättömyysaika ennen mobiili-ilmoitusta"
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:40
+#: src/features/devtools/components/NagbarControls.ts:41
 msgid "Desktop notification nagbar"
 msgstr "Työpöytäilmoitusten ilmoituspalkki"
 
@@ -12102,13 +12102,13 @@ msgstr "Kehittäjän tila"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:149
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Kehittäjän työkalut"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:150
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:153
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Kehittäjän työkalut ovat käytettävissä kanavan otsikon henkilöstömerkistä."
 
@@ -12505,7 +12505,7 @@ msgstr "Katkaise socket-yhteys"
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:103
+#: src/features/voice/components/VoiceCallView.tsx:99
 msgid "Disconnected"
 msgstr "Yhteys katkaistu"
 
@@ -12822,7 +12822,7 @@ msgid "Domain"
 msgstr "Verkkotunnus"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "Verkkotunnuksen siirron ilmoituspalkki"
 
@@ -13344,8 +13344,8 @@ msgstr "Muokkaa ryhmän tietoja"
 msgid "Edit group form"
 msgstr "Ryhmän muokkauslomake"
 
-#: src/features/invite/components/modals/InviteModal.tsx:523
-#: src/features/invite/components/modals/InviteModal.tsx:538
+#: src/features/invite/components/modals/InviteModal.tsx:528
+#: src/features/invite/components/modals/InviteModal.tsx:543
 msgid "Edit invite link"
 msgstr "Muokkaa kutsulinkkiä"
 
@@ -13397,7 +13397,7 @@ msgid "Edit profile local time"
 msgstr "Muokkaa profiilin paikallista aikaa"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:99
+#: src/features/messaging/commands/MessageCommands.tsx:100
 msgid "Edit published message?"
 msgstr "Muokataanko julkaistua viestiä?"
 
@@ -13548,7 +13548,7 @@ msgid "Email unavailable"
 msgstr "Sähköposti ei ole saatavilla"
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:36
+#: src/features/devtools/components/NagbarControls.ts:37
 msgid "Email verification nagbar"
 msgstr "Sähköpostivahvistuksen ilmoituspalkki"
 
@@ -14080,12 +14080,12 @@ msgid "End grace now"
 msgstr "Lopeta armonaika nyt"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
 msgid "End grace period"
 msgstr "Lopeta armonaika"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 msgid "End grace period now?"
 msgstr "Päätetäänkö armonaika nyt?"
 
@@ -14170,7 +14170,7 @@ msgid "Enter a product name between 1 and 80 characters."
 msgstr "Anna tuotteelle nimi, jonka pituus on 1–80 merkkiä."
 
 #. Placeholder in the optional reason input in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:88
+#: src/features/moderation/components/modals/BanMemberModal.tsx:87
 msgid "Enter a reason for the ban"
 msgstr "Anna syy porttikiellolle"
 
@@ -14180,7 +14180,7 @@ msgid "Enter a secure password"
 msgstr "Anna turvallinen salasana"
 
 #. Validation error in the import-template form when the entered URL or code is malformed. {theOtherPlatform} is a third-party product name placeholder.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:124
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:128
 msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "Anna kelvollinen {theOtherPlatform}-mallin URL-osoite tai koodi."
 
@@ -14204,7 +14204,7 @@ msgstr "Anna kelvollinen käyttäjänimi ({exampleFluxerTagFull})."
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:111
+#: src/features/voice/components/VoiceCallView.tsx:107
 msgid "Enter fullscreen"
 msgstr "Siirry koko näyttöön"
 
@@ -14347,7 +14347,7 @@ msgstr "Koko näyttö"
 msgid "Entire system"
 msgstr "Koko järjestelmä"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:260
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:257
 msgid "Entire system audio"
 msgstr "Koko järjestelmän ääni"
 
@@ -14525,7 +14525,7 @@ msgid "exclude a user"
 msgstr "sulje pois käyttäjä"
 
 #. Section header in the Linux audio source picker for apps excluded from the system mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:59
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:61
 msgid "Exclude from system"
 msgstr "Jätä pois järjestelmästä"
 
@@ -14546,7 +14546,7 @@ msgstr "Poistu"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:107
+#: src/features/voice/components/VoiceCallView.tsx:103
 msgid "Exit fullscreen"
 msgstr "Poistu koko näytöstä"
 
@@ -14624,7 +14624,7 @@ msgid "Expiration curve"
 msgstr "Vanhenemiskäyrä"
 
 #. Label above the expiration duration dropdown in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:102
+#: src/features/invite/components/modals/InviteModal.tsx:105
 msgid "Expire after"
 msgstr "Vanhenemisaika"
 
@@ -14839,7 +14839,7 @@ msgid "Failed to complete SSO sign-in"
 msgstr "SSO-kirjautuminen epäonnistui"
 
 #. Error message in the add friends to group modal utils helper.
-#: src/features/channel/utils/AddFriendsToGroupModalUtils.ts:21
+#: src/features/channel/utils/AddFriendsToGroupModalUtils.ts:22
 msgid "Failed to copy invite link"
 msgstr "Kutsulinkin kopiointi epäonnistui"
 
@@ -15687,12 +15687,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Vahvista turvallisuussyistä henkilöllisyytesi, jotta voit jatkaa."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:102
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "Pakotettu pois käytöstä"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:98
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "Pakotettu käyttöön"
 
@@ -15840,11 +15840,11 @@ msgstr "Välitä media"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:33
-#: src/features/messaging/components/modals/ForwardModal.tsx:85
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 msgid "Forward message"
 msgstr "Välitä viesti"
 
-#: src/features/channel/components/MessageAttachments.tsx:360
+#: src/features/channel/components/MessageAttachments.tsx:331
 msgid "Forwarded"
 msgstr "Välitetty"
 
@@ -16437,7 +16437,7 @@ msgstr "Lahjakoodi vaaditaan"
 msgid "Gift code is too long"
 msgstr "Lahjakoodi on liian pitkä"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:141
 msgid "Gift code:"
 msgstr "Lahjakoodi:"
 
@@ -16466,7 +16466,7 @@ msgid "Gift inventory flow"
 msgstr "Lahjavaraston kulku"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:56
+#: src/features/devtools/components/NagbarControls.ts:57
 msgid "Gift inventory nagbar"
 msgstr "Lahjavaraston ilmoituspalkki"
 
@@ -16477,7 +16477,7 @@ msgstr "Lahjan pituus"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:35
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "Lahjalinkki"
@@ -17488,7 +17488,7 @@ msgid "How about:"
 msgstr "Entä tämä:"
 
 #. Helper text under the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:64
+#: src/features/moderation/components/modals/BanMemberModal.tsx:63
 msgid "How long they stay banned."
 msgstr "Kuinka kauan käyttäjä on porttikiellossa."
 
@@ -17600,7 +17600,7 @@ msgstr "Kuvaketiedosto on liian suuri"
 #. Validation error in the create-community form when the chosen icon exceeds the size limit. {imageMaxSizeLabel} is a formatted file size such as "8 MB".
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:47
 #: src/features/channel/components/modals/EditGroupModal.tsx:45
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:107
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:111
 msgid "Icon file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Kuvaketiedosto on liian suuri. Valitse tiedosto, joka on pienempi kuin {imageMaxSizeLabel}."
 
@@ -17886,7 +17886,7 @@ msgid "Import"
 msgstr "Tuo"
 
 #. Action button label in the add community modal. Imports a template from the third-party platform named by {theOtherPlatform}.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:102
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:106
 msgid "Import {theOtherPlatform} template"
 msgstr "Tuo {theOtherPlatform}-malli"
 
@@ -17938,7 +17938,7 @@ msgid "Import more"
 msgstr "Tuo lisää"
 
 #. Accessible label for the import-template form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:138
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:142
 msgid "Import template form"
 msgstr "Tuo malli -lomake"
 
@@ -18106,7 +18106,7 @@ msgid "Include all except selected"
 msgstr "Sisällytä kaikki valittuja lukuun ottamatta"
 
 #. Section header in the Linux audio source picker for the per-app inclusion list.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:55
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:57
 msgid "Include apps"
 msgstr "Sisällytä sovellukset"
 
@@ -18472,7 +18472,7 @@ msgid "Invalid image"
 msgstr "Virheellinen kuva"
 
 #. Validation error in the paste-template-JSON form. "JSON" is a protocol token and must not be translated.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:129
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:133
 msgid "Invalid JSON. Paste the full response from the URL above."
 msgstr "Virheellinen JSON. Liitä koko vastaus yllä olevasta URL-osoitteesta."
 
@@ -18531,7 +18531,7 @@ msgid "Invisible"
 msgstr "Näkymätön"
 
 #. Per-recipient action button label in the invite modal recipient list. Sends the invite as a DM to that friend. Short standalone verb.
-#: src/features/invite/components/modals/InviteModal.tsx:97
+#: src/features/invite/components/modals/InviteModal.tsx:100
 msgid "Invite"
 msgstr "Kutsu"
 
@@ -18568,12 +18568,12 @@ msgid "Invite deleted"
 msgstr "Kutsu poistettu"
 
 #. Fallback header on the invite modal when no community context is available. Refers to inviting friends to Fluxer.
-#: src/features/invite/components/modals/InviteModal.tsx:84
+#: src/features/invite/components/modals/InviteModal.tsx:87
 msgid "Invite friends"
 msgstr "Kutsu kavereita"
 
 #. Title of the invite modal. {guildName} is the community name.
-#: src/features/invite/components/modals/InviteModal.tsx:89
+#: src/features/invite/components/modals/InviteModal.tsx:92
 msgid "Invite friends to {guildName}"
 msgstr "Kutsu kavereita yhteisöön {guildName}"
 
@@ -18584,25 +18584,25 @@ msgstr "Kutsu piilotettu jaon aikana"
 
 #. Label of the invite code/URL input in the join-community form.
 #. Placeholder in the read-only invite link input when no link is available yet.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:166
-#: src/features/invite/components/modals/InviteModal.tsx:138
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:170
+#: src/features/invite/components/modals/InviteModal.tsx:141
 msgid "Invite link"
 msgstr "Kutsulinkki"
 
 #. Label above a masked invite link while streaming privacy is active.
 #. Label above a masked invite link while streaming privacy is active.
-#: src/features/invite/components/modals/InviteModal.tsx:146
+#: src/features/invite/components/modals/InviteModal.tsx:149
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:31
 msgid "Invite link is hidden while sharing:"
 msgstr "Kutsulinkki on piilotettu jakamisen aikana:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:162
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:165
 msgid "Invite link masked while sharing"
 msgstr "Kutsulinkki piilotettu jakamisen aikana"
 
 #. Header of the invite modal when the user is editing the invite link expiry, max uses, and temporary flag.
-#: src/features/invite/components/modals/InviteModal.tsx:93
+#: src/features/invite/components/modals/InviteModal.tsx:96
 msgid "Invite link settings"
 msgstr "Kutsulinkin asetukset"
 
@@ -18747,7 +18747,7 @@ msgstr "Kutsut on keskeytetty, koska {productName} havaitsi mahdollisen hyökkä
 msgid "Invites are paused for this community."
 msgstr "Kutsut tähän yhteisöön on keskeytetty."
 
-#: src/features/invite/components/modals/InviteModal.tsx:370
+#: src/features/invite/components/modals/InviteModal.tsx:375
 msgid "Invites are paused in this community by an admin. While this invite can be created, it cannot be accepted until invites are re-enabled."
 msgstr "Yhteisön ylläpitäjä on keskeyttänyt kutsut. Vaikka tämän kutsun voi luoda, sitä ei voi hyväksyä ennen kuin kutsut otetaan uudelleen käyttöön."
 
@@ -18757,7 +18757,7 @@ msgid "Invites disabled"
 msgstr "Kutsut poissa käytöstä"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:72
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "Kutsut poissa käytöstä -ilmoituspalkki"
 
@@ -18879,7 +18879,7 @@ msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Liity yhteisöön {communityName}, niin voit jutella tiimin kanssa ja pysyä ajan tasalla."
 
 #. Action button label in the add community modal. Starts the join-by-invite-code flow.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:98
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:102
 msgid "Join a community"
 msgstr "Liity yhteisöön"
 
@@ -18903,7 +18903,7 @@ msgid "Join community"
 msgstr "Liity yhteisöön"
 
 #. Accessible label for the join-community form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:162
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:166
 msgid "Join community form"
 msgstr "Liity yhteisöön -lomake"
 
@@ -19011,7 +19011,7 @@ msgid "Jump to {displayName}"
 msgstr "Siirry kohtaan {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
 msgid "Jump to {labelText}"
 msgstr "Siirry kohtaan {labelText}"
 
@@ -19068,12 +19068,12 @@ msgid "Jump to the current call"
 msgstr "Siirry puheluun"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:112
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
 msgid "Jump to the linked channel"
 msgstr "Siirry linkitettyyn kanavaan"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:104
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
 msgid "Jump to the linked message"
 msgstr "Siirry linkitettyyn viestiin"
 
@@ -19083,7 +19083,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Siirry käyttäjän {authorNickname} viestiin"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:99
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
 msgid "Jump to the message in {labelText}"
 msgstr "Siirry viestiin kohteessa {labelText}"
 
@@ -19142,7 +19142,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "Pidä ilmaiset ja premium-tasot. Voit muokata tasoja, myydä premiumia Stripellä tai jakaa lahjakoodeja myöhemmin ylläpitopaneelista."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:273
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
 msgid "Keep grace period"
 msgstr "Säilytä armonaika"
 
@@ -19157,7 +19157,7 @@ msgid "Keep running"
 msgstr "Pidä käynnissä"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:251
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
 msgid "Keep subscription"
 msgstr "Säilytä tilaus"
 
@@ -19240,7 +19240,7 @@ msgstr "Näppäimet"
 #. Button or menu action label in the kick member modal. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile actions sheet. Keep it concise. Keep the tone plain and specific.
 #. Member actions sheet menu item. Opens the kick-member confirmation (moderation action). Short verb used as a menu label.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:98
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:97
 #: src/features/moderation/components/modals/KickMemberModal.tsx:16
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:77
 msgid "Kick"
@@ -19727,7 +19727,7 @@ msgstr "Linkitä tiedosto"
 #. Replacement text for an invite URL while streaming privacy is active.
 #. Replacement text for an invite URL while streaming privacy is active.
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:49
-#: src/features/invite/components/modals/InviteModal.tsx:142
+#: src/features/invite/components/modals/InviteModal.tsx:145
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:27
 msgid "Link hidden while sharing"
 msgstr "Linkki piilotettu jakamisen ajaksi"
@@ -19760,7 +19760,7 @@ msgid "Link styling"
 msgstr "Linkkien tyyli"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:154
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:157
 msgid "Link unavailable"
 msgstr "Linkki ei ole saatavilla"
 
@@ -20557,7 +20557,7 @@ msgid "Max {maxSize}."
 msgstr "Suurin sallittu tiedostokoko on {maxSize}."
 
 #. Label above the max-uses dropdown in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:116
+#: src/features/invite/components/modals/InviteModal.tsx:119
 msgid "Max number of uses"
 msgstr "Käyttökertojen enimmäismäärä"
 
@@ -20835,7 +20835,7 @@ msgid "Members"
 msgstr "Jäsenet"
 
 #. Helper text under the temporary membership switch in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:134
+#: src/features/invite/components/modals/InviteModal.tsx:137
 msgid "Members are removed when offline unless given a role."
 msgstr "Jäsenet poistetaan, kun he ovat offline-tilassa, ellei heille ole annettu roolia."
 
@@ -20980,7 +20980,7 @@ msgstr "Viesti"
 #. Action that opens a DM conversation with the selected user.
 #. Member actions sheet menu item. Sends a direct message to the target user. Standalone verb used as a menu label.
 #. Voice participant menu action that opens a DM conversation with the selected user.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:88
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:87
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
@@ -21084,7 +21084,7 @@ msgstr "Viestien näyttöasetukset ovat käytettävissä vain työpöytäsovellu
 msgid "Message editing"
 msgstr "Viestin muokkaus"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:315
+#: src/features/messaging/components/modals/ForwardModal.tsx:317
 msgid "Message forwarded"
 msgstr "Viesti välitetty"
 
@@ -21133,7 +21133,7 @@ msgstr "Viestinsyötön painikkeet"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:56
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "Viesti on liian pitkä"
@@ -21144,7 +21144,7 @@ msgid "Message layout"
 msgstr "Viestin asettelu"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:89
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:92
 msgid "message link"
 msgstr "viestilinkki"
 
@@ -21188,7 +21188,7 @@ msgid "Message previews in the DM list"
 msgstr "Viestien esikatselut yksityisviestiluettelossa"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:112
+#: src/features/messaging/commands/MessageCommands.tsx:113
 msgid "Message published"
 msgstr "Viesti julkaistu"
 
@@ -21301,7 +21301,7 @@ msgstr "Viestit, jotka voit kirjanmerkätä"
 msgid "Messaging is paused"
 msgstr "Viestien lähettäminen on tauolla"
 
-#. Notice shown in place of the message composer, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.
+#. Notice shown in place of the message composer, as a banner at the top of the app, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.
 #: src/features/user/utils/AccountLimitUtils.ts:10
 msgid "Messaging is paused on your account. Check your email for a quick step to continue."
 msgstr "Viestien lähettäminen on tililläsi tauolla. Löydät sähköpostistasi yhden nopean vaiheen, jolla pääset jatkamaan."
@@ -22672,7 +22672,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Ei {sendMessagesPermission}-käyttöoikeutta"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
 msgid "No access"
 msgstr "Ei käyttöoikeutta"
 
@@ -22807,7 +22807,7 @@ msgstr "Ei tallennettavia muutoksia"
 msgid "No channels available"
 msgstr "Ei kanavia saatavilla"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:389
+#: src/features/messaging/components/modals/ForwardModal.tsx:395
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "Kanavia ei löytynyt"
@@ -22955,7 +22955,7 @@ msgid "No invoices yet."
 msgstr "Ei vielä laskuja."
 
 #. Invite max-uses option meaning unlimited uses. Short standalone label.
-#: src/features/invite/components/modals/InviteModal.tsx:56
+#: src/features/invite/components/modals/InviteModal.tsx:59
 msgid "No limit"
 msgstr "Ei rajaa"
 
@@ -23306,7 +23306,7 @@ msgstr "Ei muunnosta"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:37
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:146
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:220
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:268
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:265
 msgid "None"
 msgstr "Ei mitään"
 
@@ -23858,12 +23858,12 @@ msgid "Open {host} in your browser."
 msgstr "Avaa {host} selaimessasi."
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
 msgid "Open {labelText}"
 msgstr "Avaa {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:116
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
 msgid "Open {labelText} in settings"
 msgstr "Avaa {labelText} asetuksissa"
 
@@ -24067,7 +24067,7 @@ msgid "Open emoji in browser"
 msgstr "Avaa emoji selaimessa"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:102
+#: src/features/messaging/components/modals/ForwardModal.tsx:104
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "Avaa emojivalitsin"
@@ -24392,7 +24392,7 @@ msgstr "Valinnat"
 msgid "or"
 msgstr "tai"
 
-#: src/features/theme/components/modals/ShareThemeModal.tsx:214
+#: src/features/theme/components/modals/ShareThemeModal.tsx:216
 msgid "Or copy the link:"
 msgstr "Tai kopioi linkki:"
 
@@ -24401,7 +24401,7 @@ msgstr "Tai kopioi linkki:"
 msgid "or pick a GIF from {gifProviderName}"
 msgstr "tai valitse GIF-kuva lähteestä {gifProviderName}"
 
-#: src/features/invite/components/modals/InviteModal.tsx:502
+#: src/features/invite/components/modals/InviteModal.tsx:507
 msgid "Or send an invite link to a friend:"
 msgstr "Tai lähetä kutsulinkki kaverille:"
 
@@ -24409,7 +24409,7 @@ msgstr "Tai lähetä kutsulinkki kaverille:"
 msgid "or send an invite to a friend:"
 msgstr "tai lähetä kutsu kaverille:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:133
 msgid "or send the gift link to a friend:"
 msgstr "tai lähetä lahjalinkki kaverille:"
 
@@ -24611,7 +24611,7 @@ msgid "Page down"
 msgstr "Page Down"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
 msgid "page link"
 msgstr "sivulinkki"
 
@@ -24778,12 +24778,12 @@ msgid "Paste GIF URLs below, one per line."
 msgstr "Liitä GIF-URL-osoitteet alle, yksi per rivi."
 
 #. Accessible label for the paste-template-JSON form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:146
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:150
 msgid "Paste template JSON form"
 msgstr "Mallin JSON-koodin liittämislomake"
 
 #. Placeholder in the textarea where the user pastes the third-party template JSON document.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:154
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:158
 msgid "Paste the JSON response here"
 msgstr "Liitä JSON-vastaus tähän"
 
@@ -24985,7 +24985,7 @@ msgid "Perks paused"
 msgstr "Edut keskeytetty"
 
 #. Ban duration option in the destructive ban-member modal meaning the ban never expires. Short standalone label.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:38
+#: src/features/moderation/components/modals/BanMemberModal.tsx:37
 msgid "Permanent"
 msgstr "Pysyvä"
 
@@ -25384,7 +25384,7 @@ msgstr "Toistetaan, vaikka vähennetty liike on käytössä."
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:60
-#: src/features/theme/components/modals/ShareThemeModal.tsx:67
+#: src/features/theme/components/modals/ShareThemeModal.tsx:68
 msgid "Please wait a moment and try again."
 msgstr "Odota hetki ja yritä uudelleen."
 
@@ -25416,7 +25416,7 @@ msgid "Pop back in"
 msgstr "Palauta takaisin"
 
 #. Tooltip / aria label on the voice call footer button that opens the call in a separate window.
-#: src/features/voice/components/VoiceCallCornerControls.tsx:12
+#: src/features/voice/components/VoiceCallCornerControls.tsx:11
 msgid "Pop out call"
 msgstr "Siirrä puhelu erilliseen ikkunaan"
 
@@ -25547,12 +25547,12 @@ msgid "Premium badge"
 msgstr "Premium-merkki"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:48
+#: src/features/devtools/components/NagbarControls.ts:49
 msgid "Premium expired nagbar"
 msgstr "Premium-tilaus vanhentunut -ilmoituspalkki"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:44
+#: src/features/devtools/components/NagbarControls.ts:45
 msgid "Premium grace period nagbar"
 msgstr "Premium-lisäajan ilmoituspalkki"
 
@@ -25562,7 +25562,7 @@ msgid "Premium model"
 msgstr "Premium-malli"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:52
+#: src/features/devtools/components/NagbarControls.ts:53
 msgid "Premium onboarding nagbar"
 msgstr "Premium-perehdytyksen ilmoituspalkki"
 
@@ -26514,7 +26514,7 @@ msgstr "Syy"
 
 #. Label of the optional reason input in the destructive ban-member modal. Reason is recorded in the activity log.
 #. Label of the optional reason textarea in the timeout-member modal. The reason is recorded in the activity log.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:83
+#: src/features/moderation/components/modals/BanMemberModal.tsx:82
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:36
 msgid "Reason (optional)"
 msgstr "Syy (valinnainen)"
@@ -26574,7 +26574,7 @@ msgstr "Tarkista uudelleen"
 
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
-#: src/features/invite/components/modals/InviteModal.tsx:355
+#: src/features/invite/components/modals/InviteModal.tsx:360
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "Vastaanottajat ohjataan kanavalle {0} <0>{1}</0>"
 
@@ -26601,7 +26601,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Yhteys palautettu. Valitse näyttö uudelleen, jos haluat jatkaa edellistä lähetystäsi."
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:98
+#: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Reconnecting..."
 msgstr "Yhdistetään uudelleen..."
 
@@ -26741,7 +26741,7 @@ msgstr "Viite kopioitu."
 msgid "Referral parameters"
 msgstr "Viittausparametrit"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:312
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:309
 msgid "Refresh audio sources"
 msgstr "Päivitä äänilähteet"
 
@@ -28559,7 +28559,7 @@ msgstr "Kylläisyys"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:108
+#: src/features/messaging/commands/MessageCommands.tsx:109
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
@@ -28687,7 +28687,7 @@ msgid "Scan the QR code with your authenticator app."
 msgstr "Skannaa QR-koodi todennussovelluksellasi."
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.
-#: src/features/devtools/components/NagbarControls.ts:22
+#: src/features/devtools/components/NagbarControls.ts:23
 msgid "Scheduled maintenance nagbar"
 msgstr "Ajastetun huollon ilmoituspalkki"
 
@@ -28962,7 +28962,7 @@ msgstr "Kelauksen esikatselu"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:89
+#: src/features/messaging/components/modals/ForwardModal.tsx:91
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:46
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29606,14 +29606,14 @@ msgstr "Itsepalveluhyvitykset ovat saatavilla 3 päivän kuluessa maksusta, kerr
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #. Send-message button label in the voice message composer modal.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:43
+#: src/features/theme/components/modals/ShareThemeModal.tsx:44
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:316
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:77
 msgid "Send"
 msgstr "Lähetä"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:106
+#: src/features/messaging/components/modals/ForwardModal.tsx:108
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "Lähetä ({selectedCount}/{selectionLimit})"
 
@@ -29694,7 +29694,7 @@ msgstr "Lähetä tiedostoja jopa {size}"
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:94
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
@@ -29710,7 +29710,7 @@ msgstr "Lähetä GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:31
 msgid "Send gift"
 msgstr "Lähetä lahja"
 
@@ -29873,7 +29873,7 @@ msgid "Serve the token file"
 msgstr "Julkaise tunnustiedosto"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.
-#: src/features/devtools/components/NagbarControls.ts:27
+#: src/features/devtools/components/NagbarControls.ts:28
 msgid "Service incident nagbar"
 msgstr "Palvelun häiriöilmoitus"
 
@@ -30118,7 +30118,7 @@ msgid "Settings"
 msgstr "Asetukset"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
 msgid "settings link"
 msgstr "asetuslinkki"
 
@@ -30239,7 +30239,7 @@ msgid "Share your screen or camera in up to 4K at 60 frames per second. Free acc
 msgstr "Jaa näyttösi tai kamerasi jopa 4K-tarkkuudella 60 kuvaa sekunnissa. Ilmaiset tilit striimaavat jopa 720p-tarkkuudella 30 kuvaa sekunnissa."
 
 #. Button or menu action label in the share theme modal. Keep it concise.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:39
+#: src/features/theme/components/modals/ShareThemeModal.tsx:40
 msgid "Share your theme"
 msgstr "Jaa teemasi"
 
@@ -30263,7 +30263,7 @@ msgid "Shared window"
 msgstr "Jaettu ikkuna"
 
 #. Capture option in the Linux audio source picker on a window share. Captures only the audio of the window being shared.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:40
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:42
 msgid "Shared window audio"
 msgstr "Jaetun ikkunan ääni"
 
@@ -30364,7 +30364,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "Pikanäppäimet eivät ole käytössä näppäinyhdistelmän tallennuksen aikana."
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:60
+#: src/features/messaging/components/modals/ForwardModal.tsx:62
 msgid "Shorten the message and try again."
 msgstr "Lyhennä viestiä ja yritä uudelleen."
 
@@ -31506,7 +31506,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "Jokin meni pieleen tarraa valmisteltaessa. Kokeile toista tiedostoa tai yritä hetken kuluttua uudelleen."
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:124
+#: src/features/messaging/commands/MessageCommands.tsx:125
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "Jokin meni vikaan julkaisussa. Yritä uudelleen hetken kuluttua."
 
@@ -31552,7 +31552,7 @@ msgstr "Jokin meni pieleen."
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:18
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
-#: src/features/theme/components/modals/ShareThemeModal.tsx:51
+#: src/features/theme/components/modals/ShareThemeModal.tsx:52
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
@@ -33157,12 +33157,12 @@ msgid "Template"
 msgstr "Mallipohja"
 
 #. Label of the textarea in the paste-template-JSON form. "JSON" must not be translated.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:150
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:154
 msgid "Template JSON"
 msgstr "Mallipohjan JSON"
 
 #. Label of the URL input in the import-template form.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:142
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:146
 msgid "Template URL"
 msgstr "Mallipohjan URL-osoite"
 
@@ -33191,7 +33191,7 @@ msgid "Temporary invites need a live connection. Check yours and try again."
 msgstr "Väliaikaiset kutsut vaativat aktiivisen yhteyden. Tarkista yhteytesi ja yritä uudelleen."
 
 #. Switch label in the invite link settings. When enabled, members joining via this invite are kicked when they go offline unless given a role.
-#: src/features/invite/components/modals/InviteModal.tsx:129
+#: src/features/invite/components/modals/InviteModal.tsx:132
 msgid "Temporary membership"
 msgstr "Väliaikainen jäsenyys"
 
@@ -33202,7 +33202,7 @@ msgid "Tennessee"
 msgstr "Tennessee"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:64
+#: src/features/devtools/components/NagbarControls.ts:65
 msgid "Terms acceptance nagbar"
 msgstr "Käyttöehtojen hyväksymisen ilmoituspalkki"
 
@@ -33760,7 +33760,7 @@ msgstr "Teema ei ole saatavilla"
 msgid "Themes"
 msgstr "Teemat"
 
-#: src/features/invite/components/modals/InviteModal.tsx:194
+#: src/features/invite/components/modals/InviteModal.tsx:197
 msgid "There are no channels available to create an invite for."
 msgstr "Ei kanavia, joihin voisi luoda kutsun."
 
@@ -33815,7 +33815,7 @@ msgid "They left the call"
 msgstr "Hän poistui puhelusta"
 
 #. Body of the error modal shown when a DM cannot be opened (blocked or no shared community).
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:20
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:24
 msgid "They might not be accepting messages from you, or you no longer share a community."
 msgstr "Hän ei ehkä hyväksy sinulta viestejä, tai teillä ei ole enää yhteistä yhteisöä."
 
@@ -34092,7 +34092,7 @@ msgid "This device does not support notifications."
 msgstr "Tämä laite ei tue ilmoituksia."
 
 #. Validation error in the paste-template-JSON form when the JSON parses but lacks the expected third-party template fields.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:133
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:137
 msgid "This doesn't look like a valid template response. Make sure you copied the entire JSON document."
 msgstr "Tämä ei näytä kelvolliselta mallivastaukselta. Varmista, että kopioit koko JSON-dokumentin."
 
@@ -34170,7 +34170,7 @@ msgid "This gift has been redeemed"
 msgstr "Tämä lahja on lunastettu"
 
 #. Title of the error modal shown when a group DM would exceed the maximum number of recipients.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:48
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:52
 msgid "This group has too many people"
 msgstr "Tässä ryhmässä on liikaa ihmisiä"
 
@@ -34208,7 +34208,7 @@ msgstr "Tässä instanssissa ei ole vielä tilejä. Ensimmäisestä luomastasi t
 msgid "This invite is hidden while sharing is protected."
 msgstr "Tämä kutsu on piilotettu, kun jakaminen on suojattu."
 
-#: src/features/invite/components/modals/InviteModal.tsx:514
+#: src/features/invite/components/modals/InviteModal.tsx:519
 msgid "This invite link never expires."
 msgstr "Tämä kutsulinkki ei vanhene koskaan."
 
@@ -34305,7 +34305,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Tämä linkkikanava on merkitty aikuisille tarkoitetuksi sisällöksi, ja se voi avata materiaalia, joka voi olla sopimatonta joillekin käyttäjille."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:158
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:161
 msgid "This link is not available for your account."
 msgstr "Tämä linkki ei ole käytettävissä tililläsi."
 
@@ -34361,7 +34361,7 @@ msgid "This message has already been deleted."
 msgstr "Tämä viesti on jo poistettu."
 
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:116
+#: src/features/messaging/commands/MessageCommands.tsx:117
 msgid "This message has already been published"
 msgstr "Tämä viesti on jo julkaistu"
 
@@ -34486,7 +34486,7 @@ msgid "This theme is still loading."
 msgstr "Teema latautuu edelleen."
 
 #. Title of the error modal shown when a theme CSS exceeds the maximum shareable size.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:55
+#: src/features/theme/components/modals/ShareThemeModal.tsx:56
 msgid "This theme is too large to share"
 msgstr "Teema on liian suuri jaettavaksi"
 
@@ -34528,7 +34528,7 @@ msgid "This user is not available to receive calls right now. They may have call
 msgstr "Käyttäjä ei voi vastaanottaa puheluita juuri nyt. Hän on ehkä poistanut puhelut käytöstä."
 
 #. Body of the error modal shown when the recipient of a DM no longer exists.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:28
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:32
 msgid "This user no longer exists. Refresh and try again."
 msgstr "Tätä käyttäjää ei enää ole. Päivitä ja yritä uudelleen."
 
@@ -35712,7 +35712,7 @@ msgid "Unclaimed account"
 msgstr "Lunastamaton tili"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:32
+#: src/features/devtools/components/NagbarControls.ts:33
 msgid "Unclaimed account nagbar"
 msgstr "Lunastamaton tili -ilmoituspalkki"
 
@@ -37152,7 +37152,7 @@ msgstr "Käyttäjä siirretään toiselle kanavalle"
 
 #. Reason chip in the unaddable recipients alert when the user record is missing.
 #. Title of the error modal shown when the recipient of a DM no longer exists.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:24
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:28
 #: src/features/channel/components/channel_view/DMChannelView.tsx:279
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:11
 msgid "User not found"
@@ -37274,27 +37274,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "Käytetään {effectiveLabel}-asetusta, kunnes {requestedLabel} on valmis."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:106
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "Käytetään todellista tilin tilaa"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:126
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "Käytetään todellista lahjavaraston tilaa"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:122
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "Käytetään todellista premium-tilaa"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:130
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "Käytetään todellista tilaa"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:110
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "Käytetään todellista vahvistustilaa"
 
@@ -37456,9 +37456,9 @@ msgstr "Vahvista henkilöllisyytesi"
 
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:40
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:80
-#: src/features/channel/utils/CreateDMModalUtils.tsx:51
+#: src/features/channel/utils/CreateDMModalUtils.tsx:52
 #: src/features/moderation/components/report/ReportStepEmail.tsx:43
 msgid "Verify your email"
 msgstr "Vahvista sähköpostiosoitteesi"
@@ -37543,7 +37543,7 @@ msgid "Verify your email to purchase {premiumProductFullName}."
 msgstr "Vahvista sähköpostiosoitteesi ostaaksesi {premiumProductFullName}."
 
 #. Blocked-state text shown when an unverified account cannot start a DM or group DM.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:55
+#: src/features/channel/utils/CreateDMModalUtils.tsx:56
 msgid "Verify your email to start DMs."
 msgstr "Vahvista sähköpostiosoitteesi aloittaaksesi yksityisviestit."
 
@@ -37791,7 +37791,7 @@ msgid "View call"
 msgstr "Näytä puhelu"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:124
+#: src/features/voice/components/VoiceCallView.tsx:120
 msgid "View call controls"
 msgstr "Näytä puhelun hallinta"
 
@@ -37987,7 +37987,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary (elinikäinen {premiumProductName})"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:60
+#: src/features/devtools/components/NagbarControls.ts:61
 msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2FA -ilmoituspalkki"
 
@@ -38243,7 +38243,7 @@ msgid "Voice region"
 msgstr "Puhealue"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:68
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "Äänipuhelun palautusilmoituspalkki"
 
@@ -38331,12 +38331,12 @@ msgid "Waiting for passkey…"
 msgstr "Odotetaan pääsyavainta…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:76
+#: src/features/messaging/components/modals/ForwardModal.tsx:78
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "Odotetaan hitaan tilan päättymistä kanavalla {forwardChannelDisplayName}."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:81
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "Odotetaan hitaan tilan päättymistä yhdessä tai useammassa valitussa kanavassa."
 
@@ -38520,7 +38520,7 @@ msgstr "Lähetimme koodin osoitteeseen {email}."
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Esitäytämme sähköpostiosoitteen {prefillEmail}, kun kirjautuminen avautuu selaimessa."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:89
 msgid "We'd love to give you more than a lifetime of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "Antaisimme sinulle mielellämme enemmän kuin elinikäisen {PREMIUM_PRODUCT_NAME}-tilauksen, mutta se rikkoisi aika-avaruusjatkumon. Lähetetäänkö lahja kaverille sen sijaan?"
 
@@ -39178,7 +39178,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "Sinulla on jo ryhmä näiden käyttäjien kanssa. Haluatko varmasti luoda uuden? Sekin sopii!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:27
 msgid "You already have lifetime {premiumProductName}"
 msgstr "Sinulla on jo elinikäinen {premiumProductName}"
 
@@ -39326,7 +39326,7 @@ msgid "You can't add expressions there"
 msgstr "Et voi lisätä ilmaisuja sinne"
 
 #. Error message in the messaging commands.
-#: src/features/messaging/commands/ReactionCommands.tsx:27
+#: src/features/messaging/commands/ReactionCommands.tsx:28
 msgid "You can't add new reactions while you're timed out."
 msgstr "Et voi lisätä uusia reaktioita jäähyn aikana."
 
@@ -39392,7 +39392,7 @@ msgstr "Et voi hallinnoida webhookeja missään yhteisössä. Pyydä ylläpitäj
 
 #. Reason chip in the unaddable recipients alert when blocked or DMs are not allowed.
 #. Title of the error modal shown when a DM cannot be opened (blocked or no shared community).
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:16
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:20
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:15
 msgid "You can't message this user"
 msgstr "Et voi lähettää viestiä tälle käyttäjälle"
@@ -39521,7 +39521,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Vaihdoit tunnisteesi {PREMIUM_PRODUCT_NAME}-tilauksen aikana. Tunniste arvotaan uudelleen satunnaisesti, kun {PREMIUM_PRODUCT_NAME}-tilauksesi päättyy, ellei sitä uusita."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Sinulla ei ole pääsyä kanavalle, jolle tämä viesti lähetettiin."
 
@@ -39618,12 +39618,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "Painoit juuri sarkainta. Näppäimistötila on nyt käytössä, joten voit liikkua {productName}-sovelluksessa ilman hiirtä."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:245
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "Pidät etusi seuraavaan uusimispäivään asti. Aktivoi tilaus uudelleen ennen sitä, niin säilytät tilaushistoriasi."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:266
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Menetät kaikki {PREMIUM_PRODUCT_NAME}-edut välittömästi ja tilaushistoriasi nollataan. Tätä ei voi kumota."
 
@@ -39709,7 +39709,7 @@ msgid "You need to claim your account before you can create a community."
 msgstr "Sinun on viimeisteltävä tilisi rekisteröinti, ennen kuin voit luoda yhteisön."
 
 #. Body of the error modal shown when an unclaimed account tries to start a DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:36
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:40
 msgid "You need to claim your account before you can start a direct message."
 msgstr "Sinun on viimeisteltävä tilisi rekisteröinti, ennen kuin voit aloittaa yksityisviestin."
 
@@ -39731,7 +39731,7 @@ msgid "You need to verify your email address before you can send friend requests
 msgstr "Vahvista sähköpostiosoitteesi, ennen kuin voit lähettää kaveripyyntöjä."
 
 #. Body of the error modal shown when an unverified account tries to start a DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:44
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:48
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "Sinun on vahvistettava sähköpostiosoitteesi, ennen kuin voit aloittaa yksityisviestin."
 
@@ -39745,7 +39745,7 @@ msgid "You need to verify your email to send messages in this community."
 msgstr "Sinun on vahvistettava sähköpostiosoitteesi lähettääksesi viestejä tässä yhteisössä."
 
 #. Body of the error modal shown when the user or a recipient has too many open group DMs.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:60
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:64
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "Sinulla tai jollakulla lisäämistäsi henkilöistä on jo avoinna suurin sallittu määrä ryhmäkeskusteluja. Poistu yhdestä ja yritä uudelleen."
 
@@ -39888,7 +39888,7 @@ msgstr "Muokkaat viestejä liian nopeasti"
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:56
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:77
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:149
-#: src/features/theme/components/modals/ShareThemeModal.tsx:63
+#: src/features/theme/components/modals/ShareThemeModal.tsx:64
 msgid "You're going too fast"
 msgstr "Toimit liian nopeasti"
 
@@ -39951,7 +39951,7 @@ msgid "You're viewing older messages"
 msgstr "Katselet vanhempia viestejä"
 
 #. Body of the error modal shown when a group DM would exceed the maximum number of recipients.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:52
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:56
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "Olet lisännyt enemmän henkilöitä kuin ryhmäkeskustelu sallii. Poista muutama ja yritä uudelleen."
 
@@ -40003,7 +40003,7 @@ msgid "You've reached the favorite GIF limit."
 msgstr "Olet saavuttanut suosikki-GIFien enimmäismäärän."
 
 #. Title of the error modal shown when the user or a recipient has too many open group DMs.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:56
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:60
 msgid "You've reached the group DM limit"
 msgstr "Olet saavuttanut ryhmäkeskustelujen enimmäismäärän"
 
@@ -40118,7 +40118,7 @@ msgid "Your card is eligible. Redirecting you to the payment page now."
 msgstr "Korttisi kelpaa. Ohjaamme sinut nyt maksusivulle."
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:103
+#: src/features/messaging/commands/MessageCommands.tsx:104
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "Muokkauksesi tavoittavat kaikki kanavaa seuraavat yhteisöt, ja niiden julkaiseminen voi kestää hetken. Jokainen julkaistu viesti sallii 3 nopeaa muokkausta, sen jälkeen 1 muokkauksen 20 minuutin välein."
 
@@ -40236,22 +40236,22 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Viimeisin ostoksesi on hyvitysajan ulkopuolella. Ota yhteyttä tukeen laskutusasioissa."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:72
+#: src/features/messaging/state/MessageQueue.tsx:74
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Viestiäsi ei voitu toimittaa, koska turvajärjestelmämme merkitsivät sen. Jos uskot tämän olevan virhe, ota yhteyttä tukeen."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:59
+#: src/features/messaging/state/MessageQueue.tsx:61
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Viestiäsi ei voitu toimittaa. Tämä johtuu yleensä siitä, että sinulla ja vastaanottajalla ei ole yhteistä yhteisöä tai vastaanottaja hyväksyy yksityisviestejä vain kavereilta. Sinun on ehkä myös muutettava omia yksityisviestien tietosuoja-asetuksiasi kohdassa {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:64
+#: src/features/messaging/state/MessageQueue.tsx:66
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Viestiäsi ei voitu toimittaa. Sinun on viimeisteltävä tilisi rekisteröinti, jotta voit lähettää yksityisviestejä."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:68
+#: src/features/messaging/state/MessageQueue.tsx:70
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Viestiäsi ei voitu toimittaa. Sinun on viimeisteltävä tilisi rekisteröinti, jotta voit lähettää viestejä."
 
@@ -40409,7 +40409,7 @@ msgid "Your subscription will switch to yearly billing at the next renewal."
 msgstr "Tilauksesi muuttuu vuosilaskutukseksi seuraavan uusimisen yhteydessä."
 
 #. Body of the error modal shown when a theme CSS exceeds the maximum shareable size.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:59
+#: src/features/theme/components/modals/ShareThemeModal.tsx:60
 msgid "Your theme CSS is too large to share. Trim it down and try again."
 msgstr "Teeman CSS-tiedosto on liian suuri jaettavaksi. Lyhennä sitä ja yritä uudelleen."
 

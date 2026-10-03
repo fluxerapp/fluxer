@@ -21,7 +21,7 @@ msgstr "... להפעיל מצב צפוף. יפה!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
-#: src/features/channel/components/MessageAttachments.tsx:390
+#: src/features/channel/components/MessageAttachments.tsx:361
 #: src/features/channel/components/UserMessage.tsx:75
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
@@ -993,7 +993,7 @@ msgstr "{count, plural, one {# ערוץ עוקב} other {# ערוצים עוקב
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# קהילה נמצאה} other {# קהילות נמצאו}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1954
+#: src/features/app/components/layout/GuildsLayout.tsx:1955
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# קהילה אינה זמינה באופן זמני עקב תקלה בקבל השטף.} other {# קהילות אינן זמינות באופן זמני עקב תקלה בקבל השטף.}}"
 
@@ -1041,7 +1041,7 @@ msgstr "{count, plural, one {# קהילה משותפת} other {# קהילות מ
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {אחד נוסף} other {# נוספים}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:507
+#: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# משתתף בשיחה} other {# משתתפים בשיחה}}"
 
@@ -1237,7 +1237,7 @@ msgid "{days, plural, one {Created by {creatorDisplayName}. Expires in # day.} o
 msgstr "{days, plural, one {ההזמנה נוצרה על ידי {creatorDisplayName}. תוקפה יפוג בעוד יום אחד.} two {ההזמנה נוצרה על ידי {creatorDisplayName}. תוקפה יפוג בעוד יומיים.} other {ההזמנה נוצרה על ידי {creatorDisplayName}. תוקפה יפוג בעוד # ימים.}}"
 
 #. Text under a generated invite link. {days} is how long the link stays valid, in whole days.
-#: src/features/invite/components/modals/InviteModal.tsx:164
+#: src/features/invite/components/modals/InviteModal.tsx:167
 msgid "{days, plural, one {Your invite link expires in # day.} other {Your invite link expires in # days.}}"
 msgstr "{days, plural, one {תוקף קישור ההזמנה שלך יפוג בעוד יום אחד.} two {תוקף קישור ההזמנה שלך יפוג בעוד יומיים.} other {תוקף קישור ההזמנה שלך יפוג בעוד # ימים.}}"
 
@@ -1441,7 +1441,7 @@ msgid "{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {
 msgstr "{hours, plural, one {# שעה} other {# שעות}} ו-{minutes, plural, one {# דקה} other {# דקות}}"
 
 #. Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.
-#: src/features/invite/components/modals/InviteModal.tsx:160
+#: src/features/invite/components/modals/InviteModal.tsx:163
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
 msgstr "{hours, plural, one {תוקף קישור ההזמנה שלך יפוג בעוד שעה אחת.} two {תוקף קישור ההזמנה שלך יפוג בעוד שעתיים.} other {תוקף קישור ההזמנה שלך יפוג בעוד # שעות.}}"
 
@@ -1556,7 +1556,7 @@ msgid "{minutes, plural, one {# minute} other {# minutes}} and {seconds, plural,
 msgstr "{minutes, plural, one {# דקה} other {# דקות}} ו-{seconds, plural, one {# שנייה} other {# שניות}}"
 
 #. Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.
-#: src/features/invite/components/modals/InviteModal.tsx:155
+#: src/features/invite/components/modals/InviteModal.tsx:158
 msgid "{minutes, plural, one {Your invite link expires in # minute.} other {Your invite link expires in # minutes.}}"
 msgstr "{minutes, plural, one {תוקף קישור ההזמנה שלך יפוג בעוד דקה אחת.} two {תוקף קישור ההזמנה שלך יפוג בעוד שתי דקות.} other {תוקף קישור ההזמנה שלך יפוג בעוד # דקות.}}"
 
@@ -1967,7 +1967,7 @@ msgid "{seconds, plural, one {# second} other {# seconds}}"
 msgstr "{seconds, plural, one {# שנייה} two {# שניות} other {# שניות}}"
 
 #. Text under a generated invite link. {seconds} is how long the link stays valid, in whole seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:150
+#: src/features/invite/components/modals/InviteModal.tsx:153
 msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your invite link expires in # seconds.}}"
 msgstr "{seconds, plural, one {תוקף קישור ההזמנה שלך יפוג בעוד שנייה אחת.} two {תוקף קישור ההזמנה שלך יפוג בעוד שתי שניות.} other {תוקף קישור ההזמנה שלך יפוג בעוד # שניות.}}"
 
@@ -2215,8 +2215,8 @@ msgstr "<0>{username}</0> עדיין בקבוצה. נסה שוב בעוד רגע
 
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.
-#: src/features/channel/components/MessageAttachments.tsx:241
-#: src/features/channel/components/MessageAttachments.tsx:297
+#: src/features/channel/components/MessageAttachments.tsx:212
+#: src/features/channel/components/MessageAttachments.tsx:268
 msgid "<0>Forwarded from</0>{sourceInfo}"
 msgstr "<0>הועבר מתוך</0>{sourceInfo}"
 
@@ -2270,7 +2270,7 @@ msgid "1 result available"
 msgstr "תוצאה אחת זמינה"
 
 #. Invite max-uses dropdown option for exactly one use.
-#: src/features/invite/components/modals/InviteModal.tsx:60
+#: src/features/invite/components/modals/InviteModal.tsx:63
 msgid "1 use"
 msgstr "שימוש אחד"
 
@@ -2315,12 +2315,12 @@ msgid "10 minutes"
 msgstr "10 דקות"
 
 #. Invite max-uses dropdown option for ten uses.
-#: src/features/invite/components/modals/InviteModal.tsx:68
+#: src/features/invite/components/modals/InviteModal.tsx:71
 msgid "10 uses"
 msgstr "10 שימושים"
 
 #. Invite max-uses dropdown option for 100 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:80
+#: src/features/invite/components/modals/InviteModal.tsx:83
 msgid "100 uses"
 msgstr "100 שימושים"
 
@@ -2368,7 +2368,7 @@ msgid "2 members (typing)"
 msgstr "2 חברים (מקלידים)"
 
 #. Ban duration option in the destructive ban-member modal for a two-week temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:51
+#: src/features/moderation/components/modals/BanMemberModal.tsx:50
 msgid "2 weeks"
 msgstr "שבועיים"
 
@@ -2383,7 +2383,7 @@ msgid "24-hour"
 msgstr "שעון 24 שעות"
 
 #. Invite max-uses dropdown option for 25 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:72
+#: src/features/invite/components/modals/InviteModal.tsx:75
 msgid "25 uses"
 msgstr "25 שימושים"
 
@@ -2404,7 +2404,7 @@ msgid "2FA requirement"
 msgstr "דרישת אימות דו-שלבי"
 
 #. Ban duration option in the destructive ban-member modal for a three-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:43
+#: src/features/moderation/components/modals/BanMemberModal.tsx:42
 msgid "3 days"
 msgstr "3 ימים"
 
@@ -2439,7 +2439,7 @@ msgid "40px, 3 members"
 msgstr "40px, 3 חברים"
 
 #. Ban duration option in the destructive ban-member modal for a five-day temporary ban.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:47
+#: src/features/moderation/components/modals/BanMemberModal.tsx:46
 msgid "5 days"
 msgstr "5 ימים"
 
@@ -2449,12 +2449,12 @@ msgid "5 minutes"
 msgstr "5 דקות"
 
 #. Invite max-uses dropdown option for five uses.
-#: src/features/invite/components/modals/InviteModal.tsx:64
+#: src/features/invite/components/modals/InviteModal.tsx:67
 msgid "5 uses"
 msgstr "5 שימושים"
 
 #. Invite max-uses dropdown option for 50 uses.
-#: src/features/invite/components/modals/InviteModal.tsx:76
+#: src/features/invite/components/modals/InviteModal.tsx:79
 msgid "50 uses"
 msgstr "50 שימושים"
 
@@ -2803,7 +2803,7 @@ msgid "Account too new"
 msgstr "החשבון חדש מדי"
 
 #. Title of the error modal shown when an unclaimed (guest) account tries to accept a community or group DM invite. Auth-related; keep tone plain.
-#: src/features/invite/commands/InviteCommands.tsx:35
+#: src/features/invite/commands/InviteCommands.tsx:36
 msgid "Account verification required"
 msgstr "נדרש אימות חשבון"
 
@@ -2997,12 +2997,12 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "הוספת בוט לקהילה עם ההרשאות המבוקשות"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:98
+#: src/features/messaging/components/modals/ForwardModal.tsx:100
 msgid "Add a comment (optional)"
 msgstr "הוסף הערה (אופציונלי)"
 
 #. Landing-view title of the add community modal. Top-level entry point with options to create, join, or import.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:89
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:93
 msgid "Add a community"
 msgstr "הוספת קהילה"
 
@@ -3082,7 +3082,7 @@ msgid "Add an account to continue."
 msgstr "הוסף חשבון כדי להמשיך."
 
 #. Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.
-#: src/features/invite/commands/InviteCommands.tsx:40
+#: src/features/invite/commands/InviteCommands.tsx:41
 msgid "Add an email and password to your account first."
 msgstr "הוסף/הוסיפי קודם אימייל וסיסמה לחשבון שלך."
 
@@ -3911,7 +3911,7 @@ msgid "Already set to cancel"
 msgstr "כבר מוגדר לביטול"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:88
+#: src/features/messaging/commands/MessageCommands.tsx:89
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "דווח על ההודעה הזו גם לצוות הבטיחות של {productName}"
 
@@ -4150,7 +4150,7 @@ msgid "Animated icons are not supported"
 msgstr "אייקונים מונפשים אינם נתמכים"
 
 #. Validation error in the create-community form when the user picks an animated image.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:112
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:116
 msgid "Animated icons are not supported when creating a new community. Use a static image."
 msgstr "לא ניתן להשתמש באייקונים מונפשים בעת יצירת קהילה חדשה. השתמש בתמונה סטטית."
 
@@ -4332,17 +4332,17 @@ msgid "Any uploaded attachment"
 msgstr "כל קובץ מצורף שהועלה"
 
 #. Helper text under the custom ban duration input. Both placeholders are integer numbers of seconds bounding the allowed range.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:73
+#: src/features/moderation/components/modals/BanMemberModal.tsx:72
 msgid "Any value from {minTempBanDurationSeconds} to {maxTempBanDurationSeconds} seconds."
 msgstr "כל ערך בין {minTempBanDurationSeconds} ל-{maxTempBanDurationSeconds} שניות."
 
 #. Helper text under the custom invite expiration input. {maxInviteAgeSeconds} is the platform max in seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:111
+#: src/features/invite/components/modals/InviteModal.tsx:114
 msgid "Any value from 0 to {maxInviteAgeSeconds} seconds. 0 means never expires."
 msgstr "כל ערך בין 0 ל-{maxInviteAgeSeconds} שניות. 0 פירושו שלעולם לא יפוג."
 
 #. Helper text under the custom invite max-uses input. {maxInviteUses} is the platform max number of uses per invite.
-#: src/features/invite/components/modals/InviteModal.tsx:124
+#: src/features/invite/components/modals/InviteModal.tsx:127
 msgid "Any value from 0 to {maxInviteUses}. 0 means no limit."
 msgstr "כל ערך בין 0 ל-{maxInviteUses}. 0 פירושו ללא הגבלה."
 
@@ -4938,7 +4938,7 @@ msgid "Audio settings"
 msgstr "הגדרות שמע"
 
 #. Toggle / summary row label in the Linux audio source picker. {summaryLabel} is one of the audio-source summary labels.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:45
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:47
 msgid "Audio sources: {summaryLabel}"
 msgstr "מקורות שמע: {summaryLabel}"
 
@@ -5399,7 +5399,7 @@ msgid "Back to sticker"
 msgstr "חזרה למדבקה"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:115
+#: src/features/voice/components/VoiceCallView.tsx:111
 msgid "Back to voice channel"
 msgstr "חזרה לערוץ הקולי"
 
@@ -5502,7 +5502,7 @@ msgid "Ban"
 msgstr "חסימה"
 
 #. Title of the destructive ban-member modal. {tag} is the target user tag (username#tag). Destructive moderation action; keep tone direct.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:55
+#: src/features/moderation/components/modals/BanMemberModal.tsx:54
 msgid "Ban {tag}"
 msgstr "חסימת {tag}"
 
@@ -5517,14 +5517,14 @@ msgid "Ban details"
 msgstr "פרטי חסימה"
 
 #. Label above the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:60
+#: src/features/moderation/components/modals/BanMemberModal.tsx:59
 msgid "Ban duration"
 msgstr "משך חסימה"
 
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:270
+#: src/features/moderation/components/modals/BanMemberModal.tsx:274
 #: src/features/ui/action_menu/GuildMemberContextMenu.tsx:66
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:124
@@ -5992,7 +5992,7 @@ msgid "Bot invite (no external redirect)"
 msgstr "הזמנת בוט (ללא הפניה חיצונית)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:162
+#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:163
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:104
 msgid "Bot permissions"
 msgstr "הרשאות בוט"
@@ -6549,14 +6549,14 @@ msgstr "לא ניתן להעלות קבצים כאן"
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:145
-#: src/features/invite/components/modals/InviteModal.tsx:552
+#: src/features/invite/components/modals/InviteModal.tsx:557
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:597
+#: src/features/messaging/components/modals/ForwardModal.tsx:603
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
-#: src/features/moderation/components/modals/BanMemberModal.tsx:262
+#: src/features/moderation/components/modals/BanMemberModal.tsx:266
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:126
 #: src/features/theme/components/modals/ThemeAcceptModal.tsx:173
@@ -6619,13 +6619,13 @@ msgstr "ביטול המעבר המתוזמן"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:915
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:141
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:249
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:248
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "ביטול מינוי"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:243
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:242
 msgid "Cancel subscription?"
 msgstr "לבטל את המינוי?"
 
@@ -6674,7 +6674,7 @@ msgid "Cannot delete account"
 msgstr "לא ניתן למחוק את החשבון"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:50
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:52
 msgid "Capture"
 msgstr "לכידה"
 
@@ -7229,7 +7229,7 @@ msgid "Channel access"
 msgstr "גישה לערוץ"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
 msgid "Channel access denied"
 msgstr "הגישה לערוץ נדחתה"
 
@@ -7294,7 +7294,7 @@ msgstr "מזהה הערוץ הועתק ללוח הגזירים"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:94
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "קישור לערוץ"
@@ -7472,7 +7472,7 @@ msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for st
 msgstr "בדוק את <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> שלנו לעדכוני סטטוס."
 
 #. Description text in the share theme modal.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:35
+#: src/features/theme/components/modals/ShareThemeModal.tsx:36
 msgid "Check out my custom theme!"
 msgstr "תראו את העיצוב המותאם אישית שלי!"
 
@@ -7677,7 +7677,7 @@ msgid "Choose File, then Add to Dock."
 msgstr "בחר \"קובץ\", ואז \"הוספה ל-Dock\"."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:39
+#: src/features/channel/utils/CreateDMModalUtils.tsx:40
 msgid "Choose friends to message."
 msgstr "בחר חברים לשלוח להם הודעה."
 
@@ -7861,10 +7861,10 @@ msgstr "קבל את המתנה"
 #. Short label in the authentication claim account modal. Keep the tone plain and specific.
 #. Title of the error modal shown when an unclaimed account tries to start a DM.
 #. Title shown when an unclaimed account cannot start a DM or group DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:32
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:36
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:63
-#: src/features/channel/utils/CreateDMModalUtils.tsx:43
+#: src/features/channel/utils/CreateDMModalUtils.tsx:44
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:441
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:343
@@ -7953,7 +7953,7 @@ msgid "Claim your account to send friend requests."
 msgstr "תבע את החשבון שלך כדי לשלוח בקשות חברות."
 
 #. Blocked-state text shown when an unclaimed account cannot start a DM or group DM.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:47
+#: src/features/channel/utils/CreateDMModalUtils.tsx:48
 msgid "Claim your account to start DMs."
 msgstr "תבע את החשבון שלך כדי להתחיל צ'אטים פרטיים."
 
@@ -8593,17 +8593,17 @@ msgid "Commands"
 msgstr "פקודות"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:70
+#: src/features/messaging/components/modals/ForwardModal.tsx:72
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "התגובות מושבתות כי מצב איטי מופעל באחד או יותר מהערוצים שבחרת. התגובה תיחסם על ידי מצב איטי מיד לאחר ההעברה."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:64
+#: src/features/messaging/components/modals/ForwardModal.tsx:66
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "התגובות מושבתות כי מצב איטי מופעל ב-{forwardChannelDisplayName}. התגובה תיחסם על ידי מצב איטי מיד לאחר ההעברה."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:94
+#: src/features/messaging/components/modals/ForwardModal.tsx:96
 msgid "Comments are unavailable while slowmode is on."
 msgstr "התגובות אינן זמינות כשמצב איטי מופעל."
 
@@ -8763,7 +8763,7 @@ msgid "Community members"
 msgstr "חברי קהילה"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the community-membership CTA banner.
-#: src/features/devtools/components/NagbarControls.ts:12
+#: src/features/devtools/components/NagbarControls.ts:13
 msgid "Community membership CTA nagbar"
 msgstr "שורת התראה להצטרפות לקהילה"
 
@@ -8773,7 +8773,7 @@ msgid "Community message notifications"
 msgstr "התראות על הודעות קהילה"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:81
+#: src/features/devtools/components/NagbarControls.ts:82
 msgid "Community MFA requirement nagbar"
 msgstr "שורת התראה על דרישת אימות דו-שלבי בקהילה"
 
@@ -8785,7 +8785,7 @@ msgstr "השתקת מיקרופון בקהילה"
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:199
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:120
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:124
 msgid "Community name"
 msgstr "שם קהילה"
 
@@ -9167,7 +9167,7 @@ msgstr "קונטיקט"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:94
+#: src/features/voice/components/VoiceCallView.tsx:90
 msgid "Connecting..."
 msgstr "מתחבר..."
 
@@ -9223,12 +9223,12 @@ msgid "Connection lost. Reconnecting…"
 msgstr "החיבור אבד. מתחבר מחדש…"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:47
+#: src/features/connection/commands/ConnectionCommands.ts:48
 msgid "Connection removed"
 msgstr "החיבור הוסר"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:119
+#: src/features/voice/components/VoiceCallView.tsx:115
 msgid "Connection stats"
 msgstr "נתוני חיבור"
 
@@ -9238,12 +9238,12 @@ msgid "Connection type"
 msgstr "סוג חיבור"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:43
+#: src/features/connection/commands/ConnectionCommands.ts:44
 msgid "Connection updated"
 msgstr "החיבור עודכן"
 
 #. Success toast after an account connection is verified.
-#: src/features/connection/commands/ConnectionCommands.ts:35
+#: src/features/connection/commands/ConnectionCommands.ts:36
 msgid "Connection verified"
 msgstr "החיבור אומת"
 
@@ -9279,7 +9279,7 @@ msgid "Connections"
 msgstr "חיבורים"
 
 #. Short label in the connection connection commands.
-#: src/features/connection/commands/ConnectionCommands.ts:51
+#: src/features/connection/commands/ConnectionCommands.ts:52
 msgid "Connections reordered"
 msgstr "החיבורים סודרו מחדש"
 
@@ -9526,7 +9526,7 @@ msgstr "כתובת ה-URL הועתקה ללוח הגזירים"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
-#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:228
+#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:230
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:59
 msgid "Copy"
 msgstr "העתקה"
@@ -9854,7 +9854,7 @@ msgid "Copying image..."
 msgstr "מעתיק תמונה..."
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the corrupted-installation banner.
-#: src/features/devtools/components/NagbarControls.ts:17
+#: src/features/devtools/components/NagbarControls.ts:18
 msgid "Corrupted installation nagbar"
 msgstr "שורת התראה על התקנה פגומה"
 
@@ -9988,7 +9988,7 @@ msgid "Couldn't copy gift URL"
 msgstr "לא ניתן היה להעתיק את כתובת ה-URL של המתנה"
 
 #. Title of the generic fallback error modal shown when generating a shareable theme link fails.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:47
+#: src/features/theme/components/modals/ShareThemeModal.tsx:48
 msgid "Couldn't create a theme link"
 msgstr "לא ניתן ליצור קישור לעיצוב"
 
@@ -10167,7 +10167,7 @@ msgid "Couldn't process image"
 msgstr "לא ניתן לעבד את התמונה"
 
 #. Title of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:120
+#: src/features/messaging/commands/MessageCommands.tsx:121
 msgid "Couldn't publish this message"
 msgstr "לא ניתן לפרסם הודעה זו"
 
@@ -10299,7 +10299,7 @@ msgid "Couldn't send the verification email"
 msgstr "לא ניתן היה לשלוח את אימייל האימות"
 
 #. Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.
-#: src/features/connection/commands/ConnectionCommands.ts:30
+#: src/features/connection/commands/ConnectionCommands.ts:31
 msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "לא ניתן היה להתחיל את ההרשאה עבור {blueskyProviderName}"
 
@@ -10309,7 +10309,7 @@ msgid "Couldn't start checkout"
 msgstr "לא ניתן להתחיל את התשלום"
 
 #. Toast error shown when creating a new account connection fails.
-#: src/features/connection/commands/ConnectionCommands.ts:26
+#: src/features/connection/commands/ConnectionCommands.ts:27
 msgid "Couldn't start the connection"
 msgstr "לא ניתן היה להתחיל את החיבור"
 
@@ -10319,7 +10319,7 @@ msgid "Couldn't start the desktop update"
 msgstr "לא ניתן היה להתחיל את עדכון שולחן העבודה"
 
 #. Title of the generic fallback error modal shown when opening or creating a DM fails.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:64
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:68
 msgid "Couldn't start this conversation"
 msgstr "לא ניתן להתחיל את השיחה הזו"
 
@@ -10424,7 +10424,7 @@ msgid "Couldn't verify that code. Try again."
 msgstr "לא הצלחנו לאמת את הקוד הזה. יש לנסות שוב."
 
 #. Toast error shown when verifying an account connection fails.
-#: src/features/connection/commands/ConnectionCommands.ts:39
+#: src/features/connection/commands/ConnectionCommands.ts:40
 msgid "Couldn't verify the connection"
 msgstr "לא ניתן לאמת את החיבור"
 
@@ -10469,7 +10469,7 @@ msgid "Create & share"
 msgstr "יצירה ושיתוף"
 
 #. Action button label in the add community modal. Starts the create-community flow.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:94
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:98
 msgid "Create a community"
 msgstr "יצירת קהילה"
 
@@ -10541,14 +10541,14 @@ msgid "Create community"
 msgstr "יצירת קהילה"
 
 #. Accessible label for the create-community form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:116
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:120
 msgid "Create community form"
 msgstr "טופס יצירת קהילה"
 
 #. Accessible label for the create-DM trigger in the DM list header.
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:97
-#: src/features/channel/utils/CreateDMModalUtils.tsx:35
+#: src/features/channel/utils/CreateDMModalUtils.tsx:36
 msgid "Create DM"
 msgstr "יצירת צ'אט"
 
@@ -10563,14 +10563,14 @@ msgid "Create favorite category form"
 msgstr "טופס יצירת קטגוריית מועדפים"
 
 #. Accessible label for the create-from-template form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:158
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:162
 msgid "Create from template form"
 msgstr "טופס יצירה מתבנית"
 
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
 #. Tooltip on the channel header plus button when viewing a one-on-one DM. Starts the create group DM flow with the current recipient.
 #: src/features/channel/components/channel_header/shared.ts:51
-#: src/features/channel/utils/CreateDMModalUtils.tsx:31
+#: src/features/channel/utils/CreateDMModalUtils.tsx:32
 msgid "Create group DM"
 msgstr "יצירת צ'אט קבוצתי"
 
@@ -10593,7 +10593,7 @@ msgstr "יצירת חשבון חדש"
 msgid "Create new group"
 msgstr "יצירת קבוצה חדשה"
 
-#: src/features/invite/components/modals/InviteModal.tsx:555
+#: src/features/invite/components/modals/InviteModal.tsx:560
 msgid "Create new link"
 msgstr "יצירת קישור חדש"
 
@@ -10811,12 +10811,12 @@ msgid "Current uses:"
 msgstr "שימושים נוכחיים:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:114
+#: src/features/devtools/components/NagbarControls.ts:115
 msgid "Currently dismissed"
 msgstr "מוסתר כעת"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:118
+#: src/features/devtools/components/NagbarControls.ts:119
 msgid "Currently showing"
 msgstr "מוצג כעת"
 
@@ -10853,7 +10853,7 @@ msgid "Custom"
 msgstr "מותאם אישית"
 
 #. Label of the numeric input shown after choosing "Custom..." in the ban duration dropdown. The unit is seconds.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:68
+#: src/features/moderation/components/modals/BanMemberModal.tsx:67
 msgid "Custom ban duration (seconds)"
 msgstr "משך חסימה מותאם אישית (שניות)"
 
@@ -10889,7 +10889,7 @@ msgid "Custom entrance sounds with {premiumProductName}"
 msgstr "צלילי כניסה מותאמים אישית עם {premiumProductName}"
 
 #. Label of the numeric input shown after choosing "Custom..." in the invite expiration dropdown. The unit is seconds.
-#: src/features/invite/components/modals/InviteModal.tsx:106
+#: src/features/invite/components/modals/InviteModal.tsx:109
 msgid "Custom expiration (seconds)"
 msgstr "תפוגה מותאמת אישית (שניות)"
 
@@ -10898,7 +10898,7 @@ msgid "Custom hoist order"
 msgstr "סדר הצגה מותאם אישית"
 
 #. Label of the numeric input shown after choosing "Custom..." in the invite max-uses dropdown.
-#: src/features/invite/components/modals/InviteModal.tsx:120
+#: src/features/invite/components/modals/InviteModal.tsx:123
 msgid "Custom max uses"
 msgstr "מספר שימושים מרבי מותאם אישית"
 
@@ -11506,7 +11506,7 @@ msgstr "דלאוור"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:84
+#: src/features/messaging/commands/MessageCommands.tsx:85
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:645
@@ -11652,8 +11652,8 @@ msgid "Delete message"
 msgstr "מחיקת הודעה"
 
 #. Section heading and accessible label for the message-history-deletion radio group in the destructive ban-member modal. Destructive option group.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:78
-#: src/features/moderation/components/modals/BanMemberModal.tsx:229
+#: src/features/moderation/components/modals/BanMemberModal.tsx:77
+#: src/features/moderation/components/modals/BanMemberModal.tsx:233
 msgid "Delete message history"
 msgstr "מחיקת היסטוריית הודעות"
 
@@ -11755,12 +11755,12 @@ msgid "Delete this message"
 msgstr "מחיקת ההודעה הזו"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:80
+#: src/features/messaging/commands/MessageCommands.tsx:81
 msgid "Delete this message? Can't be undone."
 msgstr "למחוק את ההודעה הזו? לא ניתן לבטל פעולה זו."
 
 #. Body of the delete confirmation for a message that was published from an announcement channel to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:93
+#: src/features/messaging/commands/MessageCommands.tsx:94
 msgid "Delete this message? Can't be undone. This message is also removed from every community that follows this channel."
 msgstr "למחוק הודעה זו? לא ניתן לבטל. הודעה זו תוסר גם מכל קהילה שעוקבת אחר ערוץ זה."
 
@@ -11977,7 +11977,7 @@ msgid "Desktop device"
 msgstr "מחשב שולחני"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the desktop-download banner.
-#: src/features/devtools/components/NagbarControls.ts:7
+#: src/features/devtools/components/NagbarControls.ts:8
 msgid "Desktop download nagbar"
 msgstr "שורת התראה להורדת אפליקציה למחשב"
 
@@ -11987,7 +11987,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "חוסר פעילות במחשב לפני שליחת התראה לנייד"
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:40
+#: src/features/devtools/components/NagbarControls.ts:41
 msgid "Desktop notification nagbar"
 msgstr "שורת התראה של התראות שולחן עבודה"
 
@@ -12102,13 +12102,13 @@ msgstr "מצב מפתח"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:149
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "כלי מפתחים"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:150
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:153
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "כלי מפתחים זמינים דרך תג הצוות בכותרת הערוץ."
 
@@ -12505,7 +12505,7 @@ msgstr "נתק את ה-socket"
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:103
+#: src/features/voice/components/VoiceCallView.tsx:99
 msgid "Disconnected"
 msgstr "מנותק"
 
@@ -12822,7 +12822,7 @@ msgid "Domain"
 msgstr "דומיין"
 
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:77
 msgid "Domain moved nagbar"
 msgstr "שורת התראה על העברת הדומיין"
 
@@ -13344,8 +13344,8 @@ msgstr "עריכת פרטי קבוצה"
 msgid "Edit group form"
 msgstr "טופס עריכת קבוצה"
 
-#: src/features/invite/components/modals/InviteModal.tsx:523
-#: src/features/invite/components/modals/InviteModal.tsx:538
+#: src/features/invite/components/modals/InviteModal.tsx:528
+#: src/features/invite/components/modals/InviteModal.tsx:543
 msgid "Edit invite link"
 msgstr "עריכת קישור הזמנה"
 
@@ -13397,7 +13397,7 @@ msgid "Edit profile local time"
 msgstr "עריכת השעה המקומית בפרופיל"
 
 #. Title of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:99
+#: src/features/messaging/commands/MessageCommands.tsx:100
 msgid "Edit published message?"
 msgstr "עריכת הודעה שפורסמה?"
 
@@ -13548,7 +13548,7 @@ msgid "Email unavailable"
 msgstr "האימייל אינו זמין"
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:36
+#: src/features/devtools/components/NagbarControls.ts:37
 msgid "Email verification nagbar"
 msgstr "באנר אימות אימייל"
 
@@ -14080,12 +14080,12 @@ msgid "End grace now"
 msgstr "סיים את תקופת החסד עכשיו"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:163
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:271
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:270
 msgid "End grace period"
 msgstr "סיום תקופת החסד"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:156
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:264
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:263
 msgid "End grace period now?"
 msgstr "לסיים את תקופת החסד עכשיו?"
 
@@ -14170,7 +14170,7 @@ msgid "Enter a product name between 1 and 80 characters."
 msgstr "יש להזין שם מוצר בין תו אחד ל-80 תווים."
 
 #. Placeholder in the optional reason input in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:88
+#: src/features/moderation/components/modals/BanMemberModal.tsx:87
 msgid "Enter a reason for the ban"
 msgstr "הזן סיבה לחסימה"
 
@@ -14180,7 +14180,7 @@ msgid "Enter a secure password"
 msgstr "הזן סיסמה מאובטחת"
 
 #. Validation error in the import-template form when the entered URL or code is malformed. {theOtherPlatform} is a third-party product name placeholder.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:124
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:128
 msgid "Enter a valid {theOtherPlatform} template URL or code."
 msgstr "יש להזין כתובת URL או קוד תבנית חוקיים של {theOtherPlatform}."
 
@@ -14204,7 +14204,7 @@ msgstr "הזן שם משתמש חוקי ({exampleFluxerTagFull})."
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:111
+#: src/features/voice/components/VoiceCallView.tsx:107
 msgid "Enter fullscreen"
 msgstr "מעבר למסך מלא"
 
@@ -14347,7 +14347,7 @@ msgstr "כל המסך"
 msgid "Entire system"
 msgstr "כל המערכת"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:260
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:257
 msgid "Entire system audio"
 msgstr "כל צלילי המערכת"
 
@@ -14525,7 +14525,7 @@ msgid "exclude a user"
 msgstr "לא לכלול משתמש"
 
 #. Section header in the Linux audio source picker for apps excluded from the system mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:59
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:61
 msgid "Exclude from system"
 msgstr "אל תכלול במערכת"
 
@@ -14546,7 +14546,7 @@ msgstr "יציאה"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:107
+#: src/features/voice/components/VoiceCallView.tsx:103
 msgid "Exit fullscreen"
 msgstr "יציאה ממסך מלא"
 
@@ -14624,7 +14624,7 @@ msgid "Expiration curve"
 msgstr "עקומת תפוגה"
 
 #. Label above the expiration duration dropdown in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:102
+#: src/features/invite/components/modals/InviteModal.tsx:105
 msgid "Expire after"
 msgstr "יפוג לאחר"
 
@@ -14839,7 +14839,7 @@ msgid "Failed to complete SSO sign-in"
 msgstr "ההתחברות באמצעות SSO נכשלה"
 
 #. Error message in the add friends to group modal utils helper.
-#: src/features/channel/utils/AddFriendsToGroupModalUtils.ts:21
+#: src/features/channel/utils/AddFriendsToGroupModalUtils.ts:22
 msgid "Failed to copy invite link"
 msgstr "העתקת קישור ההזמנה נכשלה"
 
@@ -15687,12 +15687,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "למען אבטחתך, יש לאמת את זהותך כדי להמשיך."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:102
+#: src/features/devtools/components/NagbarControls.ts:103
 msgid "Force disabled"
 msgstr "מושבת בכפייה"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:98
+#: src/features/devtools/components/NagbarControls.ts:99
 msgid "Force enabled"
 msgstr "מופעל בכפייה"
 
@@ -15840,11 +15840,11 @@ msgstr "העבר מדיה"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:33
-#: src/features/messaging/components/modals/ForwardModal.tsx:85
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 msgid "Forward message"
 msgstr "העברת הודעה"
 
-#: src/features/channel/components/MessageAttachments.tsx:360
+#: src/features/channel/components/MessageAttachments.tsx:331
 msgid "Forwarded"
 msgstr "הועבר"
 
@@ -16437,7 +16437,7 @@ msgstr "קוד המתנה נדרש"
 msgid "Gift code is too long"
 msgstr "קוד המתנה ארוך מדי"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:139
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:141
 msgid "Gift code:"
 msgstr "קוד מתנה:"
 
@@ -16466,7 +16466,7 @@ msgid "Gift inventory flow"
 msgstr "תהליך מלאי מתנות"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:56
+#: src/features/devtools/components/NagbarControls.ts:57
 msgid "Gift inventory nagbar"
 msgstr "סרגל התראות של מלאי מתנות"
 
@@ -16477,7 +16477,7 @@ msgstr "משך המתנה"
 
 #. Form field label for a gift redemption URL.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:34
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:35
 #: src/features/user/components/settings_utils/search_index/GiftInventoryIndex.ts:26
 msgid "Gift link"
 msgstr "קישור למתנה"
@@ -17488,7 +17488,7 @@ msgid "How about:"
 msgstr "מה דעתך על:"
 
 #. Helper text under the ban duration dropdown in the destructive ban-member modal.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:64
+#: src/features/moderation/components/modals/BanMemberModal.tsx:63
 msgid "How long they stay banned."
 msgstr "לכמה זמן הם יישארו חסומים."
 
@@ -17600,7 +17600,7 @@ msgstr "קובץ הסמל גדול מדי"
 #. Validation error in the create-community form when the chosen icon exceeds the size limit. {imageMaxSizeLabel} is a formatted file size such as "8 MB".
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:47
 #: src/features/channel/components/modals/EditGroupModal.tsx:45
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:107
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:111
 msgid "Icon file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "קובץ הסמל גדול מדי. בחר קובץ קטן מ-{imageMaxSizeLabel}."
 
@@ -17886,7 +17886,7 @@ msgid "Import"
 msgstr "ייבוא"
 
 #. Action button label in the add community modal. Imports a template from the third-party platform named by {theOtherPlatform}.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:102
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:106
 msgid "Import {theOtherPlatform} template"
 msgstr "ייבוא תבנית מ-{theOtherPlatform}"
 
@@ -17938,7 +17938,7 @@ msgid "Import more"
 msgstr "ייבא עוד"
 
 #. Accessible label for the import-template form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:138
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:142
 msgid "Import template form"
 msgstr "טופס ייבוא תבנית"
 
@@ -18106,7 +18106,7 @@ msgid "Include all except selected"
 msgstr "כלול הכל מלבד הנבחרים"
 
 #. Section header in the Linux audio source picker for the per-app inclusion list.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:55
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:57
 msgid "Include apps"
 msgstr "כלול אפליקציות"
 
@@ -18472,7 +18472,7 @@ msgid "Invalid image"
 msgstr "תמונה לא תקינה"
 
 #. Validation error in the paste-template-JSON form. "JSON" is a protocol token and must not be translated.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:129
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:133
 msgid "Invalid JSON. Paste the full response from the URL above."
 msgstr "JSON לא תקין. הדבק את התגובה המלאה מהכתובת שלמעלה."
 
@@ -18531,7 +18531,7 @@ msgid "Invisible"
 msgstr "בלתי נראה"
 
 #. Per-recipient action button label in the invite modal recipient list. Sends the invite as a DM to that friend. Short standalone verb.
-#: src/features/invite/components/modals/InviteModal.tsx:97
+#: src/features/invite/components/modals/InviteModal.tsx:100
 msgid "Invite"
 msgstr "הזמן"
 
@@ -18568,12 +18568,12 @@ msgid "Invite deleted"
 msgstr "ההזמנה נמחקה"
 
 #. Fallback header on the invite modal when no community context is available. Refers to inviting friends to Fluxer.
-#: src/features/invite/components/modals/InviteModal.tsx:84
+#: src/features/invite/components/modals/InviteModal.tsx:87
 msgid "Invite friends"
 msgstr "הזמנת חברים"
 
 #. Title of the invite modal. {guildName} is the community name.
-#: src/features/invite/components/modals/InviteModal.tsx:89
+#: src/features/invite/components/modals/InviteModal.tsx:92
 msgid "Invite friends to {guildName}"
 msgstr "הזמנת חברים אל {guildName}"
 
@@ -18584,25 +18584,25 @@ msgstr "ההזמנה מוסתרת בזמן שיתוף"
 
 #. Label of the invite code/URL input in the join-community form.
 #. Placeholder in the read-only invite link input when no link is available yet.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:166
-#: src/features/invite/components/modals/InviteModal.tsx:138
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:170
+#: src/features/invite/components/modals/InviteModal.tsx:141
 msgid "Invite link"
 msgstr "קישור הזמנה"
 
 #. Label above a masked invite link while streaming privacy is active.
 #. Label above a masked invite link while streaming privacy is active.
-#: src/features/invite/components/modals/InviteModal.tsx:146
+#: src/features/invite/components/modals/InviteModal.tsx:149
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:31
 msgid "Invite link is hidden while sharing:"
 msgstr "קישור ההזמנה מוסתר בזמן שיתוף:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:162
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:165
 msgid "Invite link masked while sharing"
 msgstr "קישור ההזמנה מוסתר בזמן שיתוף"
 
 #. Header of the invite modal when the user is editing the invite link expiry, max uses, and temporary flag.
-#: src/features/invite/components/modals/InviteModal.tsx:93
+#: src/features/invite/components/modals/InviteModal.tsx:96
 msgid "Invite link settings"
 msgstr "הגדרות קישור הזמנה"
 
@@ -18747,7 +18747,7 @@ msgstr "ההזמנות מושהות כי {productName} זיהה פשיטה אפ�
 msgid "Invites are paused for this community."
 msgstr "ההזמנות מושהות בקהילה זו."
 
-#: src/features/invite/components/modals/InviteModal.tsx:370
+#: src/features/invite/components/modals/InviteModal.tsx:375
 msgid "Invites are paused in this community by an admin. While this invite can be created, it cannot be accepted until invites are re-enabled."
 msgstr "ההזמנות מושהות בקהילה זו על ידי מנהל. ניתן ליצור הזמנה זו, אך לא ניתן לקבל אותה עד שההזמנות יופעלו מחדש."
 
@@ -18757,7 +18757,7 @@ msgid "Invites disabled"
 msgstr "ההזמנות מושבתות"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:72
+#: src/features/devtools/components/NagbarControls.ts:73
 msgid "Invites disabled nagbar"
 msgstr "שורת התראה להזמנות מושבתות"
 
@@ -18879,7 +18879,7 @@ msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "הצטרף ל-{communityName} כדי לשוחח עם הצוות ולהישאר מעודכן."
 
 #. Action button label in the add community modal. Starts the join-by-invite-code flow.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:98
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:102
 msgid "Join a community"
 msgstr "הצטרפות לקהילה"
 
@@ -18903,7 +18903,7 @@ msgid "Join community"
 msgstr "הצטרפות לקהילה"
 
 #. Accessible label for the join-community form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:162
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:166
 msgid "Join community form"
 msgstr "טופס הצטרפות לקהילה"
 
@@ -19011,7 +19011,7 @@ msgid "Jump to {displayName}"
 msgstr "קפוץ אל {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
 msgid "Jump to {labelText}"
 msgstr "קפוץ אל {labelText}"
 
@@ -19068,12 +19068,12 @@ msgid "Jump to the current call"
 msgstr "קפיצה לשיחה הנוכחית"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:112
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
 msgid "Jump to the linked channel"
 msgstr "קפוץ לערוץ המקושר"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:104
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
 msgid "Jump to the linked message"
 msgstr "קפוץ להודעה המקושרת"
 
@@ -19083,7 +19083,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "קפוץ להודעה של {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:99
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
 msgid "Jump to the message in {labelText}"
 msgstr "קפוץ להודעה ב-{labelText}"
 
@@ -19142,7 +19142,7 @@ msgid "Keep free and premium tiers. You can customize the tiers, sell premium th
 msgstr "שמרו על רמות חינמיות ופרימיום. תוכלו להתאים אישית את הרמות, למכור פרימיום דרך Stripe, או לחלק קודי מתנה מאוחר יותר מלוח הבקרה של המנהל."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:165
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:273
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:272
 msgid "Keep grace period"
 msgstr "השארת תקופת החסד"
 
@@ -19157,7 +19157,7 @@ msgid "Keep running"
 msgstr "המשך לפעול"
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:143
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:251
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:250
 msgid "Keep subscription"
 msgstr "השארת המנוי"
 
@@ -19240,7 +19240,7 @@ msgstr "מקשים"
 #. Button or menu action label in the kick member modal. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile actions sheet. Keep it concise. Keep the tone plain and specific.
 #. Member actions sheet menu item. Opens the kick-member confirmation (moderation action). Short verb used as a menu label.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:98
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:97
 #: src/features/moderation/components/modals/KickMemberModal.tsx:16
 #: src/features/user/components/modals/UserProfileActionsSheet.tsx:77
 msgid "Kick"
@@ -19727,7 +19727,7 @@ msgstr "קשר קובץ"
 #. Replacement text for an invite URL while streaming privacy is active.
 #. Replacement text for an invite URL while streaming privacy is active.
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:49
-#: src/features/invite/components/modals/InviteModal.tsx:142
+#: src/features/invite/components/modals/InviteModal.tsx:145
 #: src/features/relationship/components/modals/AddFriendsToGroupModal.tsx:27
 msgid "Link hidden while sharing"
 msgstr "הקישור מוסתר בזמן שיתוף"
@@ -19760,7 +19760,7 @@ msgid "Link styling"
 msgstr "עיצוב קישורים"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:154
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:157
 msgid "Link unavailable"
 msgstr "הקישור אינו זמין"
 
@@ -20557,7 +20557,7 @@ msgid "Max {maxSize}."
 msgstr "גודל קובץ מקסימלי: {maxSize}."
 
 #. Label above the max-uses dropdown in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:116
+#: src/features/invite/components/modals/InviteModal.tsx:119
 msgid "Max number of uses"
 msgstr "מספר השימושים המקסימלי"
 
@@ -20835,7 +20835,7 @@ msgid "Members"
 msgstr "חברים"
 
 #. Helper text under the temporary membership switch in the invite link settings.
-#: src/features/invite/components/modals/InviteModal.tsx:134
+#: src/features/invite/components/modals/InviteModal.tsx:137
 msgid "Members are removed when offline unless given a role."
 msgstr "חברים יוסרו כשהם לא מקוונים, אלא אם כן יקבלו תפקיד."
 
@@ -20980,7 +20980,7 @@ msgstr "הודעה"
 #. Action that opens a DM conversation with the selected user.
 #. Member actions sheet menu item. Sends a direct message to the target user. Standalone verb used as a menu label.
 #. Voice participant menu action that opens a DM conversation with the selected user.
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:88
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:87
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
@@ -21084,7 +21084,7 @@ msgstr "הגדרות תצוגת ההודעות זמינות רק במחשב."
 msgid "Message editing"
 msgstr "עריכת הודעה"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:315
+#: src/features/messaging/components/modals/ForwardModal.tsx:317
 msgid "Message forwarded"
 msgstr "ההודעה הועברה"
 
@@ -21133,7 +21133,7 @@ msgstr "כפתורי שדה ההודעה"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:56
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "ההודעה ארוכה מדי"
@@ -21144,7 +21144,7 @@ msgid "Message layout"
 msgstr "פריסת הודעות"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:89
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:92
 msgid "message link"
 msgstr "קישור להודעה"
 
@@ -21188,7 +21188,7 @@ msgid "Message previews in the DM list"
 msgstr "תצוגות מקדימות של הודעות ברשימת ההודעות הפרטיות"
 
 #. Toast shown after a message in an announcement channel was published to the channels that follow it.
-#: src/features/messaging/commands/MessageCommands.tsx:112
+#: src/features/messaging/commands/MessageCommands.tsx:113
 msgid "Message published"
 msgstr "ההודעה פורסמה"
 
@@ -21301,7 +21301,7 @@ msgstr "הודעות שניתן לשמור בסימניות"
 msgid "Messaging is paused"
 msgstr "שליחת ההודעות מושהית"
 
-#. Notice shown in place of the message composer, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.
+#. Notice shown in place of the message composer, as a banner at the top of the app, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.
 #: src/features/user/utils/AccountLimitUtils.ts:10
 msgid "Messaging is paused on your account. Check your email for a quick step to continue."
 msgstr "שליחת ההודעות בחשבון שלך מושהית כרגע. באימייל שלך מחכה לך שלב קצר אחד כדי להמשיך."
@@ -22672,7 +22672,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "אין הרשאת {sendMessagesPermission}"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
 msgid "No access"
 msgstr "אין גישה"
 
@@ -22807,7 +22807,7 @@ msgstr "אין שינויים לשמירה"
 msgid "No channels available"
 msgstr "אין ערוצים זמינים"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:389
+#: src/features/messaging/components/modals/ForwardModal.tsx:395
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "לא נמצאו ערוצים"
@@ -22955,7 +22955,7 @@ msgid "No invoices yet."
 msgstr "אין חשבוניות עדיין."
 
 #. Invite max-uses option meaning unlimited uses. Short standalone label.
-#: src/features/invite/components/modals/InviteModal.tsx:56
+#: src/features/invite/components/modals/InviteModal.tsx:59
 msgid "No limit"
 msgstr "ללא הגבלה"
 
@@ -23306,7 +23306,7 @@ msgstr "ללא המרה"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:37
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:146
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:220
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:268
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:265
 msgid "None"
 msgstr "ללא"
 
@@ -23858,12 +23858,12 @@ msgid "Open {host} in your browser."
 msgstr "פתח את {host} בדפדפן שלך."
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
 msgid "Open {labelText}"
 msgstr "פתח את {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:116
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
 msgid "Open {labelText} in settings"
 msgstr "פתח את {labelText} בהגדרות"
 
@@ -24067,7 +24067,7 @@ msgid "Open emoji in browser"
 msgstr "פתח אימוג'י בדפדפן"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:102
+#: src/features/messaging/components/modals/ForwardModal.tsx:104
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "פתח בורר אימוג'י"
@@ -24392,7 +24392,7 @@ msgstr "אפשרויות"
 msgid "or"
 msgstr "או"
 
-#: src/features/theme/components/modals/ShareThemeModal.tsx:214
+#: src/features/theme/components/modals/ShareThemeModal.tsx:216
 msgid "Or copy the link:"
 msgstr "או העתק את הקישור:"
 
@@ -24401,7 +24401,7 @@ msgstr "או העתק את הקישור:"
 msgid "or pick a GIF from {gifProviderName}"
 msgstr "או בחר GIF מ-{gifProviderName}"
 
-#: src/features/invite/components/modals/InviteModal.tsx:502
+#: src/features/invite/components/modals/InviteModal.tsx:507
 msgid "Or send an invite link to a friend:"
 msgstr "או שלח קישור הזמנה לחבר:"
 
@@ -24409,7 +24409,7 @@ msgstr "או שלח קישור הזמנה לחבר:"
 msgid "or send an invite to a friend:"
 msgstr "או שלח הזמנה לחבר:"
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:131
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:133
 msgid "or send the gift link to a friend:"
 msgstr "או שלח את קישור המתנה לחבר:"
 
@@ -24611,7 +24611,7 @@ msgid "Page down"
 msgstr "Page Down"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
 msgid "page link"
 msgstr "קישור לדף"
 
@@ -24778,12 +24778,12 @@ msgid "Paste GIF URLs below, one per line."
 msgstr "הדבק כתובות URL של קובצי GIF למטה, אחת בכל שורה."
 
 #. Accessible label for the paste-template-JSON form element. Used by assistive tech only.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:146
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:150
 msgid "Paste template JSON form"
 msgstr "טופס הדבקת JSON של תבנית"
 
 #. Placeholder in the textarea where the user pastes the third-party template JSON document.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:154
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:158
 msgid "Paste the JSON response here"
 msgstr "הדבק כאן את תגובת ה-JSON"
 
@@ -24985,7 +24985,7 @@ msgid "Perks paused"
 msgstr "ההטבות מושהות"
 
 #. Ban duration option in the destructive ban-member modal meaning the ban never expires. Short standalone label.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:38
+#: src/features/moderation/components/modals/BanMemberModal.tsx:37
 msgid "Permanent"
 msgstr "לצמיתות"
 
@@ -25384,7 +25384,7 @@ msgstr "מופעל למרות תנועה מופחתת."
 #. Body of the error modal shown when sharing or sending a theme link is rate limited.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:13
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:60
-#: src/features/theme/components/modals/ShareThemeModal.tsx:67
+#: src/features/theme/components/modals/ShareThemeModal.tsx:68
 msgid "Please wait a moment and try again."
 msgstr "יש להמתין רגע ולנסות שוב."
 
@@ -25416,7 +25416,7 @@ msgid "Pop back in"
 msgstr "החזר לחלון הראשי"
 
 #. Tooltip / aria label on the voice call footer button that opens the call in a separate window.
-#: src/features/voice/components/VoiceCallCornerControls.tsx:12
+#: src/features/voice/components/VoiceCallCornerControls.tsx:11
 msgid "Pop out call"
 msgstr "הצג שיחה בחלון נפרד"
 
@@ -25547,12 +25547,12 @@ msgid "Premium badge"
 msgstr "תג פרימיום"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:48
+#: src/features/devtools/components/NagbarControls.ts:49
 msgid "Premium expired nagbar"
 msgstr "באנר פרימיום שפג תוקפו"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:44
+#: src/features/devtools/components/NagbarControls.ts:45
 msgid "Premium grace period nagbar"
 msgstr "באנר תקופת חסד של פרימיום"
 
@@ -25562,7 +25562,7 @@ msgid "Premium model"
 msgstr "מודל פרימיום"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:52
+#: src/features/devtools/components/NagbarControls.ts:53
 msgid "Premium onboarding nagbar"
 msgstr "באנר הצטרפות לפרימיום"
 
@@ -26514,7 +26514,7 @@ msgstr "סיבה"
 
 #. Label of the optional reason input in the destructive ban-member modal. Reason is recorded in the activity log.
 #. Label of the optional reason textarea in the timeout-member modal. The reason is recorded in the activity log.
-#: src/features/moderation/components/modals/BanMemberModal.tsx:83
+#: src/features/moderation/components/modals/BanMemberModal.tsx:82
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:36
 msgid "Reason (optional)"
 msgstr "סיבה (אופציונלי)"
@@ -26574,7 +26574,7 @@ msgstr "בדוק שוב"
 
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
-#: src/features/invite/components/modals/InviteModal.tsx:355
+#: src/features/invite/components/modals/InviteModal.tsx:360
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "הנמענים יועברו אל {0} <0>{1}</0>"
 
@@ -26601,7 +26601,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "ההתחברות מחדש הצליחה. בחר מסך שוב אם ברצונך להמשיך את השידור הקודם."
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:98
+#: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Reconnecting..."
 msgstr "מתחבר מחדש..."
 
@@ -26741,7 +26741,7 @@ msgstr "ההפניה הועתקה."
 msgid "Referral parameters"
 msgstr "פרמטרים של הפניה"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:312
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:309
 msgid "Refresh audio sources"
 msgstr "רענון מקורות שמע"
 
@@ -28559,7 +28559,7 @@ msgstr "רוויה"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
-#: src/features/messaging/commands/MessageCommands.tsx:108
+#: src/features/messaging/commands/MessageCommands.tsx:109
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:136
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:193
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:115
@@ -28687,7 +28687,7 @@ msgid "Scan the QR code with your authenticator app."
 msgstr "סרוק את קוד ה-QR באמצעות אפליקציית האימות שלך."
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.
-#: src/features/devtools/components/NagbarControls.ts:22
+#: src/features/devtools/components/NagbarControls.ts:23
 msgid "Scheduled maintenance nagbar"
 msgstr "שורת התראה על תחזוקה מתוזמנת"
 
@@ -28962,7 +28962,7 @@ msgstr "תצוגה מקדימה בגלילה"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:89
+#: src/features/messaging/components/modals/ForwardModal.tsx:91
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:46
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29606,14 +29606,14 @@ msgstr "החזרים בשירות עצמי זמינים תוך 3 ימים מהת
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #. Send-message button label in the voice message composer modal.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:43
+#: src/features/theme/components/modals/ShareThemeModal.tsx:44
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:316
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:77
 msgid "Send"
 msgstr "שליחה"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:106
+#: src/features/messaging/components/modals/ForwardModal.tsx:108
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "שליחה ({selectedCount}/{selectionLimit})"
 
@@ -29694,7 +29694,7 @@ msgstr "שלח קבצים עד {size}"
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
-#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:94
+#: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
@@ -29710,7 +29710,7 @@ msgstr "שלח GIF {title}"
 #. Plus menu item that opens the gift purchase flow.
 #: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:31
 msgid "Send gift"
 msgstr "שלח מתנה"
 
@@ -29873,7 +29873,7 @@ msgid "Serve the token file"
 msgstr "הגשת קובץ האסימון"
 
 #. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.
-#: src/features/devtools/components/NagbarControls.ts:27
+#: src/features/devtools/components/NagbarControls.ts:28
 msgid "Service incident nagbar"
 msgstr "הודעת תקלה בשירות"
 
@@ -30118,7 +30118,7 @@ msgid "Settings"
 msgstr "הגדרות"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
 msgid "settings link"
 msgstr "קישור להגדרות"
 
@@ -30239,7 +30239,7 @@ msgid "Share your screen or camera in up to 4K at 60 frames per second. Free acc
 msgstr "שתף את המסך או המצלמה שלך באיכות של עד 4K ב-60 פריימים לשנייה. חשבונות חינמיים משדרים באיכות של עד 720p ב-30."
 
 #. Button or menu action label in the share theme modal. Keep it concise.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:39
+#: src/features/theme/components/modals/ShareThemeModal.tsx:40
 msgid "Share your theme"
 msgstr "שתף את ערכת הנושא שלך"
 
@@ -30263,7 +30263,7 @@ msgid "Shared window"
 msgstr "חלון משותף"
 
 #. Capture option in the Linux audio source picker on a window share. Captures only the audio of the window being shared.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:40
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:42
 msgid "Shared window audio"
 msgstr "שמע החלון המשותף"
 
@@ -30364,7 +30364,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "קיצורי הדרך מושהים בזמן הקלטת צירוף מקשים."
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:60
+#: src/features/messaging/components/modals/ForwardModal.tsx:62
 msgid "Shorten the message and try again."
 msgstr "יש לקצר את ההודעה ולנסות שוב."
 
@@ -31506,7 +31506,7 @@ msgid "Something went wrong while preparing this sticker. Try another file or tr
 msgstr "משהו השתבש במהלך הכנת המדבקה. נסה קובץ אחר או נסה שוב בעוד רגע."
 
 #. Fallback body of the error alert shown when publishing an announcement message fails.
-#: src/features/messaging/commands/MessageCommands.tsx:124
+#: src/features/messaging/commands/MessageCommands.tsx:125
 msgid "Something went wrong while publishing. Try again in a moment."
 msgstr "משהו השתבש בעת הפרסום. נסה שוב בעוד רגע."
 
@@ -31552,7 +31552,7 @@ msgstr "משהו השתבש."
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:18
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
-#: src/features/theme/components/modals/ShareThemeModal.tsx:51
+#: src/features/theme/components/modals/ShareThemeModal.tsx:52
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
@@ -33157,12 +33157,12 @@ msgid "Template"
 msgstr "תבנית"
 
 #. Label of the textarea in the paste-template-JSON form. "JSON" must not be translated.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:150
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:154
 msgid "Template JSON"
 msgstr "JSON של תבנית"
 
 #. Label of the URL input in the import-template form.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:142
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:146
 msgid "Template URL"
 msgstr "כתובת URL של תבנית"
 
@@ -33191,7 +33191,7 @@ msgid "Temporary invites need a live connection. Check yours and try again."
 msgstr "הזמנות זמניות דורשות חיבור פעיל. בדוק את החיבור שלך ונסה שוב."
 
 #. Switch label in the invite link settings. When enabled, members joining via this invite are kicked when they go offline unless given a role.
-#: src/features/invite/components/modals/InviteModal.tsx:129
+#: src/features/invite/components/modals/InviteModal.tsx:132
 msgid "Temporary membership"
 msgstr "חברות זמנית"
 
@@ -33202,7 +33202,7 @@ msgid "Tennessee"
 msgstr "טנסי"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:64
+#: src/features/devtools/components/NagbarControls.ts:65
 msgid "Terms acceptance nagbar"
 msgstr "באנר קבלת תנאים"
 
@@ -33760,7 +33760,7 @@ msgstr "ערכת נושא לא זמינה"
 msgid "Themes"
 msgstr "ערכות נושא"
 
-#: src/features/invite/components/modals/InviteModal.tsx:194
+#: src/features/invite/components/modals/InviteModal.tsx:197
 msgid "There are no channels available to create an invite for."
 msgstr "אין ערוצים זמינים ליצירת הזמנה."
 
@@ -33815,7 +33815,7 @@ msgid "They left the call"
 msgstr "הם עזבו את השיחה"
 
 #. Body of the error modal shown when a DM cannot be opened (blocked or no shared community).
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:20
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:24
 msgid "They might not be accepting messages from you, or you no longer share a community."
 msgstr "ייתכן שהם אינם מקבלים ממך הודעות, או שאתם כבר לא חברים באותה קהילה."
 
@@ -34092,7 +34092,7 @@ msgid "This device does not support notifications."
 msgstr "מכשיר זה אינו תומך בהתראות."
 
 #. Validation error in the paste-template-JSON form when the JSON parses but lacks the expected third-party template fields.
-#: src/features/guild/components/modals/add_guild_modal/shared.ts:133
+#: src/features/guild/components/modals/add_guild_modal/shared.ts:137
 msgid "This doesn't look like a valid template response. Make sure you copied the entire JSON document."
 msgstr "זו לא נראית כמו תגובת תבנית תקינה. ודא שהעתקת את מסמך ה-JSON בשלמותו."
 
@@ -34170,7 +34170,7 @@ msgid "This gift has been redeemed"
 msgstr "המתנה הזו כבר מומשה"
 
 #. Title of the error modal shown when a group DM would exceed the maximum number of recipients.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:48
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:52
 msgid "This group has too many people"
 msgstr "בקבוצה הזו יש יותר מדי אנשים"
 
@@ -34208,7 +34208,7 @@ msgstr "למופע זה עדיין אין חשבונות. החשבון הראש�
 msgid "This invite is hidden while sharing is protected."
 msgstr "ההזמנה הזו מוסתרת בזמן שהשיתוף מוגן."
 
-#: src/features/invite/components/modals/InviteModal.tsx:514
+#: src/features/invite/components/modals/InviteModal.tsx:519
 msgid "This invite link never expires."
 msgstr "קישור ההזמנה הזה לעולם לא יפוג."
 
@@ -34305,7 +34305,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "ערוץ קישור זה מסומן ככולל תוכן למבוגרים ועשוי להכיל חומר שאינו הולם עבור חלק מהמשתמשים."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:158
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:161
 msgid "This link is not available for your account."
 msgstr "הקישור הזה אינו זמין לחשבון שלך."
 
@@ -34361,7 +34361,7 @@ msgid "This message has already been deleted."
 msgstr "ההודעה הזו כבר נמחקה."
 
 #. Toast shown when someone tries to publish an announcement message that was already published.
-#: src/features/messaging/commands/MessageCommands.tsx:116
+#: src/features/messaging/commands/MessageCommands.tsx:117
 msgid "This message has already been published"
 msgstr "ההודעה הזו כבר פורסמה"
 
@@ -34486,7 +34486,7 @@ msgid "This theme is still loading."
 msgstr "העיצוב עדיין נטען."
 
 #. Title of the error modal shown when a theme CSS exceeds the maximum shareable size.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:55
+#: src/features/theme/components/modals/ShareThemeModal.tsx:56
 msgid "This theme is too large to share"
 msgstr "העיצוב גדול מדי לשיתוף"
 
@@ -34528,7 +34528,7 @@ msgid "This user is not available to receive calls right now. They may have call
 msgstr "משתמש זה אינו זמין לקבל שיחות כרגע. ייתכן שהשיחות מושבתות אצלו."
 
 #. Body of the error modal shown when the recipient of a DM no longer exists.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:28
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:32
 msgid "This user no longer exists. Refresh and try again."
 msgstr "המשתמש הזה כבר לא קיים. רענן ונסה שוב."
 
@@ -35712,7 +35712,7 @@ msgid "Unclaimed account"
 msgstr "חשבון שלא נתבע"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:32
+#: src/features/devtools/components/NagbarControls.ts:33
 msgid "Unclaimed account nagbar"
 msgstr "באנר חשבון שלא נתבע"
 
@@ -37152,7 +37152,7 @@ msgstr "משתמש עובר ערוץ"
 
 #. Reason chip in the unaddable recipients alert when the user record is missing.
 #. Title of the error modal shown when the recipient of a DM no longer exists.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:24
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:28
 #: src/features/channel/components/channel_view/DMChannelView.tsx:279
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:11
 msgid "User not found"
@@ -37274,27 +37274,27 @@ msgid "Using {effectiveLabel} until {requestedLabel} is ready."
 msgstr "שימוש ב-{effectiveLabel} עד ש- {requestedLabel} יהיה מוכן."
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:106
+#: src/features/devtools/components/NagbarControls.ts:107
 msgid "Using actual account state"
 msgstr "משתמש במצב החשבון האמיתי"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:126
+#: src/features/devtools/components/NagbarControls.ts:127
 msgid "Using actual gift inventory state"
 msgstr "משתמש במצב מלאי המתנות האמיתי"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:122
+#: src/features/devtools/components/NagbarControls.ts:123
 msgid "Using actual premium state"
 msgstr "משתמש במצב פרימיום אמיתי"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:130
+#: src/features/devtools/components/NagbarControls.ts:131
 msgid "Using actual state"
 msgstr "משתמש במצב אמיתי"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:110
+#: src/features/devtools/components/NagbarControls.ts:111
 msgid "Using actual verification state"
 msgstr "משתמש במצב אימות אמיתי"
 
@@ -37456,9 +37456,9 @@ msgstr "אימות זהותך"
 
 #. Title of the error modal shown when an unverified account tries to start a DM.
 #. Title shown when an unverified account cannot start a DM or group DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:40
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:80
-#: src/features/channel/utils/CreateDMModalUtils.tsx:51
+#: src/features/channel/utils/CreateDMModalUtils.tsx:52
 #: src/features/moderation/components/report/ReportStepEmail.tsx:43
 msgid "Verify your email"
 msgstr "אמת את כתובת האימייל שלך"
@@ -37543,7 +37543,7 @@ msgid "Verify your email to purchase {premiumProductFullName}."
 msgstr "אמת את האימייל שלך כדי לרכוש את {premiumProductFullName}."
 
 #. Blocked-state text shown when an unverified account cannot start a DM or group DM.
-#: src/features/channel/utils/CreateDMModalUtils.tsx:55
+#: src/features/channel/utils/CreateDMModalUtils.tsx:56
 msgid "Verify your email to start DMs."
 msgstr "יש לאמת את כתובת האימייל שלך כדי להתחיל בצ'אטים פרטיים."
 
@@ -37791,7 +37791,7 @@ msgid "View call"
 msgstr "הצגת שיחה"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:124
+#: src/features/voice/components/VoiceCallView.tsx:120
 msgid "View call controls"
 msgstr "הצגת פקדי שיחה"
 
@@ -37987,7 +37987,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary ({premiumProductName} לכל החיים)"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:60
+#: src/features/devtools/components/NagbarControls.ts:61
 msgid "Visionary 2FA nagbar"
 msgstr "באנר 2FA של Visionary"
 
@@ -38243,7 +38243,7 @@ msgid "Voice region"
 msgstr "אזור קולי"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:68
+#: src/features/devtools/components/NagbarControls.ts:69
 msgid "Voice session restore nagbar"
 msgstr "שורת התראה לשחזור שיחה קולית"
 
@@ -38331,12 +38331,12 @@ msgid "Waiting for passkey…"
 msgstr "ממתין למפתח גישה…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:76
+#: src/features/messaging/components/modals/ForwardModal.tsx:78
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "ממתין שתוקף מצב איטי ב-{forwardChannelDisplayName} יפוג."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:81
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "ממתין שתוקף מצב איטי באחד או יותר מהערוצים שנבחרו יפוג."
 
@@ -38520,7 +38520,7 @@ msgstr "שלחנו קוד לכתובת {email}."
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "נמלא מראש את {prefillEmail} לאחר שההתחברות בדפדפן תיפתח."
 
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:87
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:89
 msgid "We'd love to give you more than a lifetime of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time continuum. Send the gift to a friend instead?"
 msgstr "היינו שמחים לתת לך יותר מ-{PREMIUM_PRODUCT_NAME} לכל החיים, אבל זה שובר את רצף הזמן-חלל. אולי תשלח את המתנה לחבר במקום?"
 
@@ -39178,7 +39178,7 @@ msgid "You already have a group with these users. Do you really want to create a
 msgstr "כבר יש לך קבוצה עם המשתמשים האלה. האם ברצונך ליצור קבוצה חדשה? גם זה בסדר!"
 
 #. Status label shown to a user who already owns the lifetime premium tier.
-#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:26
+#: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:27
 msgid "You already have lifetime {premiumProductName}"
 msgstr "כבר יש לך {premiumProductName} לכל החיים"
 
@@ -39326,7 +39326,7 @@ msgid "You can't add expressions there"
 msgstr "אי אפשר להוסיף ביטויים שם"
 
 #. Error message in the messaging commands.
-#: src/features/messaging/commands/ReactionCommands.tsx:27
+#: src/features/messaging/commands/ReactionCommands.tsx:28
 msgid "You can't add new reactions while you're timed out."
 msgstr "אינך יכול להוסיף ריאקציות חדשות כשאתה בפסק זמן."
 
@@ -39392,7 +39392,7 @@ msgstr "אינך יכול לנהל Webhooks באף קהילה. בקש ממנהל
 
 #. Reason chip in the unaddable recipients alert when blocked or DMs are not allowed.
 #. Title of the error modal shown when a DM cannot be opened (blocked or no shared community).
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:16
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:20
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:15
 msgid "You can't message this user"
 msgstr "אינך יכול לשלוח הודעה למשתמש זה"
@@ -39521,7 +39521,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "שינית את התג שלך בזמן שהיית ב-{PREMIUM_PRODUCT_NAME}. הוא ישתנה באופן אקראי כשתוקף ה-{PREMIUM_PRODUCT_NAME} שלך יפוג, אלא אם כן הוא יתחדש."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
 msgid "You do not have access to the channel where this message was sent."
 msgstr "אין לך גישה לערוץ שבו נשלחה ההודעה הזו."
 
@@ -39618,12 +39618,12 @@ msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {produc
 msgstr "לחצת על Tab. מצב מקלדת מופעל כעת, כך שתוכל לנווט ב-{productName} ללא עכבר."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:137
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:245
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:244
 msgid "You keep your perks until your next renewal date. Reactivate before then to keep your subscriber history."
 msgstr "ההטבות שלך יישמרו עד לתאריך החידוש הבא שלך. יש להפעיל מחדש את המנוי לפני כן כדי לשמור את היסטוריית המנוי שלך."
 
 #: src/features/app/components/dialogs/components/PlutoniumContent.tsx:158
-#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:266
+#: src/features/premium/components/plutonium_page/PlutoniumPage.tsx:265
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "תאבד את כל ההטבות של {PREMIUM_PRODUCT_NAME} באופן מיידי והיסטוריית המנוי שלך תתאפס. לא ניתן לבטל פעולה זו."
 
@@ -39709,7 +39709,7 @@ msgid "You need to claim your account before you can create a community."
 msgstr "עליך לתבוע את החשבון שלך לפני שתוכל ליצור קהילה."
 
 #. Body of the error modal shown when an unclaimed account tries to start a DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:36
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:40
 msgid "You need to claim your account before you can start a direct message."
 msgstr "עליך לתבוע את החשבון שלך לפני שתוכל להתחיל צ'אט."
 
@@ -39731,7 +39731,7 @@ msgid "You need to verify your email address before you can send friend requests
 msgstr "עליך לאמת את כתובת האימייל שלך לפני שתוכל לשלוח בקשות חברות."
 
 #. Body of the error modal shown when an unverified account tries to start a DM.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:44
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:48
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "עליך לאמת את כתובת האימייל שלך לפני שתוכל להתחיל צ'אט."
 
@@ -39745,7 +39745,7 @@ msgid "You need to verify your email to send messages in this community."
 msgstr "עליך לאמת את כתובת האימייל שלך כדי לשלוח הודעות בקהילה זו."
 
 #. Body of the error modal shown when the user or a recipient has too many open group DMs.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:60
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:64
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "לך או למישהו שאתה מוסיף כבר יש את המספר המרבי של צ'אטים קבוצתיים פתוחים. צא מאחד מהם ונסה שוב."
 
@@ -39888,7 +39888,7 @@ msgstr "אתה עורך הודעות מהר מדי"
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:56
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:77
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:149
-#: src/features/theme/components/modals/ShareThemeModal.tsx:63
+#: src/features/theme/components/modals/ShareThemeModal.tsx:64
 msgid "You're going too fast"
 msgstr "אתה פועל מהר מדי"
 
@@ -39951,7 +39951,7 @@ msgid "You're viewing older messages"
 msgstr "אתה מציג הודעות ישנות יותר"
 
 #. Body of the error modal shown when a group DM would exceed the maximum number of recipients.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:52
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:56
 msgid "You've added more people than a group DM allows. Remove a few and try again."
 msgstr "הוספת יותר אנשים ממה שמותר בצ'אט קבוצתי. הסר כמה ונסה שוב."
 
@@ -40003,7 +40003,7 @@ msgid "You've reached the favorite GIF limit."
 msgstr "הגעת למגבלת קובצי ה-GIF המועדפים."
 
 #. Title of the error modal shown when the user or a recipient has too many open group DMs.
-#: src/features/app/components/alerts/DmActionErrorModal.tsx:56
+#: src/features/app/components/alerts/DmActionErrorModal.tsx:60
 msgid "You've reached the group DM limit"
 msgstr "הגעת למגבלת הצ'אטים הקבוצתיים"
 
@@ -40118,7 +40118,7 @@ msgid "Your card is eligible. Redirecting you to the payment page now."
 msgstr "הכרטיס שלך מתאים. אנו מעבירים אותך עכשיו לדף התשלום."
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
-#: src/features/messaging/commands/MessageCommands.tsx:103
+#: src/features/messaging/commands/MessageCommands.tsx:104
 msgid "Your changes reach every community that follows this channel, which can take a minute. Each published message allows 3 quick edits, then 1 every 20 minutes."
 msgstr "השינויים שלך יגיעו לכל קהילה שעוקבת אחר הערוץ הזה, וזה עשוי לקחת דקה. כל הודעה שפורסמה מאפשרת 3 עריכות מהירות, ואז 1 כל 20 דקות."
 
@@ -40236,22 +40236,22 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "הרכישה האחרונה שלך מחוץ לחלון ההחזר הכספי. צור קשר עם התמיכה בנוגע לבעיות חיוב."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:72
+#: src/features/messaging/state/MessageQueue.tsx:74
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "ההודעה שלך לא נמסרה כי היא סומנה על ידי מערכות הבטיחות שלנו. אם לדעתך זו טעות, אנא פנה לתמיכה."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:59
+#: src/features/messaging/state/MessageQueue.tsx:61
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "ההודעה שלך לא נמסרה. בדרך כלל זה קורה כי אינך חבר בקהילה משותפת עם הנמען, או שהנמען מקבל הודעות פרטיות רק מחברים. ייתכן שיהיה עליך גם להתאים את הגדרות הפרטיות שלך להודעות פרטיות ב{directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:64
+#: src/features/messaging/state/MessageQueue.tsx:66
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "ההודעה שלך לא נשלחה. עליך לתבוע את החשבון שלך כדי לשלוח הודעות פרטיות."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:68
+#: src/features/messaging/state/MessageQueue.tsx:70
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "ההודעה שלך לא נשלחה. עליך לתבוע את החשבון שלך כדי לשלוח הודעות."
 
@@ -40409,7 +40409,7 @@ msgid "Your subscription will switch to yearly billing at the next renewal."
 msgstr "המנוי שלך יעבור לחיוב שנתי במועד החידוש הבא."
 
 #. Body of the error modal shown when a theme CSS exceeds the maximum shareable size.
-#: src/features/theme/components/modals/ShareThemeModal.tsx:59
+#: src/features/theme/components/modals/ShareThemeModal.tsx:60
 msgid "Your theme CSS is too large to share. Trim it down and try again."
 msgstr "קובץ ה-CSS של העיצוב גדול מדי לשיתוף. צמצם אותו ונסה שוב."
 

@@ -15,6 +15,7 @@ import * as MessageCommands from '@app/features/messaging/commands/MessageComman
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Input} from '@app/features/ui/components/form/FormInput';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import {useCopyLinkHandler} from '@app/lib/copy-link';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -51,6 +52,7 @@ export const GiftSendToFriendModal = observer(function GiftSendToFriendModal({co
 	const handleCopy = useCopyLinkHandler(giftUrl, true);
 	const handleSendGift = useCallback(
 		async (item: RecipientItem) => {
+			if (blockIfAccountLimited()) return;
 			const userId = item.type === 'group_dm' ? item.id : item.user.id;
 			setSendingTo((previous) => new Set(previous).add(userId));
 			try {

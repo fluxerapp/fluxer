@@ -2,6 +2,7 @@
 
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {TemplateSerializedGuild} from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
@@ -80,6 +81,9 @@ export function parseTemplateCode(input: string): string | null {
 }
 
 export function handleGuildCreationError(error: unknown): never {
+	if (handleAccountLimitedError(error)) {
+		throw new DOMException('Guild create skipped', 'AbortError');
+	}
 	if (failureCode(error) === APIErrorCodes.UNCLAIMED_ACCOUNT_CANNOT_CREATE_GUILDS) {
 		openClaimAccountModal({force: true});
 	}
