@@ -95,6 +95,8 @@ const DSA_CODE_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const DSA_CODE_SEGMENT_LENGTH = 4;
 const DSA_CODE_SEPARATOR = '-';
 const DSA_TICKET_BYTES = 32;
+const DSA_EMAIL_SEND_RECIPIENT_MAX = 3;
+const DSA_EMAIL_SEND_RECIPIENT_WINDOW = ms('1 hour');
 
 async function emitReportFiled(row: IARSubmissionRow, target: ReportTarget): Promise<void> {
 	const key = row.reported_user_id ?? row.reporter_id;
@@ -373,6 +375,20 @@ export class ReportService {
 
 	async sendDsaReportVerificationCode(email: string, locale: string | null = null): Promise<void> {
 		const normalizedEmail = this.normalizeEmail(email);
+		const recipientLimit = await this.rateLimitService.checkLimit({
+			identifier: `dsa:report:email:send:recipient:${normalizedEmail}`,
+			maxAttempts: DSA_EMAIL_SEND_RECIPIENT_MAX,
+			windowMs: DSA_EMAIL_SEND_RECIPIENT_WINDOW,
+		});
+		if (!recipientLimit.allowed) {
+			throw new RateLimitError({
+				retryAfter: recipientLimit.retryAfter,
+				retryAfterDecimal: recipientLimit.retryAfterDecimal,
+				limit: recipientLimit.limit,
+				resetTime: recipientLimit.resetTime,
+				resetAfterDecimal: recipientLimit.resetAfterDecimal,
+			});
+		}
 		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(normalizedEmail);
 		if (!hasValidDns) {
 			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);

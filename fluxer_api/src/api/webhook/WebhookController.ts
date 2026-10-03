@@ -467,6 +467,7 @@ export function WebhookController(app: HonoApp) {
 	app.post(
 		'/webhooks/:webhook_id/:token/github',
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_GITHUB),
+		BlockAppOriginMiddleware,
 		OpenAPI({
 			operationId: 'execute_github_webhook',
 			summary: 'Execute GitHub webhook',
@@ -494,6 +495,7 @@ export function WebhookController(app: HonoApp) {
 	app.post(
 		'/webhooks/:webhook_id/:token/slack',
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_EXECUTE),
+		BlockAppOriginMiddleware,
 		OpenAPI({
 			operationId: 'execute_slack_webhook',
 			summary: 'Execute Slack webhook',
@@ -520,6 +522,7 @@ export function WebhookController(app: HonoApp) {
 	app.post(
 		'/webhooks/:webhook_id/:token/instatus',
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_INSTATUS),
+		BlockAppOriginMiddleware,
 		OpenAPI({
 			operationId: 'execute_instatus_webhook',
 			summary: 'Execute Instatus webhook',

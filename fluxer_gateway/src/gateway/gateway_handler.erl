@@ -261,11 +261,15 @@ handle_incoming_data(Data, #{encoding := Encoding, compress_ctx := CompressCtx0}
     ws_result().
 handle_decompressed_incoming_data(Data, Encoding, CompressCtx, State) ->
     MaxPayloadSize = constants:max_payload_size(),
-    case gateway_compress:decompress(Data, CompressCtx) of
+    case gateway_compress:decompress(Data, CompressCtx, MaxPayloadSize) of
         {ok, Decompressed, NewCompressCtx} when byte_size(Decompressed) =< MaxPayloadSize ->
             Decoded = gateway_codec:decode(Decompressed, Encoding),
             handle_decode(Decoded, State#{compress_ctx => NewCompressCtx});
         {ok, _Decompressed, _NewCompressCtx} ->
+            gateway_handler_encode:close_with_reason(
+                decode_error, <<"Payload too large">>, State
+            );
+        {error, decompression_too_large} ->
             gateway_handler_encode:close_with_reason(
                 decode_error, <<"Payload too large">>, State
             );
