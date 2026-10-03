@@ -145,6 +145,28 @@ describe('Message Search Exact Phrases', () => {
 			}
 		}
 	});
+	test('typographic quotes in content are treated as exact phrases', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Smart Quote Guild');
+		const channelId = guild.system_channel_id!;
+		const timestamp = Date.now();
+		const tag = `sq-${timestamp}`;
+		await sendMessage(harness, owner.token, channelId, `${tag} hello world`);
+		await sendMessage(harness, owner.token, channelId, `${tag} world hello`);
+		await markChannelAsIndexed(harness, channelId);
+		const result = await createBuilder<MessageSearchResponse>(harness, owner.token)
+			.post('/search/messages')
+			.body({
+				content: `${tag} \u201chello world\u201d`,
+				context_channel_id: channelId,
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(isSearchResult(result)).toBe(true);
+		if (isSearchResult(result)) {
+			expect(result.messages.map((m) => m.content)).toEqual([`${tag} hello world`]);
+		}
+	});
 	test('exact_phrases combined with author_id filter', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'Author Filter Phrase Guild');
