@@ -61,6 +61,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {MessageFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {JumpType} from '@fluxer/constants/src/JumpConstants';
@@ -679,6 +680,9 @@ function showPublishedEditLimitModal(error: unknown): boolean {
 }
 
 function showEditFailureModal(error: unknown): void {
+	if (handleAccountLimitedError(error)) {
+		return;
+	}
 	if (showPublishedEditLimitModal(error)) {
 		return;
 	}
@@ -848,6 +852,9 @@ export function confirmPublishedMessageEdit(i18n: I18n, message: MessageModel, s
 }
 
 function showCrosspostFailure(i18n: I18n, error: unknown): void {
+	if (handleAccountLimitedError(error)) {
+		return;
+	}
 	const errorCode = failureCode(error);
 	if (
 		error instanceof HttpError &&
@@ -1075,7 +1082,7 @@ export async function toggleSuppressEmbeds(channelId: string, messageId: string,
 		logger.debug(`Successfully ${isSuppressed ? 'unsuppressed' : 'suppressed'} embeds for message ${messageId}`);
 	} catch (error) {
 		logger.error('Failed to toggle suppress embeds:', error);
-		if (showPublishedEditLimitModal(error)) {
+		if (handleAccountLimitedError(error) || showPublishedEditLimitModal(error)) {
 			return;
 		}
 		throw error;

@@ -523,7 +523,6 @@ The `nagbars` field stores dismissed account-wide notices as bools and dismissed
 | desktop_download | bool | Whether the desktop download notice is dismissed |
 | guild_membership_cta | bool | Whether the guild membership call to action notice is dismissed |
 | visionary_mfa<sup>1</sup> | bool | Whether the lifetime premium MFA notice is dismissed |
-| legacy_phone_unlink | bool | Whether the legacy phone unlink notice is dismissed |
 | pending_bulk_deletion | map[string, bool] | Dismissal state keyed by pending bulk deletion identifier |
 | invites_disabled<sup>2</sup> | map[string, bool] | Dismissal state keyed by guild ID for disabled-invite notices |
 | guild_mfa_requirement<sup>2</sup> | map[string, bool] | Dismissal state keyed by guild ID for MFA requirement notices |

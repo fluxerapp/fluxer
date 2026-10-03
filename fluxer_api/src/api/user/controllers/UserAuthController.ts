@@ -6,21 +6,17 @@ import {
 	getPasskeyMigrationRegistrationOptions,
 } from '@app/api/auth/services/PasskeyMigrationService';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
-import {Config} from '@app/api/Config';
-import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
-import {verifyCaptchaToken} from '@app/api/middleware/CaptchaMiddleware';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertValidTotpSetupCode} from '@app/api/user/services/UserAuth';
 import {Validator} from '@app/api/Validator';
-import {Headers} from '@fluxer/constants/src/Headers';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
-	InboundSmsChallengeStartResponse,
 	MfaBackupCodesChallengeRegenerateRequest,
 	MfaBackupCodesChallengeResendRequest,
 	MfaBackupCodesChallengeStartResponse,
@@ -28,10 +24,6 @@ import {
 	MfaBackupCodesChallengeVerifyResponse,
 	MfaBackupCodesRequest,
 	MfaBackupCodesResponse,
-	PhoneSendVerificationRequest,
-	PhoneSendVerificationResponse,
-	PhoneVerifyRequest,
-	PhoneVerifyResponse,
 	SudoMfaMethodsResponse,
 	SudoVerificationSchema,
 	WebAuthnChallengeResponse,
@@ -69,6 +61,7 @@ export function UserAuthController(app: HonoApp) {
 		async (ctx) => {
 			const body = ctx.req.valid('json');
 			const user = ctx.get('user');
+			await assertValidTotpSetupCode(body.secret, body.code);
 			const sudoResult = await requireSudoMode(ctx, user, body);
 			return ctx.json(
 				await ctx.get('userAuthRequestService').enableTotp({
@@ -219,77 +212,6 @@ export function UserAuthController(app: HonoApp) {
 			const body = ctx.req.valid('json');
 			return ctx.json(
 				await ctx.get('mfaBackupCodesChallengeService').regenerate(user, body.ticket, body.verification_proof),
-			);
-		},
-	);
-	app.post(
-		'/users/@me/phone/send-verification',
-		RateLimitMiddleware(RateLimitConfigs.PHONE_SEND_VERIFICATION),
-		LoginRequiredAllowSuspicious,
-		DefaultUserOnly,
-		Validator('json', PhoneSendVerificationRequest),
-		OpenAPI({
-			operationId: 'send_phone_verification_code',
-			summary: 'Send phone verification code',
-			responseSchema: PhoneSendVerificationResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description:
-				'Send a one-time code on the requested channel. Defaults to the first available channel from server policy. Pass channel="sms" to request SMS (only honoured for SMS-allowlisted destinations) or channel="inbound_challenge" to receive challenge details to text in. Expensive outbound destinations always downgrade to an inbound challenge. Requires a solved captcha challenge (X-Captcha-Token) when the phone verification service asks for one.',
-		}),
-		async (ctx) => {
-			return ctx.json(
-				await ctx.get('userAuthRequestService').sendPhoneVerificationCode({
-					user: ctx.get('user'),
-					data: ctx.req.valid('json'),
-					clientIp: requireClientIp(ctx.req.raw, {
-						trustClientIpHeader: Config.proxy.trust_client_ip_header,
-						clientIpHeaderName: Config.proxy.client_ip_header,
-					}),
-					hasCaptchaToken: ctx.req.header(Headers.X_CAPTCHA_TOKEN) !== undefined,
-					verifyCaptcha: () => verifyCaptchaToken(ctx),
-				}),
-			);
-		},
-	);
-	app.post(
-		'/users/@me/phone/inbound-challenge',
-		RateLimitMiddleware(RateLimitConfigs.PHONE_SEND_VERIFICATION),
-		LoginRequiredAllowSuspicious,
-		DefaultUserOnly,
-		OpenAPI({
-			operationId: 'start_inbound_phone_challenge',
-			summary: 'Start an inbound SMS challenge',
-			responseSchema: InboundSmsChallengeStartResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description:
-				"When an account must verify its phone number inbound, the user texts a one-time code to the platform's number instead of receiving one. This endpoint generates the code and the destination number to display.",
-		}),
-		async (ctx) => {
-			return ctx.json(await ctx.get('userAuthRequestService').startInboundPhoneChallenge(ctx.get('user')));
-		},
-	);
-	app.post(
-		'/users/@me/phone/verify',
-		RateLimitMiddleware(RateLimitConfigs.PHONE_VERIFY_CODE),
-		LoginRequiredAllowSuspicious,
-		DefaultUserOnly,
-		Validator('json', PhoneVerifyRequest),
-		OpenAPI({
-			operationId: 'verify_phone_code',
-			summary: 'Verify phone code',
-			responseSchema: PhoneVerifyResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description: 'Verify a phone number by confirming the SMS verification code. Returns phone verification status.',
-		}),
-		async (ctx) => {
-			return ctx.json(
-				await ctx.get('userAuthRequestService').verifyPhoneCode({user: ctx.get('user'), data: ctx.req.valid('json')}),
 			);
 		},
 	);

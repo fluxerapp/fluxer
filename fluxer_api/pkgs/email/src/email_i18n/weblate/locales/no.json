@@ -11,10 +11,6 @@
 		"subject": "Slettingen av {product_name}-kontoen din er planlagt",
 		"body": "Hei {username},\n\nSom du ba om, er {product_name}-kontoen din planlagt for permanent sletting:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsak: {reason}}}\n\nKontoen din er låst frem til da. Hvis du ikke ba om dette, eller hvis du vil beholde kontoen din, kan du kontakte {safety_email} fra denne e-postadressen før denne datoen.\n\n– {product_name}-teamet"
 	},
-	"account_disabled_suspicious": {
-		"subject": "{product_name}-kontoen din er midlertidig deaktivert",
-		"body": "Hei {username},\n\nVi deaktiverte {product_name}-kontoen din midlertidig fordi vi oppdaget mistenkelig aktivitet.\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}}\n}\n\nFor å få tilgang til kontoen din igjen må du tilbakestille passordet ditt:\n\n{forgotUrl}\n\nEtter at du har tilbakestilt passordet ditt, kan du logge inn igjen.\n\nHvis du mener dette er en feil, kan du kontakte kundestøtten vår.\n\n– Sikkerhetsteamet hos {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name}-kontoen din blir permanent slettet",
 		"body": "Hei {username},\n\nVi har planlagt permanent sletting av {product_name}-kontoen din på grunn av brudd på våre vilkår for bruk eller retningslinjer for fellesskapet.\n\nPlanlagt sletting: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Årsak: {reason}}\n}\n\nDette er et alvorlig tiltak. Kontodataene dine blir permanent slettet på den planlagte datoen.\n\nLes gjennom:\n- Vilkår for bruk: {termsUrl}\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\nKlageprosessen:\nHvis du mener avgjørelsen var feil eller uberettiget, har du 60 dager på deg til å sende inn en klage. Send en e-post til {appeals_email} fra denne e-postadressen.\n\nI klagen din:\n- Forklar tydelig hvorfor du mener avgjørelsen var feil eller uberettiget\n- Legg ved relevante bevis eller opplysninger\n\nEt medlem av sikkerhetsteamet hos {product_name} vil vurdere klagen din og kan utsette slettingen til en endelig avgjørelse er tatt.\n\n– Sikkerhetsteamet hos {product_name}"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "E-postadressen på {product_name}-kontoen din er endret",
-		"body": "Hei {username},\n\nE-postadressen på {product_name}-kontoen din ble endret til {newEmail}.\n\nHvis du gjorde denne endringen, trenger du ikke å gjøre noe. Hvis det ikke var deg, kan du angre endringen og sikre kontoen din via denne lenken:\n\n{revertUrl}\n\nDette gjenoppretter den forrige e-postadressen din, logger deg ut overalt, fjerner tilknyttede telefonnumre, deaktiverer flerfaktorautentisering (MFA) og krever at du angir et nytt passord.\n\n– Sikkerhetsteamet hos {product_name}"
+		"body": "Hei {username},\n\nE-postadressen på {product_name}-kontoen din ble endret til {newEmail}.\n\nHvis du gjorde denne endringen, trenger du ikke å gjøre noe. Hvis det ikke var deg, kan du angre endringen og sikre kontoen din via denne lenken:\n\n{revertUrl}\n\nDette gjenoppretter den forrige e-postadressen din, logger deg ut overalt, deaktiverer flerfaktorautentisering (MFA) og krever at du angir et nytt passord.\n\n– Sikkerhetsteamet hos {product_name}"
 	},
 	"email_verification": {
 		"subject": "Bekreft e-postadressen din for {product_name}",

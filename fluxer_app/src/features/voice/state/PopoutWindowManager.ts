@@ -57,12 +57,6 @@ export function isVoicePopoutAlwaysOnTopSupported(): boolean {
 	return typeof getElectronAPI()?.popoutSetAlwaysOnTop === 'function';
 }
 
-interface PopoutChildWindow {
-	closed: boolean;
-	focus: () => void;
-	close: () => void;
-}
-
 interface AlwaysOnTopOperationState {
 	readonly descriptor: VoicePopoutDescriptor;
 	desired: boolean;
@@ -71,7 +65,7 @@ interface AlwaysOnTopOperationState {
 class PopoutWindowManagerStore {
 	popouts: Record<string, VoicePopoutDescriptor> = {};
 	alwaysOnTopKeys: Record<string, true> = {};
-	private readonly childWindows = new Map<string, PopoutChildWindow>();
+	private readonly childWindows = new Map<string, Window>();
 	private readonly alwaysOnTopOperations = new Map<string, AlwaysOnTopOperationState>();
 	private nextPopoutGeneration = 1;
 
@@ -108,6 +102,12 @@ class PopoutWindowManagerStore {
 			if (popout.kind === 'call') return popout;
 		}
 		return null;
+	}
+
+	getChildWindow(key: string): Window | null {
+		const childWindow = this.childWindows.get(key);
+		if (!childWindow || childWindow.closed) return null;
+		return childWindow;
 	}
 
 	isOpen(key: string): boolean {
@@ -148,7 +148,7 @@ class PopoutWindowManagerStore {
 		}
 	}
 
-	attachWindow(key: string, generation: number, childWindow: PopoutChildWindow | null): void {
+	attachWindow(key: string, generation: number, childWindow: Window | null): void {
 		if (!this.isCurrentPopout(key, generation)) return;
 		if (childWindow === null) {
 			this.childWindows.delete(key);

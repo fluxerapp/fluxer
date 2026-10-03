@@ -199,7 +199,6 @@ export async function processUserDeletion(
 		stripe_subscription_id: null,
 		stripe_customer_id: null,
 		has_ever_purchased: null,
-		suspicious_activity_flags: null,
 		terms_agreed_at: null,
 		privacy_agreed_at: null,
 		last_active_at: null,

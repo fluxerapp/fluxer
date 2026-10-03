@@ -18,6 +18,7 @@ import {ReportStatus} from '@app/api/report/IReportRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import {clearPendingDeletion, reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
@@ -326,6 +327,7 @@ export class AdminUserDeletionService {
 				['notification_sent', notificationSent ? 'true' : 'false'],
 			]),
 		});
+		await clearNewConversationLimit(userId, {cache: cacheService});
 		await emitAdminAction(adminUserId, userId, 'cancel_deletion');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),

@@ -35,7 +35,7 @@ describe('Webhook emoji bypass', () => {
 			user.token,
 			guildId,
 			'animated',
-			'thisisfine.gif',
+			'animated.gif',
 			'image/gif',
 		);
 		const webhook = await createWebhook(harness, channelId, user.token, 'Emoji Test Webhook');

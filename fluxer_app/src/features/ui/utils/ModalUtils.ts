@@ -73,7 +73,7 @@ function watchBackdropActivation(ownerDocument: Document): () => void {
 	};
 }
 
-function isBackdropActivationCarriedOver(ownerDocument: Document): boolean {
+function isBackdropActivationLeftOver(ownerDocument: Document): boolean {
 	const watcher = backdropActivationWatchers.get(ownerDocument);
 	if (!watcher) {
 		return false;
@@ -222,7 +222,7 @@ export function useModalLogic({
 	}, [handleClose, modalKey]);
 	const handleBackdropClick = useCallback(
 		(customOnClose?: () => void) => {
-			if (isBackdropActivationCarriedOver(ownerDocument)) {
+			if (isBackdropActivationLeftOver(ownerDocument)) {
 				return;
 			}
 			handleClose(customOnClose);

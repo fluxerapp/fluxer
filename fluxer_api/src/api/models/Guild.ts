@@ -8,6 +8,7 @@ import {
 	type GuildNSFWLevelValue,
 	GuildSplashCardAlignment,
 	type GuildSplashCardAlignmentValue,
+	GuildVerificationLevel,
 	type GuildVerificationLevelValue,
 	normalizeLegacyNsfwLevel,
 } from '@fluxer/constants/src/GuildConstants';
@@ -67,7 +68,10 @@ export class Guild {
 		this.embedSplashWidth = row.embed_splash_width ?? null;
 		this.embedSplashHeight = row.embed_splash_height ?? null;
 		this.features = row.features ?? new Set();
-		this.verificationLevel = (row.verification_level ?? 0) as GuildVerificationLevelValue;
+		this.verificationLevel = Math.min(
+			row.verification_level ?? 0,
+			GuildVerificationLevel.HIGH,
+		) as GuildVerificationLevelValue;
 		this.mfaLevel = (row.mfa_level ?? 0) as GuildMFALevelValue;
 		this.nsfwLevel = normalizeLegacyNsfwLevel(row.nsfw_level ?? 0) as GuildNSFWLevelValue;
 		this.nsfw = row.nsfw ?? this.nsfwLevel === 3;

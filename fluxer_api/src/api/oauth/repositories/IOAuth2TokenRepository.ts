@@ -14,13 +14,14 @@ export interface IOAuth2TokenRepository {
 	createAuthorizationCode(data: OAuth2AuthorizationCodeRow): Promise<OAuth2AuthorizationCode>;
 	getAuthorizationCode(code: string): Promise<OAuth2AuthorizationCode | null>;
 	deleteAuthorizationCode(code: string): Promise<void>;
+	consumeAuthorizationCode(code: string, applicationId: ApplicationID): Promise<boolean>;
 	createAccessToken(data: OAuth2AccessTokenRow): Promise<OAuth2AccessToken>;
 	getAccessToken(token: string): Promise<OAuth2AccessToken | null>;
 	deleteAccessToken(token: string, applicationId: ApplicationID, userId: UserID | null): Promise<void>;
 	deleteAllAccessTokensForUser(userId: UserID): Promise<void>;
 	createRefreshToken(data: OAuth2RefreshTokenRow): Promise<OAuth2RefreshToken>;
 	getRefreshToken(token: string): Promise<OAuth2RefreshToken | null>;
-	deleteRefreshToken(token: string, applicationId: ApplicationID, userId: UserID): Promise<void>;
+	consumeRefreshToken(token: string, applicationId: ApplicationID, userId: UserID): Promise<boolean>;
 	deleteAllRefreshTokensForUser(userId: UserID): Promise<void>;
 	listRefreshTokensForUser(userId: UserID): Promise<Array<OAuth2RefreshToken>>;
 	deleteAllTokensForUserAndApplication(userId: UserID, applicationId: ApplicationID): Promise<void>;

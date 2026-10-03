@@ -17,6 +17,7 @@ import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
 import {Validator} from '@app/api/Validator';
 import type {WebhookExecuteMessageData} from '@app/api/webhook/WebhookService';
@@ -189,6 +190,7 @@ export function WebhookController(app: HonoApp) {
 		Validator('param', ChannelIdParam),
 		Validator('json', WebhookCreateRequest),
 		async (ctx) => {
+			assertAccountNotLimited(ctx.get('user'));
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const response = await ctx.get('webhookRequestService').createWebhook({
 				userId: ctx.get('user').id,
@@ -465,6 +467,7 @@ export function WebhookController(app: HonoApp) {
 	app.post(
 		'/webhooks/:webhook_id/:token/github',
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_GITHUB),
+		BlockAppOriginMiddleware,
 		OpenAPI({
 			operationId: 'execute_github_webhook',
 			summary: 'Execute GitHub webhook',
@@ -492,6 +495,7 @@ export function WebhookController(app: HonoApp) {
 	app.post(
 		'/webhooks/:webhook_id/:token/slack',
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_EXECUTE),
+		BlockAppOriginMiddleware,
 		OpenAPI({
 			operationId: 'execute_slack_webhook',
 			summary: 'Execute Slack webhook',
@@ -518,6 +522,7 @@ export function WebhookController(app: HonoApp) {
 	app.post(
 		'/webhooks/:webhook_id/:token/instatus',
 		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_INSTATUS),
+		BlockAppOriginMiddleware,
 		OpenAPI({
 			operationId: 'execute_instatus_webhook',
 			summary: 'Execute Instatus webhook',

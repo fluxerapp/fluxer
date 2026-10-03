@@ -208,7 +208,7 @@ mod tests {
     }
 
     #[test]
-    fn media_headers_carry_the_frozen_policy_values_and_no_entity_tag() {
+    fn media_headers_have_the_frozen_policy_values_and_no_entity_tag() {
         let mut headers = HeaderMap::new();
         add_media_headers(&mut headers, 100, "image/png", None);
         assert_eq!(value(&headers, "accept-ranges"), "bytes");

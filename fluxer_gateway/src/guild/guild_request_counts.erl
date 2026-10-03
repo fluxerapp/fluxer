@@ -15,6 +15,7 @@
 -define(GUILD_CALL_TIMEOUT_MS, 2000).
 -define(BATCH_OVERALL_TIMEOUT_MS, 3000).
 -define(MAX_NONCE_BYTES, 64).
+-define(LEGACY_NODE_KEY(Node), {?MODULE, legacy_node, Node}).
 
 -type session_state() :: map().
 
@@ -105,13 +106,32 @@ worker(Parent, Tag, GuildId, GuildPid, UserId) ->
 
 -spec fetch_counts(pid(), integer()) -> {ok, non_neg_integer(), non_neg_integer()} | error.
 fetch_counts(GuildPid, UserId) ->
+    case is_legacy_node(node(GuildPid)) of
+        true -> fetch_legacy_counts(GuildPid, UserId);
+        false -> fetch_viewer_counts(GuildPid, UserId)
+    end.
+
+-spec fetch_viewer_counts(pid(), integer()) ->
+    {ok, non_neg_integer(), non_neg_integer()} | error.
+fetch_viewer_counts(GuildPid, UserId) ->
     Request = {get_viewer_counts, #{user_id => UserId}},
     try guild_query_handler:call(GuildPid, Request, ?GUILD_CALL_TIMEOUT_MS) of
-        ok -> fetch_legacy_counts(GuildPid, UserId);
-        Reply -> counts_result(Reply)
+        ok ->
+            ok = remember_legacy_node(node(GuildPid)),
+            fetch_legacy_counts(GuildPid, UserId);
+        Reply ->
+            counts_result(Reply)
     catch
         _:_ -> error
     end.
+
+-spec is_legacy_node(node()) -> boolean().
+is_legacy_node(Node) ->
+    persistent_term:get(?LEGACY_NODE_KEY(Node), false) =:= true.
+
+-spec remember_legacy_node(node()) -> ok.
+remember_legacy_node(Node) ->
+    persistent_term:put(?LEGACY_NODE_KEY(Node), true).
 
 -spec fetch_legacy_counts(pid(), integer()) ->
     {ok, non_neg_integer(), non_neg_integer()} | error.
@@ -248,7 +268,12 @@ handle_request_echoes_nonce_test() ->
         ?assert(false)
     end.
 
+forget_legacy_nodes() ->
+    _ = persistent_term:erase(?LEGACY_NODE_KEY(node())),
+    ok.
+
 handle_request_fetches_viewer_counts_with_deadline_test() ->
+    ok = forget_legacy_nodes(),
     Self = self(),
     Guild = spawn(fun() ->
         receive
@@ -299,25 +324,26 @@ request_counts_payload(Guilds) ->
     end.
 
 handle_request_falls_back_to_user_counts_on_legacy_guild_test() ->
+    ok = forget_legacy_nodes(),
     Guild = legacy_guild([#{member_count => 50, online_count => 10}]),
     Payload = request_counts_payload(#{7 => {Guild, make_ref()}}),
     ?assertEqual([build_entry(7, 50, 10)], maps:get(<<"counts">>, Payload)).
 
 handle_request_omits_guild_when_legacy_fallback_fails_test() ->
+    ok = forget_legacy_nodes(),
     Guild = legacy_guild([ok]),
     Payload = request_counts_payload(#{7 => {Guild, make_ref()}}),
     ?assertEqual([], maps:get(<<"counts">>, Payload)).
 
 handle_request_mixes_legacy_and_current_guilds_test() ->
+    ok = forget_legacy_nodes(),
     Legacy = legacy_guild([#{member_count => 50, online_count => 10}]),
     Current = spawn(fun() ->
         receive
             {'$gen_call', From, {get_viewer_counts, #{user_id := 100}}} ->
+                gen_server:reply(From, #{member_count => 80, online_count => 20});
+            {'$gen_call', From, {get_user_counts, 100}} ->
                 gen_server:reply(From, #{member_count => 80, online_count => 20})
-        end,
-        receive
-            {'$gen_call', From2, _} -> gen_server:reply(From2, unexpected)
-        after 500 -> ok
         end
     end),
     Payload = request_counts_payload(#{7 => {Legacy, make_ref()}, 9 => {Current, make_ref()}}),
@@ -327,6 +353,7 @@ handle_request_mixes_legacy_and_current_guilds_test() ->
     ).
 
 fetch_counts_does_not_fall_back_on_current_guild_test() ->
+    ok = forget_legacy_nodes(),
     Self = self(),
     Guild = spawn(fun() ->
         receive
@@ -346,7 +373,39 @@ fetch_counts_does_not_fall_back_on_current_guild_test() ->
     after 400 -> ok
     end.
 
+fetch_counts_goes_straight_to_user_counts_after_a_legacy_answer_test() ->
+    ok = forget_legacy_nodes(),
+    Self = self(),
+    Guild = spawn(fun() -> recording_legacy_guild(Self, 3) end),
+    ?assertEqual({ok, 50, 10}, fetch_counts(Guild, 100)),
+    ?assertEqual({ok, 50, 10}, fetch_counts(Guild, 100)),
+    Calls = [
+        receive
+            {legacy_call, Tag} -> Tag
+        after 1000 -> none
+        end
+     || _ <- [1, 2, 3]
+    ],
+    ok = forget_legacy_nodes(),
+    ?assertEqual([get_viewer_counts, get_user_counts, get_user_counts], Calls).
+
+recording_legacy_guild(_Parent, 0) ->
+    ok;
+recording_legacy_guild(Parent, N) ->
+    receive
+        {'$gen_call', From, {get_viewer_counts, _}} ->
+            Parent ! {legacy_call, get_viewer_counts},
+            gen_server:reply(From, ok);
+        {'$gen_call', From, {get_user_counts, 100}} ->
+            Parent ! {legacy_call, get_user_counts},
+            gen_server:reply(From, #{member_count => 50, online_count => 10})
+    after 1000 ->
+        ok
+    end,
+    recording_legacy_guild(Parent, N - 1).
+
 fetch_counts_errors_on_malformed_reply_test() ->
+    ok = forget_legacy_nodes(),
     Guild = spawn(fun() ->
         receive
             {'$gen_call', From, {get_viewer_counts, _}} -> gen_server:reply(From, #{})

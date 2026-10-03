@@ -5,7 +5,7 @@ import {EXAMPLE_FLUXER_TAG_FULL} from '@app/features/app/config/I18nDisplayConst
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import styles from '@app/features/channel/components/direct_message/AddFriendForm.module.css';
 import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as RelationshipCommands from '@app/features/relationship/commands/RelationshipCommands';
 import {getSendFriendRequestErrorMessage} from '@app/features/relationship/utils/RelationshipActionUtils';
 import {OUTGOING_FRIEND_REQUEST_STATUS_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
@@ -53,6 +53,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 	const [isLoading, setIsLoading] = useState(false);
 	const [resultStatus, setResultStatus] = useState<'success' | 'error' | null>(null);
 	const [errorCode, setErrorCode] = useState<string | null>(null);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const currentUser = Users.currentUser;
 	const isClaimed = currentUser?.isClaimed() ?? true;
 	if (!isClaimed) {
@@ -109,6 +110,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 		if (resultStatus) {
 			setResultStatus(null);
 			setErrorCode(null);
+			setErrorMessage(null);
 		}
 	};
 	const getErrorMessage = () => {
@@ -121,6 +123,9 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 		if (errorCode === APIErrorCodes.DISCRIMINATOR_REQUIRED) {
 			return i18n._(PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR, {exampleFluxerTagFull: EXAMPLE_FLUXER_TAG_FULL});
 		}
+		if (errorCode === APIErrorCodes.NEW_CONVERSATIONS_LIMITED) {
+			return getSendFriendRequestErrorMessage(i18n, errorCode, errorMessage);
+		}
 		return getSendFriendRequestErrorMessage(i18n, errorCode, null);
 	};
 	const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -129,6 +134,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 		if (!username || !discriminator || !/^\d{4}$/.test(discriminator)) {
 			setResultStatus('error');
 			setErrorCode(APIErrorCodes.NO_USERS_WITH_FLUXERTAG_EXIST);
+			setErrorMessage(null);
 			return;
 		}
 		setIsLoading(true);
@@ -143,6 +149,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 				setIsLoading(false);
 				setResultStatus('error');
 				setErrorCode(failureCode(error) ?? null);
+				setErrorMessage(failureMessage(error) ?? null);
 			});
 	};
 	const isDisabled = isLoading || !input['trim']();

@@ -25,7 +25,7 @@ import type {User} from '@app/api/models/User';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {PremiumFlags, SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {expect} from 'vitest';
 
 async function loadUser(account: TestAccount): Promise<User> {
@@ -181,39 +181,6 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetType: 'user',
 					targetId: target.userId,
 					metadata: {fields: 'bio,pronouns,global_name'},
-				},
-			};
-		},
-	},
-	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/bot-status',
-		async prepare({harness}) {
-			const target = await createTestAccount(harness);
-			return {
-				request: {path: `/admin/users/${target.userId}/bot-status`, body: {bot: true}},
-				expected: {
-					action: 'set_bot_status',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {bot: 'true'},
-				},
-			};
-		},
-	},
-	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/system-status',
-		async prepare(context) {
-			const target = await createTestAccount(context.harness);
-			await adminBuilder(context).put(`/admin/users/${target.userId}/bot-status`).body({bot: true}).execute();
-			return {
-				request: {path: `/admin/users/${target.userId}/system-status`, body: {system: true}},
-				expected: {
-					action: 'set_system_status',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {system: 'true'},
 				},
 			};
 		},
@@ -534,34 +501,6 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/phone-verification',
-		async prepare(context) {
-			const target = await createTestAccount(context.harness);
-			const flags = SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE;
-			await adminBuilder(context)
-				.put(`/admin/users/${target.userId}/suspicious-activity-flags`)
-				.body({flags})
-				.execute();
-			return {
-				request: {
-					path: `/admin/users/${target.userId}/phone-verification`,
-					body: {has_verified_phone: true},
-				},
-				expected: {
-					action: 'update_has_verified_phone',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {
-						has_verified_phone: 'true',
-						suspicious_activity_flags_before: flags.toString(),
-						suspicious_activity_flags_after: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL.toString(),
-					},
-				},
-			};
-		},
-	},
-	{
 		method: 'PATCH',
 		route: '/admin/users/:user_id/date-of-birth',
 		async prepare({harness}) {
@@ -573,40 +512,6 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetType: 'user',
 					targetId: target.userId,
 					metadata: {old_dob: (await loadUser(target)).dateOfBirth!, new_dob: '1995-06-15'},
-				},
-			};
-		},
-	},
-	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/suspicious-activity-flags',
-		async prepare({harness}) {
-			const target = await createTestAccount(harness);
-			const flags = SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL | SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE;
-			return {
-				request: {path: `/admin/users/${target.userId}/suspicious-activity-flags`, body: {flags}},
-				expected: {
-					action: 'update_suspicious_activity_flags',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {flags: flags.toString()},
-				},
-			};
-		},
-	},
-	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/suspicious-activity-disablement',
-		async prepare({harness}) {
-			const target = await createTestAccount(harness);
-			const flags = SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE;
-			return {
-				request: {path: `/admin/users/${target.userId}/suspicious-activity-disablement`, body: {flags}},
-				expected: {
-					action: 'disable_suspicious_activity',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {flags: flags.toString(), notify_user: 'true', notification_sent: 'true'},
 				},
 			};
 		},

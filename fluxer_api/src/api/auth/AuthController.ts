@@ -2,7 +2,7 @@
 
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {Config} from '@app/api/Config';
-import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
 import {LocalAuthMiddleware} from '@app/api/middleware/LocalAuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -102,7 +102,9 @@ export function AuthController(app: HonoApp) {
 				'Complete the SSO authentication flow with the authorization code from the SSO provider. Returns authentication token and user information.',
 		}),
 		async (ctx) => {
-			const result = await ctx.get('authRequestService').completeSso(ctx.req.valid('json'), ctx.req.raw);
+			const result = await ctx
+				.get('authRequestService')
+				.completeSso(ctx.req.valid('json'), ctx.req.raw, ctx.get('requestCache'));
 			return ctx.json(result);
 		},
 	);
@@ -180,7 +182,7 @@ export function AuthController(app: HonoApp) {
 	app.post(
 		'/auth/logout',
 		RateLimitMiddleware(RateLimitConfigs.AUTH_LOGOUT),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		OpenAPI({
 			operationId: 'logout_user',
 			summary: 'Logout account',
@@ -220,7 +222,7 @@ export function AuthController(app: HonoApp) {
 		'/auth/verify/resend',
 		LocalAuthMiddleware,
 		RateLimitMiddleware(RateLimitConfigs.AUTH_RESEND_VERIFICATION),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
 			operationId: 'resend_verification_email',
@@ -330,7 +332,7 @@ export function AuthController(app: HonoApp) {
 	app.get(
 		'/auth/sessions',
 		RateLimitMiddleware(RateLimitConfigs.AUTH_SESSIONS_GET),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
 			operationId: 'list_auth_sessions',
@@ -350,7 +352,7 @@ export function AuthController(app: HonoApp) {
 	app.post(
 		'/auth/sessions/logout',
 		RateLimitMiddleware(RateLimitConfigs.AUTH_SESSIONS_LOGOUT),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		SudoModeMiddleware,
 		Validator('json', LogoutAuthSessionsWithVerificationRequest),

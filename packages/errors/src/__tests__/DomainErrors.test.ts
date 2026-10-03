@@ -3,13 +3,6 @@
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {InvalidPhoneNumberError} from '@fluxer/errors/src/domains/auth/InvalidPhoneNumberError';
-import {PhoneCountryNotSupportedError} from '@fluxer/errors/src/domains/auth/PhoneCountryNotSupportedError';
-import {PhoneInboundVerificationRequiredError} from '@fluxer/errors/src/domains/auth/PhoneInboundVerificationRequiredError';
-import {PhoneLookupUnavailableError} from '@fluxer/errors/src/domains/auth/PhoneLookupUnavailableError';
-import {PhoneNumberNotInServiceError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotInServiceError';
-import {PhoneNumberNotMobileError} from '@fluxer/errors/src/domains/auth/PhoneNumberNotMobileError';
-import {PhoneVerificationNeedsReviewError} from '@fluxer/errors/src/domains/auth/PhoneVerificationNeedsReviewError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
@@ -25,6 +18,7 @@ import {StorePurchaseInvalidError} from '@fluxer/errors/src/domains/payment/Stor
 import {StorePurchaseOwnedByOtherAccountError} from '@fluxer/errors/src/domains/payment/StorePurchaseOwnedByOtherAccountError';
 import {StorePurchaseSandboxNotEntitledError} from '@fluxer/errors/src/domains/payment/StorePurchaseSandboxNotEntitledError';
 import {UnknownStorePurchaseError} from '@fluxer/errors/src/domains/payment/UnknownStorePurchaseError';
+import {AccountLimitedError} from '@fluxer/errors/src/domains/user/AccountLimitedError';
 import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {describe, expect, it} from 'vitest';
 
@@ -71,23 +65,7 @@ it.each([BadRequestError, ForbiddenError, NotFoundError])(
 );
 
 describe.each([
-	[APIErrorCodes.INVALID_PHONE_NUMBER, InvalidPhoneNumberError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[APIErrorCodes.PHONE_COUNTRY_NOT_SUPPORTED, PhoneCountryNotSupportedError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[
-		APIErrorCodes.PHONE_INBOUND_VERIFICATION_REQUIRED,
-		PhoneInboundVerificationRequiredError,
-		BadRequestError,
-		HttpStatus.BAD_REQUEST,
-	],
-	[APIErrorCodes.PHONE_LOOKUP_UNAVAILABLE, PhoneLookupUnavailableError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[APIErrorCodes.PHONE_NUMBER_NOT_IN_SERVICE, PhoneNumberNotInServiceError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[APIErrorCodes.PHONE_NUMBER_NOT_MOBILE, PhoneNumberNotMobileError, BadRequestError, HttpStatus.BAD_REQUEST],
-	[
-		APIErrorCodes.PHONE_VERIFICATION_NEEDS_REVIEW,
-		PhoneVerificationNeedsReviewError,
-		BadRequestError,
-		HttpStatus.BAD_REQUEST,
-	],
+	[APIErrorCodes.ACCOUNT_LIMITED, AccountLimitedError, ForbiddenError, HttpStatus.FORBIDDEN],
 	[APIErrorCodes.UNKNOWN_CHANNEL, UnknownChannelError, NotFoundError, HttpStatus.NOT_FOUND],
 	[APIErrorCodes.UNKNOWN_MESSAGE, UnknownMessageError, NotFoundError, HttpStatus.NOT_FOUND],
 	[APIErrorCodes.STORE_PURCHASE_INVALID, StorePurchaseInvalidError, BadRequestError, HttpStatus.BAD_REQUEST],
@@ -210,7 +188,7 @@ describe('PremiumPurchaseBlockedError', () => {
 		});
 	});
 
-	it('carries the blocking provider when one is given', () => {
+	it('includes the blocking provider when one is given', () => {
 		const error = new PremiumPurchaseBlockedError('existing_subscription', {provider: 'app_store'});
 
 		expect(error.toJSON()).toEqual({

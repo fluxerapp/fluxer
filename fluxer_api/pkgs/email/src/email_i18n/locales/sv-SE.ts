@@ -15,10 +15,6 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "Raderingen av ditt {product_name}-konto är schemalagd",
 		"body": "Hej {username},\n\nSom du har begärt är permanent radering av ditt {product_name}-konto planerad till följande tidpunkt:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nAnledning: {reason}}}\n\nDitt konto är låst fram till dess. Om du inte begärde detta, eller om du vill behålla ditt konto, kontakta {safety_email} från den här e-postadressen före det datumet.\n\n– {product_name}-teamet"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Ditt {product_name}-konto har tillfälligt inaktiverats",
-		"body": "Hej {username},\n\nVi har tillfälligt inaktiverat ditt {product_name}-konto eftersom vi upptäckte misstänkt aktivitet.\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}}\n}\n\nFör att återfå åtkomst till ditt konto måste du återställa ditt lösenord:\n\n{forgotUrl}\n\nEfter att du har återställt ditt lösenord kan du logga in igen.\n\nOm du anser att detta har skett av misstag, kontakta vårt supportteam.\n\n– Säkerhetsteamet på {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Ditt {product_name}-konto kommer att raderas permanent",
 		"body": "Hej {username},\n\nDitt {product_name}-konto har schemalagts för permanent radering på grund av brott mot våra användarvillkor eller communityriktlinjer.\n\nSchemalagd radering: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}}\n}\n\nDetta är en allvarlig åtgärd. Dina kontodata kommer att raderas permanent på det schemalagda datumet.\n\nGranska:\n- Användarvillkor: {termsUrl}\n- Communityriktlinjer: {guidelinesUrl}\n\nÖverklagandeprocess:\nOm du anser att detta beslut var felaktigt eller obefogat har du 60 dagar på dig att överklaga. Mejla {appeals_email} från den här e-postadressen.\n\nI ditt överklagande:\n- Förklara tydligt varför du anser att beslutet var felaktigt eller obefogat\n- Bifoga relevanta bevis eller bakgrundsinformation\n\nEn medarbetare i säkerhetsteamet på {product_name} kommer att granska ditt överklagande och kan pausa den planerade raderingen tills ett slutgiltigt beslut har fattats.\n\n– Säkerhetsteamet på {product_name}"
@@ -49,7 +45,7 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Din e-postadress på {product_name} har ändrats",
-		"body": "Hej {username},\n\nE-postadressen för ditt {product_name}-konto har ändrats till {newEmail}.\n\nOm du gjorde denna ändring behövs ingen åtgärd. Om du inte gjorde det kan du ångra ändringen och säkra ditt konto med denna länk:\n\n{revertUrl}\n\nDetta återställer din tidigare e-postadress, loggar ut dig överallt, tar bort kopplade telefonnummer, inaktiverar flerfaktorsautentisering (MFA) och kräver att du väljer ett nytt lösenord.\n\n– Säkerhetsteamet på {product_name}"
+		"body": "Hej {username},\n\nE-postadressen för ditt {product_name}-konto har ändrats till {newEmail}.\n\nOm du gjorde denna ändring behövs ingen åtgärd. Om du inte gjorde det kan du ångra ändringen och säkra ditt konto med denna länk:\n\n{revertUrl}\n\nDetta återställer din tidigare e-postadress, loggar ut dig överallt, inaktiverar flerfaktorsautentisering (MFA) och kräver att du väljer ett nytt lösenord.\n\n– Säkerhetsteamet på {product_name}"
 	},
 	"email_verification": {
 		"subject": "Verifiera din e-postadress på {product_name}",

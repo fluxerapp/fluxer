@@ -108,15 +108,9 @@ pub struct AdminUser {
     pub premium_grace_ends_at: Option<String>,
     pub premium_lifetime_sequence: Option<i32>,
     #[serde(default)]
-    pub suspicious_activity_flags: i32,
-    #[serde(default)]
-    pub phone_verification_deferred: bool,
-    #[serde(default)]
     pub has_totp: bool,
     #[serde(default)]
     pub authenticator_types: Vec<i32>,
-    #[serde(default)]
-    pub has_verified_phone: bool,
     pub temp_banned_until: Option<String>,
     pub pending_deletion_at: Option<String>,
     pub pending_bulk_message_deletion_at: Option<String>,
@@ -261,7 +255,28 @@ pub enum FlashLevel {
 pub struct BanCheckResult {
     pub banned: bool,
     #[serde(default)]
+    pub expires_at: Option<String>,
+    #[serde(default)]
     pub entries: Vec<serde_json::Value>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BlocklistEntry {
+    pub value: String,
+    #[serde(default)]
+    pub match_subdomains: Option<bool>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub created_at: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BlocklistEntryPage {
+    pub items: Vec<BlocklistEntry>,
+    pub has_more: bool,
+    #[serde(default)]
+    pub next_after: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

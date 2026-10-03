@@ -282,6 +282,7 @@ export class OAuth2RequestService {
 						guildId,
 						skipGuildLimitCheck: true,
 						skipBanCheck: true,
+						skipAccountLimitCheck: true,
 						joinSourceType: JoinSourceTypes.BOT_INVITE,
 						inviterId: params.userId,
 						requestCache: params.requestCache,

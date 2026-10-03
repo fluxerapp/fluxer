@@ -43,7 +43,7 @@ const FULL_USER_COLUMNS: &str = "\
     premium_will_cancel, premium_onboarding_dismissed_at, \
     has_ever_purchased, stripe_subscription_id, stripe_customer_id, \
     gift_inventory_server_seq, gift_inventory_client_seq, \
-    suspicious_activity_flags, terms_agreed_at, privacy_agreed_at, \
+    terms_agreed_at, privacy_agreed_at, \
     last_active_at, last_active_ip, \
     temp_banned_until, pending_deletion_at, \
     pending_bulk_message_deletion_at, \
@@ -51,7 +51,7 @@ const FULL_USER_COLUMNS: &str = "\
     pending_bulk_message_deletion_message_count, \
     password_last_changed_at, acls, \
     deletion_reason_code, deletion_public_reason, deletion_audit_log_reason, \
-    first_refund_at, version, has_verified_phone, \
+    first_refund_at, version, \
     premium_grace_ends_at, mention_flags, \
     last_voice_activity_sharing_change_at, \
     timezone, timezone_privacy_flags";
@@ -146,7 +146,6 @@ struct FullUserDbRow {
     stripe_customer_id: Option<String>,
     gift_inventory_server_seq: Option<i32>,
     gift_inventory_client_seq: Option<i32>,
-    suspicious_activity_flags: Option<i32>,
     terms_agreed_at: OptionalTimestamp,
     privacy_agreed_at: OptionalTimestamp,
     last_active_at: OptionalTimestamp,
@@ -163,7 +162,6 @@ struct FullUserDbRow {
     deletion_audit_log_reason: Option<String>,
     first_refund_at: OptionalTimestamp,
     version: Option<i32>,
-    has_verified_phone: Option<bool>,
     premium_grace_ends_at: OptionalTimestamp,
     mention_flags: Option<i32>,
     last_voice_activity_sharing_change_at: OptionalTimestamp,
@@ -226,7 +224,6 @@ struct FullUserKvRow {
     stripe_customer_id: Option<String>,
     gift_inventory_server_seq: Option<i32>,
     gift_inventory_client_seq: Option<i32>,
-    suspicious_activity_flags: Option<i32>,
     terms_agreed_at: Option<i64>,
     privacy_agreed_at: Option<i64>,
     last_active_at: Option<i64>,
@@ -243,7 +240,6 @@ struct FullUserKvRow {
     deletion_audit_log_reason: Option<String>,
     first_refund_at: Option<i64>,
     version: Option<i32>,
-    has_verified_phone: Option<bool>,
     premium_grace_ends_at: Option<i64>,
     mention_flags: Option<i32>,
     last_voice_activity_sharing_change_at: Option<i64>,
@@ -658,7 +654,6 @@ fn fluxer_system_user() -> User {
         stripe_customer_id: None,
         gift_inventory_server_seq: None,
         gift_inventory_client_seq: None,
-        suspicious_activity_flags: None,
         terms_agreed_at: None,
         privacy_agreed_at: None,
         last_active_at: None,
@@ -675,7 +670,6 @@ fn fluxer_system_user() -> User {
         deletion_audit_log_reason: None,
         first_refund_at: None,
         version: 1,
-        has_verified_phone: None,
         premium_grace_ends_at: None,
         mention_flags: None,
         last_voice_activity_sharing_change_at: None,
@@ -832,7 +826,6 @@ impl From<FullUserDbRow> for User {
             stripe_customer_id: row.stripe_customer_id,
             gift_inventory_server_seq: row.gift_inventory_server_seq,
             gift_inventory_client_seq: row.gift_inventory_client_seq,
-            suspicious_activity_flags: row.suspicious_activity_flags,
             terms_agreed_at: optional_timestamp_millis(row.terms_agreed_at),
             privacy_agreed_at: optional_timestamp_millis(row.privacy_agreed_at),
             last_active_at: optional_timestamp_millis(row.last_active_at),
@@ -856,7 +849,6 @@ impl From<FullUserDbRow> for User {
             deletion_audit_log_reason: row.deletion_audit_log_reason,
             first_refund_at: optional_timestamp_millis(row.first_refund_at),
             version: row.version.unwrap_or_default(),
-            has_verified_phone: row.has_verified_phone,
             premium_grace_ends_at: optional_timestamp_millis(row.premium_grace_ends_at),
             mention_flags: row.mention_flags,
             last_voice_activity_sharing_change_at: optional_timestamp_millis(
@@ -906,7 +898,6 @@ impl From<FullUserKvRow> for User {
             stripe_customer_id: row.stripe_customer_id,
             gift_inventory_server_seq: row.gift_inventory_server_seq,
             gift_inventory_client_seq: row.gift_inventory_client_seq,
-            suspicious_activity_flags: row.suspicious_activity_flags,
             terms_agreed_at: row.terms_agreed_at,
             privacy_agreed_at: row.privacy_agreed_at,
             last_active_at: row.last_active_at,
@@ -925,7 +916,6 @@ impl From<FullUserKvRow> for User {
             deletion_audit_log_reason: row.deletion_audit_log_reason,
             first_refund_at: row.first_refund_at,
             version: row.version.unwrap_or_default(),
-            has_verified_phone: row.has_verified_phone,
             premium_grace_ends_at: row.premium_grace_ends_at,
             mention_flags: row.mention_flags,
             last_voice_activity_sharing_change_at: row.last_voice_activity_sharing_change_at,

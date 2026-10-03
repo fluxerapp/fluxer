@@ -52,13 +52,12 @@ pub fn settings_tab(
                             "guild-verification-level",
                             "verification_level",
                             "Verification Level",
-                            guild.verification_level.unwrap_or(0),
+                            guild.verification_level.unwrap_or(0).min(3),
                             &[
                                 (0, "None"),
                                 (1, "Low (verified email)"),
                                 (2, "Medium (5+ minutes)"),
                                 (3, "High (10+ minutes)"),
-                                (4, "Very High (verified phone)"),
                             ],
                         ))
                         (select_field(
@@ -225,12 +224,11 @@ fn select_field(
 }
 
 fn settings_tab_readonly(guild: &GuildDetailInfo) -> Markup {
-    let verification_label = match guild.verification_level.unwrap_or(0) {
+    let verification_label = match guild.verification_level.unwrap_or(0).min(3) {
         0 => "None",
         1 => "Low (verified email)",
         2 => "Medium (5+ minutes)",
         3 => "High (10+ minutes)",
-        4 => "Very High (verified phone)",
         _ => "Unknown",
     };
     let mfa_label = match guild.mfa_level.unwrap_or(0) {

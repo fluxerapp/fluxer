@@ -280,7 +280,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Renames an API key or replaces the access control lists (ACLs) it carries. The key may only carry permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.",
+				"description": "Renames an API key or replaces the access control lists (ACLs) it has. The key may only hold permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -1108,7 +1108,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "List every blocklist this instance maintains, the request field that carries an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.",
+				"description": "List every blocklist this instance maintains, the request field that holds an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.",
 				"security": [{"adminApiKey": []}]
 			}
 		},
@@ -1451,7 +1451,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Report whether a value is currently blocked by a blocklist. The value is percent-encoded in the path. An IP address can still match a broader stored CIDR entry, and a URL can match a banned domain. The profile-substring blocklist requires a scope.",
+				"description": "Report whether a value is currently blocked by a blocklist. The value is percent-encoded in the path. An IP address can still match a broader stored CIDR entry, and a url-domain value can be a hostname or an http(s) URL that a stored domain or pattern covers. The profile-substring blocklist requires a scope.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -1529,7 +1529,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Rewrite the stored fields of a blocklist entry without removing and re-adding it. The stored metadata is replaced by the supplied fields, so fields left out fall back to their defaults. Only blocklists whose entries carry fields accept this operation, reported as supports_update by GET /admin/blocklists.",
+				"description": "Rewrite the stored fields of a blocklist entry without removing and re-adding it. The stored metadata is replaced by the supplied fields, so fields left out fall back to their defaults. Only blocklists whose entries have fields accept this operation, reported as supports_update by GET /admin/blocklists.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -1683,7 +1683,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Enqueue one background administrative job. The `task` discriminator selects both the body variant and the ACL evaluated for the request: `update_user_flags` needs bulk:update:user_flags, `update_suspicious_activity_flags` needs bulk:update:suspicious_activity, `update_guild_features` needs bulk:update:guild_features, `add_guild_members` needs bulk:add:guild_members, `schedule_user_deletion` needs bulk:delete:users, and `delete_user_messages` needs bulk:delete:user_messages. Returns a job_id immediately; observe progress at /admin/jobs/:job_id.",
+				"description": "Enqueue one background administrative job. The `task` discriminator selects both the body variant and the ACL evaluated for the request: `update_user_flags` needs bulk:update:user_flags, `update_guild_features` needs bulk:update:guild_features, `add_guild_members` needs bulk:add:guild_members, `schedule_user_deletion` needs bulk:delete:users, and `delete_user_messages` needs bulk:delete:user_messages. Returns a job_id immediately; observe progress at /admin/jobs/:job_id.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
 					"required": true,
@@ -4680,7 +4680,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Searches the messages of a channel by content, or resolves a single message by its ID or by one of its attachments. Passing message_id returns that message with the messages surrounding it; passing attachment_id together with filename returns the message carrying that attachment with its surrounding context. Requires MESSAGE_LOOKUP permission.",
+				"description": "Searches the messages of a channel by content, or resolves a single message by its ID or by one of its attachments. Passing message_id returns that message with the messages surrounding it; passing attachment_id together with filename returns the message with that attachment with its surrounding context. Requires MESSAGE_LOOKUP permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -4715,10 +4715,10 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"description": "Return the single message carrying this attachment together with its surrounding context; requires filename",
+							"description": "Return the single message with this attachment together with its surrounding context; requires filename",
 							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
 						},
-						"description": "Return the single message carrying this attachment together with its surrounding context; requires filename"
+						"description": "Return the single message with this attachment together with its surrounding context; requires filename"
 					},
 					{
 						"name": "filename",
@@ -6137,72 +6137,6 @@
 				}
 			}
 		},
-		"/admin/users/{user_id}/bot-status": {
-			"put": {
-				"operationId": "set_admin_user_bot_status",
-				"summary": "Set user bot status",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Mark or unmark a user account as a bot. Controls bot badge visibility and API permissions. Creates audit log entry. Requires USER_UPDATE_BOT_STATUS permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "user_id",
-						"in": "path",
-						"required": true,
-						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
-						"description": "The ID of the user"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserBotStatusRequest"}}}
-				}
-			}
-		},
 		"/admin/users/{user_id}/change-log": {
 			"get": {
 				"operationId": "list_admin_user_change_log",
@@ -7190,74 +7124,6 @@
 				]
 			}
 		},
-		"/admin/users/{user_id}/phone-verification": {
-			"put": {
-				"operationId": "update_admin_user_phone_verification",
-				"summary": "Update user phone verification flag",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Set whether a user is treated as having completed phone verification. This is the only supported path for clearing the irreversible user-facing phone verification flag. Requires USER_UPDATE_PHONE permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "user_id",
-						"in": "path",
-						"required": true,
-						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
-						"description": "The ID of the user"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserPhoneVerificationRequest"}}
-					}
-				}
-			}
-		},
 		"/admin/users/{user_id}/premium-flags": {
 			"patch": {
 				"operationId": "update_admin_user_premium_flags",
@@ -7849,208 +7715,6 @@
 						"description": "The ID of the user"
 					}
 				]
-			}
-		},
-		"/admin/users/{user_id}/suspicious-activity-disablement": {
-			"put": {
-				"operationId": "disable_admin_user_suspicious",
-				"summary": "Disable user for suspicious activity",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Disable user account due to suspicious activity or abuse. Account is locked pending review. User cannot access services. Emails the user unless notify_user is false. Creates audit log entry. Requires USER_DISABLE_SUSPICIOUS permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "user_id",
-						"in": "path",
-						"required": true,
-						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
-						"description": "The ID of the user"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserSuspiciousDisableRequest"}}
-					}
-				}
-			}
-		},
-		"/admin/users/{user_id}/suspicious-activity-flags": {
-			"put": {
-				"operationId": "update_admin_user_suspicious_activity_flags",
-				"summary": "Update suspicious activity flags",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Flag user as suspicious for account abuse, fraud, or policy violations. Enables enforcement actions and rate limiting. Creates audit log entry. Requires USER_UPDATE_SUSPICIOUS_ACTIVITY permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "user_id",
-						"in": "path",
-						"required": true,
-						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
-						"description": "The ID of the user"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {
-						"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserSuspiciousActivityFlagsRequest"}}
-					}
-				}
-			}
-		},
-		"/admin/users/{user_id}/system-status": {
-			"put": {
-				"operationId": "set_admin_user_system_status",
-				"summary": "Set user system status",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserMutationResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Mark or unmark a user as a system account. System accounts have special permissions for automated operations. Creates audit log entry. Requires USER_UPDATE_BOT_STATUS permission.",
-				"security": [{"adminApiKey": []}],
-				"parameters": [
-					{
-						"name": "user_id",
-						"in": "path",
-						"required": true,
-						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
-						"description": "The ID of the user"
-					}
-				],
-				"requestBody": {
-					"required": true,
-					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserSystemStatusRequest"}}}
-				}
 			}
 		},
 		"/admin/users/{user_id}/traits": {
@@ -9499,38 +9163,6 @@
 				},
 				"required": ["traits"]
 			},
-			"AdminUserSystemStatusRequest": {
-				"type": "object",
-				"properties": {
-					"system": {"type": "boolean", "description": "Whether the user should be marked as a system user"}
-				},
-				"required": ["system"]
-			},
-			"AdminUserSuspiciousActivityFlagsRequest": {
-				"type": "object",
-				"properties": {
-					"flags": {
-						"description": "Bitmask of suspicious activity flags",
-						"allOf": [{"$ref": "#/components/schemas/SuspiciousActivityFlags"}]
-					}
-				},
-				"required": ["flags"]
-			},
-			"AdminUserSuspiciousDisableRequest": {
-				"type": "object",
-				"properties": {
-					"flags": {
-						"description": "Bitmask of suspicious activity flags that triggered the disable",
-						"allOf": [{"$ref": "#/components/schemas/SuspiciousActivityFlags"}]
-					},
-					"notify_user": {
-						"default": true,
-						"description": "Whether to email the user that the account was disabled",
-						"type": "boolean"
-					}
-				},
-				"required": ["flags"]
-			},
 			"AdminStorePurchaseListResponse": {
 				"type": "object",
 				"properties": {
@@ -9684,16 +9316,6 @@
 						}
 					}
 				}
-			},
-			"AdminUserPhoneVerificationRequest": {
-				"type": "object",
-				"properties": {
-					"has_verified_phone": {
-						"type": "boolean",
-						"description": "Whether the user should be treated as having completed phone verification"
-					}
-				},
-				"required": ["has_verified_phone"]
 			},
 			"DeleteAllUserMessagesResponse": {
 				"type": "object",
@@ -9991,11 +9613,6 @@
 				"required": ["entries", "next_page_token"],
 				"additionalProperties": false
 			},
-			"AdminUserBotStatusRequest": {
-				"type": "object",
-				"properties": {"bot": {"type": "boolean", "description": "Whether the user should be marked as a bot"}},
-				"required": ["bot"]
-			},
 			"AdminUserBanNoteRequest": {
 				"type": "object",
 				"properties": {
@@ -10110,7 +9727,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 108,
+						"maxItems": 103,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -10809,6 +10426,7 @@
 					"gateway_rollout": {"$ref": "#/components/schemas/GatewayRolloutConfigResponse"},
 					"push_relay": {"$ref": "#/components/schemas/PushRelayConfigResponse"},
 					"domain_migration": {"$ref": "#/components/schemas/DomainMigrationConfigResponse"},
+					"plutonium_page": {"$ref": "#/components/schemas/PlutoniumPageConfigResponse"},
 					"captcha": {"$ref": "#/components/schemas/CaptchaConfigResponse"},
 					"experiment_delivery": {"$ref": "#/components/schemas/ExperimentDeliveryConfigResponse"},
 					"registration": {
@@ -11209,6 +10827,7 @@
 					"gateway_rollout",
 					"push_relay",
 					"domain_migration",
+					"plutonium_page",
 					"captcha",
 					"experiment_delivery",
 					"registration",
@@ -11345,6 +10964,10 @@
 					"domain_migration": {
 						"nullable": true,
 						"allOf": [{"$ref": "#/components/schemas/DomainMigrationConfigUpdateRequest"}]
+					},
+					"plutonium_page": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/PlutoniumPageConfigUpdateRequest"}]
 					},
 					"captcha": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/CaptchaConfigUpdateRequest"}]},
 					"experiment_delivery": {
@@ -12053,6 +11676,9 @@
 				"properties": {
 					"status": {"type": "string", "minLength": 1, "maxLength": 256},
 					"sessions": {"$ref": "#/components/schemas/Int32Type"},
+					"session_resumes_total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+					"websocket_dispatches_total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
+					"websocket_dispatch_drops_total": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
 					"guilds": {"$ref": "#/components/schemas/Int32Type"},
 					"presences": {"$ref": "#/components/schemas/Int32Type"},
 					"calls": {"$ref": "#/components/schemas/Int32Type"},
@@ -12079,6 +11705,24 @@
 								"node_id": {"type": "string", "minLength": 1, "maxLength": 256},
 								"status": {"type": "string", "minLength": 1, "maxLength": 256},
 								"sessions": {"$ref": "#/components/schemas/Int32Type"},
+								"session_resumes_total": {
+									"nullable": true,
+									"type": "integer",
+									"minimum": 0,
+									"maximum": 9007199254740991
+								},
+								"websocket_dispatches_total": {
+									"nullable": true,
+									"type": "integer",
+									"minimum": 0,
+									"maximum": 9007199254740991
+								},
+								"websocket_dispatch_drops_total": {
+									"nullable": true,
+									"type": "integer",
+									"minimum": 0,
+									"maximum": 9007199254740991
+								},
 								"guilds": {"$ref": "#/components/schemas/Int32Type"},
 								"presences": {"$ref": "#/components/schemas/Int32Type"},
 								"calls": {"$ref": "#/components/schemas/Int32Type"},
@@ -12132,6 +11776,9 @@
 								"node_id",
 								"status",
 								"sessions",
+								"session_resumes_total",
+								"websocket_dispatches_total",
+								"websocket_dispatch_drops_total",
 								"guilds",
 								"presences",
 								"calls",
@@ -12147,6 +11794,9 @@
 				"required": [
 					"status",
 					"sessions",
+					"session_resumes_total",
+					"websocket_dispatches_total",
+					"websocket_dispatch_drops_total",
 					"guilds",
 					"presences",
 					"calls",
@@ -12406,37 +12056,6 @@
 					{
 						"type": "object",
 						"properties": {
-							"user_ids": {
-								"maxItems": 1000,
-								"type": "array",
-								"items": {"$ref": "#/components/schemas/SnowflakeType"},
-								"description": "List of user IDs to update"
-							},
-							"add_flags": {
-								"default": [],
-								"description": "Suspicious activity flag names to add to all specified users",
-								"maxItems": 32,
-								"type": "array",
-								"items": {"type": "string"}
-							},
-							"remove_flags": {
-								"default": [],
-								"description": "Suspicious activity flag names to remove from all specified users",
-								"maxItems": 32,
-								"type": "array",
-								"items": {"type": "string"}
-							},
-							"task": {
-								"type": "string",
-								"enum": ["update_suspicious_activity_flags"],
-								"description": "Adds and removes verification requirements on every targeted user"
-							}
-						},
-						"required": ["user_ids", "task"]
-					},
-					{
-						"type": "object",
-						"properties": {
 							"guild_ids": {
 								"maxItems": 1000,
 								"type": "array",
@@ -12562,8 +12181,15 @@
 			},
 			"BanCheckResponseSchema": {
 				"type": "object",
-				"properties": {"banned": {"type": "boolean"}},
-				"required": ["banned"],
+				"properties": {
+					"banned": {"type": "boolean"},
+					"expires_at": {
+						"nullable": true,
+						"description": "ISO 8601 timestamp when the matching ban expires. Null when the ban is permanent, when nothing matches, and on every blocklist other than ip.",
+						"type": "string"
+					}
+				},
+				"required": ["banned", "expires_at"],
 				"additionalProperties": false
 			},
 			"AdminBlocklistBulkDeleteRequest": {
@@ -12719,7 +12345,7 @@
 								},
 								"value_field": {
 									"type": "string",
-									"description": "The request body field that carries the entry value when adding to this blocklist"
+									"description": "The request body field that holds the entry value when adding to this blocklist"
 								},
 								"fields": {
 									"maxItems": 8,
@@ -12966,7 +12592,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 108,
+						"maxItems": 103,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -12984,7 +12610,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 108,
+						"maxItems": 103,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13014,7 +12640,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 108,
+						"maxItems": 103,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -13035,7 +12661,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 108,
+						"maxItems": 103,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -13048,7 +12674,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 108,
+						"maxItems": 103,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -13102,7 +12728,6 @@
 					"bulk:delete:users",
 					"bulk:delete:user_messages",
 					"bulk:update:guild_features",
-					"bulk:update:suspicious_activity",
 					"bulk:update:user_flags",
 					"csam:submit_ncmec",
 					"discovery:remove",
@@ -13138,7 +12763,6 @@
 					"system_dm:send",
 					"user:cancel:bulk_message_deletion",
 					"user:delete",
-					"user:disable:suspicious",
 					"user:list:dm_channels",
 					"user:list:guilds",
 					"user:list:relationships",
@@ -13150,14 +12774,11 @@
 					"user:view:email",
 					"user:view:ip",
 					"user:temp_ban",
-					"user:update:bot_status",
 					"user:update:dob",
 					"user:update:email",
 					"user:update:flags",
 					"user:update:mfa",
-					"user:update:phone",
 					"user:update:profile",
-					"user:update:suspicious_activity",
 					"user:update:traits",
 					"user:update:username",
 					"voice:region:create",
@@ -13347,10 +12968,13 @@
 			"BanUrlDomainRequest": {
 				"type": "object",
 				"properties": {
-					"domain": {"description": "Domain to ban (e.g. example.com)", "type": "string"},
+					"domain": {
+						"description": "Domain to ban (e.g. example.com), or a pattern whose leftmost label contains * under a registrable domain (e.g. *shop*.example.com). Internationalized names are stored in ASCII form.",
+						"type": "string"
+					},
 					"match_subdomains": {
 						"default": true,
-						"description": "If true, any subdomain rooted at this domain is also banned",
+						"description": "If true, any subdomain rooted at this domain, or at a host the pattern matches, is also banned",
 						"type": "boolean"
 					},
 					"category": {"description": "Category / source slug (defaults to \"manual\")", "type": "string"},
@@ -13394,16 +13018,27 @@
 			"BanEmailRequest": {
 				"type": "object",
 				"properties": {
-					"email": {"description": "Email address to ban", "allOf": [{"$ref": "#/components/schemas/EmailType"}]}
+					"email": {
+						"description": "Email address to ban, or a domain written as @example.com to ban every address at it and its subdomains",
+						"allOf": [{"$ref": "#/components/schemas/EmailBlocklistEntryType"}]
+					}
 				},
 				"required": ["email"]
 			},
 			"BanIpRequest": {
 				"type": "object",
-				"properties": {"ip": {"description": "IPv4/IPv6 address or CIDR range to ban", "type": "string"}},
+				"properties": {
+					"ip": {"description": "IPv4/IPv6 address or CIDR range to ban", "type": "string"},
+					"duration_hours": {
+						"description": "Hours until the ban expires and its entry is removed. Omit it or use 0 for a permanent ban.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 8760
+					}
+				},
 				"required": ["ip"]
 			},
-			"EmailType": {"type": "string"},
+			"EmailBlocklistEntryType": {"type": "string"},
 			"CheckAvatarHashRequest": {
 				"type": "object",
 				"properties": {"hashes": {"minItems": 1, "maxItems": 1000, "type": "array", "items": {"type": "string"}}},
@@ -13443,7 +13078,7 @@
 				"properties": {
 					"match_subdomains": {
 						"default": true,
-						"description": "If true, any subdomain rooted at this domain is also banned",
+						"description": "If true, any subdomain rooted at this domain, or at a host the pattern matches, is also banned",
 						"type": "boolean"
 					},
 					"category": {"description": "Category / source slug (defaults to \"manual\")", "type": "string"},
@@ -13601,11 +13236,6 @@
 					},
 					{"name": "SPAMMER", "value": "64", "description": "User is flagged as a spammer"},
 					{"name": "DELETED", "value": "17179869184", "description": "User account has been deleted"},
-					{
-						"name": "DISABLED_SUSPICIOUS_ACTIVITY",
-						"value": "34359738368",
-						"description": "User account disabled due to suspicious activity"
-					},
 					{"name": "SELF_DELETED", "value": "68719476736", "description": "User account was self-deleted"},
 					{"name": "DISABLED", "value": "274877906944", "description": "User account is disabled"},
 					{"name": "HAS_SESSION_STARTED", "value": "549755813888", "description": "User has started a session"},
@@ -13616,6 +13246,7 @@
 						"value": "562949953421312",
 						"description": "User is verified as not underage"
 					},
+					{"name": "ACCOUNT_LIMITED", "value": "1125899906842624", "description": "User account is limited"},
 					{
 						"name": "HAS_DISMISSED_PREMIUM_ONBOARDING",
 						"value": "2251799813685248",
@@ -13633,14 +13264,9 @@
 						"description": "User has verified their age as an adult via credit card verification"
 					},
 					{
-						"name": "FORCE_INBOUND_PHONE_VERIFICATION",
-						"value": "2305843009213693952",
-						"description": "User is forced through inbound phone verification, for debugging"
-					},
-					{
-						"name": "NOT_SUSPICIOUS",
+						"name": "LIMIT_EXEMPT",
 						"value": "4611686018427387904",
-						"description": "User is permanently exempt from automatic suspicious-activity flagging"
+						"description": "User is permanently exempt from account limitation"
 					}
 				]
 			},
@@ -13789,7 +13415,7 @@
 						"additionalProperties": false
 					},
 					"referenced_message": {
-						"description": "The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message carries no default reference. Clients must tell null apart from absent by key presence.",
+						"description": "The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence.",
 						"nullable": true,
 						"type": "object",
 						"properties": {
@@ -14983,15 +14609,14 @@
 			"GuildVerificationLevel": {
 				"description": "Required verification level for members",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4],
+				"enum": [0, 1, 2, 3],
 				"format": "int32",
-				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH"],
 				"x-enumDescriptions": [
 					"Unrestricted",
 					"Must have verified email",
 					"Registered for more than 5 minutes",
-					"Member of the server for more than 10 minutes",
-					"Must have a verified phone number"
+					"Member of the server for more than 10 minutes"
 				]
 			},
 			"GuildOperations": {
@@ -15073,15 +14698,14 @@
 				"minimum": 0,
 				"maximum": 2147483647,
 				"format": "int32",
-				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH", "VERY_HIGH"],
+				"x-enumNames": ["NONE", "LOW", "MEDIUM", "HIGH"],
 				"x-enumDescriptions": [
 					"Unrestricted",
 					"Must have verified email",
 					"Registered for more than 5 minutes",
-					"Member of the server for more than 10 minutes",
-					"Must have a verified phone number"
+					"Member of the server for more than 10 minutes"
 				],
-				"enum": [0, 1, 2, 3, 4]
+				"enum": [0, 1, 2, 3]
 			},
 			"PurgeGuildAssetErrorSchema": {
 				"type": "object",
@@ -15451,6 +15075,30 @@
 					"max_counter": {"type": "integer", "minimum": 100, "maximum": 20000}
 				}
 			},
+			"PlutoniumPageConfigUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"rollout_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000},
+					"rollout_salt": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[\\x20-\\x7e]+$"},
+					"included_user_ids": {
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"included_guild_ids": {
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"include_premium_users": {"type": "boolean"},
+					"excluded_user_ids": {
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					}
+				}
+			},
 			"DomainMigrationConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
@@ -15588,6 +15236,51 @@
 					"max_counter": {"default": 1000, "type": "integer", "minimum": 100, "maximum": 20000}
 				},
 				"required": ["enabled", "cost", "max_counter"],
+				"additionalProperties": false
+			},
+			"PlutoniumPageConfigResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"default": false, "type": "boolean"},
+					"config_version": {"default": 0, "type": "integer", "minimum": 0, "maximum": 9007199254740991},
+					"rollout_basis_points": {"default": 0, "type": "integer", "minimum": 0, "maximum": 10000},
+					"rollout_salt": {
+						"default": "plutonium-page-v1",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[\\x20-\\x7e]+$"
+					},
+					"included_user_ids": {
+						"default": [],
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"included_guild_ids": {
+						"default": [],
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					},
+					"include_premium_users": {"default": false, "type": "boolean"},
+					"excluded_user_ids": {
+						"default": [],
+						"maxItems": 1000,
+						"type": "array",
+						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
+					}
+				},
+				"required": [
+					"enabled",
+					"config_version",
+					"rollout_basis_points",
+					"rollout_salt",
+					"included_user_ids",
+					"included_guild_ids",
+					"include_premium_users",
+					"excluded_user_ids"
+				],
 				"additionalProperties": false
 			},
 			"DomainMigrationConfigResponse": {
@@ -15782,7 +15475,6 @@
 					"email": {"nullable": true, "type": "string"},
 					"email_verified": {"type": "boolean"},
 					"email_bounced": {"type": "boolean"},
-					"has_verified_phone": {"type": "boolean"},
 					"date_of_birth": {"nullable": true, "type": "string"},
 					"locale": {"nullable": true, "type": "string"},
 					"premium_type": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
@@ -15790,11 +15482,6 @@
 					"premium_until": {"nullable": true, "type": "string"},
 					"premium_grace_ends_at": {"nullable": true, "type": "string"},
 					"premium_lifetime_sequence": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
-					"suspicious_activity_flags": {"allOf": [{"$ref": "#/components/schemas/SuspiciousActivityFlags"}]},
-					"phone_verification_deferred": {
-						"type": "boolean",
-						"description": "Whether a stored phone requirement is deferred and not enforced"
-					},
 					"temp_banned_until": {"nullable": true, "type": "string"},
 					"pending_deletion_at": {"nullable": true, "type": "string"},
 					"pending_bulk_message_deletion_at": {"nullable": true, "type": "string"},
@@ -15815,7 +15502,7 @@
 						"description": "ISO 8601 timestamp when the pending deletion was scheduled",
 						"type": "string"
 					},
-					"acls": {"maxItems": 108, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 103, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},
@@ -15841,7 +15528,6 @@
 					"email",
 					"email_verified",
 					"email_bounced",
-					"has_verified_phone",
 					"date_of_birth",
 					"locale",
 					"premium_type",
@@ -15849,8 +15535,6 @@
 					"premium_until",
 					"premium_grace_ends_at",
 					"premium_lifetime_sequence",
-					"suspicious_activity_flags",
-					"phone_verification_deferred",
 					"temp_banned_until",
 					"pending_deletion_at",
 					"pending_bulk_message_deletion_at",
@@ -15869,44 +15553,6 @@
 					"last_active_location"
 				],
 				"additionalProperties": false
-			},
-			"SuspiciousActivityFlags": {
-				"type": "integer",
-				"minimum": 0,
-				"maximum": 2147483647,
-				"description": "Suspicious activity indicators",
-				"format": "int32",
-				"x-bitflagValues": [
-					{"name": "REQUIRE_VERIFIED_EMAIL", "value": "1", "description": "Requires verified email address"},
-					{"name": "REQUIRE_REVERIFIED_EMAIL", "value": "2", "description": "Requires re-verified email address"},
-					{"name": "REQUIRE_VERIFIED_PHONE", "value": "4", "description": "Requires verified phone number"},
-					{"name": "REQUIRE_REVERIFIED_PHONE", "value": "8", "description": "Requires re-verified phone number"},
-					{
-						"name": "REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE",
-						"value": "16",
-						"description": "Requires verified email or verified phone"
-					},
-					{
-						"name": "REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE",
-						"value": "32",
-						"description": "Requires re-verified email or re-verified phone"
-					},
-					{
-						"name": "REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE",
-						"value": "64",
-						"description": "Requires verified email or re-verified phone"
-					},
-					{
-						"name": "REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE",
-						"value": "128",
-						"description": "Requires re-verified email or re-verified phone"
-					},
-					{
-						"name": "REQUIRE_INBOUND_PHONE_VERIFICATION",
-						"value": "256",
-						"description": "Requires inbound SMS verification (user must text code to platform number)"
-					}
-				]
 			},
 			"PremiumFlags": {
 				"type": "integer",
@@ -15934,6 +15580,7 @@
 					{"name": "PERKS_DISABLED", "value": "256", "description": "User has temporarily disabled premium perks"}
 				]
 			},
+			"EmailType": {"type": "string"},
 			"AdminRelationshipEntrySchema": {
 				"type": "object",
 				"properties": {

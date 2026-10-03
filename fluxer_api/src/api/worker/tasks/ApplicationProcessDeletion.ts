@@ -60,16 +60,17 @@ const applicationProcessDeletion: WorkerTaskHandler = async (payload, helpers) =
 			await applicationRepository.deleteApplication(applicationId);
 			return;
 		}
-		const updatedBotUser = await userRepository.patchUpsert(
+		const renamedBotUser = await userRepository.patchUpsert(
 			botUserId,
 			{
 				username: DELETED_USER_USERNAME,
 				global_name: DELETED_USER_GLOBAL_NAME,
 				discriminator: DELETED_USER_DISCRIMINATOR,
-				flags: botUser.flags | UserFlags.DELETED,
 			},
 			botUser.toRow(),
 		);
+		const updatedBotUser =
+			(await userRepository.updateFlags(botUserId, (flags) => flags | UserFlags.DELETED)) ?? renamedBotUser;
 		await userCacheService.setUserPartialResponseFromUser(updatedBotUser);
 		Logger.debug({applicationId, botUserId}, 'Updated bot user to deleted state');
 		const guildIds = await userRepository.getUserGuildIds(botUserId);

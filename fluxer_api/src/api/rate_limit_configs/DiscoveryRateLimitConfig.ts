@@ -16,6 +16,10 @@ export const DiscoveryRateLimitConfigs = {
 		bucket: 'discovery:join',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	DISCOVERY_CHANNEL_PREVIEW: {
+		bucket: 'discovery:channel_preview',
+		config: {limit: 60, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	DISCOVERY_APPLY: {
 		bucket: 'discovery:apply::guild_id',
 		config: {limit: 5, windowMs: ms('1 minute')},

@@ -44,7 +44,7 @@
     <screenshots>
         <screenshot type="default">
             <caption>The main Fluxer window.</caption>
-            <image type="source" width="1920" height="1080">https://fluxerstatic.com/marketing/screenshots/desktop-1920w.avif</image>
+            <image type="source" width="1920" height="1670">https://fluxer.app/static/img/screenshots-desktop-1920w.4976d2d1f2238c05.avif</image>
         </screenshot>
     </screenshots>
     <url type="bugtracker">https://github.com/fluxerapp/fluxer/issues</url>

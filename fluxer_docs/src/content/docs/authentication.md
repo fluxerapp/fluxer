@@ -124,24 +124,7 @@ Enforcement applies at those operations only, and does not gate password change 
 
 ## Account state gates
 
-An ordinary authenticated operation rejects an account that has an unmet suspicious activity requirement with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. Each set flag in the response is one requirement the account has not met. A flag no longer appears in the response once the account meets that requirement.
-
-### Account suspicious activity body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| data | object | An object whose `suspicious_activity_flags` member is the integer [suspicious activity flag](/admin-api/users/#suspicious-activity-flags) bitfield still outstanding |
-
-A route that explicitly admits an account with an unmet suspicious activity requirement still accepts its credential. These stay reachable while a requirement is outstanding:
-
-- [Get current user](/http-api/users/current-user/#get-current-user) and [Modify current user](/http-api/users/current-user/#modify-current-user).
-- [Get current user settings](/http-api/users/settings/#get-current-user-settings).
-- The [email change flow](/http-api/users/email-and-password/) with its bounced-address variants, and the email verification resend.
-- The [phone verification](/http-api/users/phone-verification/) flow.
-- Session listing and session termination.
-- The application and authorisation management operations in [Applications](/http-api/applications/) and [OAuth2](/http-api/oauth2/).
-
-An Admin operation applies no suspicious activity gate.
+A [limited account](/http-api/users/#account-limitation) keeps its credentials and sessions. The operations listed there return 403 `ACCOUNT_LIMITED`, and every other operation accepts the account as usual.
 
 No shared gate rejects a deleted or disabled account. Each operation that reads account state applies its own rule, and login, password, and email operations refuse a deleted account outright.
 

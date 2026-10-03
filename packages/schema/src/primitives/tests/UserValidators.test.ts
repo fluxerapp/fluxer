@@ -6,7 +6,6 @@ import {
 	EmailType,
 	GlobalNameType,
 	PasswordType,
-	PhoneNumberType,
 	UsernameType,
 	WebhookNameType,
 } from '@fluxer/schema/src/primitives/UserValidators';
@@ -214,40 +213,6 @@ describe('PasswordType', () => {
 	it('trims and normalizes password', () => {
 		const result = PasswordType.parse('  password123  ');
 		expect(result).toBe('password123');
-	});
-});
-
-describe('PhoneNumberType', () => {
-	it('accepts valid E.164 phone numbers', () => {
-		const result = PhoneNumberType.parse('+14155551234');
-		expect(result).toBe('+14155551234');
-	});
-	it('accepts international phone numbers', () => {
-		const result = PhoneNumberType.safeParse('+442071234567');
-		expect(result.success).toBe(true);
-	});
-	it('rejects phone numbers without plus prefix', () => {
-		const result = PhoneNumberType.safeParse('14155551234');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.PHONE_NUMBER_INVALID_FORMAT);
-		}
-	});
-	it('rejects phone numbers starting with +0', () => {
-		const result = PhoneNumberType.safeParse('+04155551234');
-		expect(result.success).toBe(false);
-	});
-	it('rejects phone numbers with invalid characters', () => {
-		const result = PhoneNumberType.safeParse('+1-415-555-1234');
-		expect(result.success).toBe(false);
-	});
-	it('rejects phone numbers that are too short', () => {
-		const result = PhoneNumberType.safeParse('+1');
-		expect(result.success).toBe(false);
-	});
-	it('rejects phone numbers that are too long', () => {
-		const result = PhoneNumberType.safeParse('+1234567890123456');
-		expect(result.success).toBe(false);
 	});
 });
 

@@ -262,7 +262,7 @@ describe('App Store purchases', () => {
 		};
 	}
 
-	it('grants premium for a claim that carries the account token and answers repeats the same way', async () => {
+	it('grants premium for a claim that includes the account token and answers repeats the same way', async () => {
 		const account = await createTestAccount(harness);
 		const token = await accountToken(account);
 		const expiresDate = Date.now() + ms('30 days');

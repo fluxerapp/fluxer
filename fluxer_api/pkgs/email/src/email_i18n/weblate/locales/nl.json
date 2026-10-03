@@ -11,10 +11,6 @@
 		"subject": "De verwijdering van je {product_name}-account staat gepland",
 		"body": "Hallo {username},\n\nZoals je hebt verzocht, staat je {product_name}-account gepland voor permanente verwijdering op:\n\n{deletionDate, date, full} om {deletionDate, time, short}{reason, select, null {} other {\n\nReden: {reason}}}\n\nJe account is tot die tijd vergrendeld. Als je dit niet hebt aangevraagd of je account wilt behouden, neem dan vóór die datum vanaf dit e-mailadres contact op met {safety_email}.\n\n– Het team van {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Je {product_name}-account is tijdelijk uitgeschakeld",
-		"body": "Hallo {username},\n\nWe hebben je {product_name}-account tijdelijk uitgeschakeld omdat we verdachte activiteit hebben gedetecteerd.\n\n{reason, select,\n  null {}\n  other {Reden: {reason}}\n}\n\nOm weer toegang te krijgen tot je account, moet je je wachtwoord opnieuw instellen:\n\n{forgotUrl}\n\nNadat je je wachtwoord opnieuw hebt ingesteld, kun je weer inloggen.\n\nAls je denkt dat dit een fout is, neem dan contact op met ons supportteam.\n\n– Het veiligheidsteam van {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Je {product_name}-account wordt permanent verwijderd",
 		"body": "Hallo {username},\n\nJe {product_name}-account staat gepland voor permanente verwijdering vanwege schendingen van onze Gebruiksvoorwaarden of Communityrichtlijnen.\n\nGeplande verwijdering: {deletionDate, date, full} om {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Reden: {reason}}\n}\n\nDit is een ingrijpende handhavingsmaatregel. Je accountgegevens worden permanent verwijderd op de geplande datum.\n\nBekijk ook:\n- Gebruiksvoorwaarden: {termsUrl}\n- Communityrichtlijnen: {guidelinesUrl}\n\nBezwaarprocedure:\nAls je van mening bent dat deze handhavingsbeslissing onjuist of ongerechtvaardigd was, heb je 60 dagen de tijd om bezwaar te maken. Stuur een e-mail naar {appeals_email} vanaf dit e-mailadres.\n\nVermeld in je bezwaar:\n- Een duidelijke uitleg waarom je van mening bent dat de handhavingsbeslissing onjuist of ongerechtvaardigd was\n- Alle relevante bewijzen of context\n\nEen medewerker van het veiligheidsteam van {product_name} zal je bezwaar beoordelen en kan de geplande verwijdering uitstellen totdat een definitieve beslissing is genomen.\n\n– Het veiligheidsteam van {product_name}"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Je e-mailadres op {product_name} is gewijzigd",
-		"body": "Hallo {username},\n\nHet e-mailadres van je {product_name}-account is gewijzigd naar {newEmail}.\n\nAls je deze wijziging zelf hebt aangebracht, hoef je niets te doen. Als je dit niet hebt gedaan, kun je de wijziging ongedaan maken en je account beveiligen via deze link:\n\n{revertUrl}\n\nDit herstelt je vorige e-mailadres, meldt je overal af, verwijdert gekoppelde telefoonnummers, schakelt MFA uit en vereist dat je een nieuw wachtwoord instelt.\n\n– Het veiligheidsteam van {product_name}"
+		"body": "Hallo {username},\n\nHet e-mailadres van je {product_name}-account is gewijzigd naar {newEmail}.\n\nAls je deze wijziging zelf hebt aangebracht, hoef je niets te doen. Als je dit niet hebt gedaan, kun je de wijziging ongedaan maken en je account beveiligen via deze link:\n\n{revertUrl}\n\nDit herstelt je vorige e-mailadres, meldt je overal af, schakelt MFA uit en vereist dat je een nieuw wachtwoord instelt.\n\n– Het veiligheidsteam van {product_name}"
 	},
 	"email_verification": {
 		"subject": "Verifieer je e-mailadres op {product_name}",

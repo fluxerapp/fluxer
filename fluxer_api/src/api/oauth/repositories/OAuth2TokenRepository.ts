@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	BatchBuilder,
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import type {
 	OAuth2AccessTokenByUserRow,
 	OAuth2AccessTokenRow,
@@ -69,6 +76,10 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 
 	async deleteAuthorizationCode(code: string): Promise<void> {
 		await deleteOneOrMany(OAuth2AuthorizationCodes.deleteByPk({code}));
+	}
+
+	async consumeAuthorizationCode(code: string, applicationId: ApplicationID): Promise<boolean> {
+		return executeConditional(OAuth2AuthorizationCodes.conditionalDeleteByPk({code}, {application_id: applicationId}));
 	}
 
 	async createAccessToken(data: OAuth2AccessTokenRow): Promise<OAuth2AccessToken> {
@@ -142,11 +153,14 @@ export class OAuth2TokenRepository implements IOAuth2TokenRepository {
 		return row ? new OAuth2RefreshToken(row) : null;
 	}
 
-	async deleteRefreshToken(token: string, _applicationId: ApplicationID, userId: UserID): Promise<void> {
-		const batch = new BatchBuilder();
-		batch.addPrepared(OAuth2RefreshTokens.deleteByPk({token_: token}));
-		batch.addPrepared(OAuth2RefreshTokensByUser.deleteByPk({user_id: userId, token_: token}));
-		await batch.execute();
+	async consumeRefreshToken(token: string, applicationId: ApplicationID, userId: UserID): Promise<boolean> {
+		const consumed = await executeConditional(
+			OAuth2RefreshTokens.conditionalDeleteByPk({token_: token}, {application_id: applicationId, user_id: userId}),
+		);
+		if (consumed) {
+			await deleteOneOrMany(OAuth2RefreshTokensByUser.deleteByPk({user_id: userId, token_: token}));
+		}
+		return consumed;
 	}
 
 	async deleteAllRefreshTokensForUser(userId: UserID): Promise<void> {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {registerAdminControllers} from '@app/api/admin/controllers/index';
-import {getActivityJetStream} from '@app/api/app/APILifecycle';
 import {AttachmentController} from '@app/api/attachment/AttachmentController';
 import {AuthController} from '@app/api/auth/AuthController';
 import {OriginHandoffController} from '@app/api/auth/OriginHandoffController';
@@ -36,7 +35,6 @@ import {ThemeController} from '@app/api/theme/ThemeController';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {UnfurlController} from '@app/api/unfurl/UnfurlController';
 import {UserController} from '@app/api/user/controllers/UserController';
-import {installSmsWebhookForwarder} from '@app/api/webhook/SmsWebhookForwarder';
 import {WebhookController} from '@app/api/webhook/WebhookController';
 
 export function registerControllers(routes: HonoApp, config: APIConfig): void {
@@ -69,7 +67,6 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 		TestHarnessController(routes);
 	}
 	UserController(routes);
-	installSmsWebhookForwarder(routes, getActivityJetStream);
 	StoreBillingController(routes);
 	WebhookController(routes);
 	OAuth2Controller(routes);

@@ -15,6 +15,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
 import {
 	openEntranceSoundTrimmerModal,
@@ -154,6 +155,7 @@ function useEntranceSoundImpl(selectedScope: EntranceSoundScope): UseEntranceSou
 				});
 			} catch (error) {
 				logger.error('Failed to set entrance sound selection', error);
+				if (handleAccountLimitedError(error)) return;
 				showUserErrorModal(
 					i18n._(
 						soundId === null ? COULDN_T_REMOVE_ENTRANCE_SOUND_DESCRIPTOR : COULDN_T_SAVE_ENTRANCE_SOUND_DESCRIPTOR,
@@ -174,7 +176,9 @@ function useEntranceSoundImpl(selectedScope: EntranceSoundScope): UseEntranceSou
 				ToastCommands.createToast({type: 'success', children: i18n._(ENTRANCE_SOUND_SAVED_DESCRIPTOR)});
 			} catch (error) {
 				logger.error('Failed to upload trimmed entrance sound', error);
-				showUserErrorModal(i18n._(COULDN_T_SAVE_ENTRANCE_SOUND_DESCRIPTOR), i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
+				if (!handleAccountLimitedError(error)) {
+					showUserErrorModal(i18n._(COULDN_T_SAVE_ENTRANCE_SOUND_DESCRIPTOR), i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
+				}
 				throw error;
 			}
 		},

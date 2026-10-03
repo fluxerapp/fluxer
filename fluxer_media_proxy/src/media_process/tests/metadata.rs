@@ -113,7 +113,7 @@ fn metadata_json_treats_mp4_attached_picture_as_audio_cover_art() {
 }
 
 #[test]
-fn metadata_json_accepts_audio_carrying_png_cover_art() {
+fn metadata_json_accepts_audio_with_png_cover_art() {
     let mp3 = fixture_audio_mp3_with_png_cover_art();
     assert_eq!("audio/mpeg", mime::sniff(&mp3).mime);
     let probe = probe_av_metadata(&mp3, NSFW_PREVIEW_MAX_DIMENSION, &test_media_limits(), None)

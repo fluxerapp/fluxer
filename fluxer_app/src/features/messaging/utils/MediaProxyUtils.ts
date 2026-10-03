@@ -110,7 +110,7 @@ function readProxyDimensionParam(url: URL, key: 'width' | 'height'): number | un
 	return resolveProxyDimension(Number(raw));
 }
 
-function carriedProxyDimensions(proxyURL: string): {width?: number; height?: number} | undefined {
+function proxyUrlDimensions(proxyURL: string): {width?: number; height?: number} | undefined {
 	let parsed: URL;
 	try {
 		parsed = new URL(proxyURL);
@@ -124,7 +124,7 @@ function carriedProxyDimensions(proxyURL: string): {width?: number; height?: num
 }
 
 function variantDimensions(proxyURL: string, width?: number, height?: number): {width?: number; height?: number} {
-	return carriedProxyDimensions(proxyURL) ?? {width, height};
+	return proxyUrlDimensions(proxyURL) ?? {width, height};
 }
 
 export function stripMediaProxyParams(proxyURL: string): string {

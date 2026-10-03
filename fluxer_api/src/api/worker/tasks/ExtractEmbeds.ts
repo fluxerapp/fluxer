@@ -330,11 +330,11 @@ async function scanEmbedsForBannedContent(
 			continue;
 		}
 		for (const embed of embeds) {
-			const imageUrls = [embed.thumbnail?.url, embed.image?.url, embed.video?.url, embed.audio?.url].filter(
+			const embedUrls = [embed.url, embed.thumbnail?.url, embed.image?.url, embed.video?.url, embed.audio?.url].filter(
 				(u): u is string => u != null,
 			);
-			for (const imageUrl of imageUrls) {
-				contentModerationService.scanUrl(imageUrl, ctx);
+			for (const embedUrl of embedUrls) {
+				contentModerationService.scanUrl(embedUrl, ctx);
 			}
 			const children = embed.children ?? [];
 			for (const child of children) {

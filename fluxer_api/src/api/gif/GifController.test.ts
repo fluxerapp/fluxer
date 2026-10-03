@@ -33,7 +33,6 @@ function createApp(gifService: GifService): Hono<HonoEnv> {
 		ctx.set('gifService', gifService);
 		ctx.set('user', {
 			isBot: false,
-			suspiciousActivityFlags: 0,
 		} as HonoEnv['Variables']['user']);
 		ctx.set('authTokenType', 'session');
 		await next();

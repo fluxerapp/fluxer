@@ -460,7 +460,7 @@ fn external_verbatim_range_forwards_the_upstream_partial_unchanged() {
     );
 
     let multipart = validate_external_partial(multi, None, Some(4096), 100)
-        .expect("a multipart partial carries no Content-Range");
+        .expect("a multipart partial has no Content-Range");
     assert_eq!(None, multipart.content_length());
     assert_eq!(None, multipart.header_value());
 }
@@ -928,4 +928,45 @@ async fn an_upstream_that_ignores_the_client_range_still_streams_a_complete_body
     );
     let body = to_bytes(response.into_body(), 64).await.unwrap();
     assert_eq!(b"streamed bytes", body.as_ref());
+}
+
+#[tokio::test]
+async fn external_buffering_accepts_transport_chunks_of_any_size_within_the_limit() {
+    const LARGE_CHUNK_BYTES: usize =
+        crate::response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX + 155_648;
+    const SMALL_CHUNK_BYTES: usize = 1448;
+    const SMALL_CHUNKS: usize = 512;
+    let budget = ByteBudget::new(constants::MAX_MEDIA_PROXY_BYTES * 4);
+    let metrics = ExternalMetrics::new();
+    let buffer = |response: reqwest::Response, length: usize| {
+        buffer_external_response(ExternalBufferRequest {
+            response,
+            prefix: Bytes::new(),
+            url: "https://media.example.test/clip.webm",
+            budget: &budget,
+            metrics: &metrics,
+            content_length: Some(length as u64),
+            limit: constants::MAX_MEDIA_PROXY_BYTES,
+        })
+    };
+
+    let large = buffer(
+        reqwest::Response::from(http::Response::new(vec![7u8; LARGE_CHUNK_BYTES])),
+        LARGE_CHUNK_BYTES,
+    )
+    .await
+    .expect("a transport chunk larger than the reserved allowance");
+    assert_eq!(LARGE_CHUNK_BYTES, large.as_bytes().len());
+
+    let small_body = reqwest::Body::wrap_stream(futures_util::stream::iter(
+        (0..SMALL_CHUNKS)
+            .map(|_| Ok::<Bytes, std::io::Error>(Bytes::from(vec![9u8; SMALL_CHUNK_BYTES]))),
+    ));
+    let small = buffer(
+        reqwest::Response::from(http::Response::new(small_body)),
+        SMALL_CHUNK_BYTES * SMALL_CHUNKS,
+    )
+    .await
+    .expect("packet-sized transport chunks");
+    assert_eq!(SMALL_CHUNK_BYTES * SMALL_CHUNKS, small.as_bytes().len());
 }

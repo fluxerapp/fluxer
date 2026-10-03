@@ -10,7 +10,6 @@ import {
 	getEffectiveGuildVerificationLevel,
 } from '@fluxer/constants/src/GuildConstants';
 import {GuildEmailVerificationRequiredError} from '@fluxer/errors/src/domains/auth/EmailVerificationRequiredError';
-import {GuildPhoneVerificationRequiredError} from '@fluxer/errors/src/domains/auth/GuildPhoneVerificationRequiredError';
 import {AccountTooNewForGuildError} from '@fluxer/errors/src/domains/guild/AccountTooNewForGuildError';
 import {GuildVerificationRequiredError} from '@fluxer/errors/src/domains/guild/GuildVerificationRequiredError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
@@ -38,12 +37,6 @@ function checkGuildVerification(params: VerificationParams): void {
 		return;
 	}
 	if (memberRoles && memberRoles.size > 0) {
-		return;
-	}
-	if (verificationLevel === GuildVerificationLevel.VERY_HIGH) {
-		if (!user.hasVerifiedPhone) {
-			throw new GuildPhoneVerificationRequiredError();
-		}
 		return;
 	}
 	if (!user.email) {

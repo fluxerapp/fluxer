@@ -108,14 +108,6 @@ export const AuthRateLimitConfigs = {
 		bucket: 'mfa:webauthn:migration',
 		config: {limit: 20, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	PHONE_SEND_VERIFICATION: {
-		bucket: 'phone:send_verification',
-		config: {limit: 5, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	PHONE_VERIFY_CODE: {
-		bucket: 'phone:verify_code',
-		config: {limit: 10, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
 	AUTH_HANDOFF_INITIATE: {
 		bucket: 'auth:handoff:initiate',
 		config: {limit: 10, windowMs: ms('1 minute')},

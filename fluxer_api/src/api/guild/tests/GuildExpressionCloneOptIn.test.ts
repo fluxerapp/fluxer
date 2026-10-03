@@ -117,7 +117,7 @@ describe('Guild expression clone opt-in', () => {
 		expect(cloned.name).toBe(source.sticker.name);
 	}
 
-	test('rejects both emoji and sticker cloning when the source guild carries no clone features', async () => {
+	test('rejects both emoji and sticker cloning when the source guild has no clone features', async () => {
 		const source = await createSource(harness, 'No Clone Features Source');
 		expect(source.guild.features).not.toContain(GuildFeatures.CLONE_EMOJI_ENABLED);
 		expect(source.guild.features).not.toContain(GuildFeatures.CLONE_STICKER_ENABLED);
@@ -154,7 +154,7 @@ describe('Guild expression clone opt-in', () => {
 		await expectStickerCloneAllowed(source, 'Deprecated Plus Enabled');
 	});
 
-	test('rejects cloning when the source guild carries only the deprecated disabled features', async () => {
+	test('rejects cloning when the source guild has only the deprecated disabled features', async () => {
 		const source = await createSource(harness, 'Deprecated Only Source');
 		await addDeprecatedFeatures(harness, source, [
 			GuildFeatures.CLONE_EMOJI_DISABLED,
@@ -186,7 +186,7 @@ describe('Guild expression clone opt-in', () => {
 		expect(stickerAfter.allow_cloning).toBe(true);
 	});
 
-	test('reports allow_cloning false for a guild carrying only the deprecated disabled features', async () => {
+	test('reports allow_cloning false for a guild with only the deprecated disabled features', async () => {
 		const source = await createSource(harness, 'Metadata Deprecated Source');
 		await addDeprecatedFeatures(harness, source, [
 			GuildFeatures.CLONE_EMOJI_DISABLED,

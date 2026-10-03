@@ -36,9 +36,6 @@ function buildUserFilters(filters: UserSearchFilters): Array<ElasticsearchFilter
 	if (filters.hasAcl && filters.hasAcl.length > 0) {
 		clauses.push(...esAndTerms('acls', filters.hasAcl));
 	}
-	if (filters.minSuspiciousActivityFlags !== undefined) {
-		clauses.push(esRangeFilter('suspiciousActivityFlags', {gte: filters.minSuspiciousActivityFlags}));
-	}
 	if (filters.createdAtGreaterThanOrEqual !== undefined) {
 		clauses.push(esRangeFilter('createdAt', {gte: filters.createdAtGreaterThanOrEqual}));
 	}
@@ -65,7 +62,7 @@ export class ElasticsearchUserAdapter extends ElasticsearchIndexAdapter<UserSear
 		super({
 			client: options.client,
 			index: ELASTICSEARCH_INDEX_DEFINITIONS.users,
-			searchableFields: ['username', 'email', 'phone', 'id'],
+			searchableFields: ['username', 'email', 'id'],
 			buildFilters: buildUserFilters,
 			buildSort: buildUserSort,
 			lock: options.lock,

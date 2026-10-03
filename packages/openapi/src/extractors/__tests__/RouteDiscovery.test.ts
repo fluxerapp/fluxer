@@ -31,7 +31,6 @@ describe('discoverControllerFiles', () => {
 		expect(shapes).toContain('GET /gifs/featured');
 	});
 	it('reads routes registered outside a *Controller.ts file', () => {
-		expect(shapes).toContain('POST /webhooks/twilio/sms');
 		expect(shapes).toContain('GET /_metrics');
 		expect(shapes).toContain('GET /_health');
 	});

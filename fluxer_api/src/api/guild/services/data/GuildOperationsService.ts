@@ -54,6 +54,7 @@ import {
 	MAX_GUILD_ROLES,
 	VOICE_CHANNEL_BITRATE_DEFAULT,
 	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
+	VOICE_CHANNEL_USER_LIMIT_MAX,
 } from '@fluxer/constants/src/LimitConstants';
 import {DEFAULT_GUILD_FOLDER_ICON} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -1065,7 +1066,7 @@ export class GuildOperationsService {
 					content_warning_text: null,
 					rate_limit_per_user: channel.rate_limit_per_user ?? 0,
 					bitrate: isVoice ? resolveVoiceChannelBitrate(channel.bitrate, null) : null,
-					user_limit: isVoice ? (channel.user_limit ?? 0) : null,
+					user_limit: isVoice ? Math.min(channel.user_limit ?? 0, VOICE_CHANNEL_USER_LIMIT_MAX) : null,
 					voice_connection_limit: isVoice
 						? (channel.voice_connection_limit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT)
 						: null,
@@ -1177,7 +1178,12 @@ export class GuildOperationsService {
 
 	private sanitiseTemplateGuildSettings(template?: TemplateSerializedGuild): TemplateGuildSettings {
 		return {
-			verificationLevel: this.clampTemplateSetting(template?.verification_level, 0, 4, 0),
+			verificationLevel: this.clampTemplateSetting(
+				template?.verification_level,
+				GuildVerificationLevel.NONE,
+				GuildVerificationLevel.HIGH,
+				GuildVerificationLevel.NONE,
+			),
 			explicitContentFilter: this.clampTemplateSetting(template?.explicit_content_filter, 0, 2, 0),
 			defaultMessageNotifications: this.clampTemplateSetting(template?.default_message_notifications, 0, 1, 0),
 			systemChannelFlags: (template?.system_channel_flags ?? 0) & SUPPORTED_SYSTEM_CHANNEL_FLAGS,

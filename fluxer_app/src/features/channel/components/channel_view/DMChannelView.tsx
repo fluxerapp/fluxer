@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	AccountLimitedBarrier,
 	BlockedUserBarrier,
 	SystemDmBarrier,
 	UnclaimedDMBarrier,
@@ -78,6 +79,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 	const recipient = recipientId ? Users.getUser(recipientId) : null;
 	const isRecipientBlocked = recipientId ? Relationships.isBlocked(recipientId) : false;
 	const isCurrentUserUnclaimed = !Users.currentUser?.isClaimed();
+	const isCurrentUserLimited = Users.currentUser?.accountLimited === true;
 	const isSystemDm = channel ? ChannelUtils.isSystemDmChannel(channel) : false;
 	const isDM = channel?.type === ChannelTypes.DM;
 	const isGroupDM = channel?.type === ChannelTypes.GROUP_DM;
@@ -494,6 +496,8 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 									username={NicknameUtils.getNickname(recipient, null)}
 									data-flx="channel.channel-view.dm-channel-view.blocked-user-barrier"
 								/>
+							) : isCurrentUserLimited && !isPersonalNotes ? (
+								<AccountLimitedBarrier data-flx="channel.channel-view.dm-channel-view.account-limited-barrier" />
 							) : isCurrentUserUnclaimed && isDM && !isPersonalNotes && !isGroupDM ? (
 								<UnclaimedDMBarrier data-flx="channel.channel-view.dm-channel-view.unclaimed-dm-barrier" />
 							) : (

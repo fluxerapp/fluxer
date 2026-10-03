@@ -5,6 +5,7 @@ import {isClientBooting} from '@app/features/app/state/ClientReadiness';
 import Authentication from '@app/features/auth/state/Authentication';
 import {initializeDesktopTrayBridge} from '@app/features/platform/utils/DesktopTrayBridge';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import {useEffect} from 'react';
@@ -15,6 +16,9 @@ export function useDesktopElectronBridges(): void {
 		void ThemeLibrary.init();
 		const electronApi = getElectronAPI();
 		if (!electronApi) return;
+		const disposeLinkedFileSync = ThemeLibrary.startLinkedFileSync({
+			onThemesChanged: () => broadcastThemeStudioMessage({type: 'themeLibrary', revision: ThemeLibrary.revision}),
+		});
 		const unsubZoomIn = electronApi.onZoomIn?.(() => void Accessibility.adjustZoom(1));
 		const unsubZoomOut = electronApi.onZoomOut?.(() => void Accessibility.adjustZoom(-1));
 		const unsubZoomReset = electronApi.onZoomReset?.(() => Accessibility.updateSettings({zoomLevel: 1.0}));
@@ -36,6 +40,7 @@ export function useDesktopElectronBridges(): void {
 			unsubZoomReset?.();
 			unsubOpenSettings?.();
 			disposeTrayBridge?.();
+			disposeLinkedFileSync();
 		};
 	}, []);
 }

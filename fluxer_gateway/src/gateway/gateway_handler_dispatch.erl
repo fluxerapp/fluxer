@@ -138,8 +138,10 @@ dispatch_pre_encoded(Event, EncodedData, Seq, #{compress_ctx := CompressCtx} = S
     case gateway_compress:compress(JsonFrame, Ctx) of
         {ok, Compressed, NewCompressCtx} ->
             Frame = gateway_handler_encode:make_frame(Compressed, text, NewCompressCtx),
+            gateway_cluster_metrics:record_dispatch(),
             {[Frame], State#{compress_ctx => NewCompressCtx}};
         {error, _Reason} ->
+            gateway_cluster_metrics:record_dispatch_drop(),
             {ok, State}
     end.
 
@@ -156,9 +158,11 @@ dispatch_standard(Event, Data, Seq, State) ->
     },
     case gateway_handler_encode:encode_and_compress(Message, State) of
         {ok, Frame, NewState} ->
+            gateway_cluster_metrics:record_dispatch(),
             trigger_gc_after_large_dispatch(Data),
             {[Frame], NewState};
         {error, _Reason} ->
+            gateway_cluster_metrics:record_dispatch_drop(),
             {ok, State}
     end.
 

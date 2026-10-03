@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Fluxer delivers a notification to a registered device as [RFC 8291](https://datatracker.ietf.org/doc/html/rfc8291) Web Push. The client generates a P-256 key pair and an auth secret, registers the public half of the pair, and decrypts each delivery with the private half.
 
-Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`. An account with an outstanding required action is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`.
 
 ## Registration formats
 

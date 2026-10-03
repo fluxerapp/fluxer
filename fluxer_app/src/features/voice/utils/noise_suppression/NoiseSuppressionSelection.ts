@@ -11,7 +11,7 @@ import {
 import type {ResolvedVoiceProcessing} from '@app/features/voice/utils/VoiceProcessingProfile';
 
 const NOISE_SUPPRESSION_SAMPLE_RATE = 48000;
-const DEFAULT_NOISE_SUPPRESSION_BACKEND: VoiceNoiseSuppressionBackend = 'deep_filter';
+const DEFAULT_NOISE_SUPPRESSION_BACKEND: VoiceNoiseSuppressionBackend = 'rnnoise';
 
 export function readNoiseSuppressionRuntimeCapabilities(): NoiseSuppressionRuntimeCapabilities {
 	return {

@@ -88,9 +88,7 @@ The `X-RateLimit-Scope` header is the scope that produced a denial.
 | global | The denial came from the global bucket |
 | shared<sup>1</sup> | The denial came from an allowance that several accounts can exhaust for each other |
 
-<sup>1</sup> No route bucket declares a scope of its own, so every route bucket denial reports `user`. Phone verification and the announcement channel allowances are the live sources of `shared`
-
-Phone verification reports `shared` when the per-number send allowance or a number-scoped provider cooldown produced the denial. Both are keyed by the submitted number, so two accounts sending to one number share the allowance.
+<sup>1</sup> No route bucket declares a scope of its own, so every route bucket denial reports `user`. The announcement channel allowances are the live sources of `shared`
 
 [Crosspost message](/http-api/messages/#crosspost-message) reports `shared` for its channel publish allowance, and an edit of a published message reports it for the per-message edit allowance. Every member who publishes or edits draws on the same allowance.
 
@@ -158,11 +156,7 @@ The 400 shape has no `retry_after` member, no `X-RateLimit-*` header, and no `Re
 | [Report message](/http-api/reports/#report-message) | 3 per hour, keyed by the reporter and the channel together | `RATE_LIMITED` |
 | [Report message](/http-api/reports/#report-message) | 20 per hour, keyed by the reported message, across all reporters | `RATE_LIMITED` |
 | [Report message](/http-api/reports/#report-message) | 4 per hour, keyed by the reporter and the guild together, for a guild message | `RATE_LIMITED` |
-| [Send phone verification](/http-api/users/phone-verification/#send-phone-verification) | 3 per 6 hours, keyed by the authenticated account | `PHONE_RATE_LIMIT_EXCEEDED` |
-| [Send phone verification](/http-api/users/phone-verification/#send-phone-verification) | 3 per 5 days, keyed by the submitted number | `PHONE_RATE_LIMIT_EXCEEDED` |
 | [Resend IP authorisation](/http-api/authentication/#resend-ip-authorisation) | Nothing in the first 30 seconds after the ticket was issued, keyed by the authorisation ticket | `IP_AUTHORIZATION_RESEND_COOLDOWN` |
-
-SMS provider throttling can impose an additional cooldown. It returns `PHONE_RATE_LIMIT_EXCEEDED` with the remaining delay.
 
 The Resend IP authorisation cooldown has no `X-RateLimit-*` header. It has a `Retry-After` header in whole seconds, and the body reports that delay again as a top-level `resend_available_in` and `retry_after`. A second resend on one ticket returns 400 `IP_AUTHORIZATION_RESEND_LIMIT_EXCEEDED`. The allowance never refills, and the ticket expires 15 minutes after it was issued.
 

@@ -48,6 +48,7 @@ export class AdminGuildMembershipService {
 			guildId,
 			sendJoinMessage,
 			skipBanCheck: true,
+			skipAccountLimitCheck: true,
 			joinSourceType: JoinSourceTypes.ADMIN_FORCE_ADD,
 			requestCache,
 			initiatorId: adminUserId,

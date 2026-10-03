@@ -44,6 +44,7 @@ pub struct AppState {
     pub discovery_cache: Arc<DiscoveryCache>,
     pub geoip: Arc<GeoipResolver>,
     pub index_html: Option<Arc<str>>,
+    pub local_asset_prefixes: Option<Arc<[&'static str]>>,
     pub budgets: AppProxyBudgets,
 }
 

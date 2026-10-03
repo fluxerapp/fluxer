@@ -15,10 +15,6 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "你的 {product_name} 账号已安排删除",
 		"body": "你好 {username}，\n\n根据你的请求，你的 {product_name} 账号将于以下时间永久删除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，你的账号将被锁定。如果你未请求此操作，或者想保留账号，请在该日期前使用此邮箱地址联系 {safety_email}。\n\n– {product_name} 团队"
 	},
-	"account_disabled_suspicious": {
-		"subject": "你的 {product_name} 账号已被暂时禁用",
-		"body": "你好 {username}，\n\n我们检测到你的 {product_name} 账号存在可疑活动，因此暂时禁用了你的账号。\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n要重新访问你的账号，你需要重置密码：\n\n{forgotUrl}\n\n重置密码后，你将能够再次登录。\n\n如果你认为这是误判，请联系我们的支持团队。\n\n– {product_name} 安全团队"
-	},
 	"account_scheduled_deletion": {
 		"subject": "你的 {product_name} 账号将被永久删除",
 		"body": "你好 {username}，\n\n由于违反了我们的《服务条款》或《社区准则》，你的 {product_name} 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n这是一项严重的处罚措施。你的账号数据将在预定日期被永久删除。\n\n请查阅：\n- 服务条款：{termsUrl}\n- 社区准则：{guidelinesUrl}\n\n申诉流程：\n如果你认为此处罚决定不正确或不合理，你有 60 天时间提交申诉。请使用此邮箱地址发送邮件至 {appeals_email}。\n\n在你的申诉中：\n- 清楚说明你认为处罚决定不正确或不合理的原因\n- 提供任何相关证据或背景信息\n\n{product_name} 安全团队成员将审核你的申诉，并可能在做出最终决定前暂停此次删除。\n\n– {product_name} 安全团队"
@@ -49,7 +45,7 @@ const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "你的 {product_name} 邮箱已变更",
-		"body": "你好 {username}，\n\n你的 {product_name} 账号邮箱已变更为 {newEmail}。\n\n如果你进行了此更改，则无需采取任何操作。如果不是你本人操作，请使用此链接撤销更改并保护账号安全：\n\n{revertUrl}\n\n这将恢复你之前的邮箱，让你在所有设备上退出登录，移除关联的手机号，禁用 MFA，并要求你设置新密码。\n\n– {product_name} 安全团队"
+		"body": "你好 {username}，\n\n你的 {product_name} 账号邮箱已变更为 {newEmail}。\n\n如果你进行了此更改，则无需采取任何操作。如果不是你本人操作，请使用此链接撤销更改并保护账号安全：\n\n{revertUrl}\n\n这将恢复你之前的邮箱，让你在所有设备上退出登录，禁用 MFA，并要求你设置新密码。\n\n– {product_name} 安全团队"
 	},
 	"email_verification": {
 		"subject": "验证你的 {product_name} 邮箱地址",

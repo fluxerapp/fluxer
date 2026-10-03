@@ -11,11 +11,11 @@
 #   -Rollback  Put the images and the stack files of the last recorded upgrade back.
 #
 # Why one script and not a separate upgrader: an upgrade needs the host checks, the stack
-# download, the readiness poll and the health probe that the install already carries. A second
+# download, the readiness poll and the health probe that the install already has. A second
 # script either copies them or drifts from them, and the operator has two downloads and two
 # checksums to verify instead of one.
 #
-# This file is also the procedure. Every step of the upgrade carries the command an operator
+# This file is also the procedure. Every step of the upgrade includes the command an operator
 # types to do that step by hand, and the reason the step exists.
 #
 # Read this file before running it. The default mode writes .env, which holds every secret the
@@ -664,7 +664,7 @@ function Get-FluxerStackFiles([string]$StagingDir, [string]$RefValue) {
 # None of these files is part of an image, and all four are read from the working directory, so
 # docker compose pull never updates any of them. That is why an upgrade refreshes them itself.
 #
-# A refreshed docker-compose.yml can declare a variable the running .env does not carry. Compose
+# A refreshed docker-compose.yml can declare a variable the running .env does not define. Compose
 # writes ${NAME:?message} for a variable the stack requires and stops with that message until .env
 # sets it, and ${NAME:-default} for one that needs nothing from the operator. Every optional
 # override ships commented out in .env.example, so a new required key is the only kind that asks
@@ -684,7 +684,7 @@ function Move-FluxerStackFiles([string]$StagingDir, [string]$TargetDir) {
 # values only the operator knows. The five other non-secret keys in the list above ship correct in
 # .env.example and need no edit.
 #
-# Every secret in .env.example carries the literal CHANGE_ME. A key whose name ends in _BASE64
+# Every secret in .env.example contains the literal CHANGE_ME. A key whose name ends in _BASE64
 # takes 32 random bytes as base64, every other key takes 32 random bytes as hex, and the VAPID pair
 # comes from the generator above.
 #
@@ -1233,7 +1233,7 @@ function Write-FluxerTextFile([string]$Path, [string[]]$Lines) {
 # keep, and what makes a rollback possible on a moving tag.
 #
 # The reference list comes from Compose and the ID under each reference comes from the container
-# running it, for the reason in Get-FluxerRunningImageIds. A reference no container carries is
+# running it, for the reason in Get-FluxerRunningImageIds. A reference no container uses is
 # recorded as `-`, which a rollback skips, because a version that was not running is not a version
 # to go back to.
 #
@@ -1748,7 +1748,7 @@ function Invoke-FluxerUpgrade([string]$TargetDir, [string]$EnvPath, [string]$Bac
 #
 # Two shapes, depending on what the upgrade moved:
 #
-#   A pinned tag moved, so the old images still carry their own tag. The tag goes back into .env
+#   A pinned tag moved, so the old images still have their own tag. The tag goes back into .env
 #   and Compose finds them.
 #
 #     By hand: set FLUXER_IMAGE_TAG back, then docker compose up -d

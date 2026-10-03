@@ -14,11 +14,6 @@ export interface EmailTemplateVariables {
 		reason: string | null;
 		deletionDate: Date;
 	};
-	account_disabled_suspicious: {
-		username: string;
-		reason: string | null;
-		forgotUrl: string;
-	};
 	account_scheduled_deletion: {
 		username: string;
 		reason: string | null;

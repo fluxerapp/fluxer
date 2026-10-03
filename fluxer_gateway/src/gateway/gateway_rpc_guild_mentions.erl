@@ -322,7 +322,7 @@ parse_page_params_defaults_optional_fields_test() ->
         maps:get(limit, Req)
     ).
 
-mention_guild_calls_carry_the_caller_deadline_test() ->
+mention_guild_calls_pass_the_caller_deadline_test() ->
     Cases = [
         {
             fun(Pid) -> guild_call_sources_page(Pid, #{limit => 5}) end,
@@ -350,9 +350,9 @@ mention_guild_calls_carry_the_caller_deadline_test() ->
             #{<<"user_ids">> => [<<"7">>]}
         }
     ],
-    lists:foreach(fun assert_call_carries_deadline/1, Cases).
+    lists:foreach(fun assert_call_passes_deadline/1, Cases).
 
-assert_call_carries_deadline({Call, GuildReply, Expected}) ->
+assert_call_passes_deadline({Call, GuildReply, Expected}) ->
     Self = self(),
     Guild = spawn(fun() ->
         receive

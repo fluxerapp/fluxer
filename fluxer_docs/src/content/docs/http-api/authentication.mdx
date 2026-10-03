@@ -10,13 +10,13 @@ The Authentication resource covers signing up, signing in, recovering an account
 
 ## Shared behaviour
 
-[Authentication](/authentication/) and [HTTP authentication](/http-api/#authentication) define credential syntax and the credential namespaces. Changing the credentials of an account that is already signed in is covered by [Email and password changes](/http-api/users/email-and-password/), [Multi-factor authentication](/http-api/users/mfa/), and [Phone verification](/http-api/users/phone-verification/).
+[Authentication](/authentication/) and [HTTP authentication](/http-api/#authentication) define credential syntax and the credential namespaces. Changing the credentials of an account that is already signed in is covered by [Email and password changes](/http-api/users/email-and-password/) and [Multi-factor authentication](/http-api/users/mfa/).
 
 :::caution[Authentication material is confidential and opaque]
 A client MUST treat every session token, one-use token, ticket, SSO state, and handoff code as confidential. It MUST NOT parse one, expose it to untrusted code, or write it to logs, analytics, or a URL the operation did not assign.
 :::
 
-Most operations need no `Authorization` credential, because the request has a one-use token, MFA ticket, WebAuthn assertion, or account credential of its own. [List authentication sessions](#list-authentication-sessions), [terminate authentication sessions](#terminate-authentication-sessions), [resend email verification](#resend-email-verification), [log out](#log-out), [complete desktop handoff](#complete-desktop-handoff), and [create origin handoff](#create-origin-handoff) are the only operations on this page that read an `Authorization` credential. Complete desktop handoff reads the header only when its body omits the `token` field. The first three and create origin handoff require an ordinary user session, and each rejects a bot token and an OAuth2 bearer token with 403 `ACCESS_DENIED`. All four still admit a session whose account is flagged for suspicious activity.
+Most operations need no `Authorization` credential, because the request has a one-use token, MFA ticket, WebAuthn assertion, or account credential of its own. [List authentication sessions](#list-authentication-sessions), [terminate authentication sessions](#terminate-authentication-sessions), [resend email verification](#resend-email-verification), [log out](#log-out), [complete desktop handoff](#complete-desktop-handoff), and [create origin handoff](#create-origin-handoff) are the only operations on this page that read an `Authorization` credential. Complete desktop handoff reads the header only when its body omits the `token` field. The first three and create origin handoff require an ordinary user session, and each rejects a bot token and an OAuth2 bearer token with 403 `ACCESS_DENIED`.
 
 Every route has a route bucket and is also subject to the [global HTTP limit](/topics/rate-limits/). A route bucket is keyed by the authenticated user when the request has a resolvable credential and by the client IP address otherwise. Bucket or global denial returns 429 `RATE_LIMITED`.
 
@@ -834,7 +834,7 @@ Success consumes the challenge, clears an expired temporary suspension, and crea
 
 Revokes the session identified by the user session token in the `Authorization` header. Returns 204 with no body.
 
-The request has no body. The operation requires a credential that resolves to an account, and it admits one flagged for suspicious activity. An absent, malformed, or unknown token returns 401 `UNAUTHORIZED`. An OAuth2 bearer token returns 403 `ACCESS_DENIED`. A bot holds no session, so a bot token is accepted and revokes nothing.
+The request has no body. The operation requires a credential that resolves to an account. An absent, malformed, or unknown token returns 401 `UNAUTHORIZED`. An OAuth2 bearer token returns 403 `ACCESS_DENIED`. A bot holds no session, so a bot token is accepted and revokes nothing.
 
 :::note[Logging out revokes exactly the calling session]
 The account's other sessions, its OAuth2 grants, and any outstanding MFA ticket, IP authorisation ticket, or desktop handoff all survive. Use [terminate authentication sessions](#terminate-authentication-sessions) to revoke other sessions.
@@ -890,7 +890,7 @@ Fluxer never compares the account's address against the one the token was issued
 
 ### Side effects
 
-The operation marks the current address verified, clears its bounced state, and clears every suspicious activity flag that verifying or reverifying an email address satisfies. It emits a [User Update](/gateway/events/#user-update) Gateway Dispatch to the account's own sessions.
+The operation marks the current address verified and clears its bounced state. It emits a [User Update](/gateway/events/#user-update) Gateway Dispatch to the account's own sessions.
 
 ### Rate limit
 
@@ -902,7 +902,7 @@ The operation marks the current address verified, clears its bounced state, and 
 
 Issues and sends a new email verification token for the authenticated account. Requires a user session token for an ordinary user. Returns 204 with no body.
 
-The request has no body. When the current address is already verified and no reverification suspicious activity flag is set, the operation returns 204 and sends nothing.
+The request has no body. When the current address is already verified, the operation returns 204 and sends nothing.
 
 ### Response
 
@@ -1592,7 +1592,7 @@ The sending origin encrypts the state and keeps the key. Fluxer never receives t
 | nonce_hash | string | The SHA-256 digest of the receiving origin's nonce, as 64 lowercase hex characters |
 | payload | string | The encrypted client state as base64url, 1 to 8388608 characters |
 
-A bot token and an OAuth2 bearer token both return 403 `ACCESS_DENIED`. A session whose account is flagged for suspicious activity is admitted.
+A bot token and an OAuth2 bearer token both return 403 `ACCESS_DENIED`.
 
 ### Response
 

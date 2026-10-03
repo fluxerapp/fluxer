@@ -15,6 +15,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import * as WebhookCommands from '@app/features/webhook/commands/WebhookCommands';
 import {FollowedChannelListItem} from '@app/features/webhook/components/FollowedChannelListItem';
 import {WebhookListItem} from '@app/features/webhook/components/WebhookListItem';
@@ -106,6 +107,7 @@ const ChannelWebhooksTab: React.FC<{channelId: string}> = observer(({channelId})
 			void WebhookCommands.fetchChannelWebhooks({guildId: guildId!, channelId}).catch(() => {});
 		} catch (error) {
 			logger.error('Failed to create webhook', error);
+			if (handleAccountLimitedError(error)) return;
 			showChannelErrorModal({
 				title: i18n._(FAILED_TO_CREATE_WEBHOOK_DESCRIPTOR),
 				message: i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR),

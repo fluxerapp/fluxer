@@ -44,7 +44,7 @@ export type SetupUnauthorizedCause = 'stale_session' | 'origin_mismatch' | 'unkn
 
 export async function classifySetupUnauthorized(): Promise<SetupUnauthorizedCause> {
 	if (!SessionManager.token) return 'unknown';
-	if (!http.carriesAuthorization()) return 'origin_mismatch';
+	if (!http.hasAuthorization()) return 'origin_mismatch';
 	try {
 		const response = await http.get(Endpoints.USER_ME, {mode: 'silent'});
 		return response.status === 401 ? 'stale_session' : 'unknown';

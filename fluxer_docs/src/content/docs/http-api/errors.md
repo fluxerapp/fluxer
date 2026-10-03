@@ -26,8 +26,8 @@ The error code determines which supplementary members a failure has, and most co
 
 - `ip_address` is the normalised client address.
 - `appeal_email` is the address an appeal is sent to.
-- `appeals_supported` is `true` only for the permanent ban.
-- `ban_kind` is `permanent` or `temporary_24h`.
+- `appeals_supported` is `true` for both kinds of ban.
+- `ban_kind` is `permanent` or `temporary_24h`. `temporary_24h` covers every ban that records an expiry, whatever its length.
 - `expires_at` is an ISO 8601 timestamp when the ban records an expiry, and `null` otherwise, including on every permanent ban.
 
 ## Validation failure codes
@@ -132,6 +132,10 @@ Several source messages append a further recovery sentence with a template value
 
 You don't have access to this resource or feature
 
+### `ACCOUNT_LIMITED`
+
+Messaging is paused on your account
+
 ### `ACCOUNT_SUSPENDED_PERMANENTLY`
 
 This account has been permanently suspended
@@ -139,10 +143,6 @@ This account has been permanently suspended
 ### `ACCOUNT_SUSPENDED_TEMPORARILY`
 
 This account has been temporarily suspended
-
-### `ACCOUNT_SUSPICIOUS_ACTIVITY`
-
-Your account is locked due to suspicious activity
 
 ### `ACCOUNT_TOO_NEW_FOR_GUILD`
 
@@ -304,6 +304,10 @@ Remove the followed channels posting here before converting it to an announcemen
 
 Only text and announcement channels can be converted into each other
 
+### `NEW_CONVERSATIONS_LIMITED`
+
+You can't start new conversations right now. Please try again later
+
 ### `COMMUNICATION_DISABLED`
 
 Communication is disabled
@@ -458,7 +462,7 @@ Your IP address {ipAddress} has been permanently blocked from the Fluxer API by 
 
 ### `GLOBAL_IP_TEMPORARILY_BANNED`
 
-Your IP address {ipAddress} has been temporarily blocked from the Fluxer API for 24 hours because of abusive or unusual access patterns
+Your IP address {ipAddress} has been temporarily blocked from the Fluxer API
 
 ### `GONE`
 
@@ -479,10 +483,6 @@ You don't have permission to create communities on this instance
 ### `GUILD_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
-
-### `GUILD_PHONE_VERIFICATION_REQUIRED`
-
-You need to add a phone number to send messages in this community
 
 ### `GUILD_TEMPLATE_INVALID`
 
@@ -588,14 +588,6 @@ Permissions must be a valid integer
 
 Permissions must be non-negative
 
-### `INVALID_PHONE_NUMBER`
-
-Invalid phone number
-
-### `INVALID_PHONE_VERIFICATION_CODE`
-
-Invalid phone verification code
-
 ### `INVALID_REQUEST`
 
 Invalid request
@@ -607,10 +599,6 @@ Invalid stream key format
 ### `INVALID_STREAM_THUMBNAIL_PAYLOAD`
 
 Invalid stream thumbnail payload
-
-### `INVALID_SUSPICIOUS_FLAGS_FORMAT`
-
-Invalid suspicious flags format
 
 ### `INVALID_SYSTEM_FLAG`
 
@@ -824,50 +812,6 @@ NSFW content is age restricted
 
 Passkey authentication failed
 
-### `PHONE_ADD_NOT_ELIGIBLE`
-
-You are not eligible to add a phone number to your account
-
-### `PHONE_ALREADY_USED`
-
-Phone number is already in use
-
-### `PHONE_COUNTRY_NOT_SUPPORTED`
-
-We don't send verification texts to this country. Use a mobile number from another country, or email support@fluxer.app and a person will review your account
-
-### `PHONE_GATE_ESCAPE_UNAVAILABLE`
-
-This account cannot postpone the phone verification check
-
-### `PHONE_INBOUND_VERIFICATION_REQUIRED`
-
-This number is verified by texting us instead of us texting you. Start phone verification again to get the code and the number to text
-
-### `PHONE_LOOKUP_UNAVAILABLE`
-
-Our phone number check is down right now, so we stopped before sending your code. This is on us, not your number. Wait a few minutes and try the same number again
-
-### `PHONE_NUMBER_NOT_IN_SERVICE`
-
-Your carrier says this number isn't in service. Check the number and try again, or email support@fluxer.app if it's correct
-
-### `PHONE_NUMBER_NOT_MOBILE`
-
-This isn't a mobile number, so it can't receive our text. Use a mobile number, or email support@fluxer.app if you think that's wrong
-
-### `PHONE_RATE_LIMIT_EXCEEDED`
-
-Phone rate limit exceeded
-
-### `PHONE_VERIFICATION_NEEDS_REVIEW`
-
-We couldn't verify this number automatically. Email support@fluxer.app and a person will review your account
-
-### `PHONE_VERIFICATION_REQUIRED`
-
-Phone verification is required
-
 ### `PREMIUM_PURCHASE_BLOCKED`
 
 No active subscription
@@ -959,10 +903,6 @@ You cannot leave the community for this instance
 ### `SLOWMODE_RATE_LIMITED`
 
 Slowmode rate limited
-
-### `SMS_VERIFICATION_UNAVAILABLE`
-
-Service unavailable
 
 ### `SSO_REQUIRED`
 
@@ -1203,10 +1143,6 @@ Unknown sticker
 ### `UNKNOWN_STORE_PURCHASE`
 
 Unknown store purchase
-
-### `UNKNOWN_SUSPICIOUS_FLAG`
-
-Unknown suspicious flag
 
 ### `UNKNOWN_USER`
 
@@ -1941,10 +1877,6 @@ String length must be between {min} and {max} characters
 
 Password isn't set
 
-### `PHONE_NUMBER_INVALID_FORMAT`
-
-Phone number must be in E.164 format (for example, +1234567890)
-
 ### `PRECEDING_CHANNEL_MUST_SHARE_PARENT`
 
 Preceding channel must share the same parent as the moved channel
@@ -2112,10 +2044,6 @@ This user doesn't have an email address
 ### `USER_IS_NOT_BANNED`
 
 This user isn't banned
-
-### `USER_MUST_BE_A_BOT_TO_BE_MARKED_AS_A_SYSTEM_USER`
-
-User must be a bot to be marked as a system user
 
 ### `USER_NOT_IN_CHANNEL`
 

@@ -100,6 +100,7 @@ const DEFAULT_INSTANCE_FEATURES: InstanceFeatures = {
 	self_hosted: false,
 	presigned_attachment_uploads: false,
 	emails_enabled: false,
+	phone_verification_enabled: false,
 };
 
 export const DEFAULT_INSTANCE_REGISTRATION: InstanceRegistration = {

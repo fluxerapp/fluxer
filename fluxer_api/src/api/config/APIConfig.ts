@@ -155,6 +155,7 @@ export interface APIConfig {
 		webhookSecret?: string;
 		fromEmail: string;
 		fromName: string;
+		replyToEmail: string;
 		appBaseUrl: string;
 		smtp?: {
 			host: string;

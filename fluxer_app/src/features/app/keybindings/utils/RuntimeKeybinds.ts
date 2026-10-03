@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {CustomKeybindEntry, KeybindCommand, KeybindConfig, KeyCombo} from '@app/features/input/state/InputKeybind';
-import {keyComboHasTriggerInput} from '@app/features/input/state/KeybindResolution';
+import {isActiveCustomKeybind, keyComboHasTriggerInput} from '@app/features/input/state/KeybindResolution';
 
 export {
 	comboModifierSignature,
@@ -46,15 +46,6 @@ export function isEnabledDefaultCombo(combo: KeyCombo): boolean {
 	return (combo.enabled ?? true) !== false && hasTriggerInput(combo);
 }
 
-export function getCustomActionOverrides(customs: ReadonlyArray<CustomKeybindEntry>): Set<KeybindCommand> {
-	const overriddenActions = new Set<KeybindCommand>();
-	for (const custom of customs) {
-		if (!custom.action) continue;
-		overriddenActions.add(custom.action);
-	}
-	return overriddenActions;
-}
-
 export function buildDefaultRuntimeKeybinds(
 	defaults: ReadonlyArray<KeybindConfig>,
 	overriddenActions: Set<KeybindCommand>,
@@ -75,12 +66,10 @@ export function buildCustomRuntimeKeybinds(
 ): Array<RuntimeKeybind> {
 	const result: Array<RuntimeKeybind> = [];
 	for (const custom of customs) {
-		if (!custom.action || !custom.enabled) continue;
+		if (!custom.action || !isActiveCustomKeybind(custom)) continue;
 		const base = getBaseByAction(custom.action);
 		if (!base) continue;
-		const combo = custom.combo;
-		if (!hasTriggerInput(combo)) continue;
-		result.push({...base, combo});
+		result.push({...base, combo: custom.combo});
 	}
 	return result;
 }

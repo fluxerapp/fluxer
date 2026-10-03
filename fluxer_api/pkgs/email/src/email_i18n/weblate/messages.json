@@ -11,10 +11,6 @@
 		"subject": "Your {product_name} account deletion is scheduled",
 		"body": "Hello {username},\n\nAs you requested, your {product_name} account is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\nYour account is locked until then. If you didn't request this, or you want to keep your account, contact {safety_email} from this email address before that date.\n\n– {product_name} Team"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Your {product_name} account has been temporarily disabled",
-		"body": "Hello {username},\n\nWe temporarily disabled your {product_name} account because we detected suspicious activity.\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nTo regain access to your account, you'll need to reset your password:\n\n{forgotUrl}\n\nAfter you reset your password, you'll be able to log in again.\n\nIf you believe this was done in error, please contact our support team.\n\n– {product_name} Safety Team"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Your {product_name} account will be permanently deleted",
 		"body": "Hello {username},\n\nYour {product_name} account has been scheduled for permanent deletion due to violations of our Terms of Service or Community Guidelines.\n\nScheduled deletion: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nThis is a serious enforcement action. Your account data will be permanently deleted on the scheduled date.\n\nPlease review:\n- Terms of Service: {termsUrl}\n- Community Guidelines: {guidelinesUrl}\n\nAppeals process:\nIf you believe this enforcement decision was incorrect or unjustified, you have 60 days to submit an appeal. Email {appeals_email} from this email address.\n\nIn your appeal:\n- Clearly explain why you believe the enforcement decision was incorrect or unjustified\n- Provide any relevant evidence or context\n\nA member of the {product_name} Safety Team will review your appeal and may pause the pending deletion until a final decision has been reached.\n\n– {product_name} Safety Team"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Your {product_name} email was changed",
-		"body": "Hello {username},\n\nThe email address on your {product_name} account was changed to {newEmail}.\n\nIf you made this change, no action is needed. If you didn't, you can revert the change and secure your account using this link:\n\n{revertUrl}\n\nThis will restore your previous email, sign you out everywhere, remove linked phone numbers, disable MFA, and require you to set a new password.\n\n– {product_name} Safety Team"
+		"body": "Hello {username},\n\nThe email address on your {product_name} account was changed to {newEmail}.\n\nIf you made this change, no action is needed. If you didn't, you can revert the change and secure your account using this link:\n\n{revertUrl}\n\nThis will restore your previous email, sign you out everywhere, disable MFA, and require you to set a new password.\n\n– {product_name} Safety Team"
 	},
 	"email_verification": {
 		"subject": "Verify your {product_name} email address",

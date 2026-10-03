@@ -579,7 +579,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn decoded_keydown_carries_keysym_and_name() {
+    fn decoded_keydown_has_keysym_and_name() {
         let mut event = DecodedEvent::new(EventKind::KeyDown, modifiers::from_state(0));
         event.keycode = 0x0061;
         event.key_name = keymap::keysym_to_name(0x0061).unwrap().to_string();

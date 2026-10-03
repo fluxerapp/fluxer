@@ -49,7 +49,9 @@ import type {Message} from '@app/api/models/Message';
 import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
 import type {Webhook} from '@app/api/models/Webhook';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {
@@ -788,6 +790,7 @@ export class MessageSendService {
 			const message = await this.sendPersonalNoteMessage({authChannel, user, channelId, data, requestCache});
 			return {message, authChannel};
 		}
+		assertAccountNotLimited(user);
 		const {channel, guild, checkPermission, hasPermission, member} = authChannel;
 		const {canEmbedLinks, canMentionEveryone, canAttachFiles} = await this.checkMessageSendPermissions({
 			guild,
@@ -855,6 +858,16 @@ export class MessageSendService {
 			}
 		}
 		this.ensureForwardGuildMatches({data, referencedChannelGuildId});
+		const dmRecipientId = this.getOneToOneDmRecipientId(channel, user.id);
+		if (dmRecipientId !== null) {
+			await assertMayStartConversation({
+				user,
+				targetId: dmRecipientId,
+				users: this.deps.userRepository,
+				messages: this.deps.channelRepository.messages,
+				channel,
+			});
+		}
 		await this.ensureAttachmentsExist({
 			attachments: data.attachments,
 			user,
@@ -928,7 +941,6 @@ export class MessageSendService {
 				});
 			}
 		}
-		const dmRecipientId = this.getOneToOneDmRecipientId(channel, user.id);
 		const suppressDmRecipientDelivery = dmRecipientId !== null && isDirectDeliverySuppressed(user);
 		const channelHadMessages = channel.lastMessageId !== null;
 		const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({

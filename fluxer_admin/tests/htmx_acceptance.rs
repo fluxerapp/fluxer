@@ -363,7 +363,9 @@ async fn user_account_actions_use_no_swap_htmx_toasts() {
     assert!(body.contains("__fluxerAdminActionForms"), "{body}");
     assert!(!body.contains(&native_confirm), "{body}");
     assert!(
-        body.contains(r#"hx-post="/users/1500000000000000001?action=update_has_verified_phone&amp;tab=account""#),
+        body.contains(
+            r#"hx-post="/users/1500000000000000001?action=send_password_reset&amp;tab=account""#
+        ),
         "{body}"
     );
     assert!(body.contains(r##"hx-target="#flash-container""##), "{body}");
@@ -374,7 +376,7 @@ async fn user_account_actions_use_no_swap_htmx_toasts() {
         .unwrap_or_else(|| panic!("account page did not set csrf_token cookie\n{body}"));
     let (status, response_headers, response_body) = post_form_with_headers(
         &app,
-        "/users/1500000000000000001?action=update_has_verified_phone&tab=account",
+        "/users/1500000000000000001?action=send_password_reset&tab=account",
         &[
             ("HX-Request", "true"),
             ("HX-Target", "flash-container"),
@@ -383,7 +385,7 @@ async fn user_account_actions_use_no_swap_htmx_toasts() {
                 &format!("{}; csrf_token={}", app.session_cookie, csrf_token),
             ),
         ],
-        &format!("_csrf={csrf_token}&has_verified_phone=true"),
+        &format!("_csrf={csrf_token}"),
     )
     .await;
     assert_eq!(status, StatusCode::NO_CONTENT, "{response_body}");
@@ -399,7 +401,7 @@ async fn user_account_actions_use_no_swap_htmx_toasts() {
         .unwrap_or_else(|| panic!("missing toast header\n{response_body}"));
     assert!(toast.contains("success"), "{toast}");
     assert!(
-        toast.contains("Phone verification status updated successfully"),
+        toast.contains("Password reset sent successfully"),
         "{toast}"
     );
 }
@@ -467,6 +469,7 @@ async fn mutating_admin_pages_render_usable_csrf_tokens() {
                 "/instance-config?action=update_gateway_rollout",
                 "/instance-config?action=update_sso",
                 "/instance-config?action=update_domain_migration",
+                "/instance-config?action=update_plutonium_page",
                 "/instance-config?action=update_experiment_delivery",
             ][..],
         ),
@@ -838,8 +841,8 @@ async fn mock_api(method: Method, uri: Uri) -> Response {
         (Method::GET, "/admin/users/1500000000000000001") => {
             json_response(json!({ "users": [searched_user()] }))
         }
-        (Method::PUT, "/admin/users/1500000000000000001/phone-verification") => {
-            json_response(json!({ "user": searched_user() }))
+        (Method::POST, "/admin/users/1500000000000000001/password-reset") => {
+            StatusCode::NO_CONTENT.into_response()
         }
         (Method::GET, "/admin/guilds") => {
             json_response(json!({ "guilds": [searched_guild()], "total": 1 }))
@@ -946,11 +949,8 @@ fn user(id: &str, username: &str) -> Value {
         "premium_until": null,
         "premium_grace_ends_at": null,
         "premium_lifetime_sequence": null,
-        "suspicious_activity_flags": 0,
-        "phone_verification_deferred": false,
         "has_totp": false,
         "authenticator_types": [],
-        "has_verified_phone": false,
         "temp_banned_until": null,
         "pending_deletion_at": null,
         "pending_bulk_message_deletion_at": null,
@@ -1192,6 +1192,14 @@ fn instance_config() -> Value {
             "excluded_user_ids": [],
             "anonymous_rollout_basis_points": 0,
             "standalone_forwarding": false
+        },
+        "plutonium_page": {
+            "enabled": false,
+            "config_version": 0,
+            "rollout_basis_points": 0,
+            "rollout_salt": "plutonium-page-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": []
         },
         "experiment_delivery": {
             "poll_interval_seconds": 300,

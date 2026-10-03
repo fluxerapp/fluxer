@@ -8,7 +8,7 @@ import {
 import {describe, expect, test} from 'vitest';
 
 describe('captcha configuration', () => {
-	test('defaults to enabled at the phone-friendly difficulty', () => {
+	test('defaults to enabled at the mobile-friendly difficulty', () => {
 		expect(CaptchaConfigSchema.parse({})).toEqual({enabled: true, cost: 5000, max_counter: 1000});
 		expect(DEFAULT_CAPTCHA_CONFIG).toEqual({enabled: true, cost: 5000, max_counter: 1000});
 	});

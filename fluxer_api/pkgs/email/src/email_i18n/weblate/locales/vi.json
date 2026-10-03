@@ -11,10 +11,6 @@
 		"subject": "Tài khoản {product_name} của bạn đã được lên lịch xóa",
 		"body": "Xin chào {username},\n\nTheo yêu cầu của bạn, tài khoản {product_name} của bạn được lên lịch xóa vĩnh viễn vào:\n\n{deletionDate, date, full} lúc {deletionDate, time, short}{reason, select, null {} other {\n\nLý do: {reason}}}\n\nTài khoản của bạn sẽ bị khóa cho đến lúc đó. Nếu bạn không yêu cầu điều này, hoặc bạn muốn giữ tài khoản, hãy liên hệ {safety_email} từ địa chỉ email này trước ngày đó.\n\n– Đội ngũ {product_name}"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Tài khoản {product_name} của bạn đã bị tạm thời vô hiệu hóa",
-		"body": "Xin chào {username},\n\nChúng tôi đã tạm thời vô hiệu hóa tài khoản {product_name} của bạn vì phát hiện hoạt động đáng ngờ.\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}}\n}\n\nĐể truy cập lại tài khoản, bạn cần đặt lại mật khẩu:\n\n{forgotUrl}\n\nSau khi đặt lại mật khẩu, bạn sẽ có thể đăng nhập lại.\n\nNếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi.\n\n– Đội ngũ An toàn {product_name}"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Tài khoản {product_name} của bạn sẽ bị xóa vĩnh viễn",
 		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã được lên lịch xóa vĩnh viễn do vi phạm Điều khoản dịch vụ hoặc Nguyên tắc cộng đồng của chúng tôi.\n\nThời gian xóa theo lịch: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}}\n}\n\nĐây là một biện pháp xử lý nghiêm trọng. Dữ liệu tài khoản của bạn sẽ bị xóa vĩnh viễn vào ngày đã lên lịch.\n\nVui lòng xem lại:\n- Điều khoản dịch vụ: {termsUrl}\n- Nguyên tắc cộng đồng: {guidelinesUrl}\n\nQuy trình khiếu nại:\nNếu bạn cho rằng quyết định này không chính xác hoặc không hợp lý, bạn có 60 ngày để gửi khiếu nại. Gửi email đến {appeals_email} từ địa chỉ email này.\n\nTrong khiếu nại của bạn:\n- Giải thích rõ ràng lý do bạn cho rằng quyết định này không chính xác hoặc không hợp lý\n- Cung cấp bằng chứng hoặc thông tin liên quan nếu có\n\nMột thành viên của Đội ngũ An toàn {product_name} sẽ xem xét khiếu nại của bạn và có thể tạm dừng việc xóa đang chờ xử lý cho đến khi có quyết định cuối cùng.\n\n– Đội ngũ An toàn {product_name}"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "Email của bạn trên {product_name} đã được thay đổi",
-		"body": "Xin chào {username},\n\nĐịa chỉ email trên tài khoản {product_name} của bạn đã được thay đổi thành {newEmail}.\n\nNếu bạn đã thực hiện thay đổi này, bạn không cần thực hiện hành động nào. Nếu không, bạn có thể hoàn tác thay đổi và bảo mật tài khoản của mình bằng cách sử dụng liên kết này:\n\n{revertUrl}\n\nThao tác này sẽ khôi phục email trước đó của bạn, đăng xuất khỏi tất cả thiết bị, xóa số điện thoại đã liên kết, tắt MFA và yêu cầu bạn đặt mật khẩu mới.\n\n– Đội ngũ An toàn {product_name}"
+		"body": "Xin chào {username},\n\nĐịa chỉ email trên tài khoản {product_name} của bạn đã được thay đổi thành {newEmail}.\n\nNếu bạn đã thực hiện thay đổi này, bạn không cần thực hiện hành động nào. Nếu không, bạn có thể hoàn tác thay đổi và bảo mật tài khoản của mình bằng cách sử dụng liên kết này:\n\n{revertUrl}\n\nThao tác này sẽ khôi phục email trước đó của bạn, đăng xuất khỏi tất cả thiết bị, tắt MFA và yêu cầu bạn đặt mật khẩu mới.\n\n– Đội ngũ An toàn {product_name}"
 	},
 	"email_verification": {
 		"subject": "Xác minh địa chỉ email của bạn trên {product_name}",

@@ -132,7 +132,7 @@ describe('Favorite Meme Operations', () => {
 		expect(sent.attachments[0].filename).toBe(filename);
 		expect(sent.attachments[0].flags & MessageAttachmentFlags.IS_ANIMATED).toBe(MessageAttachmentFlags.IS_ANIMATED);
 	});
-	test('should carry the saved placeholder onto the sent attachment', async () => {
+	test('should copy the saved placeholder onto the sent attachment', async () => {
 		const account = await createTestAccountForAttachmentTests(harness);
 		const {channel} = await setupTestGuildAndChannel(harness, account);
 		const message = await createMessageWithImageAttachment(harness, account.token, channel.id);
@@ -244,7 +244,7 @@ describe('Favorite Meme Operations', () => {
 			attachment_id: message1.attachments[0].id,
 			name: 'First Meme',
 		});
-		const message2 = await createMessageWithImageAttachment(harness, account.token, channel.id, 'thisisfine.gif');
+		const message2 = await createMessageWithImageAttachment(harness, account.token, channel.id, 'animated.gif');
 		await createFavoriteMemeFromMessage(harness, account.token, channel.id, message2.id, {
 			attachment_id: message2.attachments[0].id,
 			name: 'Second Meme',

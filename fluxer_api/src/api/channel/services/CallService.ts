@@ -15,6 +15,7 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import {AUTOMATIC_VOICE_REGION_ID, ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {IncomingCallFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
@@ -168,6 +169,16 @@ export class CallService {
 			const dmRecipientIds = recipientIds.filter((id) => id !== userId);
 			if (dmRecipientIds.length === 1) {
 				await this.dmPermissionValidator.validate({senderId: userId, recipientId: dmRecipientIds[0]});
+				const caller = await this.userRepository.findUnique(userId);
+				if (caller) {
+					await assertMayStartConversation({
+						user: caller,
+						targetId: dmRecipientIds[0]!,
+						users: this.userRepository,
+						messages: this.channelRepository,
+						channel,
+					});
+				}
 			}
 		}
 		const existingCall = await this.gatewayService.getCall(channelId);
@@ -336,6 +347,16 @@ export class CallService {
 			const dmRecipientIds = Array.from(channel.recipientIds).filter((id) => id !== userId);
 			if (dmRecipientIds.length === 1) {
 				await this.dmPermissionValidator.validate({senderId: userId, recipientId: dmRecipientIds[0]});
+				const caller = await this.userRepository.findUnique(userId);
+				if (caller) {
+					await assertMayStartConversation({
+						user: caller,
+						targetId: dmRecipientIds[0]!,
+						users: this.userRepository,
+						messages: this.channelRepository,
+						channel,
+					});
+				}
 			}
 		}
 		const callerRequestedNoRing = recipients !== undefined && recipients.length === 0;

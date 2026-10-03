@@ -51,6 +51,9 @@ render_metrics() ->
 -spec render_gateway_gauges() -> iolist().
 render_gateway_gauges() ->
     Sessions = safe_apply_int(fun session_manager:session_count/0),
+    DispatchDrops = safe_apply_int(fun gateway_cluster_metrics:dispatch_drops_total/0),
+    Dispatches = safe_apply_int(fun gateway_cluster_metrics:dispatches_total/0),
+    Resumes = safe_apply_int(fun gateway_cluster_metrics:resumes_total/0),
     Guilds = safe_apply_int(fun guild_manager:local_guild_count/0),
     VoiceCounts = safe_apply_map(fun voice_state_counts_cache:get_local_counts/0),
     CallIds = safe_apply_list(fun call_manager:local_call_ids/0),
@@ -65,10 +68,28 @@ render_gateway_gauges() ->
             integer_to_binary(Sessions)
         ),
         format_metric(
+            <<"fluxer_gateway_session_resumes_total">>,
+            <<"counter">>,
+            <<"Successful WebSocket session resumes">>,
+            integer_to_binary(Resumes)
+        ),
+        format_metric(
             <<"fluxer_gateway_guilds_total">>,
             <<"gauge">>,
             <<"Locally loaded guilds">>,
             integer_to_binary(Guilds)
+        ),
+        format_metric(
+            <<"fluxer_gateway_websocket_dispatches_total">>,
+            <<"counter">>,
+            <<"WebSocket dispatch frames handed to the transport, including replays">>,
+            integer_to_binary(Dispatches)
+        ),
+        format_metric(
+            <<"fluxer_gateway_websocket_dispatch_drops_total">>,
+            <<"counter">>,
+            <<"WebSocket dispatches dropped due to encoding or compression errors">>,
+            integer_to_binary(DispatchDrops)
         ),
         render_voice_metrics(VoiceCounts),
         format_metric(

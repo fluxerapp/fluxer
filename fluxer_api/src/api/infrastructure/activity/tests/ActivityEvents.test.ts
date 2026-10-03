@@ -194,11 +194,10 @@ describe('activity events', () => {
 	it('gives two account changes written at the same version distinct ids', async () => {
 		const publisher = new FakePublisher();
 		await startActivityEvents({publisher, kv: new MockKVProvider()});
-		const row = (suspicious: number, flags: bigint) =>
-			({user_id: 1174109840998400001n, version: 11, flags, suspicious_activity_flags: suspicious}) as never;
-		await emitAccountChangedIfRelevant(row(2, 0n), row(0, 0n), 'email_verify');
-		await emitAccountChangedIfRelevant(row(2, 0n), row(2, 1n << 43n), 'admin');
-		await emitAccountChangedIfRelevant(row(2, 0n), row(0, 0n), 'email_verify');
+		const row = (flags: bigint) => ({user_id: 1174109840998400001n, version: 11, flags}) as never;
+		await emitAccountChangedIfRelevant(row(0n), row(1n << 50n), 'admin');
+		await emitAccountChangedIfRelevant(row(0n), row(1n << 43n), 'admin');
+		await emitAccountChangedIfRelevant(row(0n), row(1n << 50n), 'admin');
 		const ids = publisher.calls.map((call) => call.options.msgID);
 		expect(ids).toHaveLength(3);
 		expect(ids[0]).toMatch(/^account_changed:1174109840998400001:11:/u);

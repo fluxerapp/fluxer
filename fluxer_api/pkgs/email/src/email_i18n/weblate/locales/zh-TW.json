@@ -11,10 +11,6 @@
 		"subject": "您的 {product_name} 帳號已排定刪除",
 		"body": "哈囉 {username}，\n\n依照您的要求，您的 {product_name} 帳號已排定於以下時間永久刪除：\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n原因：{reason}}}\n\n在此之前，您的帳號將被鎖定。如果您沒有提出此要求，或想保留帳號，請在該日期前使用此電子郵件地址聯絡 {safety_email}。\n\n– {product_name} 團隊"
 	},
-	"account_disabled_suspicious": {
-		"subject": "您的 {product_name} 帳號已暫時停用",
-		"body": "哈囉 {username}，\n\n我們偵測到您的 {product_name} 帳號有可疑活動，因此已暫時停用您的帳號。\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n若要重新取得帳號存取權，您需要重設密碼：\n\n{forgotUrl}\n\n重設密碼後，您將可以再次登入。\n\n如果您認為這是誤判，請聯絡我們的支援團隊。\n\n– {product_name} 安全團隊"
-	},
 	"account_scheduled_deletion": {
 		"subject": "您的 {product_name} 帳號將被永久刪除",
 		"body": "哈囉 {username}，\n\n由於您違反了我們的服務條款或社群準則，您的 {product_name} 帳號已排定永久刪除。\n\n排定刪除時間：{deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n這是一項嚴重的處分。您的帳號資料將在排定日期永久刪除。\n\n請參閱：\n- 服務條款：{termsUrl}\n- 社群準則：{guidelinesUrl}\n\n申訴流程：\n如果您認為此處分不正確或不合理，您有 60 天的時間可以提交申訴。請使用此電子郵件地址寄信至 {appeals_email}。\n\n在您的申訴中：\n- 請清楚說明您認為此處分不正確或不合理的原因\n- 提供任何相關證據或背景資訊\n\n{product_name} 安全團隊的成員將會審查您的申訴，並可能在做出最終決定前暫停這項刪除。\n\n– {product_name} 安全團隊"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "您的 {product_name} 電子郵件已變更",
-		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號電子郵件地址已變更為 {newEmail}。\n\n如果您進行了此變更，則無需採取任何行動。如果您沒有進行此變更，可以使用此連結還原變更並保護您的帳號安全：\n\n{revertUrl}\n\n這將會還原您先前的電子郵件、將您從所有裝置登出、移除連結的電話號碼、停用多重要素驗證，並要求您設定新密碼。\n\n– {product_name} 安全團隊"
+		"body": "哈囉 {username}，\n\n您的 {product_name} 帳號電子郵件地址已變更為 {newEmail}。\n\n如果您進行了此變更，則無需採取任何行動。如果您沒有進行此變更，可以使用此連結還原變更並保護您的帳號安全：\n\n{revertUrl}\n\n這將會還原您先前的電子郵件、將您從所有裝置登出、停用多重要素驗證，並要求您設定新密碼。\n\n– {product_name} 安全團隊"
 	},
 	"email_verification": {
 		"subject": "驗證您的 {product_name} 電子郵件地址",

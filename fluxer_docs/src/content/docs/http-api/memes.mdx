@@ -171,7 +171,6 @@ The account's [collection limit](#collection-limits) bounds how many entries the
 | --- | --- | --- |
 | 200 | array[[meme](#meme-object) object] | Collection was returned, possibly as an empty array |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 ### Rate limit
 
@@ -216,7 +215,6 @@ A URL that resolves to no usable media fails with 400 `MEDIA_METADATA_ERROR`. Sa
 | 400 | [error response](/http-api/#error-response) | The URL resolves to no usable media with `MEDIA_METADATA_ERROR` |
 | 400 | [error response](/http-api/#error-response) | The collection is at its limit with `MAX_FAVORITE_MEMES` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 <sup>5</sup> Including `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path and `MEDIA_ALREADY_IN_FAVORITE_MEMES` at the `media` path
 
@@ -274,7 +272,6 @@ An embed selection uses its image, video, or thumbnail, in that order. Media who
 | 400 | [error response](/http-api/#error-response) | External media metadata cannot be resolved with `MEDIA_METADATA_ERROR` |
 | 400 | [error response](/http-api/#error-response) | The collection is at its limit with `MAX_FAVORITE_MEMES` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The caller is not a member of the guild or lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The channel requires age verification the account has not completed and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | Channel is unavailable or the caller is not a recipient of it with `UNKNOWN_CHANNEL` |
@@ -314,7 +311,6 @@ Returns one [meme object](#meme-object) owned by the current account.
 | --- | --- | --- |
 | 200 | [meme](#meme-object) object | Meme was returned |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 404 | [error response](/http-api/#error-response) | Meme is unknown or belongs to another account with `UNKNOWN_FAVORITE_MEME` |
 
 ### Rate limit
@@ -358,7 +354,6 @@ Fluxer checks the tag allowance against the resulting list, so a request omittin
 | 200 | [meme](#meme-object) object | Meme was updated |
 | 400 | [error response](/http-api/#error-response) | Path, name, alt text, or tag length fails validation with `INVALID_FORM_BODY`<sup>3</sup> |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 404 | [error response](/http-api/#error-response) | Meme is unknown or belongs to another account with `UNKNOWN_FAVORITE_MEME` |
 
 <sup>3</sup> Including `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path
@@ -395,7 +390,6 @@ Every meme owns its stored bytes, so deletion removes them permanently. The meme
 | --- | --- | --- |
 | 204 | empty | Meme was deleted, or no owned meme existed |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 ### Side effects
 
@@ -447,7 +441,6 @@ An unresolved URL still returns an entry with its signed proxy URL and an empty 
 | --- | --- | --- |
 | 200 | response body | One entry was returned for each URL, including URLs that did not resolve |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 ### Rate limit
 

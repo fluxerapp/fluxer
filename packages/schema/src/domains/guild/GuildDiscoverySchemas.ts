@@ -100,6 +100,25 @@ export const DiscoveryGuildListResponse = z.object({
 
 export type DiscoveryGuildListResponse = z.infer<typeof DiscoveryGuildListResponse>;
 
+export const DiscoveryChannelPreviewResponse = z.object({
+	guild: z
+		.object({
+			id: SnowflakeStringType.describe('Guild ID'),
+			name: z.string().describe('Guild name'),
+			icon: z.string().nullable().describe('Guild icon hash'),
+		})
+		.describe('The discoverable guild the channel belongs to'),
+	channel: z
+		.object({
+			id: SnowflakeStringType.describe('Channel ID'),
+			name: z.string().nullable().describe('Channel name'),
+			type: z.number().describe('Channel type'),
+		})
+		.describe('A channel that new members can view'),
+});
+
+export type DiscoveryChannelPreviewResponse = z.infer<typeof DiscoveryChannelPreviewResponse>;
+
 export const DiscoveryApplicationResponse = z.object({
 	guild_id: SnowflakeStringType.describe('Guild ID'),
 	guild_nsfw_level: NSFWLevelSchema.nullable().optional().describe('NSFW level of the guild'),

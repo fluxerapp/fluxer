@@ -163,7 +163,7 @@ async fn post_form(app: &TestApp, uri: &str, body: &str) -> StatusCode {
     let csrf = body
         .split('&')
         .find_map(|pair| pair.strip_prefix("_csrf="))
-        .expect("form carries a csrf token");
+        .expect("form has a csrf token");
     let response = app
         .router
         .clone()
@@ -294,11 +294,8 @@ fn admin_user() -> Value {
         "premium_until": null,
         "premium_grace_ends_at": null,
         "premium_lifetime_sequence": null,
-        "suspicious_activity_flags": 0,
-        "phone_verification_deferred": false,
         "has_totp": false,
         "authenticator_types": [],
-        "has_verified_phone": false,
         "temp_banned_until": null,
         "pending_deletion_at": null,
         "pending_bulk_message_deletion_at": null,

@@ -54,6 +54,21 @@ is_positive_int "${FLUXER_ERLANG_SCHEDULERS_MIN:-}" || FLUXER_ERLANG_SCHEDULERS_
 is_positive_int "${FLUXER_ERLANG_SCHEDULERS_MAX:-}" || FLUXER_ERLANG_SCHEDULERS_MAX=16
 : "${FLUXER_ERLANG_NODE_NAME:=fluxer_gateway@127.0.0.1}"
 : "${FLUXER_ERLANG_DIST_PORT:=8081}"
+node_name_file=/opt/fluxer_gateway/node_name
+
+if [ -n "${FLUXER_ERLANG_NODE_NAME_PREFIX:-}" ]; then
+	case "$FLUXER_ERLANG_NODE_NAME_PREFIX" in
+	*[!A-Za-z0-9_]*)
+		echo 'FLUXER_ERLANG_NODE_NAME_PREFIX may only contain letters, digits and underscores.' >&2
+		exit 1
+		;;
+	esac
+	node_nonce="$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"
+	FLUXER_ERLANG_NODE_NAME="${FLUXER_ERLANG_NODE_NAME_PREFIX}_${node_nonce}@${FLUXER_ERLANG_NODE_NAME#*@}"
+	printf '%s\n' "$FLUXER_ERLANG_NODE_NAME" >"$node_name_file"
+else
+	rm -f "$node_name_file"
+fi
 
 if [ -z "${FLUXER_ERLANG_COOKIE:-}" ]; then
 	echo 'FLUXER_ERLANG_COOKIE is required.' >&2

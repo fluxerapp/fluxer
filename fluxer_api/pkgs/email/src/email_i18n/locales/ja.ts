@@ -15,10 +15,6 @@ const EMAIL_I18N_JA_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "{product_name}アカウントの削除が予定されています",
 		"body": "こんにちは、{username}さん\n\nリクエストに基づき、{product_name}アカウントは以下の日時に完全に削除される予定です。\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n理由: {reason}}}\n\nそれまでアカウントはロックされます。ご自身でリクエストしていない場合、またはアカウントを維持したい場合は、この日時までにこのメールアドレスから{safety_email}へご連絡ください。\n\n– {product_name}チーム"
 	},
-	"account_disabled_suspicious": {
-		"subject": "{product_name}アカウントが一時的に無効になりました",
-		"body": "こんにちは、{username}さん\n\n不審なアクティビティが検出されたため、{product_name}アカウントを一時的に無効にしました。\n\n{reason, select,\n  null {}\n  other {理由: {reason}}\n}\n\nアカウントに再度アクセスするには、パスワードをリセットする必要があります。\n\n{forgotUrl}\n\nパスワードをリセットすると、再度ログインできるようになります。\n\nこの措置が誤りであると思われる場合は、サポートチームにお問い合わせください。\n\n– {product_name}安全チーム"
-	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name}アカウントは完全に削除されます",
 		"body": "こんにちは、{username}さん\n\n{product_name}アカウントは、利用規約またはコミュニティガイドラインへの違反のため、完全な削除が予定されています。\n\n削除予定日時: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {理由: {reason}}\n}\n\nこれは重大な措置です。アカウントデータは、予定日に完全に削除されます。\n\n以下をご確認ください。\n- 利用規約: {termsUrl}\n- コミュニティガイドライン: {guidelinesUrl}\n\n異議申し立て手続き:\nこの措置が不正確または不当であると思われる場合は、60日以内に異議申し立てを提出できます。このメールアドレスから{appeals_email}までメールを送信してください。\n\n異議申し立てには、以下を記載してください。\n- 措置が不正確または不当であると考える理由の明確な説明\n- 関連する証拠や背景情報\n\n{product_name}安全チームのメンバーが異議申し立てを審査し、最終決定が下されるまで削除を一時停止する場合があります。\n\n– {product_name}安全チーム"
@@ -49,7 +45,7 @@ const EMAIL_I18N_JA_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "{product_name}のメールアドレスが変更されました",
-		"body": "こんにちは、{username}さん\n\n{product_name}アカウントのメールアドレスが{newEmail}に変更されました。\n\nこの変更を行った場合は、何もする必要はありません。変更を行っていない場合は、このリンクを使用して変更を元に戻し、アカウントを保護できます。\n\n{revertUrl}\n\nこれにより、以前のメールアドレスが復元され、すべてのデバイスからログアウトされ、連携済みの電話番号が削除され、MFAが無効になり、新しいパスワードの設定が必要になります。\n\n– {product_name}安全チーム"
+		"body": "こんにちは、{username}さん\n\n{product_name}アカウントのメールアドレスが{newEmail}に変更されました。\n\nこの変更を行った場合は、何もする必要はありません。変更を行っていない場合は、このリンクを使用して変更を元に戻し、アカウントを保護できます。\n\n{revertUrl}\n\nこれにより、以前のメールアドレスが復元され、すべてのデバイスからログアウトされ、MFAが無効になり、新しいパスワードの設定が必要になります。\n\n– {product_name}安全チーム"
 	},
 	"email_verification": {
 		"subject": "{product_name}のメールアドレスを確認",

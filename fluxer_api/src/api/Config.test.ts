@@ -43,13 +43,13 @@ describe('buildAPIServerOptions', () => {
 		expect(server.requestTimeout).toBe(120_000);
 	});
 
-	test('carries the operator header timeout from the environment into the server', async () => {
+	test('passes the operator header timeout from the environment into the server', async () => {
 		const server = await listenWithEnv({FLUXER_API_HEADERS_TIMEOUT_MS: '45000'});
 		expect(server.headersTimeout).toBe(45_000);
 		expect(server.requestTimeout).toBe(120_000);
 	});
 
-	test('carries the operator request timeout from the environment into the server', async () => {
+	test('passes the operator request timeout from the environment into the server', async () => {
 		const server = await listenWithEnv({FLUXER_API_REQUEST_TIMEOUT_MS: '600000'});
 		expect(server.headersTimeout).toBe(30_000);
 		expect(server.requestTimeout).toBe(600_000);
@@ -134,7 +134,7 @@ describe('buildAPIConfigFromMaster stripe legacy prices', () => {
 		master = await loadConfig();
 	});
 
-	it('carries the retired stripe price map from master config onto the api config', () => {
+	it('copies the retired stripe price map from master config onto the api config', () => {
 		const legacyPrices = {
 			monthly_brl: ['price_retired_monthly_brl'],
 			yearly_brl: ['price_retired_yearly_brl_a', 'price_retired_yearly_brl_b'],
@@ -145,7 +145,7 @@ describe('buildAPIConfigFromMaster stripe legacy prices', () => {
 		);
 	});
 
-	it('carries the retired price map even when no live prices are configured', () => {
+	it('copies the retired price map even when no live prices are configured', () => {
 		const withoutPrices: MasterConfig = {
 			...master,
 			integrations: {

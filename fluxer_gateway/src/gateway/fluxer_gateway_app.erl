@@ -16,6 +16,7 @@ start(_StartType, _StartArgs) ->
 -spec init_subsystems() -> ok.
 init_subsystems() ->
     _ = fluxer_gateway_env:load(),
+    ok = gateway_guild_pin_keeper:apply_boot_pins(),
     gateway_compress:init(),
     gateway_cluster_metrics:init(),
     process_registry:init(),

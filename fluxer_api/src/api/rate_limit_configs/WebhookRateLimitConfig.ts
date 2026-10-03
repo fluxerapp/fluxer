@@ -48,10 +48,6 @@ export const WebhookRateLimitConfigs = {
 		bucket: 'webhook:github::webhook_id',
 		config: {limit: 200, windowMs: ms('1 minute'), exemptFromGlobal: true},
 	} as RouteRateLimitConfig,
-	WEBHOOK_TWILIO_SMS: {
-		bucket: 'webhook:twilio_sms',
-		config: {limit: 60, windowMs: ms('1 minute'), exemptFromGlobal: true},
-	} as RouteRateLimitConfig,
 	WEBHOOK_INSTATUS: {
 		bucket: 'webhook:instatus::webhook_id',
 		config: {limit: 200, windowMs: ms('1 minute'), exemptFromGlobal: true},

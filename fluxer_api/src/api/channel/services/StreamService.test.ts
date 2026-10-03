@@ -72,7 +72,7 @@ describe('StreamService.uploadPreview', () => {
 		expect(uploaded).toHaveLength(0);
 	});
 
-	it('rejects a thumbnail carrying no base64 digits', async () => {
+	it('rejects a thumbnail with no base64 digits', async () => {
 		await expect(upload('====')).rejects.toBeInstanceOf(InvalidStreamThumbnailPayloadError);
 		expect(uploaded).toHaveLength(0);
 	});

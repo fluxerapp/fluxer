@@ -81,15 +81,6 @@ const VERIFICATION_LEVEL_HIGH_DESCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Helper text for the "High" member verification level option in the community moderation settings tab. "Medium" refers to the matching level option.',
 });
-const VERIFICATION_LEVEL_VERY_HIGH_NAME_DESCRIPTOR = msg({
-	message: 'Very high',
-	comment:
-		'Member verification level option in the community moderation settings tab. Short standalone severity label.',
-});
-const VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Requires a verified phone number.',
-	comment: 'Helper text for the "Very high" member verification level option in the community moderation settings tab.',
-});
 const MEMBER_VERIFICATION_LEVEL_ARIA_DESCRIPTOR = msg({
 	message: 'Member verification level',
 	comment: 'Accessible label for the member verification level radio group in the community moderation settings tab.',
@@ -280,11 +271,6 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_HIGH_NAME_DESCRIPTOR), '#f97316'),
 			desc: i18n._(VERIFICATION_LEVEL_HIGH_DESCRIPTION_DESCRIPTOR),
 		},
-		{
-			value: GuildVerificationLevel.VERY_HIGH,
-			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_VERY_HIGH_NAME_DESCRIPTOR), '#ef4444'),
-			desc: i18n._(VERIFICATION_LEVEL_VERY_HIGH_DESCRIPTION_DESCRIPTOR),
-		},
 	];
 	const matureContentOptions: ReadonlyArray<ComboboxOption<string>> = [
 		{value: 'on', label: i18n._(MATURE_CONTENT_ON_DESCRIPTOR)},
@@ -298,27 +284,27 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 						<h3 className={styles.sectionTitle} data-flx="guild.guild-tabs.guild-moderation-tab.section-title">
 							<Trans>Member verification</Trans>
 						</h3>
-						<div
-							className={styles.sectionDescriptionMultiline}
-							data-flx="guild.guild-tabs.guild-moderation-tab.section-description-multiline"
+						<p
+							className={styles.sectionDescription}
+							data-flx="guild.guild-tabs.guild-moderation-tab.section-description--verification"
 						>
-							<p data-flx="guild.guild-tabs.guild-moderation-tab.p">
-								<Trans>Choose what members must have before they can post or DM community members.</Trans>
-							</p>
-							<p data-flx="guild.guild-tabs.guild-moderation-tab.p--2">
+							<Trans>
+								Choose what members must have before they can post or DM community members. Members with roles can
+								bypass these checks. For public spaces, we recommend enabling verification.
+							</Trans>
+						</p>
+						{isDiscoverable && (
+							<p
+								className={styles.sectionDescription}
+								style={{fontStyle: 'italic'}}
+								data-flx="guild.guild-tabs.guild-moderation-tab.section-description--verification-discovery"
+							>
 								<Trans>
-									Members with roles can bypass these checks. For public spaces, we recommend enabling verification.
+									Communities listed in Discovery require at least email verification. None cannot be selected while
+									Discovery is enabled.
 								</Trans>
 							</p>
-							{isDiscoverable && (
-								<p data-flx="guild.guild-tabs.guild-moderation-tab.p--3">
-									<Trans>
-										Communities listed in Discovery require at least email verification. None cannot be selected while
-										Discovery is enabled.
-									</Trans>
-								</p>
-							)}
-						</div>
+						)}
 						<Controller
 							name="verification_level"
 							control={form.control}

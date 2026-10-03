@@ -471,7 +471,7 @@ describe('Crosspost moderation', () => {
 				});
 		}
 
-		test('forwarding a published source carries none of the server bits', async () => {
+		test('forwarding a published source keeps none of the server bits', async () => {
 			const source = await sendChannelMessage(harness, world.b.owner.token, world.a.ann.id, 'forward me');
 			await publish(harness, world.b.owner.token, world.a.ann.id, source.id);
 			const forwarded = await forward(world.b.owner.token, world.b.t2.id, world.a.ann.id, world.a.guild.id, source.id)
@@ -480,7 +480,7 @@ describe('Crosspost moderation', () => {
 			expect(forwarded.message_snapshots?.[0]?.flags ?? 0).toBe(0);
 		});
 
-		test('forwarding a copy carries none of the server bits', async () => {
+		test('forwarding a copy keeps none of the server bits', async () => {
 			const source = await sendChannelMessage(harness, world.a.member.token, world.a.ann.id, 'update');
 			const {copyId} = await fabricateCopy({
 				harness,

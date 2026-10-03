@@ -60,11 +60,11 @@ export interface ConnectionNoticeShape {
 }
 
 export function resolveConnectionNoticeShape(): ConnectionNoticeShape {
-	if (isClientReconnecting()) {
-		return {tone: ConnectionNoticeTone.NEUTRAL, hasActions: false};
-	}
 	if (StatusPage.scheduledMaintenance != null) {
 		return {tone: ConnectionNoticeTone.MAINTENANCE, hasActions: true};
+	}
+	if (isClientReconnecting()) {
+		return {tone: ConnectionNoticeTone.NEUTRAL, hasActions: StatusPage.incident != null};
 	}
 	return {tone: ConnectionNoticeTone.NEUTRAL, hasActions: true};
 }
@@ -103,21 +103,14 @@ export function useConnectionNotice(): ConnectionNotice | null {
 	if (!forced && !connectionUnavailable) {
 		return null;
 	}
-	if (reconnecting) {
-		return {
-			tone: ConnectionNoticeTone.NEUTRAL,
-			message: i18n._(CONNECTION_LOST_DESCRIPTOR),
-			action: null,
-			showSwitchAccount: false,
-		};
-	}
+	const noticeShowsSwitchAccount = showSwitchAccount && !reconnecting;
 	const maintenance = StatusPage.scheduledMaintenance;
 	if (maintenance != null) {
 		return {
 			tone: ConnectionNoticeTone.MAINTENANCE,
 			message: maintenance.name,
 			action: {label: i18n._(VIEW_MAINTENANCE_DETAILS_DESCRIPTOR), url: maintenance.url},
-			showSwitchAccount,
+			showSwitchAccount: noticeShowsSwitchAccount,
 		};
 	}
 	const incident = StatusPage.incident;
@@ -126,7 +119,15 @@ export function useConnectionNotice(): ConnectionNotice | null {
 			tone: ConnectionNoticeTone.NEUTRAL,
 			message: incident.name,
 			action: {label: i18n._(VIEW_INCIDENT_DETAILS_DESCRIPTOR), url: incident.url},
-			showSwitchAccount,
+			showSwitchAccount: noticeShowsSwitchAccount,
+		};
+	}
+	if (reconnecting) {
+		return {
+			tone: ConnectionNoticeTone.NEUTRAL,
+			message: i18n._(CONNECTION_LOST_DESCRIPTOR),
+			action: null,
+			showSwitchAccount: false,
 		};
 	}
 	return {

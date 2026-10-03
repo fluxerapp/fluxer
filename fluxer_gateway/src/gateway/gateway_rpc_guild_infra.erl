@@ -67,7 +67,7 @@ with_guild_unchecked(GuildId, Fun) ->
 
 -spec ensure_responsive(pid()) -> ok.
 ensure_responsive(Pid) ->
-    case guild_health:is_degraded(Pid) of
+    case guild_health:is_overloaded(Pid) of
         true -> gateway_rpc_error:raise(<<"guild_overloaded">>);
         false -> ok
     end.
@@ -433,7 +433,8 @@ overloaded_guild_is_rejected_before_enqueuing_work_test() ->
             stop -> ok
         end
     end),
-    true = ets:insert(guild_health_status, {Pid, 42, true, undefined, undefined}),
+    Pending = {make_ref(), erlang:monotonic_time(millisecond), 2500},
+    true = ets:insert(guild_health_status, {Pid, 42, true, undefined, Pending}),
     try
         ?assertError(
             {gateway_rpc_error, <<"guild_overloaded">>},

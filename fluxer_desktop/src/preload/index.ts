@@ -50,6 +50,7 @@ import type {
 	StreamerModeCaptureAppStatus,
 	StreamingPriorityDiagnostics,
 	TextareaContextMenuParams,
+	ThemeLinkedFileChange,
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
 	UpdaterContext,
@@ -353,6 +354,13 @@ const api: ElectronAPI = {
 	readThemeLocalFiles: (paths: Array<string>) => ipcRenderer.invoke('theme-local-files-read', paths),
 	clearThemeLocalFiles: () => ipcRenderer.invoke('theme-local-files-clear'),
 	importThemeDirectory: () => ipcRenderer.invoke('theme-directory-import'),
+	pickThemeLinkedFiles: (options?: {multiple?: boolean}) => ipcRenderer.invoke('theme-linked-files-pick', options),
+	watchThemeLinkedFiles: (paths: Array<string>) => ipcRenderer.invoke('theme-linked-files-watch', paths),
+	onThemeLinkedFileChange: (callback: (change: ThemeLinkedFileChange) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, change: ThemeLinkedFileChange) => callback(change);
+		ipcRenderer.on('theme-linked-file-changed', handler);
+		return () => ipcRenderer.removeListener('theme-linked-file-changed', handler);
+	},
 	cacheVoiceBackgroundMedia: (options) => ipcRenderer.invoke('voice-background-media-cache:write', options),
 	readVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:read', id),
 	deleteVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:delete', id),

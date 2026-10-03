@@ -45,6 +45,7 @@ export class SmtpEmailProvider implements IEmailProvider {
 			await this.transporter.sendMail({
 				to: message.to,
 				from: `${message.from.name} <${message.from.email}>`,
+				...(message.replyTo ? {replyTo: message.replyTo} : {}),
 				subject: message.subject,
 				text: message.text,
 			});

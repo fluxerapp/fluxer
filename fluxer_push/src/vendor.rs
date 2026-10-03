@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_logged_error_never_carries_the_device_token() {
+    async fn a_logged_error_never_contains_the_device_token() {
         const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
         let error = error_for(&format!("https://push.invalid/3/device/{TOKEN}")).await;
         assert!(

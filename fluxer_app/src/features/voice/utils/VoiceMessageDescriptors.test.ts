@@ -126,7 +126,7 @@ describe('formatScreenShareTargetLabel', () => {
 });
 
 describe('SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR', () => {
-	it('reads Source, carries a translator comment and keeps the wording plain', () => {
+	it('reads Source, has a translator comment and keeps the wording plain', () => {
 		expect(SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR.message).toBe('Source');
 		expect(SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR.comment).toEqual(expect.stringMatching(/\S/));
 		expect(SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR.message).not.toMatch(/[;:—–]/);

@@ -1325,7 +1325,7 @@ push_loss_counters_keep_a_genuine_zero_distinct_from_absent_test() ->
         ?assertEqual(0, maps:get(worker_pool_dropped, push_loss_counters()))
     end).
 
-cache_stats_with_counters_carries_the_loss_surface_test() ->
+cache_stats_with_counters_includes_the_loss_surface_test() ->
     push_ets_cache:init(),
     with_counter_table(fun() ->
         Stats = cache_stats_with_counters(),

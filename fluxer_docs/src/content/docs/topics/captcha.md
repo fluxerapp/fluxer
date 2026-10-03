@@ -51,8 +51,6 @@ The following operations verify a CAPTCHA while the check is on.
 
 Create private channel is gated only on the group direct message path, where the request body has a `recipients` member. A one-to-one direct message request omits the field and is never gated.
 
-[Send phone verification](/http-api/users/phone-verification/#send-phone-verification) verifies a CAPTCHA only when the phone verification service asks for one. It then answers and accepts the handshake the same way. When the check is off or the account is exempt, that send is refused with `PHONE_RATE_LIMIT_EXCEEDED` instead.
-
 ## Exemption
 
 Fluxer skips the check in three cases, and the operation then proceeds with no CAPTCHA header. The authenticated account's email address is on an exempt domain. The authenticated account holds the [`APP_STORE_REVIEWER`](/admin-api/users/#account-flags) flag. The request body has an `email` that belongs to an account holding that flag. Discovery does not report exemptions, so clients must handle a challenge on every gated operation.

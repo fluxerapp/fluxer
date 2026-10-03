@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import fs from 'node:fs/promises';
 import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createWebhookID, createWebhookToken} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
 import {withChannelFollowLock} from '@app/api/channel/services/ChannelFollowers';
@@ -29,7 +29,6 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {Webhook} from '@app/api/models/Webhook';
-import {resolveAssetPath} from '@app/api/utils/AssetPaths';
 import * as RandomUtils from '@app/api/utils/RandomUtils';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {transform as GitHubTransform} from '@app/api/webhook/transformers/GitHubTransformer';
@@ -117,6 +116,10 @@ interface WebhookExecuteInstatusParams extends WebhookTokenParams {
 }
 
 const WEBHOOK_AVATAR_MISSING_CACHE_VALUE = '__fluxer_webhook_avatar_missing__';
+const HOSTED_WEBHOOK_AVATAR_URLS = {
+	github: 'https://fluxer.app/static/img/app-webhook-github.2d0319169a3aee33.webp',
+	instatus: 'https://fluxer.app/static/img/app-webhook-instatus.22ad5aee16da872c.webp',
+} as const;
 
 export class WebhookService {
 	private static readonly NO_ALLOWED_MENTIONS: AllowedMentionsRequest = {parse: []};
@@ -744,32 +747,22 @@ export class WebhookService {
 	}
 
 	private async getGitHubWebhookAvatar(webhookId: WebhookID): Promise<string | null> {
-		return this.getStaticWebhookAvatar({webhookId, provider: 'github'});
+		return this.getHostedWebhookAvatar({webhookId, provider: 'github'});
 	}
 
 	private async getInstatusWebhookAvatar(webhookId: WebhookID): Promise<string | null> {
-		return this.getStaticWebhookAvatar({webhookId, provider: 'instatus'});
+		return this.getHostedWebhookAvatar({webhookId, provider: 'instatus'});
 	}
 
-	private async getStaticWebhookAvatar({
+	private async getHostedWebhookAvatar({
 		webhookId,
 		provider,
 	}: {
 		webhookId: WebhookID;
-		provider: 'github' | 'instatus';
+		provider: keyof typeof HOSTED_WEBHOOK_AVATAR_URLS;
 	}): Promise<string | null> {
-		const cacheKey = `webhook:${webhookId}:avatar:${provider}`;
-		const avatarCache = await this.cacheService.get<string | null>(cacheKey);
-		if (avatarCache) return avatarCache;
-		const avatarFile = await fs.readFile(resolveAssetPath('assets', `${provider}.webp`));
-		const avatar = await this.avatarService.uploadAvatar({
-			prefix: 'avatars',
-			entityId: webhookId,
-			errorPath: 'avatar',
-			base64Image: avatarFile.toString('base64'),
-		});
-		await this.cacheService.set(cacheKey, avatar, seconds('1 day'));
-		return avatar;
+		if (Config.instance.selfHosted) return null;
+		return this.getWebhookAvatar({webhookId, avatarUrl: HOSTED_WEBHOOK_AVATAR_URLS[provider]});
 	}
 
 	private getWebhookMetadata(webhook: Webhook): Record<string, string> | undefined {

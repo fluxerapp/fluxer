@@ -2,27 +2,18 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
-import * as AuthPhone from '@app/api/auth/AuthPhone';
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
-import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import * as UserAuth from '@app/api/user/services/UserAuth';
 import {mapUserToPrivateResponse, mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
-import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
-import {PhoneAddNotEligibleError} from '@fluxer/errors/src/domains/auth/PhoneAddNotEligibleError';
 import type {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
 	MfaBackupCodesRequest,
 	MfaBackupCodesResponse,
-	PhoneSendVerificationRequest,
-	PhoneSendVerificationResponse,
-	PhoneVerifyRequest,
-	PhoneVerifyResponse,
 	SudoMfaMethodsResponse,
 	WebAuthnChallengeResponse,
 	WebAuthnCredentialListResponse,
@@ -63,28 +54,7 @@ export class UserAuthRequestService {
 	constructor(
 		private apiContext: ApiContext,
 		private userRepository: IUserRepository,
-		private guildRepository: IGuildRepositoryAggregate,
 	) {}
-
-	private async assertPhoneEligible(user: User): Promise<void> {
-		if (user.hasVerifiedPhone) {
-			return;
-		}
-		if (user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP)) {
-			return;
-		}
-		if (user.suspiciousActivityFlags !== 0) {
-			return;
-		}
-		const guildIds = await this.userRepository.getUserGuildIds(user.id);
-		if (guildIds.length > 0) {
-			const guilds = await this.guildRepository.listGuilds(guildIds);
-			if (guilds.some((g) => g.verificationLevel >= GuildVerificationLevel.VERY_HIGH)) {
-				return;
-			}
-		}
-		throw new PhoneAddNotEligibleError();
-	}
 
 	async enableTotp({
 		user,
@@ -120,55 +90,6 @@ export class UserAuthRequestService {
 			sudoContext,
 		});
 		return this.toBackupCodesResponse(backupCodes);
-	}
-
-	async sendPhoneVerificationCode({
-		user,
-		data,
-		clientIp,
-		hasCaptchaToken,
-		verifyCaptcha,
-	}: UserAuthRequest<PhoneSendVerificationRequest> & {
-		clientIp: string;
-		hasCaptchaToken: boolean;
-		verifyCaptcha: () => Promise<boolean>;
-	}): Promise<PhoneSendVerificationResponse> {
-		await this.assertPhoneEligible(user);
-		const result = await AuthPhone.sendPhoneVerificationCode(this.apiContext, data.phone, user.id, {
-			clientIp,
-			channel: data.channel,
-			hasCaptchaToken,
-			verifyCaptcha,
-		});
-		if (result.channel === 'inbound_challenge') {
-			return {
-				channel: 'inbound_challenge',
-				challenge_code: result.challengeCode,
-				our_number: result.ourNumber,
-				expires_at: result.expiresAt.toISOString(),
-				reason: 'verification_required',
-			};
-		}
-		return {channel: result.channel};
-	}
-
-	async verifyPhoneCode({user, data}: UserAuthRequest<PhoneVerifyRequest>): Promise<PhoneVerifyResponse> {
-		await this.assertPhoneEligible(user);
-		await AuthPhone.verifyPhoneCode(this.apiContext, data.phone, data.code, user.id);
-		return {verified: true};
-	}
-
-	async startInboundPhoneChallenge(user: User): Promise<{
-		challenge_code: string;
-		our_number: string;
-		expires_at: string;
-	}> {
-		const issued = await AuthPhone.startInboundPhoneChallenge(this.apiContext, user.id);
-		return {
-			challenge_code: issued.challengeCode,
-			our_number: issued.ourNumber,
-			expires_at: issued.expiresAt.toISOString(),
-		};
 	}
 
 	async forgetAuthorizedIps(user: User): Promise<void> {

@@ -13,8 +13,6 @@ function timeMs(value: Date | null | undefined): number | null {
 function isRelevantChange(previous: UserRow, updated: UserRow): boolean {
 	return (
 		(previous.flags ?? 0n) !== (updated.flags ?? 0n) ||
-		(previous.suspicious_activity_flags ?? 0) !== (updated.suspicious_activity_flags ?? 0) ||
-		(previous.has_verified_phone ?? false) !== (updated.has_verified_phone ?? false) ||
 		timeMs(previous.temp_banned_until) !== timeMs(updated.temp_banned_until) ||
 		timeMs(previous.pending_deletion_at) !== timeMs(updated.pending_deletion_at) ||
 		(previous.deletion_reason_code ?? null) !== (updated.deletion_reason_code ?? null)
@@ -33,9 +31,6 @@ export async function emitAccountChangedIfRelevant(
 		source: source ?? currentAccountChangeSource(),
 		flags: (updated.flags ?? 0n).toString(),
 		flags_before: (previous.flags ?? 0n).toString(),
-		suspicious_flags: updated.suspicious_activity_flags ?? 0,
-		suspicious_flags_before: previous.suspicious_activity_flags ?? 0,
-		has_verified_phone: updated.has_verified_phone ?? false,
 		temp_banned_until_ms: timeMs(updated.temp_banned_until),
 		pending_deletion_at_ms: timeMs(updated.pending_deletion_at),
 		deletion_reason_code: updated.deletion_reason_code ?? null,

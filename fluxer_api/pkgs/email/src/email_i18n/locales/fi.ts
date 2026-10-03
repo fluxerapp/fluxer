@@ -15,10 +15,6 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 		"subject": "{product_name}-tilisi poistaminen on ajoitettu",
 		"body": "Hei {username},\n\nPyyntösi mukaisesti {product_name}-tilisi on ajoitettu poistettavaksi pysyvästi:\n\n{deletionDate, date, full} klo {deletionDate, time, short}{reason, select, null {} other {\n\nSyy: {reason}}}\n\nTilisi on lukittu siihen asti. Jos et pyytänyt tätä tai haluat säilyttää tilisi, ota yhteyttä osoitteeseen {safety_email} tästä sähköpostiosoitteesta ennen tätä päivämäärää.\n\n– {product_name}-tiimi"
 	},
-	"account_disabled_suspicious": {
-		"subject": "Käyttäjätilisi {product_name}-palvelussa on tilapäisesti poistettu käytöstä",
-		"body": "Hei {username},\n\nOlemme poistaneet {product_name}-tilisi tilapäisesti käytöstä, koska havaitsimme epäilyttävää toimintaa.\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nPäästäksesi takaisin tilillesi sinun on nollattava salasanasi:\n\n{forgotUrl}\n\nKun olet nollannut salasanasi, voit kirjautua sisään uudelleen.\n\nJos uskot, että tämä oli virhe, ota yhteyttä tukitiimiimme.\n\n– {product_name}-turvallisuustiimi"
-	},
 	"account_scheduled_deletion": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa poistetaan pysyvästi",
 		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on ajoitettu poistettavaksi pysyvästi käyttöehtojemme tai yhteisösääntöjemme rikkomisen vuoksi.\n\nAjoitettu poisto: {deletionDate, date, full} klo {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nTämä on vakava toimenpide. Tilisi tiedot poistetaan pysyvästi ajoitettuna päivänä.\n\nTutustu:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\nValitusprosessi:\nJos uskot, että tämä päätös oli virheellinen tai perusteeton, sinulla on 60 päivää aikaa tehdä valitus. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta.\n\nValituksessasi:\n- Selitä selkeästi, miksi uskot päätöksen olleen virheellinen tai perusteeton\n- Liitä mukaan asiaankuuluvat todisteet tai taustatiedot\n\n{product_name}-turvallisuustiimin jäsen käsittelee valituksesi ja voi keskeyttää vireillä olevan poiston, kunnes lopullinen päätös on tehty.\n\n– {product_name}-turvallisuustiimi"
@@ -49,7 +45,7 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "{product_name}-tilisi sähköpostiosoite on vaihdettu",
-		"body": "Hei {username},\n\nSähköpostiosoitteesi {product_name}-tilillä on vaihdettu osoitteeseen {newEmail}.\n\nJos teit tämän muutoksen, toimenpiteitä ei tarvita. Jos et tehnyt, voit kumota muutoksen ja turvata tilisi käyttämällä tätä linkkiä:\n\n{revertUrl}\n\nTämä palauttaa edellisen sähköpostiosoitteesi, kirjaa sinut ulos kaikkialta, poistaa linkitetyt puhelinnumerot, poistaa MFA:n käytöstä ja edellyttää uuden salasanan asettamista.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\nSähköpostiosoitteesi {product_name}-tilillä on vaihdettu osoitteeseen {newEmail}.\n\nJos teit tämän muutoksen, toimenpiteitä ei tarvita. Jos et tehnyt, voit kumota muutoksen ja turvata tilisi käyttämällä tätä linkkiä:\n\n{revertUrl}\n\nTämä palauttaa edellisen sähköpostiosoitteesi, kirjaa sinut ulos kaikkialta, poistaa MFA:n käytöstä ja edellyttää uuden salasanan asettamista.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"email_verification": {
 		"subject": "Vahvista sähköpostiosoitteesi {product_name}-tilillä",

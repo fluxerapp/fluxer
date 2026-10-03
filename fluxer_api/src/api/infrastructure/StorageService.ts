@@ -108,6 +108,22 @@ function extractStreamFromGet(out: GetObjectCommandOutput): Readable {
 	return wrapped;
 }
 
+const REJECTED_SERVER_SIDE_COPY_ERRORS = new Set([
+	'NoSuchKey',
+	'NotFound',
+	'NotImplemented',
+	'AccessDenied',
+	'InvalidRequest',
+	'MethodNotAllowed',
+]);
+
+function isRejectedServerSideCopy(error: unknown): boolean {
+	return (
+		error instanceof S3ServiceException &&
+		(REJECTED_SERVER_SIDE_COPY_ERRORS.has(error.name) || error.$metadata?.httpStatusCode === 501)
+	);
+}
+
 export class StorageService implements IStorageService {
 	private readonly client: S3Client;
 	private readonly presignClient: S3Client;
@@ -473,15 +489,76 @@ export class StorageService implements IStorageService {
 		if (isSameObject && !newContentType) {
 			return;
 		}
-		await this.client.send(
-			new CopyObjectCommand({
+		try {
+			await this.client.send(
+				new CopyObjectCommand({
+					Bucket: destinationBucket,
+					Key: destinationKey,
+					CopySource: `${encodeURIComponent(sourceBucket)}/${sourceKey.split('/').map(encodeURIComponent).join('/')}`,
+					ContentType: newContentType,
+					MetadataDirective: newContentType ? 'REPLACE' : undefined,
+				}),
+			);
+		} catch (copyError) {
+			if (sourceBucket === destinationBucket || !isRejectedServerSideCopy(copyError)) {
+				throw copyError;
+			}
+			await this.copyObjectThroughApi(
+				{sourceBucket, sourceKey, destinationBucket, destinationKey, newContentType},
+				copyError,
+			);
+		}
+	}
+
+	private async copyObjectThroughApi(
+		{
+			sourceBucket,
+			sourceKey,
+			destinationBucket,
+			destinationKey,
+			newContentType,
+		}: {
+			sourceBucket: string;
+			sourceKey: string;
+			destinationBucket: string;
+			destinationKey: string;
+			newContentType?: string;
+		},
+		copyError: unknown,
+	): Promise<void> {
+		const source = await this.streamObject({bucket: sourceBucket, key: sourceKey});
+		if (!source) {
+			throw copyError;
+		}
+		Logger.warn(
+			{sourceBucket, destinationBucket, error: copyError},
+			'Object storage rejected a cross-bucket copy, copying through the API instead',
+		);
+		const upload = new Upload({
+			client: this.client,
+			params: {
 				Bucket: destinationBucket,
 				Key: destinationKey,
-				CopySource: `${encodeURIComponent(sourceBucket)}/${sourceKey.split('/').map(encodeURIComponent).join('/')}`,
-				ContentType: newContentType,
-				MetadataDirective: newContentType ? 'REPLACE' : undefined,
-			}),
-		);
+				Body: source.body,
+				ContentType: newContentType ?? source.contentType ?? undefined,
+				...(newContentType
+					? {}
+					: {
+							CacheControl: source.cacheControl ?? undefined,
+							ContentDisposition: source.contentDisposition ?? undefined,
+							Expires: source.expires ?? undefined,
+						}),
+			},
+			partSize: STREAM_UPLOAD_PART_BYTES,
+			queueSize: STREAM_UPLOAD_CONCURRENCY,
+			leavePartsOnError: false,
+		});
+		try {
+			await upload.done();
+		} catch (error) {
+			source.body.destroy();
+			throw error;
+		}
 	}
 
 	async copyObjectWithMetadataStripping({

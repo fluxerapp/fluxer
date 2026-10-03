@@ -13,7 +13,9 @@ import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {Relationship} from '@app/api/models/Relationship';
 import type {User} from '@app/api/models/User';
+import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
 import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
@@ -44,6 +46,7 @@ import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 
 interface UserRelationshipRepository
 	extends IUserAccountRepository,
+		IUserChannelRepository,
 		IUserRelationshipRepository,
 		IUserSettingsRepository {}
 
@@ -184,6 +187,7 @@ export class UserRelationshipService {
 			}
 		}
 		const targetUser = await this.validateFriendRequest({userId, targetId});
+		await assertMayStartConversation({user: requesterUser, targetId, users: this.userRepository});
 		await this.validateRelationshipCounts({userId, targetId});
 		const requestRelationship = await this.createFriendRequest({userId, targetId, userCacheService, requestCache});
 		emitFriendRequest(userId, targetId, true);

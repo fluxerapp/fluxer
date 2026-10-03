@@ -206,26 +206,6 @@ class Messages {
 		return messages.ready && messages.length > 0 && !messages.cached;
 	}
 
-	shouldPreloadLatestPage(channelId: string): boolean {
-		if (!GatewayConnection.isConnected || !Channels.getChannel(channelId)) {
-			return false;
-		}
-		const messages = ChannelMessages.get(channelId);
-		if (!messages) return true;
-		if (messages.loadingMore || ChannelMessages.isRetained(channelId)) return false;
-		return messages.length === 0 ? !messages.ready : messages.cached;
-	}
-
-	preloadLatestPage(channelId: string, guildId?: string | null): boolean {
-		if (!this.shouldPreloadLatestPage(channelId)) {
-			return false;
-		}
-		const channel = Channels.getChannel(channelId);
-		const resolvedGuildId = guildId ?? channel?.guildId ?? (channel?.isPrivate() ? ME : undefined);
-		this.handleChannelSelect({guildId: resolvedGuildId ?? undefined, channelId});
-		return true;
-	}
-
 	getMessage(channelId: string, messageId: string): Message | undefined {
 		return ChannelMessages.getOrCreate(channelId).get(messageId);
 	}

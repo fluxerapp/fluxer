@@ -31,6 +31,7 @@ import {ProfilePreview} from '@app/features/user/components/profile/ProfilePrevi
 import {type CustomStatus, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import {getDaysBetween} from '@fluxer/date_utils/src/DateComparison';
 import {getFormattedShortDate, getFormattedTime} from '@fluxer/date_utils/src/DateFormatting';
@@ -233,6 +234,8 @@ export const CustomStatusModal = observer(() => {
 			});
 			await UserSettingsCommands.update({customStatus: statusToSave});
 			ModalCommands.pop();
+		} catch (error) {
+			if (!handleAccountLimitedError(error)) throw error;
 		} finally {
 			setIsSaving(false);
 		}

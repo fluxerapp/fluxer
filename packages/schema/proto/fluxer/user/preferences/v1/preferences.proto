@@ -152,7 +152,7 @@ message NagbarDismissals {
   bool desktop_download = 10;
   bool guild_membership_cta = 11;
   bool visionary_mfa = 12;
-  bool legacy_phone_unlink = 14;
+  reserved 14;
   map<string, bool> pending_bulk_deletion = 15;
   map<string, bool> invites_disabled = 16;
   map<string, bool> guild_mfa_requirement = 17;

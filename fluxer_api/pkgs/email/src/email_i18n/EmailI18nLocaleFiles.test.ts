@@ -19,7 +19,6 @@ const FIXTURE: {[K in EmailTemplateKey]: EmailTemplateVariables[K]} = {
 	account_deletion_cancelled: {username: 'testuser'},
 	account_deletion_scheduled_inactivity: {username: 'testuser', reason: 'Inactive', deletionDate: DATE},
 	account_deletion_scheduled_requested: {username: 'testuser', reason: 'Requested', deletionDate: DATE},
-	account_disabled_suspicious: {username: 'testuser', reason: 'Spam', forgotUrl: 'https://example.com/forgot'},
 	account_scheduled_deletion: {
 		username: 'testuser',
 		reason: 'Spam',

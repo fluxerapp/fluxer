@@ -89,9 +89,9 @@ gc_if_large_and_idle(Pid) ->
 
 -spec gc_if_known_type(pid(), non_neg_integer()) -> ok.
 gc_if_known_type(Pid, Memory) ->
-    try erlang:process_info(Pid, dictionary) of
-        {dictionary, Dict} ->
-            force_gc_by_type(Pid, Memory, proplists:get_value('$initial_call', Dict));
+    try erlang:process_info(Pid, {dictionary, '$initial_call'}) of
+        {{dictionary, '$initial_call'}, InitialCall} ->
+            force_gc_by_type(Pid, Memory, InitialCall);
         _ ->
             ok
     catch

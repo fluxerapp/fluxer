@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -42,6 +43,7 @@ export function CodesAdminController(app: HonoApp) {
 				count,
 				durationType: duration_type,
 				durationQuantity: duration_quantity,
+				createdByUserId: Config.instance.selfHosted ? ctx.get('adminUserId') : SYSTEM_USER_ID,
 			});
 			await adminService.auditService.createAuditLog({
 				adminUserId: ctx.get('adminUserId'),

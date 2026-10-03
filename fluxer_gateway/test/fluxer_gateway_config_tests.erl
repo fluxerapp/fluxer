@@ -187,6 +187,40 @@ rpc_concurrency_key_defaults_test() ->
     ?assertEqual(512, maps:get(gateway_nats_rpc_max_handlers, Config)),
     ?assertEqual(512, maps:get(gateway_http_rpc_max_concurrency, Config)).
 
+pinned_node_defaults_keep_release_behaviour_test() ->
+    Config = fluxer_gateway_config:load(),
+    ?assertEqual(true, maps:get(nats_rpc_enabled, Config)),
+    ?assertEqual([], maps:get(pinned_guild_ids, Config)),
+    ?assertEqual(undefined, maps:get(guild_pin_keeper_beam, Config)).
+
+pinned_node_env_test() ->
+    with_envs(
+        [
+            {"FLUXER_GATEWAY_NATS_RPC_ENABLED", "false"},
+            {"FLUXER_GATEWAY_PINNED_GUILD_IDS", "1100000000000000001, 42"},
+            {"FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM", "/etc/fluxer/gw/gateway_node_router.beam"},
+            {"FLUXER_GATEWAY_GUILD_PIN_KEEPER_BEAM_MD5", "D5E42B1D6D85C4CDEE93AA0CCA18A420"}
+        ],
+        fun() ->
+            Config = fluxer_gateway_config:load(),
+            ?assertEqual(false, maps:get(nats_rpc_enabled, Config)),
+            ?assertEqual([42, 1100000000000000001], maps:get(pinned_guild_ids, Config)),
+            ?assertEqual(
+                "/etc/fluxer/gw/gateway_node_router.beam",
+                maps:get(guild_pin_keeper_beam, Config)
+            ),
+            ?assertEqual(
+                <<"D5E42B1D6D85C4CDEE93AA0CCA18A420">>,
+                maps:get(guild_pin_keeper_beam_md5, Config)
+            )
+        end
+    ).
+
+pinned_guild_ids_reject_non_snowflakes_test() ->
+    with_env("FLUXER_GATEWAY_PINNED_GUILD_IDS", "1100000000000000001,ab", fun() ->
+        ?assertError({invalid_pinned_guild_id, "ab"}, fluxer_gateway_config:load())
+    end).
+
 optional_string_test() ->
     ?assertEqual(undefined, fluxer_gateway_config:optional_string(undefined)),
     ?assertEqual("hello", fluxer_gateway_config:optional_string(<<"hello">>)),

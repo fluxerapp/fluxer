@@ -8,6 +8,7 @@ import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserU
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
 import {isAccountClosed, isTemporarilyBanned} from '@app/api/user/UserHelpers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -48,14 +49,8 @@ export class AdminUserBanService {
 		} else {
 			tempBannedUntil.setHours(tempBannedUntil.getHours() + data.duration_hours);
 		}
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				temp_banned_until: tempBannedUntil,
-				flags: user.flags | UserFlags.DISABLED,
-			},
-			user.toRow(),
-		);
+		const bannedUser = await userRepository.patchUpsert(userId, {temp_banned_until: tempBannedUntil}, user.toRow());
+		const updatedUser = (await userRepository.updateFlags(userId, (flags) => flags | UserFlags.DISABLED)) ?? bannedUser;
 		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		const email = user.email;
@@ -145,14 +140,9 @@ export class AdminUserBanService {
 			throw new UnknownUserError();
 		}
 		const wasTempBanned = isTemporarilyBanned(user) && !isAccountClosed(user);
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				temp_banned_until: null,
-				flags: user.flags & ~UserFlags.DISABLED,
-			},
-			user.toRow(),
-		);
+		const unbannedUser = await userRepository.patchUpsert(userId, {temp_banned_until: null}, user.toRow());
+		const updatedUser =
+			(await userRepository.updateFlags(userId, (flags) => flags & ~UserFlags.DISABLED)) ?? unbannedUser;
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		const email = user.email;
 		const notificationSent =
@@ -174,6 +164,7 @@ export class AdminUserBanService {
 				['public_reason', data.public_reason ?? 'null'],
 			]),
 		});
+		await clearNewConversationLimit(userId, {cache: cacheService});
 		await emitAdminAction(adminUserId, userId, 'unban');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),

@@ -355,7 +355,7 @@ caller_fields_caps_the_caller_name_test() ->
         ?MAX_CALLER_NAME_BYTES, byte_size(maps:get(<<"caller_name">>, Fields))
     ).
 
-notification_fields_carry_title_body_and_tags_test() ->
+notification_fields_include_title_body_and_tags_test() ->
     Fields = test_notification_fields(
         #{<<"content">> => <<"Hello world">>, <<"mentions">> => []},
         123,

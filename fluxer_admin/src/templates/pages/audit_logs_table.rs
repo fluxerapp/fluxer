@@ -19,11 +19,7 @@ pub fn format_action(action: &str) -> String {
 
 pub fn action_badge_variant(action: &str) -> BadgeVariant {
     match action {
-        "temp_ban"
-        | "disable_suspicious_activity"
-        | "schedule_deletion"
-        | "ban_ip"
-        | "ban_email" => BadgeVariant::Danger,
+        "temp_ban" | "schedule_deletion" | "ban_ip" | "ban_email" => BadgeVariant::Danger,
         "unban" | "cancel_deletion" | "unban_ip" | "unban_email" => BadgeVariant::Success,
         "update_flags" | "update_features" | "set_acls" | "update_settings" | "annotate_ban" => {
             BadgeVariant::Info
@@ -360,5 +356,13 @@ mod tests {
         let markup = target_cell("/admin", &entry("email_domain", "spam.example")).into_string();
         assert!(!markup.contains("<a "));
         assert!(markup.contains("Email domain"));
+    }
+
+    #[test]
+    fn retired_action_names_still_render() {
+        let mut retired = entry("user", "1500000000000000002");
+        retired.action = "update_retired_toggle".to_string();
+        let markup = audit_log_table_body("/admin", &[retired]).into_string();
+        assert!(markup.contains("Update retired toggle"));
     }
 }

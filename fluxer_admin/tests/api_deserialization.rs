@@ -23,7 +23,6 @@ fn deserialize_admin_users_me_response() {
             "email": "hampus@fluxer.com",
             "email_verified": true,
             "email_bounced": false,
-            "has_verified_phone": true,
             "date_of_birth": "2003-02-25",
             "locale": "en-US",
             "premium_type": 2,
@@ -31,7 +30,6 @@ fn deserialize_admin_users_me_response() {
             "premium_until": null,
             "premium_grace_ends_at": null,
             "premium_lifetime_sequence": 1,
-            "suspicious_activity_flags": 0,
             "temp_banned_until": null,
             "pending_deletion_at": null,
             "pending_bulk_message_deletion_at": null,
@@ -64,9 +62,7 @@ fn deserialize_admin_users_me_response() {
     assert_eq!(user.acls, vec!["super_admin"]);
     assert_eq!(user.traits, vec!["beta_tester"]);
     assert_eq!(user.premium_type, Some(2));
-    assert_eq!(user.suspicious_activity_flags, 0);
     assert!(user.has_totp);
-    assert!(user.has_verified_phone);
     assert_eq!(user.last_active_ip.as_deref(), Some("1.2.3.4"));
 }
 
@@ -79,10 +75,10 @@ fn deserialize_flags_as_string_and_number() {
             "premium_flags": 0, "avatar": null, "banner": null, "bio": null,
             "pronouns": null, "accent_color": null, "email": null,
             "email_verified": false, "email_bounced": false,
-            "has_verified_phone": false, "date_of_birth": null, "locale": null,
+            "date_of_birth": null, "locale": null,
             "premium_type": null, "premium_since": null, "premium_until": null,
             "premium_grace_ends_at": null, "premium_lifetime_sequence": null,
-            "suspicious_activity_flags": 0, "temp_banned_until": null,
+            "temp_banned_until": null,
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
             "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
             "deletion_scheduled_by": null, "deletion_scheduled_at": null,
@@ -111,10 +107,10 @@ fn deserialize_discriminator_int_and_string() {
             "bot": true, "system": false, "flags": "0", "premium_flags": 0,
             "avatar": null, "banner": null, "bio": null, "pronouns": null,
             "accent_color": null, "email": null, "email_verified": false,
-            "email_bounced": false, "has_verified_phone": false, "date_of_birth": null,
+            "email_bounced": false, "date_of_birth": null,
             "locale": null, "premium_type": null, "premium_since": null,
             "premium_until": null, "premium_grace_ends_at": null,
-            "premium_lifetime_sequence": null, "suspicious_activity_flags": 0,
+            "premium_lifetime_sequence": null,
             "temp_banned_until": null, "pending_deletion_at": null,
             "pending_bulk_message_deletion_at": null, "deletion_reason_code": null,
             "deletion_public_reason": null, "deletion_audit_log_reason": null,
@@ -161,7 +157,6 @@ fn deserialize_search_users_response() {
                 "email": null,
                 "email_verified": false,
                 "email_bounced": false,
-                "has_verified_phone": false,
                 "date_of_birth": null,
                 "locale": null,
                 "premium_type": null,
@@ -169,7 +164,6 @@ fn deserialize_search_users_response() {
                 "premium_until": null,
                 "premium_grace_ends_at": null,
                 "premium_lifetime_sequence": null,
-                "suspicious_activity_flags": 0,
                 "temp_banned_until": null,
                 "pending_deletion_at": null,
                 "pending_bulk_message_deletion_at": null,
@@ -422,6 +416,17 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "anonymous_rollout_basis_points": 100,
             "standalone_forwarding": true
         },
+        "plutonium_page": {
+            "enabled": true,
+            "config_version": 3,
+            "rollout_basis_points": 500,
+            "rollout_salt": "plutonium-page-v1",
+            "included_user_ids": ["1500000000000000001"],
+            "excluded_user_ids": ["1500000000000000002"],
+            "included_guild_ids": ["1500000000000000005"],
+            "include_premium_users": true,
+            "future_plutonium_page_knob": true
+        },
         "captcha": {
             "enabled": true,
             "cost": 5000,
@@ -578,6 +583,14 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
     assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
     assert!(resp.domain_migration.standalone_forwarding);
+    assert!(resp.plutonium_page.enabled);
+    assert_eq!(resp.plutonium_page.config_version, 3);
+    assert_eq!(resp.plutonium_page.rollout_basis_points, 500);
+    assert_eq!(*resp.plutonium_page.rollout_salt, "plutonium-page-v1");
+    assert_eq!(resp.plutonium_page.included_user_ids.len(), 1);
+    assert_eq!(resp.plutonium_page.excluded_user_ids.len(), 1);
+    assert_eq!(resp.plutonium_page.included_guild_ids.len(), 1);
+    assert!(resp.plutonium_page.include_premium_users);
     assert!(resp.push_relay.relay_consent_accepted);
     assert!(resp.captcha.enabled);
     assert_eq!(resp.captcha.max_counter, 1000);
@@ -847,6 +860,14 @@ fn deserialize_ban_check_response() {
 }
 
 #[test]
+fn deserialize_ban_check_response_with_expiry() {
+    let json = r#"{"banned": true, "expires_at": "2026-10-04T12:00:00.000Z"}"#;
+    let resp: types::BanCheckResult = serde_json::from_str(json).unwrap();
+    assert!(resp.banned);
+    assert_eq!(resp.expires_at.as_deref(), Some("2026-10-04T12:00:00.000Z"));
+}
+
+#[test]
 fn deserialize_codes_response() {
     let json = r#"{"codes": ["ABC-DEF", "GHI-JKL"]}"#;
     let resp: types::CodesResponse = serde_json::from_str(json).unwrap();
@@ -862,10 +883,10 @@ fn deserialize_user_mutation_response() {
             "flags": "1", "premium_flags": 0, "avatar": null, "banner": null,
             "bio": null, "pronouns": null, "accent_color": null, "email": null,
             "email_verified": false, "email_bounced": false,
-            "has_verified_phone": false, "date_of_birth": null, "locale": null,
+            "date_of_birth": null, "locale": null,
             "premium_type": null, "premium_since": null, "premium_until": null,
             "premium_grace_ends_at": null, "premium_lifetime_sequence": null,
-            "suspicious_activity_flags": 0, "temp_banned_until": null,
+            "temp_banned_until": null,
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
             "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
             "deletion_scheduled_by": null, "deletion_scheduled_at": null,

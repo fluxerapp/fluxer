@@ -117,6 +117,7 @@ export const OAuthBuilderSection: React.FC<OAuthBuilderSectionProps> = ({
 											checked={!!field.value}
 											onChange={(checked) => field.onChange(checked)}
 											size="small"
+											className={styles.scopeCheckbox}
 											data-flx="user.applications-tab.application-detail.o-auth-builder-section.checkbox.change"
 										>
 											<span
@@ -179,6 +180,7 @@ export const OAuthBuilderSection: React.FC<OAuthBuilderSectionProps> = ({
 												checked={!!field.value}
 												onChange={(checked) => field.onChange(checked)}
 												size="small"
+												className={styles.scopeCheckbox}
 												data-flx="user.applications-tab.application-detail.o-auth-builder-section.checkbox.change--2"
 											>
 												<span

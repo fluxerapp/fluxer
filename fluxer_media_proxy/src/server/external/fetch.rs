@@ -253,8 +253,7 @@ async fn external_body_prefix(
     prefix
         .try_reserve_exact(EXTERNAL_SNIFF_PREFIX_BYTES)
         .map_err(|_| ExternalFetchError::BufferAllocationFailed)?;
-    let mut chunks_read = 0_u64;
-    let chunks_max =
+    let mut empty_chunks_remaining =
         response_body_limit::response_body_chunk_limit(constants::MAX_MEDIA_PROXY_BYTES as u64);
     while prefix.len() < EXTERNAL_SNIFF_PREFIX_BYTES {
         let Some(chunk) = response.chunk().await.map_err(|err| {
@@ -265,17 +264,13 @@ async fn external_body_prefix(
         else {
             break;
         };
-        if chunk.len() > response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX {
-            warn!(url = %url, "external response transport chunk exceeded its byte bound");
-            return Err(ExternalFetchError::PayloadTooLarge);
-        }
-        chunks_read = chunks_read
-            .checked_add(1)
-            .filter(|chunks| *chunks <= chunks_max)
-            .ok_or_else(|| {
-                warn!(url = %url, chunks_max, "external sniff prefix exceeded its chunk limit");
+        if chunk.is_empty() {
+            empty_chunks_remaining = empty_chunks_remaining.checked_sub(1).ok_or_else(|| {
+                warn!(url = %url, "external sniff prefix exceeded its empty chunk limit");
                 ExternalFetchError::PayloadTooLarge
             })?;
+            continue;
+        }
         prefix.extend_from_slice(&chunk);
     }
     Ok(Bytes::from(prefix))
@@ -370,24 +365,19 @@ pub(super) async fn buffer_external_response(
     let mut reserved_bytes =
         grow_to_capacity(&mut reservation, metrics, buf.capacity(), initial_capacity)?;
     buf.extend_from_slice(&prefix);
-    let mut chunks_read = 0_u64;
-    let chunks_max = response_body_limit::response_body_chunk_limit(limit as u64);
+    let mut empty_chunks_remaining = response_body_limit::response_body_chunk_limit(limit as u64);
     while let Some(chunk) = response.chunk().await.map_err(|err| {
         warn!(url = %url, %err, "external body read failed");
         metrics.record_fetch_failure();
         ExternalFetchError::FetchFailed
     })? {
-        if chunk.len() > response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX {
-            warn!(url = %url, "external response transport chunk exceeded its byte bound");
-            return Err(ExternalFetchError::PayloadTooLarge);
-        }
-        chunks_read = chunks_read
-            .checked_add(1)
-            .filter(|chunks| *chunks <= chunks_max)
-            .ok_or_else(|| {
-                warn!(url = %url, chunks_max, "external payload exceeded its chunk limit");
+        if chunk.is_empty() {
+            empty_chunks_remaining = empty_chunks_remaining.checked_sub(1).ok_or_else(|| {
+                warn!(url = %url, "external payload exceeded its empty chunk limit");
                 ExternalFetchError::PayloadTooLarge
             })?;
+            continue;
+        }
         let Some(next_len) = buf
             .len()
             .checked_add(chunk.len())

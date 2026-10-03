@@ -113,6 +113,22 @@ describe('Channel follow', () => {
 		).toHaveLength(0);
 	});
 
+	test('rejects a limited account and creates no webhook', async () => {
+		const {a, b} = world;
+		await createBuilder(harness, '')
+			.post(`/test/users/${b.owner.userId}/security-flags`)
+			.body({set_flags: ['ACCOUNT_LIMITED']})
+			.execute();
+		await followRequest(harness, b.owner.token, a.ann.id, b.t1.id)
+			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.ACCOUNT_LIMITED)
+			.execute();
+		await createBuilder(harness, '')
+			.post(`/test/users/${b.owner.userId}/security-flags`)
+			.body({clear_flags: ['ACCOUNT_LIMITED']})
+			.execute();
+		expect(await getChannelWebhooks(harness, b.t1.id, b.owner.token)).toHaveLength(0);
+	});
+
 	test('truncates long follower webhook names to 80 code points', async () => {
 		const {b} = world;
 		const longName = `${'\u{1F4E3}'.repeat(10)}${'x'.repeat(80)}`;

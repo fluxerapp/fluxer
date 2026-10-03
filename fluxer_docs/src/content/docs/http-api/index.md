@@ -81,7 +81,7 @@ Those operations document their own JSON validation errors.
 
 [Authentication](/authentication/) defines the accepted `Authorization` schemes and links to the OAuth2 scope registry. Each operation states which credentials it accepts. The [sudo verification object](/http-api/users/mfa/#sudo-verification-object) defines the proof required for sensitive account operations.
 
-An OAuth2 bearer access token is accepted only where a route opts in, and the resource page says so. Everywhere else a bearer credential is refused with 403 `ACCESS_DENIED`. An account with a suspicious activity flag is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+An OAuth2 bearer access token is accepted only where a route opts in, and the resource page says so. Everywhere else a bearer credential is refused with 403 `ACCESS_DENIED`.
 
 ## Standard request headers
 
@@ -274,7 +274,6 @@ Fluxer produces at most one entry for each distinct pair of `path` and `code`, s
 | [User settings Protobuf](/http-api/users/settings-protobuf/) | Every structured client preference message and enumeration |
 | [Email and password changes](/http-api/users/email-and-password/) | The ticketed credential replacement flows |
 | [Multi-factor authentication](/http-api/users/mfa/) | TOTP, backup codes, WebAuthn credentials, sudo verification |
-| [Phone verification](/http-api/users/phone-verification/) | Outbound and inbound phone verification |
 | [Relationships](/http-api/users/relationships/) | Friend requests, friendships, blocks, relationship nicknames |
 | [User notes](/http-api/users/notes/) | Private notes attached to user IDs |
 | [Private channels](/http-api/users/private-channels/) | Direct message and group DM discovery, creation, preload, pin state |

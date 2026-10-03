@@ -206,10 +206,10 @@ fn hdr_pq_avif_tone_maps_even_when_the_colour_signal_is_one_libheif_cannot_model
     let nclx = avif
         .windows(8)
         .position(|window| window == b"colrnclx")
-        .expect("fixture carries an nclx colour box");
+        .expect("fixture has an nclx colour box");
     assert!(
         avif.windows(8).any(|window| window == b"colrprof"),
-        "fixture carries an icc colour box"
+        "fixture has an icc colour box"
     );
     let mut cases = vec![("an icc profile", avif.clone())];
     for (label, offset) in [

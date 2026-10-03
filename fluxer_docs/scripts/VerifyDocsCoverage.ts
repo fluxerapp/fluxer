@@ -38,7 +38,7 @@ const MAIN_SPEC_EXEMPT = new Map<string, {file: string; anchor: string; reason: 
 		{
 			file: 'fluxer_api/src/api/openapi/OpenAPIController.ts',
 			anchor: "app.get('/openapi.json'",
-			reason: 'the handler serves the spec file itself and carries no OpenAPI({...}) block',
+			reason: 'the handler serves the spec file itself and has no OpenAPI({...}) block',
 		},
 	],
 	[
@@ -119,14 +119,6 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 		{
 			reason:
 				'x-fluxer-rpc-auth must timing-safe-equal Config.internal.gatewayRpcAuthToken, and an empty token rejects every caller. The caller is fluxer_gateway',
-			documentedIn: null,
-		},
-	],
-	[
-		'POST /webhooks/twilio/sms',
-		{
-			reason:
-				'a provider callback that is forwarded untouched to the internal event bus and answers 500 while that bus is unavailable',
 			documentedIn: null,
 		},
 	],
@@ -224,7 +216,7 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 		name: 'out-of-band credential',
 		justification:
 			'no ordinary client holds the credential. Each entry states its guard, and five are covered in prose',
-		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'installSmsWebhookForwarder(routes'}],
+		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'InternalRpcController(routes);'}],
 		covers: (shape) => OUT_OF_BAND_CREDENTIAL.has(shape),
 	},
 ];
@@ -1162,7 +1154,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		for (const row of shellRows(fn, 'KEYS', label)) {
 			const parsed = row.match(/^([A-Z][A-Z0-9_]*) ([a-z0-9_]+)(?: .*)?$/u);
 			if (parsed == null) {
-				problems.push(`${label} carries the row \`${row}\`, which is not "NAME kind"`);
+				problems.push(`${label} has the row \`${row}\`, which is not "NAME kind"`);
 				continue;
 			}
 			keys.set(parsed[1], parsed[2]);
@@ -1175,7 +1167,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		for (const row of powershellRows(variable, label)) {
 			const parsed = row.match(/^\s*@\{Name = '([A-Z][A-Z0-9_]*)'; Kind = '([a-z0-9_]+)'/u);
 			if (parsed == null) {
-				problems.push(`${label} carries the row \`${row.trim()}\`, which is not an @{Name; Kind} entry`);
+				problems.push(`${label} has the row \`${row.trim()}\`, which is not an @{Name; Kind} entry`);
 				continue;
 			}
 			keys.set(parsed[1], parsed[2]);
@@ -1299,7 +1291,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const row of powershellRows('FluxerStackFiles', 'the install.ps1 download list')) {
 		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
 		if (parsed == null) {
-			problems.push(`the install.ps1 download list carries \`${row.trim()}\`, which is not a quoted file name`);
+			problems.push(`the install.ps1 download list has \`${row.trim()}\`, which is not a quoted file name`);
 			continue;
 		}
 		powershellStackFiles.push(parsed[1]);
@@ -1322,7 +1314,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const row of powershellRows('FluxerComposeNames', 'the install.ps1 compose name list')) {
 		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
 		if (parsed == null) {
-			problems.push(`the install.ps1 compose name list carries \`${row.trim()}\`, which is not a quoted file name`);
+			problems.push(`the install.ps1 compose name list has \`${row.trim()}\`, which is not a quoted file name`);
 			continue;
 		}
 		powershellComposeNames.push(parsed[1]);
@@ -1399,7 +1391,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const [where, text] of digestBearing) {
 		if (/\b[0-9a-f]{64}\b/u.test(text)) {
 			problems.push(
-				`${where} carries a literal 64-character hex digest, which goes stale the next time a script changes`,
+				`${where} contains a literal 64-character hex digest, which goes stale the next time a script changes`,
 			);
 		}
 	}
@@ -1973,7 +1965,7 @@ console.log('bot capability flag (from the middleware chain)');
 		if (documented == null) {
 			continue;
 		}
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
+		const anyLogin = route.hasLoginRequired;
 		const sourceAcceptsBot = anyLogin && !route.hasDefaultUserOnly;
 		const exemption = BOT_EXEMPT.get(key);
 		if (exemption != null) {
@@ -2033,7 +2025,7 @@ console.log('unauthenticated capability flag (from the middleware chain)');
 		if (documented == null) {
 			continue;
 		}
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
+		const anyLogin = route.hasLoginRequired;
 		const sourceIsOpen = !anyLogin && !route.middlewares.some((name) => /OAuth2Scope/u.test(name));
 		const exemption = UNAUTHENTICATED_EXEMPT.get(key);
 		if (exemption != null) {
@@ -2089,7 +2081,7 @@ console.log('spec security field against the middleware chain');
 		}
 		const declaredSchemes = declaredSecurity.schemes;
 		compared += 1;
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
+		const anyLogin = route.hasLoginRequired;
 		const acceptsBot = anyLogin && !route.hasDefaultUserOnly;
 		const requiresAuthentication =
 			anyLogin ||

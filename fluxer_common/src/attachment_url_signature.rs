@@ -310,7 +310,7 @@ mod tests {
     fn fixture_secrets(fixture: &Value) -> Vec<Vec<u8>> {
         fixture["secrets_base64"]
             .as_array()
-            .expect("the fixture carries a secret list")
+            .expect("the fixture has a secret list")
             .iter()
             .map(|entry| {
                 BASE64_STANDARD
@@ -323,20 +323,20 @@ mod tests {
     fn cases<'a>(fixture: &'a Value, name: &str) -> &'a [Value] {
         fixture[name]
             .as_array()
-            .expect("the fixture carries the case list")
+            .expect("the fixture has the case list")
             .as_slice()
     }
 
     fn text<'a>(case: &'a Value, field: &str) -> &'a str {
         case[field]
             .as_str()
-            .unwrap_or_else(|| panic!("case carries {field}"))
+            .unwrap_or_else(|| panic!("case has {field}"))
     }
 
     fn number(case: &Value, field: &str) -> u64 {
         case[field]
             .as_u64()
-            .unwrap_or_else(|| panic!("case carries {field}"))
+            .unwrap_or_else(|| panic!("case has {field}"))
     }
 
     fn secret_bytes() -> Vec<u8> {
@@ -443,7 +443,7 @@ mod tests {
                     data_packages += 1;
                     (UrlKind::DataPackage, 0, with_data_package_signature)
                 }
-                other => panic!("{name} carries an unknown uc {other}"),
+                other => panic!("{name} has an unknown uc {other}"),
             };
             assert_eq!(
                 text(case, "signature_input"),
@@ -546,10 +546,7 @@ mod tests {
         let secret = secret_bytes();
         let now = ANCHOR + 10;
         let signed = with_signature("https://media.test/x.gif", KEY, ANCHOR, now, &secret);
-        let query = signed
-            .split_once('?')
-            .expect("a signed url carries a query")
-            .1;
+        let query = signed.split_once('?').expect("a signed url has a query").1;
         let (issued, expires) = issue_window(ANCHOR, now);
         assert!(issued <= now && now < expires);
         for probe in [issued, now, expires - 1] {
@@ -574,10 +571,7 @@ mod tests {
         let now = ANCHOR + 3 * ATTACHMENT_URL_BUCKET_SECS + 7;
         let signed =
             with_data_package_signature("https://media.test/x.gif", KEY, ANCHOR, now, &secret);
-        let query = signed
-            .split_once('?')
-            .expect("a signed url carries a query")
-            .1;
+        let query = signed.split_once('?').expect("a signed url has a query").1;
         let (issued, expires) = issue_window(ANCHOR, now);
         assert!(query.starts_with(&format!("ex=0&is={issued:08x}&hm=")));
         assert!(query.ends_with("&uc=dp"));
@@ -688,7 +682,7 @@ mod tests {
     }
 
     #[test]
-    fn a_signature_never_carries_across_keys_or_windows() {
+    fn a_signature_never_validates_across_keys_or_windows() {
         let secret = secret_bytes();
         let now = ANCHOR;
         let (issued, expires) = issue_window(ANCHOR, now);

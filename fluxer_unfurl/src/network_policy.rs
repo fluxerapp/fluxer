@@ -263,6 +263,29 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn checks_the_canonical_ipv4_host() {
+        for raw in [
+            "http://0x7f.0x0.0x0.0x1/",
+            "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/",
+            "http://169.254.169.0xfe/",
+            "http://127.0.0.0x1/",
+            "http://0x7f000001/",
+            "http://2130706433/",
+            "http://0177.0.0.1/",
+            "http://127.1/",
+        ] {
+            assert_eq!(
+                validate_url(&url(raw)).await,
+                Err(Error::BlockedUrl),
+                "{raw}"
+            );
+        }
+        let base = url("https://example.com/start.gif");
+        let next = resolve_redirect(&base, "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/").unwrap();
+        assert_eq!(validate_url(&next).await, Err(Error::BlockedUrl));
+    }
+
+    #[tokio::test]
     async fn allows_public_ip_literals_without_dns() {
         assert_eq!(validate_url(&url("https://8.8.8.8/")).await, Ok(()));
         assert_eq!(

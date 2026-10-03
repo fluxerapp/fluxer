@@ -197,7 +197,7 @@ The operation deletes the ban together with the address and email blocks it had.
 
 It does not restore the removed membership, the guild profile fields and roles that membership had, or the deleted messages. The unbanned account can rejoin through an ordinary invite.
 
-An instance-wide IP ban is a separate mechanism this operation does not touch. Every request from an address it covers is still refused with 403 `GLOBAL_IP_BANNED` for a permanent ban and 403 `GLOBAL_IP_TEMPORARILY_BANNED` for a 24 hour one.
+An instance-wide IP ban is a separate mechanism this operation does not touch. Every request from an address it covers is still refused with 403 `GLOBAL_IP_BANNED` for a permanent ban and 403 `GLOBAL_IP_TEMPORARILY_BANNED` for a temporary one.
 
 ### Rate limit
 

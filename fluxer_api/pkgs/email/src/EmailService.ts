@@ -79,19 +79,6 @@ export class EmailService implements IEmailService {
 		});
 	}
 
-	async sendAccountDisabledForSuspiciousActivityEmail(
-		email: string,
-		username: string,
-		reason: string | null,
-		locale: string | null = null,
-	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'account_disabled_suspicious', locale, {
-			username,
-			reason: optionalReason(reason),
-			forgotUrl: `${this.config.appBaseUrl}/forgot`,
-		});
-	}
-
 	async sendAccountTempBannedEmail(
 		email: string,
 		username: string,
@@ -388,6 +375,7 @@ export class EmailService implements IEmailService {
 		return this.provider.sendEmail({
 			to: email,
 			from: {email: this.config.fromEmail, name: this.config.fromName},
+			...(this.config.replyTo ? {replyTo: this.config.replyTo} : {}),
 			subject,
 			text: body,
 		});

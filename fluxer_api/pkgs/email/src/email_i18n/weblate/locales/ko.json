@@ -11,10 +11,6 @@
 		"subject": "{product_name} 계정 삭제가 예정되었어요",
 		"body": "안녕하세요, {username}님.\n\n요청하신 대로 {product_name} 계정이 다음 날짜에 영구적으로 삭제될 예정이에요:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n사유: {reason}}}\n\n그때까지 계정은 잠겨 있어요. 요청하지 않으셨거나 계정을 유지하고 싶다면 해당 날짜 전에 이 이메일 주소에서 {safety_email}으로 문의해 주세요.\n\n– {product_name} 팀"
 	},
-	"account_disabled_suspicious": {
-		"subject": "{product_name} 계정이 일시적으로 비활성화되었어요",
-		"body": "안녕하세요, {username}님.\n\n의심스러운 활동이 감지되어 {product_name} 계정을 일시적으로 비활성화했어요.\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n계정에 다시 액세스하려면 비밀번호를 재설정해야 해요:\n\n{forgotUrl}\n\n비밀번호를 재설정한 후 다시 로그인할 수 있어요.\n\n실수로 비활성화되었다고 생각되면 고객지원팀에 문의해 주세요.\n\n– {product_name} 안전팀"
-	},
 	"account_scheduled_deletion": {
 		"subject": "{product_name} 계정이 영구적으로 삭제될 예정이에요",
 		"body": "안녕하세요, {username}님.\n\n서비스 약관 또는 커뮤니티 가이드라인 위반으로 인해 {product_name} 계정이 영구적으로 삭제될 예정이에요.\n\n삭제 예정일: {deletionDate, date, full} {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n이는 중대한 조치이며, 계정 데이터는 예정된 날짜에 영구적으로 삭제될 예정이에요.\n\n다음 내용을 확인해 주세요:\n- 서비스 약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n이의 제기 절차:\n이 조치가 잘못되었거나 부당하다고 생각되면 60일 이내에 이의를 제기할 수 있어요. 이 이메일 주소에서 {appeals_email}으로 이메일을 보내 이의를 제기해 주세요.\n\n이의 제기 시에는:\n- 조치가 잘못되었거나 부당하다고 생각하는 이유를 명확하게 설명해 주세요.\n- 관련 증거 또는 맥락을 제공해 주세요.\n\n{product_name} 안전팀 담당자가 이의 제기를 검토하고 최종 결정이 내려질 때까지 삭제를 일시적으로 보류할 수 있어요.\n\n– {product_name} 안전팀"
@@ -45,7 +41,7 @@
 	},
 	"email_change_revert": {
 		"subject": "{product_name} 이메일이 변경되었어요",
-		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 이메일 주소가 {newEmail}로 변경되었어요.\n\n직접 변경하셨다면 별도의 조치는 필요 없어요. 직접 변경하지 않으셨다면 다음 링크를 사용하여 변경 사항을 되돌리고 계정을 보호할 수 있어요:\n\n{revertUrl}\n\n이전 이메일이 복원되고, 모든 기기에서 로그아웃되며, 연결된 전화번호가 제거되고, MFA가 비활성화되며, 새 비밀번호를 설정해야 해요.\n\n– {product_name} 안전팀"
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 이메일 주소가 {newEmail}로 변경되었어요.\n\n직접 변경하셨다면 별도의 조치는 필요 없어요. 직접 변경하지 않으셨다면 다음 링크를 사용하여 변경 사항을 되돌리고 계정을 보호할 수 있어요:\n\n{revertUrl}\n\n이전 이메일이 복원되고, 모든 기기에서 로그아웃되며, MFA가 비활성화되며, 새 비밀번호를 설정해야 해요.\n\n– {product_name} 안전팀"
 	},
 	"email_verification": {
 		"subject": "{product_name} 이메일 주소 인증",

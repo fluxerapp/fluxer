@@ -171,9 +171,6 @@ function buildUserFilters(filters: UserSearchFilters): Array<MeilisearchFilter |
 		);
 	}
 	if (filters.hasAcl && filters.hasAcl.length > 0) clauses.push(...meiliAndTerms('acls', filters.hasAcl));
-	if (filters.minSuspiciousActivityFlags !== undefined) {
-		clauses.push(meiliRangeFilter('suspiciousActivityFlags', {gte: filters.minSuspiciousActivityFlags}));
-	}
 	if (filters.createdAtGreaterThanOrEqual !== undefined) {
 		clauses.push(meiliRangeFilter('createdAt', {gte: filters.createdAtGreaterThanOrEqual}));
 	}

@@ -1475,7 +1475,7 @@ released_push_holds_treat_a_dead_guild_as_nothing_released_test() ->
     end,
     ?assertEqual([], released_push_holds(GuildPid, [{1, <<"s1">>}])).
 
-push_states_carry_the_guild_pid_for_the_grace_recheck_test() ->
+push_states_include_the_guild_pid_for_the_grace_recheck_test() ->
     ?assertEqual({self(), self()}, push_state_guild_pids()).
 
 push_states_skip_the_grace_recheck_while_presence_eligibility_is_off_test() ->
@@ -1798,7 +1798,7 @@ compact_push_state_drops_members_and_keeps_member_count_test() ->
         ets:delete(Tab)
     end.
 
-legacy_push_state_carries_member_count_test() ->
+legacy_push_state_includes_member_count_test() ->
     UpdatedState = #{id => 7, data => #{}, sessions => #{}, member_count => 1234},
     Legacy = legacy_push_state(7, UpdatedState),
     ?assertEqual(1234, maps:get(member_count, Legacy)),
@@ -1869,7 +1869,7 @@ spawn_push_without_members_table_falls_back_to_legacy_push_test() ->
         reset_push_worker_state()
     end.
 
-compact_push_carries_large_guild_metadata_test() ->
+compact_push_includes_large_guild_metadata_test() ->
     Self = self(),
     Tab = ets:new(test_members, [set, public]),
     ok = meck:new(push, [passthrough, no_link]),

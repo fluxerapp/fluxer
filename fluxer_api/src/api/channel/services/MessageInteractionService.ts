@@ -19,8 +19,14 @@ import type {Channel} from '@app/api/models/Channel';
 import type {Message} from '@app/api/models/Message';
 import type {MessageReaction} from '@app/api/models/MessageReaction';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {
+	assertMayStartConversation,
+	getNewConversationLimit,
+	oneToOneDmRecipient,
+} from '@app/api/user/NewConversationLimit';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {NewConversationsLimitedError} from '@fluxer/errors/src/domains/user/NewConversationsLimitedError';
 import type {ChannelPinResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
@@ -32,8 +38,8 @@ export class MessageInteractionService {
 	private reactionService: MessageReactionService;
 
 	constructor(
-		channelRepository: IChannelRepository,
-		userRepository: IUserRepository,
+		private channelRepository: IChannelRepository,
+		private userRepository: IUserRepository,
 		guildRepository: IGuildRepositoryAggregate,
 		private gatewayService: IGatewayService,
 		snowflakeService: ISnowflakeService,
@@ -69,6 +75,7 @@ export class MessageInteractionService {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
 		await authChannel.checkPermission(Permissions.SEND_MESSAGES);
 		assertGuildMemberCanCommunicate(authChannel.member);
+		if (!authChannel.guild && (await this.startsNewConversation(authChannel.channel, userId))) return;
 		await this.readStateService.startTyping({authChannel, userId});
 	}
 
@@ -108,6 +115,7 @@ export class MessageInteractionService {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
 		if (!authChannel.guild && authChannel.channel.type !== ChannelTypes.DM_PERSONAL_NOTES) {
 			await this.authService.validateDMSendPermissions({channel: authChannel.channel, userId});
+			await this.assertConversationAllowed(authChannel.channel, userId);
 		}
 		await this.pinService.pinMessage({authChannel, messageId, userId, requestCache, auditLogReason});
 	}
@@ -170,7 +178,34 @@ export class MessageInteractionService {
 		requestCache: RequestCache;
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
+		if (!authChannel.guild) {
+			await this.assertConversationAllowed(authChannel.channel, userId);
+		}
 		await this.reactionService.addReaction({authChannel, messageId, emoji, userId, sessionId});
+	}
+
+	private async startsNewConversation(channel: Channel, userId: UserID): Promise<boolean> {
+		try {
+			await this.assertConversationAllowed(channel, userId);
+			return false;
+		} catch (error) {
+			if (error instanceof NewConversationsLimitedError) return true;
+			throw error;
+		}
+	}
+
+	private async assertConversationAllowed(channel: Channel, userId: UserID): Promise<void> {
+		const targetId = oneToOneDmRecipient(channel, userId);
+		if (targetId === null || !(await getNewConversationLimit(userId))) return;
+		const user = await this.userRepository.findUnique(userId);
+		if (!user) return;
+		await assertMayStartConversation({
+			user,
+			targetId,
+			users: this.userRepository,
+			messages: this.channelRepository.messages,
+			channel,
+		});
 	}
 
 	async removeReaction({

@@ -42,7 +42,7 @@ describe('Reaction users pagination', () => {
 		return {token: owner.token, channelId: systemChannel.id, messageId: message.id};
 	}
 
-	it('carries the pagination signal of the page in headers', async () => {
+	it('sends the pagination signal of the page in headers', async () => {
 		const {token, channelId, messageId} = await setupReactedMessage();
 
 		const legacy = await createBuilder<Array<{id: string}>>(harness, token)

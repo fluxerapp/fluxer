@@ -20,7 +20,6 @@ export function convertToSearchableUser(user: User): SearchableUser {
 		premiumType: user.premiumType,
 		emailVerified: user.emailVerified,
 		emailBounced: user.emailBounced,
-		suspiciousActivityFlags: user.suspiciousActivityFlags,
 		acls: Array.from(user.acls),
 		createdAt,
 		lastActiveAt,

@@ -688,7 +688,7 @@ mod tests {
         ] {
             assert!(
                 manifest.contains(entry),
-                "the rust-builder workspace manifest replaces the repository root one, so it must carry {entry}"
+                "the rust-builder workspace manifest replaces the repository root one, so it must contain {entry}"
             );
         }
         assert!(
@@ -774,7 +774,7 @@ mod tests {
     }
 
     #[test]
-    fn uploaded_assets_carry_the_same_policy_the_app_proxy_serves() {
+    fn uploaded_assets_get_the_same_policy_the_app_proxy_serves() {
         assert_eq!(
             IMMUTABLE_ASSET_CACHE_CONTROL,
             "public, max-age=31536000, immutable"
@@ -978,7 +978,7 @@ mod tests {
         ] {
             assert!(
                 dockerfile.contains(entry),
-                "every architecture must serve the injected canonical tree, so the Dockerfile must carry {entry}"
+                "every architecture must serve the injected canonical tree, so the Dockerfile must contain {entry}"
             );
         }
     }
@@ -1016,7 +1016,7 @@ mod tests {
             "APP_ASSETS_REF                        = APP_ASSETS_REF",
             "APP_ASSETS_PLATFORM                   = APP_ASSETS_PLATFORM",
         ] {
-            assert!(bake.contains(entry), "docker-bake.hcl must carry {entry}");
+            assert!(bake.contains(entry), "docker-bake.hcl must contain {entry}");
         }
     }
 

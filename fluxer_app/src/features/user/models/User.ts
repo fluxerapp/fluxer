@@ -12,12 +12,7 @@ import {
 	UserPremiumTypes,
 } from '@fluxer/constants/src/UserConstants';
 import {DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
-import type {
-	RequiredAction,
-	UserPartial,
-	UserPrivate,
-	User as WireUser,
-} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import type {UserPartial, UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 
 interface UserRecordOptions {
@@ -33,7 +28,6 @@ type MutableWireUser = {
 };
 
 const EMPTY_STRING_ARRAY: ReadonlyArray<string> = Object.freeze([]);
-const EMPTY_REQUIRED_ACTIONS: ReadonlyArray<RequiredAction> = Object.freeze([]);
 const EMPTY_AUTH_TYPES: ReadonlyArray<number> = Object.freeze([]);
 
 function parseDateOrNull(value: string | number | Date | null | undefined): Date | null {
@@ -119,8 +113,6 @@ function dedupeFiltered<T>(raw: ReadonlyArray<unknown>, parseItem: (item: unknow
 }
 
 const parseStringItem = (item: unknown): string | null => (typeof item === 'string' && item.length > 0 ? item : null);
-const parseRequiredAction = (item: unknown): RequiredAction | null =>
-	typeof item === 'string' && item.length > 0 ? (item as RequiredAction) : null;
 const parseAuthenticatorType = (item: unknown): number | null => {
 	if (typeof item !== 'number' || !Number.isFinite(item)) return null;
 	return item;
@@ -145,6 +137,7 @@ export class User {
 	private readonly _isStaff: boolean | undefined;
 	private readonly _email: string | null | undefined;
 	private readonly _emailBounced: boolean | undefined;
+	private readonly _accountLimited: boolean | undefined;
 	readonly bio: string | null | undefined;
 	readonly banner: string | null | undefined;
 	readonly bannerColor: number | null | undefined;
@@ -153,7 +146,6 @@ export class User {
 	readonly timezone: string | null | undefined;
 	readonly timezonePrivacyFlags: number | undefined;
 	readonly mfaEnabled: boolean | undefined;
-	readonly hasVerifiedPhone: boolean | undefined;
 	readonly authenticatorTypes: ReadonlyArray<number> | undefined;
 	private readonly _verified: boolean | undefined;
 	private readonly _premiumType: number | null | undefined;
@@ -172,7 +164,6 @@ export class User {
 	readonly premiumPerksDisabled: boolean | undefined;
 	readonly passwordLastChangedAt: Date | null | undefined;
 	readonly lastVoiceActivitySharingChangeAt: Date | null | undefined;
-	readonly requiredActions: ReadonlyArray<RequiredAction> | undefined;
 	private readonly _nsfwAllowed: boolean | undefined;
 	readonly hasDismissedPremiumOnboarding: boolean | undefined;
 	private readonly _hasEverPurchased: boolean | undefined;
@@ -198,6 +189,7 @@ export class User {
 		this._isStaff = hasKey(user, 'is_staff') ? user.is_staff : undefined;
 		this._email = hasKey(user, 'email') ? (user.email ?? null) : undefined;
 		this._emailBounced = hasKey(user, 'email_bounced') ? user.email_bounced : undefined;
+		this._accountLimited = hasKey(user, 'account_limited') ? user.account_limited : undefined;
 		this.bio = hasKey(user, 'bio') ? (user.bio ?? null) : undefined;
 		this.banner = hasKey(user, 'banner') ? (user.banner ?? null) : undefined;
 		this.bannerColor = hasKey(user, 'banner_color') ? (user.banner_color ?? null) : undefined;
@@ -208,7 +200,6 @@ export class User {
 			? (user.timezone_privacy_flags ?? ProfileFieldPrivacyFlags.EVERYONE)
 			: undefined;
 		this.mfaEnabled = hasKey(user, 'mfa_enabled') ? user.mfa_enabled : undefined;
-		this.hasVerifiedPhone = hasKey(user, 'has_verified_phone') ? user.has_verified_phone : undefined;
 		this.authenticatorTypes = hasKey(user, 'authenticator_types')
 			? Object.freeze(((user.authenticator_types ?? []) as ReadonlyArray<number>).slice())
 			: undefined;
@@ -243,16 +234,6 @@ export class User {
 		this.lastVoiceActivitySharingChangeAt = hasKey(user, 'last_voice_activity_sharing_change_at')
 			? parseDateOrNull(user.last_voice_activity_sharing_change_at)
 			: undefined;
-		this.requiredActions = hasKey(user, 'required_actions')
-			? mergeAuthoritativeArray(
-					EMPTY_REQUIRED_ACTIONS,
-					user,
-					'required_actions',
-					parseRequiredAction,
-					{clearMissing: true},
-					EMPTY_REQUIRED_ACTIONS,
-				)
-			: undefined;
 		this._nsfwAllowed = hasKey(user, 'nsfw_allowed') ? user.nsfw_allowed : undefined;
 		this.hasDismissedPremiumOnboarding = hasKey(user, 'has_dismissed_premium_onboarding')
 			? user.has_dismissed_premium_onboarding
@@ -279,6 +260,10 @@ export class User {
 
 	get emailBounced(): boolean | undefined {
 		return this._emailBounced;
+	}
+
+	get accountLimited(): boolean {
+		return this._accountLimited === true;
 	}
 
 	get verified(): boolean | undefined {
@@ -408,6 +393,8 @@ export class User {
 		if (email !== undefined) result.email = email;
 		const emailBounced = pickField(this._emailBounced, u, 'email_bounced', opts);
 		if (emailBounced !== undefined) result.email_bounced = emailBounced;
+		const accountLimited = pickField(this._accountLimited, u, 'account_limited', opts);
+		if (accountLimited !== undefined) result.account_limited = accountLimited;
 		const bio = pickField(this.bio, u, 'bio', opts);
 		if (bio !== undefined) result.bio = bio;
 		const banner = pickField(this.banner, u, 'banner', opts);
@@ -424,8 +411,6 @@ export class User {
 		if (timezonePrivacyFlags !== undefined) result.timezone_privacy_flags = timezonePrivacyFlags;
 		const mfaEnabled = pickField(this.mfaEnabled, u, 'mfa_enabled', opts);
 		if (mfaEnabled !== undefined) result.mfa_enabled = mfaEnabled;
-		const hasVerifiedPhone = pickField(this.hasVerifiedPhone, u, 'has_verified_phone', opts);
-		if (hasVerifiedPhone !== undefined) result.has_verified_phone = hasVerifiedPhone;
 		if (hasKey(u, 'authenticator_types') || this.authenticatorTypes !== undefined || opts.clearMissing) {
 			result.authenticator_types = mergeAuthoritativeArray(
 				this.authenticatorTypes ?? EMPTY_AUTH_TYPES,
@@ -486,16 +471,6 @@ export class User {
 		);
 		if (lastVoiceActivitySharingChangeAt !== undefined) {
 			result.last_voice_activity_sharing_change_at = dateToIsoOrNull(lastVoiceActivitySharingChangeAt);
-		}
-		if (this.requiredActions !== undefined || hasKey(u, 'required_actions') || opts.clearMissing) {
-			result.required_actions = mergeAuthoritativeArray(
-				this.requiredActions ?? EMPTY_REQUIRED_ACTIONS,
-				u,
-				'required_actions',
-				parseRequiredAction,
-				opts,
-				EMPTY_REQUIRED_ACTIONS,
-			);
 		}
 		const nsfwAllowed = pickField(this._nsfwAllowed, u, 'nsfw_allowed', opts);
 		if (nsfwAllowed !== undefined) result.nsfw_allowed = nsfwAllowed;
@@ -627,6 +602,7 @@ export class User {
 			this._isStaff === other._isStaff &&
 			this._email === other._email &&
 			this._emailBounced === other._emailBounced &&
+			this._accountLimited === other._accountLimited &&
 			this.bio === other.bio &&
 			this.banner === other.banner &&
 			this.bannerColor === other.bannerColor &&
@@ -635,7 +611,6 @@ export class User {
 			this.timezone === other.timezone &&
 			this.timezonePrivacyFlags === other.timezonePrivacyFlags &&
 			this.mfaEnabled === other.mfaEnabled &&
-			this.hasVerifiedPhone === other.hasVerifiedPhone &&
 			arraysShallowEqual(this.authenticatorTypes, other.authenticatorTypes) &&
 			this._verified === other._verified &&
 			this._premiumType === other._premiumType &&
@@ -654,7 +629,6 @@ export class User {
 			this.premiumPerksDisabled === other.premiumPerksDisabled &&
 			datesEqual(this.passwordLastChangedAt, other.passwordLastChangedAt) &&
 			datesEqual(this.lastVoiceActivitySharingChangeAt, other.lastVoiceActivitySharingChangeAt) &&
-			arraysShallowEqual(this.requiredActions, other.requiredActions) &&
 			this._nsfwAllowed === other._nsfwAllowed &&
 			this.hasDismissedPremiumOnboarding === other.hasDismissedPremiumOnboarding &&
 			this._hasEverPurchased === other._hasEverPurchased &&
@@ -687,6 +661,7 @@ export class User {
 		setOptional('is_staff', this._isStaff);
 		setOptional('email', this._email);
 		setOptional('email_bounced', this._emailBounced);
+		setOptional('account_limited', this._accountLimited);
 		setOptional('bio', this.bio);
 		setOptional('banner', this.banner);
 		setOptional('banner_color', this.bannerColor);
@@ -697,7 +672,6 @@ export class User {
 			setOptional('timezone_privacy_flags', this.timezonePrivacyFlags);
 		}
 		setOptional('mfa_enabled', this.mfaEnabled);
-		setOptional('has_verified_phone', this.hasVerifiedPhone);
 		setOptional('authenticator_types', this.authenticatorTypes);
 		setOptional('verified', this._verified);
 		setOptional('premium_type', this._premiumType);
@@ -727,7 +701,6 @@ export class User {
 				? undefined
 				: dateToIsoOrNull(this.lastVoiceActivitySharingChangeAt),
 		);
-		if (this.requiredActions !== undefined) privateFields.required_actions = this.requiredActions;
 		setOptional('nsfw_allowed', this._nsfwAllowed);
 		setOptional('has_dismissed_premium_onboarding', this.hasDismissedPremiumOnboarding);
 		setOptional('has_ever_purchased', this._hasEverPurchased);

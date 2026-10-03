@@ -42,7 +42,7 @@
 		reverse_proxy admin:8080
 	}
 
-	@staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/* /embeds/*
+	@staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/*
 	handle @staticAssets {
 		reverse_proxy static-proxy:8080
 	}

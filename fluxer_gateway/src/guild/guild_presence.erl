@@ -6,15 +6,17 @@
 -export([handle_bus_presence/3, send_cached_presence_to_session/3]).
 -export([cached_presences/1, send_presence_lookup_to_session/4]).
 -export([sync_online_status/2]).
+-export([apply_connect_presences/2]).
 
 -export_type([guild_state/0, user_id/0]).
 
 -type guild_state() :: map().
 -type member() :: map().
 -type user_id() :: integer().
+-type list_sync() :: immediate | deferred.
 
 %% members_sorted_ids trims with the member map it indexes: a snapshot that kept it would
-%% answer sorted_member_ids/2 with ids for members the snapshot no longer carries.
+%% answer sorted_member_ids/2 with ids for members the snapshot no longer holds.
 -define(HEAVY_MEMBER_DATA_KEYS, [
     <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
 ]).
@@ -40,15 +42,46 @@ handle_user_update(UserId, Payload, State) ->
     ),
     {noreply, NewState}.
 
+-spec apply_connect_presences([user_id()], guild_state()) -> guild_state().
+apply_connect_presences([], State) ->
+    State;
+apply_connect_presences(UserIds, State) ->
+    Found = cached_presences(UserIds),
+    lists:foldl(
+        fun(UserId, Acc) ->
+            apply_connect_presence(UserId, maps:get(UserId, Found, not_found), Acc)
+        end,
+        State,
+        UserIds
+    ).
+
+-spec apply_connect_presence(user_id(), {ok, map()} | not_found, guild_state()) ->
+    guild_state().
+apply_connect_presence(UserId, {ok, Payload}, State) ->
+    {noreply, NewState} =
+        case maps:get(<<"user_update">>, Payload, false) of
+            true -> handle_user_update(UserId, Payload, State);
+            false -> handle_presence_update(UserId, Payload, deferred, State)
+        end,
+    NewState;
+apply_connect_presence(_UserId, not_found, State) ->
+    State.
+
 -spec handle_presence_update(user_id(), map(), guild_state()) -> {noreply, guild_state()}.
 handle_presence_update(UserId, Payload, State) ->
+    handle_presence_update(UserId, Payload, immediate, State).
+
+-spec handle_presence_update(user_id(), map(), list_sync(), guild_state()) ->
+    {noreply, guild_state()}.
+handle_presence_update(UserId, Payload, ListSync, State) ->
     case find_member_by_user_id(UserId, State) of
         undefined -> {noreply, State};
-        Member -> process_presence(UserId, Payload, Member, State)
+        Member -> process_presence(UserId, Payload, Member, ListSync, State)
     end.
 
--spec process_presence(user_id(), map(), member(), guild_state()) -> {noreply, guild_state()}.
-process_presence(UserId, Payload, Member, State) ->
+-spec process_presence(user_id(), map(), member(), list_sync(), guild_state()) ->
+    {noreply, guild_state()}.
+process_presence(UserId, Payload, Member, ListSync, State) ->
     PresenceMap = build_presence_map(Payload, Member),
     NormalizedStatus = normalize_presence_status(
         maps:get(<<"status">>, Payload, <<"offline">>)
@@ -58,17 +91,17 @@ process_presence(UserId, Payload, Member, State) ->
         maps:get(member_presence, State),
         UserId
     ),
-    process_presence_change(UserId, OldPresence, PresenceMap, Status, State).
+    process_presence_change(UserId, OldPresence, PresenceMap, Status, ListSync, State).
 
--spec process_presence_change(user_id(), map(), map(), atom(), guild_state()) ->
+-spec process_presence_change(user_id(), map(), map(), atom(), list_sync(), guild_state()) ->
     {noreply, guild_state()}.
-process_presence_change(UserId, PresenceMap, PresenceMap, Status, State) ->
+process_presence_change(UserId, PresenceMap, PresenceMap, Status, _ListSync, State) ->
     {noreply, maybe_handle_unchanged_presence(Status, UserId, State)};
-process_presence_change(UserId, OldPresence, PresenceMap, Status, State) ->
+process_presence_change(UserId, OldPresence, PresenceMap, Status, ListSync, State) ->
     StateWithPresence = store_member_presence(UserId, PresenceMap, State),
     ok = guild_presence_sync:sync_online_status(UserId, StateWithPresence),
     StateAfterBroadcast = spawn_presence_broadcast(
-        UserId, OldPresence, PresenceMap, State, StateWithPresence
+        UserId, OldPresence, PresenceMap, State, StateWithPresence, ListSync
     ),
     StateAfterOffline = maybe_handle_offline(Status, UserId, StateAfterBroadcast),
     {noreply, StateAfterOffline}.
@@ -104,19 +137,28 @@ sync_online_status(UserId, State) ->
     map(),
     map(),
     guild_state(),
-    guild_state()
+    guild_state(),
+    list_sync()
 ) -> guild_state().
-spawn_presence_broadcast(UserId, OldPresence, PresenceMap, OldState, NewState) ->
-    {ok, NewState1} = guild_member_list:broadcast_member_list_updates(
-        UserId,
-        OldState,
-        NewState,
-        OldPresence,
-        PresenceMap
+spawn_presence_broadcast(UserId, OldPresence, PresenceMap, OldState, NewState, ListSync) ->
+    {ok, NewState1} = member_list_presence_update(
+        ListSync, UserId, OldState, NewState, OldPresence, PresenceMap
     ),
     {Pid, NewState2} = guild_broadcaster:ensure(NewState1),
     ok = cast_presence_update(Pid, UserId, PresenceMap, NewState2),
     NewState2.
+
+-spec member_list_presence_update(
+    list_sync(), user_id(), guild_state(), guild_state(), map(), map()
+) -> {ok, guild_state()}.
+member_list_presence_update(immediate, UserId, OldState, NewState, OldPresence, PresenceMap) ->
+    guild_member_list:broadcast_member_list_updates(
+        UserId, OldState, NewState, OldPresence, PresenceMap
+    );
+member_list_presence_update(deferred, UserId, OldState, NewState, OldPresence, PresenceMap) ->
+    guild_member_list_write:queue_member_list_updates(
+        UserId, OldState, NewState, OldPresence, PresenceMap
+    ).
 
 -spec cast_presence_update(pid() | undefined, user_id(), map(), guild_state()) -> ok.
 cast_presence_update(BroadcasterPid, UserId, PresenceMap, State) when is_pid(BroadcasterPid) ->

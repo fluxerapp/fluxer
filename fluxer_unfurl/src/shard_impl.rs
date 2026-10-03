@@ -23,7 +23,7 @@ pub struct UnfurlShard {
     http_client: reqwest::Client,
     resolvers: Vec<Box<dyn crate::resolvers::Resolver>>,
     media_proxy: MediaProxyClient,
-    static_cdn_endpoint: String,
+    self_hosted: bool,
 }
 
 impl UnfurlShard {
@@ -37,11 +37,7 @@ impl UnfurlShard {
         let media_proxy_secret = optional_env("FLUXER_MEDIA_PROXY_SECRET_KEY");
         let media_proxy_public_endpoint = optional_env("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
             .map(|v| fluxer_common::config::normalize_public_endpoint_from_env(&v));
-        let static_cdn_endpoint = fluxer_common::config::normalize_public_endpoint_from_env(
-            &optional_env("FLUXER_UNFURL_STATIC_CDN_ENDPOINT")
-                .or_else(|| optional_env("FLUXER_STATIC_CDN_ENDPOINT"))
-                .unwrap_or_default(),
-        );
+        let self_hosted = fluxer_common::config::read_bool_env("FLUXER_SELF_HOSTED", false);
         let (media_proxy_endpoint, media_proxy_secret) = match (
             media_proxy_endpoint,
             media_proxy_secret,
@@ -81,7 +77,7 @@ impl UnfurlShard {
             http_client,
             resolvers,
             media_proxy,
-            static_cdn_endpoint,
+            self_hosted,
         }
     }
 
@@ -103,7 +99,7 @@ impl UnfurlShard {
                 None,
                 internal_http_client(),
             ),
-            static_cdn_endpoint: String::new(),
+            self_hosted: false,
         }
     }
 
@@ -128,7 +124,7 @@ impl UnfurlShard {
             http_client: self.http_client.clone(),
             nsfw_mode,
             media_proxy: &self.media_proxy,
-            static_cdn_endpoint: &self.static_cdn_endpoint,
+            self_hosted: self.self_hosted,
             youtube_api_key: youtube_api_key.map(str::to_owned),
             klipy_api_key: klipy_api_key.map(str::to_owned),
         };
@@ -328,12 +324,11 @@ mod tests {
 
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
-    const PUBLIC_ENDPOINT_ENV: [&str; 8] = [
+    const PUBLIC_ENDPOINT_ENV: [&str; 7] = [
         "FLUXER_MEDIA_PROXY_ENDPOINT",
         "FLUXER_MEDIA_PROXY_SECRET_KEY",
         "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
-        "FLUXER_UNFURL_STATIC_CDN_ENDPOINT",
-        "FLUXER_STATIC_CDN_ENDPOINT",
+        "FLUXER_SELF_HOSTED",
         "FLUXER_BASE_DOMAIN",
         "FLUXER_PUBLIC_PORT",
         "FLUXER_PUBLIC_ORIGIN",
@@ -355,7 +350,7 @@ mod tests {
     }
 
     #[test]
-    fn a_non_default_public_port_reaches_the_public_media_and_static_endpoints() {
+    fn a_non_default_public_port_reaches_the_public_media_endpoint() {
         let shard = shard_from_env(&[
             ("FLUXER_MEDIA_PROXY_ENDPOINT", "http://media-proxy:8080"),
             ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
@@ -363,12 +358,10 @@ mod tests {
                 "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
                 "http://fluxer.example/media",
             ),
-            ("FLUXER_STATIC_CDN_ENDPOINT", "http://fluxer.example"),
             ("FLUXER_BASE_DOMAIN", "fluxer.example"),
             ("FLUXER_PUBLIC_PORT", "19080"),
         ]);
 
-        assert_eq!(shard.static_cdn_endpoint, "http://fluxer.example:19080");
         assert!(
             shard
                 .media_proxy
@@ -379,7 +372,7 @@ mod tests {
     }
 
     #[test]
-    fn a_default_public_port_leaves_the_public_media_and_static_endpoints_alone() {
+    fn a_default_public_port_leaves_the_public_media_endpoint_alone() {
         let shard = shard_from_env(&[
             ("FLUXER_MEDIA_PROXY_ENDPOINT", "http://media-proxy:8080"),
             ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
@@ -387,12 +380,10 @@ mod tests {
                 "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
                 "https://fluxer.example/media",
             ),
-            ("FLUXER_STATIC_CDN_ENDPOINT", "https://fluxer.example"),
             ("FLUXER_BASE_DOMAIN", "fluxer.example"),
             ("FLUXER_PUBLIC_PORT", "443"),
         ]);
 
-        assert_eq!(shard.static_cdn_endpoint, "https://fluxer.example");
         assert!(
             shard
                 .media_proxy
@@ -400,6 +391,18 @@ mod tests {
                 .expect("proxy url")
                 .starts_with("https://fluxer.example/media/external/")
         );
+    }
+
+    #[test]
+    fn self_hosted_follows_the_fluxer_self_hosted_env() {
+        let media_proxy = [
+            ("FLUXER_MEDIA_PROXY_ENDPOINT", "http://media-proxy:8080"),
+            ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+        ];
+        assert!(!shard_from_env(&media_proxy).self_hosted);
+        let mut vars = media_proxy.to_vec();
+        vars.push(("FLUXER_SELF_HOSTED", "true"));
+        assert!(shard_from_env(&vars).self_hosted);
     }
 
     fn unfurl(url: &str, youtube_api_key: Option<&str>) -> UnfurlRequest {

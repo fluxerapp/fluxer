@@ -12,6 +12,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
 import {Validator} from '@app/api/Validator';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -521,6 +522,7 @@ export function MessageController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const {channel_id, message_id} = ctx.req.valid('param');
+			assertAccountNotLimited(ctx.get('user'));
 			return ctx.json(
 				await ctx.get('messageRequestService').crosspostMessage({
 					userId: ctx.get('user').id,

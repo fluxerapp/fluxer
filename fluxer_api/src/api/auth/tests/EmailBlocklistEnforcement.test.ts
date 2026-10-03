@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {randomUUID} from 'node:crypto';
 import {
 	clearTestEmails,
 	createAuthHarness,
@@ -36,7 +37,11 @@ describe('Email blocklist at signup and email change', () => {
 	beforeEach(async () => {
 		await harness.reset();
 		await clearTestEmails(harness);
-		admin = await setUserACLs(harness, await createTestAccount(harness), ['admin:authenticate', 'ban:email:add']);
+		admin = await setUserACLs(harness, await createTestAccount(harness), [
+			'admin:authenticate',
+			'ban:email:add',
+			'ban:email:check',
+		]);
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
@@ -72,6 +77,52 @@ describe('Email blocklist at signup and email change', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 			.executeWithResponse();
 		expectGenericEmailError(json, 'email');
+	});
+
+	function register(email: string) {
+		return createBuilder<ValidationErrorBody>(harness, '')
+			.post('/auth/register')
+			.body({
+				email,
+				username: createUniqueUsername('domain'),
+				global_name: TEST_USER_DATA.DEFAULT_GLOBAL_NAME,
+				password: TEST_CREDENTIALS.STRONG_PASSWORD,
+				date_of_birth: TEST_USER_DATA.DEFAULT_DATE_OF_BIRTH,
+				consent: true,
+			});
+	}
+
+	it('refuses registration at a blocklisted domain and its subdomains', async () => {
+		const domain = `${randomUUID()}.test`;
+		await blocklist(`@${domain.toUpperCase()}`);
+		for (const email of [`someone@${domain}`, `SOMEONE@MAIL.${domain.toUpperCase()}`]) {
+			const {json} = await register(email).expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY').executeWithResponse();
+			expectGenericEmailError(json, 'email');
+		}
+	});
+
+	it('does not extend a domain entry to unrelated domains', async () => {
+		const domain = `${randomUUID()}.test`;
+		await blocklist(`@${domain}`);
+		await register(`someone@not${domain}`).execute();
+		await register(`someone@${domain}.example`).execute();
+	});
+
+	it('reports a domain entry through the blocklist check', async () => {
+		const domain = `${randomUUID()}.test`;
+		await blocklist(`@${domain}`);
+		const {banned} = await createBuilder<{banned: boolean}>(harness, admin.token)
+			.get(`/admin/blocklists/email/entries/${encodeURIComponent(`@${domain}`)}`)
+			.execute();
+		expect(banned).toBe(true);
+	});
+
+	it('rejects a malformed domain entry', async () => {
+		await createBuilder(harness, admin.token)
+			.post('/admin/blocklists/email/entries')
+			.body({email: '@not a domain'})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
 	});
 
 	it('still registers an address that is not blocklisted', async () => {

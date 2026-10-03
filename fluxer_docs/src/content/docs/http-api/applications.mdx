@@ -10,7 +10,7 @@ An application is an OAuth2 client owned by one user account, and every bot acco
 
 ## Access rules
 
-Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. Every route on this page accepts an account that has an outstanding [required action](/http-api/users/#required-actions).
+Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`.
 
 The sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid sudo token in that header, issued to the authenticated account, satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) with no body proof. Fluxer returns the same token in the `X-Fluxer-Sudo-Mode-JWT` response header. Fluxer issues no token to an account holding neither a TOTP secret nor a registered WebAuthn credential, so that account proves sudo mode with `password` in the body.
 

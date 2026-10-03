@@ -52,6 +52,7 @@ describe('buildNamedFluxerEnvOverrides', () => {
 			FLUXER_S3_FORCE_PATH_STYLE: 'true',
 			FLUXER_AUTH_BLUESKY_KEYS: '[{"kid":"key-1","private_key_path":"/etc/fluxer/keys/bluesky.pem"}]',
 			FLUXER_STRIPE_PRICE_MONTHLY_USD: 'price_monthly_usd',
+			FLUXER_EMAIL_REPLY_TO_EMAIL: 'support@example.com',
 		});
 
 		expect(overrides).toMatchObject({
@@ -62,7 +63,10 @@ describe('buildNamedFluxerEnvOverrides', () => {
 				bluesky: {keys: [{kid: 'key-1', private_key_path: '/etc/fluxer/keys/bluesky.pem'}]},
 			},
 			s3: {force_path_style: true},
-			integrations: {stripe: {prices: {monthly_usd: 'price_monthly_usd'}}},
+			integrations: {
+				stripe: {prices: {monthly_usd: 'price_monthly_usd'}},
+				email: {reply_to_email: 'support@example.com'},
+			},
 		});
 	});
 
@@ -77,6 +81,7 @@ describe('buildNamedFluxerEnvOverrides', () => {
 				FLUXER_LIVEKIT_DEFAULT_REGION: blank,
 				FLUXER_AUTH_BLUESKY_KEYS: blank,
 				FLUXER_EMAIL_FROM_NAME: blank,
+				FLUXER_EMAIL_REPLY_TO_EMAIL: blank,
 			}),
 		).toEqual({});
 	});

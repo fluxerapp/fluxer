@@ -500,7 +500,7 @@ describe('mapStripeRefundToRow', () => {
 		expect(result.byPaymentIntent).not.toBeNull();
 		expect(result.byInvoice).toBeNull();
 	});
-	it('payment_intent is an expanded object; hints carry through', () => {
+	it('payment_intent is an expanded object; hints pass through', () => {
 		const r = stripeFixture<Stripe.Refund>({
 			id: 're_2',
 			charge: null,

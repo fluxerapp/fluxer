@@ -284,6 +284,22 @@ describe('self-hosted premium routes', () => {
 			expect(gifts).toEqual([]);
 		});
 
+		test('credits admin generated gift codes to the issuing admin', async () => {
+			const admin = await setUserACLs(harness, await createTestAccount(harness), [
+				AdminACLs.AUTHENTICATE,
+				AdminACLs.GIFT_CODES_GENERATE,
+			]);
+			const {codes} = await createBuilder<{codes: Array<string>}>(harness, admin.token)
+				.post('/admin/gift-codes')
+				.body({count: 1, duration_type: 'months', duration_quantity: 1})
+				.execute();
+			const code = codes[0]?.split('/').pop();
+			const gift = await createBuilderWithoutAuth<{created_by: {id: string} | null}>(harness)
+				.get(`/gifts/${code}`)
+				.execute();
+			expect(gift.created_by?.id).toBe(admin.userId);
+		});
+
 		test('keeps purchase and hosted-only routes unavailable', async () => {
 			const account = await createTestAccount(harness);
 			await expectRoutesNotFound(harness, account.token, [

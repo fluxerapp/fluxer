@@ -15,6 +15,7 @@
     remove_session_ref/2,
     build_session_ref_index/1,
     remove_session/2,
+    counts_as_connected/1,
     invalidate_viewable_channels_cache/1
 ]).
 
@@ -299,14 +300,28 @@ remove_session(SessionId, State) ->
 ) -> guild_state().
 do_remove_session(SessionId, Session, State) ->
     maybe_demonitor_session(Session),
-    UserId = maps:get(user_id, Session, undefined),
-    StateAfterCleanup = cleanup_disconnecting_session(Session, State),
+    StateAfterCleanup = cleanup_removed_session(Session, State),
     SessionsAfterCleanup = maps:get(sessions, StateAfterCleanup, #{}),
     NewSessions = maps:remove(SessionId, SessionsAfterCleanup),
-    State2 = remove_session_ref(
+    remove_session_ref(
         maps:get(mref, Session, undefined), StateAfterCleanup#{sessions => NewSessions}
-    ),
-    track_connected_user(UserId, -1, State2).
+    ).
+
+-spec cleanup_removed_session(session_data(), guild_state()) -> guild_state().
+cleanup_removed_session(Session, State) ->
+    case counts_as_connected(Session) of
+        true ->
+            UserId = maps:get(user_id, Session, undefined),
+            track_connected_user(UserId, -1, cleanup_disconnecting_session(Session, State));
+        false ->
+            cleanup_session_subscriptions(Session, State)
+    end.
+
+-spec counts_as_connected(session_data()) -> boolean().
+counts_as_connected(#{pending_connect := true} = Session) ->
+    maps:get(owns_connected_tracking, Session, false) =:= true;
+counts_as_connected(_Session) ->
+    true.
 
 -spec maybe_demonitor_session(session_data()) -> ok.
 maybe_demonitor_session(Session) ->
@@ -393,15 +408,19 @@ cleanup_disconnecting_session(undefined, State) ->
     State;
 cleanup_disconnecting_session(Session, State) ->
     UserId = maps:get(user_id, Session),
+    State1 = guild_sessions_presence:unsubscribe_from_user_presence(UserId, State),
+    cleanup_session_subscriptions(Session, State1).
+
+-spec cleanup_session_subscriptions(session_data(), guild_state()) -> guild_state().
+cleanup_session_subscriptions(Session, State) ->
     SessionId = maps:get(session_id, Session),
     GuildId = require_guild_id(maps:get(id, State)),
     passive_sync_registry:delete(SessionId, GuildId),
-    State1 = guild_sessions_presence:unsubscribe_from_user_presence(UserId, State),
-    State2 = guild_member_list:unsubscribe_session(SessionId, State1),
-    MemberSubs = maps:get(member_subscriptions, State2, guild_subscriptions:init_state()),
+    State1 = guild_member_list:unsubscribe_session(SessionId, State),
+    MemberSubs = maps:get(member_subscriptions, State1, guild_subscriptions:init_state()),
     NewMemberSubs = guild_subscriptions:unsubscribe_session(SessionId, MemberSubs),
-    State3 = State2#{member_subscriptions => NewMemberSubs},
-    guild_sessions_connect_cleanup:cleanup_connect_admission_for_session(SessionId, State3).
+    State2 = State1#{member_subscriptions => NewMemberSubs},
+    guild_sessions_connect_cleanup:cleanup_connect_admission_for_session(SessionId, State2).
 
 -spec maybe_resection_disconnected_user(
     user_id(), guild_state(), guild_state()

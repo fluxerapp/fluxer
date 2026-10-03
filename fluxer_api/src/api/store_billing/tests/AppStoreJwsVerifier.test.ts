@@ -370,7 +370,7 @@ describe('App Store JWS verification with a test chain', () => {
 		);
 	});
 
-	it('rejects a leaf that carries the identifier only as a policy', async () => {
+	it('rejects a leaf that has the identifier only as a policy', async () => {
 		const policyOnly = createAppleTestPki({
 			leaf: {appleExtension: false, extraExtensions: [certificatePoliciesExtension(APPLE_RECEIPT_SIGNING_OID)]},
 		});

@@ -830,6 +830,7 @@ class MediaEngineFacade extends Store {
 			ToastCommands.createToast({
 				type: 'info',
 				children: this.i18n._(RECONNECT_SUCCEEDED_PICK_A_SCREEN_AGAIN_IF_YOU_DESCRIPTOR),
+				timeout: 5000,
 			});
 		}
 	}

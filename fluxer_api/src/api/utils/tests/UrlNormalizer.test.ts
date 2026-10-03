@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {canonicalizeUrl, extractUrlCandidates} from '@app/api/utils/UrlNormalizer';
+import {canonicalizeUrl, extractLinkHosts, extractUrlCandidates, normalizeHostname} from '@app/api/utils/UrlNormalizer';
 import {describe, expect, it} from 'vitest';
 
 describe('canonicalizeUrl', () => {
@@ -174,5 +174,63 @@ describe('extractUrlCandidates', () => {
 	});
 	it('returns empty array for text with no URLs', () => {
 		expect(extractUrlCandidates('hello world no links here')).toEqual([]);
+	});
+});
+
+describe('normalizeHostname', () => {
+	it('lowercases and strips trailing dots', () => {
+		expect(normalizeHostname('Shop.Example.COM..')).toBe('shop.example.com');
+	});
+	it('converts internationalized names to punycode', () => {
+		expect(normalizeHostname('bücher.example')).toBe('xn--bcher-kva.example');
+	});
+	it('maps ideographic full stops to dots', () => {
+		expect(normalizeHostname('shop\u3002example\u3002com')).toBe('shop.example.com');
+	});
+	it('rejects empty and invalid input', () => {
+		expect(normalizeHostname('   ')).toBeNull();
+		expect(normalizeHostname('.')).toBeNull();
+		expect(normalizeHostname('a b.com')).toBeNull();
+	});
+});
+
+describe('extractLinkHosts', () => {
+	it('drops the closing parenthesis of a masked markdown link', () => {
+		expect(extractLinkHosts('[open the shop](https://shop.example.com)')).toEqual(['shop.example.com']);
+	});
+	it('drops brackets and parentheses around nested links', () => {
+		expect(extractLinkHosts('[[x]](https://shop.example.com)(more)')).toEqual(['shop.example.com']);
+	});
+	it('reads angle-bracket autolinks', () => {
+		expect(extractLinkHosts('<https://Shop.Example.com/path>')).toEqual(['shop.example.com']);
+	});
+	it('ignores userinfo and ports', () => {
+		expect(extractLinkHosts('https://user:pass@shop.example.com:8443/x')).toEqual(['shop.example.com']);
+		expect(extractLinkHosts('[x](https://login@shop.example.com)')).toEqual(['shop.example.com']);
+	});
+	it('strips trailing dots and punctuation', () => {
+		expect(extractLinkHosts('see https://shop.example.com./ and https://other.example.org, ok')).toEqual([
+			'shop.example.com',
+			'other.example.org',
+		]);
+	});
+	it('decodes percent-encoded hosts the way a browser does', () => {
+		expect(extractLinkHosts('https://shop%2Eexample%2Ecom/')).toEqual(['shop.example.com']);
+	});
+	it('returns internationalized hosts in punycode', () => {
+		expect(extractLinkHosts('https://bücher.example/')).toEqual(['xn--bcher-kva.example']);
+	});
+	it('matches the scheme case-insensitively', () => {
+		expect(extractLinkHosts('HTTPS://SHOP.EXAMPLE.COM')).toEqual(['shop.example.com']);
+	});
+	it('stops the host at a backslash', () => {
+		expect(extractLinkHosts('https://shop.example.com\\path')).toEqual(['shop.example.com']);
+	});
+	it('deduplicates hosts', () => {
+		expect(extractLinkHosts('https://a.example.com https://A.example.com/x')).toEqual(['a.example.com']);
+	});
+	it('returns an empty array without links', () => {
+		expect(extractLinkHosts('shop.example.com')).toEqual([]);
+		expect(extractLinkHosts(null)).toEqual([]);
 	});
 });

@@ -3,15 +3,82 @@
 use crate::config::{AppProxyConfig, CspConfig, CspSource, HttpEndpoint};
 use axum::http::HeaderValue;
 use axum::http::header::InvalidHeaderValue;
-use rand::RngExt;
+use base64::{Engine as _, engine::general_purpose::STANDARD};
+use sha2::{Digest, Sha256};
 
-const CSP_NONCE_HEX_DIGITS: usize = 32;
-const CSP_VALIDATION_NONCE: &str = "00000000000000000000000000000000";
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct InlineScriptHash(String);
 
-const _: () = assert!(
-    CSP_VALIDATION_NONCE.len() == CSP_NONCE_HEX_DIGITS,
-    "the nonce a policy is validated with must be shaped like the nonce a request carries"
-);
+impl InlineScriptHash {
+    pub fn of(script_text: &str) -> Self {
+        Self(format!(
+            "'sha256-{}'",
+            STANDARD.encode(Sha256::digest(script_text.as_bytes()))
+        ))
+    }
+
+    pub fn as_source(&self) -> &str {
+        &self.0
+    }
+}
+
+pub fn inline_script_hashes(document: &str) -> Vec<InlineScriptHash> {
+    let mut hashes: Vec<InlineScriptHash> = Vec::new();
+    let mut rest = document;
+    while let Some((attributes, text, after)) = next_script_element(rest) {
+        rest = after;
+        if has_src_attribute(attributes) {
+            continue;
+        }
+        let hash = InlineScriptHash::of(text);
+        if !hashes.contains(&hash) {
+            hashes.push(hash);
+        }
+    }
+    hashes
+}
+
+fn next_script_element(html: &str) -> Option<(&str, &str, &str)> {
+    let mut offset = 0;
+    loop {
+        let start = offset + find_ignoring_ascii_case(&html[offset..], "<script")?;
+        let name_end = start + "<script".len();
+        let boundary = *html.as_bytes().get(name_end)?;
+        if boundary != b'>' && boundary != b'/' && !boundary.is_ascii_whitespace() {
+            offset = name_end;
+            continue;
+        }
+        let tag_end = name_end + html[name_end..].find('>')?;
+        let text_start = tag_end + 1;
+        let text_end = text_start + find_ignoring_ascii_case(&html[text_start..], "</script")?;
+        let close_end = html[text_end..]
+            .find('>')
+            .map_or(html.len(), |index| text_end + index + 1);
+        return Some((
+            &html[name_end..tag_end],
+            &html[text_start..text_end],
+            &html[close_end..],
+        ));
+    }
+}
+
+fn find_ignoring_ascii_case(haystack: &str, needle: &str) -> Option<usize> {
+    haystack
+        .as_bytes()
+        .windows(needle.len())
+        .position(|window| window.eq_ignore_ascii_case(needle.as_bytes()))
+}
+
+fn has_src_attribute(attributes: &str) -> bool {
+    attributes
+        .split(|c: char| c.is_ascii_whitespace() || c == '/')
+        .any(|token| {
+            token
+                .split('=')
+                .next()
+                .is_some_and(|name| name.eq_ignore_ascii_case("src"))
+        })
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct RuntimeCspSources {
@@ -29,6 +96,7 @@ const FRAME_SOURCES: &[&str] = &[
 
 const IMAGE_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
+    "https://fluxer.app",
     "https://i.ytimg.com",
     "https://*.youtube.com",
     "https://*.fluxer.media",
@@ -37,6 +105,7 @@ const IMAGE_SOURCES: &[&str] = &[
 
 const MEDIA_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
+    "https://fluxer.app",
     "https://*.youtube.com",
     "https://*.fluxer.media",
     "https://fluxer.media",
@@ -129,7 +198,7 @@ impl CompiledCspPolicy {
             .map_err(CspCompileError::InvalidAssetPolicy)?;
         HeaderValue::from_str(&build_csp(
             &config,
-            CSP_VALIDATION_NONCE,
+            &[InlineScriptHash::of("")],
             configured_sources,
         ))
         .map_err(CspCompileError::InvalidSpaPolicy)?;
@@ -140,26 +209,24 @@ impl CompiledCspPolicy {
         self.asset.clone()
     }
 
-    pub fn spa_header(&self, nonce: &str, runtime_sources: &RuntimeCspSources) -> HeaderValue {
-        assert!(
-            nonce.len() == CSP_NONCE_HEX_DIGITS
-                && nonce.bytes().all(|byte| byte.is_ascii_hexdigit()),
-            "a CSP nonce must be a 128-bit hexadecimal value"
-        );
-        HeaderValue::from_str(&build_csp(&self.config, nonce, runtime_sources)).expect(
-            "every CSP source is a validated keyword, scheme, or ASCII origin, so a policy built \
-             from them is always a valid header value",
+    pub fn spa_header(
+        &self,
+        script_hashes: &[InlineScriptHash],
+        runtime_sources: &RuntimeCspSources,
+    ) -> HeaderValue {
+        HeaderValue::from_str(&build_csp(&self.config, script_hashes, runtime_sources)).expect(
+            "every CSP source is a validated keyword, scheme, ASCII origin, or base64 hash, so a \
+             policy built from them is always a valid header value",
         )
     }
 }
 
-pub fn generate_nonce() -> String {
-    let bytes: [u8; 16] = rand::rng().random();
-    hex::encode(bytes)
-}
-
-fn build_csp(config: &CspConfig, nonce: &str, runtime_sources: &RuntimeCspSources) -> String {
-    build_csp_directives(config, Some(nonce), runtime_sources).join("; ")
+fn build_csp(
+    config: &CspConfig,
+    script_hashes: &[InlineScriptHash],
+    runtime_sources: &RuntimeCspSources,
+) -> String {
+    build_csp_directives(config, Some(script_hashes), runtime_sources).join("; ")
 }
 
 fn build_asset_csp(config: &CspConfig, runtime_sources: &RuntimeCspSources) -> String {
@@ -168,7 +235,7 @@ fn build_asset_csp(config: &CspConfig, runtime_sources: &RuntimeCspSources) -> S
 
 fn build_csp_directives(
     config: &CspConfig,
-    nonce: Option<&str>,
+    script_hashes: Option<&[InlineScriptHash]>,
     runtime_sources: &RuntimeCspSources,
 ) -> Vec<String> {
     let mut directives = Vec::with_capacity(14);
@@ -182,8 +249,8 @@ fn build_csp_directives(
         "'wasm-unsafe-eval'".to_owned(),
         "blob:".to_owned(),
     ];
-    if let Some(n) = nonce {
-        script.insert(1, format!("'nonce-{n}'"));
+    if let Some(hashes) = script_hashes {
+        script.splice(1..1, hashes.iter().map(|hash| hash.as_source().to_owned()));
     }
     extend_from(&mut script, &config.extra_script_src, SCRIPT_SOURCES);
     extend_runtime_sources(&mut script, runtime_sources, true, false);
@@ -290,21 +357,52 @@ fn extend_from(target: &mut Vec<String>, extra: &[CspSource], defaults: &[&str])
 mod tests {
     use super::*;
 
-    #[test]
-    fn generate_nonce_produces_32_char_hex() {
-        let nonce = generate_nonce();
-        assert_eq!(nonce.len(), CSP_NONCE_HEX_DIGITS);
-        assert!(nonce.chars().all(|c| c.is_ascii_hexdigit()));
-        CompiledCspPolicy::compile(default_csp_config(), &runtime_sources())
-            .unwrap()
-            .spa_header(&nonce, &runtime_sources());
+    fn hash_of(text: &str) -> InlineScriptHash {
+        InlineScriptHash::of(text)
     }
 
     #[test]
-    fn generate_nonce_is_random() {
-        let a = generate_nonce();
-        let b = generate_nonce();
-        assert_ne!(a, b);
+    fn an_inline_script_hash_is_the_base64_sha256_of_the_exact_script_text() {
+        assert_eq!(
+            hash_of("alert('Hello, world.');").as_source(),
+            "'sha256-qznLcsROx4GACP2dm0UCKCzCG+HiZ1guq6ZZDob/Tng='"
+        );
+        assert_eq!(
+            hash_of("").as_source(),
+            "'sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='"
+        );
+    }
+
+    #[test]
+    fn every_inline_script_is_hashed_and_external_scripts_are_not() {
+        let document = concat!(
+            "<head><script>first()</script>",
+            "<SCRIPT type=\"text/javascript\">second()</SCRIPT >",
+            "<script type=\"module\" src=\"/assets/app.js\"></script>",
+            "<script defer src='/assets/vendor.js'></script>",
+            "<scripts>not a script</scripts>",
+            "<script data-src=\"x\">\nthird()\n</script></head>",
+        );
+
+        assert_eq!(
+            inline_script_hashes(document),
+            vec![
+                hash_of("first()"),
+                hash_of("second()"),
+                hash_of("\nthird()\n")
+            ]
+        );
+    }
+
+    #[test]
+    fn an_inline_script_repeated_verbatim_is_granted_once() {
+        let document = "<script>same()</script><script>same()</script>";
+        assert_eq!(inline_script_hashes(document), vec![hash_of("same()")]);
+    }
+
+    #[test]
+    fn an_unterminated_script_is_never_granted() {
+        assert!(inline_script_hashes("<script>never_closed()").is_empty());
     }
 
     fn default_csp_config() -> CspConfig {
@@ -322,7 +420,7 @@ mod tests {
     #[test]
     fn build_csp_includes_required_directives() {
         let config = default_csp_config();
-        let csp = build_csp(&config, "testnonce", &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
         assert!(csp.contains("default-src"));
         assert!(csp.contains("script-src"));
         assert!(csp.contains("style-src"));
@@ -339,9 +437,27 @@ mod tests {
     }
 
     #[test]
+    fn build_csp_allows_the_apex_domain_for_images_and_media() {
+        let config = default_csp_config();
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
+        for name in ["img-src ", "media-src "] {
+            let directive = csp
+                .split("; ")
+                .find(|directive| directive.starts_with(name))
+                .expect("directive");
+            assert!(
+                directive
+                    .split(' ')
+                    .any(|source| source == "https://fluxer.app"),
+                "{name}must allow the apex domain: {directive}"
+            );
+        }
+    }
+
+    #[test]
     fn build_csp_allows_blob_connections_for_camera_background_media() {
         let config = default_csp_config();
-        let csp = build_csp(&config, "testnonce", &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
         let connect = csp
             .split("; ")
             .find(|directive| directive.starts_with("connect-src "))
@@ -369,22 +485,40 @@ mod tests {
     }
 
     #[test]
-    fn build_csp_includes_nonce_in_script_src() {
+    fn build_csp_grants_each_script_hash_in_script_src_and_no_nonce() {
         let config = default_csp_config();
-        let csp = build_csp(&config, "abc123def456", &runtime_sources());
-        assert!(csp.contains("'nonce-abc123def456'"));
-    }
-
-    #[test]
-    fn build_asset_csp_excludes_nonce() {
-        let config = default_csp_config();
-        let csp = build_asset_csp(&config, &runtime_sources());
+        let csp = build_csp(
+            &config,
+            &[hash_of("first()"), hash_of("second()")],
+            &runtime_sources(),
+        );
+        let script = csp
+            .split("; ")
+            .find(|directive| directive.starts_with("script-src "))
+            .expect("script-src directive");
+        assert!(script.starts_with(&format!(
+            "script-src 'self' {} {} 'wasm-unsafe-eval' blob:",
+            hash_of("first()").as_source(),
+            hash_of("second()").as_source()
+        )));
         assert!(!csp.contains("nonce-"));
     }
 
     #[test]
+    fn build_asset_csp_grants_no_inline_script() {
+        let config = default_csp_config();
+        let csp = build_asset_csp(&config, &runtime_sources());
+        assert!(!csp.contains("nonce-"));
+        assert!(!csp.contains("sha256-"));
+    }
+
+    #[test]
     fn build_csp_allows_no_third_party_captcha_hosts() {
-        let csp = build_csp(&default_csp_config(), "test-nonce", &runtime_sources());
+        let csp = build_csp(
+            &default_csp_config(),
+            &[hash_of("boot()")],
+            &runtime_sources(),
+        );
         assert!(!csp.contains("hcaptcha"));
         assert!(!csp.contains("challenges.cloudflare.com"));
     }
@@ -392,7 +526,7 @@ mod tests {
     #[test]
     fn csp_no_double_spaces_or_trailing_semicolons() {
         let config = default_csp_config();
-        let csp = build_csp(&config, "nonce1", &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
         assert!(!csp.contains("  "), "CSP contains double spaces");
         assert!(!csp.ends_with(';'), "CSP ends with semicolon");
         assert!(!csp.ends_with("; "), "CSP ends with semicolon+space");
@@ -410,14 +544,14 @@ mod tests {
             ),
             ..Default::default()
         };
-        let csp = build_csp(&config, "nonce1", &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
         assert!(csp.contains("report-uri https://example.com/csp-report"));
     }
 
     #[test]
     fn build_csp_excludes_report_uri_when_none() {
         let config = default_csp_config();
-        let csp = build_csp(&config, "nonce1", &runtime_sources());
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
         assert!(!csp.contains("report-uri"));
     }
 
@@ -429,7 +563,7 @@ mod tests {
             media_endpoint: Some(endpoint("https://media.example.test")),
             ..Default::default()
         };
-        let csp = build_csp(&config, "nonce1", &runtime_sources);
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources);
         assert!(csp.contains("style-src 'self' 'unsafe-inline'"));
         assert!(csp.contains("https://static.example.test"));
         assert!(csp.contains("https://media.example.test"));
@@ -471,7 +605,7 @@ mod tests {
             ..Default::default()
         };
 
-        let csp = build_csp(&config, "nonce1", &runtime_sources);
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources);
 
         assert!(csp.contains("http://localhost:3900"));
         assert!(csp.contains("http://fluxer-uploads.localhost:3900"));
@@ -492,6 +626,7 @@ mod tests {
         let asset = policy.asset_header();
         let asset = asset.to_str().unwrap();
         assert!(!asset.contains("nonce-"));
+        assert!(!asset.contains("sha256-"));
         assert!(asset.contains("https://static.example.test"));
         assert!(
             !asset.contains("https://media.example.test"),
@@ -501,7 +636,7 @@ mod tests {
     }
 
     #[test]
-    fn a_compiled_policy_stamps_the_requests_own_nonce_and_discovery_endpoints() {
+    fn a_compiled_policy_stamps_the_documents_script_hashes_and_discovery_endpoints() {
         let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
         let discovered = RuntimeCspSources {
             static_cdn_endpoint: Some(endpoint("https://cdn.discovered.test")),
@@ -509,10 +644,10 @@ mod tests {
             ..Default::default()
         };
 
-        let header = policy.spa_header("0123456789abcdef0123456789abcdef", &discovered);
+        let header = policy.spa_header(&[hash_of("boot()")], &discovered);
         let header = header.to_str().unwrap();
 
-        assert!(header.contains("'nonce-0123456789abcdef0123456789abcdef'"));
+        assert!(header.contains(hash_of("boot()").as_source()));
         assert!(header.contains("https://cdn.discovered.test"));
         assert!(header.contains("https://branding.discovered.test"));
     }
@@ -530,19 +665,10 @@ mod tests {
             policy.asset_header().to_str().unwrap(),
             build_asset_csp(&config, &sources)
         );
+        let hashes = [hash_of("boot()")];
         assert_eq!(
-            policy
-                .spa_header(CSP_VALIDATION_NONCE, &sources)
-                .to_str()
-                .unwrap(),
-            build_csp(&config, CSP_VALIDATION_NONCE, &sources)
+            policy.spa_header(&hashes, &sources).to_str().unwrap(),
+            build_csp(&config, &hashes, &sources)
         );
-    }
-
-    #[test]
-    #[should_panic(expected = "a CSP nonce must be a 128-bit hexadecimal value")]
-    fn a_compiled_policy_refuses_a_nonce_it_did_not_generate() {
-        let policy = CompiledCspPolicy::compile(default_csp_config(), &runtime_sources()).unwrap();
-        policy.spa_header("not-a-nonce", &runtime_sources());
     }
 }

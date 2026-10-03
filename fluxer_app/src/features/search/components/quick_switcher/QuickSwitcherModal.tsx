@@ -436,7 +436,7 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 				text={i18n._(QUICK_SWITCHER_DESCRIPTOR)}
 				data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.modal-screen-reader-label"
 			/>
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: pointer arbitration surface for the result rows; it carries no affordance of its own. */}
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: pointer arbitration surface for the result rows; it has no affordance of its own. */}
 			<div
 				className={quickStyles.container}
 				onMouseMove={handlePointerMove}

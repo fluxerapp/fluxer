@@ -134,19 +134,6 @@ pub async fn dispatch(
                 "Failed to update premium flags",
             )
         }
-        "update_suspicious_flags" => {
-            let Ok(submitted) =
-                form.parse_list_values::<i32>(&["suspicious_flags[]", "suspicious_flags"])
-            else {
-                return DispatchOutcome::error("Invalid suspicious activity flag value");
-            };
-            let flags = submitted.into_iter().fold(0, |acc, flag| acc | flag);
-            DispatchOutcome::from_result(
-                client.update_suspicious_flags(user_id, flags).await,
-                "Suspicious activity flags updated successfully",
-                "Failed to update suspicious activity flags",
-            )
-        }
         "update_acls" => {
             let acls = form.list_values_any(&["acls[]", "acls"]);
             DispatchOutcome::from_result(
@@ -178,14 +165,6 @@ pub async fn dispatch(
             "Email verified successfully",
             "Failed to verify email",
         ),
-        "update_has_verified_phone" => {
-            let val = form.bool_value("has_verified_phone");
-            DispatchOutcome::from_result(
-                client.update_has_verified_phone(user_id, val).await,
-                "Phone verification status updated successfully",
-                "Failed to update phone verification status",
-            )
-        }
         "terminate_sessions" => DispatchOutcome::from_result(
             client.terminate_user_sessions(user_id).await,
             "User sessions terminated successfully",
@@ -197,22 +176,6 @@ pub async fn dispatch(
                 client.clear_user_fields(user_id, &f).await,
                 "User fields cleared successfully",
                 "Failed to clear user fields",
-            )
-        }
-        "set_bot_status" => {
-            let val = form.bool_value("bot");
-            DispatchOutcome::from_result(
-                client.set_bot_status(user_id, val).await,
-                "Bot status updated successfully",
-                "Failed to update bot status",
-            )
-        }
-        "set_system_status" => {
-            let val = form.bool_value("system");
-            DispatchOutcome::from_result(
-                client.set_system_status(user_id, val).await,
-                "System status updated successfully",
-                "Failed to update system status",
             )
         }
         "change_username" => {
@@ -280,8 +243,11 @@ pub async fn dispatch(
             let Some(ip) = get("ip") else {
                 return DispatchOutcome::error("IP address is required");
             };
+            let Ok(duration) = form.parse_value::<u32>("duration_hours") else {
+                return DispatchOutcome::error("Invalid ban duration");
+            };
             DispatchOutcome::from_result(
-                client.ban_ip(&ip, None).await,
+                client.ban_ip(&ip, duration.unwrap_or(0), None).await,
                 "IP banned successfully",
                 "Failed to ban IP",
             )

@@ -36,6 +36,7 @@ import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Users from '@app/features/user/state/Users';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import TtsUtils from '@app/features/voice/utils/VoiceTtsUtils';
 import {
 	ChannelTypes,
@@ -632,6 +633,7 @@ export function requestMessageForward(
 	if (!currentUser) {
 		return;
 	}
+	if (blockIfAccountLimited()) return;
 	ModalCommands.push(
 		modal(() => (
 			<ForwardModal

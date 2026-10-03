@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 The current user is the account that presented the credential, represented as a [user object](/http-api/users/#user-object). The routes here read that account, change it, and run its lifecycle operations.
 
-Every route except [Get current user](#get-current-user) is user-only. Those routes reject a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`. They also reject an account that has an outstanding [required action](/http-api/users/#required-actions) with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+Every route except [Get current user](#get-current-user) is user-only. Those routes reject a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`.
 
 ## Sudo verification
 
@@ -33,8 +33,6 @@ Returns the current [user](/http-api/users/#user-object) object.
 
 - An OAuth2 bearer credential must hold the `identify` [scope](/http-api/oauth2/#oauth2-scopes), and one without it is rejected with 403 [`MISSING_OAUTH_SCOPE`](/http-api/errors/), whose body has `required_scope`.
 - A bearer receives the [user object](/http-api/users/#user-object) with the zero values that page lists for a bearer read, and `email` only when it also holds the `email` scope.
-
-An account with an outstanding [required action](/http-api/users/#required-actions) can call this route, so a client can read and poll the actions it has to complete.
 
 ### Response
 
@@ -122,11 +120,11 @@ An omitted field leaves its stored value untouched, and an explicit `null` clear
 
 To skip the body proof fields, send the sudo token in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
-A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. That check runs before Fluxer checks required actions, so it succeeds even while an action is outstanding. Supplying `password` alone is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
-
-Fluxer rejects an account with an outstanding required action. The one exemption is a body that has `email_token` and nothing beyond the sudo verification fields. Any other defined field removes the exemption.
+A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. Supplying `password` alone is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
 
 A claimed account needs a verified email before changing the username, discriminator, display name, avatar, banner, biography, pronouns, accent colour, timezone, timezone privacy, or any premium badge field. A request without one returns 403 [`PROFILE_EMAIL_VERIFICATION_REQUIRED`](/http-api/errors/).
+
+A [limited account](/http-api/users/#account-limitation) cannot change any of those fields. A request that sets one returns 403 [`ACCOUNT_LIMITED`](/http-api/errors/).
 
 An account is unclaimed while it holds no password credential, is not a bot, and does not have the SSO trait. Such an account may set only `new_password`, `has_dismissed_premium_onboarding`, and `has_unread_gift_inventory`. Any other field is rejected with [`UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN`](/http-api/errors/) on the path of the first offending field. The allow-list covers the profile payload only, so `email_token` and the sudo fields stay available as the way such an account claims itself.
 
@@ -158,7 +156,7 @@ Each control is separate from the route bucket. A denial returns 400 `INVALID_FO
 Fluxer consumes the avatar control before it detects identical content, and clearing the avatar consumes nothing. A clearing request consumes the banner control, and so does a request whose value is unchanged.
 
 :::caution[A password change rotates the session]
-Supplying `new_password` on a claimed account deletes every other authentication session and every outstanding password reset token, then replaces the session that issued the request. The replacement arrives as [Auth Session Change](/gateway/events/#auth-session-change).
+Supplying `new_password` on a claimed account deletes every other authentication session and every outstanding password reset token, then replaces the session that issued the request. The user object in the response then also has the fields of the [password change completion object](/http-api/users/email-and-password/#password-change-completion-object), and the client sends every later request with that token. [Auth Session Change](/gateway/events/#auth-session-change) never includes it.
 :::
 
 ### Response
@@ -166,8 +164,10 @@ Supplying `new_password` on a claimed account deletes every other authentication
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [user](/http-api/users/#user-object) object | Account was returned after applying every permitted field |
+| 200 | [user](/http-api/users/#user-object) object with the [password change completion](/http-api/users/email-and-password/#password-change-completion-object) fields | Account was returned after a password change rotated the session |
 | 400 | [error response](/http-api/#error-response) | Body, image, tag, password, entitlement, secondary control, or sudo proof is invalid |
 | 403 | [error response](/http-api/#error-response) | Email verification, sudo verification, or a staff-only field is required, or content is blocked |
+| 403 | [error response](/http-api/#error-response) | The account is limited and the body changes a profile field, and the request returns `ACCOUNT_LIMITED` |
 
 ### Side effects
 

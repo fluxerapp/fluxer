@@ -582,7 +582,7 @@ describe('ReadStates private channel open, close and reopen', () => {
 		});
 	});
 
-	it("characterisation: acks the current user's message that CHANNEL_CREATE already carries", () => {
+	it("characterisation: acks the current user's message that CHANNEL_CREATE already includes", () => {
 		ready([], []);
 		channelCreate(dm(CHANNEL.newDm, MESSAGE.own));
 		messageCreate(wireMessage(MESSAGE.own, CHANNEL.newDm, ME));

@@ -171,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn a_long_multi_byte_external_filename_still_carries_a_disposition() {
+    fn a_long_multi_byte_external_filename_still_gets_a_disposition() {
         let filename = "\u{e9}".repeat(1100);
         let inline = disposition_string("image/png", false, Some(&filename));
         assert!(inline.starts_with("inline; filename=\""));

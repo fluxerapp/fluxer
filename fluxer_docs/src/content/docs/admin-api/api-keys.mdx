@@ -83,7 +83,7 @@ Only [Create Admin API key](#create-admin-api-key) returns this object. It has t
 
 <sup>2</sup> Derived from `expires_in_days` at the instant the key is created, and null when that field is omitted
 
-<sup>3</sup> Reflects the stored set, so a value repeated in the request appears once
+<sup>3</sup> Reflects the stored set, so a value repeated in the request appears once and a value outside the [ACL registry](/admin-api/#acl-registry) is left out
 
 :::caution[The secret is returned once]
 The secret cannot be retrieved or rotated later. If it is lost, revoke the key and create a replacement.
@@ -140,7 +140,7 @@ The acting credential must already have every value in `acls`, unless it has `*`
 | --- | --- | --- |
 | name<sup>1</sup> | string | The name given to the key (1-100 characters) |
 | expires_in_days?<sup>2</sup> | integer | The number of days until the key expires (1-365) |
-| acls<sup>3</sup> | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key, each a registry value (at most 111) |
+| acls<sup>3</sup> | array[string] | The [ACLs](/admin-api/#acl-registry) stored on the key, each a registry value (at most 103) |
 
 <sup>1</sup> A value that is empty after trimming is rejected, so whitespace alone is not a name
 
@@ -218,7 +218,7 @@ An update never rotates the credential, and no field on this route changes the e
 | Field | Type | Description |
 | --- | --- | --- |
 | name?<sup>1</sup> | string | The replacement name for the key (1-100 characters) |
-| acls?<sup>2</sup> | array[string] | The complete replacement set of [ACLs](/admin-api/#acl-registry), each a registry value (at most 111) |
+| acls?<sup>2</sup> | array[string] | The complete replacement set of [ACLs](/admin-api/#acl-registry), each a registry value (at most 103) |
 
 <sup>1</sup> A value that is empty after trimming is rejected
 

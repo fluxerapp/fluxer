@@ -22,22 +22,6 @@ impl AdminApiClient {
             .await
     }
 
-    pub async fn bulk_update_suspicious_activity_flags(
-        &self,
-        user_ids: &[String],
-        add_flags: &[String],
-        remove_flags: &[String],
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<BulkJobResponse> {
-        let body = generated_types::AdminBulkJobCreateRequest::UpdateSuspiciousActivityFlags {
-            add_flags: add_flags.to_vec(),
-            remove_flags: remove_flags.to_vec(),
-            user_ids: snowflakes(user_ids),
-        };
-        self.post_typed_with_reason("/admin/bulk-jobs", &body, audit_log_reason)
-            .await
-    }
-
     pub async fn bulk_update_guild_features(
         &self,
         guild_ids: &[String],

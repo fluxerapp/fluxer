@@ -22,7 +22,11 @@ import NativePermission from '@app/features/permissions/system/state/NativePermi
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
-import {canServiceStripeSubscriptions, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {
+	canServiceStripeSubscriptions,
+	getStoreOwnedSubscription,
+	shouldShowPremiumFeatures,
+} from '@app/features/premium/utils/PremiumUtils';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import {hasUnavailableElectronNativeContext, isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -168,6 +172,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		if (isSelfHosted) return false;
 		if (!hasPurchaseReadyAccount) return false;
 		if (!premiumState || !priceAnnouncementCampaign) return false;
+		if (getStoreOwnedSubscription(premiumState)) return false;
 		const listPriceSwitch = premiumState.billing.list_price_switch ?? null;
 		if (!listPriceSwitch?.available || listPriceSwitch.pending) return false;
 		if (listPriceSwitch.currency !== priceAnnouncementCampaign.currency) return false;

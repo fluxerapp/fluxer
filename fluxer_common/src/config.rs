@@ -609,14 +609,14 @@ mod tests {
         let vectors = vectors.as_array().expect("vectors are an array");
         assert!(!vectors.is_empty());
         for vector in vectors {
-            let url = vector["url"].as_str().expect("vector carries a url");
+            let url = vector["url"].as_str().expect("vector has a url");
             let base_domain = vector["base_domain"]
                 .as_str()
-                .expect("vector carries a base domain");
+                .expect("vector has a base domain");
             let public_port = vector["public_port"].as_u64().map(|port| port as u16);
             let expected = vector["normalized"]
                 .as_str()
-                .expect("vector carries a normalized url");
+                .expect("vector has a normalized url");
             assert_eq!(
                 expected,
                 normalize_public_endpoint(url, base_domain, public_port),

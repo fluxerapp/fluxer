@@ -169,6 +169,7 @@ export interface MasterConfig {
 			provider: 'smtp' | 'none';
 			from_email: string;
 			from_name: string;
+			reply_to_email: string;
 			app_base_url: string;
 			webhook_secret?: string;
 			smtp?: {

@@ -76,7 +76,7 @@ export async function sendWithImage(
 		filenames.map((filename, index) => ({
 			index,
 			filename,
-			data: loadFixture(filename.endsWith('.gif') ? 'thisisfine.gif' : 'yeah.png'),
+			data: loadFixture(filename.endsWith('.gif') ? 'animated.gif' : 'yeah.png'),
 		})),
 	);
 	if (response.status !== 200) {

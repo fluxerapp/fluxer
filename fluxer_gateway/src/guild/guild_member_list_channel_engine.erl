@@ -230,13 +230,21 @@ build(ListId, State) ->
         undefined ->
             State;
         ChannelId ->
-            Ref = load_engine(ChannelId, State),
+            Ref = load_or_clone_engine(ListId, ChannelId, State),
             guild_member_list_engine_inputs:record(
                 ListId,
                 ChannelId,
                 State,
                 put_engines(maps:put(ListId, Ref, engines(State)), State)
             )
+    end.
+
+-spec load_or_clone_engine(list_id(), pos_integer(), guild_state()) -> engine_ref().
+load_or_clone_engine(ListId, ChannelId, State) ->
+    Engines = maps:remove(ListId, engines(State)),
+    case guild_member_list_engine_inputs:current_twin(ChannelId, maps:keys(Engines), State) of
+        {ok, TwinListId} -> guild_member_list_engine:clone(maps:get(TwinListId, Engines));
+        none -> load_engine(ChannelId, State)
     end.
 
 -spec load_engine(pos_integer(), guild_state()) -> engine_ref().

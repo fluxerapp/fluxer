@@ -163,6 +163,7 @@ function defaultConfig(): MasterConfig {
 				provider: 'none',
 				from_email: '',
 				from_name: 'Fluxer',
+				reply_to_email: '',
 				app_base_url: '',
 			},
 			voice: {
@@ -289,6 +290,12 @@ function assertOneOf<T extends string>(value: string, allowed: ReadonlyArray<T>,
 function requireString(value: string | undefined, envName: string): void {
 	if (!value || value.trim().length === 0) {
 		throw new Error(`${envName} is required`);
+	}
+}
+
+function validateReplyToEmail(value: string): void {
+	if (value !== '' && !/^[^\s@<>,;"]+@[^\s@<>,;"]+$/.test(value)) {
+		throw new Error('FLUXER_EMAIL_REPLY_TO_EMAIL must be a single email address such as support@example.com');
 	}
 }
 
@@ -566,6 +573,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateStorageChangeFeedConfig(config);
 	validateCachePurgeConfig(config);
 	validateStoreBillingConfig(config);
+	validateReplyToEmail(config.integrations.email.reply_to_email);
 	normalizeAppOriginAliases(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);

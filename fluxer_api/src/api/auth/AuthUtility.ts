@@ -110,14 +110,8 @@ export async function handleBanStatus(ctx: ApiContext, user: User): Promise<User
 		throw new AccountTemporarilySuspendedError();
 	}
 	if (banStatus.tempBanExpired) {
-		return users.patchUpsert(
-			user.id,
-			{
-				flags: user.flags & ~UserFlags.DISABLED,
-				temp_banned_until: null,
-			},
-			user.toRow(),
-		);
+		const patched = await users.patchUpsert(user.id, {temp_banned_until: null}, user.toRow());
+		return (await users.updateFlags(user.id, (flags) => flags & ~UserFlags.DISABLED)) ?? patched;
 	}
 	return user;
 }
@@ -130,11 +124,7 @@ export async function reactivateOnSignIn(
 	const {users} = ctx.services;
 	let currentUser = user;
 	if ((currentUser.flags & UserFlags.DISABLED) !== 0n && !currentUser.tempBannedUntil) {
-		currentUser = await users.patchUpsert(
-			currentUser.id,
-			{flags: currentUser.flags & ~UserFlags.DISABLED},
-			currentUser.toRow(),
-		);
+		currentUser = (await users.updateFlags(currentUser.id, (flags) => flags & ~UserFlags.DISABLED)) ?? currentUser;
 		Logger.info({userId: currentUser.id}, 'Auto-undisabled user on sign-in');
 	}
 	if ((currentUser.flags & UserFlags.SELF_DELETED) !== 0n) {

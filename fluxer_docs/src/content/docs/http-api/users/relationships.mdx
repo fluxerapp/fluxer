@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A relationship describes a friendship, block, or pending friend request from the caller's perspective. Private notes belong to [User notes](/http-api/users/notes/).
 
-The routes here are user-only. A bot or OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+The routes here are user-only. A bot or OAuth2 bearer credential receives 403 `ACCESS_DENIED`.
 
 :::note[Relationship records are directional]
 A friendship is a FRIEND record on both accounts. A pending request is `OUTGOING_REQUEST` on the sender and `INCOMING_REQUEST` on the recipient. A block exists only on the account that created it, so the block adds no record to the blocked account and sends it no [Relationship Add](/gateway/events/#relationship-add).
@@ -141,7 +141,7 @@ Fluxer resolves the tag to exactly one account before any relationship rule runs
 | --- | --- | --- |
 | 200 | [relationship](#relationship-object) object | A pending request, an existing relationship, or an accepted friendship was returned |
 | 400 | [error response](/http-api/#error-response) | The tag is unresolved, the caller or target is ineligible, target or block policy rejects the request, deployment policy disables the operation, or the [relationship limit](#relationship-limit) is reached |
-| 403 | [error response](/http-api/#error-response) | The caller's email address is unverified and the request returns `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | The caller's email address is unverified and the request returns `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED`, or the caller is under a new conversation limit and the request returns `NEW_CONVERSATIONS_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | The caller or resolved target no longer exists, or the pending request being accepted has been withdrawn |
 
 ### Side effects
@@ -166,7 +166,7 @@ Fluxer checks the current relationship state next. A pending request from the ta
 
 The remaining rules reject an unclaimed caller with 400 `UNCLAIMED_ACCOUNT_CANNOT_SEND_FRIEND_REQUESTS` and an unverified email with 403 `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED`. A bot target is rejected with 400 `FRIEND_REQUEST_BLOCKED` unless it has `FRIENDLY_BOT`. A target with the internal app store reviewer flag is rejected with the same code.
 
-A target the caller has blocked returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. A target that has blocked the caller returns 400 `FRIEND_REQUEST_BLOCKED`. Fluxer reads the target's [friend source flags](/http-api/users/#friend-source-flags) next<sup>1</sup>, and a target accepting requests only from mutual friends or mutual guild members rejects an unrelated caller with 400 `FRIEND_REQUEST_BLOCKED`. The [relationship limit](#relationship-limit) applies last, independently for both accounts.
+A target the caller has blocked returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. A target that has blocked the caller returns 400 `FRIEND_REQUEST_BLOCKED`. Fluxer reads the target's [friend source flags](/http-api/users/#friend-source-flags) next<sup>1</sup>, and a target accepting requests only from mutual friends or mutual guild members rejects an unrelated caller with 400 `FRIEND_REQUEST_BLOCKED`. An account under a [new conversation limit](/http-api/users/private-channels/#new-conversation-limit) then returns 403 `NEW_CONVERSATIONS_LIMITED`, unless the target is a bot or has already written in a direct message with it. The [relationship limit](#relationship-limit) applies last, independently for both accounts.
 
 <sup>1</sup> The friend source evaluation is skipped when the target has no stored settings, which admits the request as though the target permitted requests from anyone
 
@@ -202,7 +202,7 @@ The body can be omitted, in which case it is treated as an empty object.
 | --- | --- | --- |
 | 200 | [relationship](#relationship-object) object | A pending request, an existing relationship, or an accepted friendship was returned |
 | 400 | [error response](/http-api/#error-response) | The caller or target is ineligible, target or block policy rejects the request, deployment policy disables the operation, or the [relationship limit](#relationship-limit) is reached |
-| 403 | [error response](/http-api/#error-response) | The caller's email address is unverified and the request returns `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | The caller's email address is unverified and the request returns `FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED`, or the caller is under a new conversation limit and the request returns `NEW_CONVERSATIONS_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | The caller, the target account, or the pending request being accepted does not exist |
 
 ### Side effects

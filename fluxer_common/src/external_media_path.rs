@@ -267,8 +267,8 @@ mod tests {
         let vectors = vectors.as_array().expect("vectors are an array");
         assert!(!vectors.is_empty());
         for vector in vectors {
-            let original = vector["url"].as_str().expect("vector carries a url");
-            let expected = vector["path"].as_str().expect("vector carries a path");
+            let original = vector["url"].as_str().expect("vector has a url");
+            let expected = vector["path"].as_str().expect("vector has a path");
             let normalized = url::Url::parse(original).expect("vector url parses");
             assert_eq!(
                 expected,

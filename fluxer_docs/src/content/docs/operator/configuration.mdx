@@ -174,7 +174,7 @@ The API and worker validate endpoint URLs at startup. The Gateway endpoint requi
 
 #### `FLUXER_STATIC_CDN_DOMAIN`
 
-Default empty. A separate host for static assets. When set, the static endpoint of `api` and `worker` is forced to `https` with no port. Only `api` and `worker` read it, so set `FLUXER_STATIC_CDN_ENDPOINT` to the same origin as well for `admin`, `app-proxy`, `gateway` and `unfurl`. Compose forwards it from `.env`.
+Default empty. A separate host for static assets. When set, the static endpoint of `api` and `worker` is forced to `https` with no port. Only `api` and `worker` read it, so set `FLUXER_STATIC_CDN_ENDPOINT` to the same origin as well for `admin`, `app-proxy` and `gateway`. Compose forwards it from `.env`.
 
 #### `FLUXER_INVITE_DOMAIN`
 
@@ -210,7 +210,7 @@ Defaults to the derived endpoint. The public Media Proxy URL. The `gifs` service
 
 #### `FLUXER_STATIC_CDN_ENDPOINT`
 
-Defaults to the derived endpoint. The static asset origin. Read by `api`, `worker`, `admin`, `app-proxy`, and `unfurl`. Compose forwards it from `.env`. When it is unset, `admin` and `unfurl-shard` get the public origin, and every other service derives it itself.
+Defaults to the derived endpoint. The static asset origin. Read by `api`, `worker`, `admin`, and `app-proxy`. Compose forwards it from `.env`. When it is unset, `admin` gets the public origin, and every other service derives it itself.
 
 #### `FLUXER_ADMIN_ENDPOINT`
 
@@ -251,10 +251,6 @@ No default. The internal Media Proxy address. `unfurl-shard` reads this name alo
 #### `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT`
 
 No default. The public Media Proxy URL used by `gifs`, `unfurl`, and `media-proxy`. `gifs` requires this or `FLUXER_MEDIA_ENDPOINT` to start. Set it on `media-proxy` so requests for its own assets use local storage instead of an HTTP round trip. For `api` and `worker`, use `FLUXER_MEDIA_ENDPOINT` instead. Compose forwards it from `.env` to every app service. When it is unset, they get `FLUXER_MEDIA_ENDPOINT`, or the public media URL when that is unset too.
-
-#### `FLUXER_UNFURL_STATIC_CDN_ENDPOINT`
-
-Falls back to `FLUXER_STATIC_CDN_ENDPOINT`. The static origin used by `unfurl`. Read only by `unfurl`. Compose forwards it from `.env` to `unfurl-shard`.
 
 ## The edge
 
@@ -730,6 +726,10 @@ The same conditions turn on a DNS check at registration. The check runs when ema
 
 `.env.example` `Fluxer`. The sender name. Default `Fluxer`, which an empty value also gives. Compose forwards it from `.env`.
 
+#### `FLUXER_EMAIL_REPLY_TO_EMAIL`
+
+Default empty. The address replies go to, sent as the `Reply-To` header on every email. An empty value sends no `Reply-To` header. Must be a single bare address such as `support@example.com`, or the API fails at boot. The admin dashboard has no field for it. Compose forwards it from `.env`, and `.env.example` lists it commented out.
+
 #### `FLUXER_EMAIL_APP_BASE_URL`
 
 `.env.example` empty. The base URL used in links. Must be http or https with no username, password, query, or fragment, or the API fails at boot. Falls back to the app endpoint. Compose forwards it from `.env`.
@@ -1078,7 +1078,7 @@ Default `development`. The runtime mode. `development`, `production`, or `test`.
 
 #### `FLUXER_SELF_HOSTED`
 
-Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, and turns blocklist feeds off.
+Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, turns blocklist feeds off, and keeps hosted-only artwork from `fluxer.app` out of the app, webhook avatars and link embeds.
 
 `/_metrics` on `api`, `media-proxy`, `gateway`, and `push`, plus the Gateway's `/_health/ready`, `/_health/drain`, and `/_health/undrain`, are gated to loopback peers, so no proxy reaches them. The probes that work from outside are `/api/_health`, `/gateway/_health`, `/media/_health`, and the edge's own `/_health`.
 
@@ -1566,7 +1566,7 @@ Defaults to the crate version. The reported build of `admin` and `app-proxy`. `B
 
 ## Content Security Policy
 
-`app-proxy` builds a per-request nonce-based policy for the client HTML and the assets it serves. Each variable appends sources to one directive on top of the built-in ones. All are empty by default, and Compose forwards every one.
+`app-proxy` builds the policy for the client HTML and the assets it serves. The client HTML policy allows each inline script by its SHA-256 hash, so every visitor to a host gets the same document and header. Each variable appends sources to one directive on top of the built-in ones. All are empty by default, and Compose forwards every one.
 
 Every name below goes in `.env`. `app-proxy` reads its environment at container start, so a change takes effect on `docker compose up -d app-proxy`. A `docker compose restart app-proxy` does not apply it.
 
@@ -1808,11 +1808,15 @@ Default `256mb`. The ceiling for `nats`. Covers JetStream file store metadata as
 
 #### `FLUXER_MEILISEARCH_MEMORY_LIMIT`
 
-Default `768mb`. The ceiling for `meilisearch`. Must stay well above `FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY`, which bounds the indexer alone.
+Default `1536mb`. The ceiling for `meilisearch`. Indexing a backlog of a few hundred thousand messages with two indexing threads peaks near 1 GB, so keep this above 1 GB.
 
 #### `FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY`
 
-Default `384mb`. Becomes `MEILI_MAX_INDEXING_MEMORY`. The memory the indexer may use for one batch. Lower it whenever you lower `FLUXER_MEILISEARCH_MEMORY_LIMIT`.
+Default `256mb`. Becomes `MEILI_MAX_INDEXING_MEMORY`. The memory the indexer may use for one batch. Meilisearch uses more than this while indexing, because every indexing thread also has buffers of its own. Lower it whenever you lower `FLUXER_MEILISEARCH_MEMORY_LIMIT`.
+
+#### `FLUXER_MEILISEARCH_MAX_INDEXING_THREADS`
+
+Default `2`. Becomes `MEILI_MAX_INDEXING_THREADS`. Without it Meilisearch indexes on half the host's CPU threads, and each thread can use up to 150 MB of buffers, so a host with many cores runs out of memory under a container limit that suits a small one. Raise it only together with `FLUXER_MEILISEARCH_MEMORY_LIMIT`.
 
 #### `FLUXER_MEILISEARCH_ENV`
 
@@ -2034,8 +2038,8 @@ FLUXER_WORKER_MEMORY_LIMIT=1280mb
 FLUXER_WORKER_MEMORY_RESERVATION=768mb
 FLUXER_GATEWAY_MEMORY_LIMIT=512mb
 FLUXER_GATEWAY_MEMORY_RESERVATION=256mb
-FLUXER_MEILISEARCH_MEMORY_LIMIT=512mb
-FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY=256mb
+FLUXER_MEILISEARCH_MEMORY_LIMIT=1gb
+FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY=192mb
 FLUXER_SEAWEEDFS_MEMORY_LIMIT=1gb
 FLUXER_SEAWEEDFS_GOMEMLIMIT=768MiB
 FLUXER_GIFS_SHARD_CACHE_MAX_BYTES=134217728
@@ -2058,8 +2062,9 @@ FLUXER_WORKER_MEMORY_LIMIT=640mb
 FLUXER_WORKER_MEMORY_RESERVATION=384mb
 FLUXER_GATEWAY_MEMORY_LIMIT=384mb
 FLUXER_GATEWAY_MEMORY_RESERVATION=192mb
-FLUXER_MEILISEARCH_MEMORY_LIMIT=384mb
+FLUXER_MEILISEARCH_MEMORY_LIMIT=1gb
 FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY=128mb
+FLUXER_MEILISEARCH_MAX_INDEXING_THREADS=1
 FLUXER_MEDIA_PROXY_MEMORY_LIMIT=320mb
 FLUXER_SEAWEEDFS_MEMORY_LIMIT=320mb
 FLUXER_SEAWEEDFS_GOMEMLIMIT=240MiB

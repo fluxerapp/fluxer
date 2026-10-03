@@ -170,7 +170,6 @@ Fluxer does not stem, expand, or spell-correct the term. A term that matches not
 | 200 | array[[GIF](#gif-object) object] | Results were returned, possibly as an empty array |
 | 400 | [error response](/http-api/#error-response) | `q` is absent, empty, or longer than 256 characters, or `locale` is outside the registry, each returning `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
@@ -210,7 +209,6 @@ Fluxer resolves the category list against the country `US` for every request, wh
 | 200 | response body | Featured GIFs and categories were returned |
 | 400 | [error response](/http-api/#error-response) | `locale` is outside the registry and the request returns `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
@@ -239,7 +237,6 @@ Returns at most 50 trending [GIF objects](#gif-object) for the resolved locale a
 | 200 | array[[GIF](#gif-object) object] | Trending GIFs were returned, possibly as an empty array |
 | 400 | [error response](/http-api/#error-response) | `locale` is outside the registry and the request returns `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
@@ -271,7 +268,6 @@ Suggestions depend on the locale and query, not the requesting address.
 | 200 | array[string] | Suggestions were returned, possibly as an empty array |
 | 400 | [error response](/http-api/#error-response) | `q` is absent, empty, or longer than 256 characters, or `locale` is outside the registry, each returning `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
@@ -308,7 +304,6 @@ The deadline on this route is 3 seconds.
 | 204 | empty | The provider accepted the registration |
 | 400 | [error response](/http-api/#error-response) | `id` is absent, empty, or longer than 300 characters, `q` is longer than 256 characters, or `locale` is outside the registry, each returning `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider rejected the registration, the `gifs` service did not answer within the deadline, or it answered with something other than an acknowledgement, each returning `SERVICE_UNAVAILABLE` |
 

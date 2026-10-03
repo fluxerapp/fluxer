@@ -31,7 +31,6 @@ pub fn account_tab(
             (sessions_card(config, sessions))
             (quick_actions_card(base, user, csrf_token))
             (clear_fields_card(base, user, csrf_token))
-            (user_status_card(base, user, csrf_token))
             (security_actions_card(base, user, csrf_token))
             (webauthn_credentials_card(base, user, webauthn_credentials, csrf_token))
         }
@@ -154,30 +153,12 @@ fn session_entry(base: &str, s: &UserSession, is_tombstone: bool) -> Markup {
 }
 
 fn quick_actions_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
-    let phone_action = format!(
-        "{base}/users/{}?action=update_has_verified_phone&tab=account",
-        user.id
-    );
     html! {
         (card_with_header("Quick Actions", html! {
             div class="flex flex-wrap gap-3" {
                 @if !user.email_verified {
                     (action_form(base, &user.id, "verify_email", "account", None,
                         "Verify Email", csrf_token))
-                }
-                form method="post"
-                    action=(&phone_action)
-                    hx-post=(&phone_action)
-                    hx-target="#flash-container"
-                    hx-swap="none"
-                    hx-push-url="false" {
-                    (csrf_input(csrf_token))
-                    input type="hidden" name="has_verified_phone"
-                        value=@if user.has_verified_phone { "false" } @else { "true" };
-                    button type="submit" class=(BTN_CLS) {
-                        @if user.has_verified_phone { "Clear Phone Verified" }
-                        @else { "Mark Phone Verified" }
-                    }
                 }
                 (action_form(base, &user.id, "send_password_reset", "account", None,
                     "Send Password Reset", csrf_token))
@@ -217,19 +198,6 @@ fn clear_fields_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
                         (submit_button("Clear Selected Fields"))
                     }))
                 }
-            }
-        }))
-    }
-}
-
-fn user_status_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
-    let is_bot = user.bot;
-    let is_sys = user.system;
-    html! {
-        (card_with_header("User Status", html! {
-            div class="grid grid-cols-1 gap-4 md:grid-cols-2" {
-                (status_toggle(base, &user.id, "set_bot_status", is_bot, "bot", csrf_token))
-                (status_toggle(base, &user.id, "set_system_status", is_sys, "system", csrf_token))
             }
         }))
     }
@@ -373,42 +341,5 @@ fn action_form(
             (csrf_input(csrf))
             button type="submit" class=(BTN_CLS) { (label) }
         }
-    }
-}
-
-fn status_toggle(
-    base: &str,
-    uid: &str,
-    action: &str,
-    active: bool,
-    kind: &str,
-    csrf: &str,
-) -> Markup {
-    let status_val = if active { "false" } else { "true" };
-    let label = format!(
-        "{} {} Status",
-        if active { "Remove" } else { "Set" },
-        capitalize(kind)
-    );
-    let action_url = format!("{base}/users/{uid}?action={action}&status={status_val}&tab=account");
-    html! {
-        form method="post"
-            action=(&action_url)
-            hx-post=(&action_url)
-            hx-target="#flash-container"
-            hx-swap="none"
-            hx-push-url="false" {
-            (csrf_input(csrf))
-            input type="hidden" name=(kind) value=(status_val);
-            button type="submit" class=(BTN_CLS) { (label) }
-        }
-    }
-}
-
-fn capitalize(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().chain(c).collect(),
     }
 }

@@ -23,7 +23,7 @@ function collectFailureViolations(snapshot: VoiceMediaGraphSnapshot, violations:
 		if (!failure.streamKey) continue;
 		const currentGeneration = snapshot.watchGenerationByStreamKey.get(failure.streamKey) ?? 0;
 		if (failure.generation <= currentGeneration) continue;
-		violations.push(`failure ${key} carries generation ${failure.generation} newer than current ${currentGeneration}`);
+		violations.push(`failure ${key} has generation ${failure.generation} newer than current ${currentGeneration}`);
 	}
 }
 

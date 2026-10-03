@@ -8,7 +8,6 @@ import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
 import {
 	ORIGIN_HANDOFF_MAX_PAYLOAD_LENGTH,
 	type OriginHandoffCreateResponse,
@@ -110,19 +109,6 @@ describe('Origin handoff', () => {
 			.post(CREATE_PATH)
 			.body({nonce_hash: createNonce().nonceHash, payload: PAYLOAD})
 			.expect(HTTP_STATUS.UNAUTHORIZED)
-			.execute();
-	});
-
-	it('refuses to create a handoff for an account flagged as suspicious', async () => {
-		const account = await createTestAccount(harness);
-		await createBuilderWithoutAuth(harness)
-			.post(`/test/users/${account.userId}/security-flags`)
-			.body({suspicious_activity_flags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE})
-			.execute();
-		await createBuilder(harness, account.token)
-			.post(CREATE_PATH)
-			.body({nonce_hash: createNonce().nonceHash, payload: PAYLOAD})
-			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.ACCOUNT_SUSPICIOUS_ACTIVITY)
 			.execute();
 	});
 
