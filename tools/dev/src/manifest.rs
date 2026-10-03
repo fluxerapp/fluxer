@@ -81,20 +81,6 @@ pub const PROXY_ROUTES: &[ProxyRoute] = &[
         alternate_ports: &[],
     },
     ProxyRoute {
-        prefix: "/marketing/branding",
-        host: LOOPBACK_HOST,
-        port: APP_PROXY_PORT,
-        strip_prefix: false,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
-        prefix: "/marketing/flags",
-        host: LOOPBACK_HOST,
-        port: APP_PROXY_PORT,
-        strip_prefix: false,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
         prefix: "/assets",
         host: LOOPBACK_HOST,
         port: APP_PORT,

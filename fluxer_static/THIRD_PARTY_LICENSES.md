@@ -7,9 +7,7 @@ Third-party assets keep their upstream licenses and attribution requirements.
 | Path | Component | License |
 | --- | --- | --- |
 | `desktop/spellcheck/dictionaries/` | Hunspell dictionaries packaged as exact `dictionary-*` npm package versions | Varies by language; each dictionary directory includes its own `LICENSE`, and the package summary is in `desktop/spellcheck/dictionaries/NOTICE.md`. |
-| `emoji/` | Twemoji graphics from `jdecked/twemoji`, plus spritesheets generated from them as derivatives. Copyright 2014-2021 Twitter, Inc and other contributors, 2022-present Jason Sofonia, Justine De Caires and other contributors | CC-BY-4.0. See `emoji/LICENSE` and `emoji/NOTICE.md`. |
-| `marketing/flags/` | Twemoji flag graphics from `jdecked/twemoji`. Copyright 2014-2021 Twitter, Inc and other contributors, 2022-present Jason Sofonia, Justine De Caires and other contributors | CC-BY-4.0. See `marketing/flags/LICENSE` and `marketing/flags/NOTICE.md`. |
-| `web/og-image-default.png` | Background pattern "I Like Food" from Hero Patterns (https://heropatterns.com) by Steve Schoger | CC-BY-4.0 (https://creativecommons.org/licenses/by/4.0/). |
+| `emoji/` | Twemoji graphics from `jdecked/twemoji`. Copyright 2014-2021 Twitter, Inc and other contributors, 2022-present Jason Sofonia, Justine De Caires and other contributors | CC-BY-4.0. See `emoji/LICENSE` and `emoji/NOTICE.md`. |
 
 `fluxer_app` also bundles this third-party artwork outside this directory:
 
