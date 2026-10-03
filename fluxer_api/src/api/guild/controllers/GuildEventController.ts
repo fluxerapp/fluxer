@@ -3,10 +3,11 @@
 import {createGuildEventID, createGuildID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimit} from '@app/api/middleware/RateLimitMiddleware';
-import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
+import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	GuildEventCreateRequest,
 	GuildEventIdParam,
@@ -14,7 +15,6 @@ import {
 	GuildEventResponse,
 	GuildEventUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildEventSchemas';
-import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
 export function GuildEventController(app: HonoApp) {
 	app.get(
@@ -46,7 +46,8 @@ export function GuildEventController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'create_guild_event',
 			summary: 'Create a community event',
-			description: 'Requires CREATE_EVENTS or MANAGE_EVENTS. Event images pass through explicit-media and banned-content scanners.',
+			description:
+				'Requires CREATE_EVENTS or MANAGE_EVENTS. Event images pass through explicit-media and banned-content scanners.',
 			requestSchema: GuildEventCreateRequest,
 			responseSchema: GuildEventResponse,
 			statusCode: 200,

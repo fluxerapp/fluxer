@@ -233,7 +233,7 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 								checked={draft.image === null}
 								onChange={(e) => setDraft((d) => ({...d, image: e.target.checked ? null : undefined}))}
 							/>
-							Remove current image
+							<span>Remove current image</span>
 						</label>
 					)}
 					<button className={styles.primaryButton} type="submit" disabled={busy}>
@@ -267,10 +267,12 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 									{canEdit && (
 										<div className={styles.actions}>
 											<button type="button" onClick={() => edit(event)} disabled={busy}>
-												<PencilSimpleIcon size={15} aria-hidden /> Edit
+												<PencilSimpleIcon size={15} aria-hidden />
+												<span>Edit</span>
 											</button>
 											<button type="button" onClick={() => void remove(event.id)} disabled={busy}>
-												<TrashIcon size={15} aria-hidden /> Delete
+												<TrashIcon size={15} aria-hidden />
+												<span>Delete</span>
 											</button>
 										</div>
 									)}

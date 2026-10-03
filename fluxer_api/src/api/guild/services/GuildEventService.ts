@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	createGuildEventID,
-	type GuildEventID,
-	type GuildID,
-	type UserID,
-} from '@app/api/BrandedTypes';
+import {createGuildEventID, type GuildEventID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {GuildEventRepository} from '@app/api/guild/repositories/GuildEventRepository';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
@@ -15,13 +10,13 @@ import type {GuildEvent as StoredGuildEvent} from '@app/api/models/GuildEvent';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
 import type {
-	GuildEvent as GuildEventResponse,
 	GuildEventCreate,
+	GuildEvent as GuildEventResponse,
 	GuildEventUpdate,
 } from '@fluxer/schema/src/domains/guild/GuildEventSchemas';
 
@@ -77,11 +72,7 @@ export class GuildEventService {
 		return (await this.repository.list(params.guildId)).map((event) => this.map(event));
 	}
 
-	async create(params: {
-		userId: UserID;
-		guildId: GuildID;
-		data: GuildEventCreate;
-	}): Promise<GuildEventResponse> {
+	async create(params: {userId: UserID; guildId: GuildID; data: GuildEventCreate}): Promise<GuildEventResponse> {
 		const permissions = await this.permissions(params.userId, params.guildId);
 		if (!this.canCreateEvents(permissions)) throw new MissingPermissionsError();
 		const eventId = createGuildEventID(await this.snowflakeService.generate());
