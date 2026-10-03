@@ -405,8 +405,6 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.VISIONARY_REQUIRED_FOR_DISCRIMINATOR]: 'premium_and_plans.visionary_required_for_discriminator',
 	[ValidationErrorCodes.BOT_DISCRIMINATOR_CANNOT_BE_CHANGED]: 'bots.bot_discriminator_cannot_be_changed',
 	[ValidationErrorCodes.BOT_SEARCH_SCOPE_UNAVAILABLE]: 'bots.search_scope_unavailable',
-	[ValidationErrorCodes.USER_MUST_BE_A_BOT_TO_BE_MARKED_AS_A_SYSTEM_USER]:
-		'admin_and_system.user_must_be_bot_for_system_user',
 	[ValidationErrorCodes.USER_IS_NOT_BANNED]: 'moderation_and_reports.user_is_not_banned',
 	[ValidationErrorCodes.NCMEC_ATTACHMENT_MUST_BE_IMAGE_OR_VIDEO]:
 		'moderation_and_reports.ncmec_attachment_must_be_image_or_video',

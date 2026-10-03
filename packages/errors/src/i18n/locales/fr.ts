@@ -42,7 +42,6 @@ const ERROR_I18N_FR_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Le banc de test est désactivé.",
 	"admin_and_system.test_harness_forbidden": "Le banc de test est interdit.",
 	"admin_and_system.update_failed": "Impossible de mettre à jour la ressource. Réessayez.",
-	"admin_and_system.user_must_be_bot_for_system_user": "L'utilisateur doit être un bot pour être marqué comme utilisateur système.",
 	"age_verification.already_verified": "Vous avez déjà effectué la vérification de l’âge.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` et `expires_at` sont nécessaires.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` et `message_id` doivent être des entiers valides.",

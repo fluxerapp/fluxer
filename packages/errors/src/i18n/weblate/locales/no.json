@@ -38,7 +38,6 @@
 	"admin_and_system.test_harness_disabled": "Testrammeverket er deaktivert.",
 	"admin_and_system.test_harness_forbidden": "Testrammeverket er ikke tillatt.",
 	"admin_and_system.update_failed": "Vi kunne ikke oppdatere ressursen. Prøv på nytt.",
-	"admin_and_system.user_must_be_bot_for_system_user": "Brukeren må være en bot for å bli merket som en systembruker.",
 	"age_verification.already_verified": "Du har allerede fullført aldersverifisering.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` og `expires_at` er påkrevd.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` og `message_id` må være gyldige heltall.",

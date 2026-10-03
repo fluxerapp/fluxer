@@ -178,22 +178,6 @@ pub async fn dispatch(
                 "Failed to clear user fields",
             )
         }
-        "set_bot_status" => {
-            let val = form.bool_value("bot");
-            DispatchOutcome::from_result(
-                client.set_bot_status(user_id, val).await,
-                "Bot status updated successfully",
-                "Failed to update bot status",
-            )
-        }
-        "set_system_status" => {
-            let val = form.bool_value("system");
-            DispatchOutcome::from_result(
-                client.set_system_status(user_id, val).await,
-                "System status updated successfully",
-                "Failed to update system status",
-            )
-        }
         "change_username" => {
             let Some(username) = get("username") else {
                 return DispatchOutcome::error("Username is required");

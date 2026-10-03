@@ -42,7 +42,6 @@ const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Testavimo sistema išjungta.",
 	"admin_and_system.test_harness_forbidden": "Testavimo sistema draudžiama.",
 	"admin_and_system.update_failed": "Ištekliaus atnaujinti nepavyko. Pabandyk dar kartą.",
-	"admin_and_system.user_must_be_bot_for_system_user": "Naudotojas turi būti botas, kad jį būtų galima pažymėti kaip sistemos naudotoją.",
 	"age_verification.already_verified": "Amžiaus patvirtinimą jau atlikai.",
 	"attachments_and_uploads.attachment_fields_required": "Reikalingi: `attachment_id`, `channel_id`, `message_id` ir `expires_at`.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` ir `message_id` turi būti galiojantys sveikieji skaičiai.",

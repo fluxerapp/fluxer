@@ -57,7 +57,7 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | deletion_audit_log_reason | ?string | The private reason stored with the pending deletion, and null without `audit_log:view` |
 | deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the pending deletion, or null when it was not recorded |
 | deletion_scheduled_at | ?ISO8601 timestamp | The time the pending deletion was scheduled, or null when it was not recorded |
-| acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 107 entries |
+| acls<sup>7</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 103 entries |
 | traits<sup>8</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
 | has_totp<sup>9</sup> | boolean | Whether a TOTP authenticator is registered |
 | authenticator_types<sup>9</sup> <sup>12</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
@@ -78,7 +78,7 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 
 <sup>6</sup> Written when the account holder schedules its own bulk message deletion, and cleared by [Cancel scheduled message deletion](#cancel-scheduled-message-deletion)
 
-<sup>7</sup> The set written by [Set user ACLs](#set-user-acls), returned in stored order. This set alone decides whether the account can reach the Admin API, and the `STAFF` [account flag](#account-flags) plays no part in that
+<sup>7</sup> The set written by [Set user ACLs](#set-user-acls), returned in stored order with any value outside the [ACL registry](/admin-api/#acl-registry) left out. This set alone decides whether the account can reach the Admin API, and the `STAFF` [account flag](#account-flags) plays no part in that
 
 <sup>8</sup> Sorted in ascending order, unlike `acls`
 
@@ -945,95 +945,6 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
-## Set user bot status
-
-<RouteHeader method="PUT" path="/v1/admin/users/{user_id}/bot-status" auditReason />
-
-Marks the account as a bot or as an ordinary account, and returns the resulting account. Requires `user:update:bot_status`.
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
-
-### JSON body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| bot<sup>1</sup> | boolean | Whether the account is a bot |
-
-<sup>1</sup> Required. Setting it to false also clears `system` in the same write
-
-### Response body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
-
-### Response
-
-| Status | Body | Condition |
-| --- | --- | --- |
-| 200 | response body | Bot status was set |
-| 403<sup>1</sup> | [error response](/admin-api/#error-response) | Credential type or ACL evaluation denies the request. `ACCESS_DENIED` when the target holds an Admin ACL and `bot` is true |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-
-<sup>1</sup> A staff account cannot be converted into a bot. Clear its ACL set with [Set user ACLs](#set-user-acls) first
-
-### Side effects
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions, and each guild the account is a member of receives [Guild Member Update](/gateway/events/#guild-member-update) when the write changes `bot` or `system`.
-
-The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `set_bot_status`, target type `user`, and a metadata key `bot`. Clearing `system` as a side effect records no second entry.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
-
-## Set user system status
-
-<RouteHeader method="PUT" path="/v1/admin/users/{user_id}/system-status" auditReason />
-
-Marks the account as an official system account or removes that marker, and returns the resulting account. Requires `user:update:bot_status`, the same ACL as [Set user bot status](#set-user-bot-status).
-
-### Path parameters
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user_id | snowflake | The ID of the target account |
-
-### JSON body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| system<sup>1</sup> | boolean | Whether the account is a system account |
-
-<sup>1</sup> Required. Setting it to true on an account that is not already a bot fails validation
-
-### Response body
-
-| Field | Type | Description |
-| --- | --- | --- |
-| user | [Admin user](#admin-user-object) object | The resulting account |
-
-### Response
-
-| Status | Body | Condition |
-| --- | --- | --- |
-| 200 | response body | System status was set |
-| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-
-<sup>1</sup> The non-bot case is `INVALID_FORM_BODY` with the validation code `USER_MUST_BE_A_BOT_TO_BE_MARKED_AS_A_SYSTEM_USER` on the `system` path
-
-### Side effects
-
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `set_system_status`, target type `user`, and a metadata key `system`.
-
-### Rate limit
-
-100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
-
 ## Set user ACLs
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/acls" auditReason />
@@ -1060,7 +971,7 @@ A path naming the acting account fails with 403 `ACCESS_DENIED` before the accou
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 107 values |
+| acls<sup>1</sup> | array[string] | Replacement [Admin ACLs](/admin-api/#acl-registry), with at most 103 values |
 
 <sup>1</sup> Required. A value outside the [ACL registry](/admin-api/#acl-registry) fails body validation, and a repeated value is collapsed
 

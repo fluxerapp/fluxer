@@ -42,7 +42,6 @@ const ERROR_I18N_ES_ES_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "El entorno de pruebas está deshabilitado.",
 	"admin_and_system.test_harness_forbidden": "El entorno de pruebas está prohibido.",
 	"admin_and_system.update_failed": "No se pudo actualizar el recurso. Inténtalo de nuevo.",
-	"admin_and_system.user_must_be_bot_for_system_user": "El usuario debe ser un bot para ser marcado como usuario del sistema.",
 	"age_verification.already_verified": "Ya has completado la verificación de edad.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` y `expires_at` son obligatorios.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` y `message_id` deben ser enteros válidos.",

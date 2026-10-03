@@ -38,7 +38,6 @@
 	"admin_and_system.test_harness_disabled": "כלי הבדיקה מושבת.",
 	"admin_and_system.test_harness_forbidden": "השימוש בכלי הבדיקה אסור.",
 	"admin_and_system.update_failed": "לא הצלחנו לעדכן את המשאב. ניתן לנסות שוב.",
-	"admin_and_system.user_must_be_bot_for_system_user": "המשתמש חייב להיות בוט כדי להיות מוגדר כמשתמש מערכת.",
 	"age_verification.already_verified": "כבר השלמת את אימות הגיל.",
 	"attachments_and_uploads.attachment_fields_required": "יש לציין את `attachment_id`, `channel_id`, `message_id` ו-`expires_at`.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` ו-`message_id` חייבים להיות מספרים שלמים תקינים.",

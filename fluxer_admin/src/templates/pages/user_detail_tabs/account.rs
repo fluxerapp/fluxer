@@ -31,7 +31,6 @@ pub fn account_tab(
             (sessions_card(config, sessions))
             (quick_actions_card(base, user, csrf_token))
             (clear_fields_card(base, user, csrf_token))
-            (user_status_card(base, user, csrf_token))
             (security_actions_card(base, user, csrf_token))
             (webauthn_credentials_card(base, user, webauthn_credentials, csrf_token))
         }
@@ -204,19 +203,6 @@ fn clear_fields_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
     }
 }
 
-fn user_status_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
-    let is_bot = user.bot;
-    let is_sys = user.system;
-    html! {
-        (card_with_header("User Status", html! {
-            div class="grid grid-cols-1 gap-4 md:grid-cols-2" {
-                (status_toggle(base, &user.id, "set_bot_status", is_bot, "bot", csrf_token))
-                (status_toggle(base, &user.id, "set_system_status", is_sys, "system", csrf_token))
-            }
-        }))
-    }
-}
-
 fn security_actions_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
     html! {
         (card_with_header("Security Actions", html! {
@@ -355,42 +341,5 @@ fn action_form(
             (csrf_input(csrf))
             button type="submit" class=(BTN_CLS) { (label) }
         }
-    }
-}
-
-fn status_toggle(
-    base: &str,
-    uid: &str,
-    action: &str,
-    active: bool,
-    kind: &str,
-    csrf: &str,
-) -> Markup {
-    let status_val = if active { "false" } else { "true" };
-    let label = format!(
-        "{} {} Status",
-        if active { "Remove" } else { "Set" },
-        capitalize(kind)
-    );
-    let action_url = format!("{base}/users/{uid}?action={action}&status={status_val}&tab=account");
-    html! {
-        form method="post"
-            action=(&action_url)
-            hx-post=(&action_url)
-            hx-target="#flash-container"
-            hx-swap="none"
-            hx-push-url="false" {
-            (csrf_input(csrf))
-            input type="hidden" name=(kind) value=(status_val);
-            button type="submit" class=(BTN_CLS) { (label) }
-        }
-    }
-}
-
-fn capitalize(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().chain(c).collect(),
     }
 }

@@ -42,7 +42,6 @@ const ERROR_I18N_IT_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Ambiente di test disabilitato.",
 	"admin_and_system.test_harness_forbidden": "Ambiente di test vietato.",
 	"admin_and_system.update_failed": "Non è stato possibile aggiornare la risorsa. Riprova.",
-	"admin_and_system.user_must_be_bot_for_system_user": "L'utente deve essere un bot per essere contrassegnato come utente di sistema.",
 	"age_verification.already_verified": "Hai già completato la verifica dell'età.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` e `expires_at` sono richiesti.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` e `message_id` devono essere interi validi.",

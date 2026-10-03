@@ -38,7 +38,6 @@
 	"admin_and_system.test_harness_disabled": "Test-Harness ist deaktiviert.",
 	"admin_and_system.test_harness_forbidden": "Test-Harness ist verboten.",
 	"admin_and_system.update_failed": "Wir konnten die Ressource nicht aktualisieren. Bitte versuche es erneut.",
-	"admin_and_system.user_must_be_bot_for_system_user": "Ein Benutzer muss ein Bot sein, um als Systembenutzer markiert zu werden.",
 	"age_verification.already_verified": "Du hast die Altersbestätigung bereits abgeschlossen.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` und `expires_at` sind erforderlich.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` und `message_id` müssen gültige Ganzzahlen sein.",

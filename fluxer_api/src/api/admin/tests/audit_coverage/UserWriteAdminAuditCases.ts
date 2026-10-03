@@ -186,39 +186,6 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 		},
 	},
 	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/bot-status',
-		async prepare({harness}) {
-			const target = await createTestAccount(harness);
-			return {
-				request: {path: `/admin/users/${target.userId}/bot-status`, body: {bot: true}},
-				expected: {
-					action: 'set_bot_status',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {bot: 'true'},
-				},
-			};
-		},
-	},
-	{
-		method: 'PUT',
-		route: '/admin/users/:user_id/system-status',
-		async prepare(context) {
-			const target = await createTestAccount(context.harness);
-			await adminBuilder(context).put(`/admin/users/${target.userId}/bot-status`).body({bot: true}).execute();
-			return {
-				request: {path: `/admin/users/${target.userId}/system-status`, body: {system: true}},
-				expected: {
-					action: 'set_system_status',
-					targetType: 'user',
-					targetId: target.userId,
-					metadata: {system: 'true'},
-				},
-			};
-		},
-	},
-	{
 		method: 'PATCH',
 		route: '/admin/users/:user_id/username',
 		async prepare({harness}) {

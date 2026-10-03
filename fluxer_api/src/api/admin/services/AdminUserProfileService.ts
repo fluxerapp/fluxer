@@ -11,9 +11,6 @@ import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorS
 import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {TagAlreadyTakenError} from '@fluxer/errors/src/domains/user/TagAlreadyTakenError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
@@ -21,8 +18,6 @@ import type {
 	ChangeEmailRequest,
 	ChangeUsernameRequest,
 	ClearUserFieldsRequest,
-	SetUserBotStatusRequest,
-	SetUserSystemStatusRequest,
 	VerifyUserEmailRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {types} from 'cassandra-driver';
@@ -99,75 +94,6 @@ export class AdminUserProfileService {
 			action: 'clear_fields',
 			auditLogReason,
 			metadata: new Map([['fields', data.fields.join(',')]]),
-		});
-		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
-	}
-
-	async setUserBotStatus(
-		data: SetUserBotStatusRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
-		const userId = createUserID(data.user_id);
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		if (data.bot && user.acls.size > 0) {
-			throw new AccessDeniedError();
-		}
-		const updates: Record<string, boolean> = {bot: data.bot};
-		if (!data.bot) {
-			updates['system'] = false;
-		}
-		const updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(userId),
-			action: 'set_bot_status',
-			auditLogReason,
-			metadata: new Map([['bot', data.bot.toString()]]),
-		});
-		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
-	}
-
-	async setUserSystemStatus(
-		data: SetUserSystemStatusRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
-		const userId = createUserID(data.user_id);
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		if (data.system && !user.isBot) {
-			throw InputValidationError.fromCode(
-				'system',
-				ValidationErrorCodes.USER_MUST_BE_A_BOT_TO_BE_MARKED_AS_A_SYSTEM_USER,
-			);
-		}
-		const updatedUser = await userRepository.patchUpsert(userId, {system: data.system}, user.toRow());
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(userId),
-			action: 'set_system_status',
-			auditLogReason,
-			metadata: new Map([['system', data.system.toString()]]),
 		});
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),

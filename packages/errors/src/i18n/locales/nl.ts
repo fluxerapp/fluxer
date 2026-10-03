@@ -42,7 +42,6 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "Testfunctionaliteit is uitgeschakeld.",
 	"admin_and_system.test_harness_forbidden": "Testfunctionaliteit is verboden.",
 	"admin_and_system.update_failed": "We konden het item niet bijwerken. Probeer het opnieuw.",
-	"admin_and_system.user_must_be_bot_for_system_user": "Gebruiker moet een bot zijn om als systeemgebruiker te worden gemarkeerd.",
 	"age_verification.already_verified": "Je hebt de leeftijdsverificatie al voltooid.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` en `expires_at` zijn verplicht.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` en `message_id` moeten geldige gehele getallen zijn.",

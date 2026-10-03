@@ -19,7 +19,6 @@ import {
 	AdminUserAclsRequest,
 	AdminUserBanNoteRequest,
 	AdminUserBanRequest,
-	AdminUserBotStatusRequest,
 	AdminUserChangeLogQuery,
 	AdminUserClearFieldsRequest,
 	AdminUserDeletionCancelRequest,
@@ -34,7 +33,6 @@ import {
 	AdminUserPremiumFlagsUpdateRequest,
 	AdminUserRelationshipCategoryQuery,
 	AdminUserRelationshipParam,
-	AdminUserSystemStatusRequest,
 	AdminUsersMeResponse,
 	AdminUserTraitsRequest,
 	AdminUserUnbanRequest,
@@ -590,70 +588,6 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
 				await adminService.userService.profileService.clearUserFields(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
-	app.put(
-		'/admin/users/:user_id/bot-status',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_UPDATE_BOT_STATUS),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserBotStatusRequest),
-		OpenAPI({
-			operationId: 'set_admin_user_bot_status',
-			summary: 'Set user bot status',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Mark or unmark a user account as a bot. Controls bot badge visibility and API permissions. Creates audit log entry. Requires USER_UPDATE_BOT_STATUS permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.profileService.setUserBotStatus(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
-	app.put(
-		'/admin/users/:user_id/system-status',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_UPDATE_BOT_STATUS),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserSystemStatusRequest),
-		OpenAPI({
-			operationId: 'set_admin_user_system_status',
-			summary: 'Set user system status',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Mark or unmark a user as a system account. System accounts have special permissions for automated operations. Creates audit log entry. Requires USER_UPDATE_BOT_STATUS permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.profileService.setUserSystemStatus(
 					{user_id: userId, ...ctx.req.valid('json')},
 					adminUserId,
 					auditLogReason,

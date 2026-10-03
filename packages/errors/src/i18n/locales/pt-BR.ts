@@ -42,7 +42,6 @@ const ERROR_I18N_PT_BR_MESSAGES = defineErrorI18nLocaleMessages({
 	"admin_and_system.test_harness_disabled": "A ferramenta de teste está desativada.",
 	"admin_and_system.test_harness_forbidden": "A ferramenta de teste é proibida.",
 	"admin_and_system.update_failed": "Não foi possível atualizar o recurso. Tente de novo.",
-	"admin_and_system.user_must_be_bot_for_system_user": "O usuário deve ser um bot para ser marcado como usuário de sistema.",
 	"age_verification.already_verified": "Você já concluiu a verificação de idade.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` e `expires_at` são obrigatórios.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` e `message_id` devem ser números inteiros válidos.",

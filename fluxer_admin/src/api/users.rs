@@ -305,28 +305,6 @@ impl AdminApiClient {
         Ok(resp.user)
     }
 
-    pub async fn set_bot_status(&self, user_id: &str, is_bot: bool) -> ApiResult<AdminUser> {
-        let body = generated_types::AdminUserBotStatusRequest { bot: is_bot };
-        let response = self
-            .generated()
-            .set_admin_user_bot_status(&snowflake(user_id), &body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.user)
-    }
-
-    pub async fn set_system_status(&self, user_id: &str, is_system: bool) -> ApiResult<AdminUser> {
-        let body = generated_types::AdminUserSystemStatusRequest { system: is_system };
-        let response = self
-            .generated()
-            .set_admin_user_system_status(&snowflake(user_id), &body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
-        Ok(resp.user)
-    }
-
     pub async fn change_username(
         &self,
         user_id: &str,

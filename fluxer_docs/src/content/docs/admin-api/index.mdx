@@ -61,7 +61,7 @@ A body with none of those fields resolves to no ACL at all and applies no change
 
 Fluxer checks each ACL an Admin grants against the ACLs that Admin holds. [Set user ACLs](/admin-api/users/#set-user-acls) and [Create Admin API key](/admin-api/api-keys/#create-admin-api-key) both refuse to write an ACL the acting Admin does not itself hold, with 403 `MISSING_ACL`. A wildcard holder is exempt. Set user ACLs also refuses the acting Admin's own account with 403 `ACCESS_DENIED`, and it looks up the target account before it checks the granted ACLs, so an unknown ID fails first with 404 `UNKNOWN_USER`.
 
-[Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 107 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
+[Set user ACLs](/admin-api/users/#set-user-acls), [Create Admin API key](/admin-api/api-keys/#create-admin-api-key), and [Update Admin API key](/admin-api/api-keys/#update-admin-api-key) each accept at most 103 ACLs and validate every entry against the registry, so a value outside it returns 400 `INVALID_FORM_BODY`.
 
 :::caution[`*` satisfies every present and future ACL]
 A key whose owning account holds `*` skips the owner check. An Admin holding `*` can grant any ACL.
@@ -373,8 +373,6 @@ An entry with any other action has `access` set to `write`.
 | schedule_deletion | Account deletion was scheduled |
 | send_password_reset | A password reset message was requested for an account |
 | set_acls | The Admin ACL set of an account was replaced |
-| set_bot_status | The bot flag of an account was changed |
-| set_system_status | The system flag of an account was changed |
 | set_traits | Account traits were replaced |
 | shutdown_guild | One guild was stopped on the main Gateway |
 | system_dm.send | A system DM broadcast was created |
@@ -476,7 +474,7 @@ Returns every Admin permission string the instance recognises, in [ACL registry]
 
 | Field | Type | Description |
 | --- | --- | --- |
-| acls<sup>1</sup> | array[string] | The permission strings the Admin API recognises (at most 107 entries) |
+| acls<sup>1</sup> | array[string] | The permission strings the Admin API recognises (at most 103 entries) |
 
 <sup>1</sup> The response is the registry itself and does not vary with the caller's own ACL set
 
@@ -589,7 +587,6 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | user:view:email<sup>6</sup> | Unredacts user email addresses and email verification state |
 | user:view:ip<sup>6</sup> | Unredacts the last active IP address and the location derived from it |
 | user:temp_ban | Applies and removes an account ban |
-| user:update:bot_status | Updates bot and system account state |
 | user:update:dob | Updates dates of birth |
 | user:update:email | Updates the email address, marks the address verified, resends verification, and sends a password reset |
 | user:update:flags | Updates account flags and premium flags, refreshes in-app purchases, and ends every login session of an account |

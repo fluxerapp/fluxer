@@ -89,7 +89,6 @@ export const AdminACLs = {
 	USER_VIEW_EMAIL: 'user:view:email',
 	USER_VIEW_IP: 'user:view:ip',
 	USER_TEMP_BAN: 'user:temp_ban',
-	USER_UPDATE_BOT_STATUS: 'user:update:bot_status',
 	USER_UPDATE_DOB: 'user:update:dob',
 	USER_UPDATE_EMAIL: 'user:update:email',
 	USER_UPDATE_FLAGS: 'user:update:flags',
@@ -106,3 +105,9 @@ export const AdminACLs = {
 	VOICE_SERVER_LIST: 'voice:server:list',
 	VOICE_SERVER_UPDATE: 'voice:server:update',
 } as const;
+
+const KNOWN_ADMIN_ACLS: ReadonlySet<string> = new Set(Object.values(AdminACLs));
+
+export function filterKnownAdminACLs(acls: Iterable<string>): Array<string> {
+	return Array.from(acls).filter((acl) => KNOWN_ADMIN_ACLS.has(acl));
+}

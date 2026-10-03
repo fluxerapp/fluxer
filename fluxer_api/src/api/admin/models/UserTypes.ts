@@ -2,7 +2,7 @@
 
 import type {User} from '@app/api/models/User';
 import {getIpAddressReverse, lookupGeoip} from '@app/api/utils/IpUtils';
-import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {AdminACLs, filterKnownAdminACLs} from '@fluxer/constants/src/AdminACLs';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
@@ -65,7 +65,7 @@ export async function mapUserToAdminResponse(
 		deletion_audit_log_reason: canViewAuditLog ? user.deletionAuditLogReason : null,
 		deletion_scheduled_by: user.deletionScheduledBy?.toString() ?? null,
 		deletion_scheduled_at: user.deletionScheduledAt?.toISOString() ?? null,
-		acls: user.acls ? Array.from(user.acls) : [],
+		acls: user.acls ? filterKnownAdminACLs(user.acls) : [],
 		traits: Array.from(user.traits).sort(),
 		has_totp: user.totpSecret !== null,
 		authenticator_types: user.authenticatorTypes ? Array.from(user.authenticatorTypes) : [],

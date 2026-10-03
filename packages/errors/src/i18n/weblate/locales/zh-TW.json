@@ -38,7 +38,6 @@
 	"admin_and_system.test_harness_disabled": "測試工具已停用。",
 	"admin_and_system.test_harness_forbidden": "禁止使用測試工具。",
 	"admin_and_system.update_failed": "我們無法更新資源。請再試一次。",
-	"admin_and_system.user_must_be_bot_for_system_user": "使用者必須是機器人才能標記為系統使用者。",
 	"age_verification.already_verified": "你已完成年齡驗證。",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`、`channel_id`、`message_id` 和 `expires_at` 為必填。",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`、`channel_id` 和 `message_id` 必須為有效的整數。",

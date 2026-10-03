@@ -38,7 +38,6 @@
 	"admin_and_system.test_harness_disabled": "Cadrul de testare este dezactivat.",
 	"admin_and_system.test_harness_forbidden": "Cadrul de testare este interzis.",
 	"admin_and_system.update_failed": "Resursa nu a putut fi actualizată. Încearcă din nou.",
-	"admin_and_system.user_must_be_bot_for_system_user": "Utilizatorul trebuie să fie un bot pentru a fi marcat ca utilizator de sistem.",
 	"age_verification.already_verified": "Ai finalizat deja verificarea vârstei.",
 	"attachments_and_uploads.attachment_fields_required": "`attachment_id`, `channel_id`, `message_id` și `expires_at` sunt obligatorii.",
 	"attachments_and_uploads.attachment_ids_must_be_valid_integers": "`attachment_id`, `channel_id` și `message_id` trebuie să fie numere întregi valide.",
