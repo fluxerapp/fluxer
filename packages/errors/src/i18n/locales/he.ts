@@ -381,7 +381,7 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "משתמש זה לא חסום.",
 	"names_and_normalization.name_empty_after_normalization": "השם לא יכול להיות ריק לאחר נורמליזציה.",
 	"permissions.global_ip_banned": "כתובת ה-IP שלך {ipAddress} נחסמה לצמיתות מ-Fluxer API על ידי מנהלי הפלטפורמה. אם לדעתך זו טעות, אפשר לפנות אל support@fluxer.app כדי לערער. יש לכלול את כתובת ה-IP הזו בערעור.",
-	"permissions.global_ip_temporarily_banned": "כתובת ה-IP שלך {ipAddress} נחסמה זמנית מ-Fluxer API למשך 24 שעות בגלל דפוסי גישה פוגעניים או חריגים. בדרך כלל איננו מאפשרים ערעורים על חסימות API זמניות. אפשר להחליף כתובת IP או להמתין לסיום החסימה, ולבדוק את דפוסי הגישה ל-Fluxer API שמגיעים מהלקוח שלך.",
+	"permissions.global_ip_temporarily_banned": "כתובת ה-IP שלך {ipAddress} נחסמה זמנית מ-Fluxer API. החסימה תוסר אוטומטית כשתפוג. אם לדעתך זו טעות, אפשר לפנות אל support@fluxer.com ולציין את כתובת ה-IP הזו.",
 	"permissions.missing_access": "אין לך גישה למשאב או לתכונה הזו.",
 	"permissions.missing_permissions": "אין לך את ההרשאות הנדרשות לביצוע פעולה זו.",
 	"permissions.user_banned_from_guild": "משתמש זה חסום בקהילה זו.",

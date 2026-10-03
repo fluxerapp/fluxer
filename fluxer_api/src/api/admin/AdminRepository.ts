@@ -161,38 +161,43 @@ export class AdminRepository implements IAdminRepository {
 		return false;
 	}
 
-	async banIp(ip: string): Promise<void> {
-		if (isIpBanExempt(ip)) {
-			return;
-		}
-		const canonicalIp = canonicalizeBannedIpEntry(ip);
-		await upsertOne(
-			BannedIps.insert({
-				ip: canonicalIp,
-				ban_kind: 'permanent',
-				reason: 'platform_admin_enforcement',
-				expires_at: null,
-				created_at: new Date(),
-			}),
-		);
+	async banIp(ip: string, ttlSeconds: number | null = null): Promise<void> {
+		await this.writeIpBan(ip, 'platform_admin_enforcement', ttlSeconds);
 	}
 
 	async banIpTemp(ip: string, ttlSeconds: number): Promise<void> {
-		if (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0) {
+		await this.writeIpBan(ip, 'abusive_api_access_patterns', ttlSeconds);
+	}
+
+	private async writeIpBan(ip: string, reason: string, ttlSeconds: number | null): Promise<void> {
+		if (ttlSeconds !== null && (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0)) {
 			throw new RangeError('Temporary IP ban TTL must be a positive integer');
 		}
 		if (isIpBanExempt(ip)) {
 			return;
 		}
 		const canonicalIp = canonicalizeBannedIpEntry(ip);
+		const createdAt = new Date();
+		if (ttlSeconds === null) {
+			await upsertOne(
+				BannedIps.insert({
+					ip: canonicalIp,
+					ban_kind: 'permanent',
+					reason,
+					expires_at: null,
+					created_at: createdAt,
+				}),
+			);
+			return;
+		}
 		await upsertOne(
 			BannedIps.insertWithTtl(
 				{
 					ip: canonicalIp,
 					ban_kind: 'temporary_24h',
-					reason: 'abusive_api_access_patterns',
-					expires_at: new Date(Date.now() + ttlSeconds * 1000),
-					created_at: new Date(),
+					reason,
+					expires_at: new Date(createdAt.getTime() + ttlSeconds * 1000),
+					created_at: createdAt,
 				},
 				ttlSeconds,
 			),
@@ -228,13 +233,16 @@ export class AdminRepository implements IAdminRepository {
 			expires_at?: Date | null;
 			created_at?: Date | null;
 		}>(LOAD_ALL_BANNED_IPS_QUERY.bind({}));
-		return rows.map((row) => ({
-			ip: row.ip,
-			kind: parseBannedIpKind(row.ban_kind),
-			reason: row.reason ?? null,
-			expiresAt: row.expires_at ?? null,
-			createdAt: row.created_at ?? null,
-		}));
+		const now = Date.now();
+		return rows
+			.filter((row) => !row.expires_at || row.expires_at.getTime() > now)
+			.map((row) => ({
+				ip: row.ip,
+				kind: parseBannedIpKind(row.ban_kind),
+				reason: row.reason ?? null,
+				expiresAt: row.expires_at ?? null,
+				createdAt: row.created_at ?? null,
+			}));
 	}
 
 	async isEmailBanned(email: string): Promise<boolean> {

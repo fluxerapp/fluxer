@@ -12181,8 +12181,15 @@
 			},
 			"BanCheckResponseSchema": {
 				"type": "object",
-				"properties": {"banned": {"type": "boolean"}},
-				"required": ["banned"],
+				"properties": {
+					"banned": {"type": "boolean"},
+					"expires_at": {
+						"nullable": true,
+						"description": "ISO 8601 timestamp when the matching ban expires. Null when the ban is permanent, when nothing matches, and on every blocklist other than ip.",
+						"type": "string"
+					}
+				},
+				"required": ["banned", "expires_at"],
 				"additionalProperties": false
 			},
 			"AdminBlocklistBulkDeleteRequest": {
@@ -13017,7 +13024,15 @@
 			},
 			"BanIpRequest": {
 				"type": "object",
-				"properties": {"ip": {"description": "IPv4/IPv6 address or CIDR range to ban", "type": "string"}},
+				"properties": {
+					"ip": {"description": "IPv4/IPv6 address or CIDR range to ban", "type": "string"},
+					"duration_hours": {
+						"description": "Hours until the ban expires and its entry is removed. Omit it or use 0 for a permanent ban.",
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 8760
+					}
+				},
 				"required": ["ip"]
 			},
 			"EmailBlocklistEntryType": {"type": "string"},

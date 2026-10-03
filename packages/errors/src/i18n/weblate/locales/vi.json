@@ -377,7 +377,7 @@
 	"moderation_and_reports.user_is_not_banned": "Người dùng này không bị cấm.",
 	"names_and_normalization.name_empty_after_normalization": "Tên không được để trống sau khi chuẩn hóa.",
 	"permissions.global_ip_banned": "Địa chỉ IP của bạn {ipAddress} đã bị quản trị viên nền tảng chặn vĩnh viễn khỏi Fluxer API. Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ support@fluxer.app để khiếu nại. Hãy kèm địa chỉ IP này trong khiếu nại.",
-	"permissions.global_ip_temporarily_banned": "Địa chỉ IP của bạn {ipAddress} đã bị chặn tạm thời khỏi Fluxer API trong 24 giờ do hành vi truy cập lạm dụng hoặc bất thường. Chúng tôi thường không tiếp nhận khiếu nại cho các lệnh cấm API tạm thời. Hãy đổi địa chỉ IP hoặc chờ lệnh cấm hết hạn, và xem lại cách client của bạn truy cập Fluxer API.",
+	"permissions.global_ip_temporarily_banned": "Địa chỉ IP của bạn {ipAddress} đã bị chặn tạm thời khỏi Fluxer API. Lệnh chặn sẽ tự động được gỡ khi hết hạn. Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ support@fluxer.com và kèm theo địa chỉ IP này.",
 	"permissions.missing_access": "Bạn không có quyền truy cập vào tài nguyên hoặc tính năng này.",
 	"permissions.missing_permissions": "Bạn không có quyền cần thiết để thực hiện hành động này.",
 	"permissions.user_banned_from_guild": "Người dùng này đã bị cấm khỏi cộng đồng này.",

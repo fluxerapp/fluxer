@@ -377,7 +377,7 @@
 	"moderation_and_reports.user_is_not_banned": "이 사용자는 차단되지 않았어요.",
 	"names_and_normalization.name_empty_after_normalization": "정규화 후 이름은 비워둘 수 없어요.",
 	"permissions.global_ip_banned": "회원님의 IP 주소 {ipAddress}는 플랫폼 관리자가 Fluxer API에서 영구 차단했어요. 오류라고 생각한다면 support@fluxer.app으로 문의해 이의를 제기해 주세요. 이의 제기에는 이 IP 주소를 포함해 주세요.",
-	"permissions.global_ip_temporarily_banned": "회원님의 IP 주소 {ipAddress}는 악용 또는 비정상적인 접근 패턴으로 인해 Fluxer API에서 24시간 동안 일시 차단되었어요. 일시적인 API 차단은 보통 이의 제기를 받지 않아요. IP 주소를 변경하거나 차단이 만료될 때까지 기다리고, 클라이언트에서 Fluxer API로 발생하는 접근 패턴을 검토해 주세요.",
+	"permissions.global_ip_temporarily_banned": "회원님의 IP 주소 {ipAddress}는 Fluxer API에서 일시 차단되었어요. 차단은 기간이 끝나면 자동으로 해제돼요. 오류라고 생각한다면 이 IP 주소를 포함해 support@fluxer.com으로 문의해 주세요.",
 	"permissions.missing_access": "이 리소스 또는 기능에 접근할 권한이 없어요.",
 	"permissions.missing_permissions": "이 작업을 수행하는 데 필요한 권한이 없어요.",
 	"permissions.user_banned_from_guild": "이 사용자는 이 커뮤니티에서 차단되었어요.",

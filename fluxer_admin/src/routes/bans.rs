@@ -90,16 +90,7 @@ async fn generic_ban_post(
     };
     let value = extract_value(form, ban_cfg.input_name);
     let is_htmx = htmx::is_htmx_request(headers);
-    let (level, msg) = execute_ban(
-        &client,
-        ban_key,
-        action,
-        &value,
-        form.hashes.as_deref(),
-        form.sha256_list.as_deref(),
-        form.audit_log_reason.as_deref(),
-    )
-    .await;
+    let (level, msg) = execute_ban(&client, ban_key, action, &value, form).await;
     flash_response(config, auth, is_htmx, level, &msg, ban_cfg, csrf_token)
 }
 

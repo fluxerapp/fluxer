@@ -381,7 +381,7 @@ const ERROR_I18N_NO_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "Denne brukeren er ikke utestengt.",
 	"names_and_normalization.name_empty_after_normalization": "Navnet kan ikke være tomt etter normalisering.",
 	"permissions.global_ip_banned": "IP-adressen din {ipAddress} er permanent blokkert fra Fluxer-API-et av plattformadministratorene. Hvis du mener dette er en feil, kan du kontakte support@fluxer.app for å klage. Ta med denne IP-adressen i klagen.",
-	"permissions.global_ip_temporarily_banned": "IP-adressen din {ipAddress} er midlertidig blokkert fra Fluxer-API-et i 24 timer på grunn av misbruk eller uvanlige tilgangsmønstre. Vi tilbyr vanligvis ikke mulighet til å klage på midlertidige API-utestengelser. Bytt IP-adresse eller vent til utestengelsen utløper, og gjennomgå hvordan klienten din bruker Fluxer-API-et.",
+	"permissions.global_ip_temporarily_banned": "IP-adressen din {ipAddress} er midlertidig blokkert fra Fluxer-API-et. Blokkeringen oppheves automatisk når den utløper. Hvis du mener dette er en feil, kan du kontakte support@fluxer.com og oppgi denne IP-adressen.",
 	"permissions.missing_access": "Du har ikke tilgang til denne ressursen eller funksjonen.",
 	"permissions.missing_permissions": "Du har ikke de nødvendige tillatelsene til å utføre denne handlingen.",
 	"permissions.user_banned_from_guild": "Denne brukeren er utestengt fra dette fellesskapet.",

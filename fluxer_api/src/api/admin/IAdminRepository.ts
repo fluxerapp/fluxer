@@ -43,7 +43,7 @@ export abstract class IAdminRepository {
 
 	abstract isIpBanned(ip: string): Promise<boolean>;
 
-	abstract banIp(ip: string): Promise<void>;
+	abstract banIp(ip: string, ttlSeconds?: number | null): Promise<void>;
 
 	abstract banIpTemp(ip: string, ttlSeconds: number): Promise<void>;
 

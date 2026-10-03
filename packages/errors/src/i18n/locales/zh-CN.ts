@@ -381,7 +381,7 @@ const ERROR_I18N_ZH_CN_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "此用户未被封禁。",
 	"names_and_normalization.name_empty_after_normalization": "规范化后名称不能为空。",
 	"permissions.global_ip_banned": "你的 IP 地址 {ipAddress} 已被平台管理员永久禁止访问 Fluxer API。如果你认为这是误判，请联系 support@fluxer.app 申诉。请在申诉中附上此 IP 地址。",
-	"permissions.global_ip_temporarily_banned": "你的 IP 地址 {ipAddress} 因存在滥用或异常访问模式，已被临时禁止访问 Fluxer API，为期 24 小时。临时 API 封禁通常不提供申诉。请更换 IP 地址或等待封禁到期，并检查你的客户端对 Fluxer API 的访问模式。",
+	"permissions.global_ip_temporarily_banned": "你的 IP 地址 {ipAddress} 已被临时禁止访问 Fluxer API。限制到期后会自动解除。如果你认为这是误判，请联系 support@fluxer.com 并附上此 IP 地址。",
 	"permissions.missing_access": "你无权访问此资源或功能。",
 	"permissions.missing_permissions": "你没有执行此操作所需的权限。",
 	"permissions.user_banned_from_guild": "此用户已被此社区封禁。",

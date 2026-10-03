@@ -377,7 +377,7 @@
 	"moderation_and_reports.user_is_not_banned": "Этот пользователь не забанен.",
 	"names_and_normalization.name_empty_after_normalization": "Имя не может быть пустым после нормализации.",
 	"permissions.global_ip_banned": "Твой IP-адрес {ipAddress} навсегда заблокирован в Fluxer API администраторами платформы. Если считаешь, что это ошибка, напиши на support@fluxer.app, чтобы подать апелляцию. Укажи в ней этот IP-адрес.",
-	"permissions.global_ip_temporarily_banned": "Твой IP-адрес {ipAddress} временно заблокирован в Fluxer API на 24 часа из-за злоупотреблений или необычного характера запросов. Апелляции по временным блокировкам API мы обычно не рассматриваем. Смени IP-адрес или дождись окончания блокировки и проверь, как твой клиент обращается к Fluxer API.",
+	"permissions.global_ip_temporarily_banned": "Твой IP-адрес {ipAddress} временно заблокирован в Fluxer API. Блокировка снимется автоматически, когда истечёт её срок. Если считаешь, что это ошибка, напиши на support@fluxer.com и укажи этот IP-адрес.",
 	"permissions.missing_access": "У тебя нет доступа к этому ресурсу или функции.",
 	"permissions.missing_permissions": "У тебя нет необходимых разрешений для выполнения этого действия.",
 	"permissions.user_banned_from_guild": "Этот пользователь забанен в этом сообществе.",

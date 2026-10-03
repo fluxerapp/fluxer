@@ -377,7 +377,7 @@
 	"moderation_and_reports.user_is_not_banned": "L'utente non è bannato.",
 	"names_and_normalization.name_empty_after_normalization": "Il nome non può essere vuoto dopo la normalizzazione.",
 	"permissions.global_ip_banned": "Il tuo indirizzo IP {ipAddress} è stato bloccato in modo permanente dall'API Fluxer dagli amministratori della piattaforma. Se pensi che sia un errore, contatta support@fluxer.app per fare ricorso. Includi questo indirizzo IP nel ricorso.",
-	"permissions.global_ip_temporarily_banned": "Il tuo indirizzo IP {ipAddress} è stato bloccato temporaneamente dall'API Fluxer per 24 ore a causa di schemi di accesso abusivi o insoliti. Di solito non offriamo ricorsi per i ban temporanei dell'API. Cambia indirizzo IP o attendi la scadenza del ban, e controlla gli schemi di accesso all'API Fluxer provenienti dal tuo client.",
+	"permissions.global_ip_temporarily_banned": "Il tuo indirizzo IP {ipAddress} è stato bloccato temporaneamente dall'API Fluxer. Il blocco verrà rimosso automaticamente alla scadenza. Se pensi che sia un errore, contatta support@fluxer.com indicando questo indirizzo IP.",
 	"permissions.missing_access": "Non hai accesso a questa risorsa o funzionalità.",
 	"permissions.missing_permissions": "Non hai le autorizzazioni necessarie per eseguire questa azione.",
 	"permissions.user_banned_from_guild": "L'utente è bannato da questa community.",

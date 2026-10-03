@@ -381,7 +381,7 @@ const ERROR_I18N_TH_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "ผู้ใช้รายนี้ไม่ได้ถูกแบน",
 	"names_and_normalization.name_empty_after_normalization": "ชื่อต้องไม่ว่างเปล่าหลังจากการปรับให้เป็นมาตรฐาน",
 	"permissions.global_ip_banned": "ที่อยู่ IP ของคุณ {ipAddress} ถูกบล็อกจาก Fluxer API อย่างถาวรโดยผู้ดูแลแพลตฟอร์ม หากคุณเชื่อว่านี่เป็นข้อผิดพลาด โปรดติดต่อ support@fluxer.app เพื่ออุทธรณ์ โปรดแนบที่อยู่ IP นี้ในการอุทธรณ์",
-	"permissions.global_ip_temporarily_banned": "ที่อยู่ IP ของคุณ {ipAddress} ถูกบล็อกจาก Fluxer API ชั่วคราวเป็นเวลา 24 ชั่วโมงเนื่องจากรูปแบบการเข้าถึงที่ผิดปกติหรือมีลักษณะละเมิด โดยปกติเราไม่รับอุทธรณ์สำหรับการแบน API ชั่วคราว โปรดเปลี่ยนที่อยู่ IP หรือรอให้การแบนหมดอายุ และตรวจสอบรูปแบบการเข้าถึง Fluxer API ที่มาจากไคลเอนต์ของคุณ",
+	"permissions.global_ip_temporarily_banned": "ที่อยู่ IP ของคุณ {ipAddress} ถูกบล็อกจาก Fluxer API ชั่วคราว การบล็อกจะถูกยกเลิกโดยอัตโนมัติเมื่อหมดเวลา หากคุณเชื่อว่านี่เป็นข้อผิดพลาด โปรดติดต่อ support@fluxer.com และแนบที่อยู่ IP นี้มาด้วย",
 	"permissions.missing_access": "คุณไม่มีสิทธิ์เข้าถึงทรัพยากรหรือฟีเจอร์นี้",
 	"permissions.missing_permissions": "คุณไม่มีสิทธิ์ที่จำเป็นในการดำเนินการนี้",
 	"permissions.user_banned_from_guild": "ผู้ใช้รายนี้ถูกแบนจากคอมมูนิตี้นี้",

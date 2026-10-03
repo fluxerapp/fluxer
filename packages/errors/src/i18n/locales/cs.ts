@@ -381,7 +381,7 @@ const ERROR_I18N_CS_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "Tento uživatel není zabanován.",
 	"names_and_normalization.name_empty_after_normalization": "Název nemůže být po normalizaci prázdný.",
 	"permissions.global_ip_banned": "Vaše IP adresa {ipAddress} byla správci platformy trvale zablokována pro Fluxer API. Pokud se domníváte, že jde o chybu, podejte odvolání na adrese support@fluxer.app. V odvolání uveďte tuto IP adresu.",
-	"permissions.global_ip_temporarily_banned": "Vaše IP adresa {ipAddress} byla na 24 hodin zablokována pro Fluxer API kvůli zneužívajícímu nebo neobvyklému způsobu přístupu. Odvolání proti dočasným blokacím API obvykle nevyřizujeme. Změňte IP adresu nebo počkejte na vypršení blokace a zkontrolujte, jak váš klient přistupuje k Fluxer API.",
+	"permissions.global_ip_temporarily_banned": "Vaše IP adresa {ipAddress} byla dočasně zablokována pro Fluxer API. Blokace se po vypršení sama zruší. Pokud se domníváte, že jde o chybu, napište na adresu support@fluxer.com a uveďte tuto IP adresu.",
 	"permissions.missing_access": "Nemáte přístup k tomuto zdroji nebo funkci.",
 	"permissions.missing_permissions": "Nemáte potřebná oprávnění k provedení této akce.",
 	"permissions.user_banned_from_guild": "Tento uživatel má v této komunitě ban.",

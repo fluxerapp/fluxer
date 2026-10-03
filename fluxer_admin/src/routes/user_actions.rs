@@ -243,8 +243,11 @@ pub async fn dispatch(
             let Some(ip) = get("ip") else {
                 return DispatchOutcome::error("IP address is required");
             };
+            let Ok(duration) = form.parse_value::<u32>("duration_hours") else {
+                return DispatchOutcome::error("Invalid ban duration");
+            };
             DispatchOutcome::from_result(
-                client.ban_ip(&ip, None).await,
+                client.ban_ip(&ip, duration.unwrap_or(0), None).await,
                 "IP banned successfully",
                 "Failed to ban IP",
             )

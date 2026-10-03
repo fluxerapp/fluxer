@@ -381,7 +381,7 @@ const ERROR_I18N_HI_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "यह यूज़र बैन नहीं है।",
 	"names_and_normalization.name_empty_after_normalization": "नॉर्मलाइज़ेशन के बाद नाम खाली नहीं हो सकता।",
 	"permissions.global_ip_banned": "आपका IP पता {ipAddress} प्लेटफ़ॉर्म एडमिनों द्वारा Fluxer API से स्थायी रूप से ब्लॉक कर दिया गया है। अगर आपको लगता है कि यह गलती है, तो अपील के लिए support@fluxer.app से संपर्क करें। अपनी अपील में यह IP पता शामिल करें।",
-	"permissions.global_ip_temporarily_banned": "गलत इस्तेमाल या असामान्य एक्सेस पैटर्न के कारण आपका IP पता {ipAddress} Fluxer API से 24 घंटे के लिए अस्थायी रूप से ब्लॉक कर दिया गया है। अस्थायी API बैन के लिए हम आम तौर पर अपील स्वीकार नहीं करते। IP पता बदलें या बैन खत्म होने का इंतज़ार करें, और अपने क्लाइंट से Fluxer API पर आने वाले एक्सेस पैटर्न की जाँच करें।",
+	"permissions.global_ip_temporarily_banned": "आपका IP पता {ipAddress} Fluxer API से अस्थायी रूप से ब्लॉक कर दिया गया है। समय पूरा होने पर ब्लॉक अपने-आप हट जाएगा। अगर आपको लगता है कि यह गलती है, तो support@fluxer.com से संपर्क करें और यह IP पता शामिल करें।",
 	"permissions.missing_access": "आपके पास इस रिसोर्स या फ़ीचर का एक्सेस नहीं है।",
 	"permissions.missing_permissions": "आपके पास यह एक्शन करने के लिए ज़रूरी अनुमति नहीं है।",
 	"permissions.user_banned_from_guild": "इस यूज़र को इस कम्युनिटी से बैन कर दिया गया है।",

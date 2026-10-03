@@ -381,7 +381,7 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "Ovaj korisnik nema zabranu.",
 	"names_and_normalization.name_empty_after_normalization": "Ime ne može biti prazno nakon normalizacije.",
 	"permissions.global_ip_banned": "Administratori platforme trajno su blokirali pristup Fluxer API-ju s tvoje IP adrese {ipAddress}. Ako smatraš da je to pogreška, javi se na support@fluxer.app i uloži žalbu. U žalbu uključi ovu IP adresu.",
-	"permissions.global_ip_temporarily_banned": "Pristup Fluxer API-ju s tvoje IP adrese {ipAddress} privremeno je blokiran na 24 sata zbog zlouporabe ili neuobičajenih obrazaca pristupa. Za privremene zabrane pristupa API-ju obično ne razmatramo žalbe. Promijeni IP adresu ili pričekaj da zabrana istekne te provjeri obrasce pristupa Fluxer API-ju koji dolaze iz tvog klijenta.",
+	"permissions.global_ip_temporarily_banned": "Pristup Fluxer API-ju s tvoje IP adrese {ipAddress} privremeno je blokiran. Blokada se automatski uklanja kada istekne. Ako smatraš da je to pogreška, javi se na support@fluxer.com i navedi ovu IP adresu.",
 	"permissions.missing_access": "Nemaš pristup ovom resursu ili značajci.",
 	"permissions.missing_permissions": "Nemaš potrebna dopuštenja za ovu radnju.",
 	"permissions.user_banned_from_guild": "Ovaj korisnik ima zabranu pristupa ovoj zajednici.",

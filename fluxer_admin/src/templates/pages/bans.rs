@@ -20,6 +20,24 @@ pub struct BanConfig {
     pub entity_name: &'static str,
     pub active_page: &'static str,
     pub show_bulk_tools: bool,
+    pub show_duration: bool,
+}
+
+const IP_BAN_DURATIONS: &[(u32, &str)] = &[
+    (24, "1 day"),
+    (168, "7 days"),
+    (720, "30 days"),
+    (0, "Permanent"),
+];
+
+pub fn ip_ban_duration_label(hours: u32) -> String {
+    IP_BAN_DURATIONS
+        .iter()
+        .find(|(value, _)| *value == hours)
+        .map_or_else(
+            || format!("{hours} hours"),
+            |(_, label)| (*label).to_owned(),
+        )
 }
 
 pub const BAN_CONFIGS: &[BanConfig] = &[
@@ -33,6 +51,7 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         entity_name: "IP/CIDR",
         active_page: "ip-bans",
         show_bulk_tools: false,
+        show_duration: true,
     },
     BanConfig {
         title: "Email Bans",
@@ -44,6 +63,7 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         entity_name: "Email",
         active_page: "email-bans",
         show_bulk_tools: false,
+        show_duration: false,
     },
     BanConfig {
         title: "Phrase Bans",
@@ -55,6 +75,7 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         entity_name: "Phrase",
         active_page: "phrase-bans",
         show_bulk_tools: false,
+        show_duration: false,
     },
     BanConfig {
         title: "URL Blocklist",
@@ -66,6 +87,7 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         entity_name: "URL",
         active_page: "url-bans",
         show_bulk_tools: false,
+        show_duration: false,
     },
     BanConfig {
         title: "File SHA Blocklist",
@@ -77,6 +99,7 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         entity_name: "SHA-256",
         active_page: "file-sha-bans",
         show_bulk_tools: true,
+        show_duration: false,
     },
     BanConfig {
         title: "Avatar Hash Blocklist",
@@ -88,6 +111,7 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         entity_name: "Avatar Hash",
         active_page: "avatar-hash-bans",
         show_bulk_tools: false,
+        show_duration: false,
     },
     BanConfig {
         title: "URL Domain Blocklist",
@@ -99,6 +123,7 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         entity_name: "Domain",
         active_page: "url-domain-bans",
         show_bulk_tools: false,
+        show_duration: false,
     },
     BanConfig {
         title: "Profile Substring Blocklist",
@@ -110,6 +135,7 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         entity_name: "Substring",
         active_page: "profile-substring-bans",
         show_bulk_tools: false,
+        show_duration: false,
     },
 ];
 
@@ -163,6 +189,9 @@ fn ban_card(base: &str, cfg: &BanConfig, csrf_token: &str) -> Markup {
                 (csrf_input(csrf_token))
                 div class="space-y-4" {
                     (form_field(cfg.input_name, cfg.input_label, cfg.input_type, cfg.placeholder, true))
+                    @if cfg.show_duration {
+                        (duration_field())
+                    }
                     (form_field("audit_log_reason", "Private reason (audit log, optional)", "text", "Why is this ban being applied?", false))
                     (submit_btn("Ban", cfg.entity_name, false))
                 }
@@ -390,6 +419,24 @@ fn form_field(
                 class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm \
                        shadow-sm focus:border-brand-primary focus:outline-none focus:ring-1 \
                        focus:ring-brand-primary";
+        }
+    }
+}
+
+fn duration_field() -> Markup {
+    html! {
+        div class="space-y-1" {
+            label for="duration_hours" class="block text-sm font-medium text-neutral-700" {
+                "Duration"
+            }
+            select id="duration_hours" name="duration_hours"
+                class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm \
+                       shadow-sm focus:border-brand-primary focus:outline-none focus:ring-1 \
+                       focus:ring-brand-primary" {
+                @for &(value, label) in IP_BAN_DURATIONS {
+                    option value=(value) { (label) }
+                }
+            }
         }
     }
 }

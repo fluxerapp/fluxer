@@ -28,11 +28,23 @@ impl AdminApiClient {
         self.check_blocklist_entry("email", email, None).await
     }
 
-    pub async fn ban_ip(&self, ip: &str, audit_log_reason: Option<&str>) -> ApiResult<()> {
+    pub async fn ban_ip(
+        &self,
+        ip: &str,
+        duration_hours: u32,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<()> {
         self.create_blocklist_entry(
             "ip",
             generated_types::AdminBlocklistEntryCreateRequest::from(
-                generated_types::BanIpRequest { ip: ip.to_owned() },
+                generated_types::BanIpRequest {
+                    duration_hours: Some(
+                        i32::try_from(duration_hours)
+                            .map_err(|e| ApiError::Parse(e.to_string()))?
+                            .into(),
+                    ),
+                    ip: ip.to_owned(),
+                },
             ),
             audit_log_reason,
         )

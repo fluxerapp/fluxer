@@ -122,6 +122,7 @@ export class AdminBanManagementService {
 	async banIp(
 		data: {
 			ip: string;
+			duration_hours?: number;
 		},
 		adminUserId: UserID,
 		auditLogReason: string | null,
@@ -142,15 +143,24 @@ export class AdminBanManagementService {
 				message: 'This IP address is on the instance exemption list',
 			});
 		}
-		await adminRepository.banIp(data.ip);
-		ipBanCache.ban(data.ip);
+		const durationHours = data.duration_hours ?? 0;
+		const metadata = new Map([['ip', data.ip]]);
+		if (durationHours > 0) {
+			const ttlSeconds = durationHours * 3600;
+			await adminRepository.banIp(data.ip, ttlSeconds);
+			metadata.set('duration_hours', durationHours.toString());
+			metadata.set('expires_at', new Date(Date.now() + ttlSeconds * 1000).toISOString());
+		} else {
+			await adminRepository.banIp(data.ip);
+		}
+		await ipBanCache.refresh();
 		await cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
 		await this.createBlocklistAuditLog({
 			adminUserId,
 			targetType: 'ip',
 			action: 'ban_ip',
 			auditLogReason,
-			metadata: new Map([['ip', data.ip]]),
+			metadata,
 		});
 	}
 
@@ -177,9 +187,10 @@ export class AdminBanManagementService {
 
 	async checkIpBan(data: {ip: string}): Promise<{
 		banned: boolean;
+		expires_at: string | null;
 	}> {
-		const banned = ipBanCache.isBanned(data.ip);
-		return {banned};
+		const match = ipBanCache.getMatch(data.ip);
+		return {banned: match !== null, expires_at: toIsoString(match?.expiresAt)};
 	}
 
 	async banEmail(

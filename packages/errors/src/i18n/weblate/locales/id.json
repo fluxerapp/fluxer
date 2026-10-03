@@ -377,7 +377,7 @@
 	"moderation_and_reports.user_is_not_banned": "Pengguna ini tidak diblokir.",
 	"names_and_normalization.name_empty_after_normalization": "Nama tidak bisa kosong setelah normalisasi.",
 	"permissions.global_ip_banned": "Alamat IP kamu {ipAddress} telah diblokir permanen dari Fluxer API oleh admin platform. Jika kamu merasa ini keliru, hubungi support@fluxer.app untuk mengajukan banding. Sertakan alamat IP ini dalam bandingmu.",
-	"permissions.global_ip_temporarily_banned": "Alamat IP kamu {ipAddress} diblokir sementara dari Fluxer API selama 24 jam karena pola akses yang menyalahgunakan atau tidak wajar. Biasanya kami tidak menyediakan banding untuk pemblokiran API sementara. Ganti alamat IP atau tunggu sampai pemblokiran berakhir, dan tinjau pola akses ke Fluxer API yang berasal dari klienmu.",
+	"permissions.global_ip_temporarily_banned": "Alamat IP kamu {ipAddress} diblokir sementara dari Fluxer API. Pemblokiran akan dicabut secara otomatis saat masa berlakunya habis. Jika kamu merasa ini keliru, hubungi support@fluxer.com dan sertakan alamat IP ini.",
 	"permissions.missing_access": "Kamu tidak memiliki akses ke sumber daya atau fitur ini.",
 	"permissions.missing_permissions": "Kamu tidak memiliki izin yang diperlukan untuk melakukan tindakan ini.",
 	"permissions.user_banned_from_guild": "Pengguna ini diblokir dari komunitas ini.",

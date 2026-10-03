@@ -57,9 +57,9 @@ const BLOCKLIST_CATALOG = [
 	{
 		list_type: 'ip' as const,
 		description:
-			'IPv4/IPv6 addresses and CIDR ranges denied service. Applies to live connections and can be applied retroactively.',
+			'IPv4/IPv6 addresses and CIDR ranges denied service. Applies to live connections and can be applied retroactively. An entry can carry an expiry, after which it stops applying and is removed.',
 		value_field: 'ip',
-		fields: [],
+		fields: ['duration_hours'],
 		scoped: false,
 		supports_bulk_create: false,
 		supports_bulk_delete: false,
@@ -232,7 +232,7 @@ async function checkBlocklistEntry(
 	listType: AdminBlocklistListType,
 	entryValue: string,
 	scope: ProfileSubstringScope | undefined,
-): Promise<{banned: boolean}> {
+): Promise<{banned: boolean; expires_at?: string | null}> {
 	switch (listType) {
 		case 'ip':
 			return bans.checkIpBan({ip: entryValue});
@@ -507,7 +507,7 @@ export function BanAdminController(app: HonoApp) {
 					banned: result.banned,
 				},
 			});
-			return ctx.json(result);
+			return ctx.json({banned: result.banned, expires_at: result.expires_at ?? null});
 		},
 	);
 	app.patch(

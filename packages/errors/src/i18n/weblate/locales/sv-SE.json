@@ -377,7 +377,7 @@
 	"moderation_and_reports.user_is_not_banned": "Den här användaren är inte bannlyst.",
 	"names_and_normalization.name_empty_after_normalization": "Namnet kan inte vara tomt efter att ha normaliserats.",
 	"permissions.global_ip_banned": "Din IP-adress {ipAddress} har blockerats permanent från Fluxers API av plattformsadministratörerna. Om du anser att detta är ett misstag kan du kontakta support@fluxer.app för att överklaga. Ange den här IP-adressen i ditt överklagande.",
-	"permissions.global_ip_temporarily_banned": "Din IP-adress {ipAddress} har blockerats tillfälligt från Fluxers API i 24 timmar på grund av missbruk eller ovanliga åtkomstmönster. Tillfälliga API-blockeringar kan vanligtvis inte överklagas. Byt IP-adress eller vänta tills blockeringen löper ut och granska hur din klient använder Fluxers API.",
+	"permissions.global_ip_temporarily_banned": "Din IP-adress {ipAddress} har blockerats tillfälligt från Fluxers API. Blockeringen hävs automatiskt när den löper ut. Om du anser att detta är ett misstag kan du kontakta support@fluxer.com och ange den här IP-adressen.",
 	"permissions.missing_access": "Du har inte åtkomst till denna resurs eller funktion.",
 	"permissions.missing_permissions": "Du har inte de behörigheter som krävs för att utföra denna åtgärd.",
 	"permissions.user_banned_from_guild": "Den här användaren är bannlyst från den här communityn.",

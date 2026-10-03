@@ -14,7 +14,7 @@ Fluxer builds each permission name from `ban:`, the list name with each hyphen w
 
 ## Blocklist types
 
-`ip` and `email` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` stores nothing but the value. An `ip` row also stores a ban kind, a reason, an expiry, and its creation time.
+`ip` and `email` gate account access and registration. `phrase`, `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring` gate what an account may post, link, upload, or display. `email` stores nothing but the value. An `ip` row also stores a ban kind, a reason, an expiry, and its creation time. An `ip` row with an expiry stops applying when it expires, and Fluxer then deletes it.
 
 | Value | Description |
 | --- | --- |
@@ -104,7 +104,7 @@ One entry of the blocklist catalogue returned by [List blocklists](#list-blockli
 
 <sup>1</sup> `ip` names `ip`, `email` names `email`, `url-domain` names `domain`, `phrase` names `phrase`, `url` names `url`, `file-sha` names `sha256_hex`, `avatar-hash` names `hashes`, and `profile-substring` names `substrings`
 
-<sup>2</sup> Empty for `ip`, `email`, and `phrase`. `url` names `category`, `severity`, `source_url`, and `notes`. `url-domain` adds `match_subdomains`, `file-sha` adds `content_type`, and `avatar-hash` adds `reason`. `profile-substring` names `scope`, `reason`, and `notes`
+<sup>2</sup> `ip` names `duration_hours`. Empty for `email` and `phrase`. `url` names `category`, `severity`, `source_url`, and `notes`. `url-domain` adds `match_subdomains`, `file-sha` adds `content_type`, and `avatar-hash` adds `reason`. `profile-substring` names `scope`, `reason`, and `notes`
 
 <sup>3</sup> True only for `profile-substring`
 
@@ -112,7 +112,7 @@ One entry of the blocklist catalogue returned by [List blocklists](#list-blockli
 
 <sup>5</sup> True only for `avatar-hash` and `profile-substring`
 
-<sup>6</sup> True for `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`, which is exactly the set whose `fields` array is non-empty
+<sup>6</sup> True for `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`
 
 ### Example
 
@@ -163,7 +163,7 @@ One stored row of one blocklist. Every field is present on every entry, and a fi
 
 <sup>6</sup> Non-null only on `url-domain`
 
-<sup>7</sup> Non-null only on `ip`. An address added through [Add blocklist entry](#add-blocklist-entry) is written as a permanent ban, so it reads back with the reason `platform_admin_enforcement` and a null `expires_at`
+<sup>7</sup> Non-null only on `ip`. An address added through [Add blocklist entry](#add-blocklist-entry) reads back with the reason `platform_admin_enforcement`. Its `expires_at` is null unless it was added with a positive `duration_hours`. A row past its `expires_at` is not listed
 
 <sup>8</sup> Both null on `email` and `phrase`, which store nothing but the value. `created_by_user_id` is also null on `ip`
 
@@ -200,8 +200,11 @@ The decision [Check blocklist entry](#check-blocklist-entry) returns for one val
 | Field | Type | Description |
 | --- | --- | --- |
 | banned<sup>1</sup> | boolean | Whether the value is currently blocked by the named blocklist |
+| expires_at<sup>2</sup> | ?ISO8601 timestamp | When the matching ban expires |
 
 <sup>1</sup> Reports the decision the enforcement path would make for this value
+
+<sup>2</sup> Non-null only on `ip` when the matching ban has an expiry. Null when the ban is permanent, when nothing matches, and on every other blocklist
 
 :::note[A block and a row are different things]
 A value can be blocked with no row of its own, as a single address covered by a stored CIDR range is. A row can exist while the value reads as not blocked, as an exempt address or an exempt email domain does.
@@ -244,6 +247,7 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 | source_url?<sup>4</sup> | string | The feed or evidence URL (1-2048 characters) |
 | reason?<sup>7</sup> | string | The reason (1-1024 characters) |
 | notes?<sup>8</sup> | string | The internal note (1-1024 characters) |
+| duration_hours?<sup>9</sup> | integer | Hours until the row expires (0-8760, default 0) |
 
 <sup>3</sup> Required by `profile-substring`. Every other blocklist strips `scope`
 
@@ -256,6 +260,8 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 <sup>7</sup> Accepted only by `avatar-hash` and `profile-substring`, and recorded in the audit entry metadata
 
 <sup>8</sup> Accepted only by `url`, `url-domain`, `file-sha`, `avatar-hash`, and `profile-substring`
+
+<sup>9</sup> Accepted only by `ip`. `0` writes a permanent row. A positive value writes a row that stops applying after that many hours, and Fluxer then deletes it. Adding an address again replaces its expiry, so a permanent row can become temporary and a temporary row can become permanent
 
 ## List blocklists
 
@@ -375,7 +381,7 @@ The response has no body, so it does not report the canonical form that was stor
 
 Fluxer checks later requests against the written rows. For every list except `email`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. It records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt`, before it returns the 400.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. An `ip` added with a positive `duration_hours` adds the metadata keys `duration_hours` and `expires_at`. Fluxer records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt`, before it returns the 400.
 
 ### Rate limit
 

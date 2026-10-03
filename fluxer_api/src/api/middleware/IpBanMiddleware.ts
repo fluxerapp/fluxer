@@ -127,7 +127,7 @@ class IpBanCache {
 		const sameIpDecisionKey = getSameIpDecisionKey(parsed.canonical);
 		if (sameIpDecisionKey) {
 			const decisionCount = this.sameIpDecisionBans.get(sameIpDecisionKey);
-			if (decisionCount) {
+			if (decisionCount && this.isActive(decisionCount)) {
 				return {
 					ipAddress: parsed.canonical,
 					matchedEntry: sameIpDecisionKey,
@@ -137,7 +137,7 @@ class IpBanCache {
 		}
 		const singleMap = this.singleIpBans[parsed.family];
 		const single = singleMap.get(parsed.canonical);
-		if (single) {
+		if (single && this.isActive(single.count)) {
 			return {
 				ipAddress: parsed.canonical,
 				matchedEntry: parsed.canonical,
@@ -146,7 +146,7 @@ class IpBanCache {
 		}
 		const rangeMap = this.rangeIpBans[parsed.family];
 		for (const [canonical, range] of rangeMap.entries()) {
-			if (parsed.value >= range.start && parsed.value <= range.end) {
+			if (parsed.value >= range.start && parsed.value <= range.end && this.isActive(range.count)) {
 				return {
 					ipAddress: parsed.canonical,
 					matchedEntry: canonical,
@@ -230,6 +230,13 @@ class IpBanCache {
 			count.temporary -= 1;
 		}
 		return count.permanent <= 0 && count.temporary <= 0;
+	}
+
+	private isActive(count: IpBanCount): boolean {
+		if (count.permanent > 0 || !count.temporaryExpiresAt) {
+			return true;
+		}
+		return count.temporaryExpiresAt.getTime() > Date.now();
 	}
 
 	private resolveCount(count: IpBanCount): {

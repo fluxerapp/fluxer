@@ -381,7 +381,7 @@ const ERROR_I18N_FR_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "Cet utilisateur n'est pas banni.",
 	"names_and_normalization.name_empty_after_normalization": "Le nom ne peut pas être vide une fois normalisé.",
 	"permissions.global_ip_banned": "Les administrateurs de la plateforme ont définitivement bloqué l’accès à Fluxer API depuis votre adresse IP {ipAddress}. Si vous pensez qu’il s’agit d’une erreur, écrivez à support@fluxer.app pour déposer un recours. Indiquez cette adresse IP dans votre recours.",
-	"permissions.global_ip_temporarily_banned": "L’accès à Fluxer API depuis votre adresse IP {ipAddress} a été bloqué pendant 24 heures en raison d’une utilisation abusive ou inhabituelle. Nous ne proposons généralement pas de recours pour les blocages temporaires de l’API. Changez d’adresse IP ou attendez la fin du blocage, et vérifiez la façon dont votre client accède à Fluxer API.",
+	"permissions.global_ip_temporarily_banned": "L’accès à Fluxer API depuis votre adresse IP {ipAddress} a été temporairement bloqué. Le blocage sera levé automatiquement à son expiration. Si vous pensez qu’il s’agit d’une erreur, écrivez à support@fluxer.com en indiquant cette adresse IP.",
 	"permissions.missing_access": "Vous n’avez pas accès à cette ressource ou fonctionnalité.",
 	"permissions.missing_permissions": "Vous n’avez pas les permissions requises pour effectuer cette action.",
 	"permissions.user_banned_from_guild": "Cet utilisateur est banni de cette communauté.",

@@ -860,6 +860,14 @@ fn deserialize_ban_check_response() {
 }
 
 #[test]
+fn deserialize_ban_check_response_with_expiry() {
+    let json = r#"{"banned": true, "expires_at": "2026-10-04T12:00:00.000Z"}"#;
+    let resp: types::BanCheckResult = serde_json::from_str(json).unwrap();
+    assert!(resp.banned);
+    assert_eq!(resp.expires_at.as_deref(), Some("2026-10-04T12:00:00.000Z"));
+}
+
+#[test]
 fn deserialize_codes_response() {
     let json = r#"{"codes": ["ABC-DEF", "GHI-JKL"]}"#;
     let resp: types::CodesResponse = serde_json::from_str(json).unwrap();

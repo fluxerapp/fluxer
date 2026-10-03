@@ -381,7 +381,7 @@ const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
 	"moderation_and_reports.user_is_not_banned": "このユーザーはBANされていません。",
 	"names_and_normalization.name_empty_after_normalization": "正規化後、名前は空にできません。",
 	"permissions.global_ip_banned": "IPアドレス{ipAddress}は、プラットフォーム管理者によりFluxer APIから永久にブロックされました。誤りだと思う場合は、support@fluxer.appに連絡して異議申し立てをしてください。申し立てにはこのIPアドレスを記載してください。",
-	"permissions.global_ip_temporarily_banned": "IPアドレス{ipAddress}は、悪質または通常と異なるアクセスパターンのため、Fluxer APIから24時間一時的にブロックされました。一時的なAPIのBANについては通常、異議申し立てを受け付けていません。IPアドレスを変更するかBANの期限切れを待ち、クライアントからFluxer APIへのアクセスパターンを確認してください。",
+	"permissions.global_ip_temporarily_banned": "IPアドレス{ipAddress}は、Fluxer APIから一時的にブロックされました。ブロックは期限が切れると自動的に解除されます。誤りだと思う場合は、このIPアドレスを記載のうえ、support@fluxer.comに連絡してください。",
 	"permissions.missing_access": "このリソースや機能にアクセスする権限がありません。",
 	"permissions.missing_permissions": "この操作を実行するために必要な権限がありません。",
 	"permissions.user_banned_from_guild": "このユーザーはこのコミュニティでBANされています。",
