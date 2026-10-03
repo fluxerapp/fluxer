@@ -393,6 +393,9 @@ catalogs:
     tiny-invariant:
       specifier: 1.3.3
       version: 1.3.3
+    tldts:
+      specifier: 7.4.13
+      version: 7.4.13
     transliteration:
       specifier: 2.6.1
       version: 2.6.1
@@ -710,6 +713,9 @@ importers:
       tempy:
         specifier: 'catalog:'
         version: 3.2.0
+      tldts:
+        specifier: 'catalog:'
+        version: 7.4.13
       transliteration:
         specifier: 'catalog:'
         version: 2.6.1

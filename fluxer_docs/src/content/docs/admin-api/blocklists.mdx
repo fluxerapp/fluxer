@@ -35,7 +35,7 @@ Fluxer builds each permission name from `ban:`, the list name with each hyphen w
 
 <sup>4</sup> Canonicalised before storage. A value Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url`
 
-<sup>5</sup> Stored lowercased and matched against the lowercased hostname of a submitted URL. `match_subdomains` is stored on the row and defaults to true, and the hostname match is exact whatever its value
+<sup>5</sup> Stored lowercased, in ASCII form, and without a trailing dot. A row matches that hostname, and with `match_subdomains` true it also matches every subdomain. A value whose leftmost label has `*` is a [domain pattern](#domain-patterns)
 
 <sup>6</sup> Stored as lowercase hexadecimal
 
@@ -44,6 +44,27 @@ Fluxer builds each permission name from `ban:`, the list name with each hyphen w
 <sup>8</sup> The only scoped list. Scope and substring together identify a row, so the same substring can be stored once per [scope](#profile-substring-scopes)
 
 The fields and the operations a list accepts differ from list to list. Read the `fields` array and the `supports_` flags of a [blocklist object](#blocklist-object) before writing to a list.
+
+## Domain patterns
+
+A `url-domain` value whose leftmost label has `*` is a pattern. Each `*` stands for any run of characters inside that one label, so `*shop*.example.com` matches `shop.example.com` and `my-shop-2.example.com`. The rest of the value is a literal domain, called the suffix.
+
+A pattern only matches the label directly left of its suffix. It never matches the suffix itself, so `*shop*.example.com` does not block `example.com`. With `match_subdomains` true, the pattern also matches every subdomain of a matching host, such as `www.shop.example.com`. Blocking a whole suffix takes a plain domain row.
+
+Fluxer refuses a pattern with 400 `INVALID_FORM_BODY` naming `domain` when:
+
+- `*` appears outside the leftmost label
+- the leftmost label has characters other than `a-z`, `0-9`, `-`, and `*`
+- the leftmost label has more than 3 `*` or fewer than 3 other characters
+- the suffix is not a valid domain or is a public suffix such as `com` or `co.uk`
+
+A domain under a shared hosting suffix, such as `onrender.com` or `github.io`, is a valid suffix. Fluxer folds a run of `*` into one before it stores the pattern.
+
+Fluxer matches a pattern against the ASCII form of a hostname. An internationalised label is compared in its punycode form, so a pattern with a leading or trailing literal can miss it, while `*shop*` still matches it.
+
+## Link matching
+
+Fluxer checks every link in user content against the `url` and `url-domain` lists. This covers bare links, autolinks in angle brackets, the target of a masked link, and the link URLs of rich embeds. Fluxer reads the hostname of each link the way a browser does. It ignores user information and the port, lowercases the hostname, converts it to ASCII, decodes percent escapes, and drops trailing dots.
 
 ## Content blocklist categories
 
@@ -119,7 +140,7 @@ One entry of the blocklist catalogue returned by [List blocklists](#list-blockli
 ```json
 {
   "list_type": "url-domain",
-  "description": "Domains blocked from being linked, optionally covering every subdomain rooted at the domain.",
+  "description": "Domains blocked from being linked, optionally covering every subdomain rooted at the domain. A value whose leftmost label contains * is a pattern that matches that one label under a registrable domain.",
   "value_field": "domain",
   "fields": ["match_subdomains", "category", "severity", "source_url", "notes"],
   "scoped": false,
@@ -145,7 +166,7 @@ One stored row of one blocklist. Every field is present on every entry, and a fi
 | source_url<sup>3</sup> | ?string | The feed or evidence URL the row was recorded from |
 | notes<sup>4</sup> | ?string | The internal note stored alongside the row |
 | content_type<sup>5</sup> | ?string | The media type hint recorded alongside a `file-sha` row |
-| match_subdomains<sup>6</sup> | ?boolean | Whether a `url-domain` row is flagged as covering subdomains |
+| match_subdomains<sup>6</sup> | ?boolean | Whether a `url-domain` row also covers subdomains |
 | reason<sup>7</sup> | ?string | The reason stored on the row |
 | expires_at<sup>7</sup> | ?ISO8601 timestamp | When the row expires |
 | created_at<sup>8</sup> | ?ISO8601 timestamp | When the row was added |
@@ -222,7 +243,7 @@ The body of [Add blocklist entry](#add-blocklist-entry) has one shape per blockl
 | email | email | Email address of 1 through 254 characters |
 | phrase | phrase | Phrase of 1 through 500 characters |
 | url | url | Absolute `http` or `https` URL of 1 through 2048 characters |
-| url-domain | domain | Domain of 1 through 253 characters |
+| url-domain | domain | Domain or [domain pattern](#domain-patterns) of 1 through 253 characters |
 | file-sha | sha256_hex | Exactly 64 hexadecimal characters |
 | avatar-hash<sup>1</sup> | hashes | 1 through 1000 hashes, each 8 through 10 characters matching `^(a_)?[0-9a-fA-F]{8}$` |
 | profile-substring<sup>1</sup> <sup>2</sup> | substrings | 1 through 1000 substrings, each 1 through 500 characters |
@@ -242,7 +263,7 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 | scope<sup>3</sup> | string | The [profile substring scope](#profile-substring-scopes) to store the rows under |
 | category?<sup>4</sup> | string | The [content blocklist category](#content-blocklist-categories) (1-64 characters, default `manual`) |
 | severity?<sup>4</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
-| match_subdomains?<sup>5</sup> | boolean | Whether the row is flagged as covering subdomains (default true) |
+| match_subdomains?<sup>5</sup> | boolean | Whether the row also covers subdomains (default true) |
 | content_type?<sup>6</sup> | string | The media type hint (1-128 characters) |
 | source_url?<sup>4</sup> | string | The feed or evidence URL (1-2048 characters) |
 | reason?<sup>7</sup> | string | The reason (1-1024 characters) |
@@ -371,7 +392,7 @@ Every write is an upsert on the canonical value. An omitted optional field is wr
 | 204 | empty | Values were written |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because the value is not valid for the list, or a field the blocklist does not accept was supplied |
 
-A body field the selected blocklist does not accept is stripped and never produces that 400. A `url` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
+A body field the selected blocklist does not accept is stripped and never produces that 400. A `url` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array. A `url-domain` value that is not a valid domain or [domain pattern](#domain-patterns) returns the same 400 naming `domain`.
 
 Fluxer refuses to add an `ip` with 400 `IP_BAN_DECLINED` when the address is on the instance exemption list.
 
@@ -381,7 +402,7 @@ The response has no body, so it does not report the canonical form that was stor
 
 Fluxer checks later requests against the written rows. For every list except `email`, other nodes see the rows after a short propagation delay. No Gateway Dispatch is emitted.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. An `ip` added with a positive `duration_hours` adds the metadata keys `duration_hours` and `expires_at`. Fluxer records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt`, before it returns the 400.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written value, with that value in its metadata. An `ip` added with a positive `duration_hours` adds the metadata keys `duration_hours` and `expires_at`. A `url-domain` entry also records `match_subdomains` and `pattern`, which is `true` for a [domain pattern](#domain-patterns). Fluxer records an entry for a refused `ip` too, under the action `ban_ip_skipped_exempt`, before it returns the 400.
 
 ### Rate limit
 
@@ -518,7 +539,7 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 | email | Exact match on the lowercased address |
 | phrase | Normalised phrase matching, so a disguised form of a stored phrase still reads as blocked |
 | url<sup>5</sup> | Exact match on the canonicalised URL |
-| url-domain | Exact match on the lowercased hostname |
+| url-domain<sup>6</sup> | The hostname, each parent domain stored with `match_subdomains` true, and each [domain pattern](#domain-patterns) covering the hostname |
 | file-sha | Exact match on the lowercased hexadecimal digest |
 | avatar-hash | Exact match after the `a_` prefix is stripped and the hash is lowercased |
 | profile-substring | Normalised substring matching within the named scope |
@@ -528,6 +549,8 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 <sup>4</sup> Two addresses are the same origin when they share a decision key, which is the exact address for IPv4 and the `/64` prefix for IPv6
 
 <sup>5</sup> This check does not read the `url-domain` list, so a URL that a stored domain blocks reads as not blocked. Check the hostname separately
+
+<sup>6</sup> The value can be a hostname or an absolute `http` or `https` URL. Fluxer normalises the hostname as it does for [link matching](#link-matching)
 
 ### Response
 
@@ -572,7 +595,7 @@ The body is the creation shape of the selected blocklist with the value field re
 | scope<sup>1</sup> | string | The [profile substring scope](#profile-substring-scopes) to write the row under |
 | category?<sup>2</sup> | string | The [content blocklist category](#content-blocklist-categories) (1-64 characters, default `manual`) |
 | severity?<sup>2</sup> | integer | The [content blocklist severity](#content-blocklist-severities) (0-3, default 2) |
-| match_subdomains?<sup>3</sup> | boolean | Whether the row is flagged as covering subdomains (default true) |
+| match_subdomains?<sup>3</sup> | boolean | Whether the row also covers subdomains (default true) |
 | content_type?<sup>4</sup> | string | The media type hint (1-128 characters) |
 | source_url?<sup>2</sup> | string | The feed or evidence URL (1-2048 characters) |
 | reason?<sup>5</sup> | string | The reason (1-1024 characters) |
@@ -601,7 +624,7 @@ Sending `{"severity": 3}` on a `url` row also resets its category to `manual` an
 | 204 | empty | Row was written |
 | 400 | [error response](/admin-api/#error-response) | The list accepts no update, or the body fails validation, and the request returns `INVALID_FORM_BODY` |
 
-On the `url` blocklist, an `entry_value` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array.
+On the `url` blocklist, an `entry_value` Fluxer cannot canonicalise returns 400 `INVALID_FORM_BODY` naming `url` in the `errors` array. On the `url-domain` blocklist, an `entry_value` that is not a valid domain or [domain pattern](#domain-patterns) returns the same 400 naming `domain`.
 
 The write is an upsert on the canonical value, so a value with no existing row is created. This operation never returns 404. A `url` blocked only by a stored `url-domain` row has no row of its own, and updating it through the URL silently creates a new exact-URL row.
 
@@ -630,7 +653,7 @@ Removes one row from the selected blocklist. Returns 204 with an empty body. Req
 | list_type | string | The [blocklist type](#blocklist-types) |
 | entry_value<sup>1</sup> | string | The percent-encoded canonical value of the row to remove (1-2048 characters) |
 
-<sup>1</sup> Canonicalised the same way it was on the add path and matched exactly, so a `url` blocked only by a broader `url-domain` row cannot be removed through the URL
+<sup>1</sup> Canonicalised the same way it was on the add path and matched exactly, so a `url` blocked only by a broader `url-domain` row cannot be removed through the URL. A `url-domain` value that fails validation is lowercased and removed as written
 
 ### Query parameters
 

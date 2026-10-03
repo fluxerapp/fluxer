@@ -33,7 +33,7 @@ function attachment(id: bigint, hash: string | null): MessageAttachment {
 	};
 }
 
-function message(attachments: Array<MessageAttachment>): Message {
+function message(attachments: Array<MessageAttachment>, content = ''): Message {
 	return new Message({
 		channel_id: createChannelID(10n),
 		bucket: 0,
@@ -43,7 +43,7 @@ function message(attachments: Array<MessageAttachment>): Message {
 		webhook_id: null,
 		webhook_name: null,
 		webhook_avatar_hash: null,
-		content: '',
+		content,
 		edited_timestamp: null,
 		pinned_timestamp: null,
 		flags: 0,
@@ -75,10 +75,10 @@ describe('message activity', () => {
 		resetActivityEventsForTests();
 	});
 
-	function params(attachments: Array<MessageAttachment>) {
+	function params(attachments: Array<MessageAttachment>, content = '') {
 		return {
 			user: {id: createUserID(3n), isBot: false} as unknown as User,
-			message: message(attachments),
+			message: message(attachments, content),
 			channel: {id: createChannelID(10n), type: ChannelTypes.DM} as unknown as Channel,
 			guildId: null,
 			guildOwnerId: null,
@@ -116,5 +116,19 @@ describe('message activity', () => {
 		expect(updated.kind).toBe('message_updated');
 		expect(updated.data).toMatchObject({message_id: '100', attachments: [{hash: HASH.toLowerCase()}]});
 		expect(updated.id).not.toBe(created.id);
+	});
+
+	it('records the link domain of a masked markdown link without its brackets', async () => {
+		const publisher = new CapturingPublisher();
+		await startActivityEvents({publisher, kv: new MockKVProvider()});
+		emitMessageCreated(
+			params(
+				[],
+				'[OPEN](https://Shop.Example.com) [docs](<https://www.docs.example.org/a>) https://user@cdn.example.net:8443/x',
+			),
+		);
+		await vi.waitFor(() => expect(publisher.payloads).toHaveLength(1));
+		const event = JSON.parse(publisher.payloads[0]!);
+		expect(event.data.link_domains).toEqual(['shop.example.com', 'docs.example.org', 'cdn.example.net']);
 	});
 });

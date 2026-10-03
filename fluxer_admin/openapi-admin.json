@@ -1451,7 +1451,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Report whether a value is currently blocked by a blocklist. The value is percent-encoded in the path. An IP address can still match a broader stored CIDR entry, and a URL can match a banned domain. The profile-substring blocklist requires a scope.",
+				"description": "Report whether a value is currently blocked by a blocklist. The value is percent-encoded in the path. An IP address can still match a broader stored CIDR entry, and a url-domain value can be a hostname or an http(s) URL that a stored domain or pattern covers. The profile-substring blocklist requires a scope.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -12968,10 +12968,13 @@
 			"BanUrlDomainRequest": {
 				"type": "object",
 				"properties": {
-					"domain": {"description": "Domain to ban (e.g. example.com)", "type": "string"},
+					"domain": {
+						"description": "Domain to ban (e.g. example.com), or a pattern whose leftmost label contains * under a registrable domain (e.g. *shop*.example.com). Internationalized names are stored in ASCII form.",
+						"type": "string"
+					},
 					"match_subdomains": {
 						"default": true,
-						"description": "If true, any subdomain rooted at this domain is also banned",
+						"description": "If true, any subdomain rooted at this domain, or at a host the pattern matches, is also banned",
 						"type": "boolean"
 					},
 					"category": {"description": "Category / source slug (defaults to \"manual\")", "type": "string"},
@@ -13075,7 +13078,7 @@
 				"properties": {
 					"match_subdomains": {
 						"default": true,
-						"description": "If true, any subdomain rooted at this domain is also banned",
+						"description": "If true, any subdomain rooted at this domain, or at a host the pattern matches, is also banned",
 						"type": "boolean"
 					},
 					"category": {"description": "Category / source slug (defaults to \"manual\")", "type": "string"},

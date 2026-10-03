@@ -280,25 +280,16 @@ pub fn custom_flash(
     level: &str,
     message: &str,
     csrf_token: &str,
-    page_type: &str,
 ) -> Response {
     if is_htmx {
         return render_inline_flash(level, message);
     }
     let flash = to_flash(level, message);
-    let markup = match page_type {
-        "url-domain" => templates::pages::url_domain_bans::url_domain_bans_page(
-            config,
-            auth,
-            Some(&flash),
-            csrf_token,
-        ),
-        _ => templates::pages::profile_substring_bans::profile_substring_bans_page(
-            config,
-            auth,
-            Some(&flash),
-            csrf_token,
-        ),
-    };
+    let markup = templates::pages::profile_substring_bans::profile_substring_bans_page(
+        config,
+        auth,
+        Some(&flash),
+        csrf_token,
+    );
     Html(markup.into_string()).into_response()
 }

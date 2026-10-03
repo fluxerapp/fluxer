@@ -99,7 +99,8 @@ const BLOCKLIST_CATALOG = [
 	},
 	{
 		list_type: 'url-domain' as const,
-		description: 'Domains blocked from being linked, optionally covering every subdomain rooted at the domain.',
+		description:
+			'Domains blocked from being linked, optionally covering every subdomain rooted at the domain. A value whose leftmost label contains * is a pattern that matches that one label under a registrable domain.',
 		value_field: 'domain',
 		fields: ['match_subdomains', 'category', 'severity', 'source_url', 'notes'],
 		scoped: false,
@@ -488,7 +489,7 @@ export function BanAdminController(app: HonoApp) {
 			security: ['adminApiKey'],
 			tags: ['Admin'],
 			description:
-				'Report whether a value is currently blocked by a blocklist. The value is percent-encoded in the path. An IP address can still match a broader stored CIDR entry, and a URL can match a banned domain. The profile-substring blocklist requires a scope.',
+				'Report whether a value is currently blocked by a blocklist. The value is percent-encoded in the path. An IP address can still match a broader stored CIDR entry, and a url-domain value can be a hostname or an http(s) URL that a stored domain or pattern covers. The profile-substring blocklist requires a scope.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');

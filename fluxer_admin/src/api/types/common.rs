@@ -261,6 +261,25 @@ pub struct BanCheckResult {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BlocklistEntry {
+    pub value: String,
+    #[serde(default)]
+    pub match_subdomains: Option<bool>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub created_at: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BlocklistEntryPage {
+    pub items: Vec<BlocklistEntry>,
+    pub has_more: bool,
+    #[serde(default)]
+    pub next_after: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct BulkBanResult {
     pub job_id: String,
 }

@@ -58,6 +58,17 @@ export function canonicalizeUrl(raw: string): string | null {
 	return parsed.toString().toLowerCase();
 }
 
+const TRAILING_DOTS_RE = /\.+$/;
+
+export function normalizeHostname(raw: string): string | null {
+	const trimmed = raw.trim();
+	if (!trimmed) return null;
+	const ascii = domainToASCII(trimmed);
+	if (!ascii) return null;
+	const host = ascii.toLowerCase().replace(TRAILING_DOTS_RE, '');
+	return host || null;
+}
+
 const URL_CANDIDATE_RE =
 	/(?<![a-z0-9._+-]@)((?:https?:\/\/)?(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}(?:[/:?#][^\s<>\u201D']*)?)/gi;
 const TRAILING_PUNCT_RE = /[.,;:!?)\]}\x22'\u00bb\u201C\u201D]+$/;
@@ -77,4 +88,30 @@ export function extractUrlCandidates(text: string | null | undefined): Array<str
 		out.push(cleaned);
 	}
 	return out;
+}
+
+const LINK_AUTHORITY_RE = /https?:\/\/([^\s/\\?#<>"'`()[\]{}|^]+)/giu;
+
+function hostFromAuthority(authority: string): string | null {
+	const cleaned = authority.replace(TRAILING_PUNCT_RE, '');
+	if (!cleaned) return null;
+	let parsed: URL;
+	try {
+		parsed = new URL(`http://${cleaned}/`);
+	} catch {
+		return null;
+	}
+	return normalizeHostname(parsed.hostname);
+}
+
+export function extractLinkHosts(text: string | null | undefined): Array<string> {
+	if (!text) return [];
+	const hosts = new Set<string>();
+	for (const match of text.matchAll(LINK_AUTHORITY_RE)) {
+		const authority = match[1];
+		if (!authority) continue;
+		const host = hostFromAuthority(authority);
+		if (host) hosts.add(host);
+	}
+	return [...hosts];
 }

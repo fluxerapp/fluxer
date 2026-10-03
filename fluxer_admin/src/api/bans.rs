@@ -3,7 +3,7 @@
 use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
-use super::types::{BanAvatarResult, BanCheckResult, BulkBanResult};
+use super::types::{BanAvatarResult, BanCheckResult, BlocklistEntryPage, BulkBanResult};
 
 impl AdminApiClient {
     pub async fn ban_email(&self, email: &str, audit_log_reason: Option<&str>) -> ApiResult<()> {
@@ -146,6 +146,19 @@ impl AdminApiClient {
 
     pub async fn check_url_domain_ban(&self, domain: &str) -> ApiResult<BanCheckResult> {
         self.check_blocklist_entry("url-domain", domain, None).await
+    }
+
+    pub async fn list_url_domain_entries(
+        &self,
+        after: Option<&str>,
+    ) -> ApiResult<BlocklistEntryPage> {
+        let list_type = blocklist_list_type("url-domain")?;
+        let response = self
+            .generated()
+            .list_admin_blocklist_entries(list_type, after, Some(BLOCKLIST_PAGE_SIZE), None)
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        self.generated_value(response.into_inner())
     }
 
     pub async fn ban_file_sha(
@@ -334,6 +347,8 @@ impl AdminApiClient {
 }
 
 const PROFILE_SUBSTRING_LIST: &str = "profile-substring";
+
+const BLOCKLIST_PAGE_SIZE: &str = "200";
 
 fn blocklist_list_type(list_type: &str) -> ApiResult<generated_types::AdminBlocklistListType> {
     generated_types::AdminBlocklistListType::try_from(list_type)

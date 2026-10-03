@@ -10,22 +10,20 @@ import type {Message} from '@app/api/models/Message';
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {findInvites} from '@app/api/utils/InviteUtils';
+import {extractLinkHosts} from '@app/api/utils/UrlNormalizer';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 
 const CONTENT_MAX_CHARS = 2000;
 const LIST_MAX = 10;
 const MENTIONS_MAX = 20;
-const LINK_PATTERN = /https?:\/\/([^\s/?#<>"']+)/giu;
+const WWW_PREFIX_RE = /^www\./u;
 
 function linkDomains(content: string): Array<string> {
 	const domains = new Set<string>();
-	for (const match of content.matchAll(LINK_PATTERN)) {
-		const host = match[1]
-			?.toLowerCase()
-			.replace(/:\d+$/u, '')
-			.replace(/^www\./u, '');
-		if (host) domains.add(host);
+	for (const host of extractLinkHosts(content)) {
+		const domain = host.replace(WWW_PREFIX_RE, '');
+		if (domain) domains.add(domain);
 		if (domains.size >= LIST_MAX) break;
 	}
 	return [...domains];

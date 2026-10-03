@@ -7,12 +7,13 @@ import {BANNED_URL_DOMAINS_REFRESH_CHANNEL, BANNED_URLS_REFRESH_CHANNEL} from '@
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
-import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
+import {UrlHostRuleSet} from '@app/api/utils/UrlHostRules';
+import {canonicalizeUrl, extractLinkHosts, extractUrlCandidates} from '@app/api/utils/UrlNormalizer';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 class UrlBlocklistCache {
 	private exactUrls: Set<string> = new Set();
-	private blockedDomains: Set<string> = new Set();
+	private hostRules = new UrlHostRuleSet();
 	private adminRepository = new AdminRepository();
 	private kvClient: IKVProvider | null = null;
 	private storageService: IStorageService | null = null;
@@ -55,15 +56,15 @@ class UrlBlocklistCache {
 		for (const row of manualUrls) {
 			if (row.url_canonical) nextUrls.add(row.url_canonical.toLowerCase());
 		}
-		const nextDomains = new Set<string>();
+		const nextHostRules = new UrlHostRuleSet();
 		for (const row of domains) {
-			nextDomains.add(row.domain.toLowerCase());
+			nextHostRules.add(row.domain, row.match_subdomains ?? true);
 		}
 		this.exactUrls = nextUrls;
-		this.blockedDomains = nextDomains;
+		this.hostRules = nextHostRules;
 		this.consecutiveFailures = 0;
 		Logger.debug(
-			{urls: nextUrls.size, domains: nextDomains.size, feedUrls: feedUrls.size},
+			{urls: nextUrls.size, ...nextHostRules.size, feedUrls: feedUrls.size},
 			'URL blocklist cache refreshed',
 		);
 	}
@@ -94,7 +95,17 @@ class UrlBlocklistCache {
 	}
 
 	isHostnameBanned(host: string): boolean {
-		return this.blockedDomains.has(host.toLowerCase());
+		return this.hostRules.matches(host);
+	}
+
+	containsBannedLink(text: string): boolean {
+		for (const url of extractUrlCandidates(text)) {
+			if (this.isUrlOrDomainBanned(url)) return true;
+		}
+		for (const host of extractLinkHosts(text)) {
+			if (this.isHostnameBanned(host)) return true;
+		}
+		return false;
 	}
 
 	addExactUrl(canonical: string): void {
@@ -105,21 +116,22 @@ class UrlBlocklistCache {
 		this.exactUrls.delete(canonical.toLowerCase());
 	}
 
-	addDomain(domain: string): void {
-		this.blockedDomains.add(domain.toLowerCase());
+	addDomain(domain: string, matchSubdomains = true): void {
+		this.hostRules.add(domain, matchSubdomains);
 	}
 
 	removeDomain(domain: string): void {
-		this.blockedDomains.delete(domain.toLowerCase());
+		this.hostRules.remove(domain);
 	}
 
 	get size(): {
 		urls: number;
 		domains: number;
+		patterns: number;
 	} {
 		return {
 			urls: this.exactUrls.size,
-			domains: this.blockedDomains.size,
+			...this.hostRules.size,
 		};
 	}
 
@@ -128,7 +140,7 @@ class UrlBlocklistCache {
 			Logger.error({error}, 'Failed to shut down URL blocklist cache');
 		});
 		this.exactUrls = new Set();
-		this.blockedDomains = new Set();
+		this.hostRules = new UrlHostRuleSet();
 		this.kvClient = null;
 		this.storageService = null;
 		this.consecutiveFailures = 0;

@@ -81,4 +81,14 @@ describe('shouldSkipContentFilterPath', () => {
 		const result = paths.map((path) => shouldSkipContentFilterPath(path));
 		expect(result).toEqual([false, false, false]);
 	});
+	test('skips blocklist writes whose values are the blocked content', () => {
+		const paths = [
+			'/admin/blocklists/phrase/entries',
+			'/admin/blocklists/url/entries',
+			'/admin/blocklists/url-domain/entries',
+			'/admin/blocklists/profile-substring/entries',
+		];
+		const result = paths.map((path) => shouldSkipContentFilterPath(path));
+		expect(result).toEqual([true, true, true, false]);
+	});
 });

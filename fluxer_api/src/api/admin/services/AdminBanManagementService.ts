@@ -24,6 +24,7 @@ import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
 import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
 import {canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
+import {parseUrlDomainEntry} from '@app/api/utils/UrlHostRules';
 import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -106,6 +107,16 @@ function stripAvatarAnimationPrefix(hash: string): string {
 
 function normalizeAvatarHashes(hashes: Array<string>): Array<string> {
 	return Array.from(new Set(hashes.map((hash) => stripAvatarAnimationPrefix(hash.toLowerCase()))));
+}
+
+function hostFromUrlOrHostname(value: string): string | null {
+	const trimmed = value.trim();
+	if (!/^https?:\/\//i.test(trimmed)) return trimmed;
+	try {
+		return new URL(trimmed).hostname;
+	} catch {
+		return null;
+	}
 }
 
 function withReasonMetadata(entries: Array<[string, string]>, reason: string | undefined): Map<string, string> {
@@ -366,7 +377,9 @@ export class AdminBanManagementService {
 	) {
 		const {adminRepository} = this.deps;
 		const {cache: cacheService} = this.deps.apiContext.services;
-		const d = data.domain.toLowerCase();
+		const entry = parseUrlDomainEntry(data.domain);
+		if (!entry.ok) throw InputValidationError.create('domain', entry.message);
+		const d = entry.value;
 		const matchSubs = data.match_subdomains ?? true;
 		await adminRepository.banUrlDomain({
 			domain: d,
@@ -378,7 +391,7 @@ export class AdminBanManagementService {
 			added_by: adminUserId,
 			notes: data.notes ?? null,
 		});
-		urlBlocklistCache.addDomain(d);
+		urlBlocklistCache.addDomain(d, matchSubs);
 		await cacheService.publish(BANNED_URL_DOMAINS_REFRESH_CHANNEL, 'refresh');
 		await this.createBlocklistAuditLog({
 			adminUserId,
@@ -388,6 +401,7 @@ export class AdminBanManagementService {
 			metadata: new Map([
 				['domain', d],
 				['match_subdomains', String(matchSubs)],
+				['pattern', String(entry.pattern)],
 			]),
 		});
 	}
@@ -401,7 +415,8 @@ export class AdminBanManagementService {
 	) {
 		const {adminRepository} = this.deps;
 		const {cache: cacheService} = this.deps.apiContext.services;
-		const d = data.domain.toLowerCase();
+		const entry = parseUrlDomainEntry(data.domain);
+		const d = entry.ok ? entry.value : data.domain.trim().toLowerCase();
 		await adminRepository.unbanUrlDomain(d);
 		urlBlocklistCache.removeDomain(d);
 		await cacheService.publish(BANNED_URL_DOMAINS_REFRESH_CHANNEL, 'refresh');
@@ -417,7 +432,8 @@ export class AdminBanManagementService {
 	async checkUrlDomainBan(data: {domain: string}): Promise<{
 		banned: boolean;
 	}> {
-		return {banned: urlBlocklistCache.isHostnameBanned(data.domain)};
+		const host = hostFromUrlOrHostname(data.domain);
+		return {banned: host != null && urlBlocklistCache.isHostnameBanned(host)};
 	}
 
 	async banFileSha(
