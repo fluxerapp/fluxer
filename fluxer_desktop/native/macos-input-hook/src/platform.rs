@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::collections::BTreeSet;
 use std::ffi::c_void;
 use std::ptr;
 use std::sync::{
-    Arc, Mutex,
+    Arc, Mutex, MutexGuard,
     atomic::{AtomicBool, AtomicPtr, AtomicU64, Ordering},
     mpsc::{Receiver, Sender, channel},
 };
@@ -33,14 +34,12 @@ unsafe extern "C" {
     fn CGEventTapEnable(tap: CFMachPortRef, enable: bool);
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum InputEventKind {
     KeyDown,
     KeyUp,
     MouseDown,
     MouseUp,
-    MouseMove,
-    Wheel,
 }
 
 #[derive(Debug)]
@@ -50,8 +49,6 @@ pub struct InputEventPayload {
     keycode: u32,
     key_name: String,
     button: u8,
-    delta_x: i32,
-    delta_y: i32,
     x: i32,
     y: i32,
     has_xy: bool,
@@ -66,8 +63,6 @@ impl ToNapiValue for InputEventPayload {
             InputEventKind::KeyUp => "keyup",
             InputEventKind::MouseDown => "mousedown",
             InputEventKind::MouseUp => "mouseup",
-            InputEventKind::MouseMove => "mousemove",
-            InputEventKind::Wheel => "wheel",
         };
         obj.set("type", kind_str)?;
         obj.set("ctrlKey", value.mods.ctrl)?;
@@ -87,18 +82,6 @@ impl ToNapiValue for InputEventPayload {
                     obj.set("y", value.y)?;
                 }
             }
-            InputEventKind::MouseMove => {
-                obj.set("x", value.x)?;
-                obj.set("y", value.y)?;
-            }
-            InputEventKind::Wheel => {
-                obj.set("deltaX", value.delta_x)?;
-                obj.set("deltaY", value.delta_y)?;
-                if value.has_xy {
-                    obj.set("x", value.x)?;
-                    obj.set("y", value.y)?;
-                }
-            }
         }
         unsafe { <Object<'_> as ToNapiValue>::to_napi_value(raw_env, obj) }
     }
@@ -112,11 +95,8 @@ type EventTsfn = Arc<
         Status,
         false,
         true,
-        EVENT_QUEUE_LIMIT,
     >,
 >;
-
-const EVENT_QUEUE_LIMIT: usize = 1024;
 
 struct WorkerState {
     run_loop: CFRunLoop,
@@ -138,7 +118,6 @@ impl InputHook {
                 .build_threadsafe_function::<InputEventPayload>()
                 .weak::<true>()
                 .callee_handled::<false>()
-                .max_queue_size::<EVENT_QUEUE_LIMIT>()
                 .build()
                 .map_err(|err| {
                     Error::new(
@@ -235,11 +214,6 @@ const EVENTS_OF_INTEREST: &[CGEventType] = &[
     CGEventType::RightMouseUp,
     CGEventType::OtherMouseDown,
     CGEventType::OtherMouseUp,
-    CGEventType::MouseMoved,
-    CGEventType::LeftMouseDragged,
-    CGEventType::RightMouseDragged,
-    CGEventType::OtherMouseDragged,
-    CGEventType::ScrollWheel,
 ];
 
 const CAPS_LOCK_KEYCODE: u16 = 0x39;
@@ -253,6 +227,7 @@ fn worker_main(tsfn: EventTsfn, loop_tx: Sender<std::result::Result<CFRunLoop, S
         tap_ref: tap_ref.clone(),
         last_flags: last_flags.clone(),
         caps_lock_via_hid: caps_lock_via_hid.clone(),
+        held: Mutex::new(HeldInputs::default()),
     };
     let tap_result = CGEventTap::new(
         CGEventTapLocation::Session,
@@ -319,8 +294,67 @@ fn caps_lock_payload(pressed: bool, flags: u64) -> InputEventPayload {
         keycode: u32::from(CAPS_LOCK_KEYCODE),
         key_name: keymap::keycode_name_or_fallback(CAPS_LOCK_KEYCODE),
         button: 0,
-        delta_x: 0,
-        delta_y: 0,
+        x: 0,
+        y: 0,
+        has_xy: false,
+    }
+}
+
+#[derive(Default)]
+struct HeldInputs {
+    keys: BTreeSet<u16>,
+    buttons: BTreeSet<u8>,
+}
+
+impl HeldInputs {
+    fn track(&mut self, payload: &InputEventPayload) {
+        #[allow(clippy::cast_possible_truncation)]
+        let keycode = payload.keycode as u16;
+        match payload.kind {
+            InputEventKind::KeyDown => {
+                self.keys.insert(keycode);
+            }
+            InputEventKind::KeyUp => {
+                self.keys.remove(&keycode);
+            }
+            InputEventKind::MouseDown => {
+                self.buttons.insert(payload.button);
+            }
+            InputEventKind::MouseUp => {
+                self.buttons.remove(&payload.button);
+            }
+        }
+    }
+
+    fn take_releases(&mut self) -> Vec<InputEventPayload> {
+        let mods = modifiers::from_flags(0);
+        let keys = std::mem::take(&mut self.keys)
+            .into_iter()
+            .map(|keycode| key_payload(InputEventKind::KeyUp, keycode, mods));
+        let buttons =
+            std::mem::take(&mut self.buttons)
+                .into_iter()
+                .map(|button| InputEventPayload {
+                    kind: InputEventKind::MouseUp,
+                    mods,
+                    keycode: 0,
+                    key_name: String::new(),
+                    button,
+                    x: 0,
+                    y: 0,
+                    has_xy: false,
+                });
+        keys.chain(buttons).collect()
+    }
+}
+
+fn key_payload(kind: InputEventKind, keycode: u16, mods: Modifiers) -> InputEventPayload {
+    InputEventPayload {
+        kind,
+        mods,
+        keycode: u32::from(keycode),
+        key_name: keymap::keycode_name_or_fallback(keycode),
+        button: 0,
         x: 0,
         y: 0,
         has_xy: false,
@@ -332,6 +366,7 @@ struct EventDispatcher {
     tap_ref: Arc<AtomicPtr<c_void>>,
     last_flags: Arc<AtomicU64>,
     caps_lock_via_hid: Arc<AtomicBool>,
+    held: Mutex<HeldInputs>,
 }
 
 impl EventDispatcher {
@@ -344,6 +379,7 @@ impl EventDispatcher {
         match event_type {
             CGEventType::TapDisabledByTimeout | CGEventType::TapDisabledByUserInput => {
                 self.reenable_tap();
+                self.release_all();
                 return CallbackResult::Keep;
             }
             _ => {}
@@ -380,7 +416,9 @@ impl EventDispatcher {
                     self.send_key(InputEventKind::KeyUp, keycode, mods);
                     return CallbackResult::Keep;
                 }
-                let Some(is_down) = modifiers::modifier_key_down_from_flags(keycode, flags.bits())
+                let was_held = self.held().keys.contains(&keycode);
+                let Some(is_down) =
+                    modifiers::modifier_key_down_from_flags(keycode, flags.bits(), was_held)
                 else {
                     return CallbackResult::Keep;
                 };
@@ -414,8 +452,6 @@ impl EventDispatcher {
                         keycode: 0,
                         key_name: String::new(),
                         button: b,
-                        delta_x: 0,
-                        delta_y: 0,
                         x: point.x as i32,
                         y: point.y as i32,
                         has_xy: true,
@@ -423,72 +459,35 @@ impl EventDispatcher {
                     self.send(payload);
                 }
             }
-            CgEventType::MouseMoved
-            | CgEventType::LeftMouseDragged
-            | CgEventType::RightMouseDragged
-            | CgEventType::OtherMouseDragged => {
-                let point = event.location();
-                #[allow(clippy::cast_possible_truncation)]
-                let payload = InputEventPayload {
-                    kind: InputEventKind::MouseMove,
-                    mods,
-                    keycode: 0,
-                    key_name: String::new(),
-                    button: 0,
-                    delta_x: 0,
-                    delta_y: 0,
-                    x: point.x as i32,
-                    y: point.y as i32,
-                    has_xy: true,
-                };
-                self.send(payload);
-            }
-            CgEventType::ScrollWheel => {
-                let dy = event.get_integer_value_field(EventField::SCROLL_WHEEL_EVENT_DELTA_AXIS_1)
-                    as i32;
-                let dx = event.get_integer_value_field(EventField::SCROLL_WHEEL_EVENT_DELTA_AXIS_2)
-                    as i32;
-                let point = event.location();
-                #[allow(clippy::cast_possible_truncation)]
-                let payload = InputEventPayload {
-                    kind: InputEventKind::Wheel,
-                    mods,
-                    keycode: 0,
-                    key_name: String::new(),
-                    button: 0,
-                    delta_x: dx,
-                    delta_y: dy,
-                    x: point.x as i32,
-                    y: point.y as i32,
-                    has_xy: true,
-                };
-                self.send(payload);
-            }
         }
 
         CallbackResult::Keep
     }
 
     fn send_key(&self, kind: InputEventKind, keycode: u16, mods: Modifiers) {
-        let payload = InputEventPayload {
-            kind,
-            mods,
-            keycode: u32::from(keycode),
-            key_name: keymap::keycode_name_or_fallback(keycode),
-            button: 0,
-            delta_x: 0,
-            delta_y: 0,
-            x: 0,
-            y: 0,
-            has_xy: false,
-        };
-        self.send(payload);
+        self.send(key_payload(kind, keycode, mods));
+    }
+
+    fn held(&self) -> MutexGuard<'_, HeldInputs> {
+        self.held
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     fn send(&self, payload: InputEventPayload) {
+        self.held().track(&payload);
         let _ = self
             .tsfn
             .call(payload, ThreadsafeFunctionCallMode::NonBlocking);
+    }
+
+    fn release_all(&self) {
+        let releases = self.held().take_releases();
+        for payload in releases {
+            let _ = self
+                .tsfn
+                .call(payload, ThreadsafeFunctionCallMode::NonBlocking);
+        }
     }
 
     fn reenable_tap(&self) {
@@ -501,4 +500,44 @@ impl EventDispatcher {
 
 pub fn has_accessibility_permission() -> bool {
     objc2_core_graphics::CGPreflightListenEventAccess()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn held_inputs_release_every_pressed_key_and_button_once() {
+        let mods = modifiers::from_flags(0);
+        let mut held = HeldInputs::default();
+        held.track(&key_payload(InputEventKind::KeyDown, 0x31, mods));
+        held.track(&key_payload(InputEventKind::KeyDown, 0x3b, mods));
+        held.track(&key_payload(InputEventKind::KeyDown, 0x00, mods));
+        held.track(&key_payload(InputEventKind::KeyUp, 0x00, mods));
+        held.track(&InputEventPayload {
+            kind: InputEventKind::MouseDown,
+            mods,
+            keycode: 0,
+            key_name: String::new(),
+            button: 3,
+            x: 0,
+            y: 0,
+            has_xy: true,
+        });
+        let releases = held.take_releases();
+        let summary: Vec<(InputEventKind, u32, u8)> = releases
+            .iter()
+            .map(|payload| (payload.kind, payload.keycode, payload.button))
+            .collect();
+        assert_eq!(
+            summary,
+            vec![
+                (InputEventKind::KeyUp, 0x31, 0),
+                (InputEventKind::KeyUp, 0x3b, 0),
+                (InputEventKind::MouseUp, 0, 3),
+            ]
+        );
+        assert!(releases.iter().all(|payload| !payload.mods.ctrl));
+        assert!(held.take_releases().is_empty());
+    }
 }

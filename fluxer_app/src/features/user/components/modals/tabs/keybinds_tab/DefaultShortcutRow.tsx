@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
 import {isBuiltinDisableMarker} from '@app/features/input/state/KeybindResolution';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
@@ -15,6 +16,7 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {getCustomKeybindActionLabel} from '@app/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions';
 import {DefaultShortcutChipList} from '@app/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList';
+import {SystemShortcutRowHint} from '@app/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint';
 import {
 	chipsForDefaultEntry,
 	getRowActions,
@@ -86,7 +88,10 @@ export const DefaultShortcutRow: React.FC<{
 				const anyBuiltinDisabled = perAction.some((p) => p.builtinDisabled);
 				const allBuiltinDisabled = perAction.every((p) => p.builtinDisabled);
 				const globalAction =
-					actions.length === 1 && !anyBuiltinDisabled && Keybind.isActionGlobalCapable(actions[0].action)
+					actions.length === 1 &&
+					!anyBuiltinDisabled &&
+					!GlobalShortcuts.isPortalBackend &&
+					Keybind.isActionGlobalCapable(actions[0].action)
 						? actions[0].action
 						: null;
 				const reEnableGroup = anyBuiltinDisabled ? (
@@ -268,6 +273,10 @@ export const DefaultShortcutRow: React.FC<{
 		<div className={styles.defaultRow} data-flx="user.keybinds-tab.default-shortcut-row.default-row--2">
 			<div className={styles.defaultLabel} data-flx="user.keybinds-tab.default-shortcut-row.default-label--2">
 				{entry.label}
+				<SystemShortcutRowHint
+					action={entry.action}
+					data-flx="user.keybinds-tab.default-shortcut-row.system-shortcut-row-hint"
+				/>
 			</div>
 			<div
 				className={styles.defaultRowActions}

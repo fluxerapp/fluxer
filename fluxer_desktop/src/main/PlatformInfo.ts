@@ -13,6 +13,7 @@ import type {
 } from '@electron/common/Types';
 import {isPortableMode} from '@electron/common/UserDataPath';
 import {getFlatpakAppId, isFlatpakRuntime} from '@electron/main/LinuxSandbox';
+import {isWaylandSession} from '@electron/main/LinuxSession';
 import {app} from 'electron';
 
 const requireModule = createRequire(import.meta.url);
@@ -143,9 +144,7 @@ export async function getDesktopInfo(options: DesktopInfoOptions = {}): Promise<
 		electronVersion: process.versions.electron ?? 'unknown',
 		chromeVersion: process.versions.chrome ?? 'unknown',
 		nodeVersion: process.versions.node ?? 'unknown',
-		waylandSession:
-			process.platform === 'linux' &&
-			(Boolean(process.env.WAYLAND_DISPLAY) || process.env.XDG_SESSION_TYPE === 'wayland'),
+		waylandSession: isWaylandSession(),
 		portable: isPortableMode(),
 		flatpak: isFlatpakRuntime(),
 		flatpakAppId: getFlatpakAppId(),

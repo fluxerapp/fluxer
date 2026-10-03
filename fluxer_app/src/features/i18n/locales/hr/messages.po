@@ -993,7 +993,7 @@ msgstr "{count, plural, one {# kanal ga prati} other {# kanala ga prati}} ovu po
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# zajednica pronađena} few {# zajednice pronađene} other {# zajednica pronađeno}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1955
+#: src/features/app/components/layout/GuildsLayout.tsx:1954
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# zajednica privremeno nije dostupna zbog kvara na protočnom kondenzatoru.} few {# zajednice privremeno nisu dostupne zbog kvara na protočnom kondenzatoru.} other {# zajednica privremeno nije dostupno zbog kvara na protočnom kondenzatoru.}}"
 
@@ -1708,6 +1708,31 @@ msgstr "{productName} izbjegava slanje push obavijesti na vaše mobilne uređaje
 msgid "{productName} Bug Hunter"
 msgstr "Lovac na bugove {productName}a"
 
+#. Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:28
+msgid "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
+msgstr "{productName} može zatražiti od radnog okruženja da pokreće njegove prečace dok {productName} nije u fokusu. Radno okruženje tražit će potvrdu i omogućiti vam odabir tipki."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:160
+msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
+msgstr "{productName} više ne može čitati vašu tipkovnicu pa umjesto toga osluškuje prečace putem X11."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:155
+msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
+msgstr "{productName} više ne može čitati vašu tipkovnicu pa se umjesto toga koriste prečaci radnog okruženja."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:165
+msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
+msgstr "{productName} više ne može čitati vašu tipkovnicu. Prečaci rade samo dok je {productName} u fokusu."
+
+#. Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:34
+msgid "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
+msgstr "{productName} može registrirati svoje prečace u Hyprlandu kako bi radili dok {productName} nije u fokusu. Zatim dodijelite tipke u konfiguraciji Hyprlanda."
+
 #. Inline notice body on Windows. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
 #. Inline notice body on macOS. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:23
@@ -1813,7 +1838,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "Aplikacija {productName} treba pristup kameri za prikaz vaših uređaja."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:141
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:143
 msgid "{productName} needs microphone access to list your devices."
 msgstr "Aplikacija {productName} treba pristup mikrofonu za prikaz vaših uređaja."
 
@@ -1836,6 +1861,11 @@ msgstr "{productName} se sada nalazi na adresi {host}. Instalirajte ga odande."
 #: src/features/user/components/popouts/UserProfileBadges.tsx:34
 msgid "{productName} Partner"
 msgstr "Partner {productName}a"
+
+#. Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:58
+msgid "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
+msgstr "{productName} je registrirao svoje prečace u Hyprlandu. Dodijelite im tipke u konfiguraciji Hyprlanda da biste ih koristili dok {productName} nije u fokusu."
 
 #. Nagbar shown after the app restarts while the user was connected to a community voice channel. {productName} is Fluxer, {channelName} is the voice channel name, and {communityName} is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:24
@@ -2586,7 +2616,7 @@ msgid "A profile that stands out"
 msgstr "Profil koji se ističe"
 
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:55
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "redirect_uri je obavezan kada opseg bot nije jedini opseg."
 
@@ -2847,7 +2877,7 @@ msgstr "Samo u svim otvorenim izravnim porukama"
 msgid "Across every community you're in"
 msgstr "U svim zajednicama u kojima ste član"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:110
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:112
 msgid "Action"
 msgstr "Radnja"
 
@@ -2962,7 +2992,7 @@ msgid "Activity sharing"
 msgstr "Dijeljenje aktivnosti"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:495
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Prag aktivnosti"
@@ -3091,7 +3121,7 @@ msgid "Add an extra layer of security to your account"
 msgstr "Dodajte još jedan sloj sigurnosti svom računu"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:41
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
 msgstr "Dodaj još jedan prilagođeni prečac"
 
@@ -3427,7 +3457,7 @@ msgid "Address"
 msgstr "Adresa"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:101
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Sami prilagodite svaku postavku: potiskivanje buke, poništavanje jeke i pojačanje."
 
@@ -3696,11 +3726,11 @@ msgstr "Dopusti {everyoneMention} i {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Dopustite aplikaciji {PRODUCT_NAME} pristup vašoj kameri u {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:553
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Dopustite aplikaciji {PRODUCT_NAME} pristup mikrofonu u {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Dopustite aplikaciji {PRODUCT_NAME} pristup mikrofonu. Provjerite adresnu traku ili postavke preglednika."
 
@@ -3803,7 +3833,7 @@ msgstr "Dopusti članovima bez dopuštenja {readMessageHistoryPermissionLabel} d
 msgid "Allow mentions for this role"
 msgstr "Dopusti spominjanje za ovu ulogu"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:578
 msgid "Allow microphone"
 msgstr "Dopusti mikrofon"
 
@@ -5003,7 +5033,7 @@ msgid "Authorization failed"
 msgstr "Autorizacija nije uspjela"
 
 #. OAuth authorize page generic error toast shown when the authorize request fails unexpectedly.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:75
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:76
 msgid "Authorization failed. Try again."
 msgstr "Autorizacija nije uspjela. Pokušajte ponovno."
 
@@ -5092,8 +5122,8 @@ msgid "Auto-detect language"
 msgstr "Automatsko prepoznavanje jezika"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:121
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:482
 msgid "Auto-set activity threshold"
 msgstr "Automatsko postavljanje praga aktivnosti"
 
@@ -5998,7 +6028,7 @@ msgid "Bot permissions"
 msgstr "Dopuštenja bota"
 
 #. OAuth authorize page error shown when the permissions query parameter is a negative integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:67
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:68
 msgid "Bot permissions cannot be negative."
 msgstr "Dopuštenja bota ne mogu biti negativna."
 
@@ -6869,6 +6899,11 @@ msgstr "Promijeni nadimak u grupi"
 msgid "Change icon"
 msgstr "Promijeni ikonu"
 
+#. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
+msgid "Change in system settings"
+msgstr "Promijeni u postavkama sustava"
+
 #. Title of the modal where the user picks a community invite background source. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:37
 msgid "Change invite background"
@@ -7229,7 +7264,7 @@ msgid "Channel access"
 msgstr "Pristup kanalu"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:140
 msgid "Channel access denied"
 msgstr "Pristup kanalu odbijen"
 
@@ -7294,7 +7329,7 @@ msgstr "ID kanala kopiran u međuspremnik"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:100
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "poveznica kanala"
@@ -7461,6 +7496,11 @@ msgstr "unos za chat"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:146
 msgid "Chat shortcuts"
 msgstr "Prečaci za chat"
+
+#. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:128
+msgid "Check again"
+msgstr "Provjeri ponovno"
 
 #. Tray menu item. Triggers the auto-updater to look for a new desktop build.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:225
@@ -7645,7 +7685,7 @@ msgstr "Odaberite prozor u sistemskom biraču"
 msgid "Choose an account"
 msgstr "Odaberite račun"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:152
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:154
 msgid "Choose an action."
 msgstr "Odaberite radnju."
 
@@ -7667,7 +7707,7 @@ msgid "Choose background"
 msgstr "Odaberite pozadinu"
 
 #. OAuth authorize page error shown when a bot invite request provides both guild_id and channel_id. Keep the parameter names literal.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:87
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:88
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "Odaberite guild_id ili channel_id, ne oboje."
 
@@ -7990,7 +8030,7 @@ msgstr "Pročišćava mikrofon za jasan govor."
 #: src/features/app/components/setup/SetupWizardSteps.tsx:120
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
-#: src/features/input/components/KeybindRecorder.tsx:442
+#: src/features/input/components/KeybindRecorder.tsx:482
 #: src/features/theme_studio/sections/QuickCssSection.tsx:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:241
 msgid "Clear"
@@ -8191,7 +8231,7 @@ msgstr "Kliknite za otvaranje birača boja i odabir nove boje."
 msgid "Click to react"
 msgstr "Kliknite za reakciju"
 
-#: src/features/input/components/KeybindRecorder.tsx:411
+#: src/features/input/components/KeybindRecorder.tsx:451
 msgid "Click to record"
 msgstr "Kliknite za snimanje"
 
@@ -9110,7 +9150,7 @@ msgstr "Potvrda"
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Potvrda ili dvostruki klik za pridruživanje glasovnim kanalima zajednice"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:169
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:176
 msgid "Conflicts with {conflictLabel}"
 msgstr "U sukobu s {conflictLabel}"
 
@@ -9127,7 +9167,7 @@ msgstr "Povežite kameru ili virtualni uređaj za snimanje, pa pokušajte ponovn
 msgid "Connect a display, then try again."
 msgstr "Povežite zaslon, a zatim pokušajte ponovno."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:563
 msgid "Connect a microphone and try again."
 msgstr "Povežite mikrofon i pokušajte ponovno."
 
@@ -9699,6 +9739,21 @@ msgstr "Kopiraj poveznicu za pozivnicu"
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:49
 msgid "Copy invite URL"
 msgstr "Kopiraj URL pozivnice"
+
+#. Button that copies Hyprland config lines to the clipboard.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
+msgid "Copy lines"
+msgstr "Kopiraj retke"
+
+#. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:118
+msgid "Copy lines for hyprland.conf"
+msgstr "Kopiraj retke za hyprland.conf"
+
+#. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
+msgid "Copy lines for hyprland.lua"
+msgstr "Kopiraj retke za hyprland.lua"
 
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:750
@@ -10845,7 +10900,7 @@ msgstr "Prilagođeno"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
@@ -10948,12 +11003,12 @@ msgid "Custom selection"
 msgstr "Prilagođeni odabir"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:42
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:44
 msgid "Custom shortcut action"
 msgstr "Prilagođena radnja prečaca"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:38
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:40
 msgid "Custom shortcut options"
 msgstr "Opcije prilagođenih prečaca"
 
@@ -11466,7 +11521,7 @@ msgstr "Zadani prečaci"
 msgid "Default translator"
 msgstr "Zadani prevoditelj"
 
-#: src/features/input/components/KeybindRecorder.tsx:419
+#: src/features/input/components/KeybindRecorder.tsx:459
 msgid "Default:"
 msgstr "Zadano:"
 
@@ -11715,7 +11770,7 @@ msgid "Delete saved media"
 msgstr "Izbriši spremljene medije"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:34
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:36
 msgid "Delete shortcut"
 msgstr "Izbriši prečac"
 
@@ -12102,13 +12157,13 @@ msgstr "Stanje za razvojne programere"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:149
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:152
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Alati za razvojne programere"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:153
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:156
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Alati za razvojne programere dostupni su putem značke osoblja u zaglavlju kanala."
 
@@ -12313,7 +12368,7 @@ msgid "Disable backend premium perks"
 msgstr "Onemogući pozadinske premium pogodnosti"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:33
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:35
 msgid "Disable built-in shortcut"
 msgstr "Onemogući ugrađeni prečac"
 
@@ -12377,7 +12432,7 @@ msgid "Disable screen share picture-in-picture popouts?"
 msgstr "Onemogućiti skočne prozore slike u slici za dijeljenje zaslona?"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:26
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:28
 msgid "Disable shortcut"
 msgstr "Onemogući prečac"
 
@@ -12888,7 +12943,7 @@ msgstr "Doniraj radije"
 #. Primary button in the favorite GIF import modal after a completed import.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:54
-#: src/features/input/components/KeybindRecorder.tsx:470
+#: src/features/input/components/KeybindRecorder.tsx:510
 #: src/features/moderation/components/report_modal/IARModal.tsx:94
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
@@ -12951,7 +13006,7 @@ msgid "Download button"
 msgstr "Gumb za preuzimanje"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
 msgid "Download desktop app"
 msgstr "Preuzmi aplikaciju za stolno računalo"
 
@@ -13204,6 +13259,11 @@ msgstr "Nizozemski"
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "npr. YubiKey, iPhone, poslovno računalo"
 
+#. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+msgid "Each key can run only one system-wide shortcut."
+msgstr "Svaka tipka može pokretati samo jedan prečac za cijeli sustav."
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx:12
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -13350,7 +13410,7 @@ msgid "Edit invite link"
 msgstr "Uredi poveznicu za pozivnicu"
 
 #. Button or menu action label in the keyboard shortcuts keybind recorder. Keep it concise.
-#: src/features/input/components/KeybindRecorder.tsx:32
+#: src/features/input/components/KeybindRecorder.tsx:40
 msgid "Edit keyboard shortcut"
 msgstr "Uredi prečac na tipkovnici"
 
@@ -13425,7 +13485,7 @@ msgstr "Obrazac za uređivanje spremljenih medija"
 msgid "Edit search engine"
 msgstr "Uredi tražilicu"
 
-#: src/features/input/components/KeybindRecorder.tsx:378
+#: src/features/input/components/KeybindRecorder.tsx:418
 msgid "Edit shortcut"
 msgstr "Uredi prečac"
 
@@ -13753,20 +13813,16 @@ msgstr "Prazna izmjena"
 msgid "Empty favorites"
 msgstr "Prazni favoriti"
 
-#. Button label in the Linux Wayland input-access nagbar.
-#. Button label in the keybind settings system-wide shortcuts section.
 #. Button or menu action label in the invites disable invites button. Keep it concise.
 #. Primary button label in the enable-invites confirmation modal.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "Omogući"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:129
 msgid "Enable {permissionName} permission"
 msgstr "Omogući dopuštenje {permissionName}"
 
@@ -13876,11 +13932,6 @@ msgstr "Omogući hardversko ubrzanje i ponovno pokreni"
 msgid "Enable hardware acceleration?"
 msgstr "Omogućiti hardversko ubrzanje?"
 
-#. Description for a Linux Wayland input-access nagbar. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:16
-msgid "Enable input access to use system-wide shortcuts on Wayland. After changing input access, fully quit and restart {productName} so shortcuts can use it."
-msgstr "Omogućite pristup unosu za korištenje prečaca na razini sustava na Waylandu. Nakon promjene pristupa unosu, u potpunosti zatvorite i ponovno pokrenite {productName} kako bi prečaci mogli koristiti tu značajku."
-
 #. Button label that re-enables invite links for a community.
 #: src/features/invite/components/DisableInvitesButton.tsx:40
 msgid "Enable invites"
@@ -13971,7 +14022,7 @@ msgid "Enable Shift to expand"
 msgstr "Omogući Shift za proširivanje"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:30
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:32
 msgid "Enable shortcut"
 msgstr "Omogući prečac"
 
@@ -14357,7 +14408,7 @@ msgstr "Zvuk cijelog sustava"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:310
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:192
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:194
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Zvuk ulaska"
@@ -14467,7 +14518,7 @@ msgstr "Večernje vrijeme"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:178
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Ujednačava glasnoću mikrofona kako ne biste bili pretihi."
@@ -15682,6 +15733,26 @@ msgstr "Samo za britanske oči..."
 msgid "For me"
 msgstr "Za mene"
 
+#. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
+msgstr "Za „Pritisni za isključivanje mikrofona” koristite jednu tipku bez Ctrl, Alt ili Shift. Kod kombinacije najprije otpustite glavnu tipku jer mikrofon inače može ostati isključen."
+
+#. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:181
+msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
+msgstr "Za „Pritisni za govor” koristite jednu tipku bez Ctrl, Alt ili Shift. Kod kombinacije najprije otpustite glavnu tipku jer mikrofon inače može ostati uključen."
+
+#. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:199
+msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
+msgstr "Za ovaj prečac koristite jednu tipku bez Ctrl, Alt ili Shift. Kod kombinacije najprije otpustite glavnu tipku jer prečac inače može ostati aktivan."
+
+#. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
+msgstr "Za prioritet glasovne aktivnosti koristite jednu tipku bez Ctrl, Alt ili Shift. Kod kombinacije najprije otpustite glavnu tipku jer prioritet inače može ostati uključen."
+
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:268
 msgid "For your security, please confirm it's you to continue."
 msgstr "Radi vaše sigurnosti, potvrdite svoj identitet za nastavak."
@@ -16600,8 +16671,8 @@ msgid "Global profile"
 msgstr "Globalni profil"
 
 #. Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:81
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:63
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:83
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:65
 msgid "Global shortcut"
 msgstr "Globalni prečac"
 
@@ -17434,6 +17505,11 @@ msgstr "Držite tipku Shift i pritisnite X za odabir aplikacija. Pritisnite {sel
 msgid "Hold to record. Drag up to lock, or release to send."
 msgstr "Držite za snimanje. Povucite gore za zaključavanje ili otpustite za slanje."
 
+#. Hint under a system-wide hold shortcut such as push-to-talk on Linux. The desktop ignores the key while other modifier keys are held.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:39
+msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your system settings."
+msgstr "Držanje tipke Shift, Ctrl ili Alt blokira ovaj prečac. Dodajte zamjenske prečace u postavkama sustava."
+
 #. Action label in quick switcher for navigating to the Home tab.
 #: src/features/app/components/layout/MobileBottomNav.tsx:110
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:47
@@ -17537,6 +17613,26 @@ msgstr "Hura! Obavijesti su omogućene"
 msgid "Hyperlink"
 msgstr "Hiperveza"
 
+#. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:86
+msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
+msgstr "Hyprland nema dijaloški okvir za prečace. Dodajte retke za svoju verziju Hyprlanda u njegovu konfiguraciju i zamijenite KEY željenom tipkom."
+
+#. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
+msgstr "Hyprland nema dijaloški okvir za prečace. Dodijelite tipke u konfiguraciji Hyprlanda."
+
+#. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
+msgid "hyprland.conf (before Hyprland 0.55)"
+msgstr "hyprland.conf (prije Hyprlanda 0.55)"
+
+#. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:101
+msgid "hyprland.lua (Hyprland 0.55 and later)"
+msgstr "hyprland.lua (Hyprland 0.55 i noviji)"
+
 #: src/features/auth/flow/RegistrationLegalConsent.tsx:83
 msgid "I agree to the <0>Privacy policy</0>"
 msgstr "Slažem se s <0>Pravilima privatnosti</0>"
@@ -17576,7 +17672,7 @@ msgstr "Predomislio/la sam se"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:113
 msgid "I understand"
 msgstr "Razumijem"
 
@@ -18000,7 +18096,7 @@ msgstr "U"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "U načinu rada \"Operativni sustav\" gore navedeni rječnici su savjetodavni. {PRODUCT_NAME} će proslijediti ove jezične oznake provjeri pravopisa vašeg OS-a kada je podržano. Oznake koje ne prepoznaje bit će zanemarene."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:322
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:324
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "U pregledniku pritisni za govor radi samo dok je kartica {PRODUCT_NAME} aktivna. Instalirajte desktop aplikaciju za značajku pritisni za govor na cijelom sustavu."
 
@@ -18268,30 +18364,8 @@ msgctxt "chat-settings-section"
 msgid "Input"
 msgstr "Unos"
 
-#. Status text after Linux input access setup failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:35
-msgid "Input access could not be enabled automatically. Change it manually, then fully quit and restart {productName} so shortcuts can use it."
-msgstr "Pristup unosu nije bilo moguće automatski omogućiti. Promijenite ga ručno, zatim u potpunosti zatvorite i ponovno pokrenite {productName} kako bi ga prečaci mogli koristiti."
-
-#. Description for a Linux Wayland input-access nagbar after automatic permission setup failed. {settingsMenuName} is the shared user settings tab label for shortcuts and {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:26
-msgid "Input access could not be enabled. Try again from {settingsMenuName} settings, then fully quit and restart {productName}."
-msgstr "Pristup unosu nije omogućen. Pokušajte ponovno u postavkama {settingsMenuName}, zatim u potpunosti zatvorite i ponovno pokrenite {productName}."
-
-#. Settings warning for Linux Wayland system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:18
-msgid "Input access is required for system-wide keyboard and mouse shortcuts on Wayland. After changing input access, fully quit and restart {productName} so shortcuts can use it."
-msgstr "Pristup unosu potreban je za prečace tipkovnice i miša na razini sustava na Waylandu. Nakon promjene pristupa unosu, u potpunosti zatvorite i ponovno pokrenite {productName} kako bi ga prečaci mogli koristiti."
-
-#. Description for a Linux Wayland input-access nagbar after access was changed. {productName} is the app name.
-#. Status text after Linux input access was changed. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:21
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:31
-msgid "Input access was changed. Fully quit and restart {productName} so system-wide shortcuts can use it."
-msgstr "Pristup unosu je promijenjen. U potpunosti zatvorite i ponovno pokrenite {productName} kako bi ga prečaci na razini sustava mogli koristiti."
-
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:182
 msgid "Input and output"
 msgstr "Ulaz i izlaz"
 
@@ -18450,7 +18524,7 @@ msgid "Invalid authorization request"
 msgstr "Nevažeći zahtjev za autorizaciju"
 
 #. OAuth authorize page error shown when the permissions query parameter is not a valid integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:63
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:64
 msgid "Invalid bot permissions."
 msgstr "Nevažeća dopuštenja bota."
 
@@ -18493,7 +18567,7 @@ msgid "Invalid or expired code. Try again."
 msgstr "Nevažeći ili istekli kod. Pokušajte ponovno."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:79
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:80
 msgid "Invalid redirect_uri"
 msgstr "Nevažeći redirect_uri"
 
@@ -18597,7 +18671,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Poveznica za pozivnicu skrivena je tijekom dijeljenja:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:165
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:168
 msgid "Invite link masked while sharing"
 msgstr "Poveznica za pozivnicu maskirana tijekom dijeljenja"
 
@@ -19011,7 +19085,7 @@ msgid "Jump to {displayName}"
 msgstr "Skoči na {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:114
 msgid "Jump to {labelText}"
 msgstr "Skoči na {labelText}"
 
@@ -19068,12 +19142,12 @@ msgid "Jump to the current call"
 msgstr "Skoči na trenutačni poziv"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:118
 msgid "Jump to the linked channel"
 msgstr "Skoči na povezani kanal"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:110
 msgid "Jump to the linked message"
 msgstr "Skoči na povezanu poruku"
 
@@ -19083,7 +19157,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Skoči na poruku od {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:105
 msgid "Jump to the message in {labelText}"
 msgstr "Skoči na poruku u {labelText}"
 
@@ -19167,7 +19241,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Čuvajte ih na sigurnom. Ponovno generiranje prekinut će postojeće integracije."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:84
 msgid "Keep transmitting briefly after release."
 msgstr "Nastavi s prijenosom još nakratko nakon otpuštanja tipke."
 
@@ -19203,6 +19277,11 @@ msgstr "Tipkovnica"
 msgctxt "accessibility-settings-section"
 msgid "Keyboard"
 msgstr "Tipkovnica"
+
+#. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:176
+msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
+msgstr "Pristup tipkovnici nije se mogao pokrenuti. Prečaci rade samo dok je {productName} u fokusu."
 
 #. Toggle label and settings search entry for controlling tooltip keyboard shortcut hints.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:46
@@ -19577,6 +19656,11 @@ msgstr "Neka se zajednica sama moderira"
 msgid "Let the member hear others in this community again"
 msgstr "Članu je ponovno omogućeno slušanje drugih u ovoj zajednici"
 
+#. Description for the Linux direct input device access switch. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:151
+msgid "Lets {productName} read your keyboard directly. Your system already allows this."
+msgstr "Omogućuje aplikaciji {productName} izravno čitanje tipkovnice. Vaš sustav to već dopušta."
+
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:259
 msgid "Lets custom CSS reveal transparent window regions after restarting the desktop app."
 msgstr "Omogućuje prilagođenom CSS-u da otkrije prozirna područja prozora nakon ponovnog pokretanja aplikacije za stolna računala."
@@ -19760,7 +19844,7 @@ msgid "Link styling"
 msgstr "Stil poveznica"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:157
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:160
 msgid "Link unavailable"
 msgstr "Poveznica nije dostupna"
 
@@ -20036,7 +20120,7 @@ msgid "Look and feel"
 msgstr "Izgled i dojam"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:678
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Čini se da koristite {0}. Dodatna obrada u {PRODUCT_NAME}u povrh toga može uzrokovati pumpanje ili izobličenje zvuka. Izravan unos propušta vaš zvuk netaknutim."
 
@@ -21144,7 +21228,7 @@ msgid "Message layout"
 msgstr "Izgled poruka"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:92
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:95
 msgid "message link"
 msgstr "poveznica poruke"
 
@@ -21332,7 +21416,7 @@ msgstr "Mikrofon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:190
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Test mikrofona"
@@ -21472,7 +21556,7 @@ msgid "Miscellaneous"
 msgstr "Razno"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:37
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:38
 msgid "Missing client_id"
 msgstr "Nedostaje client_id"
 
@@ -21690,7 +21774,7 @@ msgid "More options"
 msgstr "Više opcija"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:59
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:61
 msgid "More shortcut options"
 msgstr "Više opcija prečaca"
 
@@ -22672,7 +22756,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Nema dopuštenja {sendMessagesPermission}"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:148
 msgid "No access"
 msgstr "Nema pristupa"
 
@@ -22984,7 +23068,7 @@ msgstr "Nema rezultata"
 msgid "No mentions yet"
 msgstr "Još nema spominjanja"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:548
 msgid "No microphone found"
 msgstr "Nije pronađen mikrofon"
 
@@ -23134,7 +23218,7 @@ msgid "No settings found"
 msgstr "Nema pronađenih postavki"
 
 #. Empty-state text in the keyboard shortcuts keybind recorder.
-#: src/features/input/components/KeybindRecorder.tsx:36
+#: src/features/input/components/KeybindRecorder.tsx:44
 msgid "No shortcut set"
 msgstr "Prečac nije postavljen"
 
@@ -23357,6 +23441,11 @@ msgstr "Nije cijeli broj"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:395
 msgid "Not accepted"
 msgstr "Nije prihvaćeno"
+
+#. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:68
+msgid "Not assigned"
+msgstr "Nije dodijeljeno"
 
 #. Fallback value when a saved billing payment method has no expiration date.
 #. Screen reader text for a cross in the Plutonium page comparison table.
@@ -23858,12 +23947,12 @@ msgid "Open {host} in your browser."
 msgstr "Otvorite {host} u svojem pregledniku."
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:127
 msgid "Open {labelText}"
 msgstr "Otvori {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:122
 msgid "Open {labelText} in settings"
 msgstr "Otvori {labelText} u postavkama"
 
@@ -24611,7 +24700,7 @@ msgid "Page down"
 msgstr "Page Down"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:132
 msgid "page link"
 msgstr "link na stranicu"
 
@@ -25611,11 +25700,11 @@ msgstr "Prisutnost"
 msgid "Press {shortcut} to react"
 msgstr "Pritisnite {shortcut} za reakciju"
 
-#: src/features/input/components/KeybindRecorder.tsx:381
+#: src/features/input/components/KeybindRecorder.tsx:421
 msgid "Press a key, mouse button, or gamepad button to bind. Escape cancels."
 msgstr "Pritisnite tipku, gumb miša ili gumb gamepada za postavljanje prečaca. Escape poništava."
 
-#: src/features/input/components/KeybindRecorder.tsx:407
+#: src/features/input/components/KeybindRecorder.tsx:447
 msgid "Press a shortcut…"
 msgstr "Pritisnite prečac…"
 
@@ -26273,18 +26362,33 @@ msgid "Push to talk key"
 msgstr "Tipka za pritisni za govor"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:117
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:360
 #: src/features/voice/components/VoiceSettingsMenus.tsx:419
 msgid "Push-to-talk"
 msgstr "Pritisni za govor"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:105
 msgid "Push-to-talk (limited)"
 msgstr "Pritisni za govor (ograničeno)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:701
+#. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
+msgstr "Pritisni za govor još nema tipku za cijeli sustav. Da biste je postavili, idite na Postavke > Aplikacije > {productName}."
+
+#. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:220
+msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
+msgstr "Pritisni za govor još nema tipku za cijeli sustav. Da biste je postavili, idite na Postavke sustava > Tipkovnica > Prečaci > {productName}."
+
+#. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:231
+msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
+msgstr "Pritisni za govor još nema tipku za cijeli sustav. Da biste je postavili, otvorite postavke tipkovničkih prečaca u svojem radnom okruženju."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:708
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Pritisni za govor zanemaruje se u izravnom unosu. Prebacite se na fokusirani glas ili prilagođeno da biste ga koristili."
 
@@ -26293,20 +26397,50 @@ msgstr "Pritisni za govor zanemaruje se u izravnom unosu. Prebacite se na fokusi
 msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Uključena je opcija pritisni za govor. Držite {pushToTalkHint} da biste govorili."
 
+#. Tooltip and screen reader label on the mic button when push-to-talk is on but the key has no name to show, for example when the Linux desktop assigns it.
+#: src/features/input/utils/PushToTalkHint.ts:11
+msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
+msgstr "Uključena je opcija pritisni za govor. Držite tipku za govor da biste govorili."
+
+#. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:209
+msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
+msgstr "Pritisni za govor radi samo dok je {productName} u fokusu jer vaše radno okruženje nije postavilo prečace za cijeli sustav."
+
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:137
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "Pritisni za govor radi samo dok je {productName} u fokusu, sve dok se ne omogući {permissionName}. Nakon promjene dopuštenja, u potpunosti zatvorite i ponovno pokrenite {productName} kako bi ga prečaci na razini sustava mogli koristiti."
 
+#. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:205
+msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
+msgstr "Pritisni za govor radi samo dok je {productName} u fokusu, sve dok ne postavite prečace za cijeli sustav."
+
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:133
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Pritisni za govor radi samo dok je kartica preglednika u fokusu."
+
+#. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:170
+msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
+msgstr "Pritisni za govor koristit će tipku koju postavite u aplikaciji {productName}. Najprije je postavite jer će inače mikrofon raditi na glasovnu aktivnost."
 
 #. Modal description shown when a push-to-talk shortcut is pressed while the user is self-deafened.
 #: src/features/app/keybindings/keybind_manager/shared.ts:22
 msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen yourself to talk."
 msgstr "Pritisni za govor neće uključiti vaš mikrofon dok vam je zvuk isključen. Uključite zvuk kako biste mogli govoriti."
+
+#. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:242
+msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
+msgstr "Pritisni za govor radi izvan aplikacije {productName} tek kada mu dodijelite tipku u konfiguraciji Hyprlanda."
+
+#. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:236
+msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
+msgstr "Pritisni za govor radi izvan aplikacije {productName} tek kada mu dodijelite tipku u konfiguraciji Hyprlanda. Dodajte redak za svoju verziju Hyprlanda i zamijenite KEY željenom tipkom."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
@@ -26406,7 +26540,7 @@ msgid "Raw embed JSON"
 msgstr "Sirovi JSON ugrađenog sadržaja"
 
 #. Button or menu action label in the keybinds tab. Turns a disabled built-in shortcut back on. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:50
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:52
 msgid "Re-enable built-in shortcut"
 msgstr "Ponovno omogući ugrađeni prečac"
 
@@ -26565,13 +26699,6 @@ msgstr "Nedavna spominjanja"
 msgid "Recent searches"
 msgstr "Nedavna pretraživanja"
 
-#. Button label in the Linux Wayland input-access nagbar after the user changes OS permissions.
-#. Button label in the keybind settings system-wide shortcuts section.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:36
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:27
-msgid "Recheck"
-msgstr "Ponovno provjeri"
-
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
 #: src/features/invite/components/modals/InviteModal.tsx:360
@@ -26586,7 +26713,7 @@ msgid "Recommended"
 msgstr "Preporučeno"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:88
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Preporučeno. Pročišćava mikrofon za jasan govor."
 
@@ -26600,6 +26727,11 @@ msgstr "Ponovno poveži"
 msgid "Reconnect succeeded. Pick a screen again if you want to resume your previous stream."
 msgstr "Ponovno povezivanje uspješno. Ponovno odaberite zaslon ako želite nastaviti prethodni prijenos."
 
+#. Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:48
+msgid "Reconnecting to your desktop…"
+msgstr "Ponovno povezivanje s radnim okruženjem…"
+
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
 #: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Reconnecting..."
@@ -26611,7 +26743,7 @@ msgid "Reconnecting…"
 msgstr "Ponovno povezivanje…"
 
 #. Short label in the keyboard shortcuts keybind recorder. Keep it concise.
-#: src/features/input/components/KeybindRecorder.tsx:28
+#: src/features/input/components/KeybindRecorder.tsx:36
 msgid "Record shortcut"
 msgstr "Snimi prečac"
 
@@ -26851,7 +26983,7 @@ msgstr "Relativno"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:80
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Odgoda otpuštanja"
@@ -27739,13 +27871,13 @@ msgstr "Ponovno poslano"
 
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
-#: src/features/input/components/KeybindRecorder.tsx:459
+#: src/features/input/components/KeybindRecorder.tsx:499
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1022
 msgid "Reset"
 msgstr "Poništi"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:45
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:47
 msgid "Reset \"{label}\" to built-in"
 msgstr "Vrati \"{label}\" na ugrađeno"
 
@@ -27866,7 +27998,7 @@ msgid "Reset to actual values"
 msgstr "Vrati na stvarne vrijednosti"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:37
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:39
 msgid "Reset to built-in"
 msgstr "Vrati na zadano"
 
@@ -29509,7 +29641,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Odaberite račun s kojim se želite prijaviti na novom uređaju."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:125
 msgid "Select voice processing mode"
 msgstr "Odaberite način obrade glasa"
 
@@ -29814,7 +29946,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Šalje sirovi zvuk mikrofona bez ikakve obrade."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:92
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Šalje vaš zvuk netaknut. Najbolje ako koristite vanjski audio softver."
 
@@ -29913,12 +30045,12 @@ msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "Postavljeno pomoću predmemorije {preset}. Odabir vrijednosti ovdje prebacuje na Prilagođeno."
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:29
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:31
 msgid "Set custom shortcut"
 msgstr "Postavi prilagođeni prečac"
 
 #. Label in the keybinds tab. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:55
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:57
 msgid "Set custom shortcut for \"{label}\""
 msgstr "Postavi prilagođeni prečac za „{label}”"
 
@@ -30066,6 +30198,11 @@ msgstr "Postavljena je glasovna regija na {region}"
 msgid "Set the voice region to automatic"
 msgstr "Postavljena je glasovna regija na automatsku"
 
+#. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:40
+msgid "Set up"
+msgstr "Postavi"
+
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:74
 msgid "Set up {productName}"
@@ -30118,7 +30255,7 @@ msgid "Settings"
 msgstr "Postavke"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:136
 msgid "settings link"
 msgstr "poveznica postavki"
 
@@ -30330,8 +30467,8 @@ msgstr "Kratki kodovi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:376
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:375
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -32759,7 +32896,7 @@ msgstr "Prebaci na ugodan izgled"
 msgid "Switch to dense layout"
 msgstr "Prebaci na zgusnuti izgled"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:673
 msgid "Switch to direct input"
 msgstr "Prebaci na izravan unos"
 
@@ -33027,9 +33164,24 @@ msgid "System-managed install"
 msgstr "Instalacija kojom upravlja sustav"
 
 #. Settings subsection title for keyboard and mouse shortcuts that work outside the app.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:14
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:24
 msgid "System-wide shortcuts"
 msgstr "Prečaci za cijeli sustav"
+
+#. Linux settings text when setting up system-wide shortcuts failed.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:137
+msgid "System-wide shortcuts could not be set up."
+msgstr "Prečace za cijeli sustav nije moguće postaviti."
+
+#. Hint under a shortcut on Linux showing the key the desktop assigned. {trigger} is the key, as named by the desktop.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:30
+msgid "System-wide: {trigger}"
+msgstr "Za cijeli sustav: {trigger}"
+
+#. Hint under a shortcut on Linux when the desktop has no key assigned for it system-wide.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:35
+msgid "System-wide: Not assigned"
+msgstr "Za cijeli sustav: nije dodijeljeno"
 
 #. Description text in the theme tab content.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx:58
@@ -33612,12 +33764,12 @@ msgid "The page you're looking for doesn't exist or has been moved."
 msgstr "Stranica koju tražite ne postoji ili je premještena."
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:60
 msgid "The provided redirect_uri is not registered for this application."
 msgstr "Navedeni redirect_uri nije registriran za ovu aplikaciju."
 
 #. Body text in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:50
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:51
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Navedeni redirect_uri mora koristiti HTTP ili HTTPS."
 
@@ -33850,7 +34002,7 @@ msgid "This animation is too long or too large to crop. Try a shorter or smaller
 msgstr "Ova animacija je predugačka ili prevelika za obrezivanje. Isprobajte kraću ili manju datoteku."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:83
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:84
 msgid "This application"
 msgstr "Ova aplikacija"
 
@@ -33860,7 +34012,7 @@ msgid "This attachment has expired"
 msgstr "Ovaj je privitak istekao"
 
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:71
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:72
 msgid "This bot is not public and cannot be added by other users."
 msgstr "Ovaj bot nije javan i drugi ga korisnici ne mogu dodati."
 
@@ -34081,6 +34233,16 @@ msgstr "Ovaj razgovor više nije dostupan."
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Ova verzija za stolno računalo ne može instalirati ažuriranja unutar {productName}. Umjesto toga preuzmite najnoviji instalacijski program za stolno računalo."
 
+#. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:215
+msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
+msgstr "Ovo radno okruženje ne nudi prečace za cijeli sustav. Pritisni za govor radi samo dok je {productName} u fokusu."
+
+#. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:133
+msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
+msgstr "Ovo radno okruženje ne nudi prečace za cijeli sustav. Prečaci i dalje rade dok je {productName} u fokusu."
+
 #. Desktop updater modal body for development or unpackaged builds.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:65
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
@@ -34294,6 +34456,11 @@ msgstr "Ovo je vaš posljednji pristupni ključ, a pristupni ključevi su vaš d
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Ovo je vaš posljednji pristupni ključ. Kada ga više ne bude, nećete moći koristiti pristupni ključ kao drugi faktor."
 
+#. Hint under the push-to-talk key recorder in voice settings on Linux when the desktop owns system-wide shortcuts. {settingsTabName} is the name of the settings tab with keyboard shortcuts and {sectionName} the title of its system-wide shortcuts section, both filled in by the app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:24
+msgid "This key works while {productName} is focused. Your desktop sets the system-wide key, under {settingsTabName} > {sectionName}."
+msgstr "Ova tipka radi dok je {productName} u fokusu. Tipku za cijeli sustav postavlja vaše radno okruženje, pod {settingsTabName} > {sectionName}."
+
 #. Extra file-too-large alert sentence shown when premium upload-limit upgrades are unavailable.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:39
 msgid "This limit is configured by your instance administrator."
@@ -34305,7 +34472,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Ovaj kanal s poveznicama označen je kao sadržaj za odrasle i može otvoriti materijal koji možda nije prikladan za neke korisnike."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:161
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:164
 msgid "This link is not available for your account."
 msgstr "Ova poveznica nije dostupna za vaš račun."
 
@@ -34777,6 +34944,21 @@ msgstr "Naslovna traka"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:252
 msgid "Title bar platform"
 msgstr "Platforma naslovne trake"
+
+#. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:81
+msgid "To change the keys, go to Settings > Apps > {productName}."
+msgstr "Da biste promijenili tipke, idite na Postavke > Aplikacije > {productName}."
+
+#. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
+msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
+msgstr "Da biste promijenili tipke, idite na Postavke sustava > Tipkovnica > Prečaci > {productName}."
+
+#. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+msgid "To change the keys, open your desktop's keyboard shortcut settings."
+msgstr "Da biste promijenili tipke, otvorite postavke tipkovničkih prečaca u svojem radnom okruženju."
 
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:125
 msgid "To create a webhook, open <0>{channelWebhooksSettingsPath}</0>. You can still edit and organize all existing webhooks here."
@@ -35872,7 +36054,7 @@ msgid "Unknown"
 msgstr "Nepoznato"
 
 #. OAuth authorize page error shown when the application, session, or request is invalid.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:46
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:47
 msgid "Unknown application, expired session, or invalid authorization request."
 msgstr "Nepoznata aplikacija, istekla sesija ili nevažeći zahtjev za autorizaciju."
 
@@ -36410,6 +36592,11 @@ msgstr "Do 4K/60fps"
 msgid "Up to 720p at 30 FPS"
 msgstr "Do 720p pri 30 FPS"
 
+#. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
+msgid "Update {productName} to use system-wide shortcuts on Wayland."
+msgstr "Ažurirajte {productName} da biste koristili prečace za cijeli sustav na Waylandu."
+
 #. Message placeholder shown when the app cannot render a newer message type.
 #: src/features/channel/components/UnknownMessage.tsx:23
 msgid "Update {productName} to view this message."
@@ -36850,6 +37037,11 @@ msgstr "Koristi tamnu temu u cijeloj aplikaciji"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:45
 msgid "Use default"
 msgstr "Koristi zadano"
+
+#. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:146
+msgid "Use direct input device access"
+msgstr "Koristi izravan pristup ulaznim uređajima"
 
 #. Permission description in the channel-scoped permissions editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:260
@@ -38218,7 +38410,7 @@ msgid "Voice participants"
 msgstr "Sudionici glasovnog poziva"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:668
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Obrada glasa"
@@ -38264,7 +38456,7 @@ msgstr "Uključivanje zvuka"
 msgid "Voice unmute"
 msgstr "Uključivanje mikrofona"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:597
 msgid "Voice uses your system output device in this browser. Change it in your system settings."
 msgstr "Glas koristi vaš sistemski izlazni uređaj u ovom pregledniku. Promijenite ga u sistemskim postavkama."
 
@@ -38278,7 +38470,7 @@ msgstr "Poništeno"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:383
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:186
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -38344,6 +38536,11 @@ msgstr "Čeka se istek usporenog načina rada u jednom ili više odabranih kanal
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:48
 msgid "Waiting for you to..."
 msgstr "Čekamo da..."
+
+#. Status text while the Linux desktop shows its own dialog for confirming system-wide shortcuts.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:44
+msgid "Waiting for your desktop…"
+msgstr "Čekanje na radno okruženje…"
 
 #: src/features/input/utils/KeybindUtils.ts:107
 msgctxt "keyboard-key-name"
@@ -38926,7 +39123,7 @@ msgstr "Koje razgovore"
 msgid "Which rule was broken?"
 msgstr "Koje je pravilo prekršeno?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:370
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:369
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Dok je uključena značajka pritisni za govor, vaš prečac upravlja mikrofonom, pa je gumb za isključivanje mikrofona onemogućen."
 
@@ -39093,6 +39290,11 @@ msgstr "Bez ovog dopuštenja obavezna je značajka pritisni za govor."
 #: src/features/app/components/setup/SetupWizardSteps.tsx:136
 msgid "Wordmark"
 msgstr "Tekstualni logotip"
+
+#. Hint under a shortcut on Linux when the desktop owns system-wide shortcuts. The key shown here only works inside the app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:19
+msgid "Works while {productName} is focused"
+msgstr "Radi dok je {productName} u fokusu"
 
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual preview context menu. Keep it concise.
@@ -39521,7 +39723,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Promijenili ste svoju oznaku dok ste imali pretplatu na {PREMIUM_PRODUCT_NAME}. Nasumično će se ponovno dodijeliti kada vam istekne {PREMIUM_PRODUCT_NAME}, osim ako se ne obnovi."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:144
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nemate pristup kanalu u kojem je poslana ova poruka."
 
@@ -40056,7 +40258,7 @@ msgid "Your {premiumProductName} subscription has expired. You have lost all {pr
 msgstr "Vaša pretplata na {premiumProductName} je istekla. Izgubili ste sve pogodnosti {premiumProductName}. Ponovno aktivirajte pretplatu kako biste ponovno dobili pristup."
 
 #. OAuth authorize page error shown when the session expired mid-authorization. Keep plain. Preserve {productName}; it is inserted by code.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:42
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Vaša je sesija za {productName} istekla. Prijavite se ponovno kako biste nastavili s autorizacijom ove aplikacije."
 
@@ -40143,6 +40345,16 @@ msgstr "Vaša zajednica treba imati najmanje {minMemberCount, plural, one {# čl
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:14
 msgid "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
 msgstr "Vaša je kreditna kartica provjerena. Ako je kartica valjana, sadržaj za odrasle uskoro će biti otključan. Možete zatvoriti ovu karticu preglednika i vratiti se u aplikaciju."
+
+#. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:123
+msgid "Your desktop didn't set up system-wide shortcuts."
+msgstr "Vaše radno okruženje nije postavilo prečace za cijeli sustav."
+
+#. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
+msgid "Your desktop runs these shortcuts even while {productName} is not focused."
+msgstr "Vaše radno okruženje pokreće ove prečace čak i kad {productName} nije u fokusu."
 
 #. Body of the modal that asks the user to save an updated passkey. name is the name the user gave the passkey. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:28

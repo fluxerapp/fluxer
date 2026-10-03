@@ -157,10 +157,6 @@ pub fn keysym_to_name(keysym: u32) -> Option<&'static str> {
         .map(|(_, name)| *name)
 }
 
-pub fn fallback_name(keysym: u32) -> String {
-    format!("Key{keysym}")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -200,9 +196,9 @@ mod tests {
     }
 
     #[test]
-    fn unknown_keysym_falls_back_to_key_n() {
+    fn unknown_keysym_has_no_name() {
         assert!(keysym_to_name(0x12345).is_none());
-        assert_eq!(fallback_name(0x12345), "Key74565");
+        assert!(keysym_to_name(0x6ca).is_none());
     }
 
     #[test]

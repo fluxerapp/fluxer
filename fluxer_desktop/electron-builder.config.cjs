@@ -16,6 +16,7 @@ const appId = isCanary ? 'app.fluxer.canary' : 'app.fluxer';
 const iconDir = isCanary ? 'icons-canary' : 'icons-stable';
 const packageName = isCanary ? 'fluxer_desktop_canary' : 'fluxer_desktop';
 const linuxPackageName = isCanary ? 'fluxer-canary' : 'fluxer';
+const linuxDesktopId = isCanary ? 'app.fluxer.FluxerDesktopCanary' : 'app.fluxer.FluxerDesktop';
 const linuxDesktopActionIds = ['open-settings', 'new-dm'];
 const linuxDesktopActionList = `${linuxDesktopActionIds.join(';')};`;
 const linuxGlibcBaseline = Object.freeze({major: 2, minor: 35, patch: 0, name: 'GLIBC_2.35'});
@@ -341,7 +342,7 @@ const linuxDesktopEntry = {
 	Comment: isCanary ? 'Canary build of Fluxer' : 'Instant messaging and VoIP',
 	Keywords: 'chat;im;messaging;messenger;voip;voice;video;call;',
 	Categories: 'Network;InstantMessaging;Chat;',
-	StartupWMClass: linuxPackageName,
+	StartupWMClass: linuxDesktopId,
 	StartupNotify: 'true',
 	SingleMainWindow: 'true',
 	MimeType: 'x-scheme-handler/fluxer;',
@@ -1496,7 +1497,7 @@ module.exports = {
 		main: 'dist/main/index.js',
 		name: metadataName,
 		...(process.env.VERSION ? {version: process.env.VERSION} : {}),
-		...(targetPlatform === 'linux' ? {desktopName: `${linuxPackageName}.desktop`} : {}),
+		...(targetPlatform === 'linux' ? {desktopName: `${linuxDesktopId}.desktop`} : {}),
 	},
 	extraResources: [
 		{

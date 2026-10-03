@@ -29,7 +29,9 @@ import {WarningAlert} from '@app/features/ui/warning_alert/WarningAlert';
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import {EntranceSoundSection} from '@app/features/user/components/modals/tabs/components/EntranceSoundSection';
 import {MicTestSection} from '@app/features/user/components/modals/tabs/components/MicTestSection';
+import {SystemShortcutsPushToTalkAlert} from '@app/features/user/components/modals/tabs/components/SystemShortcutsSection';
 import {useMediaPermission} from '@app/features/user/components/modals/tabs/hooks/useMediaPermission';
+import {SystemShortcutRowHint} from '@app/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint';
 import styles from '@app/features/user/components/modals/tabs/UserVoiceTab.module.css';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
@@ -344,9 +346,6 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 		if (enabled && isNativeMac && !inputMonitoringGranted) {
 			openMacPermissionsModal({focus: 'input-monitoring'});
 		}
-		if (enabled && NativePermission.isLinuxWaylandDesktop && NativePermission.linuxInputAccessStatus !== 'granted') {
-			NativePermission.requestLinuxInputAccessNagbar('push-to-talk');
-		}
 		Keybind.setTransmitMode(mode);
 		MediaEngine.handlePushToTalkModeChange();
 	};
@@ -393,6 +392,11 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 								}
 							}}
 							data-flx="user.voice-tab.render-ptt-controls.keybind-recorder.set-primary-custom-keybind-combo"
+						/>
+						<SystemShortcutRowHint
+							action="voice_push_to_talk"
+							variant="voice-tab"
+							data-flx="user.voice-tab.render-ptt-controls.system-shortcut-row-hint"
 						/>
 					</div>
 					<div className={styles.pttSettingRow} data-flx="user.voice-tab.render-ptt-controls.ptt-setting-row--2">
@@ -444,6 +448,9 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 								permissionName: MACOS_INPUT_MONITORING_PERMISSION_NAME,
 							})}
 				</WarningAlert>
+			)}
+			{isPushToTalk && !isPttLimited && (
+				<SystemShortcutsPushToTalkAlert data-flx="user.voice-tab.render-ptt-controls.system-shortcuts-ptt-alert" />
 			)}
 		</>
 	);
@@ -696,7 +703,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 								{renderStereoMicrophoneSwitch('user.voice-tab.studio-profile.switch.set-stereo-microphone')}
 							</div>
 						)}
-						{voiceProcessingMode === 'studio' && pttCombo?.key && isPushToTalk && (
+						{voiceProcessingMode === 'studio' && isPushToTalk && Keybind.hasPushToTalkKeybind() && (
 							<WarningAlert data-flx="user.voice-tab.warning-alert--2">
 								<Trans>Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it.</Trans>
 							</WarningAlert>

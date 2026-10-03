@@ -10,6 +10,11 @@ import {
 	STABLE_APP_URL,
 	STABLE_MIGRATED_APP_ORIGIN,
 } from '@electron/common/Constants';
+import {
+	GLOBAL_SHORTCUT_DESCRIPTION_MAX_LENGTH,
+	type GlobalShortcutAction,
+	isGlobalShortcutAction,
+} from '@electron/common/GlobalShortcutActions';
 import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
 import log from 'electron-log';
 
@@ -25,6 +30,29 @@ interface DesktopConfig extends Record<string, unknown> {
 	troubleshooting?: PersistedDesktopTroubleshootingSettings;
 	theme_allowed_local_files?: Array<string>;
 	app_origin?: string;
+	global_shortcuts?: PersistedGlobalShortcutsSettings;
+}
+
+export type GlobalShortcutsPortalConsent = 'unset' | 'granted' | 'declined';
+
+export interface PersistedGlobalShortcutAction {
+	action: GlobalShortcutAction;
+	description: string;
+	preferredTrigger: string | null;
+}
+
+interface PersistedGlobalShortcutsSettings {
+	portal_consent?: GlobalShortcutsPortalConsent;
+	direct_input_enabled?: boolean;
+	migrated?: boolean;
+	last_actions?: Array<PersistedGlobalShortcutAction>;
+}
+
+export interface GlobalShortcutsSettings {
+	portalConsent: GlobalShortcutsPortalConsent;
+	directInputEnabled: boolean;
+	migrated: boolean;
+	lastActions: Array<PersistedGlobalShortcutAction>;
 }
 
 export type ChromiumSwitchesSetting = ReadonlyArray<string> | Record<string, unknown>;
@@ -145,6 +173,70 @@ function sanitizeChromiumSwitchesSetting(value: unknown): ChromiumSwitchesSettin
 	return undefined;
 }
 
+const PREFERRED_TRIGGER_MAX_LENGTH = 100;
+
+function sanitizePersistedGlobalShortcutActions(value: unknown): Array<PersistedGlobalShortcutAction> | undefined {
+	if (!Array.isArray(value)) {
+		return undefined;
+	}
+	const actions: Array<PersistedGlobalShortcutAction> = [];
+	const seen = new Set<string>();
+	for (const item of value) {
+		if (!isRecord(item) || !isGlobalShortcutAction(item.action) || seen.has(item.action)) continue;
+		if (typeof item.description !== 'string') continue;
+		const description = item.description.trim();
+		if (description.length === 0 || description.length > GLOBAL_SHORTCUT_DESCRIPTION_MAX_LENGTH) continue;
+		const preferredTrigger =
+			typeof item.preferredTrigger === 'string' &&
+			item.preferredTrigger.length > 0 &&
+			item.preferredTrigger.length <= PREFERRED_TRIGGER_MAX_LENGTH
+				? item.preferredTrigger
+				: null;
+		seen.add(item.action);
+		actions.push({action: item.action, description, preferredTrigger});
+	}
+	return actions.length > 0 ? actions : undefined;
+}
+
+export function sanitizePersistedGlobalShortcutsSettings(value: unknown): PersistedGlobalShortcutsSettings | undefined {
+	if (!isRecord(value)) {
+		return undefined;
+	}
+	const settings: PersistedGlobalShortcutsSettings = {};
+	if (value.portal_consent === 'unset' || value.portal_consent === 'granted' || value.portal_consent === 'declined') {
+		settings.portal_consent = value.portal_consent;
+	}
+	if (typeof value.direct_input_enabled === 'boolean') {
+		settings.direct_input_enabled = value.direct_input_enabled;
+	}
+	if (typeof value.migrated === 'boolean') {
+		settings.migrated = value.migrated;
+	}
+	const lastActions = sanitizePersistedGlobalShortcutActions(value.last_actions);
+	if (lastActions) {
+		settings.last_actions = lastActions;
+	}
+	return Object.keys(settings).length > 0 ? settings : undefined;
+}
+
+function normalizeGlobalShortcutsSettings(settings?: PersistedGlobalShortcutsSettings): GlobalShortcutsSettings {
+	return {
+		portalConsent: settings?.portal_consent ?? 'unset',
+		directInputEnabled: settings?.direct_input_enabled ?? false,
+		migrated: settings?.migrated ?? false,
+		lastActions: settings?.last_actions ? settings.last_actions.map((entry) => ({...entry})) : [],
+	};
+}
+
+function serializeGlobalShortcutsSettings(settings: GlobalShortcutsSettings): PersistedGlobalShortcutsSettings {
+	return {
+		portal_consent: settings.portalConsent,
+		direct_input_enabled: settings.directInputEnabled,
+		migrated: settings.migrated,
+		...(settings.lastActions.length > 0 ? {last_actions: settings.lastActions.map((entry) => ({...entry}))} : {}),
+	};
+}
+
 function getLegacyAppUrl(): string {
 	return BUILD_CHANNEL === 'canary' ? CANARY_APP_URL : STABLE_APP_URL;
 }
@@ -190,6 +282,12 @@ function sanitizeDesktopConfig(value: unknown): DesktopConfig {
 		nextConfig.troubleshooting = troubleshooting;
 	} else {
 		delete nextConfig.troubleshooting;
+	}
+	const globalShortcuts = sanitizePersistedGlobalShortcutsSettings(value.global_shortcuts);
+	if (globalShortcuts) {
+		nextConfig.global_shortcuts = globalShortcuts;
+	} else {
+		delete nextConfig.global_shortcuts;
 	}
 	if (Array.isArray(value.theme_allowed_local_files)) {
 		nextConfig.theme_allowed_local_files = value.theme_allowed_local_files.filter(
@@ -420,6 +518,19 @@ export function setDesktopTroubleshootingSettings(
 	);
 	saveDesktopConfig();
 	return getDesktopTroubleshootingSettings();
+}
+
+export function getGlobalShortcutsSettings(): GlobalShortcutsSettings {
+	return normalizeGlobalShortcutsSettings(config.global_shortcuts);
+}
+
+export function setGlobalShortcutsSettings(settings: Partial<GlobalShortcutsSettings>): GlobalShortcutsSettings {
+	config.global_shortcuts = serializeGlobalShortcutsSettings({
+		...getGlobalShortcutsSettings(),
+		...settings,
+	});
+	saveDesktopConfig();
+	return getGlobalShortcutsSettings();
 }
 
 export function getAllowedThemeLocalFiles(): Array<string> {

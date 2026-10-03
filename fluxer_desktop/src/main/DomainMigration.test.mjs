@@ -25,6 +25,7 @@ function transform(relativePath) {
 
 const constantsSource = transform('../common/Constants.ts');
 const desktopConfigSource = transform('../common/DesktopConfig.ts');
+const globalShortcutActionsSource = transform('../common/GlobalShortcutActions.ts');
 const domainMigrationSource = transform('./DomainMigration.ts');
 
 const silentLog = {debug() {}, info() {}, warn() {}, error() {}};
@@ -53,8 +54,12 @@ function loadDesktop({channel = 'stable', settings} = {}) {
 	const constants = runModule(constantsSource, (specifier) => {
 		throw new Error(`Unexpected import: ${specifier}`);
 	});
+	const globalShortcutActions = runModule(globalShortcutActionsSource, (specifier) => {
+		throw new Error(`Unexpected import: ${specifier}`);
+	});
 	const desktopConfig = runModule(desktopConfigSource, (specifier) => {
 		if (specifier === 'node:fs') return fs;
+		if (specifier === '@electron/common/GlobalShortcutActions') return globalShortcutActions;
 		if (specifier === 'node:path') return path;
 		if (specifier === '@electron/common/BuildChannel') return {BUILD_CHANNEL: channel};
 		if (specifier === '@electron/common/Constants') return constants;

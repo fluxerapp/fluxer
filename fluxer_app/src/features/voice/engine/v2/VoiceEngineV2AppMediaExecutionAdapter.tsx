@@ -1560,7 +1560,11 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		this.syncLocalSpeakingOverride(room);
 	}
 
-	handlePushToTalkModeChange(room: Room | null, getCurrentUserVoiceState: () => VoiceState | null): void {
+	handlePushToTalkModeChange(
+		room: Room | null,
+		getCurrentUserVoiceState: () => VoiceState | null,
+		options: {preserveSelfMute?: boolean} = {},
+	): void {
 		assertNullableObjectLike<Room>(room, 'handlePushToTalkModeChange.room');
 		assert.equal(
 			typeof getCurrentUserVoiceState,
@@ -1569,7 +1573,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		);
 		Keybind.resetPushToTalkState();
 		Keybind.resetPushToMuteState();
-		if (isPushToTalkActiveFromAppState() && LocalVoiceState.getSelfMute()) {
+		if (!options.preserveSelfMute && isPushToTalkActiveFromAppState() && LocalVoiceState.getSelfMute()) {
 			LocalVoiceState.updateSelfMute(false);
 		}
 		const serverVoiceState = getCurrentUserVoiceState();

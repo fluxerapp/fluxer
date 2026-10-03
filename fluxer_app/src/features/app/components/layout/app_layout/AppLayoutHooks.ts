@@ -18,7 +18,6 @@ import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
-import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
 import PremiumState from '@app/features/premium/state/PremiumState';
 import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
@@ -257,7 +256,6 @@ export const useNagbarConditions = (): NagbarConditions => {
 			startupVoiceSessionRestoreSnapshotKey && startupVoiceSessionRestoreSnapshotKey === voiceSessionRestoreSnapshotKey,
 		);
 	})();
-	const canShowLinuxInputAccess = NativePermission.shouldShowLinuxInputAccessNagbar;
 	const canShowSoftwareEncoder = SoftwareEncoderWarning.showWarning;
 	const canShowStreamerMode = StreamerMode.shouldShowNagbar;
 	const canShowDesktopUpdateReady = Updater.shouldShowUpdateReadyNagbar;
@@ -328,7 +326,6 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowVisionaryMfa,
 		canShowVoiceSessionRestore,
 		needsTermsAcceptance,
-		canShowLinuxInputAccess,
 		canShowSoftwareEncoder,
 		canShowStreamerMode,
 		canShowDesktopUpdateReady,
@@ -444,12 +441,6 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.DESKTOP_NOTIFICATION,
 				priority: 8,
 				visible: conditions.canShowDesktopNotification,
-				dismissible: true,
-			},
-			{
-				type: NagbarType.LINUX_INPUT_ACCESS,
-				priority: 8.5,
-				visible: conditions.canShowLinuxInputAccess,
 				dismissible: true,
 			},
 			{

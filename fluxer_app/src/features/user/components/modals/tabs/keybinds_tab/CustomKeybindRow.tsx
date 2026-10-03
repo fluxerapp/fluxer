@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {KeybindRecorder} from '@app/features/input/components/KeybindRecorder';
+import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
 import Keybind, {
 	type CustomKeybindEntry,
 	type KeybindCommand,
@@ -15,6 +16,7 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {ActionDropdown} from '@app/features/user/components/modals/tabs/keybinds_tab/ActionDropdown';
+import {SystemShortcutRowHint} from '@app/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint';
 import {useAssignableActionOptions} from '@app/features/user/components/modals/tabs/keybinds_tab/useAssignableActionOptions';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -70,7 +72,7 @@ export const CustomKeybindRow = observer(
 		const openRowMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 				<>
-					{entry.action && Keybind.isActionGlobalCapable(entry.action) ? (
+					{entry.action && Keybind.isActionGlobalCapable(entry.action) && !GlobalShortcuts.isPortalBackend ? (
 						<MenuGroup data-flx="user.keybinds-tab.open-row-menu.global-menu-group">
 							<CheckboxItem
 								checked={entry.combo.global === true}
@@ -151,7 +153,12 @@ export const CustomKeybindRow = observer(
 					<div className={styles.customHint} data-flx="user.keybinds-tab.custom-keybind-row.custom-hint">
 						<Trans>Choose an action.</Trans>
 					</div>
-				) : null}
+				) : (
+					<SystemShortcutRowHint
+						action={entry.action}
+						data-flx="user.keybinds-tab.custom-keybind-row.system-shortcut-row-hint"
+					/>
+				)}
 				{conflictLabel ? (
 					<div
 						className={styles.conflictWarning}

@@ -993,7 +993,7 @@ msgstr "{count, plural, one {# Kanal folgt} other {# Kanäle folgen}} diesem Kan
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# Community gefunden} other {# Communitys gefunden}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1955
+#: src/features/app/components/layout/GuildsLayout.tsx:1954
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# Community ist aufgrund einer Fehlfunktion des Fluxkompensators vorübergehend nicht verfügbar.} other {# Communitys sind aufgrund einer Fehlfunktion des Fluxkompensators vorübergehend nicht verfügbar.}}"
 
@@ -1708,6 +1708,31 @@ msgstr "{productName} verhindert, dass Push-Benachrichtigungen an deine mobilen 
 msgid "{productName} Bug Hunter"
 msgstr "{productName}-Fehlerjäger"
 
+#. Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:28
+msgid "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
+msgstr "{productName} kann deinen Desktop bitten, seine Tastenkombinationen auch dann auszuführen, wenn {productName} nicht im Fokus ist. Dein Desktop bittet dich um Bestätigung und lässt dich die Tasten wählen."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:160
+msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
+msgstr "{productName} kann deine Tastatur nicht mehr auslesen und erkennt Tastenkombinationen stattdessen über X11."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:155
+msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
+msgstr "{productName} kann deine Tastatur nicht mehr auslesen, daher werden stattdessen die Tastenkombinationen deines Desktops verwendet."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:165
+msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
+msgstr "{productName} kann deine Tastatur nicht mehr auslesen. Tastenkombinationen funktionieren nur, solange {productName} im Fokus ist."
+
+#. Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:34
+msgid "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
+msgstr "{productName} kann seine Tastenkombinationen bei Hyprland registrieren, damit sie auch funktionieren, wenn {productName} nicht im Fokus ist. Die Tasten legst du dann in deiner Hyprland-Konfiguration fest."
+
 #. Inline notice body on Windows. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
 #. Inline notice body on macOS. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:23
@@ -1813,7 +1838,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} benötigt Kamerazugriff, um deine Geräte aufzulisten."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:141
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:143
 msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} benötigt Mikrofonzugriff, um deine Geräte aufzulisten."
 
@@ -1836,6 +1861,11 @@ msgstr "{productName} ist jetzt unter {host} erreichbar. Installiere es von dort
 #: src/features/user/components/popouts/UserProfileBadges.tsx:34
 msgid "{productName} Partner"
 msgstr "{productName}-Partner"
+
+#. Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:58
+msgid "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
+msgstr "{productName} hat seine Tastenkombinationen bei Hyprland registriert. Lege in deiner Hyprland-Konfiguration Tasten dafür fest, um sie zu nutzen, wenn {productName} nicht im Fokus ist."
 
 #. Nagbar shown after the app restarts while the user was connected to a community voice channel. {productName} is Fluxer, {channelName} is the voice channel name, and {communityName} is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:24
@@ -2586,7 +2616,7 @@ msgid "A profile that stands out"
 msgstr "Ein Profil, das auffällt"
 
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:55
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "Eine redirect_uri ist erforderlich, wenn der Bot-Scope nicht der einzige Scope ist."
 
@@ -2847,7 +2877,7 @@ msgstr "Nur in allen offenen DMs"
 msgid "Across every community you're in"
 msgstr "In allen Communitys, in denen du bist"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:110
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:112
 msgid "Action"
 msgstr "Aktion"
 
@@ -2962,7 +2992,7 @@ msgid "Activity sharing"
 msgstr "Aktivitätsfreigabe"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:495
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Aktivitätsschwelle"
@@ -3091,7 +3121,7 @@ msgid "Add an extra layer of security to your account"
 msgstr "Füge deinem Account eine zusätzliche Sicherheitsebene hinzu"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:41
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
 msgstr "Weitere benutzerdefinierte Tastenkombination hinzufügen"
 
@@ -3427,7 +3457,7 @@ msgid "Address"
 msgstr "Adresse"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:101
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Jede Einstellung selbst anpassen: Rauschunterdrückung, Echokompensation und Verstärkung."
 
@@ -3696,11 +3726,11 @@ msgstr "{everyoneMention} und {hereMention} erlauben"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Erlaube {PRODUCT_NAME} unter {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME} den Zugriff auf deine Kamera."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:553
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Erlaube {PRODUCT_NAME} den Zugriff auf dein Mikrofon in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Erlaube {PRODUCT_NAME}, auf dein Mikrofon zuzugreifen. Überprüfe die Adressleiste oder die Einstellungen deines Browsers."
 
@@ -3803,7 +3833,7 @@ msgstr "Erlaube Mitgliedern ohne die Berechtigung „{readMessageHistoryPermissi
 msgid "Allow mentions for this role"
 msgstr "Erwähnungen für diese Rolle zulassen"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:578
 msgid "Allow microphone"
 msgstr "Mikrofonzugriff erlauben"
 
@@ -5003,7 +5033,7 @@ msgid "Authorization failed"
 msgstr "Autorisierung fehlgeschlagen"
 
 #. OAuth authorize page generic error toast shown when the authorize request fails unexpectedly.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:75
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:76
 msgid "Authorization failed. Try again."
 msgstr "Autorisierung fehlgeschlagen. Bitte versuche es noch einmal."
 
@@ -5092,8 +5122,8 @@ msgid "Auto-detect language"
 msgstr "Sprache automatisch erkennen"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:121
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:482
 msgid "Auto-set activity threshold"
 msgstr "Aktivitätsschwelle automatisch festlegen"
 
@@ -5998,7 +6028,7 @@ msgid "Bot permissions"
 msgstr "Bot-Berechtigungen"
 
 #. OAuth authorize page error shown when the permissions query parameter is a negative integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:67
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:68
 msgid "Bot permissions cannot be negative."
 msgstr "Bot-Berechtigungen können nicht negativ sein."
 
@@ -6869,6 +6899,11 @@ msgstr "Spitznamen in der Gruppe ändern"
 msgid "Change icon"
 msgstr "Symbol ändern"
 
+#. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
+msgid "Change in system settings"
+msgstr "In den Systemeinstellungen ändern"
+
 #. Title of the modal where the user picks a community invite background source. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:37
 msgid "Change invite background"
@@ -7229,7 +7264,7 @@ msgid "Channel access"
 msgstr "Kanalzugriff"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:140
 msgid "Channel access denied"
 msgstr "Kanalzugriff verweigert"
 
@@ -7294,7 +7329,7 @@ msgstr "Kanal-ID in die Zwischenablage kopiert"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:100
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "Kanal-Link"
@@ -7461,6 +7496,11 @@ msgstr "Chateingabe"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:146
 msgid "Chat shortcuts"
 msgstr "Tastenkombinationen für den Chat"
+
+#. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:128
+msgid "Check again"
+msgstr "Erneut prüfen"
 
 #. Tray menu item. Triggers the auto-updater to look for a new desktop build.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:225
@@ -7645,7 +7685,7 @@ msgstr "Wähle ein Fenster in deiner Systemauswahl"
 msgid "Choose an account"
 msgstr "Account auswählen"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:152
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:154
 msgid "Choose an action."
 msgstr "Eine Aktion auswählen."
 
@@ -7667,7 +7707,7 @@ msgid "Choose background"
 msgstr "Hintergrund auswählen"
 
 #. OAuth authorize page error shown when a bot invite request provides both guild_id and channel_id. Keep the parameter names literal.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:87
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:88
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "Wähle entweder „guild_id“ oder „channel_id“, nicht beides."
 
@@ -7990,7 +8030,7 @@ msgstr "Verbessert das Mikrofonsignal für klare Sprache."
 #: src/features/app/components/setup/SetupWizardSteps.tsx:120
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
-#: src/features/input/components/KeybindRecorder.tsx:442
+#: src/features/input/components/KeybindRecorder.tsx:482
 #: src/features/theme_studio/sections/QuickCssSection.tsx:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:241
 msgid "Clear"
@@ -8191,7 +8231,7 @@ msgstr "Klicken, um die Farbauswahl zu öffnen und eine neue Farbe auszuwählen.
 msgid "Click to react"
 msgstr "Zum Reagieren klicken"
 
-#: src/features/input/components/KeybindRecorder.tsx:411
+#: src/features/input/components/KeybindRecorder.tsx:451
 msgid "Click to record"
 msgstr "Zum Aufnehmen klicken"
 
@@ -9110,7 +9150,7 @@ msgstr "Bestätigung"
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Bestätigung oder Doppelklick zum Beitreten zu einem Sprachkanal in der Community"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:169
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:176
 msgid "Conflicts with {conflictLabel}"
 msgstr "In Konflikt mit {conflictLabel}"
 
@@ -9127,7 +9167,7 @@ msgstr "Schließe eine Kamera oder ein virtuelles Aufnahmegerät an und versuche
 msgid "Connect a display, then try again."
 msgstr "Schließe einen Bildschirm an und versuche es erneut."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:563
 msgid "Connect a microphone and try again."
 msgstr "Verbinde ein Mikrofon und versuche es erneut."
 
@@ -9699,6 +9739,21 @@ msgstr "Einladungslink kopieren"
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:49
 msgid "Copy invite URL"
 msgstr "Einladungs-URL kopieren"
+
+#. Button that copies Hyprland config lines to the clipboard.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
+msgid "Copy lines"
+msgstr "Zeilen kopieren"
+
+#. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:118
+msgid "Copy lines for hyprland.conf"
+msgstr "Zeilen für hyprland.conf kopieren"
+
+#. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
+msgid "Copy lines for hyprland.lua"
+msgstr "Zeilen für hyprland.lua kopieren"
 
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:750
@@ -10845,7 +10900,7 @@ msgstr "Benutzerdefiniert"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
@@ -10948,12 +11003,12 @@ msgid "Custom selection"
 msgstr "Benutzerdefinierte Auswahl"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:42
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:44
 msgid "Custom shortcut action"
 msgstr "Benutzerdefinierte Tastenkombinationsaktion"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:38
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:40
 msgid "Custom shortcut options"
 msgstr "Optionen für benutzerdefinierte Tastenkombinationen"
 
@@ -11466,7 +11521,7 @@ msgstr "Standard-Tastenkombinationen"
 msgid "Default translator"
 msgstr "Standard-Übersetzer"
 
-#: src/features/input/components/KeybindRecorder.tsx:419
+#: src/features/input/components/KeybindRecorder.tsx:459
 msgid "Default:"
 msgstr "Standard:"
 
@@ -11715,7 +11770,7 @@ msgid "Delete saved media"
 msgstr "Gespeicherte Medien löschen"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:34
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:36
 msgid "Delete shortcut"
 msgstr "Tastenkombination löschen"
 
@@ -12102,13 +12157,13 @@ msgstr "Entwicklerstatus"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:149
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:152
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Entwicklertools"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:153
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:156
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Entwicklertools sind über das Mitarbeiter-Abzeichen in der Kanalüberschrift verfügbar."
 
@@ -12313,7 +12368,7 @@ msgid "Disable backend premium perks"
 msgstr "Backend-Premiumvorteile deaktivieren"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:33
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:35
 msgid "Disable built-in shortcut"
 msgstr "Integrierte Tastenkombination deaktivieren"
 
@@ -12377,7 +12432,7 @@ msgid "Disable screen share picture-in-picture popouts?"
 msgstr "Bild-im-Bild-Pop-outs für Bildschirmfreigaben deaktivieren?"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:26
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:28
 msgid "Disable shortcut"
 msgstr "Tastenkombination deaktivieren"
 
@@ -12888,7 +12943,7 @@ msgstr "Stattdessen spenden"
 #. Primary button in the favorite GIF import modal after a completed import.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:54
-#: src/features/input/components/KeybindRecorder.tsx:470
+#: src/features/input/components/KeybindRecorder.tsx:510
 #: src/features/moderation/components/report_modal/IARModal.tsx:94
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
@@ -12951,7 +13006,7 @@ msgid "Download button"
 msgstr "Herunterladen-Button"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
 msgid "Download desktop app"
 msgstr "Desktop-App herunterladen"
 
@@ -13204,6 +13259,11 @@ msgstr "Niederländisch"
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "z. B. YubiKey, iPhone, Arbeitscomputer"
 
+#. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+msgid "Each key can run only one system-wide shortcut."
+msgstr "Jede Taste kann nur eine systemweite Tastenkombination auslösen."
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx:12
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -13350,7 +13410,7 @@ msgid "Edit invite link"
 msgstr "Einladungslink bearbeiten"
 
 #. Button or menu action label in the keyboard shortcuts keybind recorder. Keep it concise.
-#: src/features/input/components/KeybindRecorder.tsx:32
+#: src/features/input/components/KeybindRecorder.tsx:40
 msgid "Edit keyboard shortcut"
 msgstr "Tastenkombination bearbeiten"
 
@@ -13425,7 +13485,7 @@ msgstr "Formular zum Bearbeiten gespeicherter Medien"
 msgid "Edit search engine"
 msgstr "Suchmaschine bearbeiten"
 
-#: src/features/input/components/KeybindRecorder.tsx:378
+#: src/features/input/components/KeybindRecorder.tsx:418
 msgid "Edit shortcut"
 msgstr "Tastenkombination bearbeiten"
 
@@ -13753,20 +13813,16 @@ msgstr "Leere Bearbeitung"
 msgid "Empty favorites"
 msgstr "Favoriten leer"
 
-#. Button label in the Linux Wayland input-access nagbar.
-#. Button label in the keybind settings system-wide shortcuts section.
 #. Button or menu action label in the invites disable invites button. Keep it concise.
 #. Primary button label in the enable-invites confirmation modal.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "Aktivieren"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:129
 msgid "Enable {permissionName} permission"
 msgstr "{permissionName}-Berechtigung aktivieren"
 
@@ -13876,11 +13932,6 @@ msgstr "Hardwarebeschleunigung aktivieren und neu starten"
 msgid "Enable hardware acceleration?"
 msgstr "Hardwarebeschleunigung aktivieren?"
 
-#. Description for a Linux Wayland input-access nagbar. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:16
-msgid "Enable input access to use system-wide shortcuts on Wayland. After changing input access, fully quit and restart {productName} so shortcuts can use it."
-msgstr "Aktiviere den Eingabezugriff, um systemweite Tastenkombinationen unter Wayland zu verwenden. Nachdem du den Eingabezugriff geändert hast, beende {productName} vollständig und starte es neu, damit die Tastenkombinationen verwendet werden können."
-
 #. Button label that re-enables invite links for a community.
 #: src/features/invite/components/DisableInvitesButton.tsx:40
 msgid "Enable invites"
@@ -13971,7 +14022,7 @@ msgid "Enable Shift to expand"
 msgstr "Umschalttaste zum Erweitern aktivieren"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:30
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:32
 msgid "Enable shortcut"
 msgstr "Tastenkombination aktivieren"
 
@@ -14357,7 +14408,7 @@ msgstr "Gesamtes System-Audio"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:310
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:192
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:194
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Beitrittston"
@@ -14467,7 +14518,7 @@ msgstr "Abend"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:178
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Gleicht deine Mikrofonlautstärke aus, damit du nicht zu leise bist."
@@ -15682,6 +15733,26 @@ msgstr "Nur für britische Augen ..."
 msgid "For me"
 msgstr "Für mich"
 
+#. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
+msgstr "Verwende für „Zum Stummschalten drücken“ eine einzelne Taste ohne Strg, Alt oder Umschalttaste. Lass bei einer Kombination zuerst die Haupttaste los, sonst kann das Mikrofon stummgeschaltet bleiben."
+
+#. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:181
+msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
+msgstr "Verwende für Push-to-Talk eine einzelne Taste ohne Strg, Alt oder Umschalttaste. Lass bei einer Kombination zuerst die Haupttaste los, sonst kann das Mikrofon an bleiben."
+
+#. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:199
+msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
+msgstr "Verwende für diese Tastenkombination eine einzelne Taste ohne Strg, Alt oder Umschalttaste. Lass bei einer Kombination zuerst die Haupttaste los, sonst kann die Tastenkombination aktiv bleiben."
+
+#. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
+msgstr "Verwende für „Sprachaktivitätspriorität“ eine einzelne Taste ohne Strg, Alt oder Umschalttaste. Lass bei einer Kombination zuerst die Haupttaste los, sonst kann die Priorität aktiv bleiben."
+
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:268
 msgid "For your security, please confirm it's you to continue."
 msgstr "Bestätige bitte zu deiner Sicherheit, dass du es bist, um fortzufahren."
@@ -16600,8 +16671,8 @@ msgid "Global profile"
 msgstr "Globales Profil"
 
 #. Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:81
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:63
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:83
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:65
 msgid "Global shortcut"
 msgstr "Globale Tastenkombination"
 
@@ -17434,6 +17505,11 @@ msgstr "Halte die Umschalttaste gedrückt und drücke X, um Apps auszuwählen. D
 msgid "Hold to record. Drag up to lock, or release to send."
 msgstr "Halten zum Aufnehmen. Nach oben ziehen zum Sperren oder loslassen zum Senden."
 
+#. Hint under a system-wide hold shortcut such as push-to-talk on Linux. The desktop ignores the key while other modifier keys are held.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:39
+msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your system settings."
+msgstr "Wenn du Umschalttaste, Strg oder Alt gedrückt hältst, wird diese Tastenkombination blockiert. Füge in deinen Systemeinstellungen Alternativen hinzu."
+
 #. Action label in quick switcher for navigating to the Home tab.
 #: src/features/app/components/layout/MobileBottomNav.tsx:110
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:47
@@ -17537,6 +17613,26 @@ msgstr "Hurra! Benachrichtigungen sind aktiviert"
 msgid "Hyperlink"
 msgstr "Hyperlink"
 
+#. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:86
+msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
+msgstr "Hyprland hat keinen Dialog für Tastenkombinationen. Füge die Zeilen für deine Hyprland-Version zu deiner Hyprland-Konfiguration hinzu und ersetze KEY durch die gewünschte Taste."
+
+#. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
+msgstr "Hyprland hat keinen Dialog für Tastenkombinationen. Lege die Tasten in deiner Hyprland-Konfiguration fest."
+
+#. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
+msgid "hyprland.conf (before Hyprland 0.55)"
+msgstr "hyprland.conf (vor Hyprland 0.55)"
+
+#. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:101
+msgid "hyprland.lua (Hyprland 0.55 and later)"
+msgstr "hyprland.lua (Hyprland 0.55 und neuer)"
+
 #: src/features/auth/flow/RegistrationLegalConsent.tsx:83
 msgid "I agree to the <0>Privacy policy</0>"
 msgstr "Ich stimme der <0>Datenschutzerklärung</0> zu"
@@ -17576,7 +17672,7 @@ msgstr "Ich habe es mir anders überlegt"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:113
 msgid "I understand"
 msgstr "Ich verstehe"
 
@@ -18000,7 +18096,7 @@ msgstr "In"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "Im Modus „Betriebssystem“ dienen die oben aufgeführten Wörterbücher als Empfehlungen. {PRODUCT_NAME} übergibt diese Sprach-Tags, sofern unterstützt, an die Rechtschreibprüfung deines Betriebssystems. Nicht erkannte Tags werden ignoriert."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:322
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:324
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "Im Browser funktioniert Push-to-Talk nur, wenn der Tab \"{PRODUCT_NAME}\" im Fokus ist. Installiere die Desktop-App für systemweites Push-to-Talk."
 
@@ -18268,30 +18364,8 @@ msgctxt "chat-settings-section"
 msgid "Input"
 msgstr "Eingabe"
 
-#. Status text after Linux input access setup failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:35
-msgid "Input access could not be enabled automatically. Change it manually, then fully quit and restart {productName} so shortcuts can use it."
-msgstr "Der Eingabezugriff konnte nicht automatisch aktiviert werden. Ändere ihn manuell und beende und starte {productName} dann vollständig neu, damit Tastenkombinationen ihn verwenden können."
-
-#. Description for a Linux Wayland input-access nagbar after automatic permission setup failed. {settingsMenuName} is the shared user settings tab label for shortcuts and {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:26
-msgid "Input access could not be enabled. Try again from {settingsMenuName} settings, then fully quit and restart {productName}."
-msgstr "Der Eingabezugriff konnte nicht aktiviert werden. Versuche es erneut über die {settingsMenuName}-Einstellungen und beende und starte {productName} dann vollständig neu."
-
-#. Settings warning for Linux Wayland system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:18
-msgid "Input access is required for system-wide keyboard and mouse shortcuts on Wayland. After changing input access, fully quit and restart {productName} so shortcuts can use it."
-msgstr "Eingabezugriff ist für systemweite Tastatur- und Maus-Kurzbefehle unter Wayland erforderlich. Nachdem du den Eingabezugriff geändert hast, beende und starte {productName} vollständig neu, damit die Kurzbefehle ihn verwenden können."
-
-#. Description for a Linux Wayland input-access nagbar after access was changed. {productName} is the app name.
-#. Status text after Linux input access was changed. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:21
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:31
-msgid "Input access was changed. Fully quit and restart {productName} so system-wide shortcuts can use it."
-msgstr "Der Eingabezugriff wurde geändert. Beende {productName} vollständig und starte es neu, damit systemweite Tastenkombinationen ihn verwenden können."
-
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:182
 msgid "Input and output"
 msgstr "Ein- und Ausgabe"
 
@@ -18450,7 +18524,7 @@ msgid "Invalid authorization request"
 msgstr "Ungültige Autorisierungsanfrage"
 
 #. OAuth authorize page error shown when the permissions query parameter is not a valid integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:63
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:64
 msgid "Invalid bot permissions."
 msgstr "Ungültige Bot-Berechtigungen."
 
@@ -18493,7 +18567,7 @@ msgid "Invalid or expired code. Try again."
 msgstr "Ungültiger oder abgelaufener Code. Bitte versuche es noch einmal."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:79
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:80
 msgid "Invalid redirect_uri"
 msgstr "Ungültiger Parameter redirect_uri"
 
@@ -18597,7 +18671,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Einladungslink ist ausgeblendet, während du teilst:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:165
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:168
 msgid "Invite link masked while sharing"
 msgstr "Einladungslink ausgeblendet, während du teilst"
 
@@ -19011,7 +19085,7 @@ msgid "Jump to {displayName}"
 msgstr "Zu {displayName} springen"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:114
 msgid "Jump to {labelText}"
 msgstr "Springe zu {labelText}"
 
@@ -19068,12 +19142,12 @@ msgid "Jump to the current call"
 msgstr "Zum aktuellen Anruf springen"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:118
 msgid "Jump to the linked channel"
 msgstr "Zum verlinkten Kanal springen"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:110
 msgid "Jump to the linked message"
 msgstr "Zur verlinkten Nachricht springen"
 
@@ -19083,7 +19157,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Gehe zu der Nachricht von {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:105
 msgid "Jump to the message in {labelText}"
 msgstr "Zur Nachricht in {labelText} springen"
 
@@ -19167,7 +19241,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Bitte sicher aufbewahren. Eine Neuerstellung unterbricht bestehende Integrationen."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:84
 msgid "Keep transmitting briefly after release."
 msgstr "Auch nach Loslassen des Knopfes noch kurzzeitig übertragen."
 
@@ -19203,6 +19277,11 @@ msgstr "Tastatur"
 msgctxt "accessibility-settings-section"
 msgid "Keyboard"
 msgstr "Tastatur"
+
+#. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:176
+msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
+msgstr "Der Tastaturzugriff konnte nicht gestartet werden. Tastenkombinationen funktionieren nur, solange {productName} im Fokus ist."
 
 #. Toggle label and settings search entry for controlling tooltip keyboard shortcut hints.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:46
@@ -19577,6 +19656,11 @@ msgstr "Community selbst moderieren lassen"
 msgid "Let the member hear others in this community again"
 msgstr "Dem Mitglied wieder erlaubt, andere in dieser Community zu hören"
 
+#. Description for the Linux direct input device access switch. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:151
+msgid "Lets {productName} read your keyboard directly. Your system already allows this."
+msgstr "Lässt {productName} direkt auf deine Tastatur zugreifen. Dein System erlaubt dies bereits."
+
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:259
 msgid "Lets custom CSS reveal transparent window regions after restarting the desktop app."
 msgstr "Ermöglicht es benutzerdefiniertem CSS, nach dem Neustart der Desktop-App transparente Fensterbereiche anzuzeigen."
@@ -19760,7 +19844,7 @@ msgid "Link styling"
 msgstr "Link-Stil"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:157
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:160
 msgid "Link unavailable"
 msgstr "Link nicht verfügbar"
 
@@ -20036,7 +20120,7 @@ msgid "Look and feel"
 msgstr "Aussehen und Verhalten"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:678
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Es sieht so aus, als würdest du {0} verwenden. Wenn du die Verarbeitung von {PRODUCT_NAME} zusätzlich aktivierst, kann dies zu Pumpen oder Verzerrungen führen. Eine direkte Eingabe leitet dein Audio unverändert weiter."
 
@@ -21144,7 +21228,7 @@ msgid "Message layout"
 msgstr "Nachrichtenlayout"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:92
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:95
 msgid "message link"
 msgstr "Nachrichtenlink"
 
@@ -21332,7 +21416,7 @@ msgstr "Mikrofon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:190
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Mikrofon-Test"
@@ -21472,7 +21556,7 @@ msgid "Miscellaneous"
 msgstr "Verschiedenes"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:37
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:38
 msgid "Missing client_id"
 msgstr "client_id fehlt"
 
@@ -21690,7 +21774,7 @@ msgid "More options"
 msgstr "Weitere Optionen"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:59
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:61
 msgid "More shortcut options"
 msgstr "Weitere Tastenkombinationsoptionen"
 
@@ -22672,7 +22756,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Keine Berechtigung \"{sendMessagesPermission}\""
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:148
 msgid "No access"
 msgstr "Kein Zugriff"
 
@@ -22984,7 +23068,7 @@ msgstr "Keine Treffer gefunden"
 msgid "No mentions yet"
 msgstr "Noch keine Erwähnungen"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:548
 msgid "No microphone found"
 msgstr "Kein Mikrofon gefunden"
 
@@ -23134,7 +23218,7 @@ msgid "No settings found"
 msgstr "Keine Einstellungen gefunden"
 
 #. Empty-state text in the keyboard shortcuts keybind recorder.
-#: src/features/input/components/KeybindRecorder.tsx:36
+#: src/features/input/components/KeybindRecorder.tsx:44
 msgid "No shortcut set"
 msgstr "Keine Tastenkombination festgelegt"
 
@@ -23357,6 +23441,11 @@ msgstr "Keine ganze Zahl"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:395
 msgid "Not accepted"
 msgstr "Nicht akzeptiert"
+
+#. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:68
+msgid "Not assigned"
+msgstr "Nicht zugewiesen"
 
 #. Fallback value when a saved billing payment method has no expiration date.
 #. Screen reader text for a cross in the Plutonium page comparison table.
@@ -23858,12 +23947,12 @@ msgid "Open {host} in your browser."
 msgstr "Öffne {host} in deinem Browser."
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:127
 msgid "Open {labelText}"
 msgstr "Öffne {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:122
 msgid "Open {labelText} in settings"
 msgstr "Öffne {labelText} in den Einstellungen"
 
@@ -24611,7 +24700,7 @@ msgid "Page down"
 msgstr "Bild ab"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:132
 msgid "page link"
 msgstr "Seitenlink"
 
@@ -25611,11 +25700,11 @@ msgstr "Online-Status"
 msgid "Press {shortcut} to react"
 msgstr "Drücke {shortcut} zum Reagieren"
 
-#: src/features/input/components/KeybindRecorder.tsx:381
+#: src/features/input/components/KeybindRecorder.tsx:421
 msgid "Press a key, mouse button, or gamepad button to bind. Escape cancels."
 msgstr "Drücke eine Taste, Maustaste oder Gamepad-Taste zum Belegen. Escape bricht ab."
 
-#: src/features/input/components/KeybindRecorder.tsx:407
+#: src/features/input/components/KeybindRecorder.tsx:447
 msgid "Press a shortcut…"
 msgstr "Tastenkombination drücken …"
 
@@ -26273,18 +26362,33 @@ msgid "Push to talk key"
 msgstr "Push-to-Talk-Taste"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:117
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:360
 #: src/features/voice/components/VoiceSettingsMenus.tsx:419
 msgid "Push-to-talk"
 msgstr "Push-to-Talk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:105
 msgid "Push-to-talk (limited)"
 msgstr "Push-to-Talk (begrenzt)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:701
+#. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
+msgstr "Push-to-Talk hat noch keine systemweite Taste. Um eine festzulegen, gehe zu Einstellungen > Apps > {productName}."
+
+#. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:220
+msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
+msgstr "Push-to-Talk hat noch keine systemweite Taste. Um eine festzulegen, gehe zu Systemeinstellungen > Tastatur > Kurzbefehle > {productName}."
+
+#. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:231
+msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
+msgstr "Push-to-Talk hat noch keine systemweite Taste. Um eine festzulegen, öffne die Tastenkombinationseinstellungen deines Desktops."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:708
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Push-to-Talk wird bei direkter Eingabe ignoriert. Wechsle zu „Fokussierter Sprachchat“ oder „Benutzerdefiniert“, um es zu verwenden."
 
@@ -26293,20 +26397,50 @@ msgstr "Push-to-Talk wird bei direkter Eingabe ignoriert. Wechsle zu „Fokussie
 msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Push-to-Talk ist aktiviert. Halte {pushToTalkHint} gedrückt, um zu sprechen."
 
+#. Tooltip and screen reader label on the mic button when push-to-talk is on but the key has no name to show, for example when the Linux desktop assigns it.
+#: src/features/input/utils/PushToTalkHint.ts:11
+msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
+msgstr "Push-to-Talk ist aktiviert. Halte deine Push-to-Talk-Taste gedrückt, um zu sprechen."
+
+#. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:209
+msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
+msgstr "Push-to-Talk funktioniert nur, solange {productName} im Fokus ist, da dein Desktop keine systemweiten Tastenkombinationen eingerichtet hat."
+
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:137
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "Push-to-Talk funktioniert nur, während {productName} im Fokus ist, bis {permissionName} aktiviert wird. Beende {productName} nach der Berechtigungsänderung vollständig und starte es neu, damit systemweite Tastenkombinationen die Berechtigung nutzen können."
 
+#. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:205
+msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
+msgstr "Push-to-Talk funktioniert nur, solange {productName} im Fokus ist, bis du systemweite Tastenkombinationen einrichtest."
+
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:133
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Push-to-Talk funktioniert nur, während der Browser-Tab im Fokus ist."
+
+#. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:170
+msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
+msgstr "Push-to-Talk verwendet die Taste, die du in {productName} festgelegt hast. Lege zuerst eine fest, sonst nutzt dein Mikrofon Sprachaktivität."
 
 #. Modal description shown when a push-to-talk shortcut is pressed while the user is self-deafened.
 #: src/features/app/keybindings/keybind_manager/shared.ts:22
 msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen yourself to talk."
 msgstr "Push-to-Talk aktiviert dein Mikrofon nicht, solange dein Ton ausgeschaltet ist. Schalte deinen Ton ein, um zu sprechen."
+
+#. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:242
+msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
+msgstr "Push-to-Talk funktioniert außerhalb von {productName} erst, nachdem du es in deiner Hyprland-Konfiguration festgelegt hast."
+
+#. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:236
+msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
+msgstr "Push-to-Talk funktioniert außerhalb von {productName} erst, nachdem du es in deiner Hyprland-Konfiguration festgelegt hast. Füge die Zeile für deine Hyprland-Version hinzu und ersetze KEY durch die gewünschte Taste."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
@@ -26406,7 +26540,7 @@ msgid "Raw embed JSON"
 msgstr "Rohes Embed-JSON"
 
 #. Button or menu action label in the keybinds tab. Turns a disabled built-in shortcut back on. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:50
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:52
 msgid "Re-enable built-in shortcut"
 msgstr "Integrierte Tastenkombination aktivieren"
 
@@ -26565,13 +26699,6 @@ msgstr "Neue Erwähnungen"
 msgid "Recent searches"
 msgstr "Letzte Suchanfragen"
 
-#. Button label in the Linux Wayland input-access nagbar after the user changes OS permissions.
-#. Button label in the keybind settings system-wide shortcuts section.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:36
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:27
-msgid "Recheck"
-msgstr "Erneut prüfen"
-
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
 #: src/features/invite/components/modals/InviteModal.tsx:360
@@ -26586,7 +26713,7 @@ msgid "Recommended"
 msgstr "Empfohlen"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:88
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Empfohlen. Filtert dein Mikrofonsignal für klare Sprache."
 
@@ -26600,6 +26727,11 @@ msgstr "Verbindung wiederherstellen"
 msgid "Reconnect succeeded. Pick a screen again if you want to resume your previous stream."
 msgstr "Wiederherstellung erfolgreich. Wähle erneut einen Bildschirm aus, wenn du deinen vorherigen Stream fortsetzen möchtest."
 
+#. Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:48
+msgid "Reconnecting to your desktop…"
+msgstr "Verbindung zu deinem Desktop wird wiederhergestellt…"
+
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
 #: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Reconnecting..."
@@ -26611,7 +26743,7 @@ msgid "Reconnecting…"
 msgstr "Verbindung wird wiederhergestellt…"
 
 #. Short label in the keyboard shortcuts keybind recorder. Keep it concise.
-#: src/features/input/components/KeybindRecorder.tsx:28
+#: src/features/input/components/KeybindRecorder.tsx:36
 msgid "Record shortcut"
 msgstr "Tastenkombination aufnehmen"
 
@@ -26851,7 +26983,7 @@ msgstr "Relativ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:80
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Verzögerung beim Loslassen"
@@ -27739,13 +27871,13 @@ msgstr "Erneut gesendet"
 
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
-#: src/features/input/components/KeybindRecorder.tsx:459
+#: src/features/input/components/KeybindRecorder.tsx:499
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1022
 msgid "Reset"
 msgstr "Zurücksetzen"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:45
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:47
 msgid "Reset \"{label}\" to built-in"
 msgstr "\"{label}\" auf Standard zurücksetzen"
 
@@ -27866,7 +27998,7 @@ msgid "Reset to actual values"
 msgstr "Auf tatsächliche Werte zurücksetzen"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:37
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:39
 msgid "Reset to built-in"
 msgstr "Auf Standard zurücksetzen"
 
@@ -29509,7 +29641,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Wähle das Konto aus, mit dem du dich auf deinem neuen Gerät anmelden möchtest."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:125
 msgid "Select voice processing mode"
 msgstr "Sprachverarbeitungsmodus auswählen"
 
@@ -29814,7 +29946,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Sendet rohes Mikrofon-Audio ohne Verarbeitung."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:92
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Sendet dein Audio unverändert. Am besten geeignet, wenn du externe Audiosoftware verwendest."
 
@@ -29913,12 +30045,12 @@ msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "Festgelegt durch die {preset}-Voreinstellung. Die Auswahl eines Wertes hier wechselt zu Benutzerdefiniert."
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:29
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:31
 msgid "Set custom shortcut"
 msgstr "Eigene Tastenkombination festlegen"
 
 #. Label in the keybinds tab. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:55
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:57
 msgid "Set custom shortcut for \"{label}\""
 msgstr "Benutzerdefinierte Tastenkombination für „{label}“ festlegen"
 
@@ -30066,6 +30198,11 @@ msgstr "Die Sprachregion wurde auf {region} gesetzt"
 msgid "Set the voice region to automatic"
 msgstr "Die Sprachregion auf automatisch gesetzt"
 
+#. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:40
+msgid "Set up"
+msgstr "Einrichten"
+
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:74
 msgid "Set up {productName}"
@@ -30118,7 +30255,7 @@ msgid "Settings"
 msgstr "Einstellungen"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:136
 msgid "settings link"
 msgstr "Einstellungen-Link"
 
@@ -30330,8 +30467,8 @@ msgstr "Kurzcodes"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:376
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:375
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -32759,7 +32896,7 @@ msgstr "Zu \"Komfortabel\" wechseln"
 msgid "Switch to dense layout"
 msgstr "Zu kompakter Ansicht wechseln"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:673
 msgid "Switch to direct input"
 msgstr "Direkte Eingabe nutzen"
 
@@ -33027,9 +33164,24 @@ msgid "System-managed install"
 msgstr "Systemverwaltete Installation"
 
 #. Settings subsection title for keyboard and mouse shortcuts that work outside the app.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:14
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:24
 msgid "System-wide shortcuts"
 msgstr "Systemweite Tastenkombinationen"
+
+#. Linux settings text when setting up system-wide shortcuts failed.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:137
+msgid "System-wide shortcuts could not be set up."
+msgstr "Systemweite Tastenkombinationen konnten nicht eingerichtet werden."
+
+#. Hint under a shortcut on Linux showing the key the desktop assigned. {trigger} is the key, as named by the desktop.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:30
+msgid "System-wide: {trigger}"
+msgstr "Systemweit: {trigger}"
+
+#. Hint under a shortcut on Linux when the desktop has no key assigned for it system-wide.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:35
+msgid "System-wide: Not assigned"
+msgstr "Systemweit: Nicht zugewiesen"
 
 #. Description text in the theme tab content.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx:58
@@ -33612,12 +33764,12 @@ msgid "The page you're looking for doesn't exist or has been moved."
 msgstr "Die Seite, die du suchst, existiert nicht oder wurde verschoben."
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:60
 msgid "The provided redirect_uri is not registered for this application."
 msgstr "Die angegebene redirect_uri ist für diese Anwendung nicht registriert."
 
 #. Body text in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:50
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:51
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Die angegebene redirect_uri muss HTTP oder HTTPS verwenden."
 
@@ -33850,7 +34002,7 @@ msgid "This animation is too long or too large to crop. Try a shorter or smaller
 msgstr "Diese Animation ist zu lang oder zu groß zum Zuschneiden. Versuche es mit einer kürzeren oder kleineren Datei."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:83
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:84
 msgid "This application"
 msgstr "Diese Anwendung"
 
@@ -33860,7 +34012,7 @@ msgid "This attachment has expired"
 msgstr "Dieser Anhang ist abgelaufen"
 
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:71
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:72
 msgid "This bot is not public and cannot be added by other users."
 msgstr "Dieser Bot ist nicht öffentlich und kann nicht von anderen Nutzern hinzugefügt werden."
 
@@ -34081,6 +34233,16 @@ msgstr "Diese Unterhaltung ist nicht mehr verfügbar."
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Diese Desktop-Version kann keine Updates innerhalb von {productName} installieren. Bitte lade stattdessen die neueste Desktop-Installationsdatei herunter."
 
+#. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:215
+msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
+msgstr "Dieser Desktop bietet keine systemweiten Tastenkombinationen. Push-to-Talk funktioniert nur, solange {productName} im Fokus ist."
+
+#. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:133
+msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
+msgstr "Dieser Desktop bietet keine systemweiten Tastenkombinationen. Tastenkombinationen funktionieren weiterhin, solange {productName} im Fokus ist."
+
 #. Desktop updater modal body for development or unpackaged builds.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:65
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
@@ -34294,6 +34456,11 @@ msgstr "Dies ist dein letzter Passkey und Passkeys sind dein zweiter Faktor. Wen
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Dies ist dein letzter Passkey. Sobald er weg ist, kannst du keinen Passkey mehr als zweiten Faktor verwenden."
 
+#. Hint under the push-to-talk key recorder in voice settings on Linux when the desktop owns system-wide shortcuts. {settingsTabName} is the name of the settings tab with keyboard shortcuts and {sectionName} the title of its system-wide shortcuts section, both filled in by the app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:24
+msgid "This key works while {productName} is focused. Your desktop sets the system-wide key, under {settingsTabName} > {sectionName}."
+msgstr "Diese Taste funktioniert, solange {productName} im Fokus ist. Die systemweite Taste legt dein Desktop fest, unter {settingsTabName} > {sectionName}."
+
 #. Extra file-too-large alert sentence shown when premium upload-limit upgrades are unavailable.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:39
 msgid "This limit is configured by your instance administrator."
@@ -34305,7 +34472,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Dieser Link-Kanal ist als nicht jugendfrei gekennzeichnet und kann Inhalte enthalten, die für manche Nutzer unangemessen sein könnten."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:161
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:164
 msgid "This link is not available for your account."
 msgstr "Dieser Link ist für deinen Account nicht verfügbar."
 
@@ -34777,6 +34944,21 @@ msgstr "Titelleiste"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:252
 msgid "Title bar platform"
 msgstr "Titelleisten-Plattform"
+
+#. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:81
+msgid "To change the keys, go to Settings > Apps > {productName}."
+msgstr "Um die Tasten zu ändern, gehe zu Einstellungen > Apps > {productName}."
+
+#. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
+msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
+msgstr "Um die Tasten zu ändern, gehe zu Systemeinstellungen > Tastatur > Kurzbefehle > {productName}."
+
+#. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+msgid "To change the keys, open your desktop's keyboard shortcut settings."
+msgstr "Um die Tasten zu ändern, öffne die Tastenkombinationseinstellungen deines Desktops."
 
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:125
 msgid "To create a webhook, open <0>{channelWebhooksSettingsPath}</0>. You can still edit and organize all existing webhooks here."
@@ -35872,7 +36054,7 @@ msgid "Unknown"
 msgstr "Unbekannt"
 
 #. OAuth authorize page error shown when the application, session, or request is invalid.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:46
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:47
 msgid "Unknown application, expired session, or invalid authorization request."
 msgstr "Unbekannte Anwendung, abgelaufene Sitzung oder ungültige Autorisierungsanfrage."
 
@@ -36410,6 +36592,11 @@ msgstr "Bis zu 4K/60fps"
 msgid "Up to 720p at 30 FPS"
 msgstr "Bis zu 720p bei 30 FPS"
 
+#. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
+msgid "Update {productName} to use system-wide shortcuts on Wayland."
+msgstr "Aktualisiere {productName}, um systemweite Tastenkombinationen unter Wayland zu verwenden."
+
 #. Message placeholder shown when the app cannot render a newer message type.
 #: src/features/channel/components/UnknownMessage.tsx:23
 msgid "Update {productName} to view this message."
@@ -36850,6 +37037,11 @@ msgstr "Dunkles Design in der gesamten App verwenden"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:45
 msgid "Use default"
 msgstr "Standard verwenden"
+
+#. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:146
+msgid "Use direct input device access"
+msgstr "Direkten Zugriff auf Eingabegeräte verwenden"
 
 #. Permission description in the channel-scoped permissions editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:260
@@ -38218,7 +38410,7 @@ msgid "Voice participants"
 msgstr "Sprachchat-Teilnehmer"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:668
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Sprachverarbeitung"
@@ -38264,7 +38456,7 @@ msgstr "Ton im Sprachchat einschalten"
 msgid "Voice unmute"
 msgstr "Stummschaltung aufheben"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:597
 msgid "Voice uses your system output device in this browser. Change it in your system settings."
 msgstr "Die Sprachausgabe verwendet in diesem Browser Ihr Systemausgabegerät. Ändern Sie dies in Ihren Systemeinstellungen."
 
@@ -38278,7 +38470,7 @@ msgstr "Storniert"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:383
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:186
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -38344,6 +38536,11 @@ msgstr "Warten, bis die Wartezeit des Slow-Modus in einem oder mehreren ausgewä
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:48
 msgid "Waiting for you to..."
 msgstr "Warten, bis du …"
+
+#. Status text while the Linux desktop shows its own dialog for confirming system-wide shortcuts.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:44
+msgid "Waiting for your desktop…"
+msgstr "Warten auf deinen Desktop…"
 
 #: src/features/input/utils/KeybindUtils.ts:107
 msgctxt "keyboard-key-name"
@@ -38926,7 +39123,7 @@ msgstr "Welche Unterhaltungen"
 msgid "Which rule was broken?"
 msgstr "Welche Regel wurde gebrochen?"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:370
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:369
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Solange Push-to-Talk aktiviert ist, steuert deine Tastenkombination dein Mikrofon, daher ist die Stummschaltfläche deaktiviert."
 
@@ -39093,6 +39290,11 @@ msgstr "Ohne diese Berechtigung ist Push-to-Talk erforderlich."
 #: src/features/app/components/setup/SetupWizardSteps.tsx:136
 msgid "Wordmark"
 msgstr "Wortmarke"
+
+#. Hint under a shortcut on Linux when the desktop owns system-wide shortcuts. The key shown here only works inside the app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:19
+msgid "Works while {productName} is focused"
+msgstr "Funktioniert, solange {productName} im Fokus ist"
 
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual preview context menu. Keep it concise.
@@ -39521,7 +39723,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Du hast deinen Tag geändert, während du {PREMIUM_PRODUCT_NAME} hattest. Er wird zufällig neu generiert, wenn dein {PREMIUM_PRODUCT_NAME} abläuft, es sei denn, es wird verlängert."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:144
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Du hast keinen Zugriff auf den Kanal, in dem diese Nachricht gesendet wurde."
 
@@ -40056,7 +40258,7 @@ msgid "Your {premiumProductName} subscription has expired. You have lost all {pr
 msgstr "Dein {premiumProductName}-Abo ist abgelaufen. Du hast alle {premiumProductName}-Vorteile verloren. Reaktiviere dein Abo, um den Zugriff wiederherzustellen."
 
 #. OAuth authorize page error shown when the session expired mid-authorization. Keep plain. Preserve {productName}; it is inserted by code.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:42
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Deine {productName}-Sitzung ist abgelaufen. Melde dich erneut an, um die Autorisierung dieser Anwendung fortzusetzen."
 
@@ -40143,6 +40345,16 @@ msgstr "Deine Community braucht mindestens {minMemberCount, plural, one {# Mitgl
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:14
 msgid "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
 msgstr "Deine Kreditkarte wurde überprüft. Wenn die Kreditkarte gültig ist, werden Inhalte für Erwachsene in Kürze freigeschaltet. Du kannst diesen Tab schließen und zur App zurückkehren."
+
+#. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:123
+msgid "Your desktop didn't set up system-wide shortcuts."
+msgstr "Dein Desktop hat keine systemweiten Tastenkombinationen eingerichtet."
+
+#. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
+msgid "Your desktop runs these shortcuts even while {productName} is not focused."
+msgstr "Dein Desktop führt diese Tastenkombinationen aus, auch wenn {productName} nicht im Fokus ist."
 
 #. Body of the modal that asks the user to save an updated passkey. name is the name the user gave the passkey. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:28

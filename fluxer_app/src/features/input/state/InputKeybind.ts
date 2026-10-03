@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {HoldAction} from '@app/features/app/keybindings/utils/RuntimeKeybinds';
 import {COPY_TEXT_DESCRIPTOR, DELETE_MESSAGE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
+import {HoldSources} from '@app/features/input/state/HoldSources';
 import {
 	ADD_REACTION_DESCRIPTOR,
 	ANSWER_THE_INCOMING_CALL_DESCRIPTOR,
@@ -211,7 +214,7 @@ const KEYBIND_COMMAND_VALUES = [
 export type KeybindCommand = (typeof KEYBIND_COMMAND_VALUES)[number];
 
 const KEYBIND_COMMAND_SET = new Set<string>(KEYBIND_COMMAND_VALUES);
-const isKeybindCommand = (value: unknown): value is KeybindCommand =>
+export const isKeybindCommand = (value: unknown): value is KeybindCommand =>
 	typeof value === 'string' && KEYBIND_COMMAND_SET.has(value);
 
 export interface KeyCombo {
@@ -1041,9 +1044,10 @@ class Keybind {
 	private i18n: I18n | null = null;
 	private initialized = false;
 	private keyboardShortcutsOverlayCombo: KeyCombo = {...DEFAULT_KEYBOARD_SHORTCUTS_OVERLAY_COMBO};
+	private holdSources = new HoldSources(() => this.pushToTalkReleaseDelay);
 
 	constructor() {
-		makeAutoObservable(this, {}, {autoBind: true});
+		makeAutoObservable<this, 'holdSources'>(this, {holdSources: false}, {autoBind: true});
 		void this.initPersistence();
 	}
 
@@ -1353,7 +1357,12 @@ class Keybind {
 	}
 
 	hasPushToTalkKeybind(): boolean {
-		return this.hasActiveBindingFor('voice_push_to_talk') || this.hasActiveBindingFor('voice_push_to_talk_priority');
+		return (
+			this.hasActiveBindingFor('voice_push_to_talk') ||
+			this.hasActiveBindingFor('voice_push_to_talk_priority') ||
+			GlobalShortcuts.isPortalActionAssigned('voice_push_to_talk') ||
+			GlobalShortcuts.isPortalActionAssigned('voice_push_to_talk_priority')
+		);
 	}
 
 	isPushToTalkEffective(): boolean {
@@ -1367,24 +1376,21 @@ class Keybind {
 		});
 	}
 
-	handlePushToTalkPress(): boolean {
-		runInAction(() => {
-			this.pushToTalkHeld = true;
-		});
-		return true;
+	pressHoldSource(action: HoldAction, sourceId: string): boolean {
+		const activated = this.holdSources.press(action, sourceId);
+		this.prioritySpeakerHeld = this.holdSources.prioritySpeakerHeld;
+		return activated;
 	}
 
-	handlePushToTalkRelease(): boolean {
-		runInAction(() => {
-			this.pushToTalkHeld = false;
-		});
-		return true;
+	releaseHoldSource(action: HoldAction, sourceId: string, onReleased?: () => void): void {
+		this.holdSources.release(action, sourceId, onReleased);
+		this.prioritySpeakerHeld = this.holdSources.prioritySpeakerHeld;
 	}
 
 	resetPushToTalkState(): void {
-		runInAction(() => {
-			this.pushToTalkHeld = false;
-		});
+		this.holdSources.resetPushToTalk();
+		this.pushToTalkHeld = false;
+		this.prioritySpeakerHeld = this.holdSources.prioritySpeakerHeld;
 	}
 
 	setPushToMuteHeld(held: boolean): void {
@@ -1394,7 +1400,9 @@ class Keybind {
 	}
 
 	hasPushToMuteKeybind(): boolean {
-		return this.hasActiveBindingFor('voice_push_to_mute');
+		return (
+			this.hasActiveBindingFor('voice_push_to_mute') || GlobalShortcuts.isPortalActionAssigned('voice_push_to_mute')
+		);
 	}
 
 	isPushToMuteEffective(): boolean {
@@ -1402,19 +1410,9 @@ class Keybind {
 	}
 
 	resetPushToMuteState(): void {
-		runInAction(() => {
-			this.pushToMuteHeld = false;
-		});
-	}
-
-	setPrioritySpeakerHeld(held: boolean): void {
-		runInAction(() => {
-			this.prioritySpeakerHeld = held;
-		});
-	}
-
-	resetPrioritySpeakerState(): void {
-		this.setPrioritySpeakerHeld(false);
+		this.holdSources.resetPushToMute();
+		this.pushToMuteHeld = false;
+		this.prioritySpeakerHeld = this.holdSources.prioritySpeakerHeld;
 	}
 
 	muteActions(actions: Iterable<KeybindCommand>): void {

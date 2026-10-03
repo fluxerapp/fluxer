@@ -9,6 +9,8 @@ export {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME};
 export const PRODUCT_API_NAME = `${PRODUCT_NAME} API`;
 export const PRODUCT_HQ_COMMUNITY_NAME = `${PRODUCT_NAME} HQ`;
 export const CANARY_RELEASE_CHANNEL_NAME = `${PRODUCT_NAME} Canary`;
+export const DESKTOP_ENTRY_NAME = 'Fluxer';
+export const CANARY_DESKTOP_ENTRY_NAME = 'Fluxer Canary';
 export const VOICE_PROVIDER_NAME = 'LiveKit';
 export const PAYMENT_PROVIDER_NAME = 'Stripe';
 export const BLUESKY_PROVIDER_NAME = 'Bluesky';

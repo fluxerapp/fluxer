@@ -1633,6 +1633,9 @@
         "msgid": "Capture entire system audio"
       },
       {
+        "msgid": "Change in system settings"
+      },
+      {
         "msgid": "Change stream"
       },
       {
@@ -1756,6 +1759,9 @@
         "msgid": "Characters in a single message"
       },
       {
+        "msgid": "Check again"
+      },
+      {
         "msgid": "Checkout is blocked for this account."
       },
       {
@@ -1862,6 +1868,15 @@
       },
       {
         "msgid": "Copy emoji"
+      },
+      {
+        "msgid": "Copy lines"
+      },
+      {
+        "msgid": "Copy lines for hyprland.conf"
+      },
+      {
+        "msgid": "Copy lines for hyprland.lua"
       },
       {
         "msgid": "Copy sticker"
@@ -2134,6 +2149,18 @@
         "msgid": "Footnote about custom tags"
       },
       {
+        "msgid": "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
+      },
+      {
+        "msgid": "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
+      },
+      {
+        "msgid": "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
+      },
+      {
+        "msgid": "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
+      },
+      {
         "msgid": "From {sourceGuildName}"
       },
       {
@@ -2218,7 +2245,16 @@
         "msgid": "Hid the community owner crown."
       },
       {
+        "msgid": "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your system settings."
+      },
+      {
         "msgid": "How much of the member's recent message history to delete."
+      },
+      {
+        "msgid": "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
+      },
+      {
+        "msgid": "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
       },
       {
         "msgid": "Ignore this channel's slowmode cooldown."
@@ -2272,6 +2308,9 @@
         "msgid": "Keep attachments when clearing an edit"
       },
       {
+        "msgid": "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
+      },
+      {
         "msgid": "Kicked {targetUserTag} from the community"
       },
       {
@@ -2297,6 +2336,9 @@
       },
       {
         "msgid": "Lets other communities follow this channel and get copies of what you publish."
+      },
+      {
+        "msgid": "Lets {productName} read your keyboard directly. Your system already allows this."
       },
       {
         "msgid": "Lightweight classic filter, works on any device."
@@ -2471,6 +2513,9 @@
       },
       {
         "msgid": "Not accepted"
+      },
+      {
+        "msgid": "Not assigned"
       },
       {
         "msgid": "Not sent to followers yet."
@@ -2662,6 +2707,33 @@
         "msgid": "Push relay notice"
       },
       {
+        "msgid": "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
+      },
+      {
+        "msgid": "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
+      },
+      {
+        "msgid": "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
+      },
+      {
+        "msgid": "Push-to-talk is on. Hold your push-to-talk key to speak."
+      },
+      {
+        "msgid": "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
+      },
+      {
+        "msgid": "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
+      },
+      {
+        "msgid": "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
+      },
+      {
+        "msgid": "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
+      },
+      {
+        "msgid": "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
+      },
+      {
         "msgid": "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
       },
       {
@@ -2672,6 +2744,9 @@
       },
       {
         "msgid": "Reason (optional)."
+      },
+      {
+        "msgid": "Reconnecting to your desktop…"
       },
       {
         "msgid": "Redeem a gift code"
@@ -3088,6 +3163,9 @@
         "msgid": "Set to send {resolution} at {frameRate} FPS with {codec}"
       },
       {
+        "msgid": "Set up"
+      },
+      {
         "msgid": "Set up {productName}"
       },
       {
@@ -3313,6 +3391,15 @@
         "msgid": "Syntax highlighting"
       },
       {
+        "msgid": "System-wide shortcuts could not be set up."
+      },
+      {
+        "msgid": "System-wide: Not assigned"
+      },
+      {
+        "msgid": "System-wide: {trigger}"
+      },
+      {
         "msgid": "Talk in calls and test your input."
       },
       {
@@ -3439,6 +3526,9 @@
         "msgid": "This community has published a lot of messages recently. Try again in {duration}."
       },
       {
+        "msgid": "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
+      },
+      {
         "msgid": "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
       },
       {
@@ -3481,6 +3571,9 @@
         "msgid": "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
       },
       {
+        "msgid": "This key works while {productName} is focused. Your desktop sets the system-wide key, under {settingsTabName} > {sectionName}."
+      },
+      {
         "msgid": "This message can only be forwarded to age-restricted channels"
       },
       {
@@ -3506,6 +3599,15 @@
       },
       {
         "msgid": "Timed out {targetUserTag}"
+      },
+      {
+        "msgid": "To change the keys, go to Settings > Apps > {productName}."
+      },
+      {
+        "msgid": "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
+      },
+      {
+        "msgid": "To change the keys, open your desktop's keyboard shortcut settings."
       },
       {
         "msgid": "Transferred community ownership to {user}."
@@ -3577,6 +3679,9 @@
         "msgid": "Update your passkey"
       },
       {
+        "msgid": "Update {productName} to use system-wide shortcuts on Wayland."
+      },
+      {
         "msgid": "Updates are on their way!"
       },
       {
@@ -3593,6 +3698,9 @@
       },
       {
         "msgid": "Use custom emojis and stickers in any community"
+      },
+      {
+        "msgid": "Use direct input device access"
       },
       {
         "msgid": "Use emoji from other communities in this channel."
@@ -3652,6 +3760,9 @@
         "msgid": "Volume sliders"
       },
       {
+        "msgid": "Waiting for your desktop…"
+      },
+      {
         "msgid": "We could not renew your subscription. Update your payment method to keep your perks."
       },
       {
@@ -3694,6 +3805,9 @@
         "msgid": "Wordmark"
       },
       {
+        "msgid": "Works while {productName} is focused"
+      },
+      {
         "msgid": "You asked for {resolution} at {frameRate} FPS"
       },
       {
@@ -3728,6 +3842,12 @@
       },
       {
         "msgid": "Your connection cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+      },
+      {
+        "msgid": "Your desktop didn't set up system-wide shortcuts."
+      },
+      {
+        "msgid": "Your desktop runs these shortcuts even while {productName} is not focused."
       },
       {
         "msgid": "Your device cannot keep up. Viewers get about {deliveredFrameRate} of {frameRate} FPS at {resolution}."
@@ -3794,6 +3914,12 @@
       },
       {
         "msgid": "greeting"
+      },
+      {
+        "msgid": "hyprland.conf (before Hyprland 0.55)"
+      },
+      {
+        "msgid": "hyprland.lua (Hyprland 0.55 and later)"
       },
       {
         "msgid": "macOS"
@@ -4372,6 +4498,21 @@
         "msgid": "{productName} application logo"
       },
       {
+        "msgid": "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
+      },
+      {
+        "msgid": "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
+      },
+      {
+        "msgid": "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
+      },
+      {
+        "msgid": "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
+      },
+      {
+        "msgid": "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
+      },
+      {
         "msgid": "{productName} cannot start a safe desktop audio route while excluding {productName}'s call audio."
       },
       {
@@ -4397,6 +4538,9 @@
       },
       {
         "msgid": "{productName} now lives at {host}. Install it from there."
+      },
+      {
+        "msgid": "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
       },
       {
         "msgid": "{productName} wordmark"

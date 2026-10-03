@@ -16,10 +16,14 @@ napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols",
 napi-derive = "3.6.7"
 
 [target.'cfg(target_os = "linux")'.dependencies]
+async-io = "2.6.0"
+event-listener = "5.4.0"
 evdev = "0.13.2"
-nix = {version = "0.31.3", default-features = false, features = ["event"]}
+futures-lite = "2.6.1"
+nix = {version = "0.31.3", default-features = false, features = ["event", "fs", "inotify"]}
 udev = "0.9.3"
 polling = "3.11.0"
+zbus = "5.19.0"
 
 [build-dependencies]
 napi-build = "2.4.3"

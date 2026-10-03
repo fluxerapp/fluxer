@@ -20,6 +20,10 @@ import type {
 	GlobalKeyEvent,
 	GlobalKeyHookRegisterOptions,
 	GlobalMouseEvent,
+	GlobalShortcutCaptureEvent,
+	GlobalShortcutEvent,
+	GlobalShortcutsStatus,
+	GlobalShortcutsSyncPayload,
 	GpuInfo,
 	InputMonitoringPermissionStatus,
 	LinuxAppearanceSnapshot,
@@ -634,6 +638,45 @@ const api: ElectronAPI = {
 		return () => {
 			ipcRenderer.removeListener('global-keybind-triggered', handler);
 		};
+	},
+	globalShortcuts: {
+		sync: (payload: GlobalShortcutsSyncPayload): Promise<void> => ipcRenderer.invoke('global-shortcuts:sync', payload),
+		setPaused: (paused: boolean): Promise<void> => ipcRenderer.invoke('global-shortcuts:set-paused', paused),
+		getStatus: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:get-status'),
+		onStatus: (callback: (status: GlobalShortcutsStatus) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutsStatus): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcuts:status', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcuts:status', handler);
+			};
+		},
+		onEvent: (callback: (event: GlobalShortcutEvent) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutEvent): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcut-event', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcut-event', handler);
+			};
+		},
+		setUp: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:set-up'),
+		recheck: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:recheck'),
+		configure: (): Promise<void> => ipcRenderer.invoke('global-shortcuts:configure'),
+		setDirectInputEnabled: (enabled: boolean): Promise<GlobalShortcutsStatus> =>
+			ipcRenderer.invoke('global-shortcuts:set-direct-input-enabled', enabled),
+		startCapture: (): Promise<number | null> => ipcRenderer.invoke('global-shortcuts:start-capture'),
+		stopCapture: (captureId: number): Promise<void> => ipcRenderer.invoke('global-shortcuts:stop-capture', captureId),
+		onCapture: (callback: (event: GlobalShortcutCaptureEvent) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutCaptureEvent): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcuts:capture', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcuts:capture', handler);
+			};
+		},
 	},
 	spellcheckGetState: (): Promise<SpellcheckState> => ipcRenderer.invoke('spellcheck-get-state'),
 	spellcheckSetState: (state: Partial<SpellcheckState>): Promise<SpellcheckState> =>

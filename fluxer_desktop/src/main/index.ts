@@ -50,11 +50,12 @@ import {
 import {destroyDesktopTray, hasActiveDesktopTray, initializeDesktopTray} from '@electron/main/DesktopTray';
 import {registerDisplayMediaHandlers} from '@electron/main/DisplayMedia';
 import {initializeDockMenu} from '@electron/main/DockMenu';
-import {cleanupGlobalKeyHook, registerGlobalKeyHookHandlers} from '@electron/main/GlobalKeyHook';
+import {cleanupGlobalShortcuts, initializeGlobalShortcuts} from '@electron/main/GlobalShortcutsIpc';
 import {cleanupIpcHandlers, registerIpcHandlers} from '@electron/main/IpcHandlers';
 import {initializeJumpList} from '@electron/main/JumpList';
 import {describeLaunchDiagnosticOptions} from '@electron/main/LaunchOptions';
 import {cleanupVirtmic, registerVirtmicHandlers} from '@electron/main/LinuxAudioCapture';
+import {ensureLinuxDesktopEntry} from '@electron/main/LinuxDesktopEntry';
 import {initializeMainI18n, t} from '@electron/main/MainI18n';
 import {createApplicationMenu} from '@electron/main/Menu';
 import {cleanupNativeAudio, registerNativeAudioHandlers} from '@electron/main/NativeAudio';
@@ -182,9 +183,6 @@ if (launchConfigurationError) {
 	log.info('Launch diagnostic modes', launchDiagnosticOptions);
 	const CHANNEL_APP_NAME = DESKTOP_APP_NAME;
 	app.setName(CHANNEL_APP_NAME);
-	if (process.platform === 'linux') {
-		process.env.FLUXER_LINUX_DESKTOP_ENTRY_ID = LINUX_DESKTOP_ENTRY_ID;
-	}
 	function recordStartupPhase(phase: string, phaseStartedAt: number): void {
 		log.info('[Startup] Phase completed', {
 			phase,
@@ -316,6 +314,15 @@ if (launchConfigurationError) {
 					log.error('[DebugInfo] Failed to collect desktop debug info:', error);
 				}
 				try {
+					runStartupPhase('linux-desktop-entry', () => {
+						if (ensureLinuxDesktopEntry()) {
+							process.env.FLUXER_LINUX_PORTAL_APP_ID = LINUX_DESKTOP_ENTRY_ID;
+						}
+					});
+				} catch (error) {
+					log.error('[Init] Failed to ensure the Linux desktop entry:', error);
+				}
+				try {
 					runStartupPhase('deep-links', initializeDeepLinks);
 				} catch (error) {
 					log.error('[Init] Failed to initialize deep links:', error);
@@ -341,9 +348,9 @@ if (launchConfigurationError) {
 					log.error('[Init] Failed to register autostart handlers:', error);
 				}
 				try {
-					runStartupPhase('global-key-hook-handlers', registerGlobalKeyHookHandlers);
+					runStartupPhase('global-shortcuts', initializeGlobalShortcuts);
 				} catch (error) {
-					log.error('[Init] Failed to register global key hook handlers:', error);
+					log.error('[Init] Failed to initialize global shortcuts:', error);
 				}
 				try {
 					runStartupPhase('display-media-handlers', registerDisplayMediaHandlers);
@@ -456,7 +463,7 @@ if (launchConfigurationError) {
 			armQuitWatchdog('will-quit');
 			event.preventDefault();
 			cleanupIpcHandlers({quitting: true});
-			cleanupGlobalKeyHook();
+			cleanupGlobalShortcuts();
 			cleanupNativeAudio();
 			cleanupNativeScreenCapture();
 			cleanupNativeHardwareEncoderHandlers();

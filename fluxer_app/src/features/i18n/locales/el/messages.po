@@ -993,7 +993,7 @@ msgstr "{count, plural, one {# κανάλι ακολουθεί} other {# καν�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# κοινότητα βρέθηκε} other {# κοινότητες βρέθηκαν}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1955
+#: src/features/app/components/layout/GuildsLayout.tsx:1954
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# κοινότητα είναι προσωρινά μη διαθέσιμη λόγω δυσλειτουργίας του πυκνωτή ροής.} other {# κοινότητες είναι προσωρινά μη διαθέσιμες λόγω δυσλειτουργίας του πυκνωτή ροής.}}"
 
@@ -1708,6 +1708,31 @@ msgstr "Το {productName} αποφεύγει την αποστολή ειδοπ
 msgid "{productName} Bug Hunter"
 msgstr "Κυνηγός σφαλμάτων {productName}"
 
+#. Linux settings text before system-wide shortcuts are set up. The desktop environment owns the keys. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:28
+msgid "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
+msgstr "Το {productName} μπορεί να ζητήσει από την επιφάνεια εργασίας σας να εκτελεί τις συντομεύσεις του όταν το {productName} δεν έχει την εστίαση. Η επιφάνεια εργασίας σας θα ζητήσει επιβεβαίωση και θα σας αφήσει να επιλέξετε τα πλήκτρα."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:160
+msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
+msgstr "Το {productName} δεν μπορεί πλέον να διαβάσει το πληκτρολόγιό σας, οπότε ανιχνεύει τις συντομεύσεις μέσω του X11."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:155
+msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
+msgstr "Το {productName} δεν μπορεί πλέον να διαβάσει το πληκτρολόγιό σας, οπότε χρησιμοποιούνται οι συντομεύσεις της επιφάνειας εργασίας σας."
+
+#. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:165
+msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
+msgstr "Το {productName} δεν μπορεί πλέον να διαβάσει το πληκτρολόγιό σας. Οι συντομεύσεις λειτουργούν μόνο όταν το {productName} έχει την εστίαση."
+
+#. Linux settings text before system-wide shortcuts are set up on the Hyprland desktop. Hyprland shows no dialog. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:34
+msgid "{productName} can register its shortcuts with Hyprland so they run while {productName} is not focused. You then bind the keys in your Hyprland config."
+msgstr "Το {productName} μπορεί να καταχωρίσει τις συντομεύσεις του στο Hyprland, ώστε να εκτελούνται όταν το {productName} δεν έχει την εστίαση. Στη συνέχεια, αντιστοιχίζετε τα πλήκτρα στο αρχείο διαμόρφωσης του Hyprland."
+
 #. Inline notice body on Windows. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
 #. Inline notice body on macOS. Explains that desktop audio is disabled because productName cannot exclude its own WebRTC/call playback on this OS build.
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:23
@@ -1813,7 +1838,7 @@ msgid "{productName} needs camera access to list your devices."
 msgstr "Το {productName} χρειάζεται πρόσβαση στην κάμερα για να εμφανίσει τις συσκευές σας."
 
 #. Voice settings notice shown when microphone permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:141
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:143
 msgid "{productName} needs microphone access to list your devices."
 msgstr "Το {productName} χρειάζεται πρόσβαση στο μικρόφωνο για να εμφανίσει τις συσκευές σας."
 
@@ -1836,6 +1861,11 @@ msgstr "Το {productName} βρίσκεται πλέον στο {host}. Εγκα
 #: src/features/user/components/popouts/UserProfileBadges.tsx:34
 msgid "{productName} Partner"
 msgstr "Συνεργάτης {productName}"
+
+#. Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:58
+msgid "{productName} registered its shortcuts with Hyprland. Bind them in your Hyprland config to use them while {productName} is not focused."
+msgstr "Το {productName} καταχώρισε τις συντομεύσεις του στο Hyprland. Αντιστοιχίστε τις στο αρχείο διαμόρφωσης του Hyprland για να τις χρησιμοποιείτε όταν το {productName} δεν έχει την εστίαση."
 
 #. Nagbar shown after the app restarts while the user was connected to a community voice channel. {productName} is Fluxer, {channelName} is the voice channel name, and {communityName} is the community name.
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:24
@@ -2586,7 +2616,7 @@ msgid "A profile that stands out"
 msgstr "Ένα προφίλ που ξεχωρίζει"
 
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:55
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "Απαιτείται ένα redirect_uri όταν το πεδίο εφαρμογής bot δεν είναι το μόνο πεδίο εφαρμογής."
 
@@ -2847,7 +2877,7 @@ msgstr "Μόνο σε όλα τα ανοιχτά DM"
 msgid "Across every community you're in"
 msgstr "Σε κάθε κοινότητα στην οποία ανήκετε"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:110
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:112
 msgid "Action"
 msgstr "Ενέργεια"
 
@@ -2962,7 +2992,7 @@ msgid "Activity sharing"
 msgstr "Κοινή χρήση δραστηριοτήτων"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:488
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:495
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Όριο δραστηριότητας"
@@ -3091,7 +3121,7 @@ msgid "Add an extra layer of security to your account"
 msgstr "Πρόσθεσε ένα επιπλέον επίπεδο ασφαλείας στον λογαριασμό σου"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:41
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:43
 msgid "Add another custom shortcut"
 msgstr "Προσθήκη άλλης προσαρμοσμένης συντόμευσης"
 
@@ -3427,7 +3457,7 @@ msgid "Address"
 msgstr "Διεύθυνση"
 
 #. Description for the custom profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:99
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:101
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
 msgstr "Προσαρμόστε κάθε ρύθμιση μόνοι σας: καταστολή θορύβου, ακύρωση ηχούς και ενίσχυση."
 
@@ -3696,11 +3726,11 @@ msgstr "Να επιτρέπονται οι αναφορές {everyoneMention} κ
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Επιτρέψτε στο {PRODUCT_NAME} να έχει πρόσβαση στην κάμερά σας στις {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:546
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:553
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Επιτρέψτε στο {PRODUCT_NAME} να έχει πρόσβαση στο μικρόφωνό σας στις {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:551
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Επιτρέψτε στο {PRODUCT_NAME} να έχει πρόσβαση στο μικρόφωνό σας. Ελέγξτε τη γραμμή διευθύνσεων ή τις ρυθμίσεις του προγράμματος περιήγησής σας."
 
@@ -3803,7 +3833,7 @@ msgstr "Να επιτρέπεται στα μέλη χωρίς το δικαίω
 msgid "Allow mentions for this role"
 msgstr "Να επιτρέπονται οι αναφορές για αυτόν τον ρόλο"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:571
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:578
 msgid "Allow microphone"
 msgstr "Να επιτρέπεται το μικρόφωνο"
 
@@ -5003,7 +5033,7 @@ msgid "Authorization failed"
 msgstr "Η εξουσιοδότηση απέτυχε"
 
 #. OAuth authorize page generic error toast shown when the authorize request fails unexpectedly.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:75
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:76
 msgid "Authorization failed. Try again."
 msgstr "Η εξουσιοδότηση απέτυχε. Δοκιμάστε ξανά."
 
@@ -5092,8 +5122,8 @@ msgid "Auto-detect language"
 msgstr "Αυτόματη ανίχνευση γλώσσας"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:119
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:475
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:121
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:482
 msgid "Auto-set activity threshold"
 msgstr "Αυτόματη ρύθμιση ορίου δραστηριότητας"
 
@@ -5998,7 +6028,7 @@ msgid "Bot permissions"
 msgstr "Δικαιώματα bot"
 
 #. OAuth authorize page error shown when the permissions query parameter is a negative integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:67
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:68
 msgid "Bot permissions cannot be negative."
 msgstr "Τα δικαιώματα bot δεν μπορούν να είναι αρνητικά."
 
@@ -6869,6 +6899,11 @@ msgstr "Αλλαγή ψευδώνυμου στην ομάδα"
 msgid "Change icon"
 msgstr "Αλλαγή εικονιδίου"
 
+#. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
+msgid "Change in system settings"
+msgstr "Αλλαγή στις ρυθμίσεις συστήματος"
+
 #. Title of the modal where the user picks a community invite background source. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:37
 msgid "Change invite background"
@@ -7229,7 +7264,7 @@ msgid "Channel access"
 msgstr "Πρόσβαση σε κανάλι"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:140
 msgid "Channel access denied"
 msgstr "Δεν επιτρέπεται η πρόσβαση στο κανάλι"
 
@@ -7294,7 +7329,7 @@ msgstr "Το αναγνωριστικό καναλιού αντιγράφηκε 
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:100
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "σύνδεσμος καναλιού"
@@ -7461,6 +7496,11 @@ msgstr "πεδίο συνομιλίας"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:146
 msgid "Chat shortcuts"
 msgstr "Συντομεύσεις συνομιλίας"
+
+#. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:128
+msgid "Check again"
+msgstr "Νέος έλεγχος"
 
 #. Tray menu item. Triggers the auto-updater to look for a new desktop build.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:225
@@ -7645,7 +7685,7 @@ msgstr "Επιλέξτε ένα παράθυρο από τον επιλογέα 
 msgid "Choose an account"
 msgstr "Επιλέξτε λογαριασμό"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:152
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:154
 msgid "Choose an action."
 msgstr "Επιλέξτε μια ενέργεια."
 
@@ -7667,7 +7707,7 @@ msgid "Choose background"
 msgstr "Επιλέξτε φόντο"
 
 #. OAuth authorize page error shown when a bot invite request provides both guild_id and channel_id. Keep the parameter names literal.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:87
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:88
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "Επιλέξτε είτε guild_id είτε channel_id, όχι και τα δύο."
 
@@ -7990,7 +8030,7 @@ msgstr "Καθαρίζει το μικρόφωνό σας για καθαρή ο
 #: src/features/app/components/setup/SetupWizardSteps.tsx:120
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
-#: src/features/input/components/KeybindRecorder.tsx:442
+#: src/features/input/components/KeybindRecorder.tsx:482
 #: src/features/theme_studio/sections/QuickCssSection.tsx:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:241
 msgid "Clear"
@@ -8191,7 +8231,7 @@ msgstr "Πατήστε για να ανοίξετε την επιλογή χρώ
 msgid "Click to react"
 msgstr "Πατήστε για αντίδραση"
 
-#: src/features/input/components/KeybindRecorder.tsx:411
+#: src/features/input/components/KeybindRecorder.tsx:451
 msgid "Click to record"
 msgstr "Κάντε κλικ για εγγραφή"
 
@@ -9110,7 +9150,7 @@ msgstr "Επιβεβαίωση"
 msgid "Confirmation or double-click for community voice joins"
 msgstr "Επιβεβαίωση ή διπλό κλικ για συμμετοχή σε φωνητικά κανάλια της κοινότητας"
 
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:169
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:176
 msgid "Conflicts with {conflictLabel}"
 msgstr "Συγκρούεται με {conflictLabel}"
 
@@ -9127,7 +9167,7 @@ msgstr "Συνδέστε μια κάμερα ή μια συσκευή εικον
 msgid "Connect a display, then try again."
 msgstr "Συνδέστε μια οθόνη και δοκιμάστε ξανά."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:556
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:563
 msgid "Connect a microphone and try again."
 msgstr "Συνδέστε ένα μικρόφωνο και δοκιμάστε ξανά."
 
@@ -9699,6 +9739,21 @@ msgstr "Αντιγραφή συνδέσμου πρόσκλησης"
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:49
 msgid "Copy invite URL"
 msgstr "Αντιγραφή URL πρόσκλησης"
+
+#. Button that copies Hyprland config lines to the clipboard.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
+msgid "Copy lines"
+msgstr "Αντιγραφή γραμμών"
+
+#. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:118
+msgid "Copy lines for hyprland.conf"
+msgstr "Αντιγραφή γραμμών για το hyprland.conf"
+
+#. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
+msgid "Copy lines for hyprland.lua"
+msgstr "Αντιγραφή γραμμών για το hyprland.lua"
 
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:750
@@ -10845,7 +10900,7 @@ msgstr "Προσαρμοσμένη πηγή"
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
 #. Voice input processing profile where the user configures processing manually.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:42
 #: src/features/voice/components/VoiceSettingsMenus.tsx:70
 msgctxt "voice-processing-profile"
@@ -10948,12 +11003,12 @@ msgid "Custom selection"
 msgstr "Προσαρμοσμένη επιλογή"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:42
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:44
 msgid "Custom shortcut action"
 msgstr "Προσαρμοσμένη ενέργεια συντόμευσης"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:38
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:40
 msgid "Custom shortcut options"
 msgstr "Επιλογές προσαρμοσμένης συντόμευσης"
 
@@ -11466,7 +11521,7 @@ msgstr "Προεπιλεγμένες συντομεύσεις"
 msgid "Default translator"
 msgstr "Προεπιλεγμένος μεταφραστής"
 
-#: src/features/input/components/KeybindRecorder.tsx:419
+#: src/features/input/components/KeybindRecorder.tsx:459
 msgid "Default:"
 msgstr "Προεπιλογή:"
 
@@ -11715,7 +11770,7 @@ msgid "Delete saved media"
 msgstr "Διαγραφή αποθηκευμένων πολυμέσων"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:34
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:36
 msgid "Delete shortcut"
 msgstr "Διαγραφή συντόμευσης"
 
@@ -12102,13 +12157,13 @@ msgstr "Κατάσταση προγραμματιστή"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:149
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:152
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Εργαλεία προγραμματιστή"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:153
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:156
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Τα εργαλεία προγραμματιστή είναι διαθέσιμα από το σήμα προσωπικού στην κεφαλίδα του καναλιού."
 
@@ -12313,7 +12368,7 @@ msgid "Disable backend premium perks"
 msgstr "Απενεργοποίηση premium παροχών του backend"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:33
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:35
 msgid "Disable built-in shortcut"
 msgstr "Απενεργοποίηση ενσωματωμένης συντόμευσης"
 
@@ -12377,7 +12432,7 @@ msgid "Disable screen share picture-in-picture popouts?"
 msgstr "Απενεργοποίηση αναδυόμενων παραθύρων εικόνας-σε-εικόνα για την κοινή χρήση οθόνης;"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:26
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:28
 msgid "Disable shortcut"
 msgstr "Απενεργοποίηση συντόμευσης"
 
@@ -12888,7 +12943,7 @@ msgstr "Κάνε μια δωρεά"
 #. Primary button in the favorite GIF import modal after a completed import.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:44
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:54
-#: src/features/input/components/KeybindRecorder.tsx:470
+#: src/features/input/components/KeybindRecorder.tsx:510
 #: src/features/moderation/components/report_modal/IARModal.tsx:94
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
@@ -12951,7 +13006,7 @@ msgid "Download button"
 msgstr "Κουμπί λήψης"
 
 #. Button or menu action label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:107
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:109
 msgid "Download desktop app"
 msgstr "Λήψη εφαρμογής για υπολογιστή"
 
@@ -13204,6 +13259,11 @@ msgstr "Ολλανδικά"
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "π.χ. YubiKey, iPhone, υπολογιστής εργασίας"
 
+#. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+msgid "Each key can run only one system-wide shortcut."
+msgstr "Κάθε πλήκτρο μπορεί να εκτελεί μόνο μία συντόμευση σε όλο το σύστημα."
+
 #. Body of the alert shown when a published announcement message hit its editing limit. {duration} is a localized short duration such as "12 minutes".
 #: src/features/messaging/components/alerts/PublishedMessageEditLimitModal.tsx:12
 msgid "Each published message allows 3 quick edits, then 1 every 20 minutes. Try again in {duration}."
@@ -13350,7 +13410,7 @@ msgid "Edit invite link"
 msgstr "Επεξεργασία συνδέσμου πρόσκλησης"
 
 #. Button or menu action label in the keyboard shortcuts keybind recorder. Keep it concise.
-#: src/features/input/components/KeybindRecorder.tsx:32
+#: src/features/input/components/KeybindRecorder.tsx:40
 msgid "Edit keyboard shortcut"
 msgstr "Επεξεργασία συντόμευσης πληκτρολογίου"
 
@@ -13425,7 +13485,7 @@ msgstr "Φόρμα επεξεργασίας αποθηκευμένων πολυ�
 msgid "Edit search engine"
 msgstr "Επεξεργασία μηχανής αναζήτησης"
 
-#: src/features/input/components/KeybindRecorder.tsx:378
+#: src/features/input/components/KeybindRecorder.tsx:418
 msgid "Edit shortcut"
 msgstr "Επεξεργασία συντόμευσης"
 
@@ -13753,20 +13813,16 @@ msgstr "Κενή επεξεργασία"
 msgid "Empty favorites"
 msgstr "Κενά αγαπημένα"
 
-#. Button label in the Linux Wayland input-access nagbar.
-#. Button label in the keybind settings system-wide shortcuts section.
 #. Button or menu action label in the invites disable invites button. Keep it concise.
 #. Primary button label in the enable-invites confirmation modal.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "Ενεργοποίηση"
 
 #. Voice settings CTA label for opening a platform permission prompt.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:127
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:129
 msgid "Enable {permissionName} permission"
 msgstr "Ενεργοποίηση άδειας {permissionName}"
 
@@ -13876,11 +13932,6 @@ msgstr "Ενεργοποίηση επιτάχυνσης υλικού και επ
 msgid "Enable hardware acceleration?"
 msgstr "Ενεργοποίηση επιτάχυνσης υλικού;"
 
-#. Description for a Linux Wayland input-access nagbar. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:16
-msgid "Enable input access to use system-wide shortcuts on Wayland. After changing input access, fully quit and restart {productName} so shortcuts can use it."
-msgstr "Ενεργοποιήστε την πρόσβαση εισόδου για να χρησιμοποιήσετε συντομεύσεις σε όλο το σύστημα στο Wayland. Αφού αλλάξετε την πρόσβαση εισόδου, κλείστε πλήρως και επανεκκινήστε το {productName} ώστε να μπορούν να χρησιμοποιηθούν οι συντομεύσεις."
-
 #. Button label that re-enables invite links for a community.
 #: src/features/invite/components/DisableInvitesButton.tsx:40
 msgid "Enable invites"
@@ -13971,7 +14022,7 @@ msgid "Enable Shift to expand"
 msgstr "Ενεργοποίηση Shift για επέκταση"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:30
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:32
 msgid "Enable shortcut"
 msgstr "Ενεργοποίηση συντόμευσης"
 
@@ -14357,7 +14408,7 @@ msgstr "Ήχος ολόκληρου του συστήματος"
 #. Voice menu submenu label that contains per-user entrance sound mute and volume controls.
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:181
 #: src/features/ui/action_menu/items/VoiceParticipantMenuItems.tsx:310
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:192
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:194
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:150
 msgid "Entrance sound"
 msgstr "Ήχος εισόδου"
@@ -14467,7 +14518,7 @@ msgstr "Βράδυ"
 
 #. Description for the automatic gain control toggle in the voice processing settings.
 #. Description for the automatic gain control toggle in the voice processing settings.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:176
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:178
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:63
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Εξομαλύνει την ένταση του μικροφώνου σας, ώστε να μην ακούγεστε πολύ σιγά."
@@ -15682,6 +15733,26 @@ msgstr "Μόνο για βρετανικά μάτια..."
 msgid "For me"
 msgstr "Για μένα"
 
+#. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
+msgstr "Για τη λειτουργία push to mute, χρησιμοποιήστε ένα μόνο πλήκτρο χωρίς Ctrl, Alt ή Shift. Αν χρησιμοποιείτε συνδυασμό, αφήνετε πρώτα το κύριο πλήκτρο, αλλιώς το μικρόφωνο μπορεί να παραμείνει σε σίγαση."
+
+#. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:181
+msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
+msgstr "Για τη λειτουργία push-to-talk, χρησιμοποιήστε ένα μόνο πλήκτρο χωρίς Ctrl, Alt ή Shift. Αν χρησιμοποιείτε συνδυασμό, αφήνετε πρώτα το κύριο πλήκτρο, αλλιώς το μικρόφωνο μπορεί να παραμείνει ανοιχτό."
+
+#. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:199
+msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
+msgstr "Για αυτή τη συντόμευση, χρησιμοποιήστε ένα μόνο πλήκτρο χωρίς Ctrl, Alt ή Shift. Αν χρησιμοποιείτε συνδυασμό, αφήνετε πρώτα το κύριο πλήκτρο, αλλιώς η συντόμευση μπορεί να παραμείνει ενεργή."
+
+#. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
+msgstr "Για την Προτεραιότητα φωνητικής δραστηριότητας, χρησιμοποιήστε ένα μόνο πλήκτρο χωρίς Ctrl, Alt ή Shift. Αν χρησιμοποιείτε συνδυασμό, αφήνετε πρώτα το κύριο πλήκτρο, αλλιώς η προτεραιότητα μπορεί να παραμείνει ενεργή."
+
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:268
 msgid "For your security, please confirm it's you to continue."
 msgstr "Για την ασφάλειά σας, επιβεβαιώστε ότι είστε εσείς για να συνεχίσετε."
@@ -16600,8 +16671,8 @@ msgid "Global profile"
 msgstr "Γενικό προφίλ"
 
 #. Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:81
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:63
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:83
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:65
 msgid "Global shortcut"
 msgstr "Καθολική συντόμευση"
 
@@ -17434,6 +17505,11 @@ msgstr "Κρατήστε πατημένο το Shift και πατήστε το 
 msgid "Hold to record. Drag up to lock, or release to send."
 msgstr "Πατήστε παρατεταμένα για εγγραφή. Σύρετε προς τα πάνω για κλείδωμα ή αφήστε για αποστολή."
 
+#. Hint under a system-wide hold shortcut such as push-to-talk on Linux. The desktop ignores the key while other modifier keys are held.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:39
+msgid "Holding Shift, Ctrl or Alt blocks this shortcut. Add alternates in your system settings."
+msgstr "Όσο κρατάτε πατημένο το Shift, το Ctrl ή το Alt, αυτή η συντόμευση δεν λειτουργεί. Προσθέστε εναλλακτικά πλήκτρα στις ρυθμίσεις του συστήματός σας."
+
 #. Action label in quick switcher for navigating to the Home tab.
 #: src/features/app/components/layout/MobileBottomNav.tsx:110
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:47
@@ -17537,6 +17613,26 @@ msgstr "Ζήτω! Οι ειδοποιήσεις είναι ενεργοποιη�
 msgid "Hyperlink"
 msgstr "Υπερσύνδεσμος"
 
+#. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:86
+msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
+msgstr "Το Hyprland δεν έχει παράθυρο συντομεύσεων. Προσθέστε τις γραμμές για την έκδοση του Hyprland σας στο αρχείο διαμόρφωσης του Hyprland και αντικαταστήστε το KEY με το πλήκτρο που θέλετε."
+
+#. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
+msgstr "Το Hyprland δεν έχει παράθυρο συντομεύσεων. Αντιστοιχίστε τα πλήκτρα στο αρχείο διαμόρφωσης του Hyprland."
+
+#. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
+msgid "hyprland.conf (before Hyprland 0.55)"
+msgstr "hyprland.conf (πριν το Hyprland 0.55)"
+
+#. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:101
+msgid "hyprland.lua (Hyprland 0.55 and later)"
+msgstr "hyprland.lua (Hyprland 0.55 και νεότερες εκδόσεις)"
+
 #: src/features/auth/flow/RegistrationLegalConsent.tsx:83
 msgid "I agree to the <0>Privacy policy</0>"
 msgstr "Συμφωνώ με την <0>Πολιτική απορρήτου</0>"
@@ -17576,7 +17672,7 @@ msgstr "Άλλαξα γνώμη"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/channel/components/MatureContentChannelGate.tsx:207
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:111
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:113
 msgid "I understand"
 msgstr "Καταλαβαίνω"
 
@@ -18000,7 +18096,7 @@ msgstr "Σε"
 msgid "In \"Operating system\" mode, dictionaries listed above are advisory. {PRODUCT_NAME} will pass these language tags to your OS spellchecker when supported. Tags it doesn't recognize are ignored."
 msgstr "Στη λειτουργία \"Λειτουργικό σύστημα\", τα λεξικά που αναφέρονται παραπάνω είναι ενδεικτικά. Το {PRODUCT_NAME} θα περάσει αυτές τις ετικέτες γλώσσας στον ορθογραφικό έλεγχο του λειτουργικού σας συστήματος, εφόσον υποστηρίζεται. Οι ετικέτες που δεν αναγνωρίζει αγνοούνται."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:322
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:324
 msgid "In a browser, push-to-talk only works while the {PRODUCT_NAME} tab is focused. Install the desktop app for system-wide push-to-talk."
 msgstr "Σε ένα πρόγραμμα περιήγησης, η λειτουργία push-to-talk λειτουργεί μόνο όταν η καρτέλα {PRODUCT_NAME} είναι ενεργή. Εγκαταστήστε την εφαρμογή υπολογιστή για push-to-talk σε όλο το σύστημα."
 
@@ -18268,30 +18364,8 @@ msgctxt "chat-settings-section"
 msgid "Input"
 msgstr "Εισαγωγή"
 
-#. Status text after Linux input access setup failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:35
-msgid "Input access could not be enabled automatically. Change it manually, then fully quit and restart {productName} so shortcuts can use it."
-msgstr "Δεν ήταν δυνατή η αυτόματη ενεργοποίηση της πρόσβασης εισόδου. Αλλάξτε την χειροκίνητα και, στη συνέχεια, κλείστε εντελώς και επανεκκινήστε το {productName}, ώστε οι συντομεύσεις να μπορούν να τη χρησιμοποιήσουν."
-
-#. Description for a Linux Wayland input-access nagbar after automatic permission setup failed. {settingsMenuName} is the shared user settings tab label for shortcuts and {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:26
-msgid "Input access could not be enabled. Try again from {settingsMenuName} settings, then fully quit and restart {productName}."
-msgstr "Δεν ήταν δυνατή η ενεργοποίηση της πρόσβασης εισόδου. Δοκιμάστε ξανά από τις ρυθμίσεις {settingsMenuName}, και μετά κλείστε εντελώς και επανεκκινήστε το {productName}."
-
-#. Settings warning for Linux Wayland system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:18
-msgid "Input access is required for system-wide keyboard and mouse shortcuts on Wayland. After changing input access, fully quit and restart {productName} so shortcuts can use it."
-msgstr "Απαιτείται πρόσβαση εισόδου για συντομεύσεις πληκτρολογίου και ποντικιού σε όλο το σύστημα στο Wayland. Αφού αλλάξετε την πρόσβαση εισόδου, κλείστε πλήρως και επανεκκινήστε το {productName}, ώστε οι συντομεύσεις να μπορούν να τη χρησιμοποιήσουν."
-
-#. Description for a Linux Wayland input-access nagbar after access was changed. {productName} is the app name.
-#. Status text after Linux input access was changed. {productName} is the app name.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:21
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:31
-msgid "Input access was changed. Fully quit and restart {productName} so system-wide shortcuts can use it."
-msgstr "Η πρόσβαση εισόδου άλλαξε. Κλείστε εντελώς και επανεκκινήστε το {productName} ώστε να μπορούν να χρησιμοποιηθούν οι συντομεύσεις σε όλο το σύστημα."
-
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:180
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:182
 msgid "Input and output"
 msgstr "Είσοδος και έξοδος"
 
@@ -18450,7 +18524,7 @@ msgid "Invalid authorization request"
 msgstr "Μη έγκυρο αίτημα εξουσιοδότησης"
 
 #. OAuth authorize page error shown when the permissions query parameter is not a valid integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:63
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:64
 msgid "Invalid bot permissions."
 msgstr "Μη έγκυρα δικαιώματα bot."
 
@@ -18493,7 +18567,7 @@ msgid "Invalid or expired code. Try again."
 msgstr "Μη έγκυρος ή ληγμένος κωδικός. Δοκιμάστε ξανά."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:79
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:80
 msgid "Invalid redirect_uri"
 msgstr "Μη έγκυρο redirect_uri"
 
@@ -18597,7 +18671,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Ο σύνδεσμος πρόσκλησης είναι κρυφός κατά την κοινή χρήση:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:165
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:168
 msgid "Invite link masked while sharing"
 msgstr "Ο σύνδεσμος πρόσκλησης αποκρύφτηκε κατά την κοινή χρήση"
 
@@ -19011,7 +19085,7 @@ msgid "Jump to {displayName}"
 msgstr "Μετάβαση σε {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:111
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:114
 msgid "Jump to {labelText}"
 msgstr "Μετάβαση σε {labelText}"
 
@@ -19068,12 +19142,12 @@ msgid "Jump to the current call"
 msgstr "Μετάβαση στην τρέχουσα κλήση"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:115
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:118
 msgid "Jump to the linked channel"
 msgstr "Μετάβαση στο συνδεδεμένο κανάλι"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:107
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:110
 msgid "Jump to the linked message"
 msgstr "Μετάβαση στο μήνυμα του συνδέσμου"
 
@@ -19083,7 +19157,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Μετάβαση στο μήνυμα του/της {authorNickname}"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:102
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:105
 msgid "Jump to the message in {labelText}"
 msgstr "Μετάβαση στο μήνυμα στο {labelText}"
 
@@ -19167,7 +19241,7 @@ msgid "Keep these safe. Regenerating will break existing integrations."
 msgstr "Κράτησέ τα ασφαλή. Η αναδημιουργία θα διακόψει τις υπάρχουσες ενσωματώσεις."
 
 #. Description for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:82
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:84
 msgid "Keep transmitting briefly after release."
 msgstr "Συνεχίζει τη μετάδοση για λίγο αφού αφήσετε το πλήκτρο."
 
@@ -19203,6 +19277,11 @@ msgstr "Πληκτρολόγιο"
 msgctxt "accessibility-settings-section"
 msgid "Keyboard"
 msgstr "Πληκτρολόγιο"
+
+#. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:176
+msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
+msgstr "Δεν ήταν δυνατή η έναρξη της πρόσβασης στο πληκτρολόγιο. Οι συντομεύσεις λειτουργούν μόνο όταν το {productName} έχει την εστίαση."
 
 #. Toggle label and settings search entry for controlling tooltip keyboard shortcut hints.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:46
@@ -19577,6 +19656,11 @@ msgstr "Άσε την κοινότητα να συντονίζεται μόνη 
 msgid "Let the member hear others in this community again"
 msgstr "Επέτρεψε στο μέλος να ακούει ξανά τους άλλους σε αυτήν την κοινότητα"
 
+#. Description for the Linux direct input device access switch. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:151
+msgid "Lets {productName} read your keyboard directly. Your system already allows this."
+msgstr "Επιτρέπει στο {productName} να διαβάζει απευθείας το πληκτρολόγιό σας. Το σύστημά σας το επιτρέπει ήδη."
+
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:259
 msgid "Lets custom CSS reveal transparent window regions after restarting the desktop app."
 msgstr "Επιτρέπει στο προσαρμοσμένο CSS να αποκαλύπτει διαφανείς περιοχές παραθύρων μετά την επανεκκίνηση της εφαρμογής υπολογιστή."
@@ -19760,7 +19844,7 @@ msgid "Link styling"
 msgstr "Στιλ συνδέσμου"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:157
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:160
 msgid "Link unavailable"
 msgstr "Ο σύνδεσμος δεν είναι διαθέσιμος"
 
@@ -20036,7 +20120,7 @@ msgid "Look and feel"
 msgstr "Εμφάνιση και αίσθηση"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:671
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:678
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Φαίνεται ότι χρησιμοποιείτε {0}. Η προσθήκη της επεξεργασίας του {PRODUCT_NAME} από πάνω μπορεί να προκαλέσει διακυμάνσεις έντασης ή παραμόρφωση. Η άμεση είσοδος περνάει τον ήχο σας χωρίς επεξεργασία."
 
@@ -21144,7 +21228,7 @@ msgid "Message layout"
 msgstr "Διάταξη μηνυμάτων"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:92
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:95
 msgid "message link"
 msgstr "σύνδεσμος μηνύματος"
 
@@ -21332,7 +21416,7 @@ msgstr "Μικρόφωνο"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:188
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:190
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:142
 msgid "Mic test"
 msgstr "Δοκιμή μικροφώνου"
@@ -21472,7 +21556,7 @@ msgid "Miscellaneous"
 msgstr "Διάφορα"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:37
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:38
 msgid "Missing client_id"
 msgstr "Λείπει το client_id"
 
@@ -21690,7 +21774,7 @@ msgid "More options"
 msgstr "Περισσότερες επιλογές"
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:59
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:61
 msgid "More shortcut options"
 msgstr "Περισσότερες επιλογές συντομεύσεων"
 
@@ -22672,7 +22756,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Δεν υπάρχει δικαίωμα {sendMessagesPermission}"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:148
 msgid "No access"
 msgstr "Δεν υπάρχει πρόσβαση"
 
@@ -22984,7 +23068,7 @@ msgstr "Δεν βρέθηκαν αποτελέσματα"
 msgid "No mentions yet"
 msgstr "Δεν υπάρχουν αναφορές ακόμα"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:541
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:548
 msgid "No microphone found"
 msgstr "Δεν βρέθηκε μικρόφωνο"
 
@@ -23134,7 +23218,7 @@ msgid "No settings found"
 msgstr "Δεν βρέθηκαν ρυθμίσεις"
 
 #. Empty-state text in the keyboard shortcuts keybind recorder.
-#: src/features/input/components/KeybindRecorder.tsx:36
+#: src/features/input/components/KeybindRecorder.tsx:44
 msgid "No shortcut set"
 msgstr "Δεν έχει οριστεί συντόμευση"
 
@@ -23357,6 +23441,11 @@ msgstr "Δεν είναι ακέραιος αριθμός"
 #: src/features/app/components/setup/SetupWizardSteps.tsx:395
 msgid "Not accepted"
 msgstr "Δεν έγινε αποδεκτή"
+
+#. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:68
+msgid "Not assigned"
+msgstr "Δεν έχει οριστεί"
 
 #. Fallback value when a saved billing payment method has no expiration date.
 #. Screen reader text for a cross in the Plutonium page comparison table.
@@ -23858,12 +23947,12 @@ msgid "Open {host} in your browser."
 msgstr "Ανοίξτε το {host} στο πρόγραμμα περιήγησής σας."
 
 #. Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:124
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:127
 msgid "Open {labelText}"
 msgstr "Άνοιγμα {labelText}"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:119
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:122
 msgid "Open {labelText} in settings"
 msgstr "Άνοιγμα {labelText} στις ρυθμίσεις"
 
@@ -24611,7 +24700,7 @@ msgid "Page down"
 msgstr "Page Down"
 
 #. Role description announced for an inline chat link pill that opens an app page. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:132
 msgid "page link"
 msgstr "σύνδεσμος σελίδας"
 
@@ -25611,11 +25700,11 @@ msgstr "Παρουσία"
 msgid "Press {shortcut} to react"
 msgstr "Πατήστε {shortcut} για αντίδραση"
 
-#: src/features/input/components/KeybindRecorder.tsx:381
+#: src/features/input/components/KeybindRecorder.tsx:421
 msgid "Press a key, mouse button, or gamepad button to bind. Escape cancels."
 msgstr "Πατήστε ένα πλήκτρο, ένα κουμπί του ποντικιού ή ένα κουμπί του χειριστηρίου για αντιστοίχιση. Το Escape ακυρώνει."
 
-#: src/features/input/components/KeybindRecorder.tsx:407
+#: src/features/input/components/KeybindRecorder.tsx:447
 msgid "Press a shortcut…"
 msgstr "Πατήστε μια συντόμευση…"
 
@@ -26273,18 +26362,33 @@ msgid "Push to talk key"
 msgstr "Πλήκτρο «Push to talk»"
 
 #. Switch label in the voice tab toggling push-to-talk mode. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:115
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:361
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:117
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:360
 #: src/features/voice/components/VoiceSettingsMenus.tsx:419
 msgid "Push-to-talk"
 msgstr "Push-to-talk"
 
 #. Short label in the voice tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:103
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:105
 msgid "Push-to-talk (limited)"
 msgstr "Push-to-talk (περιορισμένο)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:701
+#. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
+msgstr "Η λειτουργία push-to-talk δεν έχει ακόμα πλήκτρο σε όλο το σύστημα. Για να ορίσετε ένα, μεταβείτε στις Ρυθμίσεις > Εφαρμογές > {productName}."
+
+#. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:220
+msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
+msgstr "Η λειτουργία push-to-talk δεν έχει ακόμα πλήκτρο σε όλο το σύστημα. Για να ορίσετε ένα, μεταβείτε στις Ρυθμίσεις συστήματος > Πληκτρολόγιο > Συντομεύσεις > {productName}."
+
+#. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:231
+msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
+msgstr "Η λειτουργία push-to-talk δεν έχει ακόμα πλήκτρο σε όλο το σύστημα. Για να ορίσετε ένα, ανοίξτε τις ρυθμίσεις συντομεύσεων πληκτρολογίου της επιφάνειας εργασίας σας."
+
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:708
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Η λειτουργία push-to-talk αγνοείται στην άμεση εισαγωγή. Μεταβείτε σε εστιασμένη φωνή ή προσαρμοσμένη για να τη χρησιμοποιήσετε."
 
@@ -26293,20 +26397,50 @@ msgstr "Η λειτουργία push-to-talk αγνοείται στην άμε�
 msgid "Push-to-talk is on. Hold {pushToTalkHint} to speak."
 msgstr "Η λειτουργία push-to-talk είναι ενεργή. Κρατήστε πατημένο το {pushToTalkHint} για να μιλήσετε."
 
+#. Tooltip and screen reader label on the mic button when push-to-talk is on but the key has no name to show, for example when the Linux desktop assigns it.
+#: src/features/input/utils/PushToTalkHint.ts:11
+msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
+msgstr "Η λειτουργία push-to-talk είναι ενεργή. Κρατήστε πατημένο το πλήκτρο push-to-talk για να μιλήσετε."
+
+#. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:209
+msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
+msgstr "Η λειτουργία push-to-talk λειτουργεί μόνο όταν το {productName} έχει την εστίαση, επειδή η επιφάνεια εργασίας σας δεν ρύθμισε συντομεύσεις σε όλο το σύστημα."
+
 #. Voice settings warning shown when macOS Input Monitoring is required for system-wide push-to-talk. {productName} is the app name and {permissionName} is the macOS permission name.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:135
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:137
 msgid "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 msgstr "Η λειτουργία push-to-talk λειτουργεί μόνο όταν το {productName} είναι σε πρώτο πλάνο, μέχρι να ενεργοποιηθεί η άδεια {permissionName}. Αφού αλλάξετε την άδεια, κλείστε εντελώς και επανεκκινήστε το {productName}, ώστε να μπορούν να χρησιμοποιηθούν οι συντομεύσεις πλήκτρων σε όλο το σύστημα."
 
+#. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:205
+msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
+msgstr "Η λειτουργία push-to-talk λειτουργεί μόνο όταν το {productName} έχει την εστίαση, μέχρι να ρυθμίσετε συντομεύσεις σε όλο το σύστημα."
+
 #. Voice settings warning shown when push-to-talk is enabled in a browser.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:131
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:133
 msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Η λειτουργία push-to-talk λειτουργεί μόνο όταν η καρτέλα του προγράμματος περιήγησης είναι εστιασμένη."
+
+#. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:170
+msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
+msgstr "Η λειτουργία push-to-talk θα χρησιμοποιεί το πλήκτρο που έχετε ορίσει στο {productName}. Ορίστε πρώτα ένα, αλλιώς το μικρόφωνό σας θα λειτουργεί με φωνητική δραστηριότητα."
 
 #. Modal description shown when a push-to-talk shortcut is pressed while the user is self-deafened.
 #: src/features/app/keybindings/keybind_manager/shared.ts:22
 msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen yourself to talk."
 msgstr "Η λειτουργία push-to-talk δεν θα καταργήσει τη σίγαση του μικροφώνου σας όσο έχετε σίγαση ήχου. Καταργήστε τη σίγαση ήχου για να μιλήσετε."
+
+#. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:242
+msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
+msgstr "Η λειτουργία push-to-talk λειτουργεί εκτός του {productName} μόνο αφού την αντιστοιχίσετε στο αρχείο διαμόρφωσης του Hyprland."
+
+#. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:236
+msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
+msgstr "Η λειτουργία push-to-talk λειτουργεί εκτός του {productName} μόνο αφού την αντιστοιχίσετε στο αρχείο διαμόρφωσης του Hyprland. Προσθέστε τη γραμμή για την έκδοση του Hyprland σας και αντικαταστήστε το KEY με το πλήκτρο που θέλετε."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
@@ -26406,7 +26540,7 @@ msgid "Raw embed JSON"
 msgstr "Ακατέργαστο JSON ενσωμάτωσης"
 
 #. Button or menu action label in the keybinds tab. Turns a disabled built-in shortcut back on. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:50
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:52
 msgid "Re-enable built-in shortcut"
 msgstr "Επανενεργοποίηση ενσωματωμένης συντόμευσης"
 
@@ -26565,13 +26699,6 @@ msgstr "Πρόσφατες αναφορές"
 msgid "Recent searches"
 msgstr "Πρόσφατες αναζητήσεις"
 
-#. Button label in the Linux Wayland input-access nagbar after the user changes OS permissions.
-#. Button label in the keybind settings system-wide shortcuts section.
-#: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:36
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:27
-msgid "Recheck"
-msgstr "Επανέλεγχος"
-
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
 #: src/features/invite/components/modals/InviteModal.tsx:360
@@ -26586,7 +26713,7 @@ msgid "Recommended"
 msgstr "Προτεινόμενο"
 
 #. Description for the focused voice profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:86
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:88
 msgid "Recommended. Cleans up your mic for clear speech."
 msgstr "Προτείνεται. Καθαρίζει το μικρόφωνό σας για καθαρή ομιλία."
 
@@ -26600,6 +26727,11 @@ msgstr "Επανασύνδεση"
 msgid "Reconnect succeeded. Pick a screen again if you want to resume your previous stream."
 msgstr "Η επανασύνδεση ήταν επιτυχής. Επιλέξτε ξανά μια οθόνη, αν θέλετε να συνεχίσετε την προηγούμενη ροή σας."
 
+#. Status text on Linux while the app reconnects to the desktop service that runs system-wide shortcuts, for example after it restarted.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:48
+msgid "Reconnecting to your desktop…"
+msgstr "Επανασύνδεση στην επιφάνεια εργασίας σας…"
+
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
 #: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Reconnecting..."
@@ -26611,7 +26743,7 @@ msgid "Reconnecting…"
 msgstr "Επανασύνδεση…"
 
 #. Short label in the keyboard shortcuts keybind recorder. Keep it concise.
-#: src/features/input/components/KeybindRecorder.tsx:28
+#: src/features/input/components/KeybindRecorder.tsx:36
 msgid "Record shortcut"
 msgstr "Καταγραφή συντόμευσης"
 
@@ -26851,7 +26983,7 @@ msgstr "Σχετική"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for push-to-talk release delay.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:78
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:80
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:94
 msgid "Release delay"
 msgstr "Καθυστέρηση απελευθέρωσης"
@@ -27739,13 +27871,13 @@ msgstr "Εστάλη ξανά"
 
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
-#: src/features/input/components/KeybindRecorder.tsx:459
+#: src/features/input/components/KeybindRecorder.tsx:499
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1022
 msgid "Reset"
 msgstr "Επαναφορά"
 
 #. Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:45
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:47
 msgid "Reset \"{label}\" to built-in"
 msgstr "Επαναφορά \"{label}\" στην προεπιλογή"
 
@@ -27866,7 +27998,7 @@ msgid "Reset to actual values"
 msgstr "Επαναφορά στις πραγματικές τιμές"
 
 #. Button or menu action label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:37
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:39
 msgid "Reset to built-in"
 msgstr "Επαναφορά στην προεπιλογή"
 
@@ -29509,7 +29641,7 @@ msgid "Select the account you want to sign in with on your new device."
 msgstr "Επιλέξτε τον λογαριασμό με τον οποίο θέλετε να συνδεθείτε στη νέα σας συσκευή."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:125
 msgid "Select voice processing mode"
 msgstr "Επιλέξτε λειτουργία επεξεργασίας φωνής"
 
@@ -29814,7 +29946,7 @@ msgid "Sends raw mic audio with no processing."
 msgstr "Στέλνει ακατέργαστο ήχο μικροφώνου χωρίς επεξεργασία."
 
 #. Description for the direct input profile option in the voice tab.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:90
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:92
 msgid "Sends your audio untouched. Best if you're using external audio software."
 msgstr "Στέλνει τον ήχο σας χωρίς επεξεργασία. Ιδανικό αν χρησιμοποιείτε εξωτερικό λογισμικό ήχου."
 
@@ -29913,12 +30045,12 @@ msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "Ορίζεται από την προεπιλογή {preset}. Η επιλογή μιας τιμής εδώ θα αλλάξει σε Προσαρμοσμένη."
 
 #. Short label in the keybinds tab. Keep it concise.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:29
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:31
 msgid "Set custom shortcut"
 msgstr "Ορισμός προσαρμοσμένης συντόμευσης"
 
 #. Label in the keybinds tab. Preserve {label}; it is inserted by code.
-#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:55
+#: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:57
 msgid "Set custom shortcut for \"{label}\""
 msgstr "Ορισμός προσαρμοσμένης συντόμευσης για «{label}»"
 
@@ -30066,6 +30198,11 @@ msgstr "Ορίστηκε η περιοχή φωνής σε {region}"
 msgid "Set the voice region to automatic"
 msgstr "Ορίστηκε η περιοχή φωνής σε αυτόματη"
 
+#. Button that asks the Linux desktop to register system-wide shortcuts for the app. Keep it short.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:40
+msgid "Set up"
+msgstr "Ρύθμιση"
+
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:74
 msgid "Set up {productName}"
@@ -30118,7 +30255,7 @@ msgid "Settings"
 msgstr "Ρυθμίσεις"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:136
 msgid "settings link"
 msgstr "σύνδεσμος ρυθμίσεων"
 
@@ -30330,8 +30467,8 @@ msgstr "Κωδικοί emoji"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:121
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:376
+#: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:123
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:375
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:38
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:110
 msgid "Shortcut"
@@ -32759,7 +32896,7 @@ msgstr "Εναλλαγή σε άνετη διάταξη"
 msgid "Switch to dense layout"
 msgstr "Εναλλαγή σε συμπαγή διάταξη"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:666
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:673
 msgid "Switch to direct input"
 msgstr "Εναλλαγή σε απευθείας εισαγωγή"
 
@@ -33027,9 +33164,24 @@ msgid "System-managed install"
 msgstr "Εγκατάσταση διαχειριζόμενη από το σύστημα"
 
 #. Settings subsection title for keyboard and mouse shortcuts that work outside the app.
-#: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:14
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:24
 msgid "System-wide shortcuts"
 msgstr "Συντομεύσεις σε όλο το σύστημα"
+
+#. Linux settings text when setting up system-wide shortcuts failed.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:137
+msgid "System-wide shortcuts could not be set up."
+msgstr "Δεν ήταν δυνατή η ρύθμιση των συντομεύσεων σε όλο το σύστημα."
+
+#. Hint under a shortcut on Linux showing the key the desktop assigned. {trigger} is the key, as named by the desktop.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:30
+msgid "System-wide: {trigger}"
+msgstr "Σε όλο το σύστημα: {trigger}"
+
+#. Hint under a shortcut on Linux when the desktop has no key assigned for it system-wide.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:35
+msgid "System-wide: Not assigned"
+msgstr "Σε όλο το σύστημα: Δεν έχει οριστεί"
 
 #. Description text in the theme tab content.
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx:58
@@ -33612,12 +33764,12 @@ msgid "The page you're looking for doesn't exist or has been moved."
 msgstr "Η σελίδα που ψάχνετε δεν υπάρχει ή έχει μετακινηθεί."
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:60
 msgid "The provided redirect_uri is not registered for this application."
 msgstr "Το redirect_uri που δόθηκε δεν είναι καταχωρισμένο για αυτήν την εφαρμογή."
 
 #. Body text in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:50
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:51
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Το redirect_uri που δόθηκε πρέπει να χρησιμοποιεί HTTP ή HTTPS."
 
@@ -33850,7 +34002,7 @@ msgid "This animation is too long or too large to crop. Try a shorter or smaller
 msgstr "Αυτό το κινούμενο σχέδιο είναι πολύ μεγάλο ή έχει πάρα πολλά καρέ για να γίνει περικοπή. Δοκιμάστε ένα μικρότερο αρχείο."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:83
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:84
 msgid "This application"
 msgstr "Αυτή η εφαρμογή"
 
@@ -33860,7 +34012,7 @@ msgid "This attachment has expired"
 msgstr "Αυτό το συνημμένο έχει λήξει"
 
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:71
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:72
 msgid "This bot is not public and cannot be added by other users."
 msgstr "Αυτό το bot δεν είναι δημόσιο και δεν μπορεί να προστεθεί από άλλους χρήστες."
 
@@ -34081,6 +34233,16 @@ msgstr "Αυτή η συνομιλία δεν είναι πλέον διαθέσ
 msgid "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 msgstr "Αυτή η έκδοση για υπολογιστές δεν μπορεί να εγκαταστήσει ενημερώσεις μέσα από το {productName}. Κατεβάστε το πιο πρόσφατο πρόγραμμα εγκατάστασης για υπολογιστές."
 
+#. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:215
+msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
+msgstr "Αυτή η επιφάνεια εργασίας δεν προσφέρει συντομεύσεις σε όλο το σύστημα. Η λειτουργία push-to-talk λειτουργεί μόνο όταν το {productName} έχει την εστίαση."
+
+#. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:133
+msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
+msgstr "Αυτή η επιφάνεια εργασίας δεν προσφέρει συντομεύσεις σε όλο το σύστημα. Οι συντομεύσεις εξακολουθούν να λειτουργούν όσο το {productName} έχει την εστίαση."
+
 #. Desktop updater modal body for development or unpackaged builds.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:65
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
@@ -34294,6 +34456,11 @@ msgstr "Αυτό είναι το τελευταίο σας κλειδί πρόσ
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Αυτό είναι το τελευταίο σας κλειδί πρόσβασης. Μόλις διαγραφεί, δεν θα μπορείτε να χρησιμοποιήσετε κλειδί πρόσβασης ως δεύτερο παράγοντα."
 
+#. Hint under the push-to-talk key recorder in voice settings on Linux when the desktop owns system-wide shortcuts. {settingsTabName} is the name of the settings tab with keyboard shortcuts and {sectionName} the title of its system-wide shortcuts section, both filled in by the app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:24
+msgid "This key works while {productName} is focused. Your desktop sets the system-wide key, under {settingsTabName} > {sectionName}."
+msgstr "Αυτό το πλήκτρο λειτουργεί όσο το {productName} έχει την εστίαση. Το πλήκτρο για όλο το σύστημα το ορίζει η επιφάνεια εργασίας σας, στην ενότητα {settingsTabName} > {sectionName}."
+
 #. Extra file-too-large alert sentence shown when premium upload-limit upgrades are unavailable.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:39
 msgid "This limit is configured by your instance administrator."
@@ -34305,7 +34472,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Αυτό το κανάλι συνδέσμου έχει επισημανθεί για περιεχόμενο ενηλίκων και ενδέχεται να ανοίξει υλικό που μπορεί να είναι ακατάλληλο για ορισμένους χρήστες."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:161
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:164
 msgid "This link is not available for your account."
 msgstr "Αυτός ο σύνδεσμος δεν είναι διαθέσιμος για τον λογαριασμό σας."
 
@@ -34777,6 +34944,21 @@ msgstr "Γραμμή τίτλου"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:252
 msgid "Title bar platform"
 msgstr "Πλατφόρμα γραμμής τίτλου"
+
+#. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:81
+msgid "To change the keys, go to Settings > Apps > {productName}."
+msgstr "Για να αλλάξετε τα πλήκτρα, μεταβείτε στις Ρυθμίσεις > Εφαρμογές > {productName}."
+
+#. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
+msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
+msgstr "Για να αλλάξετε τα πλήκτρα, μεταβείτε στις Ρυθμίσεις συστήματος > Πληκτρολόγιο > Συντομεύσεις > {productName}."
+
+#. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+msgid "To change the keys, open your desktop's keyboard shortcut settings."
+msgstr "Για να αλλάξετε τα πλήκτρα, ανοίξτε τις ρυθμίσεις συντομεύσεων πληκτρολογίου της επιφάνειας εργασίας σας."
 
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:125
 msgid "To create a webhook, open <0>{channelWebhooksSettingsPath}</0>. You can still edit and organize all existing webhooks here."
@@ -35872,7 +36054,7 @@ msgid "Unknown"
 msgstr "Άγνωστο"
 
 #. OAuth authorize page error shown when the application, session, or request is invalid.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:46
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:47
 msgid "Unknown application, expired session, or invalid authorization request."
 msgstr "Άγνωστη εφαρμογή, ληγμένη συνεδρία ή μη έγκυρο αίτημα εξουσιοδότησης."
 
@@ -36410,6 +36592,11 @@ msgstr "Έως 4K/60fps"
 msgid "Up to 720p at 30 FPS"
 msgstr "Έως 720p στα 30 FPS"
 
+#. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
+msgid "Update {productName} to use system-wide shortcuts on Wayland."
+msgstr "Ενημερώστε το {productName} για να χρησιμοποιείτε συντομεύσεις σε όλο το σύστημα στο Wayland."
+
 #. Message placeholder shown when the app cannot render a newer message type.
 #: src/features/channel/components/UnknownMessage.tsx:23
 msgid "Update {productName} to view this message."
@@ -36850,6 +37037,11 @@ msgstr "Χρήση σκούρου θέματος σε όλη την εφαρμο
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:45
 msgid "Use default"
 msgstr "Χρήση προεπιλογής"
+
+#. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:146
+msgid "Use direct input device access"
+msgstr "Χρήση άμεσης πρόσβασης στις συσκευές εισόδου"
 
 #. Permission description in the channel-scoped permissions editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:260
@@ -38218,7 +38410,7 @@ msgid "Voice participants"
 msgstr "Συμμετέχοντες φωνητικής συνομιλίας"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:661
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:668
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Επεξεργασία φωνής"
@@ -38264,7 +38456,7 @@ msgstr "Κατάργηση σίγασης ήχου"
 msgid "Voice unmute"
 msgstr "Κατάργηση σίγασης μικροφώνου"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:590
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:597
 msgid "Voice uses your system output device in this browser. Change it in your system settings."
 msgstr "Η φωνή χρησιμοποιεί τη συσκευή εξόδου του συστήματός σας σε αυτό το πρόγραμμα περιήγησης. Αλλάξτε την στις ρυθμίσεις του συστήματός σας."
 
@@ -38278,7 +38470,7 @@ msgstr "Άκυρο"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:383
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:184
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:186
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:183
 msgid "Volume"
@@ -38344,6 +38536,11 @@ msgstr "Αναμονή λήξης της αργής λειτουργίας σε 
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:48
 msgid "Waiting for you to..."
 msgstr "Σε περιμένουμε να..."
+
+#. Status text while the Linux desktop shows its own dialog for confirming system-wide shortcuts.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:44
+msgid "Waiting for your desktop…"
+msgstr "Αναμονή για την επιφάνεια εργασίας σας…"
 
 #: src/features/input/utils/KeybindUtils.ts:107
 msgctxt "keyboard-key-name"
@@ -38926,7 +39123,7 @@ msgstr "Ποιες συνομιλίες"
 msgid "Which rule was broken?"
 msgstr "Ποιος κανόνας παραβιάστηκε;"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:370
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:369
 msgid "While push-to-talk is on, your shortcut controls your microphone, so the mute button is disabled."
 msgstr "Όσο η λειτουργία push-to-talk είναι ενεργή, η συντόμευσή σας ελέγχει το μικρόφωνό σας, οπότε το κουμπί σίγασης είναι απενεργοποιημένο."
 
@@ -39093,6 +39290,11 @@ msgstr "Χωρίς αυτό το δικαίωμα, απαιτείται η λε�
 #: src/features/app/components/setup/SetupWizardSteps.tsx:136
 msgid "Wordmark"
 msgstr "Λεκτικό λογότυπο"
+
+#. Hint under a shortcut on Linux when the desktop owns system-wide shortcuts. The key shown here only works inside the app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint.tsx:19
+msgid "Works while {productName} is focused"
+msgstr "Λειτουργεί όταν το {productName} έχει την εστίαση"
 
 #. Short label in the channel and chat textual attachment preview bottom sheet. Keep it concise.
 #. Short label in the channel and chat textual preview context menu. Keep it concise.
@@ -39521,7 +39723,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Αλλάξατε την ετικέτα σας ενώ είχατε {PREMIUM_PRODUCT_NAME}. Θα αλλάξει τυχαία όταν λήξει το {PREMIUM_PRODUCT_NAME} σας, εκτός αν ανανεωθεί."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:144
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Δεν έχετε πρόσβαση στο κανάλι όπου στάλθηκε αυτό το μήνυμα."
 
@@ -40056,7 +40258,7 @@ msgid "Your {premiumProductName} subscription has expired. You have lost all {pr
 msgstr "Η συνδρομή σας στο {premiumProductName} έληξε. Έχετε χάσει όλα τα προνόμια του {premiumProductName}. Ενεργοποιήστε ξανά τη συνδρομή σας για να αποκτήσετε ξανά πρόσβαση."
 
 #. OAuth authorize page error shown when the session expired mid-authorization. Keep plain. Preserve {productName}; it is inserted by code.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:42
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Η περίοδος λειτουργίας σας στο {productName} έληξε. Συνδεθείτε ξανά για να συνεχίσετε την εξουσιοδότηση αυτής της εφαρμογής."
 
@@ -40143,6 +40345,16 @@ msgstr "Η κοινότητά σας χρειάζεται τουλάχιστον
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:14
 msgid "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
 msgstr "Η πιστωτική σας κάρτα έχει ελεγχθεί. Εάν η κάρτα είναι έγκυρη, το περιεχόμενο ενηλίκων θα ξεκλειδωθεί σύντομα. Μπορείτε να κλείσετε αυτήν την καρτέλα και να επιστρέψετε στην εφαρμογή."
+
+#. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:123
+msgid "Your desktop didn't set up system-wide shortcuts."
+msgstr "Η επιφάνεια εργασίας σας δεν ρύθμισε συντομεύσεις σε όλο το σύστημα."
+
+#. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
+msgid "Your desktop runs these shortcuts even while {productName} is not focused."
+msgstr "Η επιφάνεια εργασίας σας εκτελεί αυτές τις συντομεύσεις ακόμα κι όταν το {productName} δεν έχει την εστίαση."
 
 #. Body of the modal that asks the user to save an updated passkey. name is the name the user gave the passkey. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:28

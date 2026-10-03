@@ -4,7 +4,12 @@ import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 
 export const DESKTOP_APP_NAME = BUILD_CHANNEL === 'canary' ? 'Fluxer Canary' : 'Fluxer';
 export const MACOS_BUNDLE_ID = BUILD_CHANNEL === 'canary' ? 'app.fluxer.canary' : 'app.fluxer';
-export const LINUX_DESKTOP_ENTRY_ID = BUILD_CHANNEL === 'canary' ? 'fluxer-canary' : 'fluxer';
+export const LINUX_DESKTOP_ENTRY_ID =
+	BUILD_CHANNEL === 'canary' ? 'app.fluxer.FluxerDesktopCanary' : 'app.fluxer.FluxerDesktop';
+export const LINUX_PORTAL_SESSION_TOKEN =
+	BUILD_CHANNEL === 'canary' ? 'fluxer_canary_global_shortcuts' : 'fluxer_global_shortcuts';
+export const LEGACY_LINUX_DESKTOP_ENTRY_ID = BUILD_CHANNEL === 'canary' ? 'fluxer-canary' : 'fluxer';
+export const LINUX_ICON_NAME = BUILD_CHANNEL === 'canary' ? 'fluxer-canary' : 'fluxer';
 export const WINDOWS_SHORTCUT_AUTHOR = 'Fluxer Platform AB';
 export const WINDOWS_VELOPACK_ID = BUILD_CHANNEL === 'canary' ? 'fluxer_desktop_canary' : 'fluxer_desktop';
 export const WINDOWS_LEGACY_SQUIRREL_ID = 'fluxer_app';

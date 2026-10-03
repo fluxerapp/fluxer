@@ -2,16 +2,22 @@
 
 use std::{
     collections::{HashMap, HashSet},
-    os::fd::{AsFd, AsRawFd, BorrowedFd, RawFd},
+    ffi::OsStr,
+    ops::Range,
+    os::{
+        fd::{AsFd, AsRawFd, BorrowedFd, OwnedFd, RawFd},
+        unix::fs::OpenOptionsExt,
+    },
     path::{Path, PathBuf},
     sync::{
         Arc, Mutex,
         atomic::{AtomicBool, Ordering},
     },
     thread::{self, JoinHandle},
+    time::{Duration, Instant},
 };
 
-use evdev::{Device, EventType, KeyCode};
+use evdev::{EventType, KeyCode, SynchronizationCode, raw_stream::RawDevice};
 use napi::{
     Env, Status,
     bindgen_prelude::{Function, Object, Result, ToNapiValue},
@@ -19,16 +25,28 @@ use napi::{
     threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode, UnknownReturnValue},
 };
 use napi_derive::napi;
-use nix::sys::eventfd::{EfdFlags, EventFd};
+use nix::{
+    fcntl::OFlag,
+    sys::{
+        eventfd::{EfdFlags, EventFd},
+        inotify::{AddWatchFlags, InitFlags, Inotify},
+    },
+};
 use polling::{Event as PollEvent, Events, Poller};
 
 use crate::keymap;
+use crate::logind::{SessionGate, SessionWatch};
 
 const EXIT_KEY: usize = 0;
 const MONITOR_KEY: usize = 1;
-const DEVICE_KEY_BASE: usize = 2;
+const INOTIFY_KEY: usize = 2;
+const DEVICE_KEY_BASE: usize = 3;
+const DEV_INPUT_DIR: &str = "/dev/input";
 const DEV_INPUT_PREFIX: &str = "/dev/input/event";
-const EVENT_QUEUE_LIMIT: usize = 1024;
+const EVENT_NODE_PREFIX: &str = "event";
+const FLATPAK_INFO_PATH: &str = "/.flatpak-info";
+const PERMISSION_RETRY_DELAY: Duration = Duration::from_millis(500);
+const FULL_KEYBOARD_KEY_CODES: std::ops::Range<u16> = 1..32;
 
 fn poll_key_for_device_fd(fd: RawFd) -> Option<usize> {
     usize::try_from(fd).ok()?.checked_add(DEVICE_KEY_BASE)
@@ -126,17 +144,8 @@ impl ToNapiValue for NativeEvent {
     }
 }
 
-type EventTsfn = Arc<
-    ThreadsafeFunction<
-        NativeEvent,
-        UnknownReturnValue,
-        NativeEvent,
-        Status,
-        false,
-        true,
-        EVENT_QUEUE_LIMIT,
-    >,
->;
+type EventTsfn =
+    Arc<ThreadsafeFunction<NativeEvent, UnknownReturnValue, NativeEvent, Status, false, true>>;
 
 struct ExitFd {
     fd: EventFd,
@@ -191,18 +200,79 @@ fn lookup_input_seat(sysname: &str) -> Option<String> {
     read_seat_from_device(&device)
 }
 
+struct SeatFilter {
+    udev_handle_available: bool,
+    seat: String,
+}
+
+impl SeatFilter {
+    fn detect() -> Self {
+        Self {
+            udev_handle_available: udev::Enumerator::new().is_ok(),
+            seat: resolve_seat(),
+        }
+    }
+
+    fn includes(&self, sysname: &str) -> bool {
+        if !self.udev_handle_available || self.seat.is_empty() {
+            return true;
+        }
+        match lookup_input_seat(sysname) {
+            Some(found) => found == self.seat,
+            None => true,
+        }
+    }
+
+    fn event_node_paths(&self) -> Vec<PathBuf> {
+        let Ok(entries) = std::fs::read_dir(DEV_INPUT_DIR) else {
+            return Vec::new();
+        };
+        entries
+            .flatten()
+            .filter(|entry| {
+                entry
+                    .file_name()
+                    .to_str()
+                    .is_some_and(|name| is_event_node_name(name) && self.includes(name))
+            })
+            .map(|entry| entry.path())
+            .collect()
+    }
+}
+
+fn is_event_node_name(name: &str) -> bool {
+    name.starts_with(EVENT_NODE_PREFIX)
+}
+
+fn is_sandboxed() -> bool {
+    Path::new(FLATPAK_INFO_PATH).exists()
+}
+
 struct OpenedDevice {
-    device: Device,
+    device: RawDevice,
     path: PathBuf,
+    held: HashSet<u16>,
+    dropped: bool,
+}
+
+enum DeviceInput {
+    Key(u16, i32),
+    Resync,
+}
+
+struct PermissionRetry {
+    path: PathBuf,
+    due: Instant,
 }
 
 struct Reader {
     poller: Arc<Poller>,
     exit_fd: Arc<ExitFd>,
-    udev_handle_available: bool,
-    seat: String,
+    gate: Arc<SessionGate>,
+    seats: SeatFilter,
     devices: HashMap<RawFd, OpenedDevice>,
-    held_keys: HashSet<u16>,
+    retries: Vec<PermissionRetry>,
+    delivering: bool,
     callback: EventTsfn,
     stop: Arc<AtomicBool>,
 }
@@ -217,22 +287,31 @@ impl Reader {
         unsafe {
             poller.add(&exit_fd.as_borrowed(), PollEvent::readable(EXIT_KEY))?;
         }
-        let seat = resolve_seat();
-        let udev_handle_available = udev::Enumerator::new().is_ok();
+        let gate = Arc::new(SessionGate::new(poller.clone()));
 
         Ok(Self {
             poller,
             exit_fd,
-            udev_handle_available,
-            seat,
+            gate,
+            seats: SeatFilter::detect(),
             devices: HashMap::new(),
-            held_keys: HashSet::new(),
+            retries: Vec::new(),
+            delivering: false,
             callback,
             stop,
         })
     }
 
+    fn has_full_keyboard(&self) -> bool {
+        self.devices
+            .values()
+            .any(|opened| device_is_full_keyboard(&opened.device))
+    }
+
     fn try_attach_monitor(&self) -> Option<udev::MonitorSocket> {
+        if is_sandboxed() {
+            return None;
+        }
         let socket = udev::MonitorBuilder::new()
             .and_then(|b| b.match_subsystem("input"))
             .and_then(|b| b.listen())
@@ -246,35 +325,59 @@ impl Reader {
         }
     }
 
-    fn device_is_on_our_seat(&self, sysname: &str) -> bool {
-        if !self.udev_handle_available || self.seat.is_empty() {
-            return true;
+    fn try_attach_inotify(&self) -> Option<Inotify> {
+        let inotify = Inotify::init(InitFlags::IN_CLOEXEC | InitFlags::IN_NONBLOCK).ok()?;
+        inotify
+            .add_watch(
+                DEV_INPUT_DIR,
+                AddWatchFlags::IN_CREATE | AddWatchFlags::IN_ATTRIB,
+            )
+            .ok()?;
+        if unsafe {
+            self.poller
+                .add(&inotify.as_fd(), PollEvent::readable(INOTIFY_KEY))
         }
-        match lookup_input_seat(sysname) {
-            Some(found) => found == self.seat,
-            None => true,
+        .is_ok()
+        {
+            Some(inotify)
+        } else {
+            None
         }
     }
 
     fn open_all_devices(&mut self) {
-        let entries = match std::fs::read_dir("/dev/input") {
-            Ok(entries) => entries,
-            Err(_) => return,
-        };
-        for entry in entries.flatten() {
-            let name = entry.file_name();
-            let name_str = match name.to_str() {
-                Some(s) => s,
-                None => continue,
-            };
-            if !name_str.starts_with("event") {
-                continue;
-            }
-            if !self.device_is_on_our_seat(name_str) {
-                continue;
-            }
-            let path = entry.path();
+        for path in self.seats.event_node_paths() {
             let _ = self.open_device(&path);
+        }
+    }
+
+    fn open_hotplugged_device(&mut self, path: &Path) {
+        if let Err(err) = self.open_device(path)
+            && err.kind() == std::io::ErrorKind::PermissionDenied
+            && !self.retries.iter().any(|retry| retry.path == path)
+        {
+            self.retries.push(PermissionRetry {
+                path: path.to_path_buf(),
+                due: Instant::now() + PERMISSION_RETRY_DELAY,
+            });
+        }
+    }
+
+    fn next_retry_timeout(&self) -> Option<Duration> {
+        let now = Instant::now();
+        self.retries
+            .iter()
+            .map(|retry| retry.due.saturating_duration_since(now))
+            .min()
+    }
+
+    fn run_due_retries(&mut self) {
+        let now = Instant::now();
+        let (due, pending): (Vec<PermissionRetry>, Vec<PermissionRetry>) =
+            self.retries.drain(..).partition(|retry| retry.due <= now);
+        self.retries = pending;
+        for retry in due {
+            let _ = self.open_device(&retry.path);
         }
     }
 
@@ -286,11 +389,10 @@ impl Reader {
         {
             return Ok(());
         }
-        let device = Device::open(path)?;
+        let device = open_read_only(path)?;
         if !device_has_routable_input(&device) {
             return Ok(());
         }
-        let _ = device.set_nonblocking(true);
         let fd = device.as_raw_fd();
         let poll_key = poll_key_for_device_fd(fd).ok_or_else(|| {
             std::io::Error::new(
@@ -307,8 +409,11 @@ impl Reader {
             OpenedDevice {
                 device,
                 path: path.to_path_buf(),
+                held: HashSet::new(),
+                dropped: false,
             },
         );
+        self.retries.retain(|retry| retry.path != path);
         Ok(())
     }
 
@@ -327,28 +432,65 @@ impl Reader {
         if let Some(opened) = self.devices.remove(&fd) {
             let borrowed = unsafe { BorrowedFd::borrow_raw(fd) };
             let _ = self.poller.delete(borrowed);
-            drop(opened);
+            let OpenedDevice { device, held, .. } = opened;
+            drop(device);
+            self.release_codes(held);
         }
+    }
+
+    fn release_all(&mut self) {
+        let mut held = HashSet::new();
+        for opened in self.devices.values_mut() {
+            held.extend(opened.held.drain());
+        }
+        self.release_codes(held);
+    }
+
+    fn release_codes(&mut self, codes: HashSet<u16>) {
+        let mut codes: Vec<u16> = codes
+            .into_iter()
+            .filter(|code| !self.is_held(*code))
+            .collect();
+        codes.sort_unstable();
+        for code in codes {
+            self.dispatch(self.native_event(code, false));
+        }
+    }
+
+    fn apply_session_gate(&mut self) {
+        let active = self.gate.is_active();
+        if self.delivering && !active {
+            self.release_all();
+        }
+        self.delivering = active;
     }
 
     fn run(&mut self) {
         let monitor = self.try_attach_monitor();
+        let inotify = self.try_attach_inotify();
+        self.open_all_devices();
         let mut events = Events::new();
         loop {
             if self.stop.load(Ordering::Acquire) {
                 break;
             }
             events.clear();
-            if self.poller.wait(&mut events, None).is_err() {
+            if self
+                .poller
+                .wait(&mut events, self.next_retry_timeout())
+                .is_err()
+            {
                 break;
             }
             let mut device_fds_to_drain: Vec<RawFd> = Vec::new();
             let mut drain_monitor = false;
+            let mut drain_inotify = false;
             let mut got_exit = false;
             for event in events.iter() {
                 match event.key {
                     EXIT_KEY => got_exit = true,
                     MONITOR_KEY => drain_monitor = true,
+                    INOTIFY_KEY => drain_inotify = true,
                     fd_key => {
                         if let Some(fd) = device_fd_from_poll_key(fd_key) {
                             device_fds_to_drain.push(fd);
@@ -361,19 +503,35 @@ impl Reader {
                 break;
             }
 
-            self.rearm(monitor.as_ref(), drain_monitor, &device_fds_to_drain);
+            self.rearm(
+                monitor.as_ref(),
+                drain_monitor,
+                inotify.as_ref().filter(|_| drain_inotify),
+                &device_fds_to_drain,
+            );
 
+            self.apply_session_gate();
             if drain_monitor && let Some(monitor) = monitor.as_ref() {
                 self.drain_monitor(monitor);
             }
+            if drain_inotify && let Some(inotify) = inotify.as_ref() {
+                self.drain_inotify(inotify);
+            }
+            self.run_due_retries();
             for fd in device_fds_to_drain {
                 self.drain_device(fd);
             }
         }
 
+        if !self.stop.load(Ordering::Acquire) {
+            self.release_all();
+        }
         if let Some(monitor) = monitor.as_ref() {
             let borrowed = unsafe { BorrowedFd::borrow_raw(monitor.as_raw_fd()) };
             let _ = self.poller.delete(borrowed);
+        }
+        if let Some(inotify) = inotify.as_ref() {
+            let _ = self.poller.delete(inotify.as_fd());
         }
     }
 
@@ -381,6 +539,7 @@ impl Reader {
         &self,
         monitor: Option<&udev::MonitorSocket>,
         drain_monitor: bool,
+        inotify: Option<&Inotify>,
         device_fds: &[RawFd],
     ) {
         let _ = self
@@ -391,6 +550,11 @@ impl Reader {
             let _ = self
                 .poller
                 .modify(borrowed, PollEvent::readable(MONITOR_KEY));
+        }
+        if let Some(inotify) = inotify {
+            let _ = self
+                .poller
+                .modify(inotify.as_fd(), PollEvent::readable(INOTIFY_KEY));
         }
         for fd in device_fds {
             if self.devices.contains_key(fd) {
@@ -428,13 +592,13 @@ impl Reader {
         for (action, devnode, seat) in pending {
             match action.as_str() {
                 "add" => {
-                    if !self.seat.is_empty()
+                    if !self.seats.seat.is_empty()
                         && let Some(seat) = seat.as_deref()
-                        && seat != self.seat
+                        && seat != self.seats.seat
                     {
                         continue;
                     }
-                    let _ = self.open_device(&devnode);
+                    self.open_hotplugged_device(&devnode);
                 }
                 "remove" => self.close_device_by_path(&devnode),
                 _ => {}
@@ -442,22 +606,60 @@ impl Reader {
         }
     }
 
+    fn drain_inotify(&mut self, inotify: &Inotify) {
+        let mut paths: Vec<PathBuf> = Vec::new();
+        while let Ok(events) = inotify.read_events() {
+            if events.is_empty() {
+                break;
+            }
+            for event in events {
+                let Some(name) = event.name.as_deref().and_then(OsStr::to_str) else {
+                    continue;
+                };
+                if !is_event_node_name(name) || !self.seats.includes(name) {
+                    continue;
+                }
+                let path = Path::new(DEV_INPUT_DIR).join(name);
+                if !paths.contains(&path) {
+                    paths.push(path);
+                }
+            }
+        }
+        for path in paths {
+            self.open_hotplugged_device(&path);
+        }
+    }
+
     fn drain_device(&mut self, fd: RawFd) {
-        let mut decoded: Vec<(u16, i32)> = Vec::new();
+        let mut decoded: Vec<DeviceInput> = Vec::new();
         let mut device_dead = false;
         {
             let Some(opened) = self.devices.get_mut(&fd) else {
                 return;
             };
             loop {
-                let fetch_result = opened.device.fetch_events();
-                match fetch_result {
+                match opened.device.fetch_events() {
                     Ok(events) => {
                         for ev in events {
-                            if ev.event_type() != EventType::KEY {
-                                continue;
+                            match (ev.event_type(), ev.code()) {
+                                (EventType::SYNCHRONIZATION, code)
+                                    if code == SynchronizationCode::SYN_DROPPED.0 =>
+                                {
+                                    opened.dropped = true;
+                                }
+                                (EventType::SYNCHRONIZATION, code)
+                                    if opened.dropped
+                                        && code == SynchronizationCode::SYN_REPORT.0 =>
+                                {
+                                    opened.dropped = false;
+                                    decoded.push(DeviceInput::Resync);
+                                }
+                                _ if opened.dropped => {}
+                                (EventType::KEY, code) => {
+                                    decoded.push(DeviceInput::Key(code, ev.value()));
+                                }
+                                _ => {}
                             }
-                            decoded.push((ev.code(), ev.value()));
                         }
                     }
                     Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => break,
@@ -472,50 +674,86 @@ impl Reader {
             self.close_device_by_fd(fd);
             return;
         }
-        for (code, value) in decoded {
-            if value == 2 {
-                continue;
+        if !self.delivering {
+            return;
+        }
+        for input in decoded {
+            match input {
+                DeviceInput::Key(_, 2) => {}
+                DeviceInput::Key(code, value) => self.translate_event(fd, code, value == 1),
+                DeviceInput::Resync => self.resync_device(fd),
             }
-            self.translate_event(code, value == 1);
         }
     }
 
-    fn translate_event(&mut self, code: u16, is_press: bool) {
+    fn resync_device(&mut self, fd: RawFd) {
+        let Some(opened) = self.devices.get_mut(&fd) else {
+            return;
+        };
+        let released = match opened.device.get_key_state() {
+            Ok(state) => {
+                let down: HashSet<u16> = state
+                    .iter()
+                    .map(|key| key.code())
+                    .filter(|code| is_routable_key_code(*code))
+                    .collect();
+                let released: HashSet<u16> = opened.held.difference(&down).copied().collect();
+                opened.held = down;
+                released
+            }
+            Err(_) => std::mem::take(&mut opened.held),
+        };
+        self.release_codes(released);
+    }
+
+    fn translate_event(&mut self, fd: RawFd, code: u16, is_press: bool) {
+        if !is_routable_key_code(code) {
+            return;
+        }
+        if let Some(opened) = self.devices.get_mut(&fd) {
+            if is_press {
+                opened.held.insert(code);
+            } else {
+                opened.held.remove(&code);
+            }
+        }
+        self.dispatch(self.native_event(code, is_press));
+    }
+
+    fn native_event(&self, code: u16, is_press: bool) -> NativeEvent {
+        let ctrl = self.modifier_state_ctrl();
+        let alt = self.modifier_state_alt();
+        let shift = self.modifier_state_shift();
+        let meta = self.modifier_state_meta();
         if let Some(button) = keymap::evdev_button_to_browser_button(code) {
-            let event = NativeEvent::Mouse {
+            return NativeEvent::Mouse {
                 kind: if is_press {
                     MouseKind::Down
                 } else {
                     MouseKind::Up
                 },
                 button,
-                ctrl: self.modifier_state_ctrl(),
-                alt: self.modifier_state_alt(),
-                shift: self.modifier_state_shift(),
-                meta: self.modifier_state_meta(),
+                ctrl,
+                alt,
+                shift,
+                meta,
             };
-            self.dispatch(event);
-            return;
         }
-        let key_name = match keymap::keycode_to_name(code) {
-            Some(name) => name,
-            None => return,
-        };
-        if is_press {
-            self.held_keys.insert(code);
-        } else {
-            self.held_keys.remove(&code);
-        }
-        let event = NativeEvent::Key {
+        NativeEvent::Key {
             kind: if is_press { KeyKind::Down } else { KeyKind::Up },
             keycode: code,
-            key_name,
-            ctrl: self.modifier_state_ctrl(),
-            alt: self.modifier_state_alt(),
-            shift: self.modifier_state_shift(),
-            meta: self.modifier_state_meta(),
-        };
-        self.dispatch(event);
+            key_name: keymap::keycode_to_name(code).unwrap_or_default(),
+            ctrl,
+            alt,
+            shift,
+            meta,
+        }
+    }
+
+    fn is_held(&self, code: u16) -> bool {
+        self.devices
+            .values()
+            .any(|opened| opened.held.contains(&code))
     }
 
     fn dispatch(&self, event: NativeEvent) {
@@ -528,30 +766,51 @@ impl Reader {
     }
 
     fn modifier_state_ctrl(&self) -> bool {
-        self.held_keys.contains(&keymap::LEFT_CTRL) || self.held_keys.contains(&keymap::RIGHT_CTRL)
+        self.is_held(keymap::LEFT_CTRL) || self.is_held(keymap::RIGHT_CTRL)
     }
     fn modifier_state_alt(&self) -> bool {
-        self.held_keys.contains(&keymap::LEFT_ALT) || self.held_keys.contains(&keymap::RIGHT_ALT)
+        self.is_held(keymap::LEFT_ALT) || self.is_held(keymap::RIGHT_ALT)
     }
     fn modifier_state_shift(&self) -> bool {
-        self.held_keys.contains(&keymap::LEFT_SHIFT)
-            || self.held_keys.contains(&keymap::RIGHT_SHIFT)
+        self.is_held(keymap::LEFT_SHIFT) || self.is_held(keymap::RIGHT_SHIFT)
     }
     fn modifier_state_meta(&self) -> bool {
-        self.held_keys.contains(&keymap::LEFT_META) || self.held_keys.contains(&keymap::RIGHT_META)
+        self.is_held(keymap::LEFT_META) || self.is_held(keymap::RIGHT_META)
     }
 }
 
+const KEYBOARD_KEY_CODES: Range<u16> = KeyCode::KEY_ESC.code()..KeyCode::BTN_0.code();
+const EXTENDED_KEY_CODES: Range<u16> = KeyCode::KEY_OK.code()..KeyCode::BTN_TRIGGER_HAPPY1.code();
+
 fn is_routable_key_code(code: u16) -> bool {
-    keymap::keycode_to_name(code).is_some()
+    KEYBOARD_KEY_CODES.contains(&code)
+        || EXTENDED_KEY_CODES.contains(&code)
         || keymap::evdev_button_to_browser_button(code).is_some()
 }
 
-fn device_has_routable_input(device: &Device) -> bool {
+fn device_has_routable_input(device: &RawDevice) -> bool {
     device.supported_keys().is_some_and(|keys| {
         keys.iter()
             .any(|key: KeyCode| is_routable_key_code(key.code()))
     })
+}
+
+fn is_full_keyboard_key_set(supports: impl Fn(u16) -> bool) -> bool {
+    FULL_KEYBOARD_KEY_CODES.into_iter().all(supports)
+}
+
+fn device_is_full_keyboard(device: &RawDevice) -> bool {
+    device
+        .supported_keys()
+        .is_some_and(|keys| is_full_keyboard_key_set(|code| keys.contains(KeyCode::new(code))))
+}
+
+fn open_read_only(path: &Path) -> std::io::Result<RawDevice> {
+    let file = std::fs::OpenOptions::new()
+        .read(true)
+        .custom_flags(OFlag::O_NONBLOCK.bits())
+        .open(path)?;
+    RawDevice::from_fd(OwnedFd::from(file))
 }
 
 impl Drop for Reader {
@@ -570,11 +829,12 @@ struct HookInner {
     stop: Option<Arc<AtomicBool>>,
     exit_fd: Option<Arc<ExitFd>>,
     thread: Option<JoinHandle<()>>,
-    opened: bool,
+    session_watch: Option<SessionWatch>,
 }
 
 impl HookInner {
     fn stop_and_join(&mut self) {
+        self.session_watch = None;
         if let Some(stop) = &self.stop {
             stop.store(true, Ordering::Release);
         }
@@ -586,7 +846,6 @@ impl HookInner {
         }
         self.stop = None;
         self.exit_fd = None;
-        self.opened = false;
     }
 }
 
@@ -605,7 +864,6 @@ impl EvdevHook {
                 .build_threadsafe_function::<NativeEvent>()
                 .weak::<true>()
                 .callee_handled::<false>()
-                .max_queue_size::<EVENT_QUEUE_LIMIT>()
                 .build()
                 .map_err(|err| {
                     generic_error(format!("failed to build callback: {}", err.reason))
@@ -617,7 +875,7 @@ impl EvdevHook {
                 stop: None,
                 exit_fd: None,
                 thread: None,
-                opened: false,
+                session_watch: None,
             }),
         })
     }
@@ -628,8 +886,11 @@ impl EvdevHook {
             .inner
             .lock()
             .map_err(|_| generic_error("hook lock poisoned"))?;
-        if inner.thread.is_some() {
-            return Ok(inner.opened);
+        if let Some(thread) = inner.thread.as_ref() {
+            if !thread.is_finished() {
+                return Ok(true);
+            }
+            inner.stop_and_join();
         }
         let stop = Arc::new(AtomicBool::new(false));
         let exit_fd = Arc::new(
@@ -640,8 +901,12 @@ impl EvdevHook {
             .map_err(|err| generic_error(format!("evdev start failed: {err}")))?;
 
         reader.open_all_devices();
-        let opened = !reader.devices.is_empty();
+        if !reader.has_full_keyboard() {
+            return Ok(false);
+        }
 
+        let session_watch = SessionWatch::spawn(reader.gate.clone())
+            .map_err(|err| generic_error(format!("failed to spawn logind thread: {err}")))?;
         let join = thread::Builder::new()
             .name("fluxer-linux-evdev-reader".to_string())
             .spawn(move || {
@@ -653,8 +918,8 @@ impl EvdevHook {
         inner.stop = Some(stop);
         inner.exit_fd = Some(exit_fd);
         inner.thread = Some(join);
-        inner.opened = opened;
-        Ok(opened)
+        inner.session_watch = Some(session_watch);
+        Ok(true)
     }
 
     #[napi]
@@ -676,9 +941,12 @@ impl Drop for EvdevHook {
     }
 }
 
-#[napi(js_name = "nameToEvdevKeycode")]
-pub fn name_to_evdev_keycode(name: String) -> u32 {
-    u32::from(keymap::name_to_keycode(&name))
+#[napi(js_name = "isKeyboardReadable")]
+pub fn is_keyboard_readable() -> bool {
+    SeatFilter::detect()
+        .event_node_paths()
+        .iter()
+        .any(|path| open_read_only(path).is_ok_and(|device| device_is_full_keyboard(&device)))
 }
 
 fn generic_error(reason: impl Into<String>) -> napi::Error {
@@ -693,11 +961,50 @@ mod tests {
     fn control_poll_keys_are_legal_and_outside_fd_range() {
         assert_eq!(EXIT_KEY, 0);
         assert_eq!(MONITOR_KEY, 1);
-        assert_ne!(EXIT_KEY, MONITOR_KEY);
+        assert_eq!(INOTIFY_KEY, 2);
         assert_eq!(poll_key_for_device_fd(0), Some(DEVICE_KEY_BASE));
         assert_eq!(device_fd_from_poll_key(DEVICE_KEY_BASE), Some(0));
         assert_eq!(device_fd_from_poll_key(EXIT_KEY), None);
         assert_eq!(device_fd_from_poll_key(MONITOR_KEY), None);
+        assert_eq!(device_fd_from_poll_key(INOTIFY_KEY), None);
+    }
+
+    #[test]
+    fn full_keyboard_requires_every_key_from_escape_to_s() {
+        assert!(is_full_keyboard_key_set(|code| code < 200));
+        assert!(!is_full_keyboard_key_set(|code| code != 0 && code != 17));
+        assert!(!is_full_keyboard_key_set(|code| code == 0 || code >= 32));
+        assert!(is_full_keyboard_key_set(|code| (1..32).contains(&code)));
+    }
+
+    #[test]
+    fn event_node_names_match_only_event_devices() {
+        assert!(is_event_node_name("event0"));
+        assert!(is_event_node_name("event17"));
+        assert!(!is_event_node_name("mouse0"));
+        assert!(!is_event_node_name("js0"));
+        assert!(!is_event_node_name("by-id"));
+    }
+
+    #[test]
+    fn session_gate_notifies_only_on_change() {
+        let poller = Arc::new(Poller::new().expect("create poller"));
+        let gate = SessionGate::new(poller.clone());
+        assert!(!gate.is_active());
+        gate.set_active(false);
+        let mut events = Events::new();
+        poller
+            .wait(&mut events, Some(Duration::from_millis(0)))
+            .expect("poll without notification");
+        gate.set_active(true);
+        assert!(gate.is_active());
+        let started = Instant::now();
+        poller
+            .wait(&mut events, Some(Duration::from_secs(5)))
+            .expect("poll with notification");
+        assert!(started.elapsed() < Duration::from_secs(5));
+        gate.set_active(false);
+        assert!(!gate.is_active());
     }
 
     #[test]
@@ -720,6 +1027,37 @@ mod tests {
         assert!(is_routable_key_code(KeyCode::KEY_LEFTCTRL.code()));
         assert!(is_routable_key_code(KeyCode::BTN_LEFT.code()));
         assert!(is_routable_key_code(KeyCode::BTN_FORWARD.code()));
+    }
+
+    #[test]
+    fn every_key_main_maps_to_a_dom_code_is_routable() {
+        let source = include_str!("../../../src/main/GlobalShortcutKeys.ts");
+        let table = source
+            .split("const EVDEV_KEY_CODES")
+            .nth(1)
+            .and_then(|rest| rest.split("]);").next())
+            .expect("EVDEV_KEY_CODES table");
+        let codes: Vec<u16> = table
+            .split("[0x")
+            .skip(1)
+            .map(|entry| {
+                let hex = entry.split(',').next().expect("code");
+                u16::from_str_radix(hex, 16).expect("hex code")
+            })
+            .collect();
+        assert!(codes.len() > 150);
+        for code in codes {
+            assert!(is_routable_key_code(code), "evdev code {code:#x}");
+        }
+    }
+
+    #[test]
+    fn routable_key_code_filter_keeps_keys_without_a_native_name() {
+        assert!(is_routable_key_code(KeyCode::KEY_CALC.code()));
+        assert!(is_routable_key_code(KeyCode::KEY_PLAYCD.code()));
+        assert!(is_routable_key_code(KeyCode::KEY_FN.code()));
+        assert!(!is_routable_key_code(0));
+        assert!(!is_routable_key_code(KeyCode::BTN_TRIGGER_HAPPY1.code()));
     }
 
     #[test]

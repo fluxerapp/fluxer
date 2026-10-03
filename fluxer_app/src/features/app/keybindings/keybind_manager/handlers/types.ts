@@ -10,7 +10,6 @@ export interface HandlerHost {
 	readonly logger: Logger;
 	readonly currentChannelId: string | null;
 	readonly currentGuildId: string | null;
-	pttReleaseTimer: NodeJS.Timeout | null;
 	navigateToChannel(guildId: string | null, channelId: string): void;
 	navigateToDirectMessages(): void;
 	navigateToLastCommunityChannel(): boolean;

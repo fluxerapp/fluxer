@@ -10,6 +10,7 @@ export {
 } from '@app/features/app/keybindings/utils/HookShortcutIds';
 
 export type RuntimeKeybind = KeybindConfig & {
+	id: string | null;
 	combo: KeyCombo;
 };
 export type RuntimeKeybindBaseResolver = (action: KeybindCommand) => KeybindConfig | null;
@@ -34,6 +35,16 @@ export const HOLD_ACTIONS_FOR_VOICE_ACTIVITY_MODE: ReadonlyArray<HoldAction> = [
 	'voice_priority_vad',
 ];
 
+export function sourceIdForKeybind(keybind: {id: string | null; action: KeybindCommand}): string {
+	if (keybind.id === null) return `default:${keybind.action}`;
+	return `custom:${keybind.id}`;
+}
+
+export function gamepadSourceIdForKeybind(keybind: {id: string | null; action: KeybindCommand}): string {
+	if (keybind.id === null) return `gamepad:default:${keybind.action}`;
+	return `gamepad:${keybind.id}`;
+}
+
 export function hasTriggerKey(combo: KeyCombo): boolean {
 	return (combo.key ?? '') !== '' || (combo.code ?? '') !== '';
 }
@@ -55,7 +66,7 @@ export function buildDefaultRuntimeKeybinds(
 		if (overriddenActions.has(entry.action)) continue;
 		const combo = entry.combo;
 		if (!isEnabledDefaultCombo(combo)) continue;
-		result.push({...entry, combo});
+		result.push({...entry, id: null, combo});
 	}
 	return result;
 }
@@ -69,7 +80,7 @@ export function buildCustomRuntimeKeybinds(
 		if (!custom.action || !isActiveCustomKeybind(custom)) continue;
 		const base = getBaseByAction(custom.action);
 		if (!base) continue;
-		result.push({...base, combo: custom.combo});
+		result.push({...base, id: custom.id, combo: custom.combo});
 	}
 	return result;
 }

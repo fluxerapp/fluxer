@@ -33,9 +33,11 @@ import {
 	shouldSuppressLocalShortcutForModalFocus,
 	shouldSuppressShortcutForFullscreenMedia,
 } from '@app/features/app/keybindings/utils/ModalSuppression';
+import {reactToPushToTalkModeChanges} from '@app/features/app/keybindings/utils/PushToTalkModeReconcile';
 import {
 	buildCustomRuntimeKeybinds,
 	buildDefaultRuntimeKeybinds,
+	gamepadSourceIdForKeybind,
 	HOLD_ACTIONS,
 	HOLD_ACTIONS_FOR_PTT_MODE,
 	HOLD_ACTIONS_FOR_VOICE_ACTIVITY_MODE,
@@ -43,6 +45,7 @@ import {
 	hookShortcutIdForAction,
 	hookShortcutIdForKeybind,
 	type RuntimeKeybind,
+	sourceIdForKeybind,
 } from '@app/features/app/keybindings/utils/RuntimeKeybinds';
 import {LOCAL_SHORTCUT_ACTION_PRIORITY} from '@app/features/app/keybindings/utils/ShortcutPriority';
 import Authentication from '@app/features/auth/state/Authentication';
@@ -51,8 +54,10 @@ import Channels from '@app/features/channel/state/Channels';
 import type {Guild} from '@app/features/guild/models/Guild';
 import GuildList from '@app/features/guild/state/GuildList';
 import Guilds from '@app/features/guild/state/Guilds';
+import GlobalShortcuts, {getGlobalShortcutsApi} from '@app/features/input/state/GlobalShortcuts';
 import Keybind, {
 	type CustomKeybindEntry,
+	isKeybindCommand,
 	type KeybindCommand,
 	type KeybindConfig,
 	type KeyCombo,
@@ -68,9 +73,7 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
-import NativePermission, {
-	type LinuxInputAccessNagbarReason,
-} from '@app/features/permissions/system/state/NativePermission';
+import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {ensureMacPermission} from '@app/features/permissions/system/utils/MacPermissionGate';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import ReadStates from '@app/features/read_state/state/ReadStates';
@@ -87,11 +90,19 @@ import CompactVoiceCallHeight, {
 } from '@app/features/voice/state/CompactVoiceCallHeight';
 import MockIncomingCall from '@app/features/voice/state/MockIncomingCall';
 import VoiceCallFullscreen from '@app/features/voice/state/VoiceCallFullscreen';
+import type {
+	GlobalShortcutActionDefinition,
+	GlobalShortcutBinding,
+	GlobalShortcutCombo,
+	GlobalShortcutEvent,
+	GlobalShortcutsApi,
+	GlobalShortcutsSyncPayload,
+} from '@app/types/electron.d';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import CombokeysImport from 'combokeys';
-import {autorun, reaction} from 'mobx';
+import {autorun, compareStructural, reaction} from 'mobx';
 
 const normalizeKeyboardShortcutKey = (key: string): string => {
 	if (key === ' ') return 'space';
@@ -108,6 +119,86 @@ export {
 
 const ROUTE_ALLOWED_ACTIONS = new Set<KeybindCommand>(['system_open_theme_studio_popout']);
 const GAMEPAD_POLL_INTERVAL_MS = 50;
+const PORTAL_SOURCE_ID_PREFIX = 'portal:';
+
+interface HoldBindingEntry {
+	action: HoldAction;
+	sourceId: string;
+	gamepadSourceId: string;
+	combo: KeyCombo;
+}
+
+interface GlobalHoldRouting {
+	hooksActive: boolean;
+	supportsMouseButtons: boolean;
+	supportsModifierOnly: boolean;
+}
+
+function isHoldAction(action: string): action is HoldAction {
+	return HOLD_ACTIONS.includes(action as HoldAction);
+}
+
+function comboHasModifiers(combo: GlobalShortcutCombo): boolean {
+	return combo.ctrl || combo.alt || combo.shift || combo.meta;
+}
+
+function toGlobalShortcutCombo(combo: KeyCombo): GlobalShortcutCombo | null {
+	if (combo.gamepadButton != null) return null;
+	const hasKey = (combo.key ?? '') !== '' || (combo.code ?? '') !== '';
+	if (!hasKey && combo.mouseButton == null) return null;
+	const isMacOS = isNativeMacOS();
+	const result: GlobalShortcutCombo = {
+		key: combo.key ?? '',
+		ctrl: Boolean(combo.ctrl) || (!isMacOS && Boolean(combo.ctrlOrMeta)),
+		alt: Boolean(combo.alt),
+		shift: Boolean(combo.shift),
+		meta: Boolean(combo.meta) || (isMacOS && Boolean(combo.ctrlOrMeta)),
+	};
+	if (combo.code) result.code = combo.code;
+	if (combo.mouseButton != null) result.mouseButton = combo.mouseButton;
+	if (combo.modifierOnly) result.modifierOnly = true;
+	if (combo.modifierOnly && combo.bothSides) result.bothSides = true;
+	return result;
+}
+
+function createHoldBindingRuntime(entry: HoldBindingEntry): HoldBindingRuntime {
+	const {combo} = entry;
+	return {
+		action: entry.action,
+		sourceId: entry.sourceId,
+		gamepadSourceId: entry.gamepadSourceId,
+		combo,
+		keycode: null,
+		keyName: null,
+		physicalKeyName: null,
+		mouseButton: combo.mouseButton ?? null,
+		gamepadButton: combo.gamepadButton ?? null,
+		isModifierOnly: Boolean(combo.modifierOnly),
+		ctrlOrMeta: Boolean(combo.ctrlOrMeta),
+		requireBothSides: Boolean(combo.modifierOnly && combo.bothSides),
+		modifiers: {
+			ctrl: Boolean(combo.ctrl),
+			alt: Boolean(combo.alt),
+			shift: Boolean(combo.shift),
+			meta: Boolean(combo.meta),
+		},
+		routing: null,
+		pressedKeycodes: new Set<number>(),
+		localPressedCodes: new Set<string>(),
+		localActiveCode: null,
+		localMouseActive: false,
+		globalMouseActive: false,
+		localKeyDown: null,
+		localKeyUp: null,
+		localMouseDown: null,
+		localMouseUp: null,
+		gamepadHeld: false,
+	};
+}
+
+function legacyHoldSourceId(binding: HoldBindingRuntime): string {
+	return `legacy:${hookShortcutIdForAction(binding.action, binding.combo)}`;
+}
 
 class KeybindManager {
 	private handlers = new Map<KeybindCommand, KeybindHandler>();
@@ -117,8 +208,11 @@ class KeybindManager {
 	private disposers: Array<() => void> = [];
 	private combokeys: CombokeysInstance | null = null;
 	private inputMonitoringHookStatus: 'unknown' | 'granted' | 'denied' = 'unknown';
-	pttReleaseTimer: NodeJS.Timeout | null = null;
 	private registeredGlobalHookShortcutIds = new Set<string>();
+	private globalShortcutsEventUnsubscribe: (() => void) | null = null;
+	private syncedGlobalSourceIds = new Set<string>();
+	private syncedSourceIdByHookId = new Map<string, string>();
+	private syncedGlobalActions: Array<GlobalShortcutActionDefinition> = [];
 	private globalKeyHookUnsubscribes: Array<() => void> = [];
 	private globalKeybindTriggeredUnsubscribe: (() => void) | null = null;
 	private globalKeyHookStarted = false;
@@ -420,25 +514,28 @@ class KeybindManager {
 				() => this.refreshLocalShortcuts(),
 			),
 		);
-		this.disposers.push(
-			autorun(() => {
-				const desired = this.computeDesiredGlobalHookShortcuts();
-				void this.enqueueInputSync(() => this.applyGlobalShortcuts(desired));
-			}),
-		);
+		GlobalShortcuts.attach();
+		const globalShortcutsApi = getGlobalShortcutsApi();
+		if (globalShortcutsApi) {
+			this.attachGlobalShortcuts(globalShortcutsApi);
+		} else {
+			this.disposers.push(
+				autorun(() => {
+					const desired = this.computeDesiredGlobalHookShortcuts();
+					void this.enqueueInputSync(() => this.applyGlobalShortcuts(desired));
+				}),
+			);
+		}
+		this.disposers.push(reactToPushToTalkModeChanges((options) => MediaEngine.handlePushToTalkModeChange(options)));
 		this.disposers.push(
 			reaction(
-				() => Keybind.transmitMode,
-				() => {
-					MediaEngine.handlePushToTalkModeChange();
+				() => ({entries: this.buildHoldBindingEntries(), routing: this.getGlobalHoldRouting()}),
+				({entries, routing}) => {
+					const bindings = entries.map(createHoldBindingRuntime);
+					void this.enqueueInputSync(() => this.applyHoldBindings(bindings, routing));
 				},
+				{equals: compareStructural, fireImmediately: true},
 			),
-		);
-		this.disposers.push(
-			autorun(() => {
-				const bindings = this.buildHoldBindings();
-				void this.enqueueInputSync(() => this.applyHoldBindings(bindings));
-			}),
 		);
 		this.disposers.push(
 			autorun(() => {
@@ -461,79 +558,74 @@ class KeybindManager {
 		return this.inputSyncQueue;
 	}
 
-	private buildHoldBindings(): Array<HoldBindingRuntime> {
-		const bindings: Array<HoldBindingRuntime> = [];
+	private buildHoldBindingEntries(): Array<HoldBindingEntry> {
+		const entries: Array<HoldBindingEntry> = [];
 		const inPttMode = Keybind.isPushToTalkEffective();
 		const eligibleActions = inPttMode ? HOLD_ACTIONS_FOR_PTT_MODE : HOLD_ACTIONS_FOR_VOICE_ACTIVITY_MODE;
 		const customs: ReadonlyArray<CustomKeybindEntry> = Keybind.getCustomKeybinds();
-		const pushBinding = (action: HoldAction, combo: KeyCombo): void => {
-			if (!this.isActionAllowedForCurrentView(action)) return;
-			const hasBinding = !!(combo.key || combo.code || combo.gamepadButton != null || combo.mouseButton != null);
-			if (!hasBinding) return;
-			bindings.push({
-				action,
-				combo,
-				keycode: null,
-				keyName: null,
-				physicalKeyName: null,
-				mouseButton: combo.mouseButton ?? null,
-				gamepadButton: combo.gamepadButton ?? null,
-				isModifierOnly: Boolean(combo.modifierOnly),
-				ctrlOrMeta: Boolean(combo.ctrlOrMeta),
-				requireBothSides: Boolean(combo.modifierOnly && combo.bothSides),
-				modifiers: {
-					ctrl: Boolean(combo.ctrl),
-					alt: Boolean(combo.alt),
-					shift: Boolean(combo.shift),
-					meta: Boolean(combo.meta),
-				},
-				routing: null,
-				pressedKeycodes: new Set<number>(),
-				localPressedCodes: new Set<string>(),
-				localActiveCode: null,
-				localMouseActive: false,
-				globalMouseActive: false,
-				localKeyDown: null,
-				localKeyUp: null,
-				localMouseDown: null,
-				localMouseUp: null,
-				gamepadHeld: false,
-			});
-		};
 		for (const action of eligibleActions) {
 			for (const entry of customs) {
 				if (!entry.enabled) continue;
 				if (entry.action !== action) continue;
-				pushBinding(action, entry.combo);
+				const combo = entry.combo;
+				const hasBinding = !!(combo.key || combo.code || combo.gamepadButton != null || combo.mouseButton != null);
+				if (!hasBinding) continue;
+				const keybind = {id: entry.id, action};
+				entries.push({
+					action,
+					sourceId: sourceIdForKeybind(keybind),
+					gamepadSourceId: gamepadSourceIdForKeybind(keybind),
+					combo: {...combo},
+				});
 			}
 		}
-		return bindings;
+		return entries;
 	}
 
-	private async applyHoldBindings(bindings: Array<HoldBindingRuntime>): Promise<void> {
+	private getGlobalHoldRouting(): GlobalHoldRouting | null {
+		if (!getGlobalShortcutsApi()) return null;
+		const status = GlobalShortcuts.status;
+		return {
+			hooksActive: GlobalShortcuts.hooksActive && GlobalShortcuts.backend !== 'portal',
+			supportsMouseButtons: status?.supportsMouseButtons === true,
+			supportsModifierOnly: status?.supportsModifierOnly === true,
+		};
+	}
+
+	private canRouteHoldBindingGlobally(binding: HoldBindingRuntime, routing: GlobalHoldRouting): boolean {
+		if (!routing.hooksActive) return false;
+		if (binding.mouseButton !== null) return routing.supportsMouseButtons;
+		if (binding.isModifierOnly) return routing.supportsModifierOnly;
+		return true;
+	}
+
+	private rebuildHoldBindings(): void {
+		const bindings = this.buildHoldBindingEntries().map(createHoldBindingRuntime);
+		const routing = this.getGlobalHoldRouting();
+		void this.enqueueInputSync(() => this.applyHoldBindings(bindings, routing));
+	}
+
+	private async applyHoldBindings(
+		bindings: Array<HoldBindingRuntime>,
+		routing: GlobalHoldRouting | null,
+	): Promise<void> {
 		this.detachLocalHoldListener();
 		this.releaseGlobalHoldBindings();
 		this.releaseGamepadHoldBindings();
 		this.holdBindings = bindings;
 		if (bindings.length === 0 || this.suspended || !this.initialized) {
-			this.maybeStopGlobalKeyHook();
+			if (routing === null) this.maybeStopGlobalKeyHook();
 			this.refreshGamepadPolling();
 			return;
 		}
-		const electronApi = getElectronAPI();
-		const globalHookAvailable = !!electronApi?.globalKeyHookStart;
-		const wantsGlobal = bindings.some((b) => {
-			const hasGlobalRoutable = !!(b.combo.key || b.combo.code || b.mouseButton != null);
-			return hasGlobalRoutable && (b.combo.global ?? false) && globalHookAvailable;
-		});
-		let globalReady = false;
-		if (wantsGlobal) {
-			globalReady = await this.startGlobalKeyHook('push-to-talk');
-		}
+		const legacyGlobalReady = routing === null && (await this.startLegacyGlobalHoldHook(bindings));
 		let needsLocal = false;
 		for (const binding of bindings) {
 			const hasGlobalRoutable = !!(binding.combo.key || binding.combo.code || binding.mouseButton != null);
-			if (globalReady && hasGlobalRoutable && (binding.combo.global ?? false)) {
+			const wantsGlobal = hasGlobalRoutable && (binding.combo.global ?? false);
+			if (wantsGlobal && routing !== null && this.canRouteHoldBindingGlobally(binding, routing)) {
+				binding.routing = 'global';
+			} else if (wantsGlobal && legacyGlobalReady) {
 				binding.keycode = jsKeyToUiohookKeycode(binding.combo.code ?? binding.combo.key);
 				binding.keyName = keyNameForGlobalHook(binding.combo);
 				binding.physicalKeyName = physicalKeyNameForGlobalHook(binding.combo);
@@ -545,11 +637,156 @@ class KeybindManager {
 				binding.routing = null;
 			}
 		}
-		this.maybeStopGlobalKeyHook();
+		if (routing === null) this.maybeStopGlobalKeyHook();
 		if (needsLocal) {
 			this.attachLocalHoldListener();
 		}
 		this.refreshGamepadPolling();
+	}
+
+	private async startLegacyGlobalHoldHook(bindings: ReadonlyArray<HoldBindingRuntime>): Promise<boolean> {
+		if (!getElectronAPI()?.globalKeyHookStart) return false;
+		const wantsGlobal = bindings.some((binding) => {
+			const hasGlobalRoutable = !!(binding.combo.key || binding.combo.code || binding.mouseButton != null);
+			return hasGlobalRoutable && (binding.combo.global ?? false);
+		});
+		if (!wantsGlobal) return false;
+		return this.startGlobalKeyHook();
+	}
+
+	private attachGlobalShortcuts(api: GlobalShortcutsApi): void {
+		this.globalShortcutsEventUnsubscribe = api.onEvent((event) => this.handleGlobalShortcutEvent(event));
+		void this.enqueueInputSync(() => api.setPaused(this.suspended));
+		this.disposers.push(
+			reaction(
+				() => this.buildGlobalShortcutsSyncPayload(),
+				(payload) => {
+					void this.enqueueInputSync(() => this.syncGlobalShortcuts(api, payload));
+				},
+				{equals: compareStructural, fireImmediately: true},
+			),
+			reaction(
+				() => this.canDedupeGlobalPresses(),
+				() => this.activeGlobalShortcutPressIds.clear(),
+			),
+		);
+	}
+
+	private detachGlobalShortcuts(api: GlobalShortcutsApi): void {
+		this.globalShortcutsEventUnsubscribe?.();
+		this.globalShortcutsEventUnsubscribe = null;
+		const payload: GlobalShortcutsSyncPayload = {bindings: [], actions: this.syncedGlobalActions};
+		this.syncedGlobalSourceIds = new Set();
+		this.syncedSourceIdByHookId = new Map();
+		void this.enqueueInputSync(() => api.sync(payload));
+		const pushToTalkEngaged = Keybind.pushToTalkHeld;
+		const pushToMuteEngaged = Keybind.pushToMuteHeld;
+		Keybind.resetPushToTalkState();
+		Keybind.resetPushToMuteState();
+		if (pushToTalkEngaged) MediaEngine.applyPushToTalkHold(false);
+		if (pushToMuteEngaged) MediaEngine.applyPushToMuteHold(false);
+	}
+
+	private buildGlobalShortcutsSyncPayload(): GlobalShortcutsSyncPayload {
+		const bindings: Array<GlobalShortcutBinding> = [];
+		const seenHookIds = new Set<string>();
+		for (const entry of this.resolvedKeybinds) {
+			if (!entry.allowGlobal || !(entry.combo.global ?? false)) continue;
+			const combo = toGlobalShortcutCombo(entry.combo);
+			if (!combo) continue;
+			const hookId = hookShortcutIdForKeybind(entry);
+			if (hookId === null || seenHookIds.has(hookId)) continue;
+			seenHookIds.add(hookId);
+			bindings.push({
+				sourceId: sourceIdForKeybind(entry),
+				action: entry.action,
+				combo,
+			});
+		}
+		const actions: Array<GlobalShortcutActionDefinition> = [];
+		for (const config of Keybind.getDefaults()) {
+			if (!config.allowGlobal) continue;
+			const hold = isHoldAction(config.action);
+			const preferred = bindings.find(
+				(binding) =>
+					binding.action === config.action &&
+					binding.combo.mouseButton === undefined &&
+					!(hold && comboHasModifiers(binding.combo)),
+			);
+			actions.push({
+				action: config.action,
+				description: config.label,
+				preferredCombo: preferred ? preferred.combo : null,
+			});
+		}
+		return {bindings, actions};
+	}
+
+	private async syncGlobalShortcuts(api: GlobalShortcutsApi, payload: GlobalShortcutsSyncPayload): Promise<void> {
+		if (!this.initialized) return;
+		if (payload.bindings.length > 0) {
+			await this.checkInputMonitoringPermission();
+		}
+		const sourceIds = new Set(payload.bindings.map((binding) => binding.sourceId));
+		const sourceIdByHookId = new Map<string, string>();
+		for (const entry of this.resolvedKeybinds) {
+			const sourceId = sourceIdForKeybind(entry);
+			if (!sourceIds.has(sourceId)) continue;
+			const hookId = hookShortcutIdForKeybind(entry);
+			if (hookId !== null) sourceIdByHookId.set(hookId, sourceId);
+		}
+		this.syncedGlobalSourceIds = sourceIds;
+		this.syncedSourceIdByHookId = sourceIdByHookId;
+		this.syncedGlobalActions = payload.actions;
+		await api.sync(payload);
+	}
+
+	private isSyncedGlobalShortcutSource(event: GlobalShortcutEvent): boolean {
+		if (event.sourceId.startsWith(PORTAL_SOURCE_ID_PREFIX)) {
+			return this.syncedGlobalActions.some((definition) => definition.action === event.action);
+		}
+		return this.syncedGlobalSourceIds.has(event.sourceId);
+	}
+
+	private handleGlobalShortcutEvent(event: GlobalShortcutEvent): void {
+		if (!isKeybindCommand(event.action)) return;
+		const action = event.action;
+		const handler = this.handlers.get(action);
+		if (!handler) return;
+		const payload = {type: event.phase, source: 'global', sourceId: event.sourceId} as const;
+		if (isHoldAction(action)) {
+			if (event.phase === 'press' && (this.suspended || !this.isSyncedGlobalShortcutSource(event))) return;
+			handler(payload);
+			return;
+		}
+		if (event.phase === 'release') {
+			if (!this.activeGlobalShortcutPressIds.delete(event.sourceId)) return;
+			handler(payload);
+			return;
+		}
+		if (!this.isSyncedGlobalShortcutSource(event)) return;
+		if (this.activeGlobalShortcutPressIds.has(event.sourceId)) return;
+		if (this.suspended) return;
+		if (!this.isActionAllowedForCurrentView(action)) return;
+		if (shouldSuppressShortcutForFullscreenMedia()) return;
+		if (Keybind.isActionMuted(action)) return;
+		this.activeGlobalShortcutPressIds.add(event.sourceId);
+		handler(payload);
+	}
+
+	private canDedupeGlobalPresses(): boolean {
+		const backend = GlobalShortcuts.backend;
+		return GlobalShortcuts.hooksActive && backend !== 'portal' && backend !== 'none';
+	}
+
+	private globalPressDedupeId(entry: RuntimeKeybind): string | null {
+		const hookId = hookShortcutIdForKeybind(entry);
+		if (getGlobalShortcutsApi()) {
+			if (!this.canDedupeGlobalPresses() || hookId === null) return null;
+			return this.syncedSourceIdByHookId.get(hookId) ?? null;
+		}
+		if (!(entry.combo.global ?? false)) return null;
+		return hookId !== null && this.registeredGlobalHookShortcutIds.has(hookId) ? hookId : null;
 	}
 
 	private attachLocalHoldListener(): void {
@@ -566,14 +803,14 @@ class KeybindManager {
 					binding.localPressedCodes.add(event.code);
 					const required = this.requiredModifierKeyCount(binding);
 					if (binding.localPressedCodes.size === required) {
-						this.fireHoldHandler(binding, 'press', 'local');
+						this.fireHoldHandler(binding, 'press', 'local', binding.sourceId);
 					}
 					continue;
 				}
 				if (!this.localKeyEventMatchesBinding(binding, event)) continue;
 				if (binding.localActiveCode === event.code) continue;
 				binding.localActiveCode = event.code;
-				this.fireHoldHandler(binding, 'press', 'local');
+				this.fireHoldHandler(binding, 'press', 'local', binding.sourceId);
 			}
 		};
 		const onKeyUp = (event: KeyboardEvent): void => {
@@ -585,13 +822,13 @@ class KeybindManager {
 					const wasAtThreshold = binding.localPressedCodes.size === required;
 					binding.localPressedCodes.delete(event.code);
 					if (wasAtThreshold) {
-						this.fireHoldHandler(binding, 'release', 'local');
+						this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 					}
 					continue;
 				}
 				if (binding.localActiveCode !== event.code) continue;
 				binding.localActiveCode = null;
-				this.fireHoldHandler(binding, 'release', 'local');
+				this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 			}
 		};
 		const onMouseDown = (event: MouseEvent): void => {
@@ -602,7 +839,7 @@ class KeybindManager {
 				if (!this.matchesModifiers(binding, event)) continue;
 				if (binding.localMouseActive) continue;
 				binding.localMouseActive = true;
-				this.fireHoldHandler(binding, 'press', 'local');
+				this.fireHoldHandler(binding, 'press', 'local', binding.sourceId);
 			}
 		};
 		const onMouseUp = (event: MouseEvent): void => {
@@ -612,7 +849,7 @@ class KeybindManager {
 				if (event.button !== binding.mouseButton) continue;
 				if (!binding.localMouseActive) continue;
 				binding.localMouseActive = false;
-				this.fireHoldHandler(binding, 'release', 'local');
+				this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 			}
 		};
 		for (const binding of this.holdBindings) {
@@ -626,19 +863,19 @@ class KeybindManager {
 				if (binding.routing !== 'local') continue;
 				if (binding.localActiveCode !== null) {
 					binding.localActiveCode = null;
-					this.fireHoldHandler(binding, 'release', 'local');
+					this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 				}
 				if (binding.localPressedCodes.size > 0) {
 					const required = this.requiredModifierKeyCount(binding);
 					const wasAtThreshold = binding.localPressedCodes.size >= required;
 					binding.localPressedCodes.clear();
 					if (wasAtThreshold) {
-						this.fireHoldHandler(binding, 'release', 'local');
+						this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 					}
 				}
 				if (binding.localMouseActive) {
 					binding.localMouseActive = false;
-					this.fireHoldHandler(binding, 'release', 'local');
+					this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 				}
 			}
 		};
@@ -682,19 +919,19 @@ class KeybindManager {
 		for (const binding of this.holdBindings) {
 			if (binding.localActiveCode !== null) {
 				binding.localActiveCode = null;
-				this.fireHoldHandler(binding, 'release', 'local');
+				this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 			}
 			if (binding.localPressedCodes.size > 0) {
 				const required = this.requiredModifierKeyCount(binding);
 				const wasAtThreshold = binding.localPressedCodes.size >= required;
 				binding.localPressedCodes.clear();
 				if (wasAtThreshold) {
-					this.fireHoldHandler(binding, 'release', 'local');
+					this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 				}
 			}
 			if (binding.localMouseActive) {
 				binding.localMouseActive = false;
-				this.fireHoldHandler(binding, 'release', 'local');
+				this.fireHoldHandler(binding, 'release', 'local', binding.sourceId);
 			}
 			binding.localKeyDown = null;
 			binding.localKeyUp = null;
@@ -810,23 +1047,24 @@ class KeybindManager {
 			if (type === 'press' && shouldSuppressLocalShortcutForModalFocus(binding, event.target ?? null)) continue;
 			const id = hookShortcutIdForKeybind(binding);
 			if (!id) continue;
-			const isRegisteredGlobalShortcut = this.isHookShortcutRegistered(binding);
+			const globalPressId = this.globalPressDedupeId(binding);
+			const sourceId = sourceIdForKeybind(binding);
 			if (type === 'release') {
 				if (!this.activeLocalShortcutPressIds.delete(id)) continue;
-				if (isRegisteredGlobalShortcut) {
-					this.activeGlobalShortcutPressIds.delete(id);
+				if (globalPressId !== null) {
+					this.activeGlobalShortcutPressIds.delete(globalPressId);
 				}
-				this.fireShortcutHandler(binding, type, 'local', {shiftKey: event.shiftKey});
+				this.fireShortcutHandler(binding, type, 'local', sourceId, {shiftKey: event.shiftKey});
 				continue;
 			}
 			if (!this.comboModifiersMatch(combo, event)) continue;
 			if (this.activeLocalShortcutPressIds.has(id)) continue;
-			if (isRegisteredGlobalShortcut) {
-				if (this.activeGlobalShortcutPressIds.has(id)) continue;
-				this.activeGlobalShortcutPressIds.add(id);
+			if (globalPressId !== null) {
+				if (this.activeGlobalShortcutPressIds.has(globalPressId)) continue;
+				this.activeGlobalShortcutPressIds.add(globalPressId);
 			}
 			this.activeLocalShortcutPressIds.add(id);
-			this.fireShortcutHandler(binding, type, 'local', {shiftKey: event.shiftKey});
+			this.fireShortcutHandler(binding, type, 'local', sourceId, {shiftKey: event.shiftKey});
 		}
 	}
 
@@ -848,13 +1086,9 @@ class KeybindManager {
 		for (const shortcut of comboToCombokeysStrings(entry.combo)) {
 			this.activeLocalShortcutPressIds.delete(shortcut);
 		}
-		const registeredHookShortcutId = hookShortcutIdForKeybind(entry);
-		if (
-			(entry.combo.global ?? false) &&
-			registeredHookShortcutId &&
-			this.registeredGlobalHookShortcutIds.has(registeredHookShortcutId)
-		) {
-			this.activeGlobalShortcutPressIds.delete(registeredHookShortcutId);
+		const globalPressId = this.globalPressDedupeId(entry);
+		if (globalPressId !== null) {
+			this.activeGlobalShortcutPressIds.delete(globalPressId);
 		}
 	}
 
@@ -884,7 +1118,7 @@ class KeybindManager {
 			if (!keyboardEventStartsComboPress(entry.combo, event, {isMacOS})) continue;
 			if (this.activeLocalShortcutPressIds.has(id)) {
 				if (
-					this.isHookShortcutRegistered(entry) ||
+					this.globalPressDedupeId(entry) !== null ||
 					!keyboardEventCanRecoverStaleMacMetaPress(entry.combo, event, {isMacOS})
 				) {
 					continue;
@@ -1013,7 +1247,7 @@ class KeybindManager {
 		for (const binding of this.holdBindings) {
 			if (binding.gamepadHeld) {
 				binding.gamepadHeld = false;
-				this.fireHoldHandler(binding, 'release', 'local');
+				this.fireHoldHandler(binding, 'release', 'local', binding.gamepadSourceId);
 			}
 		}
 	}
@@ -1021,7 +1255,7 @@ class KeybindManager {
 	private releaseGamepadShortcutStates(): void {
 		for (const {binding, pressed} of this.gamepadShortcutStates.values()) {
 			if (pressed) {
-				this.fireShortcutHandler(binding, 'release', 'local');
+				this.fireShortcutHandler(binding, 'release', 'local', gamepadSourceIdForKeybind(binding));
 			}
 		}
 		this.gamepadShortcutStates.clear();
@@ -1058,7 +1292,7 @@ class KeybindManager {
 			const pressed = this.isGamepadButtonPressed(pads, target);
 			if (pressed === binding.gamepadHeld) continue;
 			binding.gamepadHeld = pressed;
-			this.fireHoldHandler(binding, pressed ? 'press' : 'release', 'local');
+			this.fireHoldHandler(binding, pressed ? 'press' : 'release', 'local', binding.gamepadSourceId);
 		}
 		for (const binding of this.localGamepadShortcutKeybinds) {
 			if (!this.isActionAllowedForCurrentView(binding.action)) continue;
@@ -1069,7 +1303,7 @@ class KeybindManager {
 			const previous = this.gamepadShortcutStates.get(id)?.pressed ?? false;
 			if (pressed === previous) continue;
 			this.gamepadShortcutStates.set(id, {binding, pressed});
-			this.fireShortcutHandler(binding, pressed ? 'press' : 'release', 'local');
+			this.fireShortcutHandler(binding, pressed ? 'press' : 'release', 'local', gamepadSourceIdForKeybind(binding));
 		}
 	}
 
@@ -1082,22 +1316,30 @@ class KeybindManager {
 		return false;
 	}
 
-	private fireHoldHandler(binding: HoldBindingRuntime, type: 'press' | 'release', source: ShortcutSource): void {
+	private fireHoldHandler(
+		binding: HoldBindingRuntime,
+		type: 'press' | 'release',
+		source: ShortcutSource,
+		sourceId: string,
+	): void {
 		const handler = this.handlers.get(binding.action);
 		if (!handler) return;
 		if (type === 'press') {
 			if (this.suspended) return;
-			if (!this.isActionAllowedForCurrentView(binding.action)) return;
-			if (shouldSuppressShortcutForFullscreenMedia()) return;
-			if (Keybind.isActionMuted(binding.action)) return;
+			if (source === 'local') {
+				if (!this.isActionAllowedForCurrentView(binding.action)) return;
+				if (shouldSuppressShortcutForFullscreenMedia()) return;
+				if (Keybind.isActionMuted(binding.action)) return;
+			}
 		}
-		handler({type, source});
+		handler({type, source, sourceId});
 	}
 
 	private fireShortcutHandler(
 		binding: RuntimeKeybind,
 		type: 'press' | 'release',
 		source: ShortcutSource,
+		sourceId: string,
 		options: {shiftKey?: boolean} = {},
 	): void {
 		if (this.suspended) return;
@@ -1106,13 +1348,20 @@ class KeybindManager {
 		if (Keybind.isActionMuted(binding.action)) return;
 		const handler = this.handlers.get(binding.action);
 		if (!handler) return;
-		handler({type, source, shiftKey: options.shiftKey});
+		handler({type, source, sourceId, shiftKey: options.shiftKey});
 	}
 
 	async reapplyGlobalShortcuts() {
 		if (!this.initialized) return;
-		await this.enqueueInputSync(() => this.applyGlobalShortcuts(this.computeDesiredGlobalHookShortcuts()));
-		await this.enqueueInputSync(() => this.applyHoldBindings(this.buildHoldBindings()));
+		const globalShortcutsApi = getGlobalShortcutsApi();
+		if (globalShortcutsApi) {
+			const payload = this.buildGlobalShortcutsSyncPayload();
+			await this.enqueueInputSync(() => this.syncGlobalShortcuts(globalShortcutsApi, payload));
+		} else {
+			await this.enqueueInputSync(() => this.applyGlobalShortcuts(this.computeDesiredGlobalHookShortcuts()));
+		}
+		this.rebuildHoldBindings();
+		await this.inputSyncQueue;
 	}
 
 	destroy() {
@@ -1120,6 +1369,11 @@ class KeybindManager {
 		this.initialized = false;
 		this.disposers.forEach((dispose) => dispose());
 		this.disposers = [];
+		GlobalShortcuts.detach();
+		const globalShortcutsApi = getGlobalShortcutsApi();
+		if (globalShortcutsApi) {
+			this.detachGlobalShortcuts(globalShortcutsApi);
+		}
 		if (this.globalKeybindTriggeredUnsubscribe) {
 			this.globalKeybindTriggeredUnsubscribe();
 			this.globalKeybindTriggeredUnsubscribe = null;
@@ -1145,7 +1399,7 @@ class KeybindManager {
 		this.combokeys = null;
 	}
 
-	async startGlobalKeyHook(reason: LinuxInputAccessNagbarReason = 'global-hotkeys'): Promise<boolean> {
+	private async startGlobalKeyHook(): Promise<boolean> {
 		const electronApi = getElectronAPI();
 		if (!electronApi?.globalKeyHookStart) return false;
 		if (this.globalKeyHookStarted) return true;
@@ -1153,19 +1407,8 @@ class KeybindManager {
 			return false;
 		}
 		const started = await electronApi.globalKeyHookStart();
-		if (!started) {
-			if (NativePermission.isLinuxWaylandDesktop) {
-				void NativePermission.recheckLinuxInputAccess();
-				NativePermission.requestLinuxInputAccessNagbar(reason);
-			}
-			return false;
-		}
+		if (!started) return false;
 		this.globalKeyHookStarted = true;
-		if (NativePermission.isLinuxWaylandDesktop) {
-			void NativePermission.recheckLinuxInputAccess().then((status) => {
-				if (status === 'blocked') NativePermission.requestLinuxInputAccessNagbar(reason);
-			});
-		}
 		const keyEventUnsub = electronApi.onGlobalKeyEvent?.((event) => {
 			this.handleGlobalKeyEvent(
 				event as {
@@ -1222,11 +1465,15 @@ class KeybindManager {
 				if (!this.isActionAllowedForCurrentView(keybind.action)) return;
 				if (event.type === 'keydown' && shouldSuppressShortcutForFullscreenMedia()) return;
 				if (Keybind.isActionMuted(keybind.action)) return;
-				handler({type: event.type === 'keydown' ? 'press' : 'release', source: 'global'});
+				handler({
+					type: event.type === 'keydown' ? 'press' : 'release',
+					source: 'global',
+					sourceId: `legacy:${event.id}`,
+				});
 			}) ?? null;
 	}
 
-	stopGlobalKeyHook(): void {
+	private stopGlobalKeyHook(): void {
 		const electronApi = getElectronAPI();
 		this.globalKeyHookUnsubscribes.forEach((unsub) => unsub());
 		this.globalKeyHookUnsubscribes = [];
@@ -1251,7 +1498,7 @@ class KeybindManager {
 			if (!keybind || !HOLD_ACTIONS.includes(keybind.action as HoldAction)) continue;
 			const handler = this.handlers.get(keybind.action);
 			if (handler) {
-				handler({type: 'release', source: 'global'});
+				handler({type: 'release', source: 'global', sourceId: `legacy:${id}`});
 			}
 		}
 	}
@@ -1265,11 +1512,11 @@ class KeybindManager {
 			if (binding.routing !== 'global') continue;
 			if (binding.pressedKeycodes.size > 0) {
 				binding.pressedKeycodes.clear();
-				this.fireHoldHandler(binding, 'release', 'global');
+				this.fireHoldHandler(binding, 'release', 'global', legacyHoldSourceId(binding));
 			}
 			if (binding.globalMouseActive) {
 				binding.globalMouseActive = false;
-				this.fireHoldHandler(binding, 'release', 'global');
+				this.fireHoldHandler(binding, 'release', 'global', legacyHoldSourceId(binding));
 			}
 		}
 	}
@@ -1316,14 +1563,14 @@ class KeybindManager {
 				if (binding.pressedKeycodes.has(event.keycode)) return;
 				binding.pressedKeycodes.add(event.keycode);
 				if (binding.pressedKeycodes.size === requiredCount) {
-					this.fireHoldHandler(binding, 'press', 'global');
+					this.fireHoldHandler(binding, 'press', 'global', legacyHoldSourceId(binding));
 				}
 			} else {
 				if (!binding.pressedKeycodes.has(event.keycode)) return;
 				const wasAtThreshold = binding.pressedKeycodes.size === requiredCount;
 				binding.pressedKeycodes.delete(event.keycode);
 				if (wasAtThreshold) {
-					this.fireHoldHandler(binding, 'release', 'global');
+					this.fireHoldHandler(binding, 'release', 'global', legacyHoldSourceId(binding));
 				}
 			}
 			return;
@@ -1332,13 +1579,13 @@ class KeybindManager {
 		if (!this.globalKeyEventMatchesHoldBinding(binding, event)) return;
 		if (event.type === 'keyup') {
 			if (!binding.pressedKeycodes.delete(event.keycode)) return;
-			this.fireHoldHandler(binding, 'release', 'global');
+			this.fireHoldHandler(binding, 'release', 'global', legacyHoldSourceId(binding));
 			return;
 		}
 		if (!this.globalHoldModifiersMatch(binding, event)) return;
 		if (binding.pressedKeycodes.has(event.keycode)) return;
 		binding.pressedKeycodes.add(event.keycode);
-		this.fireHoldHandler(binding, 'press', 'global');
+		this.fireHoldHandler(binding, 'press', 'global', legacyHoldSourceId(binding));
 	}
 
 	private globalKeyEventMatchesHoldBinding(
@@ -1422,33 +1669,48 @@ class KeybindManager {
 			if (event.type === 'mouseup') {
 				if (!binding.globalMouseActive) continue;
 				binding.globalMouseActive = false;
-				this.fireHoldHandler(binding, 'release', 'global');
+				this.fireHoldHandler(binding, 'release', 'global', legacyHoldSourceId(binding));
 				continue;
 			}
 			if (!this.globalHoldModifiersMatch(binding, event)) continue;
 			if (binding.globalMouseActive) continue;
 			binding.globalMouseActive = true;
-			this.fireHoldHandler(binding, 'press', 'global');
+			this.fireHoldHandler(binding, 'press', 'global', legacyHoldSourceId(binding));
 		}
 	}
 
 	suspend(): void {
+		const wasSuspended = this.suspended;
 		this.manualSuspendCount += 1;
 		this.combokeys?.reset();
 		this.releaseHoldBindingsForSuspension();
 		this.detachLocalEditableShortcutCaptureListener();
+		const globalShortcutsApi = getGlobalShortcutsApi();
+		if (globalShortcutsApi) {
+			if (!wasSuspended && this.initialized) {
+				void this.enqueueInputSync(() => globalShortcutsApi.setPaused(true));
+			}
+			return;
+		}
 		void this.enqueueInputSync(() => {
 			this.stopGlobalKeyHook();
 		});
 	}
 
 	resume(): void {
+		const wasSuspended = this.suspended;
 		this.manualSuspendCount = Math.max(0, this.manualSuspendCount - 1);
-		if (!this.suspended) {
-			this.refreshLocalShortcuts();
+		if (this.suspended) return;
+		this.refreshLocalShortcuts();
+		const globalShortcutsApi = getGlobalShortcutsApi();
+		if (globalShortcutsApi) {
+			if (wasSuspended && this.initialized) {
+				void this.enqueueInputSync(() => globalShortcutsApi.setPaused(false));
+			}
+		} else {
 			void this.enqueueInputSync(() => this.applyGlobalShortcuts(this.computeDesiredGlobalHookShortcuts()));
-			void this.enqueueInputSync(() => this.applyHoldBindings(this.buildHoldBindings()));
 		}
+		this.rebuildHoldBindings();
 	}
 
 	isSuspended(): boolean {
@@ -1458,18 +1720,21 @@ class KeybindManager {
 	private setRouteSuspended(value: boolean): void {
 		if (this.routeSuspended === value) return;
 		this.routeSuspended = value;
+		const globalShortcutsApi = getGlobalShortcutsApi();
 		if (value) {
 			this.combokeys?.reset();
-			this.releaseHoldBindingsForSuspension();
+			this.detachLocalHoldListener();
+			this.releaseGamepadHoldBindings();
 			this.detachLocalEditableShortcutCaptureListener();
-			void this.enqueueInputSync(() => {
-				this.stopGlobalKeyHook();
-			});
 		}
 		if (!this.suspended) {
 			this.refreshLocalShortcuts();
-			void this.enqueueInputSync(() => this.applyGlobalShortcuts(this.computeDesiredGlobalHookShortcuts()));
-			void this.enqueueInputSync(() => this.applyHoldBindings(this.buildHoldBindings()));
+			if (!globalShortcutsApi) {
+				void this.enqueueInputSync(() => this.applyGlobalShortcuts(this.computeDesiredGlobalHookShortcuts()));
+			}
+			if (!this.localHoldListenerAttached && this.holdBindings.some((binding) => binding.routing === 'local')) {
+				this.attachLocalHoldListener();
+			}
 		}
 	}
 
@@ -1534,15 +1799,6 @@ class KeybindManager {
 		const hookKeybind = currentKeybinds.find((keybind) => hookShortcutIdForKeybind(keybind) === id);
 		if (hookKeybind) return hookKeybind;
 		return null;
-	}
-
-	private isHookShortcutRegistered(binding: RuntimeKeybind): boolean {
-		return this.isHookShortcutIdRegistered(binding.action, binding.combo);
-	}
-
-	private isHookShortcutIdRegistered(action: KeybindCommand, combo: KeyCombo): boolean {
-		const id = hookShortcutIdForAction(action, combo);
-		return id !== null && this.registeredGlobalHookShortcutIds.has(id);
 	}
 
 	private computeDesiredGlobalHookShortcuts(): Map<string, KeyCombo> {
@@ -1611,11 +1867,11 @@ class KeybindManager {
 			if (hookShortcutIdForAction(binding.action, binding.combo) !== shortcutId) continue;
 			if (binding.pressedKeycodes.size > 0) {
 				binding.pressedKeycodes.clear();
-				this.fireHoldHandler(binding, 'release', 'global');
+				this.fireHoldHandler(binding, 'release', 'global', legacyHoldSourceId(binding));
 			}
 			if (binding.globalMouseActive) {
 				binding.globalMouseActive = false;
-				this.fireHoldHandler(binding, 'release', 'global');
+				this.fireHoldHandler(binding, 'release', 'global', legacyHoldSourceId(binding));
 			}
 		}
 	}
@@ -1737,7 +1993,6 @@ class KeybindManager {
 		const {combo, action} = entry;
 		const requiresKeyboardMode = entry.requiresKeyboardMode ?? false;
 		const requiresMessageFocus = entry.requiresMessageFocus ?? false;
-		const registeredHookShortcutId = hookShortcutIdForKeybind(entry);
 		const handler = this.handlers.get(action);
 		if (!handler) return false;
 		if (type === 'press' && event.repeat) return false;
@@ -1748,11 +2003,6 @@ class KeybindManager {
 		}
 		if (this.shouldIgnoreLocalShortcutEvent(entry, event)) return false;
 		if (Keybind.isActionMuted(action)) return false;
-		const isRegisteredGlobalShortcut = Boolean(
-			(combo.global ?? false) &&
-				registeredHookShortcutId &&
-				this.registeredGlobalHookShortcutIds.has(registeredHookShortcutId),
-		);
 		if (requiresKeyboardMode && !KeyboardMode.keyboardModeEnabled) {
 			return false;
 		}
@@ -1771,17 +2021,19 @@ class KeybindManager {
 			}
 			focusedChannel = MessageFocus.getFocusedChannel();
 		}
-		if (isRegisteredGlobalShortcut && registeredHookShortcutId) {
+		const globalPressId = this.globalPressDedupeId(entry);
+		if (globalPressId !== null) {
 			if (type === 'press') {
-				if (this.activeGlobalShortcutPressIds.has(registeredHookShortcutId)) return false;
-				this.activeGlobalShortcutPressIds.add(registeredHookShortcutId);
+				if (this.activeGlobalShortcutPressIds.has(globalPressId)) return false;
+				this.activeGlobalShortcutPressIds.add(globalPressId);
 			} else {
-				this.activeGlobalShortcutPressIds.delete(registeredHookShortcutId);
+				this.activeGlobalShortcutPressIds.delete(globalPressId);
 			}
 		}
 		handler({
 			type,
 			source: 'local',
+			sourceId: sourceIdForKeybind(entry),
 			context: focusedMessage ? {focusedMessage, focusedChannel} : undefined,
 			shiftKey: event.shiftKey,
 		});
