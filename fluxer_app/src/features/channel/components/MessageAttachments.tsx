@@ -14,6 +14,7 @@ import {useMessageViewContext} from '@app/features/channel/components/MessageVie
 import {ThemeEmbed} from '@app/features/channel/components/ThemeEmbed';
 import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWithTooltip';
 import type {Channel} from '@app/features/channel/models/Channel';
+import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
 import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
@@ -55,14 +56,7 @@ import type {
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {
-	ArrowBendUpRightIcon,
-	CaretRightIcon,
-	HashIcon,
-	MegaphoneSimpleIcon,
-	NotePencilIcon,
-	SpeakerHighIcon,
-} from '@phosphor-icons/react';
+import {ArrowBendUpRightIcon, CaretRightIcon, NotePencilIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -179,34 +173,11 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 				</div>
 			);
 		}
-		if (sourceChannel.type === ChannelTypes.GUILD_VOICE) {
-			return (
-				<SpeakerHighIcon
-					className={styles.forwardedSourceIcon}
-					weight="fill"
-					size={iconSize}
-					data-flx="channel.message-attachments.render-channel-icon.forwarded-source-icon--2"
-				/>
-			);
-		}
-		if (sourceChannel.type === ChannelTypes.GUILD_ANNOUNCEMENT) {
-			return (
-				<MegaphoneSimpleIcon
-					className={styles.forwardedSourceIcon}
-					weight="bold"
-					size={iconSize}
-					data-flx="channel.message-attachments.render-channel-icon.forwarded-source-icon--4"
-				/>
-			);
-		}
-		return (
-			<HashIcon
-				className={styles.forwardedSourceIcon}
-				weight="bold"
-				size={iconSize}
-				data-flx="channel.message-attachments.render-channel-icon.forwarded-source-icon--3"
-			/>
-		);
+		return ChannelUtils.getIcon(sourceChannel, {
+			className: styles.forwardedSourceIcon,
+			weight: 'bold',
+			size: iconSize,
+		});
 	}, [sourceChannel, sourceUser]);
 	if (!hasAccessToSource || !sourceChannel || !displayName || !message.messageReference) {
 		return null;
