@@ -7,6 +7,7 @@ import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {GlobalSearchService} from '@app/api/search/GlobalSearchService';
+import {normalizeQuotedPhrases} from '@app/api/search/SearchQuotedPhrases';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -58,7 +59,8 @@ export class SearchService {
 		data: GlobalSearchMessagesRequest;
 	}): Promise<MessageSearchResponse> {
 		const {userId, requestCache, data} = params;
-		const {channel_id, channel_ids, context_channel_id, context_guild_id, ...searchParams} = data;
+		const {channel_id, channel_ids, context_channel_id, context_guild_id, ...rawSearchParams} = data;
+		const searchParams = normalizeQuotedPhrases(rawSearchParams);
 		const contextChannelId = context_channel_id ? createChannelID(context_channel_id) : null;
 		const contextGuildId = context_guild_id ? createGuildID(context_guild_id) : null;
 		const channelIds = (channel_ids ?? channel_id)?.map((id) => createChannelID(id)) ?? [];
