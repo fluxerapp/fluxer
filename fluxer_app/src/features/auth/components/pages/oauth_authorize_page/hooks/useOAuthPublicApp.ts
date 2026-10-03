@@ -39,6 +39,11 @@ export function useOAuthPublicApp(clientId: string | null): PublicAppState {
 				const resp = await http.get<PublicAppData>(Endpoints.OAUTH_PUBLIC_APPLICATION(clientId));
 				if (cancelled) return;
 				const currentUser = resp.body.current_user;
+				if (currentUserId && !currentUser) {
+					logger.warn('OAuth public app fetch returned no current user for a signed-in account');
+					setState({status: 'session_expired', data: null, error: null});
+					return;
+				}
 				if (currentUser && currentUser.id === currentUserId) {
 					const userData = authResponseUserToUserData(currentUser);
 					if (userData) {

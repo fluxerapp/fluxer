@@ -29,6 +29,7 @@ import {
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
 import type {BotPermissionOption} from '@app/features/permissions/utils/PermissionUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -388,6 +389,12 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 			setSubmitting(null);
 			setSubmitError(i18n._(AUTHORIZATION_FAILED_DESCRIPTOR));
 		} catch (err) {
+			if (err instanceof HttpError && err.status === 401) {
+				logger.warn('OAuth consent returned 401', err);
+				setSubmitting(null);
+				dispatch({type: 'INIT_SESSION_EXPIRED'});
+				return;
+			}
 			logger.error('Authorization failed', err);
 			setSubmitting(null);
 			setSubmitError(failureMessage(err) ?? i18n._(AUTHORIZATION_FAILED_DESCRIPTOR));
