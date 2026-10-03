@@ -74,7 +74,6 @@ const STATIC_ASSET_PREFIXES: &[&str] = &[
     "/avatars/",
     "/badges/",
     "/desktop/",
-    "/embeds/",
     "/emoji/",
     "/libs/",
     "/marketing/",

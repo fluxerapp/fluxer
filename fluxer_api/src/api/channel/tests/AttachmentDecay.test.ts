@@ -76,7 +76,7 @@ describe('Attachment Decay', () => {
 		const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 		const channelId = guild.system_channel_id ?? channel.id;
 		const file1Data = loadFixture('yeah.png');
-		const file2Data = loadFixture('thisisfine.gif');
+		const file2Data = loadFixture('animated.gif');
 		const {response, json} = await sendMessageWithAttachments(
 			harness,
 			account.token,
@@ -258,7 +258,7 @@ describe('Attachment Decay', () => {
 		const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 		const channelId = guild.system_channel_id ?? channel.id;
 		const smallFile = loadFixture('yeah.png');
-		const largeFile = loadFixture('thisisfine.gif');
+		const largeFile = loadFixture('animated.gif');
 		const smallResult = await sendMessageWithAttachments(
 			harness,
 			account.token,

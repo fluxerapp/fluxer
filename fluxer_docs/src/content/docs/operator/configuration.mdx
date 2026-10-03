@@ -174,7 +174,7 @@ The API and worker validate endpoint URLs at startup. The Gateway endpoint requi
 
 #### `FLUXER_STATIC_CDN_DOMAIN`
 
-Default empty. A separate host for static assets. When set, the static endpoint of `api` and `worker` is forced to `https` with no port. Only `api` and `worker` read it, so set `FLUXER_STATIC_CDN_ENDPOINT` to the same origin as well for `admin`, `app-proxy`, `gateway` and `unfurl`. Compose forwards it from `.env`.
+Default empty. A separate host for static assets. When set, the static endpoint of `api` and `worker` is forced to `https` with no port. Only `api` and `worker` read it, so set `FLUXER_STATIC_CDN_ENDPOINT` to the same origin as well for `admin`, `app-proxy` and `gateway`. Compose forwards it from `.env`.
 
 #### `FLUXER_INVITE_DOMAIN`
 
@@ -210,7 +210,7 @@ Defaults to the derived endpoint. The public Media Proxy URL. The `gifs` service
 
 #### `FLUXER_STATIC_CDN_ENDPOINT`
 
-Defaults to the derived endpoint. The static asset origin. Read by `api`, `worker`, `admin`, `app-proxy`, and `unfurl`. Compose forwards it from `.env`. When it is unset, `admin` and `unfurl-shard` get the public origin, and every other service derives it itself.
+Defaults to the derived endpoint. The static asset origin. Read by `api`, `worker`, `admin`, and `app-proxy`. Compose forwards it from `.env`. When it is unset, `admin` gets the public origin, and every other service derives it itself.
 
 #### `FLUXER_ADMIN_ENDPOINT`
 
@@ -251,10 +251,6 @@ No default. The internal Media Proxy address. `unfurl-shard` reads this name alo
 #### `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT`
 
 No default. The public Media Proxy URL used by `gifs`, `unfurl`, and `media-proxy`. `gifs` requires this or `FLUXER_MEDIA_ENDPOINT` to start. Set it on `media-proxy` so requests for its own assets use local storage instead of an HTTP round trip. For `api` and `worker`, use `FLUXER_MEDIA_ENDPOINT` instead. Compose forwards it from `.env` to every app service. When it is unset, they get `FLUXER_MEDIA_ENDPOINT`, or the public media URL when that is unset too.
-
-#### `FLUXER_UNFURL_STATIC_CDN_ENDPOINT`
-
-Falls back to `FLUXER_STATIC_CDN_ENDPOINT`. The static origin used by `unfurl`. Read only by `unfurl`. Compose forwards it from `.env` to `unfurl-shard`.
 
 ## The edge
 
@@ -1082,7 +1078,7 @@ Default `development`. The runtime mode. `development`, `production`, or `test`.
 
 #### `FLUXER_SELF_HOSTED`
 
-Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, and turns blocklist feeds off.
+Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, turns blocklist feeds off, and keeps hosted-only artwork from `fluxer.app` out of the app, webhook avatars and link embeds.
 
 `/_metrics` on `api`, `media-proxy`, `gateway`, and `push`, plus the Gateway's `/_health/ready`, `/_health/drain`, and `/_health/undrain`, are gated to loopback peers, so no proxy reaches them. The probes that work from outside are `/api/_health`, `/gateway/_health`, `/media/_health`, and the edge's own `/_health`.
 

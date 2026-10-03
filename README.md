@@ -26,7 +26,7 @@
 Fluxer is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.
 
 <p align="center">
-  <img src="./fluxer_static/marketing/screenshots/desktop-readme-1920w.png" alt="Fluxer running side by side on a desktop monitor and a phone" width="640">
+  <img src="https://fluxer.app/static/img/screenshots-desktop-readme-1920w.70cb6ce340007e0a.png" alt="Fluxer running side by side on a desktop monitor and a phone" width="640">
 </p>
 
 ## Download
@@ -143,14 +143,13 @@ Full setup notes, including canary, are in the [Linux repositories documentation
 
 The source is licensed under the [AGPL-3.0-or-later](./LICENSE) license.
 
-Fluxer branding, icons, default avatars, badge artwork, screenshots and marketing
-imagery are copyright Fluxer, all rights reserved, as set out in
-[fluxer_static/LICENSE](./fluxer_static/LICENSE). Third-party material keeps its own
-terms, listed in
+Fluxer artwork, such as the logo, icons, badges and default avatars, is
+licensed under [CC BY-SA 4.0](./fluxer_static/LICENSE). Third-party material
+keeps its own terms, listed in
 [fluxer_static/THIRD_PARTY_LICENSES.md](./fluxer_static/THIRD_PARTY_LICENSES.md).
 
-Public availability of this repository does not grant trademark, brand, or
-endorsement rights.
+Use of the Fluxer name and logo is covered by the
+[name and marks policy](./.github/GOVERNANCE.md#name-and-marks).
 
 [win-setup-x64]: https://pkgs.fluxer.com/desktop/stable/win32/x64/latest/setup
 [win-setup-arm64]: https://pkgs.fluxer.com/desktop/stable/win32/arm64/latest/setup

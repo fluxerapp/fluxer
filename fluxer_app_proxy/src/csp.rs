@@ -96,6 +96,7 @@ const FRAME_SOURCES: &[&str] = &[
 
 const IMAGE_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
+    "https://fluxer.app",
     "https://i.ytimg.com",
     "https://*.youtube.com",
     "https://*.fluxer.media",
@@ -104,6 +105,7 @@ const IMAGE_SOURCES: &[&str] = &[
 
 const MEDIA_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
+    "https://fluxer.app",
     "https://*.youtube.com",
     "https://*.fluxer.media",
     "https://fluxer.media",
@@ -432,6 +434,24 @@ mod tests {
         assert!(csp.contains("object-src 'none'"));
         assert!(csp.contains("base-uri 'self'"));
         assert!(csp.contains("frame-ancestors 'none'"));
+    }
+
+    #[test]
+    fn build_csp_allows_the_apex_domain_for_images_and_media() {
+        let config = default_csp_config();
+        let csp = build_csp(&config, &[hash_of("boot()")], &runtime_sources());
+        for name in ["img-src ", "media-src "] {
+            let directive = csp
+                .split("; ")
+                .find(|directive| directive.starts_with(name))
+                .expect("directive");
+            assert!(
+                directive
+                    .split(' ')
+                    .any(|source| source == "https://fluxer.app"),
+                "{name}must allow the apex domain: {directive}"
+            );
+        }
     }
 
     #[test]

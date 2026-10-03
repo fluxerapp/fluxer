@@ -95,20 +95,6 @@ pub const PROXY_ROUTES: &[ProxyRoute] = &[
         alternate_ports: &[],
     },
     ProxyRoute {
-        prefix: "/marketing/pwa-install",
-        host: LOOPBACK_HOST,
-        port: APP_PROXY_PORT,
-        strip_prefix: false,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
-        prefix: "/marketing/screenshots",
-        host: LOOPBACK_HOST,
-        port: APP_PROXY_PORT,
-        strip_prefix: false,
-        alternate_ports: &[],
-    },
-    ProxyRoute {
         prefix: "/assets",
         host: LOOPBACK_HOST,
         port: APP_PORT,

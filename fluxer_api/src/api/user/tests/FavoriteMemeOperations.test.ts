@@ -244,7 +244,7 @@ describe('Favorite Meme Operations', () => {
 			attachment_id: message1.attachments[0].id,
 			name: 'First Meme',
 		});
-		const message2 = await createMessageWithImageAttachment(harness, account.token, channel.id, 'thisisfine.gif');
+		const message2 = await createMessageWithImageAttachment(harness, account.token, channel.id, 'animated.gif');
 		await createFavoriteMemeFromMessage(harness, account.token, channel.id, message2.id, {
 			attachment_id: message2.attachments[0].id,
 			name: 'Second Meme',

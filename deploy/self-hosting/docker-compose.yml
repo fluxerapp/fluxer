@@ -845,8 +845,6 @@ services:
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_MEDIA_PROXY_ENDPOINT: http://media-proxy:8080
-      FLUXER_UNFURL_STATIC_CDN_ENDPOINT: ${FLUXER_UNFURL_STATIC_CDN_ENDPOINT:-}
-      FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_STATIC_CDN_ENDPOINT:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}}
     healthcheck: *fluxer-svc-healthcheck
     depends_on:
       nats: {condition: service_healthy}

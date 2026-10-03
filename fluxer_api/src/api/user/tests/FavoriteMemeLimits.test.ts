@@ -113,13 +113,13 @@ describe('Favorite Meme Limits', () => {
 			attachment_id: message1.attachments[0].id,
 			name: 'PNG Meme',
 		});
-		const message2 = await createMessageWithImageAttachment(harness, account.token, channel.id, 'thisisfine.gif');
+		const message2 = await createMessageWithImageAttachment(harness, account.token, channel.id, 'animated.gif');
 		const meme2 = await createFavoriteMemeFromMessage(harness, account.token, channel.id, message2.id, {
 			attachment_id: message2.attachments[0].id,
 			name: 'GIF Meme',
 		});
 		expect(meme2.id).toBeTruthy();
-		expect(meme2.filename).toBe('thisisfine.gif');
+		expect(meme2.filename).toBe('animated.gif');
 	});
 	test('should return error for invalid attachment id', async () => {
 		const account = await createTestAccountForAttachmentTests(harness);

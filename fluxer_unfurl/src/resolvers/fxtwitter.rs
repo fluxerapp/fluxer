@@ -1073,7 +1073,7 @@ mod tests {
             http_client: reqwest::Client::new(),
             nsfw_mode: crate::types::NsfwMode::Block,
             media_proxy,
-            static_cdn_endpoint: "https://static.example.test",
+            self_hosted: false,
             youtube_api_key: None,
             klipy_api_key: None,
         }
