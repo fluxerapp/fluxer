@@ -28,7 +28,9 @@ export_handoff_state(State) ->
             virtual_channel_access_preserve, State, #{}
         ),
         virtual_channel_access_move_pending =>
-            maps:get(virtual_channel_access_move_pending, State, #{})
+            maps:get(virtual_channel_access_move_pending, State, #{}),
+        virtual_channel_access_view_only =>
+            maps:get(virtual_channel_access_view_only, State, #{})
     }.
 
 -spec derived_data_keys() -> [atom() | binary()].

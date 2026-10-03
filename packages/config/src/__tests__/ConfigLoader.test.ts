@@ -692,7 +692,7 @@ describe('ConfigLoader', () => {
 		}
 	});
 
-	test('rejects a cache purge endpoint that carries credentials', async () => {
+	test('rejects a cache purge endpoint that contains credentials', async () => {
 		stubMinimalEnv({
 			FLUXER_CACHE_PURGE_ADAPTER: 'http',
 			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purger:secret@purge.internal/purge',
@@ -869,7 +869,7 @@ describe('ConfigLoader', () => {
 		expect(config.integrations.voice.url).toBe('http://localhost:8088/livekit');
 	});
 
-	test('inserts the public port into every other public url the config carries', async () => {
+	test('inserts the public port into every other public url the config contains', async () => {
 		stubMinimalEnv({
 			FLUXER_S3_PUBLIC_ENDPOINT: 'http://localhost/s3',
 			FLUXER_EMAIL_APP_BASE_URL: 'http://localhost',

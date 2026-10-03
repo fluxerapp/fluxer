@@ -86,7 +86,7 @@ No permission applies.
 
 Outside a development instance, Fluxer also rejects a URL that omits a top-level domain.
 
-Explicit media can carry `CONTAINS_EXPLICIT_MEDIA` in its [flags](/http-api/messages/#attachment-flags). Klipy media is not classified. Message previews in channels that permit explicit media can have different flags.
+Explicit media can have `CONTAINS_EXPLICIT_MEDIA` in its [flags](/http-api/messages/#attachment-flags). Klipy media is not classified. Message previews in channels that permit explicit media can have different flags.
 
 :::note[This route applies none of the message-path filtering]
 It resolves precisely the URL in the request body and returns the complete resolver output, with no URL extraction, no embed cap, and no banned-content scan.

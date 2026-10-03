@@ -280,7 +280,7 @@ export async function resetPassword(
 		await ctx.services.botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 	}
 	await AuthSession.terminateAllUserSessions(ctx, user.id);
-	await users.deletePasswordResetToken(data.token);
+	await users.deleteAllPasswordResetTokens(user.id);
 	if (hasMfa) {
 		return await createMfaTicketResponse(ctx, updatedUser, webauthnIsSecondFactor);
 	}

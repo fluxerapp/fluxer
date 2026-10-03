@@ -279,7 +279,9 @@ grant_virtual_access_if_needed(UserId, ChannelId, State) ->
         true ->
             State;
         false ->
-            State1 = guild_virtual_channel_access:add_virtual_access(UserId, ChannelId, State),
+            State1 = guild_virtual_channel_access:add_view_only_access(
+                UserId, ChannelId, State
+            ),
             guild_virtual_channel_access:clear_pending_join(UserId, ChannelId, State1)
     end.
 
@@ -325,7 +327,9 @@ maybe_grant_virtual_access(UserId, ChannelId, State) ->
         true ->
             {State, true};
         false ->
-            State1 = guild_virtual_channel_access:add_virtual_access(UserId, ChannelId, State),
+            State1 = guild_virtual_channel_access:add_view_only_access(
+                UserId, ChannelId, State
+            ),
             State2 = guild_virtual_channel_access:clear_pending_join(UserId, ChannelId, State1),
             {State2, true}
     end.

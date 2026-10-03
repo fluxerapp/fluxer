@@ -61,7 +61,7 @@ export type AdminBlocklistEntryListQuery = z.infer<typeof AdminBlocklistEntryLis
 const AdminBlocklistTypeResponse = z.object({
 	list_type: AdminBlocklistListType,
 	description: z.string().describe('What the blocklist matches and how matching is performed'),
-	value_field: z.string().describe('The request body field that carries the entry value when adding to this blocklist'),
+	value_field: z.string().describe('The request body field that holds the entry value when adding to this blocklist'),
 	fields: z.array(z.string()).max(8).describe('Fields entries of this blocklist accept beyond the value itself'),
 	scoped: z.boolean().describe('Whether entries are scoped to a profile field and a scope must be supplied'),
 	supports_bulk_create: z.boolean().describe('Whether PUT on the entry collection is accepted'),

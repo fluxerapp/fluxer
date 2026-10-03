@@ -9,7 +9,8 @@
     reply_voice_server_pid/1,
     clear_stale_cached_voice_states/2,
     authoritative_voice_states/1,
-    cast_disconnect_voice_user/2
+    cast_disconnect_voice_user/2,
+    cast_disconnect_all_voice_users_in_channel/2
 ]).
 
 -type guild_state() :: map().
@@ -186,6 +187,22 @@ cast_disconnect_voice_user(UserId, State) when is_integer(UserId), UserId > 0 ->
             ok
     end;
 cast_disconnect_voice_user(_UserId, _State) ->
+    ok.
+
+-spec cast_disconnect_all_voice_users_in_channel(integer() | undefined, guild_state()) -> ok.
+cast_disconnect_all_voice_users_in_channel(ChannelId, State) when
+    is_integer(ChannelId), ChannelId > 0
+->
+    case voice_server_pid(State) of
+        {ok, VoiceServerPid} ->
+            gen_server:cast(
+                VoiceServerPid,
+                {disconnect_all_voice_users_in_channel, #{channel_id => ChannelId}}
+            );
+        error ->
+            ok
+    end;
+cast_disconnect_all_voice_users_in_channel(_ChannelId, _State) ->
     ok.
 
 -spec voice_server_pid(guild_state()) -> {ok, pid()} | error.

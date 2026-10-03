@@ -613,7 +613,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_not_found_carrying_a_long_upstream_lifetime_is_rewritten_to_no_store() {
+    async fn a_not_found_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
         let response = proxied_asset(
             StatusCode::NOT_FOUND,
             "public, max-age=31536000, immutable",
@@ -630,7 +630,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_bad_gateway_carrying_a_long_upstream_lifetime_is_rewritten_to_no_store() {
+    async fn a_bad_gateway_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
         let response = proxied_asset(
             StatusCode::BAD_GATEWAY,
             "public, max-age=604800",
@@ -646,7 +646,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_server_error_carrying_a_long_upstream_lifetime_is_rewritten_to_no_store() {
+    async fn a_server_error_with_a_long_upstream_lifetime_is_rewritten_to_no_store() {
         let response = proxied_asset(
             StatusCode::INTERNAL_SERVER_ERROR,
             "public, max-age=86400, immutable",
@@ -779,7 +779,7 @@ mod tests {
         )
         .await;
         assert_eq!(cors_origin_of(&first), Some(CORS_ALLOW_ANY_VALUE));
-        let entity_tag = entity_tag_of(&first).expect("first response carries a validator");
+        let entity_tag = entity_tag_of(&first).expect("first response has a validator");
 
         let mut conditional = HeaderMap::new();
         conditional.insert(
@@ -875,7 +875,7 @@ mod tests {
             test_asset_csp(),
         )
         .await;
-        let entity_tag = entity_tag_of(&first).expect("first response carries a validator");
+        let entity_tag = entity_tag_of(&first).expect("first response has a validator");
 
         let mut conditional = HeaderMap::new();
         conditional.insert(
@@ -1083,7 +1083,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_precompressed_variant_carries_its_own_validator() {
+    async fn a_precompressed_variant_has_its_own_validator() {
         let fixture = LocalAssetDir::with_asset("f00dcafe12345678.css", b"body{}")
             .and_sibling("f00dcafe12345678.css.br", b"brotli-bytes-are-longer");
 
@@ -1095,7 +1095,7 @@ mod tests {
             test_asset_csp(),
         )
         .await;
-        let brotli_tag = entity_tag_of(&brotli).expect("the brotli variant carries a validator");
+        let brotli_tag = entity_tag_of(&brotli).expect("the brotli variant has a validator");
 
         let identity = serve_local_asset(
             &budgets(),
@@ -1105,7 +1105,7 @@ mod tests {
             test_asset_csp(),
         )
         .await;
-        let identity_tag = entity_tag_of(&identity).expect("the raw file carries a validator");
+        let identity_tag = entity_tag_of(&identity).expect("the raw file has a validator");
 
         assert_ne!(
             brotli_tag, identity_tag,
@@ -1305,7 +1305,7 @@ mod tests {
         assert_eq!(
             body_bytes(response).await,
             b"already brotli, and long enough to clear the thirty-two byte floor",
-            "re-encoding upstream bytes that already carry an encoding breaks every browser"
+            "re-encoding upstream bytes that already have an encoding breaks every browser"
         );
     }
 
@@ -1536,7 +1536,7 @@ mod tests {
         assert_eq!(
             body.as_ref(),
             b"console.log(1)",
-            "a response served past the read slot count carried the wrong bytes"
+            "a response served past the read slot count had the wrong bytes"
         );
     }
 }

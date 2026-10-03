@@ -132,7 +132,7 @@ describe('Favorite Meme Operations', () => {
 		expect(sent.attachments[0].filename).toBe(filename);
 		expect(sent.attachments[0].flags & MessageAttachmentFlags.IS_ANIMATED).toBe(MessageAttachmentFlags.IS_ANIMATED);
 	});
-	test('should carry the saved placeholder onto the sent attachment', async () => {
+	test('should copy the saved placeholder onto the sent attachment', async () => {
 		const account = await createTestAccountForAttachmentTests(harness);
 		const {channel} = await setupTestGuildAndChannel(harness, account);
 		const message = await createMessageWithImageAttachment(harness, account.token, channel.id);

@@ -3437,7 +3437,7 @@ mod tests {
     }
 
     #[test]
-    fn mention_context_carries_embed_user_ids_for_message_and_snapshots() {
+    fn mention_context_includes_embed_user_ids_for_message_and_snapshots() {
         let message: Message = serde_json::from_value(json!({
             "message_id": "10",
             "channel_id": "20",
@@ -4055,7 +4055,7 @@ mod tests {
         assert!(!url.contains("/external/"), "{url}");
         assert!(!url.ends_with('&'), "{url}");
         assert!(!url.contains("&&"), "{url}");
-        let query = url.split_once('?').expect("a signed url carries a query").1;
+        let query = url.split_once('?').expect("a signed url has a query").1;
         assert_eq!(
             fluxer_common::attachment_url_signature::Verdict::Valid,
             fluxer_common::attachment_url_signature::verify(
@@ -4156,9 +4156,9 @@ mod tests {
                 &options,
                 &ResponseContext::default(),
             )
-            .expect("an attachment carrying an id maps");
+            .expect("an attachment with an id maps");
 
-        let url = mapped.url.expect("a live attachment carries a url");
+        let url = mapped.url.expect("a live attachment has a url");
         assert_eq!(Some(url.clone()), mapped.proxy_url);
         assert_signs(
             &url,
@@ -4169,7 +4169,7 @@ mod tests {
     }
 
     #[test]
-    fn an_own_url_whose_filename_carries_a_slash_is_signed() {
+    fn an_own_url_whose_filename_contains_a_slash_is_signed() {
         let options = signing_options();
         let now = SIGNED_ANCHOR_SECS + 10;
         let key = "attachments/1544725486800732163/1544971349200470016/a/b.gif";
@@ -4189,7 +4189,7 @@ mod tests {
             );
             let query = signed
                 .split_once('?')
-                .expect("a signed url carries a query")
+                .expect("a signed url has a query")
                 .1;
             assert_eq!(
                 fluxer_common::attachment_url_signature::Verdict::Valid,
@@ -4271,23 +4271,23 @@ mod tests {
 
         let now = now_epoch_secs();
         let base = mapped.base;
-        let author = base.author.expect("the embed carries an author");
-        let provider = base.provider.expect("the embed carries a provider");
-        let footer = base.footer.expect("the embed carries a footer");
-        let image = base.image.expect("the embed carries an image");
-        let thumbnail = base.thumbnail.expect("the embed carries a thumbnail");
+        let author = base.author.expect("the embed has an author");
+        let provider = base.provider.expect("the embed has a provider");
+        let footer = base.footer.expect("the embed has a footer");
+        let image = base.image.expect("the embed has an image");
+        let thumbnail = base.thumbnail.expect("the embed has a thumbnail");
         for signed in [
-            base.url.expect("the embed carries a url"),
-            author.url.expect("the author carries a url"),
-            author.icon_url.expect("the author carries an icon url"),
+            base.url.expect("the embed has a url"),
+            author.url.expect("the author has a url"),
+            author.icon_url.expect("the author has an icon url"),
             author
                 .proxy_icon_url
-                .expect("the author carries a proxy icon url"),
-            provider.url.expect("the provider carries a url"),
-            footer.icon_url.expect("the footer carries an icon url"),
+                .expect("the author has a proxy icon url"),
+            provider.url.expect("the provider has a url"),
+            footer.icon_url.expect("the footer has an icon url"),
             footer
                 .proxy_icon_url
-                .expect("the footer carries a proxy icon url"),
+                .expect("the footer has a proxy icon url"),
             image.url.clone(),
             image.proxy_url.clone(),
             thumbnail.url,
@@ -4321,11 +4321,11 @@ mod tests {
         );
         assert_eq!(
             Some("https://example.com/author".to_owned()),
-            base.author.expect("the embed carries an author").url
+            base.author.expect("the embed has an author").url
         );
         assert_eq!(
             Some("https://example.com".to_owned()),
-            base.provider.expect("the embed carries a provider").url
+            base.provider.expect("the embed has a provider").url
         );
     }
 
@@ -4360,7 +4360,7 @@ mod tests {
         assert!(!signed.contains("/external/"), "{signed}");
         let query = signed
             .split_once('?')
-            .expect("a signed url carries a query")
+            .expect("a signed url has a query")
             .1
             .split_once('#')
             .expect("the fragment is kept")
@@ -4430,7 +4430,7 @@ mod tests {
                 &options,
                 &ResponseContext::default(),
             )
-            .expect("an attachment carrying an id maps");
+            .expect("an attachment with an id maps");
 
         assert_eq!(Some(unsigned.clone()), mapped.url);
         assert_eq!(Some(unsigned.clone()), mapped.proxy_url);
@@ -4483,7 +4483,7 @@ mod tests {
             let signed = media_proxy_url_at(input, &options, now);
             let query = signed
                 .split_once('?')
-                .expect("a signed url carries a query")
+                .expect("a signed url has a query")
                 .1;
             assert_eq!(
                 fluxer_common::attachment_url_signature::Verdict::Valid,
@@ -4669,7 +4669,7 @@ mod tests {
         );
         let url = attachment["url"]
             .as_str()
-            .expect("a live attachment carries a url");
+            .expect("a live attachment has a url");
         assert_eq!(attachment["proxy_url"], attachment["url"]);
         assert_eq!(attachment["id"], json!(SIGNED_ATTACHMENT_ID.to_string()));
         assert_eq!(
@@ -4677,7 +4677,7 @@ mod tests {
             url.split_once("ex=").map(|(head, _)| head.to_owned()),
             "{url}"
         );
-        let query = url.split_once('?').expect("a signed url carries a query").1;
+        let query = url.split_once('?').expect("a signed url has a query").1;
         assert_eq!(
             fluxer_common::attachment_url_signature::Verdict::Valid,
             fluxer_common::attachment_url_signature::verify(

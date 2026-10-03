@@ -214,7 +214,7 @@ describe('publisher data channels before negotiation', () => {
 		return {engine, created};
 	}
 
-	it('creates them on a renegotiation that already carries transceivers', async () => {
+	it('creates them on a renegotiation that already has transceivers', async () => {
 		const {engine, created} = engineWithPublisherChannels(false);
 		await engine.negotiate();
 		expect(created).toEqual(['publisher']);

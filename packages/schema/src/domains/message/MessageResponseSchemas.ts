@@ -166,7 +166,7 @@ export interface MessageResponse extends MessageBaseResponse {
 
 export const MessageResponseSchema = MessageBaseResponseSchema.extend({
 	referenced_message: MessageBaseResponseSchema.nullish().describe(
-		'The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message carries no default reference. Clients must tell null apart from absent by key presence.',
+		'The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence.',
 	),
 });
 const ChannelPinMessageResponse = MessageResponseSchema.omit({

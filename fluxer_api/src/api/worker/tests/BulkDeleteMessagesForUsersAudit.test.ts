@@ -84,7 +84,7 @@ describe('Bulk delete messages for users', () => {
 		return messages.filter((message) => message.author.id === userId).length;
 	}
 
-	it('carries the admin reason and the message count on the per-user audit row', async () => {
+	it('records the admin reason and the message count on the per-user audit row', async () => {
 		const {owner, members, systemChannel} = await setupTestGuildWithMembers(harness, 1);
 		const member = members[0]!;
 		await sendChannelMessage(harness, member.token, systemChannel.id, 'first spam');

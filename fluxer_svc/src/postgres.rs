@@ -876,7 +876,7 @@ mod tests {
     }
 
     #[test]
-    fn carries_the_prepared_statement_switch_onto_the_client() {
+    fn passes_the_prepared_statement_switch_onto_the_client() {
         let mut config = test_postgres_config("fluxer_kv");
         config.prepared_statements = false;
         let pg = PgConfig::from_str("postgres://fluxer@127.0.0.1:5432/fluxer").unwrap();

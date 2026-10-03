@@ -23,7 +23,7 @@ export async function useCheapCaptcha(): Promise<void> {
 
 export async function solveCaptchaChallenge(body: CaptchaErrorBody): Promise<string> {
 	const challenge = body.altcha_challenge;
-	if (!challenge) throw new Error('The response carried no ALTCHA challenge');
+	if (!challenge) throw new Error('The response had no ALTCHA challenge');
 	const solution = await solveChallenge({challenge, deriveKey, timeout: 0});
 	if (!solution) throw new Error('The ALTCHA challenge was not solved');
 	const payload = {challenge: {parameters: challenge.parameters, signature: challenge.signature}, solution};

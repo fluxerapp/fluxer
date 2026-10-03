@@ -707,7 +707,7 @@ mod tests {
     }
 
     #[test]
-    fn the_boot_html_api_endpoint_keeps_a_port_it_already_carries() {
+    fn the_boot_html_api_endpoint_keeps_a_port_it_already_has() {
         assert_eq!(
             resolve_bootstrap_endpoint_from_pairs(&[
                 (

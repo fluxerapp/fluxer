@@ -307,7 +307,7 @@ describe('ensureVideoDDExtension', () => {
 		expect(ddOf(sdp, '1')).toBe(13);
 	});
 
-	it('leaves a section that already carries the extension alone', () => {
+	it('leaves a section that already has the extension alone', () => {
 		const sdp = parse(`${singlePcOffer}\na=extmap:3 ${ddExtensionURI}`);
 		expect(ensureVideoDDExtension(sectionOf(sdp, '2'), sdp, 0)).toBe(3);
 		expect(sectionOf(sdp, '2').ext).toHaveLength(2);

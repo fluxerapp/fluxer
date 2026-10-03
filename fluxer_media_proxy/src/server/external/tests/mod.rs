@@ -460,7 +460,7 @@ fn external_verbatim_range_forwards_the_upstream_partial_unchanged() {
     );
 
     let multipart = validate_external_partial(multi, None, Some(4096), 100)
-        .expect("a multipart partial carries no Content-Range");
+        .expect("a multipart partial has no Content-Range");
     assert_eq!(None, multipart.content_length());
     assert_eq!(None, multipart.header_value());
 }

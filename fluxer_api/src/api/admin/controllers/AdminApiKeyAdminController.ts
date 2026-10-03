@@ -146,7 +146,7 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 			security: ['adminApiKey'],
 			tags: ['Admin'],
 			description:
-				'Renames an API key or replaces the access control lists (ACLs) it carries. The key may only carry permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.',
+				'Renames an API key or replaces the access control lists (ACLs) it has. The key may only hold permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.',
 		}),
 		async (ctx) => {
 			const adminApiKeyService = ctx.get('adminApiKeyService');

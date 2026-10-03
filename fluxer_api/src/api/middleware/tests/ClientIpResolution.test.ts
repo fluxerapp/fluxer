@@ -102,7 +102,7 @@ describe('client ip resolution across the request pipeline', () => {
 		expect(pipeline.resolutions[0]?.ip).toBe('203.0.113.10');
 		expect(pipeline.resolutions[1]?.ip).toBe('203.0.113.10');
 	});
-	it('rejects an invalid trusted header even when the configured header carries a valid address', async () => {
+	it('rejects an invalid trusted header even when the configured header contains a valid address', async () => {
 		const pipeline = createPipeline('x-real-ip');
 		const response = await pipeline.request({'x-forwarded-for': '203.0.113.10', 'x-real-ip': 'not-an-ip'});
 		expect(response.status).toBe(403);

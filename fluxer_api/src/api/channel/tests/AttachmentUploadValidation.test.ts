@@ -100,7 +100,7 @@ describe('Attachment Upload Validation', () => {
 								status: HTTP_STATUS.SERVICE_UNAVAILABLE,
 							}),
 							method: 'POST',
-							path: `/channels/${channelId}/messages`,
+							path: '/channels/:channel_id/messages',
 							requestId: expect.any(String),
 							status: HTTP_STATUS.SERVICE_UNAVAILABLE,
 						},

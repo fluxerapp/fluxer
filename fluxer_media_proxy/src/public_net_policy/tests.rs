@@ -217,7 +217,7 @@ fn public_urls_are_restricted_to_the_standard_web_ports() {
 }
 
 #[test]
-fn urls_carrying_a_fragment_are_rejected() {
+fn urls_with_a_fragment_are_rejected() {
     assert_eq!(
         Err(Error::BlockedUrl),
         validate_url("https://example.com/a#section")
@@ -278,4 +278,38 @@ fn a_resolver_rejection_is_recognisable_however_deeply_the_transport_wraps_it() 
     assert!(!is_pinned_dns_failure(&std::io::Error::other(
         "tcp connect error"
     )));
+}
+
+#[test]
+fn url_validation_uses_the_canonical_ipv4_host() {
+    for url in [
+        "http://0x7f.0x0.0x0.0x1/",
+        "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/",
+        "http://169.254.169.0xfe/latest/meta-data/",
+        "http://127.0.0.0x1/",
+        "http://0xa.0x0.0x0.0x1/",
+        "http://0xc0.0xa8.0x0.0x1/",
+        "http://0x0.0x0.0x0.0x0/",
+        "http://0x7f000001/",
+        "http://2130706433/",
+        "http://0177.0.0.1/",
+        "http://0x7f.1/",
+        "http://127.1/",
+        "https://0XA9.0XFE.0XA9.0XFE./",
+    ] {
+        assert_eq!(Err(Error::BlockedUrl), validate_url(url), "{url}");
+    }
+    assert_eq!(Ok(()), validate_url("https://0x8.0x8.0x8.0x8/a"));
+}
+
+#[test]
+fn redirect_targets_are_checked_on_their_canonical_host() {
+    let next = resolve_redirect(
+        "https://example.com/start.gif",
+        "http://0xa9.0xfe.0xa9.0xfe/latest/meta-data/",
+    )
+    .unwrap();
+    assert_eq!(Err(Error::BlockedUrl), validate_url(&next));
+    let next = resolve_redirect("https://example.com/start.gif", "//0x7f.0x0.0x0.0x1/a").unwrap();
+    assert_eq!(Err(Error::BlockedUrl), validate_url(&next));
 }

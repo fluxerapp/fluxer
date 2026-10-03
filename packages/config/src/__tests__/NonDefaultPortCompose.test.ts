@@ -207,7 +207,7 @@ describe('the shipped compose stack expanded on a non-default port', () => {
 		expect(starved).toEqual([]);
 	});
 
-	test('every public URL the stack hands a browser carries the port', () => {
+	test('every public URL the stack hands a browser includes the port', () => {
 		const entries = serviceNames
 			.filter((service) => !SERVICES_WITHOUT_ENDPOINT_REPAIR.has(service))
 			.flatMap((service) => repairedPublicUrls(service, PORT_ONLY_ENV));
@@ -226,7 +226,7 @@ describe('the shipped compose stack expanded on a non-default port', () => {
 	});
 });
 
-describe('a public origin carrying a port while FLUXER_PUBLIC_PORT stays standard', () => {
+describe('a public origin with a port while FLUXER_PUBLIC_PORT stays standard', () => {
 	beforeEach(() => {
 		resetConfig();
 	});
@@ -236,7 +236,7 @@ describe('a public origin carrying a port while FLUXER_PUBLIC_PORT stays standar
 		vi.unstubAllEnvs();
 	});
 
-	test('the compose overrides all carry the origin port', () => {
+	test('the compose overrides all include the origin port', () => {
 		const environment = expandedEnvironment('api', ORIGIN_ONLY_ENV);
 		const entries = publicUrlNames(environment).map((name): [string, string] => [name, environment[name]]);
 		expect(entries.length).toBeGreaterThan(0);

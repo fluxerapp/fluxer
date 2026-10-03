@@ -38,7 +38,7 @@ const MAIN_SPEC_EXEMPT = new Map<string, {file: string; anchor: string; reason: 
 		{
 			file: 'fluxer_api/src/api/openapi/OpenAPIController.ts',
 			anchor: "app.get('/openapi.json'",
-			reason: 'the handler serves the spec file itself and carries no OpenAPI({...}) block',
+			reason: 'the handler serves the spec file itself and has no OpenAPI({...}) block',
 		},
 	],
 	[
@@ -1154,7 +1154,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		for (const row of shellRows(fn, 'KEYS', label)) {
 			const parsed = row.match(/^([A-Z][A-Z0-9_]*) ([a-z0-9_]+)(?: .*)?$/u);
 			if (parsed == null) {
-				problems.push(`${label} carries the row \`${row}\`, which is not "NAME kind"`);
+				problems.push(`${label} has the row \`${row}\`, which is not "NAME kind"`);
 				continue;
 			}
 			keys.set(parsed[1], parsed[2]);
@@ -1167,7 +1167,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		for (const row of powershellRows(variable, label)) {
 			const parsed = row.match(/^\s*@\{Name = '([A-Z][A-Z0-9_]*)'; Kind = '([a-z0-9_]+)'/u);
 			if (parsed == null) {
-				problems.push(`${label} carries the row \`${row.trim()}\`, which is not an @{Name; Kind} entry`);
+				problems.push(`${label} has the row \`${row.trim()}\`, which is not an @{Name; Kind} entry`);
 				continue;
 			}
 			keys.set(parsed[1], parsed[2]);
@@ -1291,7 +1291,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const row of powershellRows('FluxerStackFiles', 'the install.ps1 download list')) {
 		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
 		if (parsed == null) {
-			problems.push(`the install.ps1 download list carries \`${row.trim()}\`, which is not a quoted file name`);
+			problems.push(`the install.ps1 download list has \`${row.trim()}\`, which is not a quoted file name`);
 			continue;
 		}
 		powershellStackFiles.push(parsed[1]);
@@ -1314,7 +1314,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const row of powershellRows('FluxerComposeNames', 'the install.ps1 compose name list')) {
 		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
 		if (parsed == null) {
-			problems.push(`the install.ps1 compose name list carries \`${row.trim()}\`, which is not a quoted file name`);
+			problems.push(`the install.ps1 compose name list has \`${row.trim()}\`, which is not a quoted file name`);
 			continue;
 		}
 		powershellComposeNames.push(parsed[1]);
@@ -1391,7 +1391,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const [where, text] of digestBearing) {
 		if (/\b[0-9a-f]{64}\b/u.test(text)) {
 			problems.push(
-				`${where} carries a literal 64-character hex digest, which goes stale the next time a script changes`,
+				`${where} contains a literal 64-character hex digest, which goes stale the next time a script changes`,
 			);
 		}
 	}

@@ -290,7 +290,7 @@ mod tests {
         let reason = response
             .extensions()
             .get::<ErrorReason>()
-            .expect("a refusal carries an error reason")
+            .expect("a refusal has an error reason")
             .clone();
         assert_eq!("cors_origin_denied", reason.code);
         assert_eq!(

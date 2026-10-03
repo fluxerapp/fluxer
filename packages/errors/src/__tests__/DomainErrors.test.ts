@@ -188,7 +188,7 @@ describe('PremiumPurchaseBlockedError', () => {
 		});
 	});
 
-	it('carries the blocking provider when one is given', () => {
+	it('includes the blocking provider when one is given', () => {
 		const error = new PremiumPurchaseBlockedError('existing_subscription', {provider: 'app_store'});
 
 		expect(error.toJSON()).toEqual({

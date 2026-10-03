@@ -14,11 +14,11 @@
 #
 # Why one script and not a separate upgrader: an upgrade needs the host checks,
 # the stack download, the readiness poll and the health probe that the install
-# already carries. A second script either copies them or drifts from them, and
+# already has. A second script either copies them or drifts from them, and
 # the operator has two downloads and two checksums to verify instead of one.
 # The modes share one contract, one digest and one set of exit codes.
 #
-# This file is also the procedure. Every step of the upgrade carries the command
+# This file is also the procedure. Every step of the upgrade includes the command
 # an operator types to do that step by hand, and the reason the step exists.
 #
 # Read this file before you run it. The default mode writes .env, which holds
@@ -86,7 +86,7 @@ FLUXER_DUMP_FILE='fluxer.dump'
 # with it.
 FLUXER_VOLUME_HEADROOM=110
 
-# The keys .env carries, in the order they are written. The installer iterates
+# The keys .env holds, in the order they are written. The installer iterates
 # these two lists, so a key that leaves a list is a key the installer stops
 # writing. The docs CI parses the same text and compares it against
 # deploy/self-hosting/.env.example.
@@ -801,7 +801,7 @@ fluxer_fetch_stack() {
 # upgrade refreshes them itself.
 #
 # A refreshed docker-compose.yml can declare a variable the running .env does not
-# carry. Compose writes ${NAME:?message} for a variable the stack requires and
+# define. Compose writes ${NAME:?message} for a variable the stack requires and
 # stops with that message until .env sets it, and ${NAME:-default} for one that
 # needs nothing from the operator. Every optional override ships commented out in
 # .env.example, so a new required key is the only kind that asks for an edit.
@@ -900,7 +900,7 @@ fluxer_generate_vapid() {
 # operator knows. The five other non-secret keys in the list above ship correct
 # in .env.example and need no edit.
 #
-# Every secret in .env.example carries the literal CHANGE_ME. A key whose name
+# Every secret in .env.example contains the literal CHANGE_ME. A key whose name
 # ends in _BASE64 takes openssl rand -base64 32, every other key takes
 # openssl rand -hex 32, and the VAPID pair comes from the generator above.
 #
@@ -1412,7 +1412,7 @@ $(fluxer_indent_file "$fluxer_scratch/inspect-err" '  ')"
 	sort -u "$fluxer_scratch/inspected"
 }
 
-# The recorded ID for one reference, or nothing when no container carries it.
+# The recorded ID for one reference, or nothing when no container uses it.
 fluxer_recorded_id_for() {
 	awk -v fluxer_want="$1" '$1 == fluxer_want {print $2; exit}' "$fluxer_scratch/running"
 }
@@ -1427,7 +1427,7 @@ fluxer_recorded_id_for() {
 #
 # The reference list comes from Compose and the ID under each reference comes
 # from the container running it, for the reason in fluxer_running_image_ids. A
-# reference no container carries is recorded as `-`, which a rollback skips,
+# reference no container uses is recorded as `-`, which a rollback skips,
 # because a version that was not running is not a version to go back to.
 #
 # By hand:
@@ -1770,7 +1770,7 @@ fluxer_prepare_record() {
 	mkdir -m 700 "$fluxer_record"
 }
 
-# Record names carry a UTC stamp, so the shell expands the glob in byte order
+# Record names include a UTC stamp, so the shell expands the glob in byte order
 # and the last match is the most recent upgrade.
 fluxer_newest_record() {
 	fluxer_newest=''
@@ -2008,7 +2008,7 @@ fluxer_set_image_tag() {
 #
 # Two shapes, depending on what the upgrade moved:
 #
-#   A pinned tag moved, so the old images still carry their own tag. The tag goes
+#   A pinned tag moved, so the old images still have their own tag. The tag goes
 #   back into .env and Compose finds them.
 #
 #     By hand: set FLUXER_IMAGE_TAG back, then docker compose up -d

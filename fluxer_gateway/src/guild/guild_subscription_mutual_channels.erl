@@ -292,7 +292,7 @@ test_channel(ChannelId, Overwrites) ->
     }.
 
 %% Session user 10 and members 20 and 21 reach channel 500 through the viewer role.
-%% Members 30, 31, 99 and 4242 all carry the same roles term and reach only channel
+%% Members 30, 31, 99 and 4242 all have the same roles term and reach only channel
 %% 600 by role, but 99 holds virtual access to 500 and 4242 is a user-overwrite
 %% target on 500, so both must still come out true. Member 7 owns the guild.
 test_state() ->

@@ -251,7 +251,7 @@ mod tests {
     }
 
     #[test]
-    fn shipped_shell_carries_no_nonce_attribute_or_placeholder() {
+    fn shipped_shell_has_no_nonce_attribute_or_placeholder() {
         assert!(!SHIPPED_APP_SHELL.contains("nonce"));
         assert!(!SHIPPED_APP_SHELL.contains("{{CSP_NONCE_PLACEHOLDER}}"));
     }
@@ -375,7 +375,7 @@ mod tests {
     }
 
     #[test]
-    fn media_preconnect_carries_no_crossorigin_attribute() {
+    fn media_preconnect_has_no_crossorigin_attribute() {
         assert!(!MEDIA_PRECONNECT_TAG.contains("crossorigin"));
     }
 
@@ -464,7 +464,7 @@ mod tests {
     }
 
     #[test]
-    fn a_configured_endpoint_that_already_carries_a_port_is_left_alone() {
+    fn a_configured_endpoint_that_already_has_a_port_is_left_alone() {
         let discovery = discovery_offering("https://chat.example.test:8443/api");
         assert_eq!(
             api_public_endpoint(Some("https://chat.example.test:9443/api"), &discovery),

@@ -183,9 +183,9 @@ pub(super) fn encode_vips_image(
 
 pub(super) fn resolve_animation_loop_count(
     image: &VipsImageHandle<'_>,
-    carried: Option<u32>,
+    source_loop_count: Option<u32>,
 ) -> u32 {
-    if let Some(loop_count) = carried {
+    if let Some(loop_count) = source_loop_count {
         return loop_count;
     }
     let field = c"loop";

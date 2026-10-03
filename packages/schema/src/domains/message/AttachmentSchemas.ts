@@ -69,7 +69,7 @@ export const RefreshedAttachmentUrl = z.object({
 	original: z.string().describe('The requested URL, echoed back unchanged'),
 	refreshed: z
 		.string()
-		.describe('The same URL carrying a fresh signature, or the original when it is not an attachment URL of ours'),
+		.describe('The same URL with a fresh signature, or the original when it is not an attachment URL of ours'),
 });
 
 export type RefreshedAttachmentUrl = z.infer<typeof RefreshedAttachmentUrl>;

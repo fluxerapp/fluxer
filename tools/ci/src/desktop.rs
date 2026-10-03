@@ -2884,7 +2884,7 @@ fn assert_fluxer_signed(row: &SignatureRow) -> Result<()> {
     );
     ensure!(
         row.ts_subject.is_some(),
-        "Authenticode signature carries no RFC3161 timestamp"
+        "Authenticode signature has no RFC3161 timestamp"
     );
     let subject = row
         .subject

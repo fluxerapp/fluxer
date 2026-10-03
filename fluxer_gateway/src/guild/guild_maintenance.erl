@@ -604,7 +604,7 @@ prune_overwrite(TargetId, Type) ->
         <<"deny">> => <<"0">>
     }.
 
-%% Members 30, 31, 99 and 4242 all carry the same roles term and reach only channel 600
+%% Members 30, 31, 99 and 4242 all have the same roles term and reach only channel 600
 %% through it, but 99 holds virtual access to channel 500 and 4242 is a user-overwrite
 %% target on 500, so neither may be answered from that term. Member 7 owns the guild,
 %% 777 is subscribed without being a member, and session s3 has no cached viewable map.

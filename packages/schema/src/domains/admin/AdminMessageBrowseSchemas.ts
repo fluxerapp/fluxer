@@ -55,7 +55,7 @@ export const AdminMessageSearchQuery = z.object({
 		'Return the single message with this ID together with its surrounding context; ignores every other filter',
 	),
 	attachment_id: SnowflakeType.optional().describe(
-		'Return the single message carrying this attachment together with its surrounding context; requires filename',
+		'Return the single message with this attachment together with its surrounding context; requires filename',
 	),
 	filename: FilenameType.optional().describe('The filename of the attachment named by attachment_id'),
 	context_limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 100}).describe(

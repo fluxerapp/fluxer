@@ -177,7 +177,7 @@ export class RestClient {
 		this.state.globalIntercept = hooks.intercept;
 	}
 
-	carriesAuthorization(): boolean {
+	hasAuthorization(): boolean {
 		return !isOffOrigin(resolveUrl(this.state, '/', undefined));
 	}
 

@@ -35,7 +35,11 @@ import type {
 	EmailChangeApplyRequest,
 	UserUpdateWithVerificationRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import type {UserPrivateResponse, UserProfileFullResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import type {
+	UserPrivateResponse,
+	UserProfileFullResponse,
+	UserUpdateResponse,
+} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {Context} from 'hono';
 
 type UserUpdatePayload = Omit<
@@ -127,7 +131,7 @@ export class UserAccountRequestService {
 		user: User;
 		body: UserUpdateWithVerificationRequest;
 		authSession: AuthSession;
-	}): Promise<UserPrivateResponse> {
+	}): Promise<UserUpdateResponse> {
 		const {ctx, body, authSession} = params;
 		const {user} = params;
 		const oldEmail = user.email;
@@ -180,7 +184,7 @@ export class UserAccountRequestService {
 				throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
 			}
 		}
-		const updatedUser = await this.userAccountService.update({
+		const {user: updatedUser, authSessionReplacement} = await this.userAccountService.update({
 			user,
 			oldAuthSession: authSession,
 			data: userUpdateData,
@@ -224,7 +228,15 @@ export class UserAccountRequestService {
 				Logger.warn({error, userId: updatedUser.id}, 'Failed to issue email revert token');
 			}
 		}
-		return mapUserToPrivateResponse(updatedUser);
+		const response = mapUserToPrivateResponse(updatedUser);
+		if (!authSessionReplacement) {
+			return response;
+		}
+		return {
+			...response,
+			token: authSessionReplacement.token,
+			auth_session_id_hash: authSessionReplacement.authSessionIdHash,
+		};
 	}
 
 	async applyEmailChange(params: {

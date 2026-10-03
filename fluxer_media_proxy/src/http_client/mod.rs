@@ -173,7 +173,7 @@ mod tests {
     }
 
     #[test]
-    fn default_options_carry_the_frozen_timeout_and_retry_budget() {
+    fn default_options_keep_the_frozen_timeout_and_retry_budget() {
         let options = HTTPClientOptions::default();
         assert_eq!(options.connect_timeout_ms, millis(1_500));
         assert_eq!(

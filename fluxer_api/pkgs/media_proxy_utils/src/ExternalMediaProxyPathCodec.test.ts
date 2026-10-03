@@ -80,7 +80,7 @@ describe('reconstructOriginalUrl', () => {
 		).toBe('https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp?v=query_param&goes=here');
 	});
 
-	it('does not double the question mark when the query segment carries one', () => {
+	it('does not double the question mark when the query segment has one', () => {
 		const decoded = reconstructOriginalUrl('%3Fa%3D1/https/example.com/x.png');
 		expect(decoded).toBe('https://example.com/x.png?a=1');
 		expect(decoded).not.toContain('??');

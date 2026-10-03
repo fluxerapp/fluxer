@@ -687,7 +687,7 @@ mod tests {
     const SHELL_WITH_AN_INLINE_SCRIPT: &str = r#"<!doctype html><html><head><title>Fluxer</title><script>inline()</script><script src="/assets/app.js"></script></head><body></body></html>"#;
 
     #[test]
-    fn the_rendered_document_always_carries_the_bootstrap() {
+    fn the_rendered_document_always_includes_the_bootstrap() {
         let rendered = render_spa_document(
             SHELL_WITH_AN_INLINE_SCRIPT,
             "<script>booted</script>",
@@ -732,7 +732,7 @@ mod tests {
 <link rel="icon" type="image/png" sizes="32x32" href="{{STATIC_CDN_ENDPOINT}}/web/favicon-32x32.png"><link rel="apple-touch-icon" sizes="180x180" href="{{STATIC_CDN_ENDPOINT}}/web/apple-touch-icon.png"><script>inline()</script><script src="/assets/app.js"></script></head><body></body></html>"#;
 
     #[test]
-    fn the_static_cdn_argument_resolves_every_hole_the_shell_carries() {
+    fn the_static_cdn_argument_resolves_every_hole_the_shell_has() {
         let rendered = render_spa_document(
             SHELL_WITH_ENDPOINT_HOLES,
             "<script>booted</script>",
@@ -1069,13 +1069,13 @@ mod tests {
             let tag = &tag[..tag.find('>').unwrap()];
             assert!(
                 tag.is_empty() || tag.contains(" src="),
-                "the served document carries a script tag the test cannot classify: <script{tag}>"
+                "the served document has a script tag the test cannot classify: <script{tag}>"
             );
         }
         let inline = bare_inline_scripts_in(document);
         assert!(
             !inline.is_empty(),
-            "the served document carries no inline script at all"
+            "the served document has no inline script at all"
         );
         let mut expected: Vec<String> = inline.iter().map(|script| sha256_source(script)).collect();
         expected.sort();
@@ -1084,7 +1084,7 @@ mod tests {
         granted.sort();
         assert_eq!(
             granted, expected,
-            "the policy must grant exactly the inline scripts the document carries"
+            "the policy must grant exactly the inline scripts the document contains"
         );
         assert!(!document.contains("nonce"));
         assert!(!policy.contains("nonce"));
@@ -1437,7 +1437,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn the_shipped_shell_runs_every_inline_script_it_carries_under_its_policy() {
+    async fn the_shipped_shell_runs_every_inline_script_it_contains_under_its_policy() {
         let state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
 
         let response = serve_spa_index(&state, &HeaderMap::new()).await;

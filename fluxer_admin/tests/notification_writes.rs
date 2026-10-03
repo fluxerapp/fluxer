@@ -195,7 +195,7 @@ async fn post_form(app: &TestApp, uri: &str, body: &str) -> StatusCode {
     let csrf = body
         .split('&')
         .find_map(|pair| pair.strip_prefix("_csrf="))
-        .expect("form carries a csrf token");
+        .expect("form has a csrf token");
     let response = app
         .router
         .clone()

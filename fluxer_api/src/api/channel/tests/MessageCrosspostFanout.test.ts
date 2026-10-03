@@ -249,7 +249,7 @@ describe('Crosspost fan-out', () => {
 		expect(after?.mentionedRoleIds.size).toBe(0);
 	});
 
-	test('sendable flags carry over to the copy', async () => {
+	test('the copy keeps the sendable flags', async () => {
 		await followInto(harness, world, world.b.t1.id);
 		const message = await sendMessage(harness, world.a.owner.token, world.a.ann.id, {content: 'quiet'});
 		const sendable = MessageFlags.SUPPRESS_EMBEDS | MessageFlags.SUPPRESS_NOTIFICATIONS | MessageFlags.VOICE_MESSAGE;
@@ -259,7 +259,7 @@ describe('Crosspost fan-out', () => {
 		expect(copy!.flags).toBe(MessageFlags.IS_CROSSPOST | sendable);
 	});
 
-	test('copies carry the source attachments and resolve to the source channel', async () => {
+	test('copies have the source attachments and resolve to the source channel', async () => {
 		await followInto(harness, world, world.b.t1.id);
 		const message = await sendWithImage(harness, world.a.owner.token, world.a.ann.id, {content: 'files'}, [
 			'first.png',

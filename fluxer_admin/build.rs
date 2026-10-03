@@ -600,7 +600,7 @@ fn select_faces(package_dir: &Path) -> Vec<Face> {
             }
             assert!(
                 face["unicodeRange"].is_null(),
-                "{wanted} face {} carries a unicode-range; Latin-core faces must not",
+                "{wanted} face {} has a unicode-range; Latin-core faces must not",
                 face["file"]
             );
             faces.push(Face {

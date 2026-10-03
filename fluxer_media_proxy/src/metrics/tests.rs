@@ -220,7 +220,7 @@ fn render_keeps_every_frozen_series_name_and_shape() {
 }
 
 #[test]
-fn render_carries_a_zero_series_for_every_signature_verdict() {
+fn render_includes_a_zero_series_for_every_signature_verdict() {
     let text = Metrics::new().render();
     for label in FROZEN_SIGNATURE_VERDICT_LABELS {
         assert!(

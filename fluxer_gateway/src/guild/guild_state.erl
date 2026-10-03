@@ -171,8 +171,10 @@ post_update_channel(channel_update, EventData, OldState, NewState) ->
 post_update_channel(channel_update_bulk, EventData, OldState, NewState) ->
     ChanIds = guild_state_channels:extract_channel_ids_from_channel_update_bulk(EventData),
     resync_channels_after_permission_change(ChanIds, OldState, NewState);
-post_update_channel(channel_delete, _EventData, _OldState, NewState) ->
+post_update_channel(channel_delete, EventData, _OldState, NewState) ->
     maybe_sync_member_list_permission_state(NewState),
+    ChannelId = snowflake_id:parse_optional(maps:get(<<"id">>, EventData, undefined)),
+    ok = guild_voice_lifecycle:cast_disconnect_all_voice_users_in_channel(ChannelId, NewState),
     NewState.
 
 -spec resync_channels_after_permission_change([integer()], guild_state(), guild_state()) ->

@@ -78,6 +78,7 @@ import {
 	UserProfileFullResponse,
 	UserSettingsResponse,
 	UserTagCheckResponse,
+	UserUpdateResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {uint8ArrayToBase64} from 'uint8array-extras';
 
@@ -118,12 +119,12 @@ export function UserAccountController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'update_current_user',
 			summary: 'Update current user profile',
-			responseSchema: UserPrivateResponse,
+			responseSchema: UserUpdateResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				"Updates the authenticated user's profile information such as username, avatar, and bio. Requires sudo mode verification for security-sensitive changes. Only default users can modify their own profile.",
+				"Updates the authenticated user's profile information such as username, avatar, and bio. Requires sudo mode verification for security-sensitive changes. Only default users can modify their own profile. A password change invalidates all existing sessions and returns the replacement session token.",
 		}),
 		async (ctx) => {
 			const userAccountRequestService = ctx.get('userAccountRequestService');

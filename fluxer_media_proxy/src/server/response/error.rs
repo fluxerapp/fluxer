@@ -237,7 +237,7 @@ mod tests {
         let source = line
             .split("source=")
             .nth(1)
-            .expect("a failure log line carries a source field")
+            .expect("a failure log line has a source field")
             .trim_end();
         assert_eq!(513, source.len(), "{source}");
         assert!(source.ends_with('~'), "{source}");

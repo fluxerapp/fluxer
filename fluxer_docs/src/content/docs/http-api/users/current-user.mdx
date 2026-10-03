@@ -156,7 +156,7 @@ Each control is separate from the route bucket. A denial returns 400 `INVALID_FO
 Fluxer consumes the avatar control before it detects identical content, and clearing the avatar consumes nothing. A clearing request consumes the banner control, and so does a request whose value is unchanged.
 
 :::caution[A password change rotates the session]
-Supplying `new_password` on a claimed account deletes every other authentication session and every outstanding password reset token, then replaces the session that issued the request. The replacement arrives as [Auth Session Change](/gateway/events/#auth-session-change).
+Supplying `new_password` on a claimed account deletes every other authentication session and every outstanding password reset token, then replaces the session that issued the request. The user object in the response then also has the fields of the [password change completion object](/http-api/users/email-and-password/#password-change-completion-object), and the client sends every later request with that token. [Auth Session Change](/gateway/events/#auth-session-change) never includes it.
 :::
 
 ### Response
@@ -164,6 +164,7 @@ Supplying `new_password` on a claimed account deletes every other authentication
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [user](/http-api/users/#user-object) object | Account was returned after applying every permitted field |
+| 200 | [user](/http-api/users/#user-object) object with the [password change completion](/http-api/users/email-and-password/#password-change-completion-object) fields | Account was returned after a password change rotated the session |
 | 400 | [error response](/http-api/#error-response) | Body, image, tag, password, entitlement, secondary control, or sudo proof is invalid |
 | 403 | [error response](/http-api/#error-response) | Email verification, sudo verification, or a staff-only field is required, or content is blocked |
 | 403 | [error response](/http-api/#error-response) | The account is limited and the body changes a profile field, and the request returns `ACCOUNT_LIMITED` |

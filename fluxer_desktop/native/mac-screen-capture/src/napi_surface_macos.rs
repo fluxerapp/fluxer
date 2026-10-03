@@ -2008,7 +2008,7 @@ mod dispatch_queue_tests {
     }
 
     #[test]
-    fn audio_frame_payload_into_input_carries_slot_and_metadata() {
+    fn audio_frame_payload_into_input_keeps_slot_and_metadata() {
         use crate::audio_pool::MacAudioFramePool;
         let pool = MacAudioFramePool::new(2, 64).expect("pool");
         let mut slot = pool.try_acquire().expect("slot");
@@ -2114,7 +2114,7 @@ mod dispatch_queue_tests {
     }
 
     #[test]
-    fn build_capture_config_carries_audio_settings() {
+    fn build_capture_config_includes_audio_settings() {
         let cfg = super::build_capture_config(
             30,
             true,
@@ -2129,7 +2129,7 @@ mod dispatch_queue_tests {
     }
 
     #[test]
-    fn start_options_carry_cursor_color_and_rect_intent() {
+    fn start_options_include_cursor_color_and_rect_intent() {
         let options = super::normalize_start_options(Some(super::ScreenCaptureStartOptions {
             show_cursor_clicks: Some(true),
             capture_rect: Some(super::ScreenCaptureRect {

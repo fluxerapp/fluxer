@@ -153,7 +153,7 @@ mod tests {
     }
 
     #[test]
-    fn own_avatars_carry_the_extension_fallback() {
+    fn own_avatars_get_the_extension_fallback() {
         let app = app();
         match resolve(
             &app,

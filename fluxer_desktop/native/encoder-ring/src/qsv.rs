@@ -912,7 +912,7 @@ mod tests {
     }
 
     #[test]
-    fn variant_payload_carries_u32_value() {
+    fn variant_payload_holds_u32_value() {
         let v = MfxVariant {
             version: MfxStructVersion {
                 minor: MFX_VARIANT_VERSION_MINOR,

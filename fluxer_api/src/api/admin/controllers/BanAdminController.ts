@@ -269,7 +269,7 @@ export function BanAdminController(app: HonoApp) {
 			security: ['adminApiKey'],
 			tags: ['Admin'],
 			description:
-				'List every blocklist this instance maintains, the request field that carries an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.',
+				'List every blocklist this instance maintains, the request field that holds an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.',
 		}),
 		async (ctx) => {
 			await recordAdminRead(ctx, {
@@ -524,7 +524,7 @@ export function BanAdminController(app: HonoApp) {
 			tags: ['Admin'],
 			requestSchema: AdminBlocklistEntryUpdateRequest,
 			description:
-				'Rewrite the stored fields of a blocklist entry without removing and re-adding it. The stored metadata is replaced by the supplied fields, so fields left out fall back to their defaults. Only blocklists whose entries carry fields accept this operation, reported as supports_update by GET /admin/blocklists.',
+				'Rewrite the stored fields of a blocklist entry without removing and re-adding it. The stored metadata is replaced by the supplied fields, so fields left out fall back to their defaults. Only blocklists whose entries have fields accept this operation, reported as supports_update by GET /admin/blocklists.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');

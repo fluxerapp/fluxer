@@ -320,7 +320,7 @@ mod tests {
             let reason = response
                 .extensions()
                 .get::<ErrorReason>()
-                .expect("a refusal carries an error reason")
+                .expect("a refusal has an error reason")
                 .clone();
             assert_eq!(refusal_code(verdict), reason.code);
             assert!(reason.code.starts_with("attachment_signature_"));
@@ -343,7 +343,7 @@ mod tests {
     }
 
     #[test]
-    fn the_would_deny_line_carries_the_verdict_and_a_clipped_user_agent() {
+    fn the_would_deny_line_includes_the_verdict_and_a_clipped_user_agent() {
         let mut headers = HeaderMap::new();
         headers.insert(
             header::USER_AGENT,

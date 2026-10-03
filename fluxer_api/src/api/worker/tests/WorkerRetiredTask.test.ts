@@ -96,7 +96,7 @@ describe('Retired worker task types', () => {
 		expect(msg.ack).not.toHaveBeenCalled();
 	});
 
-	it('dead-letters a legacy job that carries no ledger id', async () => {
+	it('dead-letters a legacy job that has no ledger id', async () => {
 		const runner = createRunner();
 		const msg = createJobMessage(RETIRED_TASK_TYPE, {userId: '1', scheduledMessageId: '2'});
 

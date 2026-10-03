@@ -168,6 +168,21 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 
 export type UserPrivateResponse = z.infer<typeof UserPrivateResponse>;
 
+export const UserUpdateResponse = UserPrivateResponse.extend({
+	token: z
+		.string()
+		.optional()
+		.describe('Authentication token for the replacement session, present when the password was changed'),
+	auth_session_id_hash: z
+		.string()
+		.optional()
+		.describe(
+			'Base64url-encoded hash of the replacement authentication session, present when the password was changed',
+		),
+});
+
+export type UserUpdateResponse = z.infer<typeof UserUpdateResponse>;
+
 export const EmailChangeStartResponse = z.object({
 	ticket: z.string().describe('Ticket returned for email change actions'),
 	require_original: z.boolean().describe('Whether verification of the original email is required'),

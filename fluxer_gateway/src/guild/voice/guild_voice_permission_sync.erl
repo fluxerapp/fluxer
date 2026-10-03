@@ -168,7 +168,7 @@ maybe_clear_self_stream(_ChId, _VoiceState, _VoicePermissions, _State) ->
 
 -spec user_has_base_voice_access(user_id(), channel_id(), guild_state()) -> boolean().
 user_has_base_voice_access(UserId, ChannelId, State) ->
-    case guild_virtual_channel_access:has_virtual_access(UserId, ChannelId, State) of
+    case guild_virtual_channel_access:has_voice_access(UserId, ChannelId, State) of
         true ->
             true;
         false ->

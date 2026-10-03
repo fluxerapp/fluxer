@@ -335,7 +335,7 @@ mod tests {
     }
 
     #[test]
-    fn image_dockerfiles_carry_the_release_label_block() {
+    fn image_dockerfiles_include_the_release_label_block() {
         const REQUIRED: [&str; 9] = [
             "LABEL org.opencontainers.image.licenses=\"AGPL-3.0-or-later\"",
             "LABEL org.opencontainers.image.vendor=\"Fluxer\"",

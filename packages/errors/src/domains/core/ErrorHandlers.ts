@@ -15,6 +15,7 @@ import {
 	resolveMessageVariables,
 } from '@fluxer/errors/src/error_handling/ErrorIntrospection';
 import {createJsonErrorResponse} from '@fluxer/errors/src/error_handling/ErrorResponse';
+import {resolveRoutePattern} from '@fluxer/errors/src/error_handling/RoutePattern';
 import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {ErrorCodeToI18nKey} from '@fluxer/errors/src/i18n/ErrorCodeMappings';
 import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
@@ -281,7 +282,7 @@ function logErrorResponse<E extends BaseHonoEnv>(err: Error, resolved: ResolvedE
 		err,
 		status,
 		method: ctx.req.method,
-		path: ctx.req.path,
+		path: resolveRoutePattern(ctx),
 		requestId: ctx.get('requestId'),
 	};
 	if (resolved.unexpected) {

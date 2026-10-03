@@ -1893,7 +1893,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn off_mode_serves_a_signature_carrying_request_unchanged() {
+    async fn off_mode_serves_a_signed_request_unchanged() {
         let tmp = tempfile::tempdir().expect("storage root");
         let root = tmp.path().canonicalize().expect("canonical storage root");
         let root = root.as_path();

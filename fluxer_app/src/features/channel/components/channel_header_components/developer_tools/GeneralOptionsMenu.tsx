@@ -42,7 +42,7 @@ const ToggleGroupSubmenu: React.FC<{group: ToggleGroup}> = observer(({group}) =>
 								data-flx="channel.channel-header-components.developer-tools-context-menu.toggle-group-submenu.checkbox-item"
 							>
 								{description ? (
-									// biome-ignore lint/a11y/useAriaPropsSupportedByRole: project policy forbids the native title attribute, so aria-label carries the description on the developer-options row
+									// biome-ignore lint/a11y/useAriaPropsSupportedByRole: project policy forbids the native title attribute, so aria-label holds the description on the developer-options row
 									<span
 										aria-label={translateDescriptor(i18n, description)}
 										data-flx="channel.channel-header-components.developer-tools-context-menu.toggle-group-submenu.span"

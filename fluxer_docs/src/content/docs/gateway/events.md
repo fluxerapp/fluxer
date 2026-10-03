@@ -240,15 +240,14 @@ The account's set of live sessions changed. The payload is a bare JSON array of 
 
 ### <span id="auth-session-change"></span>AUTH_SESSION_CHANGE
 
-The account's authentication session was rotated, for example by a password change on another device.
+The account's authentication session was rotated by a password change.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | old_auth_session_id_hash | string | Base64url hash of the authentication session that was replaced |
 | new_auth_session_id_hash | string | Base64url hash of the replacement authentication session |
-| new_token | string | Replacement for the token the client holds |
 
-Every session of the account receives the event, including the one that caused the rotation. A client MUST use `new_token` for every later HTTP request and for any later [Resume](/gateway/commands/#resume) or [Identify](/gateway/commands/#identify). A client whose own `auth_session_id_hash` from [Ready](#ready) equals `old_auth_session_id_hash` MUST replace it with `new_auth_session_id_hash`.
+The event never includes the replacement token. The API closes every gateway session of the replaced authentication session before it sends the event, so those sessions do not receive it. The client that changed the password gets the replacement token and `auth_session_id_hash` in the HTTP response. It MUST use that token for every later HTTP request and for any later [Identify](/gateway/commands/#identify), and MUST replace its own `auth_session_id_hash` from [Ready](#ready) with the one in the response.
 
 ### <span id="rate-limited"></span>RATE_LIMITED
 

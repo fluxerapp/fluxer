@@ -432,7 +432,7 @@ mod tests {
     use serde_json::{Value, json};
 
     #[test]
-    fn audit_log_reason_header_carries_utf8_bytes() {
+    fn audit_log_reason_header_keeps_utf8_bytes() {
         let reason = "§ 3 Regel – wiederholt 日本";
         let value = audit_log_reason_header(reason).expect("valid reason header");
         assert_eq!(value.as_bytes(), reason.as_bytes());

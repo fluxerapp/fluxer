@@ -96,7 +96,7 @@ describe('Webhook Instatus integration', () => {
 			expect(await countWebhookMessages(harness, owner.token, channelId, webhook.id)).toBe(1);
 			await deleteWebhook(harness, webhook.id, owner.token);
 		});
-		it('processes a callback carrying no identifier every time', async () => {
+		it('processes a callback with no identifier every time', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'Instatus Unidentified Guild');
 			const channelId = guild.system_channel_id!;

@@ -157,7 +157,7 @@ describe('ExperimentAssignments response handling', () => {
 		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
 	});
 
-	it('accepts an envelope that carries no domain migration assignment', async () => {
+	it('accepts an envelope that has no domain migration assignment', async () => {
 		await adopt({poll_interval_seconds: 600, poll_jitter_percent: 0, assignments: {}});
 		expect(ExperimentAssignments.response.assignments.domain_migration).toBeUndefined();
 		expect(lastScheduledDelayMs()).toBe(600_000);
@@ -387,7 +387,7 @@ describe('ExperimentAssignments lifecycle', () => {
 		expect(vi.mocked(http.get)).toHaveBeenCalledTimes(1);
 	});
 
-	it('does not carry the etag or the backoff of the previous session across a reset', async () => {
+	it('does not keep the etag or the backoff of the previous session across a reset', async () => {
 		vi.spyOn(Math, 'random').mockReturnValue(0.5);
 		await adopt(CANARY_ENVELOPE);
 		vi.mocked(http.get).mockResolvedValue(reply(500, {message: '500: Internal Server Error'}));

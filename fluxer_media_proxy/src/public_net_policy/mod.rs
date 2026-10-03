@@ -11,7 +11,7 @@ pub use resolver::{PinnedDnsResolver, is_pinned_dns_failure};
 
 use std::net::IpAddr;
 use thiserror::Error;
-use url::Url;
+use url::{Host, Url};
 
 const MAX_URL_LEN: usize = 8192;
 const MAX_PUBLIC_HOSTNAME_BYTES: usize = 253;
@@ -163,7 +163,17 @@ pub fn validate_url(url: &str) -> Result<(), Error> {
         return Err(Error::BlockedUrl);
     }
     let host = normalize_host(parsed.host)?;
-    if let Ok(address) = host.parse::<IpAddr>() {
+    let canonical = Url::parse(url).map_err(|_| Error::InvalidUrl)?;
+    if canonical.port_or_known_default() != Some(port) {
+        return Err(Error::BlockedUrl);
+    }
+    let address = match canonical.host() {
+        Some(Host::Ipv4(address)) => Some(IpAddr::V4(address)),
+        Some(Host::Ipv6(address)) => Some(IpAddr::V6(address)),
+        Some(Host::Domain(_)) => None,
+        None => return Err(Error::InvalidUrl),
+    };
+    if let Some(address) = address {
         return if ip_tables::is_public_ip(address) {
             Ok(())
         } else {

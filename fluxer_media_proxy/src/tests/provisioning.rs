@@ -510,7 +510,7 @@ fn the_cargo_cache_is_keyed_on_the_native_dependency_installer() {
     let (cargo_key, restore_keys) = cache_keys(&workflow_step(&workflow, "Cache cargo"));
     assert!(
         cargo_key.contains(NATIVE_INSTALLER_HASH),
-        "target/ carries the native shim archive built against the installed headers, so the cargo cache key must move with {NATIVE_INSTALLER_HASH}: {cargo_key}"
+        "target/ holds the native shim archive built against the installed headers, so the cargo cache key must move with {NATIVE_INSTALLER_HASH}: {cargo_key}"
     );
     assert!(
         !restore_keys.is_empty(),

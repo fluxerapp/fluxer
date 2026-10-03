@@ -554,7 +554,7 @@ fn exact_stream(
     expected_length: u64,
     end: ExactStreamEnd,
 ) -> impl Stream<Item = Result<Bytes, std::io::Error>> + Send + 'static {
-    // Only a chunk that carries no bytes needs a count bound. The byte accounting below already
+    // Only a chunk with no bytes needs a count bound. The byte accounting below already
     // bounds every other chunk, and counting them all aborts a legitimate transfer whenever the
     // transport hands over reads smaller than the assumed average chunk size.
     let empty_chunks_remaining = response_body_limit::response_body_chunk_limit(expected_length);

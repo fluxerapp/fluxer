@@ -280,7 +280,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Renames an API key or replaces the access control lists (ACLs) it carries. The key may only carry permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.",
+				"description": "Renames an API key or replaces the access control lists (ACLs) it has. The key may only hold permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -1108,7 +1108,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "List every blocklist this instance maintains, the request field that carries an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.",
+				"description": "List every blocklist this instance maintains, the request field that holds an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.",
 				"security": [{"adminApiKey": []}]
 			}
 		},
@@ -1529,7 +1529,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Rewrite the stored fields of a blocklist entry without removing and re-adding it. The stored metadata is replaced by the supplied fields, so fields left out fall back to their defaults. Only blocklists whose entries carry fields accept this operation, reported as supports_update by GET /admin/blocklists.",
+				"description": "Rewrite the stored fields of a blocklist entry without removing and re-adding it. The stored metadata is replaced by the supplied fields, so fields left out fall back to their defaults. Only blocklists whose entries have fields accept this operation, reported as supports_update by GET /admin/blocklists.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -4680,7 +4680,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Searches the messages of a channel by content, or resolves a single message by its ID or by one of its attachments. Passing message_id returns that message with the messages surrounding it; passing attachment_id together with filename returns the message carrying that attachment with its surrounding context. Requires MESSAGE_LOOKUP permission.",
+				"description": "Searches the messages of a channel by content, or resolves a single message by its ID or by one of its attachments. Passing message_id returns that message with the messages surrounding it; passing attachment_id together with filename returns the message with that attachment with its surrounding context. Requires MESSAGE_LOOKUP permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -4715,10 +4715,10 @@
 						"in": "query",
 						"required": false,
 						"schema": {
-							"description": "Return the single message carrying this attachment together with its surrounding context; requires filename",
+							"description": "Return the single message with this attachment together with its surrounding context; requires filename",
 							"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
 						},
-						"description": "Return the single message carrying this attachment together with its surrounding context; requires filename"
+						"description": "Return the single message with this attachment together with its surrounding context; requires filename"
 					},
 					{
 						"name": "filename",
@@ -12482,7 +12482,7 @@
 								},
 								"value_field": {
 									"type": "string",
-									"description": "The request body field that carries the entry value when adding to this blocklist"
+									"description": "The request body field that holds the entry value when adding to this blocklist"
 								},
 								"fields": {
 									"maxItems": 8,
@@ -13542,7 +13542,7 @@
 						"additionalProperties": false
 					},
 					"referenced_message": {
-						"description": "The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message carries no default reference. Clients must tell null apart from absent by key presence.",
+						"description": "The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence.",
 						"nullable": true,
 						"type": "object",
 						"properties": {

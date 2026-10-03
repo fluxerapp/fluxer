@@ -304,7 +304,10 @@ export class OAuth2Service {
 			if (authCode.userId && !(await this.findActiveUser(authCode.userId))) {
 				throw new InvalidGrantError();
 			}
-			await this.tokens.deleteAuthorizationCode(code);
+			if (!(await this.tokens.consumeAuthorizationCode(code, authCode.applicationId))) {
+				Logger.debug({code_len: code.length}, 'OAuth2 tokenExchange: authorization code already redeemed');
+				throw new InvalidGrantError();
+			}
 			const res = await this.issueTokens({
 				application,
 				userId: authCode.userId,
@@ -328,7 +331,9 @@ export class OAuth2Service {
 		if (!(await this.findActiveUser(refresh.userId))) {
 			throw new InvalidGrantError();
 		}
-		await this.tokens.deleteRefreshToken(params.refreshToken!, refresh.applicationId, refresh.userId);
+		if (!(await this.tokens.consumeRefreshToken(params.refreshToken!, refresh.applicationId, refresh.userId))) {
+			throw new InvalidGrantError();
+		}
 		const res = await this.issueTokens({
 			application,
 			userId: refresh.userId,

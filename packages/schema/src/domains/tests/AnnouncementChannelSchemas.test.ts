@@ -98,7 +98,7 @@ describe('webhook responses', () => {
 		expect(WebhookCreateResponse.safeParse({...withoutToken, user: creator}).success).toBe(false);
 	});
 
-	it('omits the token and carries the source on follower webhooks', () => {
+	it('omits the token and includes the source on follower webhooks', () => {
 		const {token: _token, ...withoutToken} = incomingWebhook;
 		const follower = {
 			...withoutToken,

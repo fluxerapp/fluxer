@@ -16,7 +16,7 @@
 -type list_sync() :: immediate | deferred.
 
 %% members_sorted_ids trims with the member map it indexes: a snapshot that kept it would
-%% answer sorted_member_ids/2 with ids for members the snapshot no longer carries.
+%% answer sorted_member_ids/2 with ids for members the snapshot no longer holds.
 -define(HEAVY_MEMBER_DATA_KEYS, [
     <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
 ]).

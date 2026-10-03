@@ -52,7 +52,7 @@ describe('screen share layering', () => {
 		}
 	});
 
-	it('keeps temporal layers for the SVC codecs that carry one', () => {
+	it('keeps temporal layers for the SVC codecs that have one', () => {
 		for (const codec of ['av1', 'vp9'] as const) {
 			expect(resolveScreenShareLayering({codec, svcSetting: 'auto'}).scalabilityMode).toBe('L1T3');
 		}

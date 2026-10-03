@@ -237,6 +237,11 @@ handle_cast({store_pending_connection, ConnId, Meta}, State) ->
     {noreply, State#{pending_voice_connections => NewPending}};
 handle_cast({disconnect_voice_user, Request}, State) when is_map(Request) ->
     {noreply, delegate_voice_cast(fun guild_voice:disconnect_voice_user/2, Request, State)};
+handle_cast({disconnect_all_voice_users_in_channel, Request}, State) when is_map(Request) ->
+    {noreply,
+        delegate_voice_cast(
+            fun guild_voice:disconnect_all_voice_users_in_channel/2, Request, State
+        )};
 handle_cast({cleanup_virtual_access_for_user, UserId}, State) when is_integer(UserId) ->
     GS = guild_voice_server_state:build_guild_state(State),
     NewGS = guild_voice_disconnect:cleanup_virtual_channel_access_for_user(UserId, GS),
