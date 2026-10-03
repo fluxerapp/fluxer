@@ -1,0 +1,376 @@
+name: Close linked discussions
+
+on:
+  pull_request_target:
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Report matching references without closing discussions.
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      days:
+        description: Scan pull requests merged within the last N days.
+        required: true
+        default: "14"
+
+permissions: {}
+
+concurrency:
+  group: close-linked-discussions-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  close_discussions:
+    name: Close discussions referenced by a merged pull request
+    if: github.repository == 'fluxerapp/fluxer' && github.event_name == 'pull_request_target' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-discussions: write
+          permission-pull-requests: read
+
+      - name: Close discussions
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          owner="${GITHUB_REPOSITORY%/*}"
+          repository="${GITHUB_REPOSITORY#*/}"
+
+          number="$(jq -r '.pull_request.number // empty' "$GITHUB_EVENT_PATH")"
+          body="$(jq -r '.pull_request.body // empty' "$GITHUB_EVENT_PATH")"
+
+          if [ -z "$body" ]; then
+            echo "PR #${number} has no body; nothing to close."
+            exit 0
+          fi
+
+          ref_re='\b(Closes?|closes?)[[:space:]]+#[0-9]+'
+
+          references="$(grep -oEi "$ref_re" <<<"$body" || true)"
+
+          if [ -z "$references" ]; then
+            echo "PR #${number} contains no closing-keyword references."
+            exit 0
+          fi
+
+          echo "Closing-keyword references found in PR #${number}:"
+          printf '%s\n' "$references" | sed 's/^/  - /'
+
+          query() {
+            gh api graphql \
+              -F owner="$owner" \
+              -F name="$repository" \
+              -F number="$1" \
+              -f query='
+                query($owner: String!, $name: String!, $number: Int!) {
+                  repository(owner: $owner, name: $name) {
+                    discussion(number: $number) {
+                      id
+                      closed
+                      body
+                    }
+                  }
+                }
+              '
+          }
+
+          MAX_VISITS=3
+
+          while IFS= read -r reference; do
+            [ -z "$reference" ] && continue
+
+            root_number="$(grep -oE '[0-9]+$' <<<"$reference" || true)"
+            [ -z "$root_number" ] && continue
+
+            queue="$root_number"
+            visited=""
+            visits=0
+
+            while [ -n "$queue" ] && [ "$visits" -lt "$MAX_VISITS" ]; do
+              if [[ "$queue" == *" "* ]]; then
+                current="${queue%% *}"
+                queue="${queue#* }"
+              else
+                current="$queue"
+                queue=""
+              fi
+
+              if [[ " $visited " == *" $current "* ]]; then
+                continue
+              fi
+              visited="${visited}${visited:+ }${current}"
+              visits=$((visits + 1))
+
+              discussion="$(query "$current")"
+              discussion_id="$(jq -r '.data.repository.discussion.id     // empty' <<<"$discussion")"
+              closed="$(jq -r         '.data.repository.discussion.closed // empty' <<<"$discussion")"
+              discussion_body="$(jq -r '.data.repository.discussion.body  // empty' <<<"$discussion")"
+
+              if [ -z "$discussion_id" ]; then
+                echo "Reference #${current} is not a discussion; skipping."
+                continue
+              fi
+
+              # Enqueue nested references from this discussion's body
+              nested_refs="$(grep -oEi "$ref_re" <<<"$discussion_body" || true)"
+              while IFS= read -r nested; do
+                [ -z "$nested" ] && continue
+                nested_num="$(grep -oE '[0-9]+$' <<<"$nested" || true)"
+                [ -z "$nested_num" ] && continue
+                if [[ " $visited " != *" $nested_num "* ]] \
+                  && [[ " $queue " != *" $nested_num "* ]]; then
+                  queue="${queue}${queue:+ }${nested_num}"
+                fi
+              done <<<"$nested_refs"
+
+              if [ "$closed" = "true" ]; then
+                echo "Discussion #${current} is already closed."
+                continue
+              fi
+
+              if [ "$current" = "$root_number" ]; then
+                comment_body="Closed via merged PR #${number}."
+              else
+                comment_body="Closed via discussion #${root_number}"
+              fi
+
+              echo "Closing discussion #${current}..."
+              gh api graphql \
+                -F id="$discussion_id" \
+                -F body="$comment_body" \
+                -F clientId="close-comment-discussion-${number}-${current}" \
+                -f query='
+                  mutation($id: ID!, $body: String!, $clientId: String!) {
+                    addDiscussionComment(input: {discussionId: $id, body: $body, clientMutationId: $clientId}) {
+                      comment { id }
+                    }
+                    closeDiscussion(input: {discussionId: $id, reason: RESOLVED}) {
+                      discussion { closed }
+                    }
+                  }
+                ' \
+                --silent
+            done
+          done <<<"$references"
+
+  retroactive:
+    name: Close discussions referenced by recently merged pull requests
+    if: github.repository == 'fluxerapp/fluxer' && github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-discussions: write
+          permission-pull-requests: read
+
+      - name: Close discussions
+        env:
+          DRY_RUN: ${{ inputs.dry_run || 'true' }}
+          DAYS: ${{ inputs.days || '7' }}
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          owner="${GITHUB_REPOSITORY%/*}"
+          repository="${GITHUB_REPOSITORY#*/}"
+
+          dry_run="${DRY_RUN:-true}"
+          days="${DAYS:-7}"
+
+          if ! [[ "$days" =~ ^[0-9]+$ ]] || [ "$days" -lt 1 ]; then
+            echo "Invalid days input: ${days}"
+            exit 1
+          fi
+
+          cutoff="$(date -u -d "-${days} days" +%Y-%m-%dT%H:%M:%SZ)"
+          echo "Scanning pull requests merged in the last ${days} day(s) (since ${cutoff}); dry run: ${dry_run}."
+
+          ref_re='\b(Closes?|closes?)[[:space:]]+#[0-9]+'
+
+          query() {
+            gh api graphql \
+              -F owner="$owner" \
+              -F name="$repository" \
+              -F number="$1" \
+              -f query='
+                query($owner: String!, $name: String!, $number: Int!) {
+                  repository(owner: $owner, name: $name) {
+                    discussion(number: $number) {
+                      id
+                      closed
+                      body
+                    }
+                  }
+                }
+              '
+          }
+
+          MAX_VISITS=3
+          closed_total=0
+
+          close_refs_from_body() {
+            local pr_number="$1"
+            local body="$2"
+            local references
+
+            references="$(grep -oEi "$ref_re" <<<"$body" || true)"
+
+            if [ -z "$references" ]; then
+              echo "PR #${pr_number} contains no closing-keyword references."
+              return 0
+            fi
+
+            echo "Closing-keyword references found in PR #${pr_number}:"
+            printf '%s\n' "$references" | sed 's/^/  - /'
+
+            local reference root_number queue visited visits current discussion discussion_id closed discussion_body nested_refs nested nested_num comment_body
+
+            while IFS= read -r reference; do
+              [ -z "$reference" ] && continue
+
+              root_number="$(grep -oE '[0-9]+$' <<<"$reference" || true)"
+              [ -z "$root_number" ] && continue
+
+              queue="$root_number"
+              visited=""
+              visits=0
+
+              while [ -n "$queue" ] && [ "$visits" -lt "$MAX_VISITS" ]; do
+                if [[ "$queue" == *" "* ]]; then
+                  current="${queue%% *}"
+                  queue="${queue#* }"
+                else
+                  current="$queue"
+                  queue=""
+                fi
+
+                if [[ " $visited " == *" $current "* ]]; then
+                  continue
+                fi
+                visited="${visited}${visited:+ }${current}"
+                visits=$((visits + 1))
+
+                discussion="$(query "$current")"
+                discussion_id="$(jq -r '.data.repository.discussion.id     // empty' <<<"$discussion")"
+                closed="$(jq -r         '.data.repository.discussion.closed // empty' <<<"$discussion")"
+                discussion_body="$(jq -r '.data.repository.discussion.body  // empty' <<<"$discussion")"
+
+                if [ -z "$discussion_id" ]; then
+                  echo "Reference #${current} is not a discussion; skipping."
+                  continue
+                fi
+
+                # Enqueue nested references from this discussion's body
+                nested_refs="$(grep -oEi "$ref_re" <<<"$discussion_body" || true)"
+                while IFS= read -r nested; do
+                  [ -z "$nested" ] && continue
+                  nested_num="$(grep -oE '[0-9]+$' <<<"$nested" || true)"
+                  [ -z "$nested_num" ] && continue
+                  if [[ " $visited " != *" $nested_num "* ]] \
+                    && [[ " $queue " != *" $nested_num "* ]]; then
+                    queue="${queue}${queue:+ }${nested_num}"
+                  fi
+                done <<<"$nested_refs"
+
+                if [ "$closed" = "true" ]; then
+                  echo "Discussion #${current} is already closed."
+                  continue
+                fi
+
+                if [ "$current" = "$root_number" ]; then
+                  comment_body="Closed via merged PR #${pr_number}."
+                else
+                  comment_body="Closed via merged PR #${pr_number} (mentioned in discussion #${root_number})"
+                fi
+
+                closed_total=$((closed_total + 1))
+
+                if [ "$dry_run" = "true" ]; then
+                  echo "Would close discussion #${current} (referenced by PR #${pr_number})."
+                  continue
+                fi
+
+                echo "Closing discussion #${current} (referenced by PR #${pr_number})..."
+                gh api graphql \
+                  -F id="$discussion_id" \
+                  -F body="$comment_body" \
+                  -F clientId="close-comment-discussion-${pr_number}-${current}" \
+                  -f query='
+                    mutation($id: ID!, $body: String!, $clientId: String!) {
+                      addDiscussionComment(input: {discussionId: $id, body: $body, clientMutationId: $clientId}) {
+                        comment { id }
+                      }
+                      closeDiscussion(input: {discussionId: $id, reason: RESOLVED}) {
+                        discussion { closed }
+                      }
+                    }
+                  ' \
+                  --silent
+              done
+            done <<<"$references"
+          }
+
+          candidates=()
+          page=1
+          while [ "$page" -le 5 ]; do
+            response="$(gh api "repos/${GITHUB_REPOSITORY}/pulls?state=closed&sort=updated&direction=desc&per_page=100&page=${page}")"
+            count="$(jq 'length' <<<"$response")"
+            if [ "$count" -eq 0 ]; then
+              break
+            fi
+
+            while IFS= read -r candidate; do
+              [ -n "$candidate" ] && candidates+=("$candidate")
+            done < <(jq -r --arg cutoff "$cutoff" '.[] | select(.merged_at != null and .merged_at >= $cutoff) | .number' <<<"$response")
+
+            oldest_updated="$(jq -r '.[-1].updated_at // empty' <<<"$response")"
+            if [ "$count" -lt 100 ] || [[ "$oldest_updated" < "$cutoff" ]]; then
+              break
+            fi
+
+            page=$((page + 1))
+          done
+
+          if [ "${#candidates[@]}" -eq 0 ]; then
+            echo "No pull requests merged in the last ${days} day(s) found."
+            exit 0
+          fi
+
+          echo "Candidate pull requests: ${candidates[*]}"
+
+          for pr_number in "${candidates[@]}"; do
+            body="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}" --jq '.body // empty')"
+            if [ -z "$body" ]; then
+              echo "PR #${pr_number} has no body; nothing to close."
+              continue
+            fi
+
+            close_refs_from_body "$pr_number" "$body"
+          done
+
+          if [ "$dry_run" = "true" ]; then
+            echo "Dry run complete; ${closed_total} discussion(s) would be closed."
+          else
+            echo "Done; ${closed_total} discussion(s) closed."
+          fi
