@@ -21304,7 +21304,7 @@ msgstr "L'envoi de messages est en pause"
 #. Notice shown in place of the message composer, and as an error, when messaging is paused on the current account until the user completes one quick step described in an email. While paused, the account cannot post, react, join communities or change its profile. Keep the tone calm and friendly.
 #: src/features/user/utils/AccountLimitUtils.ts:10
 msgid "Messaging is paused on your account. Check your email for a quick step to continue."
-msgstr "L'envoi de messages est en pause sur votre compte. Consultez vos e-mails pour découvrir l'étape rapide qui vous permettra de continuer."
+msgstr "L'envoi de messages a été mis en pause sur votre compte. Consultez vos e-mails pour savoir comment y remédier en une étape rapide."
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:274
 msgid "Messaging is temporarily paused in this community."

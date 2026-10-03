@@ -7,7 +7,7 @@ const ERROR_I18N_FR_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.email_verification_required": "Vous devez vérifier votre adresse e-mail pour effectuer cette action.",
 	"account.guild_verification_required": "La vérification de la communauté est requise.",
 	"account.ip_authorization_required": "L'autorisation IP est requise.",
-	"account.limited": "L'envoi de messages est en pause sur votre compte. Consultez vos e-mails pour découvrir l'étape rapide qui vous permettra de continuer.",
+	"account.limited": "L'envoi de messages a été mis en pause sur votre compte. Consultez vos e-mails pour savoir comment y remédier en une étape rapide.",
 	"account.sensitive_content_filter_age_restricted": "Ce filtre de contenu sensible n’est pas disponible pour votre tranche d’âge.",
 	"account.session_timeout": "La session a expiré. Actualisez la page et reconnectez-vous.",
 	"account.session_token_mismatch": "Incompatibilité du jeton de session.",
