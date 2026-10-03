@@ -24,6 +24,7 @@ export interface NagbarSettings {
 	claimAccountModalShownThisSession: boolean;
 	forceConnectionNotice: boolean;
 	forceEmailVerification: boolean;
+	forceAccountLimited: boolean;
 	forceIOSInstall: boolean;
 	forcePWAInstall: boolean;
 	forcePushNotification: boolean;
@@ -45,6 +46,7 @@ export interface NagbarSettings {
 	forceDomainMoved: boolean;
 	forceHideConnectionNotice: boolean;
 	forceHideEmailVerification: boolean;
+	forceHideAccountLimited: boolean;
 	forceHideIOSInstall: boolean;
 	forceHidePWAInstall: boolean;
 	forceHidePushNotification: boolean;
@@ -98,6 +100,7 @@ export class Nagbar implements NagbarSettings {
 	claimAccountModalShownThisSession = false;
 	forceOffline = false;
 	forceEmailVerification = false;
+	forceAccountLimited = false;
 	forceIOSInstall = false;
 	forcePWAInstall = false;
 	forcePushNotification = false;
@@ -120,6 +123,7 @@ export class Nagbar implements NagbarSettings {
 	forceConnectionNotice = false;
 	forceHideOffline = false;
 	forceHideEmailVerification = false;
+	forceHideAccountLimited = false;
 	forceHideIOSInstall = false;
 	forceHidePWAInstall = false;
 	forceHidePushNotification = false;
@@ -416,6 +420,7 @@ export class Nagbar implements NagbarSettings {
 		this.claimAccountModalShownThisSession = false;
 		this.forceOffline = false;
 		this.forceEmailVerification = false;
+		this.forceAccountLimited = false;
 		this.forceIOSInstall = false;
 		this.forcePWAInstall = false;
 		this.forcePushNotification = false;
@@ -438,6 +443,7 @@ export class Nagbar implements NagbarSettings {
 		this.forceConnectionNotice = false;
 		this.forceHideOffline = false;
 		this.forceHideEmailVerification = false;
+		this.forceHideAccountLimited = false;
 		this.forceHideIOSInstall = false;
 		this.forceHidePWAInstall = false;
 		this.forceHidePushNotification = false;

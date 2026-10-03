@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import i18n from '@app/app/I18n';
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/alerts/FeatureTemporarilyDisabledModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -34,6 +35,7 @@ import {
 } from '@app/features/messaging/utils/MessageRequestUtils';
 import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {MatureContentRejectedModal} from '@app/features/moderation/components/alerts/MatureContentRejectedModal';
+import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
@@ -1278,6 +1280,12 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		) {
 			const systemMessage = createSystemMessage(channelId, conversationLimit.message);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
+			if (
+				conversationLimit.code === APIErrorCodes.NEW_CONVERSATIONS_LIMITED &&
+				channelId !== SelectedChannel.currentChannelId
+			) {
+				showDmActionErrorModal(error);
+			}
 			return;
 		}
 		if (getApiErrorBody(error)?.code === APIErrorCodes.CONTENT_BLOCKED) {

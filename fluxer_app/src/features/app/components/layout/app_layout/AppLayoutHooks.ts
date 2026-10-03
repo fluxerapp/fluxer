@@ -307,6 +307,11 @@ export const useNagbarConditions = (): NagbarConditions => {
 			: nagbarState.forceEmailVerification
 				? true
 				: Boolean(RuntimeConfig.emailsEnabled && user?.isClaimed() && !user.verified),
+		canShowAccountLimited: nagbarState.forceHideAccountLimited
+			? false
+			: nagbarState.forceAccountLimited
+				? true
+				: user?.accountLimited === true,
 		canShowDesktopNotification: nagbarState.forceHideDesktopNotification
 			? false
 			: nagbarState.forceDesktopNotification
@@ -373,6 +378,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.EMAIL_VERIFICATION,
 				priority: -3,
 				visible: conditions.userNeedsVerification,
+				dismissible: false,
+			},
+			{
+				type: NagbarType.ACCOUNT_LIMITED,
+				priority: -3.75,
+				visible: conditions.canShowAccountLimited,
 				dismissible: false,
 			},
 			{

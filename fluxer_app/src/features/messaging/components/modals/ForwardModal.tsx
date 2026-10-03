@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import type {ForwardDestination} from '@app/features/app/components/dialogs/shared/ForwardDefaultDestinations';
 import {MAX_FORWARD_DESTINATIONS} from '@app/features/app/components/dialogs/shared/ForwardDestinationSelection';
@@ -31,6 +32,7 @@ import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegment
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -334,6 +336,10 @@ export const ForwardModal = observer(
 				}
 			} catch (error) {
 				logger.error('Failed to forward message:', error);
+				if (failureCode(error)) {
+					showDmActionErrorModal(error);
+					return;
+				}
 				ModalCommands.push(
 					modal(() => (
 						<MessageForwardFailedModal data-flx="messaging.forward-modal.handle-forward.message-forward-failed-modal" />

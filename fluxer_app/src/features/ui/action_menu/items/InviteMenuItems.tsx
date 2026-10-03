@@ -23,6 +23,7 @@ import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {User} from '@app/features/user/models/User';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {fromTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {useLingui} from '@lingui/react/macro';
@@ -63,6 +64,7 @@ export const InviteToCommunityMenuItem: React.FC<InviteToCommunityMenuItemProps>
 	const handleSendInvite = useCallback(
 		async (candidate: InviteCandidate) => {
 			if (sendingRef.current) return;
+			if (blockIfAccountLimited()) return;
 			const guardKey = getInviteToCommunityGuardKey(user.id, candidate.guild.id, candidate.channelId);
 			if (!beginInviteToCommunityGuard(guardKey)) return;
 			sendingRef.current = true;
@@ -81,8 +83,8 @@ export const InviteToCommunityMenuItem: React.FC<InviteToCommunityMenuItemProps>
 					}
 					inviteUrl = `${RuntimeConfig.inviteEndpoint}/${invite.code}`;
 				}
-				const dmChannelId = await PrivateChannelCommands.ensureDMChannel(user.id);
 				try {
+					const dmChannelId = await PrivateChannelCommands.ensureDMChannel(user.id);
 					const result = await MessageCommands.send(dmChannelId, {
 						content: inviteUrl,
 						nonce: fromTimestamp(Date.now()),

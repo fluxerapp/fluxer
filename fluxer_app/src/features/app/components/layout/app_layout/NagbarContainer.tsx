@@ -2,6 +2,7 @@
 
 import {type NagbarState, NagbarType} from '@app/features/app/components/layout/app_layout/AppLayoutTypes';
 import styles from '@app/features/app/components/layout/app_layout/NagbarContainer.module.css';
+import {AccountLimitedNagbar} from '@app/features/app/components/layout/app_layout/nagbars/AccountLimitedNagbar';
 import {BuildEnvironmentNagbar} from '@app/features/app/components/layout/app_layout/nagbars/BuildEnvironmentNagbar';
 import {ConnectionNagbar} from '@app/features/app/components/layout/app_layout/nagbars/ConnectionNagbar';
 import {CorruptedInstallationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar';
@@ -103,6 +104,14 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 								key={nagbar.type}
 								isMobile={mobileLayout.enabled}
 								data-flx="app.app-layout.nagbar-container.email-verification-nagbar"
+							/>
+						);
+					case NagbarType.ACCOUNT_LIMITED:
+						return (
+							<AccountLimitedNagbar
+								key={nagbar.type}
+								isMobile={mobileLayout.enabled}
+								data-flx="app.app-layout.nagbar-container.account-limited-nagbar"
 							/>
 						);
 					case NagbarType.DESKTOP_NOTIFICATION:

@@ -19,6 +19,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import type {I18n} from '@lingui/core';
@@ -220,6 +221,7 @@ export function useCreateDMModalLogic(
 	const createChannel = useCallback(
 		async (userIds: Array<string>) => {
 			if (restriction) return;
+			if (userIds.length !== 1 && blockIfAccountLimited()) return;
 			setIsCreating(true);
 			try {
 				const channel =

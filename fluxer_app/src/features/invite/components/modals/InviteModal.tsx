@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {CopyLinkSection} from '@app/features/app/components/dialogs/shared/CopyLinkSection';
@@ -32,6 +33,7 @@ import styles from '@app/features/invite/components/modals/InviteModal.module.cs
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -41,6 +43,7 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import {useCopyLinkHandler} from '@app/lib/copy-link';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_INVITE_AGE_SECONDS, MAX_INVITE_USES} from '@fluxer/constants/src/LimitConstants';
@@ -285,15 +288,13 @@ const InviteModalContent = observer(function InviteModalContent({
 	const displayedInviteUrl = hideInviteLinks && inviteUrl ? i18n._(LINK_HIDDEN_WHILE_SHARING_DESCRIPTOR) : inviteUrl;
 	const handleCopy = useCopyLinkHandler(inviteUrl, true);
 	const handleSendInvite = async (item: RecipientItem) => {
+		if (blockIfAccountLimited()) return;
 		const userId = item.type === 'group_dm' ? item.id : item.user.id;
 		setSendingTo((prev) => new Set(prev).add(userId));
-		let targetChannelId: string;
-		if (item.channelId) {
-			targetChannelId = item.channelId;
-		} else {
-			targetChannelId = await PrivateChannelCommands.ensureDMChannel(item.user.id);
-		}
 		try {
+			const targetChannelId = item.channelId
+				? item.channelId
+				: await PrivateChannelCommands.ensureDMChannel(item.user.id);
 			const result = await MessageCommands.send(targetChannelId, {
 				content: inviteUrl,
 				nonce: SnowflakeUtils.fromTimestamp(Date.now()),
@@ -303,6 +304,10 @@ const InviteModalContent = observer(function InviteModalContent({
 			}
 		} catch (error) {
 			logger.error('Failed to send invite:', error);
+			if (failureCode(error)) {
+				showDmActionErrorModal(error);
+				return;
+			}
 			showGenericErrorModal({
 				title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
 				message: () => i18n._(FAILED_TO_SEND_INVITE_DESCRIPTOR),

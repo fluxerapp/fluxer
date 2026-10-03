@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ACCOUNT_LIMITED_DESCRIPTOR} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
 import type {Nagbar, NagbarToggleKey} from '@app/features/ui/state/Nagbar';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -163,6 +164,22 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceEmailVerification && !state.forceHideEmailVerification,
 		forceShowDisabled: (state) => state.forceEmailVerification,
 		forceHideDisabled: (state) => state.forceHideEmailVerification,
+	},
+	{
+		key: 'forceAccountLimited',
+		label: ACCOUNT_LIMITED_DESCRIPTOR,
+		forceKey: 'forceAccountLimited',
+		forceHideKey: 'forceHideAccountLimited',
+		resetKeys: ['forceAccountLimited'],
+		status: (state) =>
+			state.forceAccountLimited
+				? FORCE_ENABLED
+				: state.forceHideAccountLimited
+					? FORCE_DISABLED
+					: USING_ACTUAL_ACCOUNT_STATE,
+		useActualDisabled: (state) => !state.forceAccountLimited && !state.forceHideAccountLimited,
+		forceShowDisabled: (state) => state.forceAccountLimited,
+		forceHideDisabled: (state) => state.forceHideAccountLimited,
 	},
 	{
 		key: 'forceDesktopNotification',

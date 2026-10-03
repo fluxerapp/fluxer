@@ -10,6 +10,10 @@ import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErro
 import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {
+	ACCOUNT_LIMITED_NOTICE_DESCRIPTOR,
+	ACCOUNT_LIMITED_TITLE_DESCRIPTOR,
+} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {msg} from '@lingui/core/macro';
 
@@ -72,10 +76,14 @@ export function resolveDmActionErrorContent(
 ): {title: string; message: string} {
 	switch (code) {
 		case APIErrorCodes.NEW_CONVERSATIONS_LIMITED:
-		case APIErrorCodes.ACCOUNT_LIMITED:
 			return {
 				title: i18nGlobal._(GENERIC_TITLE_DESCRIPTOR),
 				message: apiMessage || i18nGlobal._(GENERIC_ERROR_BODY_DESCRIPTOR),
+			};
+		case APIErrorCodes.ACCOUNT_LIMITED:
+			return {
+				title: i18nGlobal._(ACCOUNT_LIMITED_TITLE_DESCRIPTOR),
+				message: apiMessage || i18nGlobal._(ACCOUNT_LIMITED_NOTICE_DESCRIPTOR),
 			};
 		case APIErrorCodes.CANNOT_SEND_MESSAGES_TO_USER:
 			return {
