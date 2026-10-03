@@ -42,7 +42,6 @@ export interface UpdaterMachineContext {
 	downloadProgress: NativeDownloadProgress | null;
 	lastCheckedAt: number | null;
 	isChecking: boolean;
-	checkInProgress: boolean;
 	nativeCheckFailed: boolean;
 	manualNativeDownloadInFlight: boolean;
 	nativeUnsupported: NativeUnsupportedUpdate | null;
@@ -108,7 +107,6 @@ export function createInitialUpdaterContext(): UpdaterMachineContext {
 		downloadProgress: null,
 		lastCheckedAt: null,
 		isChecking: false,
-		checkInProgress: false,
 		nativeCheckFailed: false,
 		manualNativeDownloadInFlight: false,
 		nativeUnsupported: null,
@@ -143,14 +141,12 @@ export const updaterStateMachine = setup({
 		reset: assign(() => createInitialUpdaterContext()),
 		markChecking: assign(() => ({
 			isChecking: true,
-			checkInProgress: true,
 			nativeCheckFailed: false,
 		})),
 		markCheckFinished: assign(({context, event}) => ({
 			lastCheckedAt:
 				event.type === 'check.finished' || event.type === 'check.failed' ? event.now : context.lastCheckedAt,
 			isChecking: false,
-			checkInProgress: false,
 		})),
 		applyWebChecked: assign(({context, event}) => {
 			if (event.type !== 'web.checked') return {};
@@ -198,7 +194,6 @@ export const updaterStateMachine = setup({
 				...clearNativeUpdate(context),
 				lastCheckedAt: event.now,
 				isChecking: false,
-				checkInProgress: false,
 				nativeUnsupported: {
 					reason: event.reason,
 					downloadUrl: event.downloadUrl,
@@ -231,7 +226,6 @@ export const updaterStateMachine = setup({
 			},
 			downloadProgress: null,
 			isChecking: false,
-			checkInProgress: false,
 			nativeCheckFailed: true,
 		})),
 		applyNativeDownloaded: assign(({context, event}) => {
@@ -274,7 +268,6 @@ export const updaterStateMachine = setup({
 				...clearNativeUpdate(context),
 				lastCheckedAt: event.now,
 				isChecking: false,
-				checkInProgress: false,
 				nativeUnsupported: {
 					reason: event.reason,
 					downloadUrl: event.downloadUrl,
