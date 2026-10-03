@@ -1812,11 +1812,15 @@ Default `256mb`. The ceiling for `nats`. Covers JetStream file store metadata as
 
 #### `FLUXER_MEILISEARCH_MEMORY_LIMIT`
 
-Default `768mb`. The ceiling for `meilisearch`. Must stay well above `FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY`, which bounds the indexer alone.
+Default `1536mb`. The ceiling for `meilisearch`. Indexing a backlog of a few hundred thousand messages with two indexing threads peaks near 1 GB, so keep this above 1 GB.
 
 #### `FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY`
 
-Default `384mb`. Becomes `MEILI_MAX_INDEXING_MEMORY`. The memory the indexer may use for one batch. Lower it whenever you lower `FLUXER_MEILISEARCH_MEMORY_LIMIT`.
+Default `256mb`. Becomes `MEILI_MAX_INDEXING_MEMORY`. The memory the indexer may use for one batch. Meilisearch uses more than this while indexing, because every indexing thread also has buffers of its own. Lower it whenever you lower `FLUXER_MEILISEARCH_MEMORY_LIMIT`.
+
+#### `FLUXER_MEILISEARCH_MAX_INDEXING_THREADS`
+
+Default `2`. Becomes `MEILI_MAX_INDEXING_THREADS`. Without it Meilisearch indexes on half the host's CPU threads, and each thread can use up to 150 MB of buffers, so a host with many cores runs out of memory under a container limit that suits a small one. Raise it only together with `FLUXER_MEILISEARCH_MEMORY_LIMIT`.
 
 #### `FLUXER_MEILISEARCH_ENV`
 
@@ -2038,8 +2042,8 @@ FLUXER_WORKER_MEMORY_LIMIT=1280mb
 FLUXER_WORKER_MEMORY_RESERVATION=768mb
 FLUXER_GATEWAY_MEMORY_LIMIT=512mb
 FLUXER_GATEWAY_MEMORY_RESERVATION=256mb
-FLUXER_MEILISEARCH_MEMORY_LIMIT=512mb
-FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY=256mb
+FLUXER_MEILISEARCH_MEMORY_LIMIT=1gb
+FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY=192mb
 FLUXER_SEAWEEDFS_MEMORY_LIMIT=1gb
 FLUXER_SEAWEEDFS_GOMEMLIMIT=768MiB
 FLUXER_GIFS_SHARD_CACHE_MAX_BYTES=134217728
@@ -2062,8 +2066,9 @@ FLUXER_WORKER_MEMORY_LIMIT=640mb
 FLUXER_WORKER_MEMORY_RESERVATION=384mb
 FLUXER_GATEWAY_MEMORY_LIMIT=384mb
 FLUXER_GATEWAY_MEMORY_RESERVATION=192mb
-FLUXER_MEILISEARCH_MEMORY_LIMIT=384mb
+FLUXER_MEILISEARCH_MEMORY_LIMIT=1gb
 FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY=128mb
+FLUXER_MEILISEARCH_MAX_INDEXING_THREADS=1
 FLUXER_MEDIA_PROXY_MEMORY_LIMIT=320mb
 FLUXER_SEAWEEDFS_MEMORY_LIMIT=320mb
 FLUXER_SEAWEEDFS_GOMEMLIMIT=240MiB
