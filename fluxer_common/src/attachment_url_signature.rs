@@ -546,10 +546,7 @@ mod tests {
         let secret = secret_bytes();
         let now = ANCHOR + 10;
         let signed = with_signature("https://media.test/x.gif", KEY, ANCHOR, now, &secret);
-        let query = signed
-            .split_once('?')
-            .expect("a signed url has a query")
-            .1;
+        let query = signed.split_once('?').expect("a signed url has a query").1;
         let (issued, expires) = issue_window(ANCHOR, now);
         assert!(issued <= now && now < expires);
         for probe in [issued, now, expires - 1] {
@@ -574,10 +571,7 @@ mod tests {
         let now = ANCHOR + 3 * ATTACHMENT_URL_BUCKET_SECS + 7;
         let signed =
             with_data_package_signature("https://media.test/x.gif", KEY, ANCHOR, now, &secret);
-        let query = signed
-            .split_once('?')
-            .expect("a signed url has a query")
-            .1;
+        let query = signed.split_once('?').expect("a signed url has a query").1;
         let (issued, expires) = issue_window(ANCHOR, now);
         assert!(query.starts_with(&format!("ex=0&is={issued:08x}&hm=")));
         assert!(query.ends_with("&uc=dp"));

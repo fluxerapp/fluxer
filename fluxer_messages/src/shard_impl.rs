@@ -4187,10 +4187,7 @@ mod tests {
                 signed.split_once("ex=").map(|(head, _)| head.to_owned()),
                 "{url}"
             );
-            let query = signed
-                .split_once('?')
-                .expect("a signed url has a query")
-                .1;
+            let query = signed.split_once('?').expect("a signed url has a query").1;
             assert_eq!(
                 fluxer_common::attachment_url_signature::Verdict::Valid,
                 fluxer_common::attachment_url_signature::verify(
@@ -4481,10 +4478,7 @@ mod tests {
 
         for input in [encoded, decoded] {
             let signed = media_proxy_url_at(input, &options, now);
-            let query = signed
-                .split_once('?')
-                .expect("a signed url has a query")
-                .1;
+            let query = signed.split_once('?').expect("a signed url has a query").1;
             assert_eq!(
                 fluxer_common::attachment_url_signature::Verdict::Valid,
                 fluxer_common::attachment_url_signature::verify(
