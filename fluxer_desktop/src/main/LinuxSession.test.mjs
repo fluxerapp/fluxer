@@ -5,7 +5,10 @@ import {describe, test} from 'node:test';
 import {loadTsModule} from './fixtures/TsModuleLoader.mjs';
 
 const session = loadTsModule('@electron/main/LinuxSession', {stubs: {'node:fs': {existsSync: () => false}}});
-const sandbox = loadTsModule('@electron/main/LinuxSandbox', {stubs: {'node:fs': {existsSync: () => false}}});
+const BUILD_CHANNEL_STUB = {'@electron/common/BuildChannel': {BUILD_CHANNEL: 'stable'}};
+const sandbox = loadTsModule('@electron/main/LinuxSandbox', {
+	stubs: {...BUILD_CHANNEL_STUB, 'node:fs': {existsSync: () => false}},
+});
 
 describe('detectLinuxSessionType', () => {
 	const exists = (paths) => (candidate) => paths.includes(candidate);
@@ -73,9 +76,13 @@ describe('getLinuxDesktopId', () => {
 		Object.defineProperty(process, 'platform', {...platform, value: 'linux'});
 		try {
 			process.env.FLATPAK_ID = 'app.fluxer.Fluxer';
-			const flatpak = loadTsModule('@electron/main/LinuxSandbox', {stubs: {'node:fs': {existsSync: () => true}}});
+			const flatpak = loadTsModule('@electron/main/LinuxSandbox', {
+				stubs: {...BUILD_CHANNEL_STUB, 'node:fs': {existsSync: () => true}},
+			});
 			assert.equal(flatpak.getLinuxDesktopId(), 'app.fluxer.Fluxer');
-			const host = loadTsModule('@electron/main/LinuxSandbox', {stubs: {'node:fs': {existsSync: () => false}}});
+			const host = loadTsModule('@electron/main/LinuxSandbox', {
+				stubs: {...BUILD_CHANNEL_STUB, 'node:fs': {existsSync: () => false}},
+			});
 			assert.equal(host.getLinuxDesktopId(), 'app.fluxer.FluxerDesktop');
 		} finally {
 			Object.defineProperty(process, 'platform', platform);
