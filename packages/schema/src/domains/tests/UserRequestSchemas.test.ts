@@ -8,6 +8,7 @@ import {
 	SyncedPreferencesSchema,
 } from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
 import {
+	BulkDeleteSelfMessagesFilter,
 	CreatePrivateChannelRequest,
 	CustomStatusPayload,
 	UserSettingsUpdateRequest,
@@ -81,5 +82,22 @@ describe('CreatePrivateChannelRequest', () => {
 			success: false,
 			error: {issues: [{message: 'Either recipient_id or recipients must be provided, but not both'}]},
 		});
+	});
+});
+
+describe('BulkDeleteSelfMessagesFilter', () => {
+	it('accepts ISO8601 timestamps with Z, +00:00, and -00:00', () => {
+		expect(
+			BulkDeleteSelfMessagesFilter.safeParse({
+				start_date: '2026-09-01T00:00:00Z',
+				end_date: '2026-09-07T12:00:00+00:00',
+			}).success,
+		).toBe(true);
+		expect(
+			BulkDeleteSelfMessagesFilter.safeParse({
+				start_date: '2026-09-01T00:00:00-00:00',
+				end_date: '2026-09-07T12:00:00.000Z',
+			}).success,
+		).toBe(true);
 	});
 });

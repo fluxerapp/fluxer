@@ -127,7 +127,7 @@ export const GuildUpdateRequest = z
 				'Complete desired feature set for the guild. Only user-toggleable features may differ from the current set; non-toggleable features must be preserved as-is.',
 			),
 		message_history_cutoff: z.iso
-			.datetime()
+			.datetime({offset: true})
 			.nullish()
 			.describe(
 				'ISO8601 timestamp controlling how far back members without Read Message History can access messages. Set to null to disable historical access.',
@@ -170,7 +170,7 @@ export const GuildMemberUpdateRequest = z.object({
 	mute: z.boolean().optional().describe('Whether the member is muted in voice channels'),
 	deaf: z.boolean().optional().describe('Whether the member is deafened in voice channels'),
 	communication_disabled_until: z
-		.preprocess(coerceBlankStringToNull, z.iso.datetime().nullish())
+		.preprocess(coerceBlankStringToNull, z.iso.datetime({offset: true}).nullish())
 		.describe('ISO8601 timestamp until which the member is timed out'),
 	timeout_reason: createStringType(1, 512)
 		.nullish()
