@@ -11,6 +11,8 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {getDMDisplayName, getIcon, getName} from '@app/features/channel/utils/ChannelUtils';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
+import {joinDiscoveryGuild} from '@app/features/discovery/commands/DiscoveryJoinCommands';
+import DiscoveryChannelPreviews from '@app/features/discovery/state/DiscoveryChannelPreviews';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import {getGuildIconDisplayInitials} from '@app/features/guild/utils/GuildInitialsUtils';
@@ -75,6 +77,7 @@ import type {UserSettingsDeepLinkTarget} from '@app/features/user/components/set
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as StringUtils from '@app/lib/strings';
 import {ME} from '@fluxer/constants/src/AppConstants';
+import {isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react';
@@ -82,7 +85,7 @@ import {CaretRightIcon, ChatTeardropIcon, LockIcon} from '@phosphor-icons/react'
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 
 const LINK_CONTENT_OPTION_OVERRIDES: Partial<MarkdownRenderOptions> = {disableEmojiInteractions: true};
 
@@ -201,7 +204,7 @@ type CompactGuildMentionIconStyle = React.CSSProperties & {
 	'--jump-link-guild-icon-image'?: string;
 };
 
-function CompactGuildMentionIcon({guild}: {guild: Guild}) {
+function CompactGuildMentionIcon({guild}: {guild: Pick<Guild, 'id' | 'name' | 'icon'>}) {
 	const iconUrl = guild.icon ? AvatarUtils.getGuildIconURL({id: guild.id, icon: guild.icon}) : '';
 	const style: CompactGuildMentionIconStyle | undefined = iconUrl
 		? {'--jump-link-guild-icon-image': `url(${iconUrl})`}
@@ -514,6 +517,143 @@ function InaccessibleJumpLinkMention({url, i18n, interactive = true}: Inaccessib
 	);
 }
 
+interface DiscoverableJumpLinkMentionProps {
+	guildId: string;
+	channelId: string;
+	messageId?: string;
+	url: string;
+	i18n: I18n;
+	interactive?: boolean;
+}
+
+const DiscoverableJumpLinkMention = observer(function DiscoverableJumpLinkMention({
+	guildId,
+	channelId,
+	messageId,
+	url,
+	i18n,
+	interactive = true,
+}: DiscoverableJumpLinkMentionProps) {
+	useLingui();
+	const [joining, setJoining] = useState(false);
+	useEffect(() => {
+		DiscoveryChannelPreviews.request(guildId, channelId);
+	}, [guildId, channelId]);
+	const handleClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			event.preventDefault();
+			event.stopPropagation();
+			if (joining) return;
+			setJoining(true);
+			void joinDiscoveryGuild(guildId, {channelId, messageId}).finally(() => setJoining(false));
+		},
+		[channelId, guildId, interactive, joining, messageId],
+	);
+	const handleAuxClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			if (event.button !== 1) return;
+			event.preventDefault();
+			event.stopPropagation();
+			void openExternalUrl(url);
+		},
+		[interactive, url],
+	);
+	const handleContextMenu = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
+				<JumpLinkContextMenu
+					url={url}
+					i18n={i18n}
+					onClose={onClose}
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.context-menu"
+				/>
+			));
+		},
+		[interactive, i18n, url],
+	);
+	const entry = DiscoveryChannelPreviews.get(guildId, channelId);
+	if (entry?.status !== 'ready') {
+		return (
+			<InaccessibleJumpLinkMention
+				url={url}
+				i18n={i18n}
+				interactive={interactive}
+				data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.inaccessible"
+			/>
+		);
+	}
+	const {guild, channel} = entry.preview;
+	const ariaLabel = messageId
+		? i18n._(JUMP_TO_THE_MESSAGE_IN_DESCRIPTOR, {labelText: guild.name})
+		: i18n._(JUMP_TO_DESCRIPTOR, {labelText: guild.name});
+	const Component = interactive ? 'button' : 'span';
+	return (
+		<Component
+			data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.component.click"
+			{...(interactive ? {type: 'button'} : {})}
+			className={clsx(markupStyles.mention, interactive && markupStyles.interactive, jumpLinkStyles.jumpLinkButton)}
+			onClick={handleClick}
+			onAuxClick={handleAuxClick}
+			onContextMenu={handleContextMenu}
+			aria-label={ariaLabel}
+			aria-busy={joining || undefined}
+			{...(interactive
+				? {'aria-roledescription': i18n._(messageId ? MESSAGE_LINK_DESCRIPTOR : CHANNEL_LINK_DESCRIPTOR)}
+				: {})}
+			tabIndex={interactive ? 0 : -1}
+		>
+			<span
+				className={jumpLinkStyles.part}
+				data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.part--guild"
+			>
+				<CompactGuildMentionIcon
+					guild={guild}
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.guild-icon"
+				/>
+				<span
+					className={jumpLinkStyles.name}
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.guild-name"
+				>
+					{guild.name}
+				</span>
+			</span>
+			<span
+				className={jumpLinkStyles.divider}
+				aria-hidden="true"
+				data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.divider"
+			>
+				<CaretRightIcon
+					weight="bold"
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.caret-right-icon"
+				/>
+			</span>
+			{messageId ? (
+				<ChatTeardropIcon
+					className={jumpLinkStyles.icon}
+					weight="fill"
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.chat-teardrop-icon"
+				/>
+			) : (
+				<span
+					className={jumpLinkStyles.part}
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.part--channel"
+				>
+					{getIcon({type: channel.type}, {className: jumpLinkStyles.icon})}
+					<span
+						className={jumpLinkStyles.name}
+						data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.channel-name"
+					>
+						{channel.name ?? channel.id}
+					</span>
+				</span>
+			)}
+		</Component>
+	);
+});
+
 interface SettingsJumpLinkMentionProps {
 	target: UserSettingsDeepLinkTarget;
 	url: string;
@@ -740,6 +880,14 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const jumpTarget = messageJumpTarget ?? channelJumpTarget;
 	const jumpChannel = jumpTarget ? (Channels.getChannel(jumpTarget.channelId) ?? null) : null;
 	const jumpGuild = jumpChannel?.guildId ? (Guilds.getGuild(jumpChannel.guildId) ?? null) : null;
+	const discoverableGuildId =
+		jumpTarget &&
+		!jumpChannel &&
+		jumpTarget.scope !== ME &&
+		isProbablyAValidSnowflake(jumpTarget.scope) &&
+		!Guilds.getGuild(jumpTarget.scope)
+			? jumpTarget.scope
+			: null;
 	const settingsTarget = isAppProtocolUrl(url) ? parseUserSettingsDeepLink(url) : null;
 	const appPage = settingsTarget ? null : parseAppPageLink(url);
 	const isInlineReplyContext = isRestrictedInlineContext(options.context);
@@ -810,11 +958,22 @@ export const LinkRenderer = observer(function LinkRenderer({
 		);
 	}
 	if (jumpTarget && !jumpChannel && !text) {
-		const mention = (
+		const interactive = !isInlineReplyContext && !shouldDisableInteractions;
+		const mention = discoverableGuildId ? (
+			<DiscoverableJumpLinkMention
+				guildId={discoverableGuildId}
+				channelId={jumpTarget.channelId}
+				messageId={messageJumpTarget?.messageId}
+				url={url}
+				i18n={i18n}
+				interactive={interactive}
+				data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention"
+			/>
+		) : (
 			<InaccessibleJumpLinkMention
 				url={url}
 				i18n={i18n}
-				interactive={!isInlineReplyContext && !shouldDisableInteractions}
+				interactive={interactive}
 				data-flx="messaging.markdown.renderers.link-renderer.inaccessible-jump-link-mention"
 			/>
 		);

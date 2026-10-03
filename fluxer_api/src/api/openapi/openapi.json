@@ -5541,6 +5541,77 @@
 				]
 			}
 		},
+		"/discovery/guilds/{guild_id}/channels/{channel_id}": {
+			"get": {
+				"operationId": "get_discovery_channel_preview",
+				"summary": "Preview a channel in a discoverable guild",
+				"tags": ["Discovery"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/DiscoveryChannelPreviewResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the guild and channel behind a channel or message link when the guild is listed in discovery and new members can read the channel.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the guild", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the guild"
+					},
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the channel", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					}
+				]
+			}
+		},
 		"/discovery/guilds/{guild_id}/join": {
 			"post": {
 				"operationId": "join_discovery_guild",
@@ -28577,6 +28648,35 @@
 					"url": {"type": "string", "format": "uri", "description": "Stripe checkout URL to redirect the user to"}
 				},
 				"required": ["url"],
+				"additionalProperties": false
+			},
+			"DiscoveryChannelPreviewResponse": {
+				"type": "object",
+				"properties": {
+					"guild": {
+						"type": "object",
+						"properties": {
+							"id": {"description": "Guild ID", "$ref": "#/components/schemas/SnowflakeStringType"},
+							"name": {"type": "string", "description": "Guild name"},
+							"icon": {"description": "Guild icon hash", "type": ["string", "null"]}
+						},
+						"required": ["id", "name", "icon"],
+						"additionalProperties": false,
+						"description": "The discoverable guild the channel belongs to"
+					},
+					"channel": {
+						"type": "object",
+						"properties": {
+							"id": {"description": "Channel ID", "$ref": "#/components/schemas/SnowflakeStringType"},
+							"name": {"description": "Channel name", "type": ["string", "null"]},
+							"type": {"type": "number", "description": "Channel type"}
+						},
+						"required": ["id", "name", "type"],
+						"additionalProperties": false,
+						"description": "A channel that new members can view"
+					}
+				},
+				"required": ["guild", "channel"],
 				"additionalProperties": false
 			},
 			"DiscoveryGuildListResponse": {

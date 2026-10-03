@@ -245,6 +245,8 @@ export const Endpoints = {
 	DISCOVERY_GUILDS: '/discovery/guilds',
 	DISCOVERY_CATEGORIES: '/discovery/categories',
 	DISCOVERY_JOIN: (guildId: string) => `/discovery/guilds/${guildId}/join`,
+	DISCOVERY_CHANNEL_PREVIEW: (guildId: string, channelId: string) =>
+		`/discovery/guilds/${guildId}/channels/${channelId}`,
 	GUILD_DISCOVERY: (guildId: string) => `/guilds/${guildId}/discovery`,
 	CONNECTIONS: '/users/@me/connections',
 	CONNECTIONS_VERIFY_AND_CREATE: '/users/@me/connections/verify',

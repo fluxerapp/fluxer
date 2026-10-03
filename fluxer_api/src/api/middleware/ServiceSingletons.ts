@@ -463,6 +463,7 @@ export const getGuildDiscoveryService = singleton(
 			getGuildRepository(),
 			getGatewayService(),
 			getGuildSearchService(),
+			getChannelRepository().channelData,
 		),
 );
 export const getReadStateRequestService = singleton(() => new ReadStateRequestService(getReadStateService()));

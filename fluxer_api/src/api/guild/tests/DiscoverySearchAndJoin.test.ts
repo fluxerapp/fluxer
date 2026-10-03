@@ -3,7 +3,8 @@
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import type {GuildID} from '@app/api/BrandedTypes';
 import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
-import {createGuild, getUserGuilds} from '@app/api/guild/tests/GuildTestUtils';
+import {createPermissionOverwrite} from '@app/api/channel/tests/ChannelTestUtils';
+import {createChannel, createGuild, getUserGuilds} from '@app/api/guild/tests/GuildTestUtils';
 import {setInjectedGatewayService} from '@app/api/middleware/ServiceRegistry';
 import {getGuildRepository} from '@app/api/middleware/ServiceSingletons';
 import {banUser} from '@app/api/moderation/tests/ModerationTestUtils';
@@ -15,11 +16,13 @@ import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequest
 import syncDiscoveryIndex from '@app/api/worker/tasks/SyncDiscoveryIndex';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryCategories, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import type {
 	DiscoveryApplicationResponse,
 	DiscoveryCategoryResponse,
+	DiscoveryChannelPreviewResponse,
 	DiscoveryGuildListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
@@ -504,6 +507,67 @@ describe('Discovery Search and Join', () => {
 			await createBuilderWithoutAuth(harness)
 				.post(`/discovery/guilds/${TEST_IDS.NONEXISTENT_GUILD}/join`)
 				.expect(HTTP_STATUS.UNAUTHORIZED)
+				.execute();
+		});
+	});
+	describe('channel preview', () => {
+		async function createListedGuild(name: string): Promise<{ownerToken: string; guildId: string; channelId: string}> {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, name);
+			await setGuildMemberCount(harness, guild.id, 10);
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			await applyAndApprove(
+				harness,
+				owner.token,
+				admin.token,
+				guild.id,
+				`${name} welcomes everyone`,
+				DiscoveryCategories.GAMING,
+			);
+			return {ownerToken: owner.token, guildId: guild.id, channelId: guild.system_channel_id!};
+		}
+		test('should preview a channel that new members can read', async () => {
+			const {guildId, channelId} = await createListedGuild('Preview Guild');
+			const viewer = await createTestAccount(harness);
+			const preview = await createBuilder<DiscoveryChannelPreviewResponse>(harness, viewer.token)
+				.get(`/discovery/guilds/${guildId}/channels/${channelId}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(preview.guild.id).toBe(guildId);
+			expect(preview.guild.name).toBe('Preview Guild');
+			expect(preview.channel.id).toBe(channelId);
+		});
+		test('should not preview a channel hidden from everyone', async () => {
+			const {ownerToken, guildId} = await createListedGuild('Hidden Channel Guild');
+			const hidden = await createChannel(harness, ownerToken, guildId, 'staff');
+			await createPermissionOverwrite(harness, ownerToken, hidden.id, guildId, {
+				type: 0,
+				allow: '0',
+				deny: Permissions.VIEW_CHANNEL.toString(),
+			});
+			const viewer = await createTestAccount(harness);
+			await createBuilder(harness, viewer.token)
+				.get(`/discovery/guilds/${guildId}/channels/${hidden.id}`)
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
+				.execute();
+		});
+		test('should not preview a channel from another guild', async () => {
+			const {guildId} = await createListedGuild('Listed Guild');
+			const other = await createListedGuild('Other Listed Guild');
+			const viewer = await createTestAccount(harness);
+			await createBuilder(harness, viewer.token)
+				.get(`/discovery/guilds/${guildId}/channels/${other.channelId}`)
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
+				.execute();
+		});
+		test('should not preview a guild that is not listed', async () => {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Unlisted Guild');
+			const viewer = await createTestAccount(harness);
+			await createBuilder(harness, viewer.token)
+				.get(`/discovery/guilds/${guild.id}/channels/${guild.system_channel_id}`)
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.DISCOVERY_NOT_DISCOVERABLE)
 				.execute();
 		});
 	});

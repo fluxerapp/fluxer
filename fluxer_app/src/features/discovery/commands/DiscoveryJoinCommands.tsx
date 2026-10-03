@@ -112,10 +112,17 @@ function showJoinGuildErrorModal(error: unknown): void {
 	);
 }
 
-export async function joinDiscoveryGuild(guildId: string): Promise<boolean> {
+export async function joinDiscoveryGuild(
+	guildId: string,
+	target?: {channelId: string; messageId?: string},
+): Promise<boolean> {
 	try {
 		await DiscoveryCommands.joinGuild(guildId);
-		NavigationCommands.selectGuild(guildId);
+		if (target) {
+			NavigationCommands.selectChannel(guildId, target.channelId, target.messageId);
+		} else {
+			NavigationCommands.selectGuild(guildId);
+		}
 		return true;
 	} catch (error) {
 		showJoinGuildErrorModal(error);
