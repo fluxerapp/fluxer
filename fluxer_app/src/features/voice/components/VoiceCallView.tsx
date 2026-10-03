@@ -15,7 +15,6 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Favorites from '@app/features/messaging/state/Favorites';
 import {goBackOr} from '@app/features/platform/components/router/NavigationAdapter';
-import {STREAM_VOLUME_DESCRIPTOR} from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -29,7 +28,7 @@ import Popout from '@app/features/ui/state/Popout';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {CompactVoiceCallView} from '@app/features/voice/components/CompactVoiceCallView';
-import {MediaVerticalVolumeControl} from '@app/features/voice/components/media_player/components/MediaVerticalVolumeControl';
+import {FocusedStreamVolumeControl} from '@app/features/voice/components/FocusedStreamVolumeControl';
 import {PoppedOutOverlay} from '@app/features/voice/components/popout/PoppedOutOverlay';
 import {
 	selectPoppedOutOverlayTransition,
@@ -57,26 +56,20 @@ import {
 import {VoiceRegionTeleportOverlay} from '@app/features/voice/components/VoiceRegionTeleportOverlay';
 import {VoiceDetailsPopout} from '@app/features/voice/components/voice_connection_status/VoiceDetailsPopout';
 import {VoiceDebugStatsForwarder} from '@app/features/voice/diagnostics/VoiceDebugStatsForwarder';
-import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
+import {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import {
 	asVoiceEngineConnectionState,
 	VoiceEngineConnectionState,
 } from '@app/features/voice/engine/VoiceConnectionStateMachine';
-import {
-	asVoiceTrackSource,
-	isScreenShareAudioPublicationLike,
-	VoiceTrackSource,
-} from '@app/features/voice/engine/VoiceTrackSource';
+import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import PopoutWindowManager, {
 	getVoiceCallPopoutKey,
 	isVoicePopoutSupported,
 } from '@app/features/voice/state/PopoutWindowManager';
-import StreamAudioPrefs from '@app/features/voice/state/StreamAudioPrefs';
 import VoiceCallLayout from '@app/features/voice/state/VoiceCallLayout';
 import {hasValidRoomForVoiceCallContext} from '@app/features/voice/utils/VoiceCallContext';
 import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
-import {VOICE_VOLUME_MAX_SLIDER_VOLUME} from '@app/features/voice/utils/VoiceVolumeUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -282,13 +275,6 @@ const VoiceCallViewInner = observer(
 			return getStreamKey(channel.guildId, channel.id, focusedStreamInfo.connectionId);
 		}, [focusedStreamInfo, channel.guildId, channel.id]);
 		const focusedStreamTrackInfo = useStreamTrackInfo(isFocusedOnScreenShare ? effectiveFocusMainTrack : null);
-		const hasFocusedStreamAudio = Boolean(
-			effectiveFocusMainTrack &&
-				[...effectiveFocusMainTrack.participant.audioTrackPublications.values()].some((publication) =>
-					isScreenShareAudioPublicationLike(publication),
-				),
-		);
-		const canControlFocusedStreamVolume = focusedStreamInfo !== null && !effectiveFocusMainTrack?.participant.isLocal;
 		const focusedStreamerDisplayName = useMemo(() => {
 			if (!focusedStreamerUser) return '';
 			return NicknameUtils.getNickname(focusedStreamerUser, channel.guildId, channel.id);
@@ -296,21 +282,6 @@ const VoiceCallViewInner = observer(
 		const {viewerUsers: spectatorUsers, spectatorEntries} = useStreamSpectators(
 			focusedStreamKey,
 			focusedStreamInfo?.userId,
-		);
-		const focusedStreamVolume = StreamAudioPrefs.getVolume(focusedStreamKey);
-		const isFocusedStreamMuted = StreamAudioPrefs.isMuted(focusedStreamKey);
-		const handleFocusedStreamToggleMute = useCallback(() => {
-			if (!focusedStreamKey || !focusedStreamInfo) return;
-			StreamAudioPrefs.setMuted(focusedStreamKey, !isFocusedStreamMuted);
-			MediaEngine.applyLocalAudioPreferencesForUser(focusedStreamInfo.userId);
-		}, [focusedStreamKey, isFocusedStreamMuted, focusedStreamInfo]);
-		const handleFocusedStreamVolumeChange = useCallback(
-			(newVolume: number) => {
-				if (!focusedStreamKey || !focusedStreamInfo) return;
-				StreamAudioPrefs.setVolume(focusedStreamKey, Math.round(newVolume * 100));
-				MediaEngine.applyLocalAudioPreferencesForUser(focusedStreamInfo.userId);
-			},
-			[focusedStreamKey, focusedStreamInfo],
 		);
 		const handleSpectatorsPopoutOpenChange = useCallback((open: boolean) => {
 			setIsSpectatorsPopoutOpen(open);
@@ -695,20 +666,13 @@ const VoiceCallViewInner = observer(
 						fullscreenIcon={FullscreenButtonIcon}
 						onToggleFullscreen={handleToggleVoiceCallAppFullscreen}
 						volumeControl={
-							isFocusedOnScreenShare && focusedStreamKey && hasFocusedStreamAudio && canControlFocusedStreamVolume ? (
-								<MediaVerticalVolumeControl
-									volume={focusedStreamVolume / 100}
-									isMuted={isFocusedStreamMuted}
-									maxVolume={VOICE_VOLUME_MAX_SLIDER_VOLUME}
-									onVolumeChange={handleFocusedStreamVolumeChange}
-									onToggleMute={handleFocusedStreamToggleMute}
-									iconSize={18}
-									className={styles.voiceHeaderIconButton}
-									position="above"
-									ariaLabel={i18n._(STREAM_VOLUME_DESCRIPTOR)}
-									data-flx="voice.voice-call-view.voice-call-view-inner.stream-volume-control"
-								/>
-							) : undefined
+							<FocusedStreamVolumeControl
+								track={isFocusedOnScreenShare ? effectiveFocusMainTrack : null}
+								guildId={channel.guildId}
+								channelId={channel.id}
+								className={styles.voiceHeaderIconButton}
+								data-flx="voice.voice-call-view.voice-call-view-inner.focused-stream-volume-control"
+							/>
 						}
 						data-flx="voice.voice-call-view.voice-call-view-inner.voice-call-corner-controls"
 					/>

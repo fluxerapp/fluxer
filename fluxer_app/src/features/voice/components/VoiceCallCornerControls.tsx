@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
-import {CallVolumeControl} from '@app/features/voice/components/CallVolumeControl';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import type {Icon} from '@phosphor-icons/react';
@@ -54,12 +53,7 @@ export const VoiceCallCornerControls: React.FC<VoiceCallCornerControlsProps> = (
 	}, []);
 	return (
 		<div className={wrapClassName} data-flx="voice.voice-call-corner-controls.wrap">
-			{volumeControl ?? (
-				<CallVolumeControl
-					className={buttonClassName}
-					data-flx="voice.voice-call-corner-controls.call-volume-control"
-				/>
-			)}
+			{volumeControl}
 			{showPopout && onPopOut && (
 				<ChannelHeaderIcon
 					icon={PopOutIcon}
