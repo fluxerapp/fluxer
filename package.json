@@ -55,7 +55,8 @@
 		"knip": "catalog:",
 		"typescript": "catalog:",
 		"typescript-eslint": "catalog:",
-		"vite": "catalog:"
+		"vite": "catalog:",
+		"vitest": "catalog:"
 	},
 	"packageManager": "pnpm@11.27.0"
 }

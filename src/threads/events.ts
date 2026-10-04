@@ -86,6 +86,7 @@ export interface SerializedThreadMembersUpdatePayload {
  * Gateway Event Serializer responsible for converting internal entities
  * to standardized Gateway WebSocket wire payloads.
  */
+// biome-ignore lint/complexity/noStaticOnlyClass: utility serializer class with static state
 export class ThreadEventSerializer {
 	private static sequenceCounter = 0;
 
