@@ -18,6 +18,12 @@ export interface AppStoreAppConfig {
 	appAppleId: number;
 }
 
+export interface TrustedCallerConfig {
+	name: string;
+	key: string;
+	buckets: Array<string>;
+}
+
 export interface APICachePurgeConfig {
 	adapter: CachePurgeAdapterName;
 	http: {
@@ -129,7 +135,7 @@ export interface APIConfig {
 	};
 	internal: {
 		gatewayRpcAuthToken: string;
-		donationProxyKey: string;
+		trustedCallers: Array<TrustedCallerConfig>;
 	};
 	hosts: {
 		marketing: string;

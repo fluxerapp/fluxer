@@ -312,9 +312,19 @@ Default empty. Addresses and CIDR ranges exempt from IP bans. Comma separated. A
 
 The API returns 403 for any request whose client-IP header is missing, empty, or not a parsable address, and for every request while `FLUXER_TRUST_CLIENT_IP_HEADER` is `false`. The exceptions are `/_health`, `/webhooks/livekit`, `/test`, and the Bluesky client metadata and JWKS routes. The edge sets the header on every upstream hop, so a missing or unparsable header happens only in a layout that puts something other than the edge directly in front of `api`. A proxy in front of the edge that never sets the header passes the check, and every request then looks as though it came from the proxy.
 
+#### `FLUXER_API_TRUSTED_CALLERS`
+
+Default `[]`, which keys every rate limit on the caller. A JSON array of trusted callers, such as a front end that talks to the API for its own visitors. Each entry is an object with a `name`, a `key` of at least 32 characters, and `buckets`, the rate limit buckets the caller may set the client address for. Only `donation:request_link`, `donation:manage`, `donation:checkout`, `oauth:token` and `oauth:revoke` accept it. Any other bucket name is ignored. A malformed entry or a short key fails the API at boot.
+
+The caller sends its key in `X-Fluxer-Internal-Key` and its own client's address in `X-Fluxer-Client-Ip`. The API keys the request on that address only when the key matches an entry that lists the route's bucket. Otherwise it ignores both headers and keys the request on the caller, so a browser cannot set the address. Self-hosters leave this empty. Compose forwards it from `.env`.
+
+```json
+[{"name": "bugs", "key": "<at least 32 characters>", "buckets": ["oauth:token", "oauth:revoke"]}]
+```
+
 #### `FLUXER_API_DONATION_PROXY_KEY`
 
-Default empty, which keys donation rate limits on the caller. Set it to let a trusted front end, such as the marketing site, send the donor address the limits apply to. The key must be at least 32 characters or the API fails at boot. The front end sends the same value in `X-Fluxer-Internal-Key` and the donor address in `X-Fluxer-Donor-Ip`. The API ignores the address header unless the key matches, so a browser cannot set it. Self-hosters leave this empty. Compose forwards it from `.env`.
+Default empty. The older form of a trusted caller limited to the three donation buckets, for the marketing site. The key must be at least 32 characters or the API fails at boot. The API also accepts the address in the older `X-Fluxer-Donor-Ip` header. Self-hosters leave this empty. Compose forwards it from `.env`.
 
 ## Images
 

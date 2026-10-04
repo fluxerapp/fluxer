@@ -173,7 +173,7 @@ export function OAuth2Controller(app: HonoApp) {
 	);
 	app.post(
 		'/oauth2/token/revoke',
-		RateLimitMiddleware(RateLimitConfigs.OAUTH_INTROSPECT),
+		RateLimitMiddleware(RateLimitConfigs.OAUTH_REVOKE),
 		Validator('form', RevokeRequestForm),
 		OpenAPI({
 			operationId: 'revoke_oauth2_token',

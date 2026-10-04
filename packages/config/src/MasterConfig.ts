@@ -86,6 +86,11 @@ export interface MasterConfig {
 			max_inflight_requests: number;
 			ip_ban_exempt_ips: Array<string>;
 			donation_proxy_key: string;
+			trusted_callers: Array<{
+				name: string;
+				key: string;
+				buckets: Array<string>;
+			}>;
 			presigned_attachment_uploads_enabled: boolean;
 			presigned_harvest_downloads_enabled: boolean;
 			unfurl_ignored_hosts: Array<string>;

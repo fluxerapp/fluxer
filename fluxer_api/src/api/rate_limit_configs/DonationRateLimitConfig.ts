@@ -7,7 +7,7 @@ export const DonationRateLimitConfigs = {
 	DONATION_REQUEST_LINK: {
 		bucket: 'donation:request_link',
 		config: {limit: 3, windowMs: ms('1 hour')},
-		trustDonorIpHeader: true,
+		trustForwardedClientIp: true,
 		emailBucket: {
 			bucket: 'donation:request_link:email',
 			config: {limit: 10, windowMs: ms('1 hour')},
@@ -16,12 +16,12 @@ export const DonationRateLimitConfigs = {
 	DONATION_MANAGE: {
 		bucket: 'donation:manage',
 		config: {limit: 10, windowMs: ms('1 minute')},
-		trustDonorIpHeader: true,
+		trustForwardedClientIp: true,
 	} as RouteRateLimitConfig,
 	DONATION_CHECKOUT: {
 		bucket: 'donation:checkout',
 		config: {limit: 5, windowMs: ms('1 minute')},
-		trustDonorIpHeader: true,
+		trustForwardedClientIp: true,
 		emailBucket: {
 			bucket: 'donation:checkout:email',
 			config: {limit: 10, windowMs: ms('1 hour')},
