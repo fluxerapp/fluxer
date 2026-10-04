@@ -2338,6 +2338,9 @@
         "msgid": "Lets other communities follow this channel and get copies of what you publish."
       },
       {
+        "msgid": "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
+      },
+      {
         "msgid": "Lets {productName} read your keyboard directly. Your system already allows this."
       },
       {
@@ -3845,6 +3848,12 @@
       },
       {
         "msgid": "Your desktop didn't set up system-wide shortcuts."
+      },
+      {
+        "msgid": "Your desktop keeps these keys for {productName}, so other apps can't use them."
+      },
+      {
+        "msgid": "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
       },
       {
         "msgid": "Your desktop runs these shortcuts even while {productName} is not focused."

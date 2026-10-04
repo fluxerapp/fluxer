@@ -61,6 +61,17 @@ const HYPRLAND_BOUND_DESCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Subtitle for system-wide shortcuts on the Hyprland desktop after setup. Hyprland shows no list of assigned keys. {productName} is the app name.',
 });
+const KEYS_RESERVED_DESCRIPTOR = msg({
+	message: "Your desktop keeps these keys for {productName}, so other apps can't use them.",
+	comment:
+		'Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME). A key assigned here stops reaching every other app. {productName} is the app name.',
+});
+const KEYS_RESERVED_DIRECT_INPUT_DESCRIPTOR = msg({
+	message:
+		"Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below.",
+	comment:
+		'Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.',
+});
 const ONE_ACTION_PER_KEY_DESCRIPTOR = msg({
 	message: 'Each key can run only one system-wide shortcut.',
 	comment: 'Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.',
@@ -151,6 +162,12 @@ const DIRECT_INPUT_LABEL_DESCRIPTOR = msg({
 const DIRECT_INPUT_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Lets {productName} read your keyboard directly. Your system already allows this.',
 	comment: 'Description for the Linux direct input device access switch. {productName} is the app name.',
+});
+const DIRECT_INPUT_ENABLED_DESKTOP_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		'Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead.',
+	comment:
+		'Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.',
 });
 const DIRECT_INPUT_UNAVAILABLE_DESCRIPTION_DESCRIPTOR = msg({
 	message: "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead.",
@@ -511,6 +528,13 @@ const BoundPortalShortcuts: React.FC<{'data-flx': string}> = observer(({'data-fl
 					{i18n._(ONE_ACTION_PER_KEY_DESCRIPTOR)}
 				</p>
 			)}
+			{desktop === 'hyprland' ? null : (
+				<p className={styles.permissionSectionHelper} data-flx="user.system-shortcuts-section.bound.keys-reserved">
+					{i18n._(shouldShowDirectInputSwitch() ? KEYS_RESERVED_DIRECT_INPUT_DESCRIPTOR : KEYS_RESERVED_DESCRIPTOR, {
+						productName: PRODUCT_NAME,
+					})}
+				</p>
+			)}
 			{desktop === 'hyprland' && portal.portalAppId ? (
 				<HyprlandBindLines
 					portalAppId={portal.portalAppId}
@@ -619,8 +643,18 @@ function shouldShowDirectInputSwitch(): boolean {
 	return directInput.available || directInput.enabled;
 }
 
+function canDesktopRunShortcuts(): boolean {
+	const linux = GlobalShortcuts.linux;
+	if (linux?.session !== 'wayland') return false;
+	return linux.desktop === 'kde' || linux.desktop === 'gnome' || linux.desktop === 'hyprland';
+}
+
 function getDirectInputDescription(available: boolean): MessageDescriptor {
-	if (available) return DIRECT_INPUT_DESCRIPTION_DESCRIPTOR;
+	if (available) {
+		return GlobalShortcuts.backend === 'evdev' && canDesktopRunShortcuts()
+			? DIRECT_INPUT_ENABLED_DESKTOP_DESCRIPTION_DESCRIPTOR
+			: DIRECT_INPUT_DESCRIPTION_DESCRIPTOR;
+	}
 	const backend = GlobalShortcuts.backend;
 	if (backend === 'x11') return DIRECT_INPUT_UNAVAILABLE_X11_DESCRIPTION_DESCRIPTOR;
 	if (backend === 'portal' && GlobalShortcuts.portal?.state === 'bound') {

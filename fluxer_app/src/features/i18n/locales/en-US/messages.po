@@ -1714,17 +1714,17 @@ msgid "{productName} can ask your desktop to run its shortcuts while {productNam
 msgstr "{productName} can ask your desktop to run its shortcuts while {productName} is not focused. Your desktop asks you to confirm and lets you pick the keys."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:160
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:177
 msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
 msgstr "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:155
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:172
 msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
 msgstr "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:165
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:182
 msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
 msgstr "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
 
@@ -6900,7 +6900,7 @@ msgid "Change icon"
 msgstr "Change icon"
 
 #. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:83
 msgid "Change in system settings"
 msgstr "Change in system settings"
 
@@ -7498,7 +7498,7 @@ msgid "Chat shortcuts"
 msgstr "Chat shortcuts"
 
 #. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:128
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:139
 msgid "Check again"
 msgstr "Check again"
 
@@ -9741,17 +9741,17 @@ msgid "Copy invite URL"
 msgstr "Copy invite URL"
 
 #. Button that copies Hyprland config lines to the clipboard.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:120
 msgid "Copy lines"
 msgstr "Copy lines"
 
 #. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:118
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:129
 msgid "Copy lines for hyprland.conf"
 msgstr "Copy lines for hyprland.conf"
 
 #. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:124
 msgid "Copy lines for hyprland.lua"
 msgstr "Copy lines for hyprland.lua"
 
@@ -13260,7 +13260,7 @@ msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "e.g., YubiKey, iPhone, work computer"
 
 #. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:75
 msgid "Each key can run only one system-wide shortcut."
 msgstr "Each key can run only one system-wide shortcut."
 
@@ -15734,22 +15734,22 @@ msgid "For me"
 msgstr "For me"
 
 #. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:204
 msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
 msgstr "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
 
 #. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:181
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:198
 msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
 msgstr "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
 
 #. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:199
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:216
 msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
 msgstr "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
 
 #. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:210
 msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
 msgstr "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
 
@@ -17614,22 +17614,22 @@ msgid "Hyperlink"
 msgstr "Hyperlink"
 
 #. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:86
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
 msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
 msgstr "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
 
 #. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:103
 msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
 msgstr "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
 
 #. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:116
 msgid "hyprland.conf (before Hyprland 0.55)"
 msgstr "hyprland.conf (before Hyprland 0.55)"
 
 #. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:101
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:112
 msgid "hyprland.lua (Hyprland 0.55 and later)"
 msgstr "hyprland.lua (Hyprland 0.55 and later)"
 
@@ -19279,7 +19279,7 @@ msgid "Keyboard"
 msgstr "Keyboard"
 
 #. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:176
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
 msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
 msgstr "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
 
@@ -19656,8 +19656,13 @@ msgstr "Let the community self-moderate"
 msgid "Let the member hear others in this community again"
 msgstr "Let the member hear others in this community again"
 
+#. Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:166
+msgid "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
+msgstr "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
+
 #. Description for the Linux direct input device access switch. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:151
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:162
 msgid "Lets {productName} read your keyboard directly. Your system already allows this."
 msgstr "Lets {productName} read your keyboard directly. Your system already allows this."
 
@@ -23443,7 +23448,7 @@ msgid "Not accepted"
 msgstr "Not accepted"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:68
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:79
 msgid "Not assigned"
 msgstr "Not assigned"
 
@@ -26374,17 +26379,17 @@ msgid "Push-to-talk (limited)"
 msgstr "Push-to-talk (limited)"
 
 #. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:243
 msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
 msgstr "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
 
 #. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:220
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:237
 msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
 
 #. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:231
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:248
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 
@@ -26403,7 +26408,7 @@ msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
 msgstr "Push-to-talk is on. Hold your push-to-talk key to speak."
 
 #. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:209
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
 msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
 msgstr "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
 
@@ -26413,7 +26418,7 @@ msgid "Push-to-talk only works while {productName} is focused until {permissionN
 msgstr "Push-to-talk only works while {productName} is focused until {permissionName} is enabled. After changing the permission, fully quit and restart {productName} so system-wide hotkeys can use it."
 
 #. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:205
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:222
 msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
 msgstr "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
 
@@ -26423,7 +26428,7 @@ msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "Push-to-talk only works while the browser tab is focused."
 
 #. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:170
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
 msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
 msgstr "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
 
@@ -26433,12 +26438,12 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "Push-to-talk won't unmute your microphone while you're deafened. Undeafen yourself to talk."
 
 #. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:242
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:259
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
 msgstr "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
 
 #. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:236
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:253
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 
@@ -33169,7 +33174,7 @@ msgid "System-wide shortcuts"
 msgstr "System-wide shortcuts"
 
 #. Linux settings text when setting up system-wide shortcuts failed.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:137
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:148
 msgid "System-wide shortcuts could not be set up."
 msgstr "System-wide shortcuts could not be set up."
 
@@ -34234,12 +34239,12 @@ msgid "This desktop build cannot install updates inside {productName}. Download 
 msgstr "This desktop build cannot install updates inside {productName}. Download the latest desktop installer instead."
 
 #. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:215
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:232
 msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
 msgstr "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
 
 #. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:133
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:144
 msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
 msgstr "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
 
@@ -34946,17 +34951,17 @@ msgid "Title bar platform"
 msgstr "Title bar platform"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:81
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
 msgid "To change the keys, go to Settings > Apps > {productName}."
 msgstr "To change the keys, go to Settings > Apps > {productName}."
 
 #. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:87
 msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
 
 #. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:108
 msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "To change the keys, open your desktop's keyboard shortcut settings."
 
@@ -36593,7 +36598,7 @@ msgid "Up to 720p at 30 FPS"
 msgstr "Up to 720p at 30 FPS"
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:152
 msgid "Update {productName} to use system-wide shortcuts on Wayland."
 msgstr "Update {productName} to use system-wide shortcuts on Wayland."
 
@@ -37039,7 +37044,7 @@ msgid "Use default"
 msgstr "Use default"
 
 #. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:146
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:157
 msgid "Use direct input device access"
 msgstr "Use direct input device access"
 
@@ -40347,9 +40352,19 @@ msgid "Your credit card has been checked. If the card is valid, mature content w
 msgstr "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
 
 #. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:123
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:134
 msgid "Your desktop didn't set up system-wide shortcuts."
 msgstr "Your desktop didn't set up system-wide shortcuts."
+
+#. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME). A key assigned here stops reaching every other app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+msgid "Your desktop keeps these keys for {productName}, so other apps can't use them."
+msgstr "Your desktop keeps these keys for {productName}, so other apps can't use them."
+
+#. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:69
+msgid "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
+msgstr "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
 
 #. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53

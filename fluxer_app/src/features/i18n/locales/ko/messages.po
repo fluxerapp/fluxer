@@ -1714,17 +1714,17 @@ msgid "{productName} can ask your desktop to run its shortcuts while {productNam
 msgstr "{productName}은(는) {productName}에 포커스가 없을 때도 단축키를 실행하도록 데스크톱에 요청할 수 있습니다. 데스크톱에서 확인을 요청하며 키를 직접 선택할 수 있습니다."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, on an X11 session. The app now listens for shortcuts through the X11 display server itself. Keep "X11" as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:160
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:177
 msgid "{productName} can no longer read your keyboard, so it listens for shortcuts through X11 instead."
 msgstr "{productName}이(가) 더 이상 키보드를 읽을 수 없어 대신 X11을 통해 단축키를 감지합니다."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read, for example after a restart removed the access. The app already falls back to the shortcuts the desktop runs. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:155
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:172
 msgid "{productName} can no longer read your keyboard, so your desktop's shortcuts are used instead."
 msgstr "{productName}이(가) 더 이상 키보드를 읽을 수 없어 대신 데스크톱 단축키를 사용합니다."
 
 #. Description for the Linux direct input device access switch when it is on but the keyboard can no longer be read and nothing else runs system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:165
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:182
 msgid "{productName} can no longer read your keyboard. Shortcuts only work while {productName} is focused."
 msgstr "{productName}이(가) 더 이상 키보드를 읽을 수 없습니다. 단축키는 {productName}에 포커스가 있을 때만 작동합니다."
 
@@ -6900,7 +6900,7 @@ msgid "Change icon"
 msgstr "아이콘 변경"
 
 #. Button that opens the Linux desktop dialog for changing the keys of system-wide shortcuts.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:72
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:83
 msgid "Change in system settings"
 msgstr "시스템 설정에서 변경"
 
@@ -7498,7 +7498,7 @@ msgid "Chat shortcuts"
 msgstr "채팅 단축키"
 
 #. Button on Linux that checks again whether the desktop offers system-wide shortcuts, for example after the desktop service started. Keep it short.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:128
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:139
 msgid "Check again"
 msgstr "다시 확인"
 
@@ -9741,17 +9741,17 @@ msgid "Copy invite URL"
 msgstr "초대 URL 복사"
 
 #. Button that copies Hyprland config lines to the clipboard.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:109
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:120
 msgid "Copy lines"
 msgstr "줄 복사"
 
 #. Screen reader name of the button that copies Hyprland config lines in the older hyprlang format. Starts with the visible button text "Copy lines". Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:118
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:129
 msgid "Copy lines for hyprland.conf"
 msgstr "줄 복사(hyprland.conf용)"
 
 #. Screen reader name of the button that copies Hyprland config lines in the Lua format. Starts with the visible button text "Copy lines". Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:113
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:124
 msgid "Copy lines for hyprland.lua"
 msgstr "줄 복사(hyprland.lua용)"
 
@@ -13260,7 +13260,7 @@ msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "예: YubiKey, iPhone, 회사 컴퓨터"
 
 #. Note under the list of system-wide shortcuts on Linux. The desktop cannot assign one key to two actions.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:75
 msgid "Each key can run only one system-wide shortcut."
 msgstr "각 키는 시스템 전체 단축키 하나만 실행할 수 있습니다."
 
@@ -15734,22 +15734,22 @@ msgid "For me"
 msgstr "직접 구매"
 
 #. Warning on GNOME when the push-to-mute shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone muted.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:204
 msgid "For push-to-mute, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay muted."
 msgstr "눌러서 음소거에는 Ctrl, Alt, Shift 없이 단일 키를 사용하세요. 조합 키를 사용하면 메인 키를 먼저 떼야 합니다. 그렇지 않으면 마이크가 계속 음소거될 수 있습니다."
 
 #. Warning on GNOME when the push-to-talk shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the microphone on.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:181
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:198
 msgid "For push-to-talk, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the microphone can stay on."
 msgstr "눌러서 말하기에는 Ctrl, Alt, Shift 없이 단일 키를 사용하세요. 조합 키를 사용하면 메인 키를 먼저 떼야 합니다. 그렇지 않으면 마이크가 계속 켜져 있을 수 있습니다."
 
 #. Warning on GNOME when a hold shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave the shortcut active.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:199
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:216
 msgid "For this shortcut, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or the shortcut can stay active."
 msgstr "이 단축키에는 Ctrl, Alt, Shift 없이 단일 키를 사용하세요. 조합 키를 사용하면 메인 키를 먼저 떼야 합니다. 그렇지 않으면 단축키가 계속 활성 상태로 남을 수 있습니다."
 
 #. Warning on GNOME when the voice activity priority shortcut uses a key combination. Letting go of a modifier key such as Ctrl before the main key can leave priority speaking on. "Voice activity priority" is the shortcut name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:210
 msgid "For voice activity priority, use a single key without Ctrl, Alt or Shift. With a combination, let go of the main key first or priority can stay on."
 msgstr "음성 활동 우선순위에는 Ctrl, Alt, Shift 없이 단일 키를 사용하세요. 조합 키를 사용하면 메인 키를 먼저 떼야 합니다. 그렇지 않으면 우선순위가 계속 켜져 있을 수 있습니다."
 
@@ -17614,22 +17614,22 @@ msgid "Hyperlink"
 msgstr "하이퍼링크"
 
 #. Instructions for the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:86
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
 msgid "Hyprland has no shortcut dialog. Add the lines for your Hyprland version to your Hyprland config and replace KEY with the key you want."
 msgstr "Hyprland에는 단축키 대화상자가 없습니다. Hyprland 버전에 맞는 줄을 Hyprland 설정에 추가하고 KEY를 원하는 키로 바꾸세요."
 
 #. Instructions for the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:103
 msgid "Hyprland has no shortcut dialog. Bind the keys in your Hyprland config."
 msgstr "Hyprland에는 단축키 대화상자가 없습니다. Hyprland 설정에서 키를 바인딩하세요."
 
 #. Label above Hyprland config lines in the older hyprlang format. Keep "hyprland.conf" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:105
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:116
 msgid "hyprland.conf (before Hyprland 0.55)"
 msgstr "hyprland.conf (Hyprland 0.55 이전)"
 
 #. Label above Hyprland config lines in the Lua format. Keep "hyprland.lua" exactly as written.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:101
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:112
 msgid "hyprland.lua (Hyprland 0.55 and later)"
 msgstr "hyprland.lua (Hyprland 0.55 이상)"
 
@@ -19279,7 +19279,7 @@ msgid "Keyboard"
 msgstr "키보드"
 
 #. Linux warning when direct input device access is on but reading the keyboard failed. Not related to the "Direct input" voice processing profile. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:176
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:193
 msgid "Keyboard access couldn't start. Shortcuts only work while {productName} is focused."
 msgstr "키보드 접근을 시작할 수 없습니다. 단축키는 {productName}에 포커스가 있을 때만 작동합니다."
 
@@ -19656,8 +19656,13 @@ msgstr "커뮤니티가 자율적으로 운영되도록 허용"
 msgid "Let the member hear others in this community again"
 msgstr "이 커뮤니티에서 멤버가 다른 사람들의 소리를 다시 들을 수 있도록 허용했습니다"
 
+#. Description for the Linux direct input device access switch while it is on, on a desktop that can also run system-wide shortcuts itself (KDE, GNOME, Hyprland). {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:166
+msgid "Lets {productName} read your keyboard directly. Turn this off to set up shortcuts through your desktop instead."
+msgstr "{productName}이(가) 키보드를 직접 읽을 수 있게 합니다. 데스크톱을 통해 단축키를 설정하려면 이 설정을 끄세요."
+
 #. Description for the Linux direct input device access switch. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:151
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:162
 msgid "Lets {productName} read your keyboard directly. Your system already allows this."
 msgstr "{productName}이(가) 키보드를 직접 읽을 수 있게 합니다. 시스템에서 이미 허용되어 있습니다."
 
@@ -23443,7 +23448,7 @@ msgid "Not accepted"
 msgstr "수락되지 않음"
 
 #. Shown instead of a key when the desktop has no key assigned to a system-wide shortcut.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:68
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:79
 msgid "Not assigned"
 msgstr "할당되지 않음"
 
@@ -26374,17 +26379,17 @@ msgid "Push-to-talk (limited)"
 msgstr "눌러서 말하기 (제한됨)"
 
 #. Voice settings warning on GNOME when the desktop has no key assigned to push-to-talk. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:243
 msgid "Push-to-talk has no system-wide key yet. To set one, go to Settings > Apps > {productName}."
 msgstr "눌러서 말하기에 아직 시스템 전체 키가 없습니다. 설정하려면 설정 > 앱 > {productName}(으)로 이동하세요."
 
 #. Voice settings warning on KDE Plasma when the desktop has no key assigned to push-to-talk. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:220
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:237
 msgid "Push-to-talk has no system-wide key yet. To set one, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "눌러서 말하기에 아직 시스템 전체 키가 없습니다. 설정하려면 시스템 설정 > 키보드 > 단축키 > {productName}(으)로 이동하세요."
 
 #. Voice settings warning on an unrecognized Linux desktop when the desktop has no key assigned to push-to-talk.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:231
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:248
 msgid "Push-to-talk has no system-wide key yet. To set one, open your desktop's keyboard shortcut settings."
 msgstr "눌러서 말하기에 아직 시스템 전체 키가 없습니다. 설정하려면 데스크톱의 키보드 단축키 설정을 여세요."
 
@@ -26403,7 +26408,7 @@ msgid "Push-to-talk is on. Hold your push-to-talk key to speak."
 msgstr "눌러서 말하기가 켜져 있습니다. 눌러서 말하기 키를 누른 채 말하세요."
 
 #. Voice settings warning on Linux when the desktop dialog for system-wide shortcuts was dismissed or failed. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:209
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:226
 msgid "Push-to-talk only works while {productName} is focused because your desktop didn't set up system-wide shortcuts."
 msgstr "데스크톱에서 시스템 전체 단축키를 설정하지 않아 눌러서 말하기는 {productName}에 포커스가 있을 때만 작동합니다."
 
@@ -26413,7 +26418,7 @@ msgid "Push-to-talk only works while {productName} is focused until {permissionN
 msgstr "{permissionName}을(를) 활성화하기 전까지는 {productName}이(가) 포커스된 상태에서만 눌러서 말하기가 작동합니다. 권한을 변경한 후에는 {productName}을(를) 완전히 종료하고 다시 시작해야 시스템 전체 단축키를 사용할 수 있습니다."
 
 #. Voice settings warning on Linux before system-wide shortcuts are set up. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:205
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:222
 msgid "Push-to-talk only works while {productName} is focused until you set up system-wide shortcuts."
 msgstr "시스템 전체 단축키를 설정하기 전까지 눌러서 말하기는 {productName}에 포커스가 있을 때만 작동합니다."
 
@@ -26423,7 +26428,7 @@ msgid "Push-to-talk only works while the browser tab is focused."
 msgstr "눌러서 말하기는 브라우저 탭이 활성화된 상태에서만 작동합니다."
 
 #. Linux warning next to the direct input device access switch when push-to-talk only has a key assigned by the desktop. With direct input on, only the push-to-talk key set in the app works, and without one the microphone sends whenever you speak. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:170
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:187
 msgid "Push-to-talk will use the key you set in {productName}. Set one first, or your microphone will use voice activity."
 msgstr "눌러서 말하기는 {productName}에서 설정한 키를 사용합니다. 먼저 키를 설정하지 않으면 마이크가 음성 활동으로 작동합니다."
 
@@ -26433,12 +26438,12 @@ msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen
 msgstr "소리 끄기 상태에서는 눌러서 말하기로 마이크 음소거가 해제되지 않습니다. 대화하려면 소리 끄기를 먼저 해제하세요."
 
 #. Voice settings note on the Hyprland desktop when the app id is unknown. The config is hyprland.lua on Hyprland 0.55 and later, hyprland.conf before. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:242
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:259
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config."
 msgstr "눌러서 말하기를 {productName} 밖에서 사용하려면 Hyprland 설정에서 바인딩해야 합니다."
 
 #. Voice settings note on the Hyprland desktop, shown above config lines for hyprland.lua (Hyprland 0.55 and later) and for hyprland.conf (before 0.55). Keep "KEY" exactly as written. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:236
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:253
 msgid "Push-to-talk works outside {productName} only after you bind it in your Hyprland config. Add the line for your Hyprland version and replace KEY with the key you want."
 msgstr "눌러서 말하기를 {productName} 밖에서 사용하려면 Hyprland 설정에서 바인딩해야 합니다. Hyprland 버전에 맞는 줄을 추가하고 KEY를 원하는 키로 바꾸세요."
 
@@ -33169,7 +33174,7 @@ msgid "System-wide shortcuts"
 msgstr "시스템 전체 단축키"
 
 #. Linux settings text when setting up system-wide shortcuts failed.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:137
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:148
 msgid "System-wide shortcuts could not be set up."
 msgstr "시스템 전체 단축키를 설정할 수 없습니다."
 
@@ -34234,12 +34239,12 @@ msgid "This desktop build cannot install updates inside {productName}. Download 
 msgstr "이 데스크톱 빌드는 {productName}에서 업데이트를 설치할 수 없습니다. 대신 최신 데스크톱 설치 파일을 다운로드하세요."
 
 #. Voice settings warning on Linux desktops without system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:215
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:232
 msgid "This desktop doesn't offer system-wide shortcuts. Push-to-talk only works while {productName} is focused."
 msgstr "이 데스크톱은 시스템 전체 단축키를 지원하지 않습니다. 눌러서 말하기는 {productName}에 포커스가 있을 때만 작동합니다."
 
 #. Linux settings text when the desktop has no system-wide shortcut support. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:133
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:144
 msgid "This desktop doesn't offer system-wide shortcuts. Shortcuts still work while {productName} is focused."
 msgstr "이 데스크톱은 시스템 전체 단축키를 지원하지 않습니다. {productName}에 포커스가 있을 때는 단축키가 계속 작동합니다."
 
@@ -34946,17 +34951,17 @@ msgid "Title bar platform"
 msgstr "제목 표시줄 플랫폼"
 
 #. Instructions for GNOME. Keep "Settings" and "Apps" as the GNOME menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:81
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:92
 msgid "To change the keys, go to Settings > Apps > {productName}."
 msgstr "키를 변경하려면 설정 > 앱 > {productName}(으)로 이동하세요."
 
 #. Instructions for KDE Plasma. Keep "System Settings", "Keyboard" and "Shortcuts" as the KDE menu names in your language. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:76
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:87
 msgid "To change the keys, go to System Settings > Keyboard > Shortcuts > {productName}."
 msgstr "키를 변경하려면 시스템 설정 > 키보드 > 단축키 > {productName}(으)로 이동하세요."
 
 #. Instructions for changing system-wide shortcut keys on an unrecognized Linux desktop.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:97
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:108
 msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "키를 변경하려면 데스크톱의 키보드 단축키 설정을 여세요."
 
@@ -36593,7 +36598,7 @@ msgid "Up to 720p at 30 FPS"
 msgstr "최대 720p, 30 FPS"
 
 #. Linux settings text when the installed desktop app is too old for system-wide shortcuts. {productName} is the app name.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:141
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:152
 msgid "Update {productName} to use system-wide shortcuts on Wayland."
 msgstr "Wayland에서 시스템 전체 단축키를 사용하려면 {productName}을(를) 업데이트하세요."
 
@@ -37039,7 +37044,7 @@ msgid "Use default"
 msgstr "기본값 사용"
 
 #. Switch label on Linux. When on, the app reads keyboard devices directly for system-wide shortcuts. Not related to the "Direct input" voice processing profile.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:146
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:157
 msgid "Use direct input device access"
 msgstr "입력 장치 직접 접근 사용"
 
@@ -40347,9 +40352,19 @@ msgid "Your credit card has been checked. If the card is valid, mature content w
 msgstr "신용카드 확인이 완료되었습니다. 유효한 카드인 경우, 성인 콘텐츠가 곧 잠금 해제됩니다. 이 탭을 닫고 앱으로 돌아가세요."
 
 #. Linux settings text when the desktop dialog for system-wide shortcuts was dismissed or failed. Neutral wording, the user may not have declined anything.
-#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:123
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:134
 msgid "Your desktop didn't set up system-wide shortcuts."
 msgstr "데스크톱에서 시스템 전체 단축키를 설정하지 못했습니다."
+
+#. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME). A key assigned here stops reaching every other app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:64
+msgid "Your desktop keeps these keys for {productName}, so other apps can't use them."
+msgstr "데스크톱에서 이 키를 {productName} 전용으로 예약하므로 다른 앱에서는 사용할 수 없습니다."
+
+#. Linux settings note under the list of system-wide shortcuts the desktop runs (KDE, GNOME), shown when the "Use direct input device access" switch is offered below it. A key assigned here stops reaching every other app. {productName} is the app name.
+#: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:69
+msgid "Your desktop keeps these keys for {productName}, so other apps can't use them. To use the same key in other apps, turn on direct input device access below."
+msgstr "데스크톱에서 이 키를 {productName} 전용으로 예약하므로 다른 앱에서는 사용할 수 없습니다. 다른 앱에서도 같은 키를 사용하려면 아래에서 입력 장치 직접 접근을 켜세요."
 
 #. Subtitle above the list of system-wide shortcuts assigned by the Linux desktop. {productName} is the app name.
 #: src/features/user/components/modals/tabs/components/SystemShortcutsSection.tsx:53
