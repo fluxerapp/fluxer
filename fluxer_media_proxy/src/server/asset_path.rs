@@ -130,6 +130,25 @@ pub(in crate::server) fn parse_entrance_sound_path(path: &str) -> Option<String>
     Some(format!("entrance-sounds/{user_id}/{filename}"))
 }
 
+pub(in crate::server) fn parse_guild_event_image_path(path: &str) -> Option<String> {
+    let mut parts = canonical_public_path(path)?.split('/');
+    if parts.next()? != "guild-events" {
+        return None;
+    }
+    let guild_id = SnowflakeId::parse(parts.next()?)?;
+    let event_id = SnowflakeId::parse(parts.next()?)?;
+    let hash = parts.next()?;
+    if parts.next().is_some()
+        || hash.len() != 16
+        || !hash
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+    {
+        return None;
+    }
+    Some(format!("guild-events/{guild_id}/{event_id}/{hash}"))
+}
+
 struct ParsedAssetFilename<'a> {
     hash: &'a str,
     ext: AssetExtension,
@@ -250,6 +269,49 @@ mod tests {
         assert_eq!(parse_entrance_sound_path("/entrance-sounds/42"), None);
         assert_eq!(parse_entrance_sound_path("/entrance-sounds//abc.wav"), None);
         assert_eq!(parse_entrance_sound_path("/avatars/42/abc.wav"), None);
+    }
+
+    #[test]
+    fn guild_event_image_paths_match_extensionless_api_storage_keys() {
+        for path in [
+            "/guild-events/42/7/eb417d05ad2e14c4",
+            "/guild-events/1216100949629702144/1216100949629702145/0000000000000000",
+        ] {
+            assert_eq!(
+                Some(path.trim_start_matches('/').to_owned()),
+                parse_guild_event_image_path(path)
+            );
+        }
+    }
+
+    #[test]
+    fn guild_event_image_paths_reject_noncanonical_ids_hashes_and_extra_segments() {
+        for path in [
+            "guild-events/42/7/eb417d05ad2e14c4",
+            "//guild-events/42/7/eb417d05ad2e14c4",
+            "/guild-events/0/7/eb417d05ad2e14c4",
+            "/guild-events/042/7/eb417d05ad2e14c4",
+            "/guild-events/42/0/eb417d05ad2e14c4",
+            "/guild-events/42/07/eb417d05ad2e14c4",
+            "/guild-events/42/18446744073709551616/eb417d05ad2e14c4",
+            "/guild-events/42/../eb417d05ad2e14c4",
+            "/guild-events/42/%37/eb417d05ad2e14c4",
+            "/guild-events/42/7/EB417D05AD2E14C4",
+            "/guild-events/42/7/gb417d05ad2e14c4",
+            "/guild-events/42/7/eb417d05ad2e14c",
+            "/guild-events/42/7/eb417d05ad2e14c40",
+            "/guild-events/42/7/a_eb417d05ad2e14c4",
+            "/guild-events/42/7/eb417d05ad2e14c4.png",
+            "/guild-events/42/7/eb417d05ad2e14c4/extra",
+            "/guild-events/42/7/eb417d05ad2e14c4/",
+            "/guild-events/42/7/",
+            "/avatars/42/7/eb417d05ad2e14c4",
+        ] {
+            assert!(
+                parse_guild_event_image_path(path).is_none(),
+                "accepted {path}"
+            );
+        }
     }
 
     #[test]

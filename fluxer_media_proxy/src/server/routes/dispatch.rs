@@ -7,14 +7,16 @@ use crate::{
     server::{
         asset_path::{
             StorageKeyDecodeError, decode_storage_key, parse_entrance_sound_path,
-            parse_guild_member_asset_path, parse_simple_asset_path, parse_standard_asset_path,
+            parse_guild_event_image_path, parse_guild_member_asset_path, parse_simple_asset_path,
+            parse_standard_asset_path,
         },
         attachment_signature,
         cors::{self, OriginCheck},
         external::serve_external,
-        response::error::{text, text_with_source},
+        response::error::{storage_error_response, text, text_with_source},
         state::AppState,
         stored,
+        transform::{ServeBytesRequest, parameters::TransformRoute, serve_bytes_or_transform},
     },
 };
 use axum::{
@@ -153,6 +155,32 @@ async fn serve_public_read(app: &Arc<AppState>, read: PublicRead<'_>) -> Respons
     if let Some(key) = parse_entrance_sound_path(path) {
         return stored::serve_stored_raw(app, method, &app.cfg.storage.bucket_cdn, &key, headers)
             .await;
+    }
+    if let Some(key) = parse_guild_event_image_path(path) {
+        let object = match app
+            .store
+            .read_object(&app.cfg.storage.bucket_cdn, &key)
+            .await
+        {
+            Ok(object) => object,
+            Err(err) => return storage_error_response(&key, err),
+        };
+        // Event URLs have no extension. Read once so local storage can sniff the image
+        // type too, then retain its original dimensions and animation without a resize.
+        return serve_bytes_or_transform(
+            app.media.transforms(),
+            ServeBytesRequest {
+                method,
+                data: object.data,
+                content_type: object.content_type,
+                cache_identity: &key,
+                filename: &key,
+                route: TransformRoute::Attachment,
+                params: &HashMap::new(),
+                headers,
+            },
+        )
+        .await;
     }
     if let Some(asset) = parse_guild_member_asset_path(path) {
         return stored::serve_asset_image(app, method, asset, params, headers).await;
@@ -547,6 +575,100 @@ mod tests {
             dispatch(&app, Method::POST, "/themes/dark.css")
                 .await
                 .status()
+        );
+    }
+
+    #[tokio::test]
+    async fn guild_event_images_serve_api_urls_with_original_bytes_head_and_ranges() {
+        let tmp = tempfile::tempdir().expect("storage root");
+        let root = tmp.path().canonicalize().expect("canonical storage root");
+        let path = "/guild-events/42/7/eb417d05ad2e14c4";
+        let image = crate::test_fixtures::animated_gif_fixture();
+        write_object(root.as_path(), "cdn", &path[1..], &image);
+        write_object(root.as_path(), "static", &path[1..], STORED_BYTES);
+
+        for mode in ["mp", "upload"] {
+            let app = dispatch_app(mode, root.as_path(), &[]);
+            let get = dispatch(&app, Method::GET, path).await;
+            assert_eq!(StatusCode::OK, get.status(), "mode={mode}");
+            assert_eq!(
+                Some("image/gif".to_owned()),
+                header_value(&get, header::CONTENT_TYPE)
+            );
+            assert_eq!(image.as_slice(), body_of(get).await.as_ref());
+
+            let head = dispatch(&app, Method::HEAD, path).await;
+            assert_eq!(StatusCode::OK, head.status());
+            assert_eq!(
+                Some("image/gif".to_owned()),
+                header_value(&head, header::CONTENT_TYPE)
+            );
+            assert_eq!(
+                Some(image.len().to_string()),
+                header_value(&head, header::CONTENT_LENGTH)
+            );
+            assert!(body_of(head).await.is_empty());
+
+            let range = dispatch_request(
+                &app,
+                read_request(Method::GET, path, &[], Some("bytes=0-5")),
+            )
+            .await;
+            assert_eq!(StatusCode::PARTIAL_CONTENT, range.status());
+            assert_eq!(
+                Some(format!("bytes 0-5/{}", image.len())),
+                header_value(&range, header::CONTENT_RANGE)
+            );
+            assert_eq!(&image[..6], body_of(range).await.as_ref());
+        }
+    }
+
+    #[tokio::test]
+    async fn guild_event_images_preserve_missing_object_origin_and_mode_rules() {
+        let tmp = tempfile::tempdir().expect("storage root");
+        let root = tmp.path().canonicalize().expect("canonical storage root");
+        let path = "/guild-events/42/7/eb417d05ad2e14c4";
+        write_object(
+            root.as_path(),
+            "cdn",
+            &path[1..],
+            &crate::test_fixtures::minimal_gif(),
+        );
+        let app = dispatch_app("mp", root.as_path(), ENFORCE);
+        let allowed = dispatch_request(
+            &app,
+            read_request(Method::GET, path, &[WEB.as_bytes()], None),
+        )
+        .await;
+        assert_eq!(StatusCode::OK, allowed.status());
+        assert_eq!(
+            Some(WEB.to_owned()),
+            header_value(&allowed, header::ACCESS_CONTROL_ALLOW_ORIGIN)
+        );
+        let denied = dispatch_request(
+            &app,
+            read_request(Method::GET, path, &[EVIL.as_bytes()], None),
+        )
+        .await;
+        assert_eq!(StatusCode::FORBIDDEN, denied.status());
+        for missing in [
+            "/guild-events/42/8/eb417d05ad2e14c4",
+            "/guild-events/42/7/0000000000000000",
+            "/guild-events/42/7/eb417d05ad2e14c4/extra",
+        ] {
+            assert_eq!(
+                StatusCode::NOT_FOUND,
+                dispatch(&app, Method::GET, missing).await.status()
+            );
+        }
+        assert_eq!(
+            StatusCode::METHOD_NOT_ALLOWED,
+            dispatch(&app, Method::POST, path).await.status()
+        );
+        let relay = dispatch_app("relay", root.as_path(), &[]);
+        assert_eq!(
+            StatusCode::NOT_FOUND,
+            dispatch(&relay, Method::GET, path).await.status()
         );
     }
 

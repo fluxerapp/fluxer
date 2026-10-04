@@ -224,6 +224,35 @@ The route selects no representation, accepts a `Range`, and sends no `Content-Di
 
 [Common responses](#common-responses) also apply.
 
+## Get community event image
+
+<RouteHeader method="GET" path="/guild-events/{guild_id}/{event_id}/{hash}" unauthenticated />
+
+Returns community event artwork from the CDN bucket. Use the complete `image_url` returned by the community events API. The URL has no file extension: the upload's image type is detected from the stored object, and raster images retain their original bytes, dimensions, and animation.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | string | The owning guild's positive decimal snowflake, without leading zeros |
+| event_id | string | The event's positive decimal snowflake, without leading zeros |
+| hash | string | The 16 lowercase hexadecimal characters returned by the event image upload |
+
+Do not add an extension or an animation prefix to the hash. A malformed identifier, hash, or extra path segment returns 404. Query parameters do not resize or change the image's format. The route supports `HEAD` and a byte `Range` over the returned representation. SVG content follows the media proxy's existing rasterisation path.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | Complete image representation | The event image is available |
+| 206 | Selected image bytes | One range is satisfiable |
+| 400 | Bad request | SVG rasterisation failed or was prohibited |
+| 404 | Not found | The path is malformed or the event image does not exist |
+| 416 | empty | The range is unsatisfiable |
+| 504 | Gateway timeout | SVG transformation capacity was unavailable or its deadline was exceeded |
+
+[Common responses](#common-responses) also apply.
+
 ## Image asset contract
 
 An image asset is a stored picture Fluxer serves at a requested size and format, such as an avatar, a guild icon, or an emoji. The asset hash comes from the resource object, and the path combines the owning resource, that hash, and a file extension. On an emoji or sticker path the filename is the identifier itself. The grammar, query parameters, and responses below apply to every image asset route. [Asset size selection](/media-proxy/transformations/#asset-size-selection) defines every size class.
