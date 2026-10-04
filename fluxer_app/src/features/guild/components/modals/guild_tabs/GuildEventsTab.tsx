@@ -8,6 +8,7 @@ import {
 	guildEventDateToIso,
 	snapshotGuildEventDate,
 } from '@app/features/guild/utils/GuildEventDateUtils';
+import {GuildEventImageReader} from '@app/features/guild/utils/GuildEventImageReader';
 import Permission from '@app/features/permissions/state/Permission';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -39,21 +40,22 @@ const emptyDraft = (): Draft => ({
 	image: undefined,
 });
 
-async function fileAsDataUrl(file: File): Promise<string> {
-	return await new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onerror = () => reject(reader.error ?? new Error('Unable to read image'));
-		reader.onload = () => resolve(String(reader.result));
-		reader.readAsDataURL(file);
-	});
-}
-
 const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const [events, setEvents] = useState<Array<GuildEvent>>([]);
 	const [draft, setDraft] = useState<Draft>(emptyDraft);
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [busy, setBusy] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [readingImage, setReadingImage] = useState(false);
+	const [imageReader] = useState(
+		() =>
+			new GuildEventImageReader({
+				onLoad: (image) => setDraft((d) => ({...d, image})),
+				onError: (cause) => setError(cause.message),
+				onPending: setReadingImage,
+			}),
+	);
+	useEffect(() => () => imageReader.cancel(false), [imageReader]);
 	const permissions = Permission.getGuildPermissions(guildId) ?? 0n;
 	const canCreate =
 		(permissions & Permissions.CREATE_EVENTS) === Permissions.CREATE_EVENTS ||
@@ -80,29 +82,34 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	);
 
 	const reset = useCallback(() => {
+		imageReader.cancel();
 		setEditingId(null);
 		setDraft(emptyDraft());
-	}, []);
+	}, [imageReader]);
 
-	const edit = useCallback((event: GuildEvent) => {
-		const startsAt = snapshotGuildEventDate(event.starts_at);
-		const endsAt = event.ends_at ? snapshotGuildEventDate(event.ends_at) : null;
-		setEditingId(event.id);
-		setDraft({
-			name: event.name,
-			description: event.description ?? '',
-			location: event.location ?? '',
-			startsAt: startsAt.input,
-			endsAt: endsAt?.input ?? '',
-			image: undefined,
-			originalDates: {startsAt, endsAt},
-		});
-	}, []);
+	const edit = useCallback(
+		(event: GuildEvent) => {
+			imageReader.cancel();
+			const startsAt = snapshotGuildEventDate(event.starts_at);
+			const endsAt = event.ends_at ? snapshotGuildEventDate(event.ends_at) : null;
+			setEditingId(event.id);
+			setDraft({
+				name: event.name,
+				description: event.description ?? '',
+				location: event.location ?? '',
+				startsAt: startsAt.input,
+				endsAt: endsAt?.input ?? '',
+				image: undefined,
+				originalDates: {startsAt, endsAt},
+			});
+		},
+		[imageReader],
+	);
 
 	const submit = useCallback(
 		async (event: React.FormEvent) => {
 			event.preventDefault();
-			if (!draft.startsAt || !draft.name.trim()) return;
+			if (busy || readingImage || !draft.startsAt || !draft.name.trim()) return;
 			setBusy(true);
 			setError(null);
 			try {
@@ -127,7 +134,7 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				setBusy(false);
 			}
 		},
-		[draft, editingId, guildId, refresh, reset],
+		[busy, draft, editingId, guildId, readingImage, refresh, reset],
 	);
 
 	const remove = useCallback(
@@ -218,15 +225,22 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 							onChange={(e) => setDraft((d) => ({...d, description: e.target.value}))}
 						/>
 					</label>
-					<label className={styles.imagePicker}>
+					<label className={styles.imagePicker} aria-busy={readingImage}>
 						<ImageIcon size={18} aria-hidden />
 						<span>{editingId ? 'Replace event image' : 'Event image'}</span>
 						<input
 							type="file"
 							accept="image/*"
+							disabled={busy}
 							onChange={(e) => {
 								const file = e.currentTarget.files?.[0];
-								if (file) void fileAsDataUrl(file).then((image) => setDraft((d) => ({...d, image})));
+								e.currentTarget.value = '';
+								if (file) {
+									setError(null);
+									imageReader.read(file);
+								} else {
+									imageReader.cancel();
+								}
 							}}
 						/>
 					</label>
@@ -235,12 +249,16 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 							<input
 								type="checkbox"
 								checked={draft.image === null}
-								onChange={(e) => setDraft((d) => ({...d, image: e.target.checked ? null : undefined}))}
+								disabled={busy}
+								onChange={(e) => {
+									imageReader.cancel();
+									setDraft((d) => ({...d, image: e.target.checked ? null : undefined}));
+								}}
 							/>
 							<span>Remove current image</span>
 						</label>
 					)}
-					<button className={styles.primaryButton} type="submit" disabled={busy}>
+					<button className={styles.primaryButton} type="submit" disabled={busy || readingImage}>
 						<PlusIcon size={16} aria-hidden />
 						{editingId ? 'Save changes' : 'Create event'}
 					</button>
