@@ -489,16 +489,6 @@ describe('operator billing catalog', () => {
 			expect(stripeHandlers.spies.createdCheckoutSessions[0]?.line_items?.[0]?.price).toBe('price_opchfyearly');
 		});
 
-		test('never offers the localized card preapproval flow', async () => {
-			const token = await createPurchaser();
-			await createBuilder(harness, token)
-				.post('/stripe/checkout/subscription/preapproval')
-				.body({price_id: 'price_opsekmonthly', country_code: 'SE'})
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.STRIPE_INVALID_PRODUCT_CONFIGURATION)
-				.execute();
-			expect(stripeHandlers.spies.createdCheckoutSessions).toHaveLength(0);
-		});
-
 		test('rejects pix and upi for operator prices', async () => {
 			const token = await createPurchaser();
 			await createBuilder(harness, token)

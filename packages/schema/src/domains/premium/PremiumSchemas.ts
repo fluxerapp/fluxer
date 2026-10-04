@@ -54,40 +54,6 @@ export const PriceIdsQueryRequest = z.object({
 
 export type PriceIdsQueryRequest = z.infer<typeof PriceIdsQueryRequest>;
 
-export const LocalizedCardPreapprovalContinueRequest = z.object({
-	token: createStringType(1, 256).describe('Continuation token for the localized card preapproval flow'),
-});
-
-export type LocalizedCardPreapprovalContinueRequest = z.infer<typeof LocalizedCardPreapprovalContinueRequest>;
-
-const LocalizedCardPreapprovalRejectedReason = z.enum([
-	'country_mismatch',
-	'missing_customer',
-	'missing_payment_method',
-	'missing_setup_intent',
-	'payment_method_not_card',
-	'unknown',
-]);
-export const LocalizedCardPreapprovalContinueResponse = z.discriminatedUnion('status', [
-	z.object({
-		status: z.literal('pending').describe('The preapproval result is still being processed'),
-	}),
-	z.object({
-		status: z.literal('ready').describe('The preapproval succeeded and the paid checkout URL is ready'),
-		url: z.string().describe('The URL to redirect to'),
-	}),
-	z.object({
-		status: z.literal('rejected').describe('The preapproval failed and the paid checkout should not continue'),
-		reason: LocalizedCardPreapprovalRejectedReason.describe('The reason the preapproval was rejected'),
-		actual_country: createStringType(2, 2).nullish().describe('The detected card issuing country when available'),
-	}),
-	z.object({
-		status: z.literal('expired').describe('The preapproval token has expired or is unknown'),
-	}),
-]);
-
-export type LocalizedCardPreapprovalContinueResponse = z.infer<typeof LocalizedCardPreapprovalContinueResponse>;
-
 export const CurrentSubscriptionPriceResponse = z
 	.object({
 		price_id: z.string().describe('The Stripe price ID the user is currently billed against'),

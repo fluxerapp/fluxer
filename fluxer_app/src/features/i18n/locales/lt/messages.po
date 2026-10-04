@@ -1611,11 +1611,6 @@ msgstr "{overrideCount, plural, one {# pakeitimas} few {# pakeitimai} other {# p
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "{PAYMENT_PROVIDER_NAME} saugiai apdoroja mokėjimus."
 
-#. Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:198
-msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
-msgstr "{paymentProviderName} pirmiausia patikrins, ar jūsų kortelė tinka vietinei kainodarai, tada nukreips jus į mokėjimą. Grįžkite į {productName}, kai baigsite."
-
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:54
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
@@ -3655,7 +3650,7 @@ msgstr "Visi DM + bendruomenės"
 msgid "All DMs only"
 msgstr "Tik visi DM"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:166
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:67
 msgid "All done"
 msgstr "Atlikta"
 
@@ -4064,7 +4059,7 @@ msgid "An invalid status was provided. You can close this tab and return to the 
 msgstr "Pateikta netinkama būsena. Galite uždaryti šį skirtuką ir grįžti į programėlę."
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:59
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:272
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:81
 msgid "An invalid status was provided. You can now close this tab and return to the app."
 msgstr "Pateikta netinkama būsena. Dabar galite uždaryti šį skirtuką ir grįžti į programėlę."
 
@@ -6739,14 +6734,6 @@ msgstr "Kortelės lygiavimas"
 msgid "Card alignment controls"
 msgstr "Kortelės lygiavimo valdikliai"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:200
-msgid "Card not eligible"
-msgstr "Kortelė netinkama"
-
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:261
-msgid "Card verification was canceled. You can close this tab and return to the app."
-msgstr "Kortelės patvirtinimas atšauktas. Galite uždaryti šį skirtuką ir grįžti į programėlę."
-
 #. Heading above the category filter list in the Discovery search sidebar.
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:15
@@ -7563,17 +7550,17 @@ msgid "Checkout"
 msgstr "Atsiskaitymas"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:124
 msgid "Checkout is blocked for this account."
 msgstr "Apmokėjimas šiai paskyrai užblokuotas."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:120
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Šiai paskyrai atsiskaitymas yra užblokuotas. Jei reikia pagalbos, susisiekite su {supportEmail}."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:116
 msgid "Checkout unavailable"
 msgstr "Atsiskaitymas negalimas"
 
@@ -7747,7 +7734,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Pasirinkite, kaip laikas rodomas programėlėje"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:60
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:59
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Pasirinkite, kaip norėtumėte apmokėti šią prenumeratą."
 
@@ -7761,7 +7748,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "Pasirinkite vieną iš toliau nurodytų būdų, kad įrodytumėte domeno nuosavybę. Jums reikia užbaigti tik vieną."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:159
 msgid "Choose payment method"
 msgstr "Pasirinkite mokėjimo būdą"
 
@@ -8957,7 +8944,7 @@ msgid "Complete mature content check"
 msgstr "Užbaigti brandaus turinio patikrą"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:194
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:150
 msgid "Complete payment"
 msgstr "Užbaigti mokėjimą"
 
@@ -9408,11 +9395,6 @@ msgstr "Kontekstiniai meniu atidaromi kairiuoju pelės mygtuku (ant mygtukų) ar
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
 msgstr "Tęsti"
-
-#. Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
-msgid "Continue to checkout"
-msgstr "Tęsti atsiskaitymą"
 
 #. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/utils/ReportActionUtils.tsx:37
@@ -10202,7 +10184,7 @@ msgstr "Nepavyko atidaryti paieškos rezultato"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:32
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:31
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10359,7 +10341,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Nepavyko pradėti „{blueskyProviderName}“ autorizavimo"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:128
 msgid "Couldn't start checkout"
 msgstr "Nepavyko pradėti atsiskaitymo"
 
@@ -18575,7 +18557,7 @@ msgstr "Neteisingas „redirect_uri“"
 #. Title on the mature content check callback page when the callback status is invalid.
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:27
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:56
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:269
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:78
 msgid "Invalid status"
 msgstr "Neteisinga būsena"
 
@@ -20067,11 +20049,6 @@ msgstr "Vietinis laiko formatas"
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:18
 msgid "Localization"
 msgstr "Lokalizacija"
-
-#. Error modal body shown when the localized card pre-approval session cannot be started.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
-msgid "Localized card verification is not available right now. Try again later."
-msgstr "Lokalizuotas kortelės patvirtinimas šiuo metu nepasiekiamas. Bandykite dar kartą vėliau."
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:194
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:151
@@ -24564,11 +24541,6 @@ msgstr "Kita"
 msgid "Other devices"
 msgstr "Kiti įrenginiai"
 
-#. Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
-msgid "Other methods"
-msgstr "Kiti būdai"
-
 #. Privacy note in profile timezone settings. Preserve {timezoneIdentifierExample}; it is inserted by code as an IANA timezone identifier example. productName is the app name. Users should understand that only the UTC offset is shown to other people.
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:49
 msgid "Other people can only see your current UTC offset when you choose to share profile local time. They do not see your exact time zone identifier, such as {timezoneIdentifierExample}. {productName} stores that identifier only so the offset can update automatically when daylight saving time changes."
@@ -24963,16 +24935,16 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "Mokėkite vieną kartą ir gaukite dovanos nuorodą pasidalinti. Dovanos niekada nepratęsiamos."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:40
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:39
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Mokėkite naudodami „{pixPaymentMethod} Automático“, kad leistumėte pasikartojančius mokėjimus tiesiai iš savo Brazilijos banko. Arba pasirinkite „Naudoti kortelę“, kad kitame „{paymentProviderName}“ ekrane įvestumėte kredito kortelės duomenis."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:50
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:49
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Mokėkite naudodami „{upiPaymentMethod}“, kad nustatytumėte RBI reikalavimus atitinkantį elektroninį mokėjimo įgaliojimą iš savo Indijos banko. Arba pasirinkite „Naudoti kortelę“, kad kitame „{paymentProviderName}“ ekrane įvestumėte kredito kortelės duomenis."
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:149
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:50
 msgid "Payment canceled"
 msgstr "Mokėjimas atšauktas"
 
@@ -24981,7 +24953,7 @@ msgstr "Mokėjimas atšauktas"
 msgid "Payment method"
 msgstr "Mokėjimo būdas"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:136
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:37
 msgid "Payment successful"
 msgstr "Mokėjimas sėkmingas"
 
@@ -25867,7 +25839,7 @@ msgid "Pricing"
 msgstr "Kainodara"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:142
 msgid "Pricing is still loading."
 msgstr "Kainos vis dar įkeliamos."
 
@@ -26264,17 +26236,17 @@ msgid "Purchased gifts"
 msgstr "Įsigytos dovanos"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:112
 msgid "Purchases are disabled for this account."
 msgstr "Pirkimai šiai paskyrai išjungti."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:108
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "Pirkimai šiai paskyrai išjungti. Jei tai atrodo neteisinga, susisiekite su {supportEmail}."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:104
 msgid "Purchases unavailable"
 msgstr "Pirkimai negalimi"
 
@@ -31636,7 +31608,7 @@ msgstr "Nepavyko įkelti veiklos žurnalo."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:36
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:35
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -31676,7 +31648,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Nepavyko išsiųsti patvirtinimo el. laiško. Bandykite dar kartą po akimirkos."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:172
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:132
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Nepavyko pradėti atsiskaitymo. Bandykite dar kartą po akimirkos."
 
@@ -32673,16 +32645,6 @@ msgstr "Šalinti sekimą"
 msgid "Strip tracking parameters from URLs"
 msgstr "Pašalinti sekimo parametrus iš URL"
 
-#. Premium checkout error shown when Stripe cannot verify a card for localized pricing. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:34
-msgid "Stripe could not verify this card for localized pricing. Use another card, or return to {productName} and choose another payment method."
-msgstr "„Stripe“ negalėjo patvirtinti šios kortelės, kad būtų galima atsiskaityti pagal vietos kainas. Naudokite kitą kortelę arba grįžkite į {productName} ir pasirinkite kitą mokėjimo būdą."
-
-#. Premium checkout error shown when card country does not match billing country. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:22
-msgid "Stripe reported a card issued in {countryName}. To pay in this localized currency, use a card issued in your billing country, or return to {productName} and choose another payment method."
-msgstr "„Stripe“ pranešė apie kortelę, išduotą šalyje {countryName}. Kad galėtumėte mokėti šia vietine valiuta, naudokite kortelę, išduotą jūsų atsiskaitymo šalyje, arba grįžkite į {productName} ir pasirinkite kitą mokėjimo būdą."
-
 #. Codec description in the screen share codec policy menu. Technical surface; keep Chromium as a literal proper noun.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:15
 msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sharing."
@@ -32729,7 +32691,7 @@ msgid "Subscription"
 msgstr "Prenumerata"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:87
 msgid "Subscription already exists"
 msgstr "Prenumerata jau yra"
 
@@ -34052,11 +34014,6 @@ msgstr "Šis skambutis yra užšifruotas nuo galo iki galo."
 msgid "This cannot be undone. Removing the application also deletes its bot."
 msgstr "To negalima anuliuoti. Pašalinus programą, taip pat ištrinamas ir jos botas."
 
-#. Premium checkout error shown when card country does not match billing country and Stripe did not provide the issuing country. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:28
-msgid "This card does not match your billing country, so it cannot be used for this localized currency. Use a local card, or return to {productName} and choose another payment method."
-msgstr "Ši kortelė neatitinka jūsų atsiskaitymo šalies, todėl negali būti naudojama šia lokalizuota valiuta. Naudokite vietinę kortelę arba grįžkite į {productName} ir pasirinkite kitą mokėjimo būdą."
-
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
 #: src/features/app/components/layout/ChannelListContent.tsx:83
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
@@ -34574,7 +34531,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "Šis parinkiklis pasiekiamas tik darbalaukio programoje."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:146
 msgid "This plan isn't available. Contact support."
 msgstr "Šis planas nepasiekiamas. Susisiekite su palaikymo komanda."
 
@@ -34709,11 +34666,6 @@ msgstr "Šis naudotojas nebeegzistuoja. Atnaujinkite ir bandykite dar kartą."
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:65
 msgid "This user was force-added to this community by a platform administrator."
 msgstr "Šį naudotoją į šią bendruomenę priverstinai pridėjo platformos administratorius."
-
-#. Premium checkout error shown when card verification expires before checkout. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:40
-msgid "This verification session expired. Return to {productName} and start checkout again."
-msgstr "Šis patvirtinimo seansas baigėsi. Grįžkite į „{productName}“ ir pradėkite atsiskaitymą iš naujo."
 
 #. Body of the voice-channel-full modal.
 #: src/features/voice/components/alerts/VoiceChannelFullModal.tsx:12
@@ -36928,7 +36880,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "Naudoti {everyoneMention}/{hereMention} ir {rolesMention}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:45
 msgid "Use {pixPaymentMethod}"
 msgstr "Naudoti {pixPaymentMethod}"
 
@@ -36943,7 +36895,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "Naudokite „{query}“ ten, kur turėtų būti įterptas verčiamas tekstas."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:55
 msgid "Use {upiPaymentMethod}"
 msgstr "Naudoti {upiPaymentMethod}"
 
@@ -36972,7 +36924,7 @@ msgid "Use actual value"
 msgstr "Naudoti tikrąją reikšmę"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:65
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:64
 msgid "Use alternative method"
 msgstr "Naudoti kitą būdą"
 
@@ -37003,7 +36955,7 @@ msgid "Use browser locale for time format"
 msgstr "Naudoti naršyklės lokalę laiko formatui"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:220
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:163
 msgid "Use card"
 msgstr "Naudoti kortelę"
 
@@ -37099,36 +37051,6 @@ msgstr "Naudoti senąją tamsiąją temą (pradinė neutrali pilka paletė)"
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx:50
 msgid "Use light theme"
 msgstr "Naudoti šviesiąją temą"
-
-#. Modal primary button to start the localized card pre-approval verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:216
-msgid "Use local card"
-msgstr "Naudoti vietinę kortelę"
-
-#. Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:69
-msgid "Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
-msgstr "Norėdami patvirtinti Brazilijoje išduotą kortelę prieš mokamą BRL atsiskaitymą, naudokite vietinę kortelę. Pasirinkite kitą būdą, jei norite išbandyti {pixPaymentMethod} ar kitą mokėjimo būdą, kurį {paymentProviderName} siūlo kitame ekrane."
-
-#. Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
-msgid "Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
-msgstr "Norėdami patvirtinti Indijoje išduotą kortelę prieš mokamą atsiskaitymą INR, naudokite vietinę kortelę. Pasirinkite kitą būdą, jei norite išbandyti {upiPaymentMethod} ar kitą mokėjimo būdą, kurį {paymentProviderName} siūlo kitame ekrane."
-
-#. Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
-msgid "Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead."
-msgstr "Norėdami patvirtinti Lenkijoje išduotą kortelę prieš mokamą PLN atsiskaitymą, naudokite vietinę kortelę. „{blikPaymentMethod}“ nepalaiko prenumeratų „{paymentProviderName}“ atsiskaitymo metu, todėl tęskite tik tuo atveju, jei norite naudoti „{paymentProviderName2}“ standartinį mokėjimo ekraną."
-
-#. Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
-msgid "Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen."
-msgstr "Norėdami patvirtinti Turkijoje išduotą kortelę prieš mokamą TRY atsiskaitymą, naudokite vietinę kortelę. Čia nėra programėlėje veikiančio vietinio prenumeratos būdo, todėl tęsdami būsite nukreipti į {paymentProviderName} standartinį mokėjimo ekraną."
-
-#. Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
-msgid "Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen."
-msgstr "Naudokite vietinę kortelę, kad prieš mokamą atsiskaitymą patvirtintumėte jūsų atsiskaitymo šalyje išduotą kortelę. Pasirinkite kitą būdą, jei norite bet kurio kito mokėjimo būdo, kurį {paymentProviderName} siūlo kitame ekrane."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop preference.
@@ -37577,10 +37499,6 @@ msgstr "Patvirtinimo ir narystės apribojimai"
 msgid "Verification barrier"
 msgstr "Patvirtinimo barjeras"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:258
-msgid "Verification canceled"
-msgstr "Patvirtinimas atšauktas"
-
 #. Generic form-field label for a one-time verification code.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
 msgid "Verification code"
@@ -37598,13 +37516,11 @@ msgstr "Patvirtinimo el. laiškas išsiųstas. Patikrinkite gautuosius."
 
 #. Error title shown when the backup codes email verification expired and must be started again.
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:35
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:224
 msgid "Verification expired"
 msgstr "Patvirtinimo laikas baigėsi"
 
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:82
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
 msgstr "Patvirtinimas nepavyko"
 
@@ -37622,11 +37538,6 @@ msgstr "Patvirtinta bendruomenė"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:165
 msgid "Verify"
 msgstr "Patvirtinti"
-
-#. Modal title for the mobile checkout confirmation when opening the localized card verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
-msgid "Verify card"
-msgstr "Patvirtinti kortelę"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:91
 msgid "Verify code"
@@ -37706,7 +37617,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Prieš siųsdami draugystės užklausas, patvirtinkite savo el. pašto adresą."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:108
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:68
 msgid "Verify your email first"
 msgstr "Pirmiausia patvirtinkite savo el. paštą"
 
@@ -37744,10 +37655,6 @@ msgstr "Patvirtinkite savo el. pašto adresą, kad įsigytumėte {premiumProduct
 #: src/features/channel/utils/CreateDMModalUtils.tsx:56
 msgid "Verify your email to start DMs."
 msgstr "Patvirtinkite el. paštą, kad galėtumėte pradėti tiesioginius pokalbius."
-
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:179
-msgid "Verifying card"
-msgstr "Kortelės tikrinimas"
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:144
 msgid "Verifying code…"
@@ -38190,7 +38097,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2FA pranešimų juosta"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:121
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:81
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "„Visionary“ jau apima nuolatinę prieigą, todėl pasikartojanti prenumerata nereikalinga. Vis tiek galite pirkti dovanų kitiems."
 
@@ -38612,11 +38519,6 @@ msgstr "„Wayland“ xdg-desktop-portal valdo parinkiklį ir rodo visus langus 
 msgid "Wayland's xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to windows only. Press \"Open system picker\", then choose a window there to get per-app audio."
 msgstr "„Wayland“ xdg-desktop-portal valdo parinkiklį ir rodo visus langus bei ekranus kartu. Nėra parinkties, kuri filtruotų tik langus. Paspauskite „Atidaryti sistemos parinkiklį“ ir ten pasirinkite langą, kad gautumėte atskiros programos garsą."
 
-#. Premium checkout error shown when card verification fails unexpectedly. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:44
-msgid "We could not confirm your card right now. Refresh this page or return to {productName} and try again."
-msgstr "Šiuo metu negalime patvirtinti jūsų kortelės. Atnaujinkite šį puslapį arba grįžkite į „{productName}“ ir bandykite dar kartą."
-
 #. Plutonium page hero subtitle while a failed renewal is in its grace period.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:66
 msgid "We could not renew your subscription. Update your payment method to keep your perks."
@@ -38692,7 +38594,7 @@ msgid "We couldn't remove that account. Try again."
 msgstr "Nepavyko pašalinti paskyros. Bandykite dar kartą."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:132
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:92
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Radome esamą {premiumProductFullName} prenumeratą šiai paskyrai. Tvarkykite ją saugiame atsiskaitymo portale, kad atnaujintumėte mokėjimo duomenis arba patikrintumėte atnaujinimo būseną. Jei ką tik sumokėjote, palaukite minutę ir iš naujo atidarykite šį puslapį."
 
@@ -39429,7 +39331,7 @@ msgid "You are now a developer!"
 msgstr "Dabar esate kūrėjas!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:203
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:154
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Dabar būsite nukreipti į {paymentProviderName}, kad užbaigtumėte mokėjimą. Kai tai padarysite, grįžkite į {productName}."
 
@@ -39489,7 +39391,7 @@ msgstr "Galite uždaryti šį langą. Importavimas tęsis fone."
 msgid "You can close this tab"
 msgstr "Galite uždaryti šį skirtuką"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:169
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:70
 msgid "You can now close this tab and return to the app."
 msgstr "Dabar galite uždaryti šį skirtuką ir grįžti į programėlę."
 
@@ -39944,7 +39846,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Prieš pradėdami tiesioginį pokalbį turite patvirtinti savo el. pašto adresą."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:112
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:72
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Prieš pirkdami „{premiumProductFullName}“ turite patvirtinti el. pašto adresą."
 
@@ -40026,7 +39928,7 @@ msgid "You're already friends with this user."
 msgstr "Jūs jau draugaujate su šiuo naudotoju."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:117
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:77
 msgid "You're already Visionary"
 msgstr "Jau esate Visionary"
 
@@ -40066,7 +39968,7 @@ msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Jums taikomas užklausų ribojimas. Palaukite {duration} prieš bandydami dar kartą."
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:176
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:136
 msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
 msgstr "Šiuo metu naudojatės dovanų prenumerata. Ji nebus atnaujinta. Galite išpirkti daugiau dovanų kodų, kad ją pratęstumėte. Pasibaigus dovanų prenumeratos laikotarpiui, galėsite pradėti pasikartojančias prenumeratas."
 
@@ -40249,7 +40151,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "Peržiūrėjote visus naujausius paminėjimus. Netrukus čia atsiras daugiau."
 
 #. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:138
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:98
 msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
 msgstr "Jūsų {premiumProductFullName} prenumerata apmokestinama per {storeName}. Tvarkykite ją savo {storeName} paskyroje, kad pakeistumėte planą arba patikrintumėte atnaujinimo būseną."
 
@@ -40316,14 +40218,6 @@ msgstr "Jūsų paraiška laukia peržiūros. Vis dar galite atnaujinti savo įra
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
 msgstr "Jūsų naršyklė reikalauja naudotojo veiksmo, kad būtų galima paleisti garsą. Spustelėkite žemiau esantį mygtuką, kad įjungtumėte balso pokalbį."
-
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:185
-msgid "Your card is being checked for localized pricing. This usually takes a moment."
-msgstr "Tikrinama, ar jūsų kortelei taikoma vietinė kainodara. Tai paprastai užtrunka akimirką."
-
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:183
-msgid "Your card is eligible. Redirecting you to the payment page now."
-msgstr "Jūsų kortelė tinkama. Dabar būsite nukreipti į mokėjimo puslapį."
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
 #: src/features/messaging/commands/MessageCommands.tsx:104
@@ -40503,11 +40397,11 @@ msgstr "Jūsų naujausias pirkinys nebeatitinka pinigų grąžinimo termino. Dė
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "Jūsų naujas slapyvardis arba palikite tuščią, kad jį atstatytumėte."
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:152
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:53
 msgid "Your payment was canceled. You can now close this tab and return to the app."
 msgstr "Jūsų mokėjimas atšauktas. Dabar galite uždaryti šį skirtuką ir grįžti į programėlę."
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:139
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:40
 msgid "Your payment was successful. You can now close this tab and return to the app."
 msgstr "Mokėjimas sėkmingas. Dabar galite uždaryti šį skirtuką ir grįžti į programėlę."
 

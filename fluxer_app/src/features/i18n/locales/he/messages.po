@@ -1611,11 +1611,6 @@ msgstr "{overrideCount, plural, one {# עקיפה} other {# עקיפות}}"
 msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
 msgstr "{PAYMENT_PROVIDER_NAME} מטפל בתשלומים באופן מאובטח."
 
-#. Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:198
-msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
-msgstr "{paymentProviderName} יאמת תחילה שהכרטיס שלך זכאי לתמחור מקומי, ולאחר מכן יעביר אותך לתשלום. חזור ל-{productName} לאחר שתסיים את התהליך."
-
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:54
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
@@ -3655,7 +3650,7 @@ msgstr "כל ההודעות הפרטיות + הקהילות"
 msgid "All DMs only"
 msgstr "כל ההודעות הפרטיות בלבד"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:166
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:67
 msgid "All done"
 msgstr "הכול בוצע"
 
@@ -4064,7 +4059,7 @@ msgid "An invalid status was provided. You can close this tab and return to the 
 msgstr "צוין סטטוס לא חוקי. ניתן לסגור את הכרטיסייה ולחזור לאפליקציה."
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:59
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:272
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:81
 msgid "An invalid status was provided. You can now close this tab and return to the app."
 msgstr "צוין סטטוס לא חוקי. עכשיו אפשר לסגור את הכרטיסייה הזו ולחזור לאפליקציה."
 
@@ -6739,14 +6734,6 @@ msgstr "יישור כרטיס"
 msgid "Card alignment controls"
 msgstr "פקדי יישור כרטיס"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:200
-msgid "Card not eligible"
-msgstr "הכרטיס לא מתאים"
-
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:261
-msgid "Card verification was canceled. You can close this tab and return to the app."
-msgstr "אימות הכרטיס בוטל. ניתן לסגור את הלשונית ולחזור לאפליקציה."
-
 #. Heading above the category filter list in the Discovery search sidebar.
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:15
@@ -7563,17 +7550,17 @@ msgid "Checkout"
 msgstr "תשלום"
 
 #. Modal body for the generic "checkout blocked" state on a self-hosted instance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:124
 msgid "Checkout is blocked for this account."
 msgstr "התשלום חסום עבור חשבון זה."
 
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:120
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "התשלום חסום עבור חשבון זה. צור קשר עם {supportEmail} אם אתה זקוק לעזרה."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:116
 msgid "Checkout unavailable"
 msgstr "התשלום אינו זמין"
 
@@ -7747,7 +7734,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "בחר כיצד יוצג הזמן ברחבי האפליקציה"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:60
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:59
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "בחר איך לשלם על המינוי הזה."
 
@@ -7761,7 +7748,7 @@ msgid "Choose one of the methods below to prove domain ownership. You only need 
 msgstr "בחר אחת מהשיטות הבאות כדי להוכיח בעלות על הדומיין. עליך להשלים רק אחת."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:159
 msgid "Choose payment method"
 msgstr "בחירת אמצעי תשלום"
 
@@ -8957,7 +8944,7 @@ msgid "Complete mature content check"
 msgstr "השלמת בדיקת התוכן למבוגרים"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:194
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:150
 msgid "Complete payment"
 msgstr "השלם תשלום"
 
@@ -9408,11 +9395,6 @@ msgstr "ניתן לפתוח תפריטי הקשר בלחיצה שמאלית (ע�
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
 msgstr "המשך"
-
-#. Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:91
-msgid "Continue to checkout"
-msgstr "המשך לתשלום"
 
 #. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/utils/ReportActionUtils.tsx:37
@@ -10202,7 +10184,7 @@ msgstr "לא ניתן היה לפתוח את תוצאת החיפוש"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:32
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:31
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10359,7 +10341,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "לא ניתן היה להתחיל את ההרשאה עבור {blueskyProviderName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:128
 msgid "Couldn't start checkout"
 msgstr "לא ניתן להתחיל את התשלום"
 
@@ -18574,7 +18556,7 @@ msgstr "כתובת הניתוב מחדש (redirect_uri) אינה תקינה"
 #. Title on the mature content check callback page when the callback status is invalid.
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:27
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:56
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:269
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:78
 msgid "Invalid status"
 msgstr "סטטוס לא תקין"
 
@@ -20066,11 +20048,6 @@ msgstr "פורמט שעה מקומי"
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:18
 msgid "Localization"
 msgstr "לוקליזציה"
-
-#. Error modal body shown when the localized card pre-approval session cannot be started.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
-msgid "Localized card verification is not available right now. Try again later."
-msgstr "אימות כרטיס מקומי אינו זמין כעת. נסה שוב מאוחר יותר."
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:194
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:151
@@ -24563,11 +24540,6 @@ msgstr "אחר"
 msgid "Other devices"
 msgstr "מכשירים אחרים"
 
-#. Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:75
-msgid "Other methods"
-msgstr "שיטות אחרות"
-
 #. Privacy note in profile timezone settings. Preserve {timezoneIdentifierExample}; it is inserted by code as an IANA timezone identifier example. productName is the app name. Users should understand that only the UTC offset is shown to other people.
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:49
 msgid "Other people can only see your current UTC offset when you choose to share profile local time. They do not see your exact time zone identifier, such as {timezoneIdentifierExample}. {productName} stores that identifier only so the offset can update automatically when daylight saving time changes."
@@ -24962,16 +24934,16 @@ msgid "Pay once and get a gift link to share. Gifts never renew."
 msgstr "שלם פעם אחת וקבל קישור מתנה לשתף. מתנות לעולם אינן מתחדשות."
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:40
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:39
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "שלם באמצעות {pixPaymentMethod} Automático כדי לאשר חיובים חוזרים ישירות מהבנק הברזילאי שלך. לחלופין, בחר באפשרות \"שימוש בכרטיס\" כדי להזין כרטיס אשראי במסך הבא של {paymentProviderName}."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:50
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:49
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "שלם באמצעות {upiPaymentMethod} כדי להגדיר הוראת קבע אלקטרונית תואמת RBI מהבנק ההודי שלך. לחלופין, בחר באפשרות \"שימוש בכרטיס\" כדי להזין כרטיס אשראי במסך הבא של {paymentProviderName}."
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:149
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:50
 msgid "Payment canceled"
 msgstr "התשלום בוטל"
 
@@ -24980,7 +24952,7 @@ msgstr "התשלום בוטל"
 msgid "Payment method"
 msgstr "אמצעי תשלום"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:136
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:37
 msgid "Payment successful"
 msgstr "התשלום בוצע בהצלחה"
 
@@ -25866,7 +25838,7 @@ msgid "Pricing"
 msgstr "תמחור"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:142
 msgid "Pricing is still loading."
 msgstr "המחירים עדיין נטענים."
 
@@ -26263,17 +26235,17 @@ msgid "Purchased gifts"
 msgstr "מתנות שנרכשו"
 
 #. Modal body shown on a self-hosted instance when purchases are disabled for the account.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:112
 msgid "Purchases are disabled for this account."
 msgstr "הרכישות מושבתות עבור חשבון זה."
 
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:108
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "הרכישות מושבתות עבור חשבון זה. צור קשר עם {supportEmail} אם נראה לך שזו טעות."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:104
 msgid "Purchases unavailable"
 msgstr "רכישות אינן זמינות"
 
@@ -31635,7 +31607,7 @@ msgstr "משהו השתבש בזמן טעינת יומן הפעילות."
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:36
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:35
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -31675,7 +31647,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "משהו השתבש במהלך שליחת אימייל האימות שלך. יש לנסות שוב בעוד רגע."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:172
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:132
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "משהו השתבש במהלך התחלת התשלום. יש לנסות שוב בעוד רגע."
 
@@ -32672,16 +32644,6 @@ msgstr "הסרת מעקב"
 msgid "Strip tracking parameters from URLs"
 msgstr "הסרת פרמטרי מעקב מכתובות URL"
 
-#. Premium checkout error shown when Stripe cannot verify a card for localized pricing. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:34
-msgid "Stripe could not verify this card for localized pricing. Use another card, or return to {productName} and choose another payment method."
-msgstr "Stripe לא הצליחה לאמת את הכרטיס הזה עבור תמחור מקומי. השתמש בכרטיס אחר, או חזור אל {productName} ובחר אמצעי תשלום אחר."
-
-#. Premium checkout error shown when card country does not match billing country. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:22
-msgid "Stripe reported a card issued in {countryName}. To pay in this localized currency, use a card issued in your billing country, or return to {productName} and choose another payment method."
-msgstr "Stripe דיווחה על כרטיס שהונפק ב-{countryName}. כדי לשלם במטבע המקומי, השתמש בכרטיס שהונפק במדינת החיוב שלך, או חזור אל {productName} ובחר אמצעי תשלום אחר."
-
 #. Codec description in the screen share codec policy menu. Technical surface; keep Chromium as a literal proper noun.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:15
 msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sharing."
@@ -32728,7 +32690,7 @@ msgid "Subscription"
 msgstr "מנוי"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:87
 msgid "Subscription already exists"
 msgstr "המנוי כבר קיים"
 
@@ -34051,11 +34013,6 @@ msgstr "שיחה זו מוצפנת מקצה לקצה."
 msgid "This cannot be undone. Removing the application also deletes its bot."
 msgstr "לא ניתן לבטל פעולה זו. הסרת האפליקציה תמחק גם את הבוט שלה."
 
-#. Premium checkout error shown when card country does not match billing country and Stripe did not provide the issuing country. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:28
-msgid "This card does not match your billing country, so it cannot be used for this localized currency. Use a local card, or return to {productName} and choose another payment method."
-msgstr "הכרטיס הזה אינו תואם למדינת החיוב שלך, ולכן לא ניתן להשתמש בו עבור המטבע המקומי הזה. השתמש בכרטיס מקומי, או חזור אל {productName} ובחר אמצעי תשלום אחר."
-
 #. Modal body shown when a category cannot accept another channel because the per-category limit is reached. Limit is interpolated.
 #: src/features/app/components/layout/ChannelListContent.tsx:83
 msgid "This category already contains the maximum of {maxChannelsPerCategory} channels."
@@ -34573,7 +34530,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "בורר זה זמין רק באפליקציית המחשב."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:146
 msgid "This plan isn't available. Contact support."
 msgstr "התוכנית הזו אינה זמינה. יש ליצור קשר עם התמיכה."
 
@@ -34708,11 +34665,6 @@ msgstr "המשתמש הזה כבר לא קיים. רענן ונסה שוב."
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:65
 msgid "This user was force-added to this community by a platform administrator."
 msgstr "משתמש זה נוסף בכפייה לקהילה על ידי מנהל פלטפורמה."
-
-#. Premium checkout error shown when card verification expires before checkout. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:40
-msgid "This verification session expired. Return to {productName} and start checkout again."
-msgstr "תוקף סשן האימות פג. יש לחזור אל {productName} ולהתחיל את תהליך התשלום מחדש."
 
 #. Body of the voice-channel-full modal.
 #: src/features/voice/components/alerts/VoiceChannelFullModal.tsx:12
@@ -36927,7 +36879,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "שימוש ב-{everyoneMention}/{hereMention} וב-{rolesMention}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:46
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:45
 msgid "Use {pixPaymentMethod}"
 msgstr "שימוש ב-{pixPaymentMethod}"
 
@@ -36942,7 +36894,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "השתמש ב-{query} במקום שבו יוכנס הטקסט לתרגום."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:56
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:55
 msgid "Use {upiPaymentMethod}"
 msgstr "שימוש ב-{upiPaymentMethod}"
 
@@ -36971,7 +36923,7 @@ msgid "Use actual value"
 msgstr "השתמש בערך האמיתי"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:65
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:64
 msgid "Use alternative method"
 msgstr "שימוש בשיטה חלופית"
 
@@ -37002,7 +36954,7 @@ msgid "Use browser locale for time format"
 msgstr "השתמש בהגדרות הדפדפן עבור פורמט השעה"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:220
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:163
 msgid "Use card"
 msgstr "שימוש בכרטיס"
 
@@ -37098,36 +37050,6 @@ msgstr "שימוש בערכת הנושא הכהה הישנה (לוח צבעים 
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx:50
 msgid "Use light theme"
 msgstr "שימוש בערכת נושא בהירה"
-
-#. Modal primary button to start the localized card pre-approval verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:216
-msgid "Use local card"
-msgstr "שימוש בכרטיס מקומי"
-
-#. Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:69
-msgid "Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
-msgstr "השתמש בכרטיס מקומי כדי לאמת כרטיס שהונפק בברזיל לפני התשלום ב-BRL. בחר שיטות אחרות אם אתה מעדיף לנסות את {pixPaymentMethod} או אמצעי תשלום אחר ש-{paymentProviderName} מציע במסך הבא."
-
-#. Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:79
-msgid "Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
-msgstr "השתמש בכרטיס מקומי כדי לאמת כרטיס שהונפק בהודו לפני התשלום ב-INR. בחר שיטות אחרות אם אתה מעדיף לנסות את {upiPaymentMethod} או אמצעי תשלום אחר ש-{paymentProviderName} מציע במסך הבא."
-
-#. Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:85
-msgid "Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead."
-msgstr "השתמש בכרטיס מקומי כדי לאמת כרטיס שהונפק בפולין לפני התשלום ב-PLN. {blikPaymentMethod} אינו תומך במנויים בתשלום דרך {paymentProviderName}, לכן המשך רק אם אתה רוצה את מסך התשלום הסטנדרטי של {paymentProviderName2} במקום זאת."
-
-#. Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:96
-msgid "Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen."
-msgstr "השתמש בכרטיס מקומי כדי לאמת כרטיס שהונפק בטורקיה לפני התשלום ב-TRY. אין כאן שיטת מנוי מקומית מבוססת אפליקציה, לכן המשך יוביל אותך למסך התשלום הסטנדרטי של {paymentProviderName}."
-
-#. Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:102
-msgid "Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen."
-msgstr "השתמש בכרטיס מקומי כדי לאמת כרטיס שהונפק במדינת החיוב שלך לפני התשלום. בחר שיטות אחרות עבור כל אמצעי תשלום אחר ש-{paymentProviderName} מציע במסך הבא."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop preference.
@@ -37576,10 +37498,6 @@ msgstr "מחסומי אימות וחברות"
 msgid "Verification barrier"
 msgstr "מחסום אימות"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:258
-msgid "Verification canceled"
-msgstr "האימות בוטל"
-
 #. Generic form-field label for a one-time verification code.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:219
 msgid "Verification code"
@@ -37597,13 +37515,11 @@ msgstr "נשלחה הודעת אימות. יש לבדוק את תיבת הדוא
 
 #. Error title shown when the backup codes email verification expired and must be started again.
 #: src/features/auth/components/modals/BackupCodesViewModal.tsx:35
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:224
 msgid "Verification expired"
 msgstr "האימות פג תוקף"
 
 #: src/features/auth/components/modals/SudoVerificationModal.tsx:82
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
 msgstr "האימות נכשל"
 
@@ -37621,11 +37537,6 @@ msgstr "קהילה מאומתת"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:165
 msgid "Verify"
 msgstr "אימות"
-
-#. Modal title for the mobile checkout confirmation when opening the localized card verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
-msgid "Verify card"
-msgstr "אימות כרטיס"
 
 #: src/features/moderation/components/report/ReportStepVerification.tsx:91
 msgid "Verify code"
@@ -37705,7 +37616,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "יש לאמת את כתובת האימייל שלך לפני שליחת בקשות חברות."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:108
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:68
 msgid "Verify your email first"
 msgstr "יש לאמת את כתובת האימייל שלך קודם"
 
@@ -37743,10 +37654,6 @@ msgstr "אמת את האימייל שלך כדי לרכוש את {premiumProduct
 #: src/features/channel/utils/CreateDMModalUtils.tsx:56
 msgid "Verify your email to start DMs."
 msgstr "יש לאמת את כתובת האימייל שלך כדי להתחיל בצ'אטים פרטיים."
-
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:179
-msgid "Verifying card"
-msgstr "מאמת את הכרטיס"
 
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:144
 msgid "Verifying code…"
@@ -38189,7 +38096,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "באנר 2FA של Visionary"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:121
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:81
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Visionary כבר כולל גישה קבועה, ולכן אין צורך במנוי מתחדש. עדיין אפשר לקנות מתנות לאחרים."
 
@@ -38611,11 +38518,6 @@ msgstr "xdg-desktop-portal של Wayland הוא הבעלים של הבורר ומ
 msgid "Wayland's xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to windows only. Press \"Open system picker\", then choose a window there to get per-app audio."
 msgstr "xdg-desktop-portal של Wayland הוא הבעלים של הבורר ומציג כל חלון ותצוגה יחד. אין דגל שמסנן אותו לחלונות בלבד. לחץ על 'פתיחת בורר המערכת', ואז בחר שם חלון כדי לקבל שמע לפי אפליקציה."
 
-#. Premium checkout error shown when card verification fails unexpectedly. productName is the app name.
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:44
-msgid "We could not confirm your card right now. Refresh this page or return to {productName} and try again."
-msgstr "לא הצלחנו לאשר את הכרטיס שלך כרגע. רענן את הדף או חזור אל {productName} ונסה שוב."
-
 #. Plutonium page hero subtitle while a failed renewal is in its grace period.
 #: src/features/premium/components/plutonium_page/PlutoniumPageMessages.ts:66
 msgid "We could not renew your subscription. Update your payment method to keep your perks."
@@ -38691,7 +38593,7 @@ msgid "We couldn't remove that account. Try again."
 msgstr "לא הצלחנו להסיר את החשבון הזה. יש לנסות שוב."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:132
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:92
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "מצאנו מינוי קיים ל-{premiumProductFullName} עבור חשבון זה. נהל אותו בפורטל החיובים המאובטח כדי לעדכן פרטי תשלום או לבדוק סטטוס חידוש. אם שילמת זה עתה, המתן דקה ופתח מחדש דף זה."
 
@@ -39428,7 +39330,7 @@ msgid "You are now a developer!"
 msgstr "כעת אתה מפתח!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:203
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:154
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "אתה עובר כעת אל {paymentProviderName} כדי להשלים את התשלום. חזור אל {productName} לאחר שתסיים."
 
@@ -39488,7 +39390,7 @@ msgstr "אפשר לסגור את החלון הזה. הייבוא יימשך בר
 msgid "You can close this tab"
 msgstr "אפשר לסגור את הלשונית הזו"
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:169
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:70
 msgid "You can now close this tab and return to the app."
 msgstr "כעת ניתן לסגור את הלשונית ולחזור לאפליקציה."
 
@@ -39943,7 +39845,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "עליך לאמת את כתובת האימייל שלך לפני שתוכל להתחיל צ'אט."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:112
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:72
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "יש לאמת את כתובת האימייל שלך לפני שתוכל לרכוש את {premiumProductFullName}."
 
@@ -40025,7 +39927,7 @@ msgid "You're already friends with this user."
 msgstr "אתה כבר חבר של המשתמש הזה."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:117
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:77
 msgid "You're already Visionary"
 msgstr "אתה כבר Visionary"
 
@@ -40065,7 +39967,7 @@ msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "הגעת למגבלת הקצב. המתן {duration} לפני שתנסה שוב."
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:176
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:136
 msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
 msgstr "כרגע יש לך מנוי מתנה. הוא לא יתחדש. באפשרותך לממש קודי מתנה נוספים כדי להאריך אותו. ניתן להתחיל מנויים חוזרים לאחר שתקופת המתנה שלך תסתיים."
 
@@ -40248,7 +40150,7 @@ msgid "You've seen all your recent mentions. More will appear here soon."
 msgstr "ראית את כל האזכורים האחרונים שלך. נוספים יופיעו כאן בקרוב."
 
 #. Modal body for existing-subscription block when the subscription was bought in a mobile app store. {storeName} is the store brand name, App Store or Google Play, and must not be translated. {premiumProductFullName} is the full premium product name.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:138
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:98
 msgid "Your {premiumProductFullName} subscription is billed through {storeName}. Manage it in your {storeName} account to change your plan or check renewal status."
 msgstr "המינוי שלך ל-{premiumProductFullName} מחויב דרך {storeName}. נהל אותו בחשבון {storeName} שלך כדי לשנות תוכנית או לבדוק סטטוס חידוש."
 
@@ -40315,14 +40217,6 @@ msgstr "הבקשה שלך ממתינה לבדיקה. עדיין באפשרותך
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
 msgstr "הדפדפן שלך דורש אינטראקציה של המשתמש לפני שניתן להשמיע אודיו. לחץ על הכפתור למטה כדי לאפשר צ'אט קולי."
-
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:185
-msgid "Your card is being checked for localized pricing. This usually takes a moment."
-msgstr "הכרטיס שלך נבדק להתאמת מחיר מקומי. זה בדרך כלל לוקח רגע."
-
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:183
-msgid "Your card is eligible. Redirecting you to the payment page now."
-msgstr "הכרטיס שלך מתאים. אנו מעבירים אותך עכשיו לדף התשלום."
 
 #. Body of the confirmation shown before saving an edit to a message published from an announcement channel.
 #: src/features/messaging/commands/MessageCommands.tsx:104
@@ -40502,11 +40396,11 @@ msgstr "הרכישה האחרונה שלך אינה עומדת עוד בחלון
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "הכינוי החדש שלך, או השאר ריק כדי לאפס אותו."
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:152
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:53
 msgid "Your payment was canceled. You can now close this tab and return to the app."
 msgstr "התשלום שלך בוטל. עכשיו אפשר לסגור את הכרטיסייה הזו ולחזור לאפליקציה."
 
-#: src/features/premium/components/pages/PremiumCallbackPage.tsx:139
+#: src/features/premium/components/pages/PremiumCallbackPage.tsx:40
 msgid "Your payment was successful. You can now close this tab and return to the app."
 msgstr "התשלום בוצע בהצלחה. עכשיו אפשר לסגור את הכרטיסייה הזו ולחזור לאפליקציה."
 

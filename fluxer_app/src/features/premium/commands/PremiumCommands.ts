@@ -8,7 +8,6 @@ import PremiumState from '@app/features/premium/state/PremiumState';
 import Users from '@app/features/user/state/Users';
 import type {
 	CurrentSubscriptionPriceResponse,
-	LocalizedCardPreapprovalContinueResponse,
 	PremiumStateResponse,
 	PriceIdsResponse,
 	SelfServeRefundEligibilityResponse,
@@ -73,19 +72,6 @@ function checkoutSessionBody(
 		...(countryCode ? {client_geoip_country_code: countryCode} : {}),
 		...(paymentMethod && !isGift ? {payment_method: paymentMethod} : {}),
 	};
-}
-
-function preapprovalSessionBody(priceId: string, countryCode: string): Record<string, string> {
-	const normalized = normalizedCountryCode(countryCode) ?? countryCode;
-	return {
-		price_id: priceId,
-		country_code: normalized,
-		client_geoip_country_code: normalized,
-	};
-}
-
-function tokenBody(token: string): {token: string} {
-	return {token};
 }
 
 async function postAndInvalidate(endpoint: string, body?: Record<string, string>): Promise<void> {
@@ -262,35 +248,6 @@ export async function createCheckoutSession(
 		return response.body.url;
 	} catch (error) {
 		logger.error('Checkout session creation failed', error);
-		throw error;
-	}
-}
-
-export async function createLocalizedCardPreapprovalSession(priceId: string, countryCode: string): Promise<string> {
-	try {
-		const response = await http.post<UrlResponse>(Endpoints.STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL, {
-			body: preapprovalSessionBody(priceId, countryCode),
-		});
-		logger.info('Localized card preapproval session created', {priceId, countryCode});
-		return response.body.url;
-	} catch (error) {
-		logger.error('Localized card preapproval session creation failed', error);
-		throw error;
-	}
-}
-
-export async function continueLocalizedCardPreapproval(
-	token: string,
-): Promise<LocalizedCardPreapprovalContinueResponse> {
-	try {
-		const response = await http.post<LocalizedCardPreapprovalContinueResponse>(
-			Endpoints.STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL_CONTINUE,
-			{body: tokenBody(token)},
-		);
-		logger.debug('Localized card preapproval continuation polled', response.body);
-		return response.body;
-	} catch (error) {
-		logger.error('Localized card preapproval continuation failed', error);
 		throw error;
 	}
 }

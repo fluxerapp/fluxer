@@ -16,7 +16,6 @@ import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlem
 import {getAcceptedWebhookSecrets} from '@app/api/stripe/BillingConfigCache';
 import type {ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import type {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
-import type {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
 import {StripeCheckoutWebhookHandler} from '@app/api/stripe/services/StripeCheckoutWebhookHandler';
 import {StripeDisputeWebhookHandler} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
 import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
@@ -47,7 +46,6 @@ export class StripeWebhookService {
 
 	constructor(
 		private stripe: Stripe | null,
-		private checkoutService: StripeCheckoutService,
 		userRepository: IUserRepository,
 		userCacheService: UserCacheService,
 		sessionTerminator: ISessionTerminator,
@@ -174,10 +172,6 @@ export class StripeWebhookService {
 				);
 				if (checkoutSession.metadata?.verification_type === 'uk_age_verification' && this.ageVerificationService) {
 					await this.ageVerificationService.completeVerification(checkoutSession);
-					break;
-				}
-				if (checkoutSession.metadata?.setup_type === 'localized_card_preapproval') {
-					await this.checkoutService.completeLocalizedCardPreapproval(checkoutSession);
 					break;
 				}
 				await this.checkoutHandler.handleCheckoutSessionCompleted(checkoutSession);

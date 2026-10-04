@@ -141,8 +141,6 @@ export const Endpoints = {
 	PREMIUM_REFUND_ELIGIBILITY: '/premium/refund-eligibility',
 	PREMIUM_REFUND_LATEST: '/premium/refund-latest',
 	STRIPE_CHECKOUT_SUBSCRIPTION: '/stripe/checkout/subscription',
-	STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL: '/stripe/checkout/subscription/preapproval',
-	STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL_CONTINUE: '/stripe/checkout/subscription/preapproval/continue',
 	STRIPE_CHECKOUT_GIFT: '/stripe/checkout/gift',
 	AGE_VERIFICATION: '/users/@me/age-verification',
 	SWISH_AVAILABLE: '/swish/available',

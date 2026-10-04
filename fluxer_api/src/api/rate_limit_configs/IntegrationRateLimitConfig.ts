@@ -36,14 +36,6 @@ export const IntegrationRateLimitConfigs = {
 		bucket: 'stripe:checkout:subscription',
 		config: {limit: 3, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL: {
-		bucket: 'stripe:checkout:subscription:preapproval',
-		config: {limit: 5, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL_CONTINUE: {
-		bucket: 'stripe:checkout:subscription:preapproval:continue',
-		config: {limit: 30, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
 	STRIPE_CHECKOUT_GIFT: {
 		bucket: 'stripe:checkout:gift',
 		config: {limit: 3, windowMs: ms('1 minute')},

@@ -14,10 +14,7 @@ import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlem
 import {getProductRegistry, type ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {PremiumStateService} from '@app/api/stripe/services/PremiumStateService';
-import type {
-	ContinueLocalizedCardPreapprovalResult,
-	CreateCheckoutSessionParams,
-} from '@app/api/stripe/services/StripeCheckoutService';
+import type {CreateCheckoutSessionParams} from '@app/api/stripe/services/StripeCheckoutService';
 import {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
 import {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
 import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
@@ -137,25 +134,6 @@ export class StripeService {
 		}
 		await this.subscriptionService.changeBillingCycle(params.userId, productInfo.billingCycle, 'period_end');
 		return `${Config.endpoints.webApp}/premium-callback?status=success`;
-	}
-
-	async createLocalizedCardPreapprovalSession(
-		params: Pick<
-			CreateCheckoutSessionParams,
-			| 'clientGeoipCountryCode'
-			| 'countryCode'
-			| 'euWithdrawalWaiverAccepted'
-			| 'isBusiness'
-			| 'priceId'
-			| 'purchaseGeoipCountryCode'
-			| 'userId'
-		>,
-	): Promise<string> {
-		return this.checkoutService.createLocalizedCardPreapprovalSession(params);
-	}
-
-	async continueLocalizedCardPreapproval(token: string): Promise<ContinueLocalizedCardPreapprovalResult> {
-		return this.checkoutService.continueLocalizedCardPreapproval(token);
 	}
 
 	async createCustomerPortalSession(userId: UserID): Promise<string> {

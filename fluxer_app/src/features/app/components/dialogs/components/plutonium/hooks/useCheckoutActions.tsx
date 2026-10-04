@@ -3,7 +3,6 @@
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {
-	BLIK_PAYMENT_METHOD,
 	PAYMENT_PROVIDER_NAME,
 	PIX_PAYMENT_METHOD,
 	PREMIUM_PRODUCT_FULL_NAME,
@@ -65,45 +64,6 @@ const GENERIC_PAYMENT_PROMPT_DESCRIPTION_DESCRIPTOR = msg({
 const USE_ALTERNATIVE_METHOD_BUTTON_DESCRIPTOR = msg({
 	message: 'Use alternative method',
 	comment: 'Plutonium subscription payment method picker button. Selects the alternative (non-card) method.',
-});
-const LOCAL_CARD_PROMPT_BRL_DESCRIPTION_DESCRIPTOR = msg({
-	message:
-		"Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen.",
-	comment:
-		'Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.',
-});
-const OTHER_METHODS_BUTTON_DESCRIPTOR = msg({
-	message: 'Other methods',
-	comment: 'Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.',
-});
-const LOCAL_CARD_PROMPT_INR_DESCRIPTION_DESCRIPTOR = msg({
-	message:
-		"Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen.",
-	comment:
-		'Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.',
-});
-const LOCAL_CARD_PROMPT_PLN_DESCRIPTION_DESCRIPTOR = msg({
-	message:
-		"Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead.",
-	comment:
-		'Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.',
-});
-const CONTINUE_TO_CHECKOUT_BUTTON_DESCRIPTOR = msg({
-	message: 'Continue to checkout',
-	comment:
-		'Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.',
-});
-const LOCAL_CARD_PROMPT_TRY_DESCRIPTION_DESCRIPTOR = msg({
-	message:
-		"Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen.",
-	comment:
-		'Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.',
-});
-const LOCAL_CARD_PROMPT_DEFAULT_DESCRIPTION_DESCRIPTOR = msg({
-	message:
-		'Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen.',
-	comment:
-		'Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.',
 });
 const EMAIL_VERIFICATION_REQUIRED_TITLE_DESCRIPTOR = msg({
 	message: 'Verify your email first',
@@ -187,35 +147,18 @@ const PLAN_UNAVAILABLE_TOAST_DESCRIPTOR = msg({
 	message: "This plan isn't available. Contact support.",
 	comment: 'Error modal body shown when the selected Plutonium plan has no price ID configured.',
 });
-const VERIFY_CARD_MODAL_TITLE_DESCRIPTOR = msg({
-	message: 'Verify card',
-	comment: 'Modal title for the mobile checkout confirmation when opening the localized card verification flow.',
-});
 const COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR = msg({
 	message: 'Complete payment',
 	comment: 'Modal title for the mobile checkout confirmation when opening the payment provider in a browser.',
-});
-const VERIFY_CARD_MODAL_BODY_DESCRIPTOR = msg({
-	message:
-		"{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it.",
-	comment: 'Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.',
 });
 const COMPLETE_PAYMENT_MODAL_BODY_DESCRIPTOR = msg({
 	message:
 		"You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it.",
 	comment: 'Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.',
 });
-const LOCALIZED_VERIFICATION_UNAVAILABLE_TOAST_DESCRIPTOR = msg({
-	message: 'Localized card verification is not available right now. Try again later.',
-	comment: 'Error modal body shown when the localized card pre-approval session cannot be started.',
-});
 const CHOOSE_PAYMENT_METHOD_MODAL_TITLE_DESCRIPTOR = msg({
 	message: 'Choose payment method',
 	comment: 'Modal title for the payment method picker (local card vs alternative method).',
-});
-const USE_LOCAL_CARD_BUTTON_DESCRIPTOR = msg({
-	message: 'Use local card',
-	comment: 'Modal primary button to start the localized card pre-approval verification flow.',
 });
 const USE_CARD_BUTTON_DESCRIPTOR = msg({
 	message: 'Use card',
@@ -224,7 +167,6 @@ const USE_CARD_BUTTON_DESCRIPTOR = msg({
 const logger = new Logger('useCheckoutActions');
 
 type Plan = 'monthly' | 'yearly' | 'gift_1_month' | 'gift_1_year';
-type CheckoutPromptKind = 'payment' | 'localized_card_preapproval';
 type PremiumPurchaseBlockedReason = 'lifetime' | 'existing_subscription' | 'purchase_disabled';
 
 function getPremiumPurchaseBlockedStoreProvider(body: unknown): 'app_store' | 'google_play' | null {
@@ -249,13 +191,7 @@ function getPremiumPurchaseBlockedReason(body: unknown): PremiumPurchaseBlockedR
 	return null;
 }
 
-function requiresLocalizedCardPreapproval(
-	_plan: Plan,
-	_currency: string | null | undefined,
-	_isGift: boolean,
-): boolean {
-	return false;
-}
+const MANDATORY_LOCAL_PAYMENT_CURRENCIES: ReadonlySet<string> = new Set(['BRL']);
 
 function alternativePaymentMethodForCurrency(
 	currency: string | null | undefined,
@@ -322,52 +258,6 @@ export const useCheckoutActions = (
 				description: i18n._(GENERIC_PAYMENT_PROMPT_DESCRIPTION_DESCRIPTOR),
 				primaryText: i18n._(USE_ALTERNATIVE_METHOD_BUTTON_DESCRIPTOR),
 			};
-		},
-		[i18n],
-	);
-	const getLocalizedCardPrompt = useCallback(
-		(currency: string | null | undefined): {description: string; secondaryText: string} => {
-			switch (currency) {
-				case 'BRL':
-					return {
-						description: i18n._(LOCAL_CARD_PROMPT_BRL_DESCRIPTION_DESCRIPTOR, {
-							pixPaymentMethod: PIX_PAYMENT_METHOD,
-							paymentProviderName: PAYMENT_PROVIDER_NAME,
-						}),
-						secondaryText: i18n._(OTHER_METHODS_BUTTON_DESCRIPTOR),
-					};
-				case 'INR':
-					return {
-						description: i18n._(LOCAL_CARD_PROMPT_INR_DESCRIPTION_DESCRIPTOR, {
-							upiPaymentMethod: UPI_PAYMENT_METHOD,
-							paymentProviderName: PAYMENT_PROVIDER_NAME,
-						}),
-						secondaryText: i18n._(OTHER_METHODS_BUTTON_DESCRIPTOR),
-					};
-				case 'PLN':
-					return {
-						description: i18n._(LOCAL_CARD_PROMPT_PLN_DESCRIPTION_DESCRIPTOR, {
-							blikPaymentMethod: BLIK_PAYMENT_METHOD,
-							paymentProviderName: PAYMENT_PROVIDER_NAME,
-							paymentProviderName2: PAYMENT_PROVIDER_NAME,
-						}),
-						secondaryText: i18n._(CONTINUE_TO_CHECKOUT_BUTTON_DESCRIPTOR),
-					};
-				case 'TRY':
-					return {
-						description: i18n._(LOCAL_CARD_PROMPT_TRY_DESCRIPTION_DESCRIPTOR, {
-							paymentProviderName: PAYMENT_PROVIDER_NAME,
-						}),
-						secondaryText: i18n._(CONTINUE_TO_CHECKOUT_BUTTON_DESCRIPTOR),
-					};
-				default:
-					return {
-						description: i18n._(LOCAL_CARD_PROMPT_DEFAULT_DESCRIPTION_DESCRIPTOR, {
-							paymentProviderName: PAYMENT_PROVIDER_NAME,
-						}),
-						secondaryText: i18n._(OTHER_METHODS_BUTTON_DESCRIPTOR),
-					};
-			}
 		},
 		[i18n],
 	);
@@ -560,31 +450,17 @@ export const useCheckoutActions = (
 			};
 			const openCheckoutUrl = async (
 				checkoutUrl: string,
-				{
-					promptKind = 'payment',
-					skipMobilePrompt = false,
-				}: {promptKind?: CheckoutPromptKind; skipMobilePrompt?: boolean} = {},
+				{skipMobilePrompt = false}: {skipMobilePrompt?: boolean} = {},
 			) => {
 				if (mobileEnabled && !skipMobilePrompt) {
 					ModalCommands.push(
 						modal(() => (
 							<ConfirmModal
-								title={
-									promptKind === 'localized_card_preapproval'
-										? i18n._(VERIFY_CARD_MODAL_TITLE_DESCRIPTOR)
-										: i18n._(COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR)
-								}
-								description={
-									promptKind === 'localized_card_preapproval'
-										? i18n._(VERIFY_CARD_MODAL_BODY_DESCRIPTOR, {
-												paymentProviderName: PAYMENT_PROVIDER_NAME,
-												productName: PRODUCT_NAME,
-											})
-										: i18n._(COMPLETE_PAYMENT_MODAL_BODY_DESCRIPTOR, {
-												paymentProviderName: PAYMENT_PROVIDER_NAME,
-												productName: PRODUCT_NAME,
-											})
-								}
+								title={i18n._(COMPLETE_PAYMENT_MODAL_TITLE_DESCRIPTOR)}
+								description={i18n._(COMPLETE_PAYMENT_MODAL_BODY_DESCRIPTOR, {
+									paymentProviderName: PAYMENT_PROVIDER_NAME,
+									productName: PRODUCT_NAME,
+								})}
 								primaryText={i18n._(OKAY_DESCRIPTOR)}
 								primaryVariant="primary"
 								secondaryText={i18n._(CANCEL_DESCRIPTOR)}
@@ -616,55 +492,18 @@ export const useCheckoutActions = (
 						isGift,
 						paymentMethod,
 					);
-					await openCheckoutUrl(checkoutUrl, {promptKind: 'payment', skipMobilePrompt});
+					await openCheckoutUrl(checkoutUrl, {skipMobilePrompt});
 				} catch (error) {
 					handleCheckoutError(error);
 				} finally {
 					setLoadingCheckout(false);
 				}
 			};
-			const startLocalizedCardPreapproval = async ({skipMobilePrompt = false}: {skipMobilePrompt?: boolean} = {}) => {
-				if (!countryCode) {
-					showCheckoutPlanErrorModal(
-						i18n._(LOCALIZED_VERIFICATION_UNAVAILABLE_TOAST_DESCRIPTOR),
-						'app.plutonium.use-checkout-actions.localized-verification-unavailable.generic-error-modal',
-					);
-					return;
-				}
-				setLoadingCheckout(true);
-				try {
-					const checkoutUrl = await PremiumCommands.createLocalizedCardPreapprovalSession(priceId, countryCode);
-					await openCheckoutUrl(checkoutUrl, {
-						promptKind: 'localized_card_preapproval',
-						skipMobilePrompt,
-					});
-				} catch (error) {
-					handleCheckoutError(error);
-				} finally {
-					setLoadingCheckout(false);
-				}
-			};
-			if (requiresLocalizedCardPreapproval(plan, priceIds.currency, isGift)) {
-				const localizedCardPrompt = getLocalizedCardPrompt(priceIds.currency);
-				ModalCommands.push(
-					modal(() => (
-						<ConfirmModal
-							title={i18n._(CHOOSE_PAYMENT_METHOD_MODAL_TITLE_DESCRIPTOR)}
-							description={localizedCardPrompt.description}
-							primaryText={i18n._(USE_LOCAL_CARD_BUTTON_DESCRIPTOR)}
-							primaryVariant="primary"
-							secondaryText={localizedCardPrompt.secondaryText}
-							onPrimary={() => startLocalizedCardPreapproval({skipMobilePrompt: true})}
-							onSecondary={() => {
-								void startCheckout({skipMobilePrompt: true});
-							}}
-							data-flx="app.plutonium.use-checkout-actions.handle-select-plan.confirm-modal"
-						/>
-					)),
-				);
+			const altPaymentMethod = alternativePaymentMethodForCurrency(priceIds.currency, isGift, plan);
+			if (altPaymentMethod && MANDATORY_LOCAL_PAYMENT_CURRENCIES.has(priceIds.currency ?? '')) {
+				await startCheckout({paymentMethod: altPaymentMethod});
 				return;
 			}
-			const altPaymentMethod = alternativePaymentMethodForCurrency(priceIds.currency, isGift, plan);
 			if (altPaymentMethod) {
 				const altPrompt = getAlternativePaymentMethodPrompt(priceIds.currency, altPaymentMethod);
 				ModalCommands.push(
@@ -694,7 +533,6 @@ export const useCheckoutActions = (
 			loadingCheckout,
 			priceIds,
 			countryCode,
-			getLocalizedCardPrompt,
 			getAlternativePaymentMethodPrompt,
 			isGiftSubscription,
 			mobileEnabled,

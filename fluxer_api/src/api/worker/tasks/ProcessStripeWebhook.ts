@@ -71,7 +71,6 @@ const processStripeWebhook: WorkerTaskHandler = async (payload, helpers) => {
 	const refundService = new StripeRefundService(stripe, deps.userRepository, subscriptionService);
 	const webhookService = new StripeWebhookService(
 		stripe,
-		checkoutService,
 		deps.userRepository,
 		deps.userCacheService,
 		sessionTerminator,

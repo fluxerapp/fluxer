@@ -144,8 +144,6 @@ type RouteMethod = 'GET' | 'POST' | 'DELETE';
 
 const PURCHASE_ROUTES: ReadonlyArray<[RouteMethod, string]> = [
 	['POST', '/stripe/checkout/subscription'],
-	['POST', '/stripe/checkout/subscription/preapproval'],
-	['POST', '/stripe/checkout/subscription/preapproval/continue'],
 	['POST', '/stripe/checkout/gift'],
 	['GET', '/premium/price-ids'],
 ];

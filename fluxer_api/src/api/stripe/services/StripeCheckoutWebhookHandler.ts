@@ -23,7 +23,6 @@ import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
-import {isLocalizedCurrency} from '@app/api/utils/CurrencyUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -44,12 +43,6 @@ interface DonationSubscriptionDetails {
 	currentPeriodEnd: Date | null;
 	cancelAt: Date | null;
 	status: string | null;
-}
-
-interface CheckoutChargeDetails {
-	chargeId: string | null;
-	paymentMethodType: string | null;
-	cardCountry: string | null;
 }
 
 type CheckoutPremiumApplyResult = 'granted' | 'refunded_duplicate_subscription';
@@ -198,10 +191,6 @@ export class StripeCheckoutWebhookHandler {
 			);
 			throw new StripeError('Checkout session missing amount or currency');
 		}
-		const cardEligible = await this.validateLocalizedCardEligibility(session, payment, productInfo, user);
-		if (!cardEligible) {
-			return;
-		}
 		const customerId = extractId(session.customer);
 		const subscriptionId = extractId(session.subscription);
 		const isRecurring = this.productRegistry.isRecurringSubscription(productInfo);
@@ -261,131 +250,6 @@ export class StripeCheckoutWebhookHandler {
 			},
 			'Checkout session completed and processed',
 		);
-	}
-
-	private async validateLocalizedCardEligibility(
-		session: Stripe.Checkout.Session,
-		payment: Payment,
-		productInfo: ProductInfo,
-		user: User,
-	): Promise<boolean> {
-		const requestedCountryCode = session.metadata?.country_code?.trim().toUpperCase() ?? null;
-		if (!requestedCountryCode || !this.requiresLocalizedCardEligibility(productInfo)) {
-			return true;
-		}
-		const paymentIntentId = extractId(session.payment_intent);
-		if (!paymentIntentId) {
-			const inferredPaymentMethodType = this.getDeclaredCheckoutPaymentMethodType(session);
-			if (inferredPaymentMethodType && inferredPaymentMethodType !== 'card') {
-				Logger.debug(
-					{
-						sessionId: session.id,
-						requestedCountryCode,
-						currency: productInfo.currency,
-						inferredPaymentMethodType,
-					},
-					'Skipping localized card eligibility validation because checkout explicitly used a non-card payment method',
-				);
-				return true;
-			}
-			const fallbackChargeContext = await this.getLocalizedCheckoutChargeDetailsFromSubscription(session);
-			if (fallbackChargeContext?.chargeDetails) {
-				const fallbackChargeDetails = fallbackChargeContext.chargeDetails;
-				if (fallbackChargeDetails.paymentMethodType !== 'card') {
-					Logger.debug(
-						{
-							sessionId: session.id,
-							requestedCountryCode,
-							currency: productInfo.currency,
-							fallbackPaymentMethodType: fallbackChargeDetails.paymentMethodType,
-						},
-						'Skipping localized card eligibility validation because subscription fallback resolved to a non-card payment method',
-					);
-					return true;
-				}
-				const normalizedFallbackCardCountry = fallbackChargeDetails.cardCountry?.trim().toUpperCase() ?? null;
-				if (normalizedFallbackCardCountry === requestedCountryCode) {
-					Logger.debug(
-						{
-							sessionId: session.id,
-							requestedCountryCode,
-							currency: productInfo.currency,
-							cardCountry: normalizedFallbackCardCountry,
-						},
-						'Validated localized card eligibility from subscription fallback after checkout.session.completed omitted payment_intent',
-					);
-					return true;
-				}
-				if (fallbackChargeContext.paymentIntentId && fallbackChargeDetails.chargeId) {
-					Logger.warn(
-						{
-							sessionId: session.id,
-							userId: payment.userId,
-							paymentIntentId: fallbackChargeContext.paymentIntentId,
-							chargeId: fallbackChargeDetails.chargeId,
-							requestedCountryCode,
-							cardCountry: normalizedFallbackCardCountry,
-							currency: productInfo.currency,
-						},
-						'Rejecting localized checkout because subscription fallback resolved to a card issued outside the requested country',
-					);
-					await this.rejectLocalizedCardPayment({
-						session,
-						payment,
-						user,
-						chargeDetails: fallbackChargeDetails,
-						paymentIntentId: fallbackChargeContext.paymentIntentId,
-						requestedCountryCode,
-						cardCountry: normalizedFallbackCardCountry,
-					});
-					return false;
-				}
-			}
-			Logger.error(
-				{
-					sessionId: session.id,
-					requestedCountryCode,
-					currency: productInfo.currency,
-					inferredPaymentMethodType,
-					fallbackResolved: Boolean(fallbackChargeContext?.chargeDetails),
-					fallbackPaymentIntentId: fallbackChargeContext?.paymentIntentId ?? null,
-					fallbackPaymentMethodType: fallbackChargeContext?.chargeDetails?.paymentMethodType ?? null,
-					fallbackCardCountry: fallbackChargeContext?.chargeDetails?.cardCountry ?? null,
-				},
-				'Localized checkout missing payment intent for card eligibility validation',
-			);
-			throw new StripeError('Localized checkout missing payment intent');
-		}
-		const chargeDetails = await this.getCheckoutChargeDetails(paymentIntentId);
-		if (chargeDetails.paymentMethodType !== 'card') {
-			return true;
-		}
-		const normalizedCardCountry = chargeDetails.cardCountry?.trim().toUpperCase() ?? null;
-		if (normalizedCardCountry === requestedCountryCode) {
-			return true;
-		}
-		Logger.warn(
-			{
-				sessionId: session.id,
-				userId: payment.userId,
-				paymentIntentId,
-				chargeId: chargeDetails.chargeId,
-				requestedCountryCode,
-				cardCountry: normalizedCardCountry,
-				currency: productInfo.currency,
-			},
-			'Rejecting localized checkout because card issuing country did not match requested country',
-		);
-		await this.rejectLocalizedCardPayment({
-			session,
-			payment,
-			user,
-			chargeDetails,
-			paymentIntentId,
-			requestedCountryCode,
-			cardCountry: normalizedCardCountry,
-		});
-		return false;
 	}
 
 	private async applyCheckoutSideEffects(context: CheckoutFulfilmentContext): Promise<CheckoutSideEffectResult> {
@@ -719,185 +583,6 @@ export class StripeCheckoutWebhookHandler {
 		return latestServerSeq > initialServerSeq;
 	}
 
-	private requiresLocalizedCardEligibility(productInfo: ProductInfo): boolean {
-		return isLocalizedCurrency(productInfo.currency);
-	}
-
-	private getDeclaredCheckoutPaymentMethodType(session: Stripe.Checkout.Session): string | null {
-		const metadataPaymentMethod = session.metadata?.payment_method?.trim().toLowerCase() ?? null;
-		if (metadataPaymentMethod) {
-			return metadataPaymentMethod;
-		}
-		const paymentMethodTypes = session.payment_method_types ?? [];
-		if (paymentMethodTypes.length === 1) {
-			return paymentMethodTypes[0]?.trim().toLowerCase() ?? null;
-		}
-		if (paymentMethodTypes.length > 1 && !paymentMethodTypes.some((type) => type.toLowerCase() === 'card')) {
-			return paymentMethodTypes[0]?.trim().toLowerCase() ?? null;
-		}
-		return null;
-	}
-
-	private async getLocalizedCheckoutChargeDetailsFromSubscription(session: Stripe.Checkout.Session): Promise<{
-		paymentIntentId: string | null;
-		chargeDetails: CheckoutChargeDetails | null;
-	} | null> {
-		if (!this.stripe) {
-			return null;
-		}
-		const subscriptionId = extractId(session.subscription);
-		if (!subscriptionId) {
-			return null;
-		}
-		type StripeSubscriptionWithFallbackPaymentState = Stripe.Subscription & {
-			default_payment_method?:
-				| {
-						id?: string;
-						type?: string | null;
-						card?: {
-							country?: string | null;
-						} | null;
-				  }
-				| string
-				| null;
-			latest_invoice?: Stripe.Invoice | string | null;
-		};
-		try {
-			const subscription = (await this.stripe.subscriptions.retrieve(subscriptionId, {
-				expand: ['default_payment_method', 'latest_invoice.payments.data.payment'],
-			})) as StripeSubscriptionWithFallbackPaymentState;
-			const latestInvoice =
-				typeof subscription.latest_invoice === 'string' ? null : (subscription.latest_invoice ?? null);
-			const invoicePaymentIntentId = getFirstInvoicePaymentIntentId(latestInvoice);
-			if (invoicePaymentIntentId) {
-				return {
-					paymentIntentId: invoicePaymentIntentId,
-					chargeDetails: await this.getCheckoutChargeDetails(invoicePaymentIntentId),
-				};
-			}
-			const defaultPaymentMethod =
-				typeof subscription.default_payment_method === 'string' ? null : subscription.default_payment_method;
-			if (!defaultPaymentMethod) {
-				return null;
-			}
-			return {
-				paymentIntentId: null,
-				chargeDetails: {
-					chargeId: null,
-					paymentMethodType: defaultPaymentMethod.type ?? null,
-					cardCountry: defaultPaymentMethod.card?.country ?? null,
-				},
-			};
-		} catch (error) {
-			Logger.warn(
-				{
-					error,
-					sessionId: session.id,
-					subscriptionId,
-				},
-				'Failed to load subscription fallback payment details for localized card eligibility',
-			);
-			return null;
-		}
-	}
-
-	private async getCheckoutChargeDetails(paymentIntentId: string): Promise<CheckoutChargeDetails> {
-		if (!this.stripe) {
-			throw new StripeError('Stripe client not available for localized card eligibility checks');
-		}
-		try {
-			const paymentIntent = await this.stripe.paymentIntents.retrieve(paymentIntentId, {
-				expand: ['latest_charge'],
-			});
-			const latestCharge = paymentIntent.latest_charge;
-			if (!latestCharge) {
-				throw new StripeError('Payment intent missing latest charge');
-			}
-			const charge = typeof latestCharge === 'string' ? await this.stripe.charges.retrieve(latestCharge) : latestCharge;
-			const paymentMethodDetails = charge.payment_method_details;
-			return {
-				chargeId: charge.id,
-				paymentMethodType: this.getChargePaymentMethodType(paymentMethodDetails),
-				cardCountry: paymentMethodDetails?.card?.country ?? null,
-			};
-		} catch (error) {
-			Logger.error({error, paymentIntentId}, 'Failed to load Stripe charge details for localized card eligibility');
-			throw error;
-		}
-	}
-
-	private getChargePaymentMethodType(paymentMethodDetails: Stripe.Charge.PaymentMethodDetails | null): string | null {
-		if (!paymentMethodDetails) {
-			return null;
-		}
-		if (paymentMethodDetails.type) {
-			return paymentMethodDetails.type;
-		}
-		if (paymentMethodDetails.card) {
-			return 'card';
-		}
-		if ('pix' in paymentMethodDetails && paymentMethodDetails.pix) {
-			return 'pix';
-		}
-		if ('upi' in paymentMethodDetails && paymentMethodDetails.upi) {
-			return 'upi';
-		}
-		return null;
-	}
-
-	private async rejectLocalizedCardPayment({
-		session,
-		payment,
-		user,
-		chargeDetails,
-		paymentIntentId,
-		requestedCountryCode,
-		cardCountry,
-	}: {
-		session: Stripe.Checkout.Session;
-		payment: Payment;
-		user: User;
-		chargeDetails: CheckoutChargeDetails;
-		paymentIntentId: string;
-		requestedCountryCode: string;
-		cardCountry: string | null;
-	}): Promise<void> {
-		const subscriptionId = extractId(session.subscription);
-		if (subscriptionId) {
-			await this.cancelStripeSubscriptionById(subscriptionId, session.id, user.id.toString());
-		}
-		if (chargeDetails.chargeId) {
-			await this.refundChargeForLocalizedCardMismatch({
-				chargeId: chargeDetails.chargeId,
-				checkoutSessionId: session.id,
-				requestedCountryCode,
-				cardCountry,
-			});
-		} else {
-			Logger.warn(
-				{
-					sessionId: session.id,
-					userId: user.id.toString(),
-					paymentIntentId,
-					requestedCountryCode,
-					cardCountry,
-				},
-				'Skipping localized card refund because Stripe did not surface a charge id',
-			);
-		}
-		await this.userRepository.updatePayment({
-			...payment.toRow(),
-			stripe_customer_id: extractId(session.customer),
-			payment_intent_id: paymentIntentId,
-			subscription_id: subscriptionId,
-			invoice_id: typeof session.invoice === 'string' ? session.invoice : null,
-			amount_cents: session.amount_total ?? payment.amountCents,
-			currency: session.currency ?? payment.currency,
-			status: 'failed',
-			completed_at: payment.completedAt ?? new Date(),
-		});
-	}
-
 	private async handleDonationCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
 		const email = session.metadata?.donation_email?.trim().toLowerCase();
 		if (!email) {
@@ -1132,39 +817,6 @@ export class StripeCheckoutWebhookHandler {
 				'Failed to cancel localized card payment subscription',
 			);
 			throw error;
-		}
-	}
-
-	private async refundChargeForLocalizedCardMismatch({
-		chargeId,
-		checkoutSessionId,
-		requestedCountryCode,
-		cardCountry,
-	}: {
-		chargeId: string;
-		checkoutSessionId: string;
-		requestedCountryCode: string;
-		cardCountry: string | null;
-	}): Promise<void> {
-		if (!this.stripe) {
-			throw new StripeError('Stripe client not available for localized card refund');
-		}
-		const refund = await this.stripe.refunds.create(
-			{
-				charge: chargeId,
-				metadata: {
-					checkout_session_id: checkoutSessionId,
-					rejection_reason: 'localized_card_country_mismatch',
-					expected_country: requestedCountryCode,
-					actual_country: cardCountry ?? 'unknown',
-				},
-			},
-			{idempotencyKey: `localized-card-country-refund:${checkoutSessionId}`},
-		);
-		try {
-			await getBillingRepository().refunds.upsertFromStripe(refund);
-		} catch (mirrorErr) {
-			Logger.error({mirrorErr, refundId: refund.id}, 'Mirror upsert failed after Stripe write; reconciler will heal');
 		}
 	}
 
