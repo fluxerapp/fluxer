@@ -414,7 +414,8 @@ export class JetStreamWorkerQueue {
 		this.requireConsumerConfiguration(existing, lane.consumerName);
 		const updated = await jsm.consumers.update(STREAM_NAME, lane.consumerName, config);
 		this.requireConsumerConfiguration(updated, lane.consumerName);
-		if (updated.created !== existing.created) {
+		const current = await this.readConsumer(jsm, lane.consumerName);
+		if (current?.created !== existing.created) {
 			throw new Error(`Worker consumer ${lane.consumerName} was replaced during startup`);
 		}
 		Logger.info({lane: lane.name, consumer: lane.consumerName}, 'Consumer updated without resetting delivery state');

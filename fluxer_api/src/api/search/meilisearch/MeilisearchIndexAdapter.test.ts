@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MeilisearchClient, MeilisearchTask} from '@app/api/search/meilisearch/MeilisearchClient';
+import {MeilisearchTaskError} from '@app/api/search/meilisearch/MeilisearchClient';
 import {MeilisearchMessageAdapter} from '@app/api/search/meilisearch/MeilisearchDomainAdapters';
 import {MEILISEARCH_MAX_TRACKED_BULK_TASKS} from '@app/api/search/meilisearch/MeilisearchIndexAdapter';
 import type {SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
@@ -15,6 +16,7 @@ interface RecordedMeilisearchRequest {
 class FakeMeilisearchClient implements MeilisearchClient {
 	readonly requests: Array<RecordedMeilisearchRequest> = [];
 	readonly waitedTaskUids: Array<number> = [];
+	readonly failedTasks = new Map<number, MeilisearchTaskError>();
 	private nextTaskUid = 1;
 	indexExists = false;
 
@@ -50,6 +52,10 @@ class FakeMeilisearchClient implements MeilisearchClient {
 
 	async waitForTask(taskUid: number): Promise<void> {
 		this.waitedTaskUids.push(taskUid);
+		const failure = this.failedTasks.get(taskUid);
+		if (failure) {
+			throw failure;
+		}
 	}
 
 	clear(): void {
@@ -85,6 +91,26 @@ describe('MeilisearchMessageAdapter', () => {
 		expect(client.requests.find((request) => request.path.endsWith('/settings/pagination'))?.body).toEqual({
 			maxTotalHits: 10000,
 		});
+	});
+
+	it('treats an index created concurrently by another process as created', async () => {
+		const client = new FakeMeilisearchClient();
+		client.failedTasks.set(1, new MeilisearchTaskError('Index `messages` already exists.', 'index_already_exists'));
+		const adapter = new MeilisearchMessageAdapter({client});
+
+		await adapter.initialize();
+
+		expect(adapter.isAvailable()).toBe(true);
+		expect(client.waitedTaskUids).toEqual([1, 2, 3, 4, 5]);
+	});
+
+	it('still fails when creating the index fails for another reason', async () => {
+		const client = new FakeMeilisearchClient();
+		client.failedTasks.set(1, new MeilisearchTaskError('Index uid is invalid.', 'invalid_index_uid'));
+		const adapter = new MeilisearchMessageAdapter({client});
+
+		await expect(adapter.initialize()).rejects.toThrow('Index uid is invalid.');
+		expect(adapter.isAvailable()).toBe(false);
 	});
 
 	it('builds Meilisearch search requests from message filters', async () => {
