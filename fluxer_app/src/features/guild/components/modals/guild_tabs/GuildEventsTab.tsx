@@ -3,6 +3,11 @@
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import {GuildEventCalendarExportButton} from '@app/features/guild/components/GuildEventCalendarExportButton';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildEventsTab.module.css';
+import {
+	type GuildEventDateSnapshot,
+	guildEventDateToIso,
+	snapshotGuildEventDate,
+} from '@app/features/guild/utils/GuildEventDateUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -19,6 +24,10 @@ interface Draft {
 	startsAt: string;
 	endsAt: string;
 	image: string | null | undefined;
+	originalDates?: {
+		startsAt: GuildEventDateSnapshot;
+		endsAt: GuildEventDateSnapshot | null;
+	};
 }
 
 const emptyDraft = (): Draft => ({
@@ -29,17 +38,6 @@ const emptyDraft = (): Draft => ({
 	endsAt: '',
 	image: undefined,
 });
-
-function toLocalInput(iso: string | null): string {
-	if (!iso) return '';
-	const date = new Date(iso);
-	const offset = date.getTimezoneOffset() * 60_000;
-	return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}
-
-function toIso(value: string): string {
-	return new Date(value).toISOString();
-}
 
 async function fileAsDataUrl(file: File): Promise<string> {
 	return await new Promise((resolve, reject) => {
@@ -87,14 +85,17 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	}, []);
 
 	const edit = useCallback((event: GuildEvent) => {
+		const startsAt = snapshotGuildEventDate(event.starts_at);
+		const endsAt = event.ends_at ? snapshotGuildEventDate(event.ends_at) : null;
 		setEditingId(event.id);
 		setDraft({
 			name: event.name,
 			description: event.description ?? '',
 			location: event.location ?? '',
-			startsAt: toLocalInput(event.starts_at),
-			endsAt: toLocalInput(event.ends_at),
+			startsAt: startsAt.input,
+			endsAt: endsAt?.input ?? '',
 			image: undefined,
+			originalDates: {startsAt, endsAt},
 		});
 	}, []);
 
@@ -109,8 +110,8 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					name: draft.name.trim(),
 					description: draft.description.trim() || null,
 					location: draft.location.trim() || null,
-					starts_at: toIso(draft.startsAt),
-					ends_at: draft.endsAt ? toIso(draft.endsAt) : null,
+					starts_at: guildEventDateToIso(draft.startsAt, draft.originalDates?.startsAt),
+					ends_at: draft.endsAt ? guildEventDateToIso(draft.endsAt, draft.originalDates?.endsAt) : null,
 					...(draft.image !== undefined ? {image: draft.image} : {}),
 				};
 				if (editingId) {
