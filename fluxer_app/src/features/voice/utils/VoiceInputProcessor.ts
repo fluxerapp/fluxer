@@ -202,9 +202,14 @@ export class VoiceInputGraph {
 		return this.configureRun;
 	}
 
+	loadGate(): Promise<void> {
+		this.gateLoad ??= this.installGate();
+		return this.gateLoad;
+	}
+
 	private async drainConfigure(): Promise<void> {
 		try {
-			this.gateLoad ??= this.installGate();
+			void this.loadGate();
 			while (!this.disposed && this.configureDirty) {
 				this.configureDirty = false;
 				const config = this.resolveConfig();
@@ -488,6 +493,8 @@ export class VoiceInputTrackProcessor implements TrackProcessor<Track.Kind.Audio
 			() => this.reportRuntime(),
 		);
 		this.graph.setSourceNode(opts.track, acquired.source);
+		await this.graph.loadGate();
+		if (this.state !== 'idle') throw new Error(`Voice input processor cannot start while ${this.state}`);
 		this.destination = context.createMediaStreamDestination();
 		this.destination.channelCount = this.channelCount;
 		this.destination.channelCountMode = 'explicit';

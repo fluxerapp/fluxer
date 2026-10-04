@@ -10,6 +10,7 @@ const RESUME_GESTURE_EVENTS = ['pointerdown', 'keydown'] as const;
 const IDLE_SUSPEND_DELAY_MS = 500;
 const IDLE_CLOSE_DELAY_MS = 60_000;
 const RATE_KEYED_CANDIDATE_RATES = [48000, 44100, 32000, 24000, 16000];
+const INAUDIBLE_OUTPUT_OFFSET = 1e-6;
 
 export interface VoiceInputContextLease {
 	readonly context: AudioContext;
@@ -54,9 +55,17 @@ function syncEntryResume(entry: VoiceInputContextEntry): void {
 	resumeEntry(entry);
 }
 
+function keepOutputOnAudioDevice(context: AudioContext): void {
+	if (typeof ConstantSourceNode !== 'function') return;
+	const source = new ConstantSourceNode(context, {offset: INAUDIBLE_OUTPUT_OFFSET});
+	source.connect(context.destination);
+	source.start();
+}
+
 function createEntry(options: AudioContextOptions, shared: boolean): VoiceInputContextEntry | null {
 	const context = createVoiceAudioContext({latencyHint: 'interactive', ...options});
 	if (!context) return null;
+	keepOutputOnAudioDevice(context);
 	const entry: VoiceInputContextEntry = {
 		context,
 		holders: 0,
