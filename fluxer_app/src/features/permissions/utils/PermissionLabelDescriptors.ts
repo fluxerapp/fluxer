@@ -55,6 +55,16 @@ const MANAGE_EMOJI_AND_STICKERS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Permission description in the role/permission editor for the Manage Emoji & Stickers permission. Lets the member moderate expressions uploaded by anyone in the community.',
 });
+const CREATE_EVENTS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Create events, and edit or delete your own events.',
+	comment:
+		'Permission description in the role/permission editor for the Create Events permission. Lets the member create community events and edit or delete events they created.',
+});
+const MANAGE_EVENTS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Create, edit, or delete any community event.',
+	comment:
+		'Permission description in the role/permission editor for the Manage Events permission. Lets the member create events and edit or delete events created by anyone in the community.',
+});
 const MANAGE_WEBHOOKS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Create, edit, or delete webhooks.',
 	comment:
@@ -395,6 +405,14 @@ const MANAGE_EMOJI_AND_STICKERS_DESCRIPTOR = msg({
 	message: 'Manage emoji & stickers',
 	comment: 'Permission name: allows editing or deleting custom emoji and stickers.',
 });
+const CREATE_EVENTS_DESCRIPTOR = msg({
+	message: 'Create Events',
+	comment: 'Permission name: allows creating community events and editing or deleting your own events.',
+});
+const MANAGE_EVENTS_DESCRIPTOR = msg({
+	message: 'Manage Events',
+	comment: 'Permission name: allows creating, editing, or deleting any community event.',
+});
 const MANAGE_WEBHOOKS_DESCRIPTOR = msg({
 	message: 'Manage webhooks',
 	comment: 'Permission name: allows creating, editing, or deleting webhooks.',
@@ -531,6 +549,8 @@ const PERMISSION_TITLE_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
 	[Permissions.MANAGE_NICKNAMES, MANAGE_NICKNAMES_DESCRIPTOR],
 	[Permissions.CREATE_EXPRESSIONS, CREATE_EMOJI_AND_STICKERS_DESCRIPTOR],
 	[Permissions.MANAGE_EXPRESSIONS, MANAGE_EMOJI_AND_STICKERS_DESCRIPTOR],
+	[Permissions.CREATE_EVENTS, CREATE_EVENTS_DESCRIPTOR],
+	[Permissions.MANAGE_EVENTS, MANAGE_EVENTS_DESCRIPTOR],
 	[Permissions.MANAGE_WEBHOOKS, MANAGE_WEBHOOKS_DESCRIPTOR],
 	[Permissions.SEND_MESSAGES, SEND_MESSAGES_DESCRIPTOR],
 	[Permissions.SEND_TTS_MESSAGES, SEND_TTS_MESSAGES_DESCRIPTOR],
@@ -576,6 +596,8 @@ const PERMISSION_DESCRIPTION_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
 	[Permissions.MANAGE_NICKNAMES, MANAGE_NICKNAMES_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.CREATE_EXPRESSIONS, CREATE_EMOJI_AND_STICKERS_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.MANAGE_EXPRESSIONS, MANAGE_EMOJI_AND_STICKERS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[Permissions.CREATE_EVENTS, CREATE_EVENTS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[Permissions.MANAGE_EVENTS, MANAGE_EVENTS_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.MANAGE_WEBHOOKS, MANAGE_WEBHOOKS_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.SEND_MESSAGES, SEND_MESSAGES_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.SEND_TTS_MESSAGES, SEND_TTS_MESSAGES_PERMISSION_DESCRIPTION_DESCRIPTOR],

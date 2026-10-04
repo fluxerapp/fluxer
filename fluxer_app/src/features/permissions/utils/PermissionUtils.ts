@@ -259,6 +259,8 @@ function generateGuildGeneralPermissionSpec(i18n: I18n): PermissionSpec {
 			makePermissionEntry(i18n, Permissions.MANAGE_NICKNAMES),
 			makePermissionEntry(i18n, Permissions.CREATE_EXPRESSIONS),
 			makePermissionEntry(i18n, Permissions.MANAGE_EXPRESSIONS),
+			makePermissionEntry(i18n, Permissions.CREATE_EVENTS),
+			makePermissionEntry(i18n, Permissions.MANAGE_EVENTS),
 			makePermissionEntry(i18n, Permissions.MANAGE_WEBHOOKS),
 		],
 	};

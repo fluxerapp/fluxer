@@ -168,6 +168,8 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 	const canManageWebhooks = Permission.can(Permissions.MANAGE_WEBHOOKS, {guildId: guild.id});
 	const canManageEmojis = Permission.can(Permissions.MANAGE_EXPRESSIONS, {guildId: guild.id});
 	const canCreateExpressions = Permission.can(Permissions.CREATE_EXPRESSIONS, {guildId: guild.id});
+	const canCreateEvents = Permission.can(Permissions.CREATE_EVENTS, {guildId: guild.id});
+	const canManageEvents = Permission.can(Permissions.MANAGE_EVENTS, {guildId: guild.id});
 	const canBanMembers = Permission.can(Permissions.BAN_MEMBERS, {guildId: guild.id});
 	const canAccessGuildSettings =
 		canManageGuild ||
@@ -176,6 +178,8 @@ export const GuildHeaderPopout = observer(({guild}: {guild: Guild}) => {
 		canManageWebhooks ||
 		canManageEmojis ||
 		canCreateExpressions ||
+		canCreateEvents ||
+		canManageEvents ||
 		canBanMembers;
 	const canEditCommunityProfile = Users.getCurrentUser()?.isClaimed() ?? true;
 	const settings = UserGuildSettings.getSettingsForScope(guild.id);
