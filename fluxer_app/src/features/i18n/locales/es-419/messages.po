@@ -194,6 +194,11 @@ msgstr "{actor} cambió su apodo de {oldNick} a {newNick}"
 msgid "{actor} created a webhook"
 msgstr "{actor} creó un webhook"
 
+#. Activity log summary for an event whose name was not recorded. {actor} is the member who created it, shown as a user chip, or System.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:10
+msgid "{actor} created an event"
+msgstr "{actor} creó un evento"
+
 #. Activity log summary when an announcement channel was created. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the new channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:10
 msgid "{actor} created the announcement channel {channel}"
@@ -218,6 +223,11 @@ msgstr "{actor} creó el canal {channel}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:50
 msgid "{actor} created the channel {channel} in {category}"
 msgstr "{actor} creó el canal {channel} en {category}"
+
+#. Activity log summary for a scheduled community event. {actor} is the member who created it, shown as a user chip, or System. {name} is the recorded event name, shown in bold.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:5
+msgid "{actor} created the event {name}"
+msgstr "{actor} creó el evento {name}"
 
 #. Activity log summary for a new invite link when its channel was not recorded. {actor} is the member who created the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:10
@@ -309,6 +319,11 @@ msgstr "{actor} eliminó un webhook"
 msgid "{actor} deleted an emoji"
 msgstr "{actor} eliminó un emoji"
 
+#. Activity log summary for a deleted event whose name was not recorded. {actor} is the member who deleted it, shown as a user chip, or System.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:30
+msgid "{actor} deleted an event"
+msgstr "{actor} eliminó un evento"
+
 #. Activity log summary for several messages that were deleted together when neither their number nor the channel was recorded. {actor} is the member who deleted them, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:130
 msgid "{actor} deleted some messages"
@@ -338,6 +353,11 @@ msgstr "{actor} eliminó el canal {channel}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:30
 msgid "{actor} deleted the emoji {emoji}"
 msgstr "{actor} eliminó el emoji {emoji}"
+
+#. Activity log summary for a deleted community event. {actor} is the member who deleted it, shown as a user chip, or System. {name} is the name recorded before deletion, shown in bold.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:25
+msgid "{actor} deleted the event {name}"
+msgstr "{actor} eliminó el evento {name}"
 
 #. Activity log summary for a deleted invite link when its channel was not recorded. {actor} is the member who deleted the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:50
@@ -739,6 +759,11 @@ msgstr "{actor} actualizó un webhook"
 msgid "{actor} updated an emoji"
 msgstr "{actor} actualizó un emoji"
 
+#. Activity log summary for an edited event whose name was not recorded in this entry. {actor} is the member who edited it, shown as a user chip, or System.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:20
+msgid "{actor} updated an event"
+msgstr "{actor} actualizó un evento"
+
 #. Activity log summary when settings of an announcement channel were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:194
 msgid "{actor} updated the announcement channel {channel}"
@@ -763,6 +788,11 @@ msgstr "{actor} actualizó la configuración de la comunidad"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:20
 msgid "{actor} updated the emoji {emoji}"
 msgstr "{actor} actualizó el emoji {emoji}"
+
+#. Activity log summary for an edited community event. {actor} is the member who edited it, shown as a user chip, or System. {name} is the recorded event name, shown in bold.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:15
+msgid "{actor} updated the event {name}"
+msgstr "{actor} actualizó el evento {name}"
 
 #. Activity log summary for a change to an invite link. {actor} is the member who changed the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:40
@@ -1041,7 +1071,7 @@ msgstr "{count, plural, one {# comunidad en común} other {# comunidades en com�
 msgid "{count, plural, one {# other} other {# others}}"
 msgstr "{count, plural, one {# más} other {# más}}"
 
-#: src/features/voice/components/VoiceCallView.tsx:507
+#: src/features/voice/components/VoiceCallView.tsx:474
 msgid "{count, plural, one {# participant in call} other {# participants in call}}"
 msgstr "{count, plural, one {# participante en la llamada} other {# participantes en la llamada}}"
 
@@ -2944,12 +2974,12 @@ msgid "Activity"
 msgstr "Actividad"
 
 #. Page title of the activity-log tab in community settings (the user-facing name for the audit log).
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:86
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:87
 msgid "Activity log"
 msgstr "Registro de actividad"
 
 #. Community settings tab showing activity log entries and moderation history.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:61
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:63
 msgctxt "community-settings-tab"
 msgid "Activity log"
 msgstr "Registro de actividad"
@@ -3182,12 +3212,12 @@ msgid "Add local files"
 msgstr "Agregar archivos locales"
 
 #. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:270
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:280
 msgid "Add new reactions to messages in this channel."
 msgstr "Agrega reacciones nuevas a los mensajes en este canal."
 
 #. Permission description in the role/permission editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:83
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:93
 msgid "Add new reactions to messages."
 msgstr "Agrega reacciones nuevas a los mensajes."
 
@@ -3215,7 +3245,7 @@ msgid "Add reaction"
 msgstr "Agregar reacción"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:438
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:456
 msgid "Add reactions"
 msgstr "Agregar reacciones"
 
@@ -3366,6 +3396,11 @@ msgstr "Se agregó una advertencia de contenido con el texto {text}"
 msgid "Added an avatar"
 msgstr "Se agregó un avatar"
 
+#. Past-tense activity log detail. The actor added an image to an event that previously had none.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:94
+msgid "Added an event image"
+msgstr "Se agregó una imagen al evento"
+
 #. Activity log detail line under a community settings update, shown when the community got an invite background, the image behind its invite page, where it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:91
 msgid "Added an invite background"
@@ -3461,7 +3496,7 @@ msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adj
 msgstr "Ajusta el nivel de zoom general de la app. Usa {zoomIn} / {zoomOut} para ajustar rápidamente."
 
 #. Permission name: grants all permissions and bypasses restrictions.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:350
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:360
 msgid "Administrator"
 msgstr "Administrador"
 
@@ -3565,7 +3600,7 @@ msgstr "Los controles de alineación solo están disponibles en pantallas más a
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #. Tab label in the DM friends view showing all friends.
 #. Tab label in the mobile memes (saved media) picker. Shows all saved media regardless of type.
-#: src/features/app/config/AuditLogConstants.ts:143
+#: src/features/app/config/AuditLogConstants.ts:155
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:41
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:10
 #: src/features/channel/components/MobileMemesPicker.tsx:43
@@ -3594,7 +3629,7 @@ msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Todos los <0/>, para siempre. Sin facturación ni renovaciones."
 
 #. Default option in the activity log "Filter by action" dropdown. Means no action-type filter is applied. Short standalone label.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:77
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:78
 msgid "All actions"
 msgstr "Todas las acciones"
 
@@ -3678,7 +3713,7 @@ msgid "All time"
 msgstr "Todo el historial"
 
 #. Default option in the activity log "Filter by user" dropdown. Means no user filter is applied. Short standalone label.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:72
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:73
 msgid "All users"
 msgstr "Todos los usuarios"
 
@@ -4718,7 +4753,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "Al menos un canal debe tener el permiso \"{viewChannelPermissionLabel}\" habilitado para {EVERYONE_MENTION} para que la URL personalizada funcione. Actualmente, ningún canal es visible para {EVERYONE_MENTION}."
 
 #. Permission name: allows uploading files to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:422
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:440
 msgid "Attach files"
 msgstr "Adjuntar archivos"
 
@@ -4822,7 +4857,7 @@ msgid "Audio"
 msgstr "Audio"
 
 #. Permission category for voice, video, and streaming permissions.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:342
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:352
 msgid "Audio & video"
 msgstr "Audio y video"
 
@@ -4938,7 +4973,7 @@ msgid "Audio settings"
 msgstr "Configuración de audio"
 
 #. Toggle / summary row label in the Linux audio source picker. {summaryLabel} is one of the audio-source summary labels.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:45
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:47
 msgid "Audio sources: {summaryLabel}"
 msgstr "Fuentes de audio: {summaryLabel}"
 
@@ -5399,7 +5434,7 @@ msgid "Back to sticker"
 msgstr "Volver al sticker"
 
 #. Tooltip / aria label on the back button that returns from the call view to the voice channel view.
-#: src/features/voice/components/VoiceCallView.tsx:115
+#: src/features/voice/components/VoiceCallView.tsx:111
 msgid "Back to voice channel"
 msgstr "Volver al canal de voz"
 
@@ -5532,12 +5567,12 @@ msgid "Ban member"
 msgstr "Banear miembro"
 
 #. Permission name: allows banning members from a community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:374
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:384
 msgid "Ban members"
 msgstr "Banear miembros"
 
 #. Permission description in the role/permission editor for the Ban Members permission. A ban keeps the member out until it is lifted, and the moderator chooses how much recent message history to delete.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
 msgid "Ban members from the community, with the option to delete their recent messages."
 msgstr "Banear a miembros de la comunidad, con la opción de eliminar sus mensajes recientes."
 
@@ -5603,7 +5638,7 @@ msgid "Banner preview"
 msgstr "Vista previa del banner"
 
 #. Community settings tab for banned users.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:91
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:98
 msgctxt "community-settings-tab"
 msgid "Bans"
 msgstr "Baneos"
@@ -5623,12 +5658,12 @@ msgid "Basic text inputs"
 msgstr "Campos de texto básicos"
 
 #. Permission description in the channel-scoped permissions editor for the Priority Speaker permission. "Push to talk (priority)" is the name of a keybind in the keybind settings, so match the wording used there.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:312
 msgid "Be heard over other members in this channel while holding the push to talk (priority) keybind."
 msgstr "Hazte oír por encima de otros miembros en este canal mientras mantienes presionado el atajo de presionar para hablar (prioridad)."
 
 #. Permission description in the role/permission editor for the Priority Speaker permission at community scope. "Push to talk (priority)" is the name of a keybind in the keybind settings, so match the wording used there.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:177
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:187
 msgid "Be heard over other members while holding the push to talk (priority) keybind."
 msgstr "Hazte oír por encima de otros miembros mientras mantienes presionado el atajo de presionar para hablar (prioridad)."
 
@@ -5992,7 +6027,7 @@ msgid "Bot invite (no external redirect)"
 msgstr "Invitación de bot (sin redirección externa)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:162
+#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:163
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:104
 msgid "Bot permissions"
 msgstr "Permisos del bot"
@@ -6321,7 +6356,7 @@ msgid "Bypass mention suppression"
 msgstr "Omitir supresión de menciones"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:442
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:460
 msgid "Bypass slowmode"
 msgstr "Omitir modo lento"
 
@@ -6674,7 +6709,7 @@ msgid "Cannot delete account"
 msgstr "No se puede eliminar la cuenta"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:50
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:52
 msgid "Capture"
 msgstr "Capturar"
 
@@ -6900,7 +6935,7 @@ msgid "Change other members' nicknames."
 msgstr "Cambiar los apodos de otros miembros."
 
 #. Permission name: allows a member to edit their own nickname.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:382
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:392
 msgid "Change own nickname"
 msgstr "Cambiar mi apodo"
 
@@ -6961,12 +6996,12 @@ msgid "Change what users without \"{readMessageHistoryPermissionLabel}\" can see
 msgstr "Cambia lo que pueden ver los usuarios sin \"{readMessageHistoryPermissionLabel}\""
 
 #. Permission description in the role/permission editor for the Set Voice Region permission at community scope. The region is the geographic location of the voice server.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:191
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:201
 msgid "Change which voice region a voice channel uses."
 msgstr "Cambia la región de voz que usa un canal de voz."
 
 #. Permission description in the channel-scoped permissions editor for the Set Voice Region permission. The region is the geographic location of the voice server.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:321
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:331
 msgid "Change which voice region this channel uses."
 msgstr "Cambia la región de voz que usa este canal."
 
@@ -7092,6 +7127,36 @@ msgstr "Se cambió la configuración de notificación predeterminada de {oldSett
 msgid "Changed the description from {oldText} to {newText}"
 msgstr "Se cambió la descripción de {oldText} a {newText}"
 
+#. Past-tense activity log detail. {oldValue} and {newValue} are the previous and new event descriptions, shown as inline text.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:50
+msgid "Changed the event description from {oldValue} to {newValue}"
+msgstr "Se cambió la descripción del evento de {oldValue} a {newValue}"
+
+#. Past-tense activity log detail. {oldValue} and {newValue} are the previous and new scheduled end, formatted as local dates and times.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:85
+msgid "Changed the event end time from {oldValue} to {newValue}"
+msgstr "Se cambió la hora de finalización del evento de {oldValue} a {newValue}"
+
+#. Past-tense activity log detail. The actor replaced the existing event image.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:98
+msgid "Changed the event image"
+msgstr "Se cambió la imagen del evento"
+
+#. Past-tense activity log detail. {oldValue} and {newValue} are the previous and new event locations or URLs, shown as inline text.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:63
+msgid "Changed the event location from {oldValue} to {newValue}"
+msgstr "Se cambió la ubicación del evento de {oldValue} a {newValue}"
+
+#. Past-tense activity log detail for an event rename. {oldValue} and {newValue} are the old and new event names, shown in bold. This continues the actor in the summary and is not an instruction.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:40
+msgid "Changed the event name from {oldValue} to {newValue}"
+msgstr "Se cambió el nombre del evento de {oldValue} a {newValue}"
+
+#. Past-tense activity log detail. {oldValue} and {newValue} are the previous and new scheduled start, formatted as local dates and times.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:76
+msgid "Changed the event start time from {oldValue} to {newValue}"
+msgstr "Se cambió la hora de inicio del evento de {oldValue} a {newValue}"
+
 #. Activity log detail line under a community settings update, shown when the explicit content filter setting changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldFilter} is the previous setting and {newFilter} is the new setting, each shown as Off, Filter members without roles or Filter everyone.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:246
 msgid "Changed the explicit content filter from {oldFilter} to {newFilter}"
@@ -7207,7 +7272,7 @@ msgstr "canal"
 #. Short label in the channel layout. Keep it concise.
 #. Short label in the channel source preview. Keep it concise.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a channel.
-#: src/features/app/config/AuditLogConstants.ts:163
+#: src/features/app/config/AuditLogConstants.ts:175
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:24
 #: src/features/channel/components/ChannelLayout.tsx:13
 #: src/features/channel/components/ChannelSourcePreview.tsx:28
@@ -7224,7 +7289,7 @@ msgid "Channel {id}"
 msgstr "Canal {id}"
 
 #. Permission category for viewing or entering channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:338
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:348
 msgid "Channel access"
 msgstr "Acceso al canal"
 
@@ -7324,7 +7389,7 @@ msgid "Channel list typing indicators"
 msgstr "Indicadores de escritura en la lista de canales"
 
 #. Permission category for managing channels and channel settings.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:346
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:356
 msgid "Channel management"
 msgstr "Administración de canales"
 
@@ -8658,12 +8723,12 @@ msgstr "Comunidades a las que puedes unirte"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short option type label in the OAuth bot invite destination selector.
 #. Tag shown next to messages copied from a followed announcement channel. Keep it one short word.
-#: src/features/app/config/AuditLogConstants.ts:147
+#: src/features/app/config/AuditLogConstants.ts:159
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep.tsx:48
 #: src/features/channel/components/ChannelUserTag.tsx:21
 #: src/features/channel/components/modals/ChannelFollowModal.tsx:44
 #: src/features/moderation/components/report_modal/IARModalPreview.tsx:16
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:253
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:269
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:140
 msgid "Community"
 msgstr "Comunidad"
@@ -8854,7 +8919,7 @@ msgid "Community record"
 msgstr "Registro de la comunidad"
 
 #. Root label for community settings modal and settings search paths.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:244
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:260
 msgid "Community settings"
 msgstr "Configuración de la comunidad"
 
@@ -8882,7 +8947,7 @@ msgid "Community voice"
 msgstr "Voz de la comunidad"
 
 #. Permission category for permissions that affect the whole community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:326
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:336
 msgid "Community-wide"
 msgstr "Toda la comunidad"
 
@@ -9133,7 +9198,7 @@ msgstr "Conecta un micrófono e inténtalo de nuevo."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:458
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:476
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:60
 msgid "Connect to voice"
 msgstr "Conectarse por voz"
@@ -9167,7 +9232,7 @@ msgstr "Connecticut"
 #. Action label state in the DM channel header pill while the join request is in flight. Trailing ASCII ellipsis is intentional.
 #. Overlay status in the voice call view while joining. Trailing ellipsis indicates in-progress.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:129
-#: src/features/voice/components/VoiceCallView.tsx:94
+#: src/features/voice/components/VoiceCallView.tsx:90
 msgid "Connecting..."
 msgstr "Conectando..."
 
@@ -9228,7 +9293,7 @@ msgid "Connection removed"
 msgstr "Conexión eliminada"
 
 #. Tooltip / aria label on the connection-stats button in the voice call header. Opens the voice connection status popout.
-#: src/features/voice/components/VoiceCallView.tsx:119
+#: src/features/voice/components/VoiceCallView.tsx:115
 msgid "Connection stats"
 msgstr "Estadísticas de conexión"
 
@@ -9526,7 +9591,7 @@ msgstr "URL copiada al portapapeles"
 #: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
-#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:228
+#: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:230
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:59
 msgid "Copy"
 msgstr "Copiar"
@@ -10553,9 +10618,19 @@ msgid "Create DM"
 msgstr "Crear mensaje directo"
 
 #. Permission name: allows uploading custom emoji and stickers.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:390
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:400
 msgid "Create emoji & stickers"
 msgstr "Crear emojis y stickers"
+
+#. Permission name: allows creating community events and editing or deleting your own events.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:408
+msgid "Create Events"
+msgstr "Crear eventos"
+
+#. Permission description in the role/permission editor for the Create Events permission. Lets the member create community events and edit or delete events they created.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:58
+msgid "Create events, and edit or delete your own events."
+msgstr "Crea eventos y edita o elimina tus propios eventos."
 
 #. Accessible label for the create-favorite-category form.
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:16
@@ -10580,7 +10655,7 @@ msgid "Create invite"
 msgstr "Crear invitación"
 
 #. Permission name: allows creating invite links.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:378
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:388
 msgid "Create invite links"
 msgstr "Crear enlaces de invitación"
 
@@ -10633,6 +10708,11 @@ msgstr "Crear sin ellos"
 msgid "Create your first application to get started with the {apiName}."
 msgstr "Crea tu primera aplicación para empezar a usar la {apiName}."
 
+#. Permission description in the role/permission editor for the Manage Events permission. Lets the member create events and edit or delete events created by anyone in the community.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:63
+msgid "Create, edit, or delete any community event."
+msgstr "Crea, edita o elimina cualquier evento de la comunidad."
+
 #. Permission description in the role/permission editor for the Manage Channels permission. Covers channel and category lifecycle operations.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:33
 msgid "Create, edit, or delete channels and categories."
@@ -10644,12 +10724,12 @@ msgid "Create, edit, or delete roles below your highest role. Also allows editin
 msgstr "Crea, edita o elimina roles por debajo de tu rol más alto. También permite editar los permisos específicos de los canales."
 
 #. Permission description in the channel-scoped permissions editor for the Manage Webhooks permission. Scoped to a single channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:206
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:216
 msgid "Create, edit, or delete webhooks for this channel."
 msgstr "Crea, edita o elimina webhooks para este canal."
 
 #. Permission description in the role/permission editor for the Manage Webhooks permission, community-wide scope. Refers to outbound integration webhooks.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:58
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:68
 msgid "Create, edit, or delete webhooks."
 msgstr "Crear, editar o eliminar webhooks."
 
@@ -11287,17 +11367,17 @@ msgid "Deafen device"
 msgstr "Desactivar sonido en el dispositivo"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:483
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:501
 msgid "Deafen members"
 msgstr "Desactivar sonido a miembros"
 
 #. Permission description in the channel-scoped permissions editor for the Deafen Members permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:312
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:322
 msgid "Deafen other members in this voice channel, so they cannot hear or speak."
 msgstr "Desactivar el sonido para otros miembros en este canal de voz, de modo que no puedan oír ni hablar."
 
 #. Permission description in the role/permission editor for the Deafen Members permission at community scope.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:187
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:197
 msgid "Deafen other members in voice channels, so they cannot hear or speak."
 msgstr "Desactivar el sonido para otros miembros en los canales de voz, de modo que no puedan oír ni hablar."
 
@@ -11673,12 +11753,12 @@ msgid "Delete my messages"
 msgstr "Eliminar mis mensajes"
 
 #. Permission description in the channel-scoped permissions editor for the Manage Messages permission. Notes that pinning has its own permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:230
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:240
 msgid "Delete other members' messages in this channel. Pinning is controlled separately."
 msgstr "Elimina los mensajes de otros miembros en este canal. Fijar mensajes se controla por separado."
 
 #. Permission description in the role/permission editor for the Manage Messages permission. Notes that pinning has its own permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:68
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:78
 msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Eliminar mensajes de otros miembros. Fijar mensajes se controla por separado."
 
@@ -12505,7 +12585,7 @@ msgstr "Desconectar socket"
 #. Overlay status in the voice call view when not connected.
 #. Overlay status text in the compact / floating voice call tile when not connected.
 #: src/features/voice/components/compact_voice_call_view/shared.ts:15
-#: src/features/voice/components/VoiceCallView.tsx:103
+#: src/features/voice/components/VoiceCallView.tsx:99
 msgid "Disconnected"
 msgstr "Desconectado"
 
@@ -12529,7 +12609,7 @@ msgid "Discovery"
 msgstr "Descubrir"
 
 #. Community settings tab for public community discovery/listing.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:76
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:83
 msgctxt "community-settings-tab"
 msgid "Discovery"
 msgstr "Descubrir"
@@ -13074,12 +13154,12 @@ msgid "Drag and drop emoji files here"
 msgstr "Arrastra y suelta los archivos de emojis aquí"
 
 #. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:108
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
 msgid "Drag members between voice channels they can access, and disconnect them from voice."
 msgstr "Arrastra miembros entre canales de voz a los que puedan acceder y desconéctalos de la conexión de voz."
 
 #. Permission description in the channel-scoped permissions editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:316
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:326
 msgid "Drag members out of this voice channel into channels they can access, and disconnect them from voice."
 msgstr "Arrastra miembros de este canal de voz a otros a los que puedan acceder y desconéctalos de la conexión de voz."
 
@@ -13379,7 +13459,7 @@ msgid "Edit or delete emoji and stickers created by other members."
 msgstr "Editar o eliminar emojis y stickers creados por otros miembros."
 
 #. Permission description in the channel-scoped permissions editor for the Manage Permissions permission. "Overwrites" are per-channel permission overrides.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:201
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:211
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Edita los permisos específicos de roles y miembros en este canal."
 
@@ -13596,7 +13676,7 @@ msgid "Embed debugger form"
 msgstr "Formulario del depurador de incrustaciones"
 
 #. Permission name: allows links to unfurl/embed in messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:418
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:436
 msgid "Embed links"
 msgstr "Incrustar enlaces"
 
@@ -13639,7 +13719,7 @@ msgstr "Contenido incrustado restaurado"
 #. Collapsible group heading in the Theme Studio tokens list, for emoji tokens.
 #. Column header for the custom emoji image or glyph.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/config/AuditLogConstants.ts:167
+#: src/features/app/config/AuditLogConstants.ts:179
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
@@ -13647,7 +13727,7 @@ msgid "Emoji"
 msgstr "Emoji"
 
 #. Community settings tab for managing custom emoji uploaded to the community.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:36
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:38
 msgctxt "community-settings-tab"
 msgid "Emoji"
 msgstr "Emojis"
@@ -14204,7 +14284,7 @@ msgstr "Ingresa un nombre de usuario válido ({exampleFluxerTagFull})."
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (not in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:28
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:18
-#: src/features/voice/components/VoiceCallView.tsx:111
+#: src/features/voice/components/VoiceCallView.tsx:107
 msgid "Enter fullscreen"
 msgstr "Entrar a pantalla completa"
 
@@ -14347,7 +14427,7 @@ msgstr "Toda la pantalla"
 msgid "Entire system"
 msgstr "Sistema completo"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:260
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:257
 msgid "Entire system audio"
 msgstr "Audio de todo el sistema"
 
@@ -14472,6 +14552,32 @@ msgstr "Noche"
 msgid "Evens out your mic volume so you are not too quiet."
 msgstr "Ajusta el volumen de tu micrófono para que no suenes demasiado bajo."
 
+#. Audit log target-type filter label. Filters entries that target a scheduled community event.
+#: src/features/app/config/AuditLogConstants.ts:187
+msgid "Event"
+msgstr "Evento"
+
+#. Audit log entry label. A scheduled community event was created.
+#: src/features/app/config/AuditLogConstants.ts:127
+msgid "Event created"
+msgstr "Evento creado"
+
+#. Audit log entry label. A scheduled community event was deleted.
+#: src/features/app/config/AuditLogConstants.ts:135
+msgid "Event deleted"
+msgstr "Evento eliminado"
+
+#. Audit log entry label. A scheduled community event was edited.
+#: src/features/app/config/AuditLogConstants.ts:131
+msgid "Event updated"
+msgstr "Evento actualizado"
+
+#. Community settings tab for creating and managing community calendar events.
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:78
+msgctxt "community-settings-tab"
+msgid "Events"
+msgstr "Eventos"
+
 #. Short label in the text to speech. Keep it concise.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:17
 msgid "Every channel"
@@ -14525,7 +14631,7 @@ msgid "exclude a user"
 msgstr "excluir a un usuario"
 
 #. Section header in the Linux audio source picker for apps excluded from the system mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:59
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:61
 msgid "Exclude from system"
 msgstr "Excluir del sistema"
 
@@ -14546,7 +14652,7 @@ msgstr "Salir"
 #. Tooltip / aria label on the fullscreen toggle in the voice call view (currently in fullscreen).
 #: src/features/voice/components/compact_voice_call_view/shared.ts:24
 #: src/features/voice/components/media_player/components/MediaFullscreenButton.tsx:14
-#: src/features/voice/components/VoiceCallView.tsx:107
+#: src/features/voice/components/VoiceCallView.tsx:103
 msgid "Exit fullscreen"
 msgstr "Salir de pantalla completa"
 
@@ -14725,6 +14831,16 @@ msgstr "Explorar comunidades"
 msgid "Export"
 msgstr "Exportar"
 
+#. Button that downloads the listed community events as an iCalendar file.
+#: src/features/guild/components/GuildEventCalendarExportButton.tsx:63
+msgid "Export calendar"
+msgstr "Exportar calendario"
+
+#. Button that downloads one community event as an iCalendar file.
+#: src/features/guild/components/GuildEventCalendarExportButton.tsx:61
+msgid "Export event"
+msgstr "Exportar evento"
+
 #. Description for the Everything export option.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:59
 msgid "Export every message you have ever sent, plus all of your account settings, memberships, and metadata."
@@ -14764,7 +14880,7 @@ msgstr "Categorías del selector de expresiones"
 
 #. Community settings sidebar category grouping the emoji and stickers tabs.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:249
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:265
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:137
 msgid "Expressions"
 msgstr "Expresiones"
@@ -15331,7 +15447,7 @@ msgid "Filter by account creation date"
 msgstr "Filtrar por fecha de creación de cuenta"
 
 #. Label of the action-type filter dropdown in the activity log tab.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:98
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:99
 msgid "Filter by action"
 msgstr "Filtrar por acción"
 
@@ -15369,7 +15485,7 @@ msgstr "Filtrar por roles"
 
 #. Label of the user filter dropdown in the activity log tab.
 #. Short label in the search user filter sheet. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:94
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:95
 #: src/features/search/components/search/UserFilterSheet.tsx:25
 msgid "Filter by user"
 msgstr "Filtrar por usuario"
@@ -17722,7 +17838,7 @@ msgid "Ignore input media"
 msgstr "Ignorar contenido multimedia de entrada"
 
 #. Permission description in the role/permission editor for the Bypass Slowmode permission. Slowmode is the per-channel cooldown between messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:88
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:98
 msgid "Ignore per-channel message rate limits."
 msgstr "Ignorar los límites de frecuencia de mensajes por canal."
 
@@ -17744,7 +17860,7 @@ msgid "Ignore the friend request from {displayName}?"
 msgstr "¿Ignorar la solicitud de amistad de {displayName}?"
 
 #. Permission description in the channel-scoped permissions editor for the Bypass Slowmode permission. Slowmode is the per-channel cooldown between messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:275
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:285
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "Ignorar el tiempo de espera de modo lento de este canal."
 
@@ -18106,7 +18222,7 @@ msgid "Include all except selected"
 msgstr "Incluir todos excepto los seleccionados"
 
 #. Section header in the Linux audio source picker for the per-app inclusion list.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:55
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:57
 msgid "Include apps"
 msgstr "Incluir aplicaciones"
 
@@ -18401,7 +18517,7 @@ msgstr "Número entero"
 
 #. Community settings sidebar category grouping webhooks.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:257
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:273
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:26
 msgid "Integrations"
 msgstr "Integraciones"
@@ -18537,7 +18653,7 @@ msgstr "Invitar"
 
 #. Audit log target-type filter label. Filters entries that target an invite link.
 #. Join source label on the community members page. Shown when the member joined via an invite link.
-#: src/features/app/config/AuditLogConstants.ts:175
+#: src/features/app/config/AuditLogConstants.ts:191
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:43
 msgctxt "invite-noun"
 msgid "Invite"
@@ -18635,12 +18751,12 @@ msgid "Invite modal preview"
 msgstr "Previsualización del modal de invitación"
 
 #. Permission description in the channel-scoped permissions editor for the Create Invite Links permission. The invite drops the new member into this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:216
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:226
 msgid "Invite new people to the community with a link to this channel."
 msgstr "Invita a nuevas personas a la comunidad con un enlace a este canal."
 
 #. Permission description in the role/permission editor for the Create Invite Links permission. Covers links that let someone outside the community join it.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
 msgid "Invite new people to the community with an invite link."
 msgstr "Invita a nuevas personas a la comunidad con un enlace de invitación."
 
@@ -18720,7 +18836,7 @@ msgid "Invites"
 msgstr "Invitaciones"
 
 #. Community settings tab for invite link management.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:86
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:93
 msgctxt "community-settings-tab"
 msgid "Invites"
 msgstr "Invitaciones"
@@ -18934,7 +19050,7 @@ msgid "Join the call"
 msgstr "Unirse a la llamada"
 
 #. Permission description in the channel-scoped permissions editor for the Connect permission. "View channel" is another permission in this same editor, so match the wording used for its name. The placeholder renders the literal @everyone role name and must not be translated.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:280
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
 msgid "Join this voice channel and hear others. Denying it along with View channel for {everyoneMention} makes the channel private."
 msgstr "Permite unirse a este canal de voz y escuchar a los demás. Si se deniega este permiso y el de Ver canal a {everyoneMention}, el canal pasa a ser privado."
 
@@ -18970,7 +19086,7 @@ msgid "Join voice channel"
 msgstr "Unirse al canal de voz"
 
 #. Permission description in the role/permission editor for the Connect permission at community scope.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:162
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Join voice channels and hear others."
 msgstr "Únete a canales de voz y escucha a otros."
 
@@ -19257,7 +19373,7 @@ msgid "Kick member"
 msgstr "Expulsar miembro"
 
 #. Permission name: allows removing members from a community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:370
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:380
 msgid "Kick members"
 msgstr "Expulsar miembros"
 
@@ -20188,17 +20304,17 @@ msgid "Manage blocked users"
 msgstr "Administrar usuarios bloqueados"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:495
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:513
 msgid "Manage channel"
 msgstr "Administrar canal"
 
 #. Permission name: allows creating, editing, or deleting channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:366
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:376
 msgid "Manage channels"
 msgstr "Administrar canales"
 
 #. Permission name: allows editing global community settings.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:358
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:368
 msgid "Manage community"
 msgstr "Administrar comunidad"
 
@@ -20208,9 +20324,14 @@ msgid "Manage community features"
 msgstr "Administrar funciones de la comunidad"
 
 #. Permission name: allows editing or deleting custom emoji and stickers.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:394
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:404
 msgid "Manage emoji & stickers"
 msgstr "Administrar emojis y stickers"
+
+#. Permission name: allows creating, editing, or deleting any community event.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:412
+msgid "Manage Events"
+msgstr "Administrar eventos"
 
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:97
 msgid "Manage incoming webhooks that can post messages into this channel."
@@ -20221,12 +20342,12 @@ msgid "Manage invite links for this channel."
 msgstr "Administra los enlaces de invitación para este canal."
 
 #. Permission name: allows deleting other members' messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:410
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:428
 msgid "Manage messages"
 msgstr "Administrar mensajes"
 
 #. Permission name: allows changing other members' nicknames.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:386
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:396
 msgid "Manage nicknames"
 msgstr "Administrar apodos"
 
@@ -20236,7 +20357,7 @@ msgid "Manage payment methods"
 msgstr "Administrar métodos de pago"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:499
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:517
 msgid "Manage permissions"
 msgstr "Administrar permisos"
 
@@ -20246,7 +20367,7 @@ msgid "Manage purchased gift codes and gift URLs"
 msgstr "Administrar códigos y enlaces de regalo comprados"
 
 #. Permission name: allows role management and permission overwrite editing.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:362
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:372
 msgid "Manage roles"
 msgstr "Administrar roles"
 
@@ -20258,7 +20379,7 @@ msgid "Manage subscription"
 msgstr "Administrar suscripción"
 
 #. Permission name: allows creating, editing, or deleting webhooks.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:398
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:416
 msgid "Manage webhooks"
 msgstr "Administrar webhooks"
 
@@ -20731,7 +20852,7 @@ msgid "Medium size (default)"
 msgstr "Tamaño mediano (predeterminado)"
 
 #. Audit log target-type filter label. Filters entries that target a community member.
-#: src/features/app/config/AuditLogConstants.ts:151
+#: src/features/app/config/AuditLogConstants.ts:163
 msgid "Member"
 msgstr "Miembro"
 
@@ -20829,7 +20950,7 @@ msgid "Members"
 msgstr "Miembros"
 
 #. Community settings tab for managing community members.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:81
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:88
 msgctxt "community-settings-tab"
 msgid "Members"
 msgstr "Miembros"
@@ -20890,12 +21011,12 @@ msgid "Mention controls"
 msgstr "Controles de menciones"
 
 #. Permission description in the role/permission editor for the Mention Everyone permission. Notes that this overrides the per-role "mentionable" flag.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:73
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:83
 msgid "Mention everyone or any role (even if the role isn't set to be mentionable)."
 msgstr "Mencionar a todos o a cualquier rol (incluso si el rol no está configurado para ser mencionable)."
 
 #. Permission description in the channel-scoped permissions editor for the Mention Everyone permission. Notes that this overrides the per-role "mentionable" flag.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:255
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
 msgid "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
 msgstr "Menciona a todos o a cualquier rol en este canal (incluso si el rol no está configurado para ser mencionable)."
 
@@ -20971,7 +21092,7 @@ msgstr "mensaje"
 
 #. Audit log target-type filter label. Filters entries that target an individual message.
 #. Short label in the inputs tab. Keep it concise.
-#: src/features/app/config/AuditLogConstants.ts:184
+#: src/features/app/config/AuditLogConstants.ts:200
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 msgid "Message"
 msgstr "Mensaje"
@@ -21061,7 +21182,7 @@ msgid "Message debug"
 msgstr "Depurar mensaje"
 
 #. Audit log entry label. A single message was deleted by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:127
+#: src/features/app/config/AuditLogConstants.ts:139
 msgid "Message deleted"
 msgstr "Mensaje eliminado"
 
@@ -21164,7 +21285,7 @@ msgid "Message list for {channelName}"
 msgstr "Lista de mensajes de {channelName}"
 
 #. Audit log entry label. A message was pinned in a channel.
-#: src/features/app/config/AuditLogConstants.ts:135
+#: src/features/app/config/AuditLogConstants.ts:147
 msgid "Message pinned"
 msgstr "Mensaje fijado"
 
@@ -21228,7 +21349,7 @@ msgid "Message time"
 msgstr "Hora del mensaje"
 
 #. Audit log entry label. A message was unpinned from a channel.
-#: src/features/app/config/AuditLogConstants.ts:139
+#: src/features/app/config/AuditLogConstants.ts:151
 msgid "Message unpinned"
 msgstr "Mensaje desfijado"
 
@@ -21257,12 +21378,12 @@ msgid "Messages"
 msgstr "Mensajes"
 
 #. Permission category for chat messages, uploads, embeds, reactions, and media.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:330
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:340
 msgid "Messages & media"
 msgstr "Mensajes y contenido multimedia"
 
 #. Audit log entry label. Multiple messages were bulk-deleted by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:131
+#: src/features/app/config/AuditLogConstants.ts:143
 msgid "Messages deleted"
 msgstr "Mensajes eliminados"
 
@@ -21582,18 +21703,18 @@ msgid "Mod"
 msgstr "Mod"
 
 #. Permission category for moderation actions against members or messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:334
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:344
 msgid "Moderation"
 msgstr "Moderación"
 
 #. Community settings tab for moderation and safety controls.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:56
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:58
 msgctxt "community-settings-tab"
 msgid "Moderation"
 msgstr "Moderación"
 
 #. Empty-state body in the activity log tab when there are no log entries to show.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:110
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:111
 msgid "Moderation actions and community changes will appear here."
 msgstr "Las acciones de moderación y los cambios de la comunidad aparecerán aquí."
 
@@ -21798,7 +21919,7 @@ msgid "Move item up"
 msgstr "Mover elemento hacia arriba"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:487
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:505
 msgid "Move members"
 msgstr "Mover miembros"
 
@@ -22012,7 +22133,7 @@ msgid "Mute favorites"
 msgstr "Silenciar favoritos"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:479
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:497
 msgid "Mute members"
 msgstr "Silenciar miembros"
 
@@ -22029,12 +22150,12 @@ msgid "Mute notifications"
 msgstr "Silenciar notificaciones"
 
 #. Permission description in the channel-scoped permissions editor for the Mute Members permission. The mute applies for every listener, not only for the moderator.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:307
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:317
 msgid "Mute other members in this voice channel for everyone."
 msgstr "Silenciar a otros miembros en este canal de voz para todos."
 
 #. Permission description in the role/permission editor for the Mute Members permission at community scope. The mute applies for every listener, not only for the moderator.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:182
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:192
 msgid "Mute other members in voice channels for everyone."
 msgstr "Silenciar a otros miembros en canales de voz para todos."
 
@@ -22965,7 +23086,7 @@ msgid "No local files referenced"
 msgstr "No hay archivos locales referenciados"
 
 #. Empty-state title in the activity log tab when there are no log entries to show.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:106
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:107
 msgid "No logs yet"
 msgstr "Aún no hay registros"
 
@@ -23306,7 +23427,7 @@ msgstr "No convertir"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:37
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:146
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:220
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:268
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:265
 msgid "None"
 msgstr "Ninguno"
 
@@ -24576,7 +24697,7 @@ msgid "Overview"
 msgstr "Información general"
 
 #. Community settings tab for basic server/community details.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:46
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:48
 msgctxt "community-settings-tab"
 msgid "Overview"
 msgstr "Información general"
@@ -24923,7 +25044,7 @@ msgstr "Pensilvania"
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts:22
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:54
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:261
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:277
 msgid "People"
 msgstr "Personas"
 
@@ -25189,7 +25310,7 @@ msgid "Pin message"
 msgstr "Fijar mensaje"
 
 #. Permission name: allows pinning messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:414
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:432
 msgid "Pin messages"
 msgstr "Fijar mensajes"
 
@@ -25199,12 +25320,12 @@ msgid "Pin messages here for everyone to see."
 msgstr "Fija mensajes aquí para que todos los vean."
 
 #. Permission description in the channel-scoped permissions editor for the Pin Messages permission. Covers messages from anyone, not only their own.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:235
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
 msgid "Pin or unpin any message in this channel."
 msgstr "Fijar o desfijar cualquier mensaje en este canal."
 
 #. Permission description in the role/permission editor for the Pin Messages permission at community scope. Covers messages from anyone, not only their own.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:137
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:147
 msgid "Pin or unpin any message."
 msgstr "Fijar o desfijar cualquier mensaje."
 
@@ -25416,7 +25537,7 @@ msgid "Pop back in"
 msgstr "Volver a la ventana principal"
 
 #. Tooltip / aria label on the voice call footer button that opens the call in a separate window.
-#: src/features/voice/components/VoiceCallCornerControls.tsx:12
+#: src/features/voice/components/VoiceCallCornerControls.tsx:11
 msgid "Pop out call"
 msgstr "Abrir llamada en una ventana separada"
 
@@ -25648,7 +25769,7 @@ msgid "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and joini
 msgstr "Evita que <0>{targetUserTag}</0> envíe mensajes, reaccione y se una a canales de voz durante el tiempo especificado."
 
 #. Permission description in the role/permission editor for the Time Out Members permission. Time out is a temporary moderation restriction.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:93
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:103
 msgid "Prevent members from sending messages, reacting, and joining voice for a duration."
 msgstr "Evita que los miembros envíen mensajes, reaccionen y se unan a chats de voz durante un tiempo."
 
@@ -25818,7 +25939,7 @@ msgid "Prioritize speakers"
 msgstr "Priorizar a quienes hablan"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:475
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:493
 msgid "Priority speaker"
 msgstr "Prioridad de voz"
 
@@ -26456,7 +26577,7 @@ msgid "Read message aloud"
 msgstr "Leer mensaje en voz alta"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:426
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:444
 msgid "Read message history"
 msgstr "Leer historial de mensajes"
 
@@ -26468,12 +26589,12 @@ msgid "Read messages"
 msgstr "Leer mensajes"
 
 #. Permission description in the role/permission editor for the Read Message History permission at community scope. Without the permission the member sees only messages that arrive while the channel is open in front of them.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:151
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:161
 msgid "Read messages sent before opening a channel. Without this permission, members only see messages that arrive while they have the channel open."
 msgstr "Leer mensajes enviados antes de abrir un canal. Sin este permiso, los miembros solo ven los mensajes que llegan mientras tienen el canal abierto."
 
 #. Permission description in the channel-scoped permissions editor for the Read Message History permission. Without the permission the member sees only messages that arrive while the channel is open in front of them.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:259
 msgid "Read messages sent in this channel before opening it. Without this permission, members only see messages that arrive while they have it open."
 msgstr "Leer mensajes enviados en este canal antes de abrirlo. Sin este permiso, los miembros solo ven los mensajes que llegan mientras lo tienen abierto."
 
@@ -26507,7 +26628,7 @@ msgstr "¿Listo para comprar un regalo?"
 msgid "Ready to upgrade?"
 msgstr "¿Listo para actualizar?"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:595
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:600
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:74
 msgid "Reason"
 msgstr "Motivo"
@@ -26601,7 +26722,7 @@ msgid "Reconnect succeeded. Pick a screen again if you want to resume your previ
 msgstr "Reconexión exitosa. Elige una pantalla de nuevo si quieres reanudar tu transmisión anterior."
 
 #. Overlay status in the voice call view while reconnecting after a drop. Trailing ellipsis indicates in-progress.
-#: src/features/voice/components/VoiceCallView.tsx:98
+#: src/features/voice/components/VoiceCallView.tsx:94
 msgid "Reconnecting..."
 msgstr "Reconectando..."
 
@@ -26741,7 +26862,7 @@ msgstr "Referencia copiada."
 msgid "Referral parameters"
 msgstr "Parámetros de referencia"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:312
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:309
 msgid "Refresh audio sources"
 msgstr "Actualizar fuentes de audio"
 
@@ -27098,7 +27219,7 @@ msgid "Remove it from the channel for everyone."
 msgstr "Eliminarlo del canal para todos."
 
 #. Permission description in the role/permission editor for the Kick Members permission. Note that a kick is not permanent, unlike a ban.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
 msgid "Remove members from the community. They can rejoin with a new invite."
 msgstr "Expulsa a miembros de la comunidad. Pueden volver a unirse con una nueva invitación."
 
@@ -27276,6 +27397,26 @@ msgstr "Se eliminó el texto de advertencia personalizado"
 msgid "Removed the description {text}"
 msgstr "Se eliminó la descripción {text}"
 
+#. Past-tense activity log detail. {value} is the previous event description, shown as inline text.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:55
+msgid "Removed the event description {value}"
+msgstr "Se eliminó la descripción {value} del evento"
+
+#. Past-tense activity log detail. {value} is the previous scheduled end, formatted as a local date and time.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:90
+msgid "Removed the event end time {value}"
+msgstr "Se eliminó la hora de finalización {value} del evento"
+
+#. Past-tense activity log detail. The actor removed the existing event image.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:102
+msgid "Removed the event image"
+msgstr "Se eliminó la imagen del evento"
+
+#. Past-tense activity log detail. {value} is the previous event location or URL, shown as inline text.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:68
+msgid "Removed the event location {value}"
+msgstr "Se eliminó la ubicación {value} del evento"
+
 #. Activity log detail line under a community settings update, shown when the invite background, the image behind the invite page of the community, was removed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:101
 msgid "Removed the invite background"
@@ -27393,7 +27534,7 @@ msgid "Rename :{emojiName}:"
 msgstr "Renombrar :{emojiName}:"
 
 #. Permission description in the channel-scoped permissions editor for the Manage Channel permission. "This channel" refers to the channel currently being edited.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:196
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:206
 msgid "Rename and edit this channel's settings."
 msgstr "Cambia el nombre y edita la configuración de este canal."
 
@@ -28391,7 +28532,7 @@ msgstr "Tono de llamada"
 
 #. Audit log target-type filter label. Filters entries that target a role.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a role.
-#: src/features/app/config/AuditLogConstants.ts:159
+#: src/features/app/config/AuditLogConstants.ts:171
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:35
 msgid "Role"
 msgstr "Rol"
@@ -28442,7 +28583,7 @@ msgid "Roles"
 msgstr "Roles"
 
 #. Community settings tab for role hierarchy and permission rules.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:51
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:53
 msgctxt "community-settings-tab"
 msgid "Roles"
 msgstr "Roles"
@@ -29353,7 +29494,7 @@ msgid "Security key PIN form"
 msgstr "Formulario del PIN de la llave de seguridad"
 
 #. Permission description in the role/permission editor for the View Channel permission at community scope. Per-channel overwrites still decide access for individual channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:138
 msgid "See channels by default. Channels that deny it stay hidden."
 msgstr "Ver canales de forma predeterminada. Los canales que denieguen este permiso permanecerán ocultos."
 
@@ -29362,17 +29503,17 @@ msgid "See how your invite looks to visitors."
 msgstr "Mira cómo ven tu invitación los visitantes."
 
 #. Permission description in the role/permission editor for the View Channel Members permission at community scope. Covers all channels in the community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:98
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:108
 msgid "See the member list for channels in this community."
 msgstr "Ver la lista de miembros de los canales en esta comunidad."
 
 #. Permission description in the channel-scoped permissions editor for the View Channel Members permission. Scoped to a single channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:211
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:221
 msgid "See the member list for this channel."
 msgstr "Ver la lista de miembros de este canal."
 
 #. Permission description in the channel-scoped permissions editor for the View Channel permission. The placeholder renders the literal @everyone role name and must not be translated.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:221
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:231
 msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
 msgstr "Ver este canal. Denegarlo para {everyoneMention} hace que el canal sea privado."
 
@@ -29722,7 +29863,7 @@ msgid "Send message"
 msgstr "Enviar mensaje"
 
 #. Permission name: allows sending chat messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:402
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:420
 msgid "Send messages"
 msgstr "Enviar mensajes"
 
@@ -29732,12 +29873,12 @@ msgid "Send messages disabled"
 msgstr "Envío de mensajes deshabilitado"
 
 #. Permission description in the role/permission editor for the Send Messages permission at community scope.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:133
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:143
 msgid "Send messages in channels."
 msgstr "Enviar mensajes en canales."
 
 #. Permission description in the channel-scoped permissions editor for the Send Messages permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:226
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:236
 msgid "Send messages in this channel."
 msgstr "Enviar mensajes en este canal."
 
@@ -29761,7 +29902,7 @@ msgid "Send saved media {memeName}"
 msgstr "Enviar contenido multimedia guardado {memeName}"
 
 #. Permission description in the role/permission editor for the Send TTS Messages permission. Keep "text-to-speech" spelled out for clarity. "/tts" is a literal command prefix typed in the message box and must not be translated.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:63
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:73
 msgid "Send text-to-speech messages with /tts. Members who turned text-to-speech on hear them read aloud."
 msgstr "Enviar mensajes con síntesis de voz mediante /tts. Los miembros que tengan activada la síntesis de voz los oirán en voz alta."
 
@@ -29771,7 +29912,7 @@ msgid "Send this pin back in time?"
 msgstr "¿Enviar este mensaje fijado al pasado?"
 
 #. Permission name: allows sending text-to-speech messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:406
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:424
 msgid "Send TTS messages"
 msgstr "Enviar mensajes con síntesis de voz"
 
@@ -29996,6 +30137,26 @@ msgstr "Se estableció el texto de advertencia personalizado en {text}"
 msgid "Set the description to {text}"
 msgstr "Se estableció la descripción en {text}"
 
+#. Past-tense activity log detail. The actor added this event description. {value} is the recorded description, shown as inline text.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:45
+msgid "Set the event description to {value}"
+msgstr "Se estableció la descripción del evento en {value}"
+
+#. Past-tense activity log detail. {value} is the scheduled end, formatted as a local date and time.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:81
+msgid "Set the event end time to {value}"
+msgstr "Se estableció la hora de finalización del evento en {value}"
+
+#. Past-tense activity log detail. {value} is the location or URL added to the event, shown as inline text.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:59
+msgid "Set the event location to {value}"
+msgstr "Se estableció la ubicación del evento en {value}"
+
+#. Past-tense activity log detail. {value} is the scheduled start, formatted as a local date and time.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:72
+msgid "Set the event start time to {value}"
+msgstr "Se estableció la hora de inicio del evento en {value}"
+
 #. Activity log detail row under a created or updated link channel, saying which web address the channel opens. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {url} is the web address, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:61
 msgid "Set the link to {url}"
@@ -30082,7 +30243,7 @@ msgid "Set up later"
 msgstr "Configurar más tarde"
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:491
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:509
 msgid "Set voice region"
 msgstr "Establecer región de voz"
 
@@ -30263,7 +30424,7 @@ msgid "Shared window"
 msgstr "Ventana compartida"
 
 #. Capture option in the Linux audio source picker on a window share. Captures only the audio of the window being shared.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:40
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:42
 msgid "Shared window audio"
 msgstr "Audio de la ventana compartida"
 
@@ -30506,12 +30667,12 @@ msgid "Show download button"
 msgstr "Mostrar botón de descarga"
 
 #. Permission description in the channel-scoped permissions editor for the Embed Links permission. The preview is the card rendered under a message that contains a link.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:240
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:250
 msgid "Show embedded previews for links sent in this channel."
 msgstr "Mostrar vistas previas incrustadas de los enlaces enviados en este canal."
 
 #. Permission description in the role/permission editor for the Embed Links permission at community scope. The preview is the card rendered under a message that contains a link.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:142
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:152
 msgid "Show embedded previews for links sent."
 msgstr "Mostrar vistas previas incrustadas de los enlaces enviados."
 
@@ -31485,7 +31646,7 @@ msgid "Something went wrong while issuing your refund. Contact support if this k
 msgstr "Algo salió mal al procesar tu reembolso. Si esto sigue ocurriendo, contacta a soporte."
 
 #. Generic error shown in the activity log tab when fetching log entries fails.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:82
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:83
 msgid "Something went wrong while loading the activity log."
 msgstr "Ocurrió un problema al cargar el registro de actividad."
 
@@ -31734,7 +31895,7 @@ msgid "Spanish (Spain)"
 msgstr "Español (España)"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:462
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:480
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "Hablar"
@@ -32149,7 +32310,7 @@ msgstr "sticker"
 #. Generic label for one sticker.
 #. Label for the has:sticker option in the mobile content-type filter sheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/config/AuditLogConstants.ts:171
+#: src/features/app/config/AuditLogConstants.ts:183
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:244
 #: src/features/search/components/search/HasFilterSheet.tsx:73
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:133
@@ -32230,7 +32391,7 @@ msgid "Stickers"
 msgstr "Stickers"
 
 #. Community settings tab for managing custom stickers uploaded to the community.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:41
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:43
 msgctxt "community-settings-tab"
 msgid "Stickers"
 msgstr "Stickers"
@@ -32462,7 +32623,7 @@ msgid "Stream settings"
 msgstr "Configuración de la transmisión"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:467
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:485
 msgid "Stream video"
 msgstr "Transmitir video"
 
@@ -33106,12 +33267,12 @@ msgid "Talk in calls and test your input."
 msgstr "Habla en llamadas y prueba tu micrófono."
 
 #. Permission description in the channel-scoped permissions editor for the Speak permission. "Mute members" is another permission in this same editor, so match the wording used for its name.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:286
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:296
 msgid "Talk in this voice channel. Without this permission, members stay muted until someone with the \"Mute members\" permission unmutes them."
 msgstr "Hablar en este canal de voz. Sin este permiso, los miembros permanecerán silenciados hasta que alguien con el permiso \"Silenciar miembros\" les active el micrófono."
 
 #. Permission description in the role/permission editor for the Speak permission at community scope. "Mute members" is another permission in this same editor, so match the wording used for its name.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:166
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:176
 msgid "Talk in voice channels. Without this permission, members stay muted until someone with the \"Mute members\" permission unmutes them."
 msgstr "Hablar en canales de voz. Sin este permiso, los miembros permanecerán silenciados hasta que alguien con el permiso \"Silenciar miembros\" les active el micrófono."
 
@@ -33486,6 +33647,11 @@ msgstr "El archivo descargado se guarda en tu computadora. Instálalo con tu ges
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:40
 msgid "The emoji was uploaded by {user}"
 msgstr "El emoji lo subió {user}"
+
+#. Activity log detail under a deleted event, shown when another member originally created the event. {user} is the original creator, shown as a user chip.
+#: src/features/guild/utils/guild_tabs/audit_log/AuditLogEventMessages.ts:35
+msgid "The event was created by {user}"
+msgstr "El evento fue creado por {user}"
 
 #: src/features/connection/components/modals/AddConnectionModal.tsx:356
 msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</0>."
@@ -34705,7 +34871,7 @@ msgid "Time out {tag}"
 msgstr "Aplicar aislamiento temporal a {tag}"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:446
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:464
 msgid "Time out members"
 msgstr "Aplicar aislamiento temporal a miembros"
 
@@ -34990,7 +35156,7 @@ msgid "TOTP"
 msgstr "TOTP"
 
 #. Subtitle under the activity-log page title.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:90
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:91
 msgid "Track moderator actions across the community."
 msgstr "Registra las acciones de los moderadores en toda la comunidad."
 
@@ -35355,12 +35521,12 @@ msgid "Turn on"
 msgstr "Activar"
 
 #. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:292
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:302
 msgid "Turn on a camera or share a screen in this voice channel."
 msgstr "Activa una cámara o comparte tu pantalla en este canal de voz."
 
 #. Permission description in the role/permission editor for the Stream Video permission at community scope. Covers both the webcam and screen sharing.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:182
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Activa una cámara o comparte pantalla en canales de voz."
 
@@ -35584,8 +35750,13 @@ msgstr "Las leyes del Reino Unido exigen una verificación de contenido para adu
 msgid "Ukrainian"
 msgstr "Ucraniano"
 
+#. Error shown when a community event calendar file cannot be downloaded.
+#: src/features/guild/components/GuildEventCalendarExportButton.tsx:14
+msgid "Unable to export community events. Please try again."
+msgstr "No se pudieron exportar los eventos de la comunidad. Intenta de nuevo."
+
 #. Error-state title in the activity log tab when fetching log entries failed.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:115
 msgid "Unable to load activity logs"
 msgstr "No se pudieron cargar los registros de actividad"
 
@@ -35940,7 +36111,7 @@ msgid "Unknown message type"
 msgstr "Tipo de mensaje desconocido"
 
 #. Fallback label for a permission bit the client does not recognize.
-#: src/features/permissions/utils/PermissionUtils.ts:421
+#: src/features/permissions/utils/PermissionUtils.ts:423
 msgid "Unknown permission"
 msgstr "Permiso desconocido"
 
@@ -35981,7 +36152,7 @@ msgstr "usuario desconocido"
 #: src/features/channel/utils/ChannelUtils.tsx:68
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogSentence.tsx:54
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:102
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:103
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:61
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
 #: src/features/voice/components/VoiceParticipantTile.tsx:172
@@ -36581,12 +36752,12 @@ msgid "Upload file"
 msgstr "Subir archivo"
 
 #. Permission description in the role/permission editor for the Attach Files permission at community scope.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:147
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
 msgid "Upload files and media in messages."
 msgstr "Sube archivos y contenido multimedia en los mensajes."
 
 #. Permission description in the channel-scoped permissions editor for the Attach Files permission.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:245
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:255
 msgid "Upload files and media in this channel."
 msgstr "Sube archivos y contenido multimedia en este canal."
 
@@ -36852,7 +37023,7 @@ msgid "Use default"
 msgstr "Usar predeterminado"
 
 #. Permission description in the channel-scoped permissions editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:260
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:270
 msgid "Use emoji from other communities in this channel."
 msgstr "Usar emojis de otras comunidades en este canal."
 
@@ -36862,17 +37033,17 @@ msgid "Use emoji from other communities with {premiumProductName}"
 msgstr "Usa emojis de otras comunidades con {premiumProductName}"
 
 #. Permission description in the role/permission editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:78
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:88
 msgid "Use emoji from other communities."
 msgstr "Usar emojis de otras comunidades."
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:430
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:448
 msgid "Use external emoji"
 msgstr "Usar emojis externos"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:434
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:452
 msgid "Use external stickers"
 msgstr "Usar stickers externos"
 
@@ -36961,7 +37132,7 @@ msgid "Use selection"
 msgstr "Usar selección"
 
 #. Permission description in the channel-scoped permissions editor for the Use External Stickers permission. "Other communities" means stickers uploaded in a different Fluxer community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:265
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:275
 msgid "Use stickers from other communities in this channel."
 msgstr "Usar stickers de otras comunidades en este canal."
 
@@ -36971,7 +37142,7 @@ msgid "Use stickers from other communities with {premiumProductName}"
 msgstr "Usa stickers de otras comunidades con {premiumProductName}"
 
 #. Permission description in the role/permission editor for the Use External Stickers permission. "Other communities" means stickers uploaded in a different Fluxer community.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:157
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:167
 msgid "Use stickers from other communities."
 msgstr "Usar stickers de otras comunidades."
 
@@ -37037,7 +37208,7 @@ msgid "Use video and camera previews."
 msgstr "Usa video y vistas previas de la cámara."
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:471
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:489
 msgid "Use voice activity"
 msgstr "Usar actividad de voz"
 
@@ -37094,7 +37265,7 @@ msgstr "Solo se usa en esta comunidad."
 #. Audit log target-type filter label. Filters entries that target a user account.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a user.
-#: src/features/app/config/AuditLogConstants.ts:155
+#: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:27
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:65
 msgid "User"
@@ -37331,7 +37502,7 @@ msgid "Vanity URL"
 msgstr "URL personalizada"
 
 #. Community settings tab for the community vanity/custom invite link.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:71
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:73
 msgctxt "community-settings-tab"
 msgid "Vanity URL"
 msgstr "URL personalizada"
@@ -37740,7 +37911,7 @@ msgid "View {userName}'s profile"
 msgstr "Ver el perfil de {userName}"
 
 #. Permission name: allows viewing community audit/activity logs.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:354
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:364
 msgid "View activity log"
 msgstr "Ver registro de actividad"
 
@@ -37791,17 +37962,17 @@ msgid "View call"
 msgstr "Ver llamada"
 
 #. Aria label for the show-controls trigger when the call toolbar is auto-hidden.
-#: src/features/voice/components/VoiceCallView.tsx:124
+#: src/features/voice/components/VoiceCallView.tsx:120
 msgid "View call controls"
 msgstr "Ver controles de llamada"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:450
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:468
 msgid "View channel"
 msgstr "Ver canal"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:454
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:472
 msgid "View channel members"
 msgstr "Ver miembros del canal"
 
@@ -38639,7 +38810,7 @@ msgid "Webcam"
 msgstr "Cámara web"
 
 #. Audit log target-type filter label. Filters entries that target a webhook.
-#: src/features/app/config/AuditLogConstants.ts:180
+#: src/features/app/config/AuditLogConstants.ts:196
 msgid "Webhook"
 msgstr "Webhook"
 
@@ -38687,7 +38858,7 @@ msgid "Webhooks"
 msgstr "Webhooks"
 
 #. Community settings tab for configuring webhooks.
-#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:66
+#: src/features/user/components/settings_utils/GuildSettingsConstants.ts:68
 msgctxt "community-settings-tab"
 msgid "Webhooks"
 msgstr "Webhooks"
@@ -39080,12 +39251,12 @@ msgid "Withdraw"
 msgstr "Retirar"
 
 #. Permission description in the channel-scoped permissions editor for the Use Voice Activity permission. Explains the inverse: without it, the user must use push-to-talk in this voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:297
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:307
 msgid "Without this permission, push-to-talk is required in this channel."
 msgstr "Sin este permiso, se requiere pulsar para hablar en este canal."
 
 #. Permission description in the role/permission editor for the Use Voice Activity permission. Explains the inverse: without it, the user must use push-to-talk in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:103
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
 msgid "Without this permission, push-to-talk is required."
 msgstr "Sin este permiso, se requiere pulsar para hablar."
 
