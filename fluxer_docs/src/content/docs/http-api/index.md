@@ -295,6 +295,7 @@ Fluxer produces at most one entry for each distinct pair of `path` and `code`, s
 | [Guild moderation](/http-api/guild-moderation/) | Bans, temporary bans, ban replacement, and the blocks a ban has |
 | [Guild emojis](/http-api/guild-emojis/) | Guild emoji objects, uploads, metadata changes, deletion |
 | [Guild stickers](/http-api/guild-stickers/) | Guild sticker objects, uploads, metadata changes, deletion |
+| [Guild events](/http-api/guild-events/) | Community calendar event objects, listing, creation, updates, deletion |
 | [Expressions](/http-api/expressions/) | Emoji and sticker metadata reads across both |
 | [Guild audit logs](/http-api/guild-audit-logs/) | Audit entries, typed targets, contexts, changes, filters, the audit reason contract |
 | [Roles and permissions](/http-api/permissions/) | Permission flags, computation order, role objects and lifecycle |

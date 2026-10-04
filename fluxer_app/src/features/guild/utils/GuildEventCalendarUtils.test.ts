@@ -40,12 +40,14 @@ describe('GuildEvent calendar export', () => {
 	it('escapes event text without letting newlines inject calendar properties', () => {
 		const calendar = unfold(
 			serializeGuildEventsCalendar(
-				[{
-					...event,
-					name: 'Meet, greet; share\\learn',
-					description: 'Line one\r\nBEGIN:VALARM\nACTION:EMAIL\rEND:VALARM',
-					location: 'Room: 1; West, wing',
-				}],
+				[
+					{
+						...event,
+						name: 'Meet, greet; share\\learn',
+						description: 'Line one\r\nBEGIN:VALARM\nACTION:EMAIL\rEND:VALARM',
+						location: 'Room: 1; West, wing',
+					},
+				],
 				exportedAt,
 			),
 		);

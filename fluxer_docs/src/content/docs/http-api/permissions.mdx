@@ -48,9 +48,11 @@ Every bit Fluxer defines appears below.
 | 1 &lt;&lt; 28 | MANAGE_ROLES<sup>5</sup> | Create, modify, position, and delete a role, assign a role to a member, and set a channel permission overwrite |
 | 1 &lt;&lt; 29 | MANAGE_WEBHOOKS | Create, modify, and delete a webhook on a guild channel, and follow an announcement channel into it |
 | 1 &lt;&lt; 30 | MANAGE_EXPRESSIONS<sup>6</sup> | Modify and delete an emoji or sticker created by another member |
+| 1 &lt;&lt; 33 | MANAGE_EVENTS<sup>8</sup> | Modify and delete a community event created by another member |
 | 1 &lt;&lt; 37 | USE_EXTERNAL_STICKERS | Use a sticker owned by another guild |
 | 1 &lt;&lt; 40 | MODERATE_MEMBERS | Apply and clear a member communication timeout |
 | 1 &lt;&lt; 43 | CREATE_EXPRESSIONS<sup>6</sup> | Create an emoji or sticker, and modify or delete the ones the caller created |
+| 1 &lt;&lt; 44 | CREATE_EVENTS<sup>8</sup> | Create a community event, and modify or delete the ones the caller created |
 | 1 &lt;&lt; 51 | PIN_MESSAGES | Pin and unpin a message in a guild channel |
 | 1 &lt;&lt; 52 | BYPASS_SLOWMODE | Send a message without waiting for the channel slowmode interval |
 | 1 &lt;&lt; 53 | UPDATE_RTC_REGION | Change the voice region of a guild voice channel |
@@ -70,7 +72,9 @@ Every bit Fluxer defines appears below.
 
 <sup>7</sup> The bit is [feature-gated on write](#feature-gated-permission-bits), so a request that does not declare the feature cannot change it
 
-Bits 19, 31 through 36, 38, 39, 41, 42, 44 through 50, and 55 through 63 are unassigned.
+<sup>8</sup> Creating an event requires either bit. Modifying or deleting an event created by the caller requires `CREATE_EVENTS`, and the same operation on an event created by another member requires `MANAGE_EVENTS`
+
+Bits 19, 31, 32, 34 through 36, 38, 39, 41, 42, 45 through 50, and 55 through 63 are unassigned.
 
 :::note[`STREAM` authorises a track on the existing connection]
 The track is a screenshare or a camera. Fluxer opens no second connection for it, and losing the bit mutes the published tracks while the voice connection stays up.

@@ -40653,3 +40653,73 @@ msgstr "Μεγέθυνση"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "Σμίκρυνση"
+
+#. Error shown when the community events list cannot be fetched.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Unable to load community events"
+msgstr "Unable to load community events"
+
+#. Error shown when creating or updating a community event fails.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Unable to save community event"
+msgstr "Unable to save community event"
+
+#. Error shown when deleting a community event fails.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Unable to delete community event"
+msgstr "Unable to delete community event"
+
+#. Heading of the community settings Events tab.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Community events"
+msgstr "Community events"
+
+#. Subtitle explaining the community calendar and artwork scanning.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Publish upcoming events to the community calendar. Event artwork is safety-scanned before it is stored."
+msgstr "Publish upcoming events to the community calendar. Event artwork is safety-scanned before it is stored."
+
+#. Heading shown while editing an existing community event.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Edit event"
+msgstr "Edit event"
+
+#. Heading shown while creating a community event.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Create event"
+msgstr "Create event"
+
+#. Button that discards an in-progress community event edit.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Cancel edit"
+msgstr "Cancel edit"
+
+#. Label for the community event start date and time.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Starts"
+msgstr "Starts"
+
+#. Label for the community event end date and time.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Ends"
+msgstr "Ends"
+
+#. File picker label when replacing existing community event artwork.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Replace event image"
+msgstr "Replace event image"
+
+#. File picker label when attaching community event artwork.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Event image"
+msgstr "Event image"
+
+#. Checkbox that removes the current community event image.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "Remove current image"
+msgstr "Remove current image"
+
+#. Empty state when a community has no scheduled events.
+#: src/features/guild/components/modals/guild_tabs/GuildEventsTab.tsx
+msgid "No community events are scheduled."
+msgstr "No community events are scheduled."

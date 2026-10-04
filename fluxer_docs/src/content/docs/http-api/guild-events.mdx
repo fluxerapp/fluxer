@@ -1,0 +1,252 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Guild events
+description: Community calendar event objects, listing, creation, updates, and deletion.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+A community event is one scheduled item on a guild calendar. Its ID is a [snowflake](/snowflakes/) unique across every guild. [List guild events](#list-guild-events) is the only read. There is no single-event GET.
+
+Every route names a guild in its path. Membership of that guild is required. A guild that does not exist, or a caller who is not a current member, returns 404 `UNKNOWN_GUILD`.
+
+Create requires [CREATE_EVENTS](/http-api/permissions/) or [MANAGE_EVENTS](/http-api/permissions/). Update and delete require `MANAGE_EVENTS`, or `CREATE_EVENTS` when the caller created the event.
+
+Artwork is stored after the explicit-media and banned-content scanners accept it. Blocked content returns 403 `CONTENT_BLOCKED`.
+
+Deleting a guild removes every `guild_events` row for that guild.
+
+## Guild event object
+
+A scheduled community event. Only the listed writable fields can change after creation. The creator and `created_at` never change.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the event |
+| guild_id | snowflake | The ID of the guild that owns the event |
+| creator_id | snowflake | The ID of the user that created the event |
+| name | string | The event name (1-100 characters after trim) |
+| description | ?string | The event description, or null when it has none |
+| location | ?string | The event location, or null when it has none |
+| starts_at | ISO8601 timestamp | The start of the event |
+| ends_at | ?ISO8601 timestamp | The end of the event, or null when it is open-ended |
+| image_url | ?string | The media-proxy URL of the artwork, or null when none is set |
+| created_at | ISO8601 timestamp | The time the event was created |
+
+### Example
+
+```json
+{
+  "id": "1501314428688998190",
+  "guild_id": "1501314428688998100",
+  "creator_id": "1501314428688998101",
+  "name": "Community game night",
+  "description": "Bring your favourite game",
+  "location": "Gaming voice channel",
+  "starts_at": "2030-06-10T18:00:00.000Z",
+  "ends_at": "2030-06-10T20:00:00.000Z",
+  "image_url": null,
+  "created_at": "2026-10-04T12:00:00.000Z"
+}
+```
+
+## Event create object
+
+The body submitted to [Create guild event](#create-guild-event).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name | string | The event name (1-100 characters after trim) |
+| description?<sup>1</sup> | ?string | The event description (at most 2000 characters after trim) |
+| location?<sup>1</sup> | ?string | The event location (at most 200 characters after trim) |
+| starts_at | ISO8601 timestamp | The start of the event |
+| ends_at?<sup>2</sup> | ?ISO8601 timestamp | The end of the event, or null for an open-ended event |
+| image?<sup>3</sup> | string | Base64 image data, with an optional data-URL prefix |
+
+<sup>1</sup> Omitted, null, and a blank trimmed value all store null
+
+<sup>2</sup> When present and not null, the instant must be after `starts_at` or the request returns 400 `INVALID_FORM_BODY` at `ends_at`
+
+<sup>3</sup> The remaining encoded part is scanned and stored. An empty string is rejected
+
+### Example
+
+```json
+{
+  "name": "Community game night",
+  "description": "Bring your favourite game",
+  "location": "Gaming voice channel",
+  "starts_at": "2030-06-10T18:00:00.000Z",
+  "ends_at": "2030-06-10T20:00:00.000Z"
+}
+```
+
+## Event update object
+
+The body submitted to [Modify guild event](#modify-guild-event). Every field is optional. Omitted fields stay unchanged.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| name? | string | The event name (1-100 characters after trim) |
+| description?<sup>1</sup> | ?string | The event description, or null to clear it |
+| location?<sup>1</sup> | ?string | The event location, or null to clear it |
+| starts_at? | ISO8601 timestamp | The start of the event |
+| ends_at?<sup>2</sup> | ?ISO8601 timestamp | The end of the event, or null to make it open-ended |
+| image?<sup>3</sup> | ?string | Replacement image data, or null to remove the artwork |
+
+<sup>1</sup> A blank trimmed value stores null
+
+<sup>2</sup> The resolved end, when present, must be after the resolved start
+
+<sup>3</sup> Null deletes the stored artwork. A string replaces it after the same scan as create
+
+## List guild events
+
+<RouteHeader method="GET" path="/v1/guilds/{guild_id}/events" bot />
+
+Returns every [guild event object](#guild-event-object) of the guild, ordered by `starts_at` ascending. Requires membership of the guild and no extra permission.
+
+The operation has no pagination parameters.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[guild event](#guild-event-object) object] | Events were returned |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, or the caller is not a member |
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user and guild ID, on the `guild:events:list::guild_id` bucket.
+
+## Create guild event
+
+<RouteHeader method="POST" path="/v1/guilds/{guild_id}/events" bot auditReason />
+
+Creates one community event and returns its [guild event object](#guild-event-object). Requires membership of the guild and [CREATE_EVENTS](/http-api/permissions/) or [MANAGE_EVENTS](/http-api/permissions/).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+
+### JSON body
+
+The body is one [event create object](#event-create-object).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild event](#guild-event-object) object | Event was created |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Body failed validation, or `ends_at` is not after `starts_at` |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Caller lacks `CREATE_EVENTS` and `MANAGE_EVENTS`, or the image was blocked |
+| 404 | [error response](/http-api/#error-response) | Guild does not exist, or the caller is not a member |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `INVALID_FORM_BODY`
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_PERMISSIONS` for a permission failure and `CONTENT_BLOCKED` for a blocked image
+
+### Side effects
+
+Creating an event records a [`GUILD_EVENT_CREATE`](/http-api/guild-audit-logs/#audit-actions) audit entry with the supplied reason. The route emits no Gateway Dispatch. Clients refresh the calendar over HTTP.
+
+### Rate limit
+
+10 requests per 1 minute for each authenticated user and guild ID, on the `guild:event:create::guild_id` bucket.
+
+## Modify guild event
+
+<RouteHeader method="PATCH" path="/v1/guilds/{guild_id}/events/{event_id}" bot auditReason />
+
+Replaces supplied fields and returns the [guild event object](#guild-event-object).
+
+### Limitations
+
+- The creator can modify their own event with [CREATE_EVENTS](/http-api/permissions/).
+- Any other caller requires [MANAGE_EVENTS](/http-api/permissions/).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| event_id | snowflake | The ID of the event |
+
+### JSON body
+
+The body is one [event update object](#event-update-object).
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [guild event](#guild-event-object) object | Event was updated |
+| 400<sup>1</sup> | [error response](/http-api/#error-response) | Body failed validation, or the resolved end is not after the start |
+| 403<sup>2</sup> | [error response](/http-api/#error-response) | Caller is neither the creator with `CREATE_EVENTS` nor a member holding `MANAGE_EVENTS` |
+| 404<sup>3</sup> | [error response](/http-api/#error-response) | Guild or event does not exist, or the caller is not a member |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `INVALID_FORM_BODY`
+
+<sup>2</sup> The [error code](/http-api/errors/) is `MISSING_PERMISSIONS`
+
+<sup>3</sup> The [error code](/http-api/errors/) is `UNKNOWN_GUILD` for membership failure and `NOT_FOUND` for a missing event
+
+### Side effects
+
+The operation writes the supplied fields and then records a [`GUILD_EVENT_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry. A request whose values all match the stored event records no audit entry. The route emits no Gateway Dispatch.
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and guild ID, on the `guild:event:update::guild_id` bucket.
+
+## Delete guild event
+
+<RouteHeader method="DELETE" path="/v1/guilds/{guild_id}/events/{event_id}" bot auditReason />
+
+Deletes the event record and returns 204 with an empty body.
+
+### Limitations
+
+- The creator can delete their own event with [CREATE_EVENTS](/http-api/permissions/).
+- Any other caller requires [MANAGE_EVENTS](/http-api/permissions/).
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | The ID of the guild |
+| event_id | snowflake | The ID of the event |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | Event record was deleted |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Caller is neither the creator with `CREATE_EVENTS` nor a member holding `MANAGE_EVENTS` |
+| 404<sup>2</sup> | [error response](/http-api/#error-response) | Guild or event does not exist, or the caller is not a member |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `MISSING_PERMISSIONS`
+
+<sup>2</sup> The [error code](/http-api/errors/) is `UNKNOWN_GUILD` for membership failure and `NOT_FOUND` for a missing event
+
+### Side effects
+
+Deletion removes the `guild_events` row, deletes stored artwork when the event had any, and records a [`GUILD_EVENT_DELETE`](/http-api/guild-audit-logs/#audit-actions) audit entry. The route emits no Gateway Dispatch.
+
+### Rate limit
+
+10 requests per 1 minute for each authenticated user and guild ID, on the `guild:event:delete::guild_id` bucket.

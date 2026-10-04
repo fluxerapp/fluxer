@@ -231,11 +231,7 @@ export class AvatarService {
 		return imageHash;
 	}
 
-	async deleteGuildEventImage(params: {
-		guildId: bigint;
-		eventId: bigint;
-		imageHash: string | null;
-	}): Promise<void> {
+	async deleteGuildEventImage(params: {guildId: bigint; eventId: bigint; imageHash: string | null}): Promise<void> {
 		if (!params.imageHash) return;
 		await this.storageService.deleteObject(
 			Config.s3.buckets.cdn,

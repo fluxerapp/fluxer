@@ -14,11 +14,24 @@ function calendarTimestamp(value: string | Date): string {
 	if (!Number.isFinite(date.getTime()) || date.getUTCFullYear() < 0 || date.getUTCFullYear() > 9999) {
 		throw new Error('Invalid event calendar date');
 	}
-	return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
+	return date
+		.toISOString()
+		.replace(/[-:]/g, '')
+		.replace(/\.\d{3}Z$/, 'Z');
+}
+
+function hasUnsupportedControlCharacter(value: string): boolean {
+	for (const character of value) {
+		const code = character.charCodeAt(0);
+		if (code <= 0x08 || code === 0x0b || code === 0x0c || (code >= 0x0e && code <= 0x1f) || code === 0x7f) {
+			return true;
+		}
+	}
+	return false;
 }
 
 function escapeText(value: string): string {
-	if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)) {
+	if (hasUnsupportedControlCharacter(value)) {
 		throw new Error('Event text contains an unsupported control character');
 	}
 	return value

@@ -13,10 +13,25 @@ import Permission from '@app/features/permissions/state/Permission';
 import Users from '@app/features/user/state/Users';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {GuildEvent} from '@fluxer/schema/src/domains/guild/GuildEventSchemas';
+import {msg} from '@lingui/core/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import {CalendarIcon, ImageIcon, MapPinIcon, PencilSimpleIcon, PlusIcon, TrashIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
+
+const LOAD_EVENTS_ERROR_DESCRIPTOR = msg({
+	message: 'Unable to load community events',
+	comment: 'Error shown when the community events list cannot be fetched.',
+});
+const SAVE_EVENT_ERROR_DESCRIPTOR = msg({
+	message: 'Unable to save community event',
+	comment: 'Error shown when creating or updating a community event fails.',
+});
+const DELETE_EVENT_ERROR_DESCRIPTOR = msg({
+	message: 'Unable to delete community event',
+	comment: 'Error shown when deleting a community event fails.',
+});
 
 interface Draft {
 	name: string;
@@ -41,6 +56,7 @@ const emptyDraft = (): Draft => ({
 });
 
 const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
+	const {i18n} = useLingui();
 	const [events, setEvents] = useState<Array<GuildEvent>>([]);
 	const [draft, setDraft] = useState<Draft>(emptyDraft);
 	const [editingId, setEditingId] = useState<string | null>(null);
@@ -68,9 +84,9 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			setEvents(await GuildCommands.fetchGuildEvents(guildId));
 			setError(null);
 		} catch (cause) {
-			setError(cause instanceof Error ? cause.message : 'Unable to load community events');
+			setError(cause instanceof Error ? cause.message : i18n._(LOAD_EVENTS_ERROR_DESCRIPTOR));
 		}
-	}, [guildId]);
+	}, [guildId, i18n]);
 
 	useEffect(() => {
 		void refresh();
@@ -129,12 +145,12 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				reset();
 				await refresh();
 			} catch (cause) {
-				setError(cause instanceof Error ? cause.message : 'Unable to save community event');
+				setError(cause instanceof Error ? cause.message : i18n._(SAVE_EVENT_ERROR_DESCRIPTOR));
 			} finally {
 				setBusy(false);
 			}
 		},
-		[busy, draft, editingId, guildId, readingImage, refresh, reset],
+		[busy, draft, editingId, guildId, i18n, readingImage, refresh, reset],
 	);
 
 	const remove = useCallback(
@@ -146,21 +162,25 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				if (editingId === eventId) reset();
 				await refresh();
 			} catch (cause) {
-				setError(cause instanceof Error ? cause.message : 'Unable to delete community event');
+				setError(cause instanceof Error ? cause.message : i18n._(DELETE_EVENT_ERROR_DESCRIPTOR));
 			} finally {
 				setBusy(false);
 			}
 		},
-		[editingId, guildId, refresh, reset],
+		[editingId, guildId, i18n, refresh, reset],
 	);
 
 	return (
 		<div className={styles.root} data-flx="guild.events-tab">
 			<header className={styles.header}>
 				<div>
-					<h2 className={styles.title}>Community events</h2>
+					<h2 className={styles.title}>
+						<Trans comment="Heading of the community settings Events tab.">Community events</Trans>
+					</h2>
 					<p className={styles.subtitle}>
-						Publish upcoming events to the community calendar. Event artwork is safety-scanned before it is stored.
+						<Trans comment="Subtitle explaining the community calendar and artwork scanning.">
+							Publish upcoming events to the community calendar. Event artwork is safety-scanned before it is stored.
+						</Trans>
 					</p>
 				</div>
 				<CalendarIcon size={28} weight="duotone" aria-hidden />
@@ -173,15 +193,23 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			{canCreate && (
 				<form className={styles.editor} onSubmit={submit}>
 					<div className={styles.editorHeading}>
-						<strong>{editingId ? 'Edit event' : 'Create event'}</strong>
+						<strong>
+							{editingId ? (
+								<Trans comment="Heading shown while editing an existing community event.">Edit event</Trans>
+							) : (
+								<Trans comment="Heading shown while creating a community event.">Create event</Trans>
+							)}
+						</strong>
 						{editingId && (
 							<button type="button" className={styles.linkButton} onClick={reset}>
-								Cancel edit
+								<Trans comment="Button that discards an in-progress community event edit.">Cancel edit</Trans>
 							</button>
 						)}
 					</div>
 					<label>
-						<span>Name</span>
+						<span>
+							<Trans comment="Label for the community event name field.">Name</Trans>
+						</span>
 						<input
 							value={draft.name}
 							maxLength={100}
@@ -191,7 +219,9 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					</label>
 					<div className={styles.twoColumns}>
 						<label>
-							<span>Starts</span>
+							<span>
+								<Trans comment="Label for the community event start date and time.">Starts</Trans>
+							</span>
 							<input
 								type="datetime-local"
 								value={draft.startsAt}
@@ -200,7 +230,9 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 							/>
 						</label>
 						<label>
-							<span>Ends</span>
+							<span>
+								<Trans comment="Label for the community event end date and time.">Ends</Trans>
+							</span>
 							<input
 								type="datetime-local"
 								value={draft.endsAt}
@@ -209,7 +241,9 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 						</label>
 					</div>
 					<label>
-						<span>Location</span>
+						<span>
+							<Trans comment="Label for the community event location field.">Location</Trans>
+						</span>
 						<input
 							value={draft.location}
 							maxLength={200}
@@ -217,7 +251,9 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 						/>
 					</label>
 					<label>
-						<span>Description</span>
+						<span>
+							<Trans comment="Label for the community event description field.">Description</Trans>
+						</span>
 						<textarea
 							value={draft.description}
 							maxLength={2000}
@@ -227,7 +263,15 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					</label>
 					<label className={styles.imagePicker} aria-busy={readingImage}>
 						<ImageIcon size={18} aria-hidden />
-						<span>{editingId ? 'Replace event image' : 'Event image'}</span>
+						<span>
+							{editingId ? (
+								<Trans comment="File picker label when replacing existing community event artwork.">
+									Replace event image
+								</Trans>
+							) : (
+								<Trans comment="File picker label when attaching community event artwork.">Event image</Trans>
+							)}
+						</span>
 						<input
 							type="file"
 							accept="image/*"
@@ -255,19 +299,29 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 									setDraft((d) => ({...d, image: e.target.checked ? null : undefined}));
 								}}
 							/>
-							<span>Remove current image</span>
+							<span>
+								<Trans comment="Checkbox that removes the current community event image.">Remove current image</Trans>
+							</span>
 						</label>
 					)}
 					<button className={styles.primaryButton} type="submit" disabled={busy || readingImage}>
 						<PlusIcon size={16} aria-hidden />
-						{editingId ? 'Save changes' : 'Create event'}
+						{editingId ? (
+							<Trans comment="Submit button that saves community event edits.">Save changes</Trans>
+						) : (
+							<Trans comment="Submit button that creates a community event.">Create event</Trans>
+						)}
 					</button>
 				</form>
 			)}
 
 			<section className={styles.calendar}>
 				{sortedEvents.length === 0 ? (
-					<div className={styles.empty}>No community events are scheduled.</div>
+					<div className={styles.empty}>
+						<Trans comment="Empty state when a community has no scheduled events.">
+							No community events are scheduled.
+						</Trans>
+					</div>
 				) : (
 					sortedEvents.map((event) => {
 						const canEdit = canManage || event.creator_id === currentUserId;
@@ -276,13 +330,14 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 								{event.image_url && <img className={styles.image} src={event.image_url} alt="" />}
 								<div className={styles.cardBody}>
 									<div className={styles.when}>
-										{new Date(event.starts_at).toLocaleString()}
-										{event.ends_at ? ` – ${new Date(event.ends_at).toLocaleString()}` : ''}
+										<span>{new Date(event.starts_at).toLocaleString()}</span>
+										{event.ends_at ? <span>{` – ${new Date(event.ends_at).toLocaleString()}`}</span> : null}
 									</div>
 									<h3>{event.name}</h3>
 									{event.location && (
 										<div className={styles.location}>
-											<MapPinIcon size={15} aria-hidden /> {event.location}
+											<MapPinIcon size={15} aria-hidden />
+											<span>{event.location}</span>
 										</div>
 									)}
 									{event.description && <p>{event.description}</p>}
@@ -299,11 +354,15 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 										<div className={styles.actions}>
 											<button type="button" onClick={() => edit(event)} disabled={busy}>
 												<PencilSimpleIcon size={15} aria-hidden />
-												<span>Edit</span>
+												<span>
+													<Trans comment="Button that opens a community event for editing.">Edit</Trans>
+												</span>
 											</button>
 											<button type="button" onClick={() => void remove(event.id)} disabled={busy}>
 												<TrashIcon size={15} aria-hidden />
-												<span>Delete</span>
+												<span>
+													<Trans comment="Button that deletes a community event.">Delete</Trans>
+												</span>
 											</button>
 										</div>
 									)}

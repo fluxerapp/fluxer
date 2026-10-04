@@ -255,4 +255,18 @@ export class GuildEventService {
 			imageHash: event.imageHash,
 		});
 	}
+
+	async deleteAllForGuild(guildId: GuildID): Promise<void> {
+		const events = await this.repository.list(guildId);
+		await Promise.all(
+			events.map((event) =>
+				this.avatarService.deleteGuildEventImage({
+					guildId,
+					eventId: event.id,
+					imageHash: event.imageHash,
+				}),
+			),
+		);
+		await this.repository.deleteAll(guildId);
+	}
 }

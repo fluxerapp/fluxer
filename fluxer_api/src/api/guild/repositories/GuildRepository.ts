@@ -13,6 +13,7 @@ import type {
 } from '@app/api/database/types/GuildTypes';
 import {GuildContentRepository} from '@app/api/guild/repositories/GuildContentRepository';
 import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
+import {GuildEventRepository} from '@app/api/guild/repositories/GuildEventRepository';
 import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
 import {GuildModerationRepository} from '@app/api/guild/repositories/GuildModerationRepository';
 import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
@@ -85,6 +86,7 @@ export class GuildRepository implements IGuildRepositoryAggregate {
 			return;
 		}
 		const actualOwnerId = ownerId ?? guild.ownerId;
+		const events = new GuildEventRepository();
 		const [members, roles, emojis] = await Promise.all([
 			this.memberRepo.listMembers(guildId),
 			this.roleRepo.listRoles(guildId),
@@ -103,6 +105,7 @@ export class GuildRepository implements IGuildRepositoryAggregate {
 			const emojiBatch = emojis.slice(i, i + BATCH_SIZE);
 			await Promise.all(emojiBatch.map((emoji) => this.contentRepo.deleteEmoji(guildId, emoji.id)));
 		}
+		await events.deleteAll(guildId);
 		await this.dataRepo.delete(guildId, actualOwnerId);
 	}
 

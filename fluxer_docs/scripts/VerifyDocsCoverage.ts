@@ -255,6 +255,7 @@ const MEDIA_PROXY_ASSET_PREFIXES = new Map([
 	['splashes', '"splashes" => AssetKind::Splash'],
 	['embed-splashes', '"embed-splashes" => AssetKind::EmbedSplash'],
 	['guilds', 'fn parse_guild_member_asset_path'],
+	['guild-events', 'fn parse_guild_event_image_path'],
 ]);
 
 interface SpecOperation {

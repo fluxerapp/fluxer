@@ -227,6 +227,7 @@ export default defineConfig({
 						'http-api/guild-moderation',
 						'http-api/guild-emojis',
 						'http-api/guild-stickers',
+						'http-api/guild-events',
 						'http-api/expressions',
 						'http-api/guild-audit-logs',
 					],

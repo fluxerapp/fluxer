@@ -54,7 +54,7 @@ One page of audit history together with the accounts and webhooks it references.
 - the `owner_id` change `new_value` of [GUILD_UPDATE](#audit-actions)
 - the `moderator_id` change `old_value` of [MEMBER_BAN_REMOVE](#audit-actions)
 - `options.inviter_id` of [INVITE_DELETE](#audit-actions)
-- the `creator_id` change `old_value` of [WEBHOOK_DELETE](#audit-actions), [EMOJI_DELETE](#audit-actions), and [STICKER_DELETE](#audit-actions)
+- the `creator_id` change `old_value` of [WEBHOOK_DELETE](#audit-actions), [EMOJI_DELETE](#audit-actions), [STICKER_DELETE](#audit-actions), and [GUILD_EVENT_DELETE](#audit-actions)
 
 An account that can no longer be resolved is still returned, as the deleted-account representation with the username `DeletedUser`, the discriminator `0000`, the global name `Deleted User`, a null avatar, a null avatar colour, and `flags` of `0`.
 
@@ -142,6 +142,9 @@ The Value column is the numeric `action_type`, which is also the value the `acti
 | 90 | STICKER_CREATE | Sticker was created. `target_id` is the sticker, and the action records no options |
 | 91 | STICKER_UPDATE | Sticker was changed. `target_id` is the sticker, and the action records no options |
 | 92 | STICKER_DELETE | Sticker was deleted. `target_id` is the sticker, and the action records no options |
+| 100 | GUILD_EVENT_CREATE | Community event was created. `target_id` is the event, and the action records no options |
+| 101 | GUILD_EVENT_UPDATE | Community event was changed. `target_id` is the event, and the action records no options |
+| 102 | GUILD_EVENT_DELETE | Community event was deleted. `target_id` is the event, and the action records no options |
 
 <sup>1</sup> Recorded by [Modify guild](/http-api/guilds/#modify-guild), by [Modify guild custom invite URL](/http-api/guilds/#modify-guild-custom-invite-url), and by [Transfer guild ownership](/http-api/guild-members/#transfer-guild-ownership), and `target_id` is the guild in every case
 
@@ -166,7 +169,7 @@ The Value column is the numeric `action_type`, which is also the value the `acti
 <sup>11</sup> [Follow announcement channel](/http-api/channels/#follow-announcement-channel) records `WEBHOOK_CREATE` in the following guild with `type` `2`, and deleting that webhook records `WEBHOOK_DELETE` the same way. Follower webhooks that Fluxer removes because the announcement channel was deleted or converted record no entry
 
 :::note[An update that changes nothing records no entry]
-GUILD_UPDATE, CHANNEL_UPDATE, CHANNEL_OVERWRITE_UPDATE, MEMBER_UPDATE, MEMBER_ROLE_UPDATE, MEMBER_MOVE, ROLE_UPDATE, WEBHOOK_UPDATE, EMOJI_UPDATE, and STICKER_UPDATE need a change other than `ip`. GUILD_UPDATE also ignores `guild_id`, `member_count`, and the image width and height fields. A reason alone records nothing.
+GUILD_UPDATE, CHANNEL_UPDATE, CHANNEL_OVERWRITE_UPDATE, MEMBER_UPDATE, MEMBER_ROLE_UPDATE, MEMBER_MOVE, ROLE_UPDATE, WEBHOOK_UPDATE, EMOJI_UPDATE, STICKER_UPDATE, and GUILD_EVENT_UPDATE need a change other than `ip`. GUILD_UPDATE also ignores `guild_id`, `member_count`, and the image width and height fields. A reason alone records nothing.
 :::
 
 ## Audit log options object
@@ -445,6 +448,20 @@ Recorded by [STICKER_CREATE](#audit-actions), [STICKER_UPDATE](#audit-actions), 
 | description | ?string | The sticker description, or null when it has none |
 | animated | boolean | Whether the sticker is animated |
 | creator_id | string | The decimal ID of the user that created the sticker |
+
+#### Community event change fields
+
+Recorded by [GUILD_EVENT_CREATE](#audit-actions), [GUILD_EVENT_UPDATE](#audit-actions), and [GUILD_EVENT_DELETE](#audit-actions).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| creator_id | string | The decimal ID of the user that created the event |
+| name | string | The event name recorded by this change |
+| description | ?string | The event description, or null when it has none |
+| location | ?string | The event location, or null when it has none |
+| starts_at | string | The start instant as an ISO8601 timestamp |
+| ends_at | ?string | The end instant as an ISO8601 timestamp, or null |
+| image_hash | ?string | The stored artwork hash, or null when none is set |
 
 ## Audit log webhook object
 

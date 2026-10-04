@@ -49,4 +49,13 @@ export class GuildEventRepository {
 	async delete(guildId: GuildID, eventId: GuildEventID): Promise<void> {
 		await deleteOneOrMany(GuildEvents.deleteByPk({guild_id: guildId, event_id: eventId}));
 	}
+
+	async deleteAll(guildId: GuildID): Promise<void> {
+		const events = await this.list(guildId);
+		const BATCH_SIZE = 50;
+		for (let i = 0; i < events.length; i += BATCH_SIZE) {
+			const batch = events.slice(i, i + BATCH_SIZE);
+			await Promise.all(batch.map((event) => this.delete(guildId, event.id)));
+		}
+	}
 }
