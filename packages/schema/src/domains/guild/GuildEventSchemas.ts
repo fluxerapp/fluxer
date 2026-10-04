@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {IsoTimestampStringType} from '@fluxer/schema/src/primitives/DateValidators';
-import {SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 const EventNameType = z.string().trim().min(1).max(100);
@@ -10,8 +10,8 @@ const EventLocationType = z.string().trim().max(200);
 const EventImageType = z.string().min(1);
 
 export const GuildEventIdParam = z.object({
-	guild_id: SnowflakeStringType,
-	event_id: SnowflakeStringType,
+	guild_id: SnowflakeType,
+	event_id: SnowflakeType,
 });
 
 export const GuildEventCreateRequest = z

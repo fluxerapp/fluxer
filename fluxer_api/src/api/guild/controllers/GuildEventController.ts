@@ -2,7 +2,7 @@
 
 import {createGuildEventID, createGuildID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
-import {RateLimit} from '@app/api/middleware/RateLimitMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
@@ -20,11 +20,12 @@ export function GuildEventController(app: HonoApp) {
 	app.get(
 		'/guilds/:guild_id/events',
 		LoginRequired,
-		RateLimit(RateLimitConfigs.GUILD_EVENTS_LIST),
+		RateLimitMiddleware(RateLimitConfigs.GUILD_EVENTS_LIST),
 		Validator('param', GuildIdParam),
 		OpenAPI({
 			operationId: 'list_guild_events',
 			summary: 'List community events',
+			description: 'List community events. Returns scheduled events for the guild to members of that guild.',
 			responseSchema: GuildEventListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
@@ -40,7 +41,7 @@ export function GuildEventController(app: HonoApp) {
 	app.post(
 		'/guilds/:guild_id/events',
 		LoginRequired,
-		RateLimit(RateLimitConfigs.GUILD_EVENT_CREATE),
+		RateLimitMiddleware(RateLimitConfigs.GUILD_EVENT_CREATE),
 		Validator('param', GuildIdParam),
 		Validator('json', GuildEventCreateRequest),
 		OpenAPI({
@@ -64,12 +65,14 @@ export function GuildEventController(app: HonoApp) {
 	app.patch(
 		'/guilds/:guild_id/events/:event_id',
 		LoginRequired,
-		RateLimit(RateLimitConfigs.GUILD_EVENT_UPDATE),
+		RateLimitMiddleware(RateLimitConfigs.GUILD_EVENT_UPDATE),
 		Validator('param', GuildEventIdParam),
 		Validator('json', GuildEventUpdateRequest),
 		OpenAPI({
 			operationId: 'update_guild_event',
 			summary: 'Update a community event',
+			description:
+				'Update a community event. Requires MANAGE_EVENTS, or CREATE_EVENTS when the caller created the event.',
 			requestSchema: GuildEventUpdateRequest,
 			responseSchema: GuildEventResponse,
 			statusCode: 200,
@@ -92,11 +95,13 @@ export function GuildEventController(app: HonoApp) {
 	app.delete(
 		'/guilds/:guild_id/events/:event_id',
 		LoginRequired,
-		RateLimit(RateLimitConfigs.GUILD_EVENT_DELETE),
+		RateLimitMiddleware(RateLimitConfigs.GUILD_EVENT_DELETE),
 		Validator('param', GuildEventIdParam),
 		OpenAPI({
 			operationId: 'delete_guild_event',
 			summary: 'Delete a community event',
+			description:
+				'Delete a community event. Requires MANAGE_EVENTS, or CREATE_EVENTS when the caller created the event.',
 			responseSchema: null,
 			statusCode: 204,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
