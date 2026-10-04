@@ -90,6 +90,10 @@ export class MessageMentionService {
 		const roleMentions = allMentions.roles;
 		const channelMentions = allMentions.channels;
 		const isDMChannel = channelType === ChannelTypes.DM || channelType === ChannelTypes.DM_PERSONAL_NOTES;
+		if (isDMChannel) {
+			mentionsEveryone = false;
+			mentionsHere = false;
+		}
 		const shouldAddReferencedUser =
 			referencedMessage?.authorId &&
 			referencedMessage.authorId !== message.authorId &&

@@ -17,7 +17,7 @@ export function isMentioned(user: User, message: Message): boolean {
 		return false;
 	}
 	const suppressEveryone = UserGuildSettings.isEveryoneMentionSuppressed(channel.guildId ?? null);
-	const mentionEveryone = message.mentionEveryone && !suppressEveryone;
+	const mentionEveryone = message.mentionEveryone && !channel.isDM() && !suppressEveryone;
 	if (mentionEveryone) {
 		return true;
 	}
