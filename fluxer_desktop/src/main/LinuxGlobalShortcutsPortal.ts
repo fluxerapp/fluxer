@@ -412,8 +412,16 @@ export class LinuxPortalShortcutsManager {
 				this.deps.setConsent('granted');
 				this.setState('bound', null);
 				return;
-			case 'cancelled':
 			case 'denied':
+				if (this.deps.desktop !== 'gnome') {
+					this.deps.setConsent('unset');
+					this.setState('unsupported', null);
+					return;
+				}
+				this.deps.setConsent('declined');
+				this.setState('declined', null);
+				return;
+			case 'cancelled':
 				this.deps.setConsent('declined');
 				this.setState('declined', null);
 				return;

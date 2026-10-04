@@ -194,6 +194,38 @@ describe('LinuxPortalShortcutsManager consent', () => {
 		});
 	}
 
+	for (const desktop of ['other', 'kde', 'hyprland']) {
+		test(`a denied bind on ${desktop} means the backend cannot bind, not a user decline`, async () => {
+			const harness = createHarness({consent: 'unset', desktop});
+			harness.bindResults.push({outcome: 'denied'});
+			await harness.manager.activate();
+			await harness.manager.setUp();
+			assert.equal(harness.manager.getState(), 'unsupported');
+			assert.equal(harness.manager.getStatus().canRecheck, true);
+			assert.equal(harness.consent, 'unset');
+		});
+	}
+
+	test('try again after an old stored decline on a non-GNOME desktop settles on unsupported', async () => {
+		const harness = createHarness({consent: 'declined', desktop: 'other'});
+		harness.bindResults.push({outcome: 'denied'});
+		await harness.manager.activate();
+		await harness.manager.probe();
+		assert.equal(harness.manager.getState(), 'declined');
+		await harness.manager.setUp();
+		assert.equal(harness.manager.getState(), 'unsupported');
+		assert.equal(harness.consent, 'unset');
+	});
+
+	test('a cancelled bind on KDE is still a user decline', async () => {
+		const harness = createHarness({consent: 'unset', desktop: 'kde'});
+		harness.bindResults.push({outcome: 'cancelled'});
+		await harness.manager.activate();
+		await harness.manager.setUp();
+		assert.equal(harness.manager.getState(), 'declined');
+		assert.equal(harness.consent, 'declined');
+	});
+
 	test('a failed bind is an error that keeps consent untouched', async () => {
 		const harness = createHarness({consent: 'unset'});
 		harness.bindResults.push({outcome: 'failed', code: 3});
