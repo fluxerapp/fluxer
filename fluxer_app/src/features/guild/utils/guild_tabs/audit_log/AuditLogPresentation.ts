@@ -9,6 +9,11 @@ import {
 	presentChannelUpdate,
 } from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogChannelPresentation';
 import {
+	presentEventCreate,
+	presentEventDelete,
+	presentEventUpdate,
+} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogEventPresentation';
+import {
 	presentEmojiCreate,
 	presentEmojiDelete,
 	presentEmojiUpdate,
@@ -89,6 +94,9 @@ const PRESENTERS = {
 	[AuditLogActionType.STICKER_CREATE]: presentStickerCreate,
 	[AuditLogActionType.STICKER_UPDATE]: presentStickerUpdate,
 	[AuditLogActionType.STICKER_DELETE]: presentStickerDelete,
+	[AuditLogActionType.GUILD_EVENT_CREATE]: presentEventCreate,
+	[AuditLogActionType.GUILD_EVENT_UPDATE]: presentEventUpdate,
+	[AuditLogActionType.GUILD_EVENT_DELETE]: presentEventDelete,
 	[AuditLogActionType.MESSAGE_DELETE]: presentMessageDelete,
 	[AuditLogActionType.MESSAGE_BULK_DELETE]: presentMessageBulkDelete,
 	[AuditLogActionType.MESSAGE_PIN]: presentMessagePin,

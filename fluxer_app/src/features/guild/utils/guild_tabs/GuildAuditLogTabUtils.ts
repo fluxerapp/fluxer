@@ -38,6 +38,9 @@ const targetTypeMap: Partial<Record<AuditLogActionType, AuditLogTargetType>> = {
 	[AuditLogActionType.STICKER_CREATE]: AuditLogTargetType.STICKER,
 	[AuditLogActionType.STICKER_UPDATE]: AuditLogTargetType.STICKER,
 	[AuditLogActionType.STICKER_DELETE]: AuditLogTargetType.STICKER,
+	[AuditLogActionType.GUILD_EVENT_CREATE]: AuditLogTargetType.EVENT,
+	[AuditLogActionType.GUILD_EVENT_UPDATE]: AuditLogTargetType.EVENT,
+	[AuditLogActionType.GUILD_EVENT_DELETE]: AuditLogTargetType.EVENT,
 	[AuditLogActionType.MESSAGE_DELETE]: AuditLogTargetType.MESSAGE,
 	[AuditLogActionType.MESSAGE_BULK_DELETE]: AuditLogTargetType.MESSAGE,
 	[AuditLogActionType.MESSAGE_PIN]: AuditLogTargetType.MESSAGE,
@@ -56,6 +59,7 @@ const createActions = new Set<AuditLogActionType>([
 	AuditLogActionType.WEBHOOK_CREATE,
 	AuditLogActionType.EMOJI_CREATE,
 	AuditLogActionType.STICKER_CREATE,
+	AuditLogActionType.GUILD_EVENT_CREATE,
 	AuditLogActionType.BOT_ADD,
 	AuditLogActionType.MESSAGE_PIN,
 ]);
@@ -70,6 +74,7 @@ const updateActions = new Set<AuditLogActionType>([
 	AuditLogActionType.WEBHOOK_UPDATE,
 	AuditLogActionType.EMOJI_UPDATE,
 	AuditLogActionType.STICKER_UPDATE,
+	AuditLogActionType.GUILD_EVENT_UPDATE,
 	AuditLogActionType.MEMBER_MOVE,
 	AuditLogActionType.MEMBER_DISCONNECT,
 ]);

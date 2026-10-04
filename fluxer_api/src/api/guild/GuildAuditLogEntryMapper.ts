@@ -43,6 +43,7 @@ const NOOP_SKIPPABLE_ACTIONS: ReadonlySet<AuditLogActionType> = new Set([
 	AuditLogActionType.WEBHOOK_UPDATE,
 	AuditLogActionType.EMOJI_UPDATE,
 	AuditLogActionType.STICKER_UPDATE,
+	AuditLogActionType.GUILD_EVENT_UPDATE,
 ]);
 
 const USER_TARGET_ACTIONS: ReadonlySet<AuditLogActionType> = new Set([
@@ -61,6 +62,7 @@ const CREATOR_CHANGE_ACTIONS: ReadonlySet<AuditLogActionType> = new Set([
 	AuditLogActionType.WEBHOOK_DELETE,
 	AuditLogActionType.EMOJI_DELETE,
 	AuditLogActionType.STICKER_DELETE,
+	AuditLogActionType.GUILD_EVENT_DELETE,
 ]);
 
 const OVERWRITE_ACTIONS: ReadonlySet<AuditLogActionType> = new Set([

@@ -124,6 +124,18 @@ const STICKER_DELETED_DESCRIPTOR = msg({
 	message: 'Sticker deleted',
 	comment: 'Audit log entry label. A custom sticker was removed from the community.',
 });
+const EVENT_CREATED_DESCRIPTOR = msg({
+	message: 'Event created',
+	comment: 'Audit log entry label. A scheduled community event was created.',
+});
+const EVENT_UPDATED_DESCRIPTOR = msg({
+	message: 'Event updated',
+	comment: 'Audit log entry label. A scheduled community event was edited.',
+});
+const EVENT_DELETED_DESCRIPTOR = msg({
+	message: 'Event deleted',
+	comment: 'Audit log entry label. A scheduled community event was deleted.',
+});
 const MESSAGE_DELETED_DESCRIPTOR = msg({
 	message: 'Message deleted',
 	comment: 'Audit log entry label. A single message was deleted by a moderator.',
@@ -172,6 +184,10 @@ const STICKER_DESCRIPTOR = msg({
 	message: 'Sticker',
 	comment: 'Audit log target-type filter label. Filters entries that target a custom sticker.',
 });
+const EVENT_DESCRIPTOR = msg({
+	message: 'Event',
+	comment: 'Audit log target-type filter label. Filters entries that target a scheduled community event.',
+});
 const INVITE_DESCRIPTOR = msg({
 	message: 'Invite',
 	context: 'invite-noun',
@@ -194,6 +210,7 @@ export const AUDIT_LOG_TARGET_TYPES = {
 	CHANNEL: 'channel',
 	EMOJI: 'emoji',
 	STICKER: 'sticker',
+	EVENT: 'event',
 	INVITE: 'invite',
 	WEBHOOK: 'webhook',
 	MESSAGE: 'message',
@@ -354,6 +371,21 @@ export const AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
 		targetType: AUDIT_LOG_TARGET_TYPES.STICKER,
 	},
 	{
+		value: AuditLogActionType.GUILD_EVENT_CREATE,
+		label: EVENT_CREATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.EVENT,
+	},
+	{
+		value: AuditLogActionType.GUILD_EVENT_UPDATE,
+		label: EVENT_UPDATED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.EVENT,
+	},
+	{
+		value: AuditLogActionType.GUILD_EVENT_DELETE,
+		label: EVENT_DELETED_DESCRIPTOR,
+		targetType: AUDIT_LOG_TARGET_TYPES.EVENT,
+	},
+	{
 		value: AuditLogActionType.MESSAGE_DELETE,
 		label: MESSAGE_DELETED_DESCRIPTOR,
 		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
@@ -395,6 +427,7 @@ export const AUDIT_LOG_TARGET_LABELS: Record<AuditLogTargetType, MessageDescript
 	[AUDIT_LOG_TARGET_TYPES.CHANNEL]: CHANNEL_DESCRIPTOR,
 	[AUDIT_LOG_TARGET_TYPES.EMOJI]: EMOJI_DESCRIPTOR,
 	[AUDIT_LOG_TARGET_TYPES.STICKER]: STICKER_DESCRIPTOR,
+	[AUDIT_LOG_TARGET_TYPES.EVENT]: EVENT_DESCRIPTOR,
 	[AUDIT_LOG_TARGET_TYPES.INVITE]: INVITE_DESCRIPTOR,
 	[AUDIT_LOG_TARGET_TYPES.WEBHOOK]: WEBHOOK_DESCRIPTOR,
 	[AUDIT_LOG_TARGET_TYPES.MESSAGE]: MESSAGE_DESCRIPTOR,

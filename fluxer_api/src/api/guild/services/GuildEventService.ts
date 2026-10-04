@@ -2,12 +2,15 @@
 
 import {createGuildEventID, type GuildEventID, type GuildID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import {GuildEventRepository} from '@app/api/guild/repositories/GuildEventRepository';
 import type {AvatarService} from '@app/api/infrastructure/AvatarService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {Logger} from '@app/api/Logger';
 import type {GuildEvent as StoredGuildEvent} from '@app/api/models/GuildEvent';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -27,7 +30,50 @@ export class GuildEventService {
 		private readonly gatewayService: IGatewayService,
 		private readonly avatarService: AvatarService,
 		private readonly snowflakeService: ISnowflakeService,
+		private readonly guildAuditLogService: GuildAuditLogService,
 	) {}
+
+	private auditSnapshot(event: StoredGuildEvent | null): Record<string, unknown> | null {
+		if (!event) return null;
+		return {
+			creator_id: event.creatorId.toString(),
+			name: event.name,
+			description: event.description,
+			location: event.location,
+			starts_at: event.startsAt.toISOString(),
+			ends_at: event.endsAt?.toISOString() ?? null,
+			image_hash: event.imageHash,
+		};
+	}
+
+	private async recordAuditLog(params: {
+		userId: UserID;
+		event: StoredGuildEvent;
+		action: AuditLogActionType;
+		previous: StoredGuildEvent | null;
+		next: StoredGuildEvent | null;
+		auditLogReason?: string | null;
+	}): Promise<void> {
+		try {
+			await this.guildAuditLogService
+				.createBuilder(params.event.guildId, params.userId)
+				.withAction(params.action, params.event.id.toString())
+				.withReason(params.auditLogReason)
+				.withComputedChanges(this.auditSnapshot(params.previous), this.auditSnapshot(params.next))
+				.commit();
+		} catch (error) {
+			Logger.error(
+				{
+					error,
+					guildId: params.event.guildId.toString(),
+					eventId: params.event.id.toString(),
+					userId: params.userId.toString(),
+					action: params.action,
+				},
+				'Failed to record guild event audit log',
+			);
+		}
+	}
 
 	private async requireMembership(userId: UserID, guildId: GuildID): Promise<void> {
 		const guild = await this.gatewayService.getGuildData({guildId, userId});
@@ -72,7 +118,10 @@ export class GuildEventService {
 		return (await this.repository.list(params.guildId)).map((event) => this.map(event));
 	}
 
-	async create(params: {userId: UserID; guildId: GuildID; data: GuildEventCreate}): Promise<GuildEventResponse> {
+	async create(
+		params: {userId: UserID; guildId: GuildID; data: GuildEventCreate},
+		auditLogReason?: string | null,
+	): Promise<GuildEventResponse> {
 		const permissions = await this.permissions(params.userId, params.guildId);
 		if (!this.canCreateEvents(permissions)) throw new MissingPermissionsError();
 		const eventId = createGuildEventID(await this.snowflakeService.generate());
@@ -97,6 +146,14 @@ export class GuildEventService {
 			created_at: new Date(),
 			version: 1,
 		});
+		await this.recordAuditLog({
+			userId: params.userId,
+			event,
+			action: AuditLogActionType.GUILD_EVENT_CREATE,
+			previous: null,
+			next: event,
+			auditLogReason,
+		});
 		return this.map(event);
 	}
 
@@ -116,12 +173,15 @@ export class GuildEventService {
 		return {event, canManage};
 	}
 
-	async update(params: {
-		userId: UserID;
-		guildId: GuildID;
-		eventId: GuildEventID;
-		data: GuildEventUpdate;
-	}): Promise<GuildEventResponse> {
+	async update(
+		params: {
+			userId: UserID;
+			guildId: GuildID;
+			eventId: GuildEventID;
+			data: GuildEventUpdate;
+		},
+		auditLogReason?: string | null,
+	): Promise<GuildEventResponse> {
 		const {event} = await this.ownedEvent(params);
 		const startsAt = params.data.starts_at ? new Date(params.data.starts_at) : event.startsAt;
 		const endsAt =
@@ -164,12 +224,31 @@ export class GuildEventService {
 			},
 			event.toRow(),
 		);
+		await this.recordAuditLog({
+			userId: params.userId,
+			event: updated,
+			action: AuditLogActionType.GUILD_EVENT_UPDATE,
+			previous: event,
+			next: updated,
+			auditLogReason,
+		});
 		return this.map(updated);
 	}
 
-	async delete(params: {userId: UserID; guildId: GuildID; eventId: GuildEventID}): Promise<void> {
+	async delete(
+		params: {userId: UserID; guildId: GuildID; eventId: GuildEventID},
+		auditLogReason?: string | null,
+	): Promise<void> {
 		const {event} = await this.ownedEvent(params);
 		await this.repository.delete(params.guildId, params.eventId);
+		await this.recordAuditLog({
+			userId: params.userId,
+			event,
+			action: AuditLogActionType.GUILD_EVENT_DELETE,
+			previous: event,
+			next: null,
+			auditLogReason,
+		});
 		await this.avatarService.deleteGuildEventImage({
 			guildId: params.guildId,
 			eventId: params.eventId,

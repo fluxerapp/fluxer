@@ -58,7 +58,11 @@ export function GuildEventController(app: HonoApp) {
 		async (ctx) => {
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
 			const userId = ctx.get('user').id;
-			return ctx.json(await ctx.get('guildService').events.create({userId, guildId, data: ctx.req.valid('json')}));
+			return ctx.json(
+				await ctx
+					.get('guildService')
+					.events.create({userId, guildId, data: ctx.req.valid('json')}, ctx.get('auditLogReason')),
+			);
 		},
 	);
 
@@ -82,12 +86,15 @@ export function GuildEventController(app: HonoApp) {
 		async (ctx) => {
 			const params = ctx.req.valid('param');
 			return ctx.json(
-				await ctx.get('guildService').events.update({
-					userId: ctx.get('user').id,
-					guildId: createGuildID(params.guild_id),
-					eventId: createGuildEventID(params.event_id),
-					data: ctx.req.valid('json'),
-				}),
+				await ctx.get('guildService').events.update(
+					{
+						userId: ctx.get('user').id,
+						guildId: createGuildID(params.guild_id),
+						eventId: createGuildEventID(params.event_id),
+						data: ctx.req.valid('json'),
+					},
+					ctx.get('auditLogReason'),
+				),
 			);
 		},
 	);
@@ -109,11 +116,14 @@ export function GuildEventController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const params = ctx.req.valid('param');
-			await ctx.get('guildService').events.delete({
-				userId: ctx.get('user').id,
-				guildId: createGuildID(params.guild_id),
-				eventId: createGuildEventID(params.event_id),
-			});
+			await ctx.get('guildService').events.delete(
+				{
+					userId: ctx.get('user').id,
+					guildId: createGuildID(params.guild_id),
+					eventId: createGuildEventID(params.event_id),
+				},
+				ctx.get('auditLogReason'),
+			);
 			return ctx.body(null, 204);
 		},
 	);

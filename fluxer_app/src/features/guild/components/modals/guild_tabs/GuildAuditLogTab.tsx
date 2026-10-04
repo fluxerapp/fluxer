@@ -46,6 +46,7 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import type {IconWeight} from '@phosphor-icons/react';
 import {
 	BuildingsIcon,
+	CalendarIcon,
 	CaretDownIcon,
 	ClipboardTextIcon,
 	DotIcon,
@@ -151,6 +152,9 @@ const actionIconMap: Partial<Record<AuditLogActionType, IconComponent>> = {
 	[AuditLogActionType.STICKER_CREATE]: StampIcon,
 	[AuditLogActionType.STICKER_UPDATE]: StampIcon,
 	[AuditLogActionType.STICKER_DELETE]: StampIcon,
+	[AuditLogActionType.GUILD_EVENT_CREATE]: CalendarIcon,
+	[AuditLogActionType.GUILD_EVENT_UPDATE]: CalendarIcon,
+	[AuditLogActionType.GUILD_EVENT_DELETE]: CalendarIcon,
 	[AuditLogActionType.MESSAGE_DELETE]: TrashIcon,
 	[AuditLogActionType.MESSAGE_BULK_DELETE]: TrashIcon,
 	[AuditLogActionType.MESSAGE_PIN]: PencilSimpleIcon,
@@ -167,6 +171,7 @@ const targetIconMap: Record<AuditLogTargetType, IconComponent> = {
 	[AUDIT_LOG_TARGET_TYPES.WEBHOOK]: PlugIcon,
 	[AUDIT_LOG_TARGET_TYPES.EMOJI]: SmileyIcon,
 	[AUDIT_LOG_TARGET_TYPES.STICKER]: StampIcon,
+	[AUDIT_LOG_TARGET_TYPES.EVENT]: CalendarIcon,
 	[AUDIT_LOG_TARGET_TYPES.MESSAGE]: PencilSimpleIcon,
 };
 const changeToneIconMap: Record<AuditLogTone, IconComponent> = {

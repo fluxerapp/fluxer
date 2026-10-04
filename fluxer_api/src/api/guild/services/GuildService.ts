@@ -181,7 +181,7 @@ export class GuildService {
 			assetDeletionQueue,
 			limitConfigService,
 		);
-		this.events = new GuildEventService(gatewayService, avatarService, snowflakeService);
+		this.events = new GuildEventService(gatewayService, avatarService, snowflakeService, guildAuditLogService);
 		this.channels = new GuildChannelService(
 			channelRepository,
 			guildRepository,
