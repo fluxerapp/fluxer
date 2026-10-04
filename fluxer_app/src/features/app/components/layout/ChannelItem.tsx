@@ -21,6 +21,7 @@ import {type DragItem, DragItemType, type DropResult} from '@app/features/app/co
 import {isCategory, isTextChannel} from '@app/features/app/components/layout/utils/ChannelOrganization';
 import {getChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadState';
 import {VoiceChannelUserCount} from '@app/features/app/components/layout/VoiceChannelUserCount';
+import {useChannelHoverPreload} from '@app/features/app/hooks/useChannelHoverPreload';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
@@ -219,6 +220,12 @@ export const ChannelItem = observer(
 		const channelIsCategory = isCategory(channel);
 		const channelIsVoice = channelType === ChannelTypes.GUILD_VOICE;
 		const channelIsText = isTextChannel(channel);
+		const {scheduleChannelPreload, cancelChannelPreload, preloadChannelNow} = useChannelHoverPreload({
+			channel,
+			guild,
+			defaultHiddenForChannel: channelIsVoice,
+			enabled: !channelIsCategory,
+		});
 		const draggingChannel = activeDragItem?.type === DragItemType.CHANNEL ? activeDragItem : null;
 		const isVoiceDragActive = draggingChannel?.channelType === ChannelTypes.GUILD_VOICE;
 		const shouldDimForVoiceDrag = Boolean(isVoiceDragActive && channelIsText && channel.parentId !== null);
@@ -394,11 +401,12 @@ export const ChannelItem = observer(
 		const singleClickConnectsToVoice =
 			channelIsVoice && !Accessibility.voiceChannelJoinRequiresDoubleClick && !isVoiceSelected;
 		const navigateToChannel = useCallback(() => {
+			preloadChannelNow();
 			NavigationCommands.selectChannel(guild.id, channel.id);
 			if (MobileLayout.isMobileLayout()) {
 				LayoutCommands.updateMobileLayoutState(false, true);
 			}
-		}, [guild.id, channel.id]);
+		}, [guild.id, channel.id, preloadChannelNow]);
 		const collapseVoiceCallView = useCallback(() => {
 			if (!channelIsVoice) return;
 			CompactVoiceCallHeight.setExpandedForKey(getGuildVoiceCallExpansionKey(channel.id), false);
@@ -496,10 +504,12 @@ export const ChannelItem = observer(
 		const [isPointerHovered, setIsPointerHovered] = useState(false);
 		const handleMouseEnter = useCallback(() => {
 			setIsPointerHovered(true);
-		}, []);
+			scheduleChannelPreload();
+		}, [scheduleChannelPreload]);
 		const handleMouseLeave = useCallback(() => {
 			setIsPointerHovered(false);
-		}, []);
+			cancelChannelPreload();
+		}, [cancelChannelPreload]);
 		const hoverAffordancesActive =
 			allowHoverAffordances &&
 			(contextMenuOpen || showKeyboardAffordances || shouldShowSelectedState || isPointerHovered);

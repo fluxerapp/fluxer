@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {DirectSelectionSurface, markDirectSelection} from '@app/features/app/components/layout/DirectSelectionOrigin';
+import {useGuildListItemPreload} from '@app/features/app/components/layout/sidebar_nav/UseGuildListItemPreload';
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
 import {useHover} from '@app/features/app/hooks/useHover';
 import type {Guild} from '@app/features/guild/models/Guild';
-import GuildCount from '@app/features/guild/state/GuildCount';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
-import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as AvatarSourceUtils from '@app/features/user/utils/AvatarSourceUtils';
@@ -65,12 +64,12 @@ export function useGuildListItemInteraction({
 }: UseGuildListItemInteractionOptions): GuildListItemInteraction {
 	const [hoverRef, isHovering] = useHover();
 	const contextMenuOpen = useContextMenuHoverState(itemRef, isDesktopLayout);
-	const selectedChannelId = SelectedChannel.selectedChannelIds.get(guild.id) ?? null;
-	useEffect(() => {
-		if (isMobileExperience || isSortingList || !isHovering) return;
-		const timeoutId = window.setTimeout(() => GuildCount.requestCounts(guild.id, {force: false}), 250);
-		return () => window.clearTimeout(timeoutId);
-	}, [guild.id, isHovering, isMobileExperience, isSortingList]);
+	const {preloadChannelNow, selectedChannelId} = useGuildListItemPreload({
+		guild,
+		isHovering,
+		isMobileExperience,
+		isSortingList,
+	});
 	const iconURL = AvatarSourceUtils.getGuildIconURL(guild, false);
 	const hoverIconURL = AvatarSourceUtils.getGuildIconURL(guild, true);
 	const isAnimatableIcon = hoverIconURL !== iconURL;
@@ -85,12 +84,13 @@ export function useGuildListItemInteraction({
 	}, [contextMenuOpen, hoverIconURL, isAnimatableIcon, isHovering, loadedAnimatedURL]);
 	const handleSelect = useCallback(() => {
 		markDirectSelection(DirectSelectionSurface.GUILD_RAIL);
+		preloadChannelNow();
 		if (isMobileExperience || selectedChannelId == null) {
 			NavigationCommands.selectGuild(guild.id);
 			return;
 		}
 		NavigationCommands.selectGuild(guild.id, selectedChannelId);
-	}, [guild.id, isMobileExperience, selectedChannelId]);
+	}, [guild.id, isMobileExperience, preloadChannelNow, selectedChannelId]);
 	const handleKeyDown = useCallback(
 		(event: React.KeyboardEvent) => {
 			if (!isKeyboardActivationKey(event.key)) return;
