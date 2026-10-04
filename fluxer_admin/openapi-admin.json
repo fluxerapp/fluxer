@@ -11441,6 +11441,9 @@
 					"STICKER_CREATE",
 					"STICKER_UPDATE",
 					"STICKER_DELETE",
+					"GUILD_EVENT_CREATE",
+					"GUILD_EVENT_UPDATE",
+					"GUILD_EVENT_DELETE",
 					"MESSAGE_DELETE",
 					"MESSAGE_BULK_DELETE",
 					"MESSAGE_PIN",
@@ -11478,6 +11481,9 @@
 					"Sticker was created",
 					"Sticker was updated",
 					"Sticker was deleted",
+					"Community event was created",
+					"Community event was updated",
+					"Community event was deleted",
 					"Message was deleted",
 					"Messages were bulk deleted",
 					"Message was pinned",
@@ -11485,7 +11491,7 @@
 				],
 				"enum": [
 					1, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 40, 41, 42, 50, 51, 52, 60, 61, 62,
-					90, 91, 92, 72, 73, 74, 75
+					90, 91, 92, 100, 101, 102, 72, 73, 74, 75
 				]
 			},
 			"Int32Type": {"type": "integer", "minimum": 0, "maximum": 2147483647, "format": "int32"},
@@ -14675,12 +14681,18 @@
 						"description": "Allows management of guild expressions"
 					},
 					{
+						"name": "MANAGE_EVENTS",
+						"value": "8589934592",
+						"description": "Allows management and editing of community events"
+					},
+					{
 						"name": "USE_EXTERNAL_STICKERS",
 						"value": "137438953472",
 						"description": "Allows using stickers from other guilds"
 					},
 					{"name": "MODERATE_MEMBERS", "value": "1099511627776", "description": "Allows timing out users"},
 					{"name": "CREATE_EXPRESSIONS", "value": "8796093022208", "description": "Allows creating guild expressions"},
+					{"name": "CREATE_EVENTS", "value": "17592186044416", "description": "Allows creating community events"},
 					{"name": "PIN_MESSAGES", "value": "2251799813685248", "description": "Allows pinning messages"},
 					{"name": "BYPASS_SLOWMODE", "value": "4503599627370496", "description": "Allows bypassing slowmode"},
 					{"name": "UPDATE_RTC_REGION", "value": "9007199254740992", "description": "Allows updating the voice region"},
@@ -15011,7 +15023,7 @@
 				"type": "integer",
 				"enum": [
 					1, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 40, 41, 42, 50, 51, 52, 60, 61, 62,
-					90, 91, 92, 72, 73, 74, 75
+					90, 91, 92, 100, 101, 102, 72, 73, 74, 75
 				],
 				"format": "int32",
 				"x-enumNames": [
@@ -15046,6 +15058,9 @@
 					"STICKER_CREATE",
 					"STICKER_UPDATE",
 					"STICKER_DELETE",
+					"GUILD_EVENT_CREATE",
+					"GUILD_EVENT_UPDATE",
+					"GUILD_EVENT_DELETE",
 					"MESSAGE_DELETE",
 					"MESSAGE_BULK_DELETE",
 					"MESSAGE_PIN",
@@ -15083,6 +15098,9 @@
 					"Sticker was created",
 					"Sticker was updated",
 					"Sticker was deleted",
+					"Community event was created",
+					"Community event was updated",
+					"Community event was deleted",
 					"Message was deleted",
 					"Messages were bulk deleted",
 					"Message was pinned",
