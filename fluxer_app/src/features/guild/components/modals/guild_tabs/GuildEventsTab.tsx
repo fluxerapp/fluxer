@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
+import {GuildEventCalendarExportButton} from '@app/features/guild/components/GuildEventCalendarExportButton';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildEventsTab.module.css';
 import Permission from '@app/features/permissions/state/Permission';
 import Users from '@app/features/user/state/Users';
@@ -159,6 +160,8 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 
 			{error && <div className={styles.error}>{error}</div>}
 
+			<GuildEventCalendarExportButton guildId={guildId} events={sortedEvents} disabled={busy} onError={setError} />
+
 			{canCreate && (
 				<form className={styles.editor} onSubmit={submit}>
 					<div className={styles.editorHeading}>
@@ -264,6 +267,15 @@ const GuildEventsTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 										</div>
 									)}
 									{event.description && <p>{event.description}</p>}
+									<div className={styles.actions}>
+										<GuildEventCalendarExportButton
+											guildId={guildId}
+											events={[event]}
+											eventId={event.id}
+											disabled={busy}
+											onError={setError}
+										/>
+									</div>
 									{canEdit && (
 										<div className={styles.actions}>
 											<button type="button" onClick={() => edit(event)} disabled={busy}>
