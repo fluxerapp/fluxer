@@ -382,3 +382,18 @@
 		padding-left: 1rem;
 	}
 }
+
+.usernameStyle {
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+	padding-top: 0.875rem;
+	border-top: 1px solid var(--background-modifier-accent);
+}
+
+.usernameStyleTitle {
+	margin: 0;
+	color: var(--text-primary);
+	font-size: 0.9375rem;
+	font-weight: 600;
+}

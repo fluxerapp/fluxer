@@ -2,14 +2,15 @@
 
 use crate::{
     api::types::{
-        AppPublicConfigResponse, CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE,
-        CaptchaConfigResponse, DOMAIN_MIGRATION_DEFAULT_SALT, DomainMigrationConfigResponse,
+        AccountIdentityConfigResponse, AccountIdentityMode, AppPublicConfigResponse,
+        CAPTCHA_COST_RANGE, CAPTCHA_MAX_COUNTER_RANGE, CaptchaConfigResponse,
+        DOMAIN_MIGRATION_DEFAULT_SALT, DomainMigrationConfigResponse,
         EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigResponse,
         GatewayRolloutConfigResponse, InstanceConfigResponse, InstanceIntegrationsResponse,
         InstanceMediaResponse, InstancePolicyResponse, InstanceRegistrationResponse,
         LimitConfigResponse, PLUTONIUM_PAGE_DEFAULT_SALT, PendingRegistrationResponse,
         PlutoniumPageConfigResponse, PushRelayConfigResponse, RegistrationUrlResponse,
-        SsoConfigResponse,
+        SsoConfigResponse, TagStyle,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -111,6 +112,9 @@ pub fn instance_config_page(
                     "Access & accounts",
                     "Who can sign in and create accounts on this instance.",
                     html! {
+                        @if instance_config.self_hosted {
+                            (account_identity_section(&instance_config.account_identity))
+                        }
                         (registration_config_section(
                             config,
                             csrf_token,
@@ -159,7 +163,12 @@ pub fn instance_config_page(
                     "Runtime integrations",
                     "Credentials and provider choices that override environment variables at runtime.",
                     html! {
-                        (integrations_config_section(base, csrf_token, &instance_config.integrations))
+                        (integrations_config_section(
+                            base,
+                            csrf_token,
+                            &instance_config.integrations,
+                            instance_config.account_identity.mode,
+                        ))
                     },
                 ))
                 (config_group(
@@ -500,10 +509,65 @@ fn password_input(name: &str, label: &str, helper: Option<&str>) -> Markup {
     )
 }
 
+fn account_identity_section(account_identity: &AccountIdentityConfigResponse) -> Markup {
+    let description = match account_identity.mode {
+        AccountIdentityMode::Username => {
+            "Members sign in with a username and password. The instance never collects an email \
+             address. A member who forgets their password uses their recovery kit or a reset link \
+             from an admin."
+        }
+        AccountIdentityMode::Email => "Members sign in with an email address and password.",
+    };
+    section_card_with_description(
+        "Sign-in Method",
+        "How members identify themselves when they sign in.",
+        html! {
+            div class="space-y-3" {
+                div class="flex flex-wrap items-center gap-2" {
+                    h3 class="text-sm font-semibold text-neutral-900" {
+                        (account_identity.mode.label())
+                    }
+                    @match account_identity.locked {
+                        Some(true) => (badge("Fixed", BadgeVariant::Default)),
+                        Some(false) => (badge("Not fixed yet", BadgeVariant::Warning)),
+                        None => {}
+                    }
+                }
+                p class="text-sm text-neutral-600" { (description) }
+                @if !account_identity.mode.is_username() {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" {
+                            (account_identity.tag_style.label())
+                        }
+                    }
+                    p class="text-sm text-neutral-600" {
+                        @match account_identity.tag_style {
+                            TagStyle::None => {
+                                "Each name belongs to one person and is shown without a tag."
+                            }
+                            TagStyle::Random => {
+                                "Names have a random tag, like alex#4821, so several people can share a name."
+                            }
+                        }
+                    }
+                }
+                p class="text-xs text-neutral-500" {
+                    @if account_identity.mode.is_username() {
+                        "The sign-in method is chosen during setup. It cannot be changed once setup is complete or the first account exists."
+                    } @else {
+                        "The sign-in method and the username tags are chosen during setup. They cannot be changed once setup is complete or the first account exists."
+                    }
+                }
+            }
+        },
+    )
+}
+
 fn integrations_config_section(
     base: &str,
     csrf_token: &str,
     integrations: &InstanceIntegrationsResponse,
+    account_identity: AccountIdentityMode,
 ) -> Markup {
     let smtp_port = integrations
         .email
@@ -536,62 +600,65 @@ fn integrations_config_section(
                         (password_input("integration_youtube_api_key", "YouTube API key", Some("Leave blank to keep the current key.")))
                     }
 
-                    div class="space-y-4 border-t border-neutral-200 pt-6" {
-                        div class="flex flex-wrap items-center gap-2" {
-                            h3 class="text-sm font-semibold text-neutral-900" { "Email delivery" }
-                            @if integrations.email.effective_enabled {
-                                (badge("Effective: enabled", BadgeVariant::Success))
-                            } @else {
-                                (badge("Effective: disabled", BadgeVariant::Default))
+                    @if !account_identity.is_username() {
+                        div class="space-y-4 border-t border-neutral-200 pt-6" {
+                            div class="flex flex-wrap items-center gap-2" {
+                                h3 class="text-sm font-semibold text-neutral-900" { "Email delivery" }
+                                @if integrations.email.effective_enabled {
+                                    (badge("Effective: enabled", BadgeVariant::Success))
+                                } @else {
+                                    (badge("Effective: disabled", BadgeVariant::Default))
+                                }
+                                @if integrations.email.effective_disable_new_ip_authorization {
+                                    (badge("IP auth disabled", BadgeVariant::Warning))
+                                } @else {
+                                    (badge("IP auth required", BadgeVariant::Default))
+                                }
+                                (secret_badge("SMTP password", integrations.email.smtp.password_set))
                             }
-                            @if integrations.email.effective_disable_new_ip_authorization {
-                                (badge("IP auth disabled", BadgeVariant::Warning))
-                            } @else {
-                                (badge("IP auth required", BadgeVariant::Default))
+                            input type="hidden" name="integration_email_present" value="1";
+                            (checkbox("integration_email_enabled", "true", "Enable email delivery", integrations.email.effective_enabled, true))
+                            div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                                (text_input(
+                                    "integration_email_from_email",
+                                    "From email",
+                                    integrations.email.from_email.as_deref().unwrap_or(""),
+                                    "notifications@example.com",
+                                ))
+                                (text_input(
+                                    "integration_email_from_name",
+                                    "From name",
+                                    integrations.email.from_name.as_deref().unwrap_or(""),
+                                    "Fluxer",
+                                ))
+                                (text_input(
+                                    "integration_smtp_host",
+                                    "SMTP host",
+                                    integrations.email.smtp.host.as_deref().unwrap_or(""),
+                                    "smtp.example.com",
+                                ))
+                                (text_input(
+                                    "integration_smtp_port",
+                                    "SMTP port",
+                                    &smtp_port,
+                                    "587",
+                                ))
+                                (text_input(
+                                    "integration_smtp_username",
+                                    "SMTP username",
+                                    integrations.email.smtp.username.as_deref().unwrap_or(""),
+                                    "user@example.com",
+                                ))
+                                (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
                             }
-                            (secret_badge("SMTP password", integrations.email.smtp.password_set))
-                        }
-                        (checkbox("integration_email_enabled", "true", "Enable email delivery", integrations.email.effective_enabled, true))
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
-                            (text_input(
-                                "integration_email_from_email",
-                                "From email",
-                                integrations.email.from_email.as_deref().unwrap_or(""),
-                                "notifications@example.com",
-                            ))
-                            (text_input(
-                                "integration_email_from_name",
-                                "From name",
-                                integrations.email.from_name.as_deref().unwrap_or(""),
-                                "Fluxer",
-                            ))
-                            (text_input(
-                                "integration_smtp_host",
-                                "SMTP host",
-                                integrations.email.smtp.host.as_deref().unwrap_or(""),
-                                "smtp.example.com",
-                            ))
-                            (text_input(
-                                "integration_smtp_port",
-                                "SMTP port",
-                                &smtp_port,
-                                "587",
-                            ))
-                            (text_input(
-                                "integration_smtp_username",
-                                "SMTP username",
-                                integrations.email.smtp.username.as_deref().unwrap_or(""),
-                                "user@example.com",
-                            ))
-                            (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
-                        }
-                        (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
-                        (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorisation", integrations.email.disable_new_ip_authorization, true))
-                        div class="flex flex-wrap gap-2" {
-                            button type="submit"
-                                formaction={(base) "/instance-config?action=test_smtp"}
-                                class="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 font-medium text-base text-neutral-700 transition-all duration-150 hover:border-neutral-400 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white" {
-                                span { "Test SMTP connection" }
+                            (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
+                            (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorisation", integrations.email.disable_new_ip_authorization, true))
+                            div class="flex flex-wrap gap-2" {
+                                button type="submit"
+                                    formaction={(base) "/instance-config?action=test_smtp"}
+                                    class="inline-flex w-fit items-center justify-center gap-2 rounded-lg border border-neutral-300 bg-neutral-50 px-4 py-2 font-medium text-base text-neutral-700 transition-all duration-150 hover:border-neutral-400 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white" {
+                                    span { "Test SMTP connection" }
+                                }
                             }
                         }
                     }
@@ -2031,6 +2098,95 @@ fn limit_config_section(base: &str, limit_config: &LimitConfigResponse) -> Marku
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn username_instances_hide_email_delivery_and_the_smtp_test() {
+        let integrations = InstanceIntegrationsResponse::default();
+        let username = integrations_config_section(
+            "/admin",
+            "csrf",
+            &integrations,
+            AccountIdentityMode::Username,
+        )
+        .into_string();
+        assert!(!username.contains("Email delivery"));
+        assert!(!username.contains("test_smtp"));
+        assert!(!username.contains("integration_email_present"));
+        assert!(username.contains("Bluesky OAuth"));
+
+        let email = integrations_config_section(
+            "/admin",
+            "csrf",
+            &integrations,
+            AccountIdentityMode::Email,
+        )
+        .into_string();
+        assert!(email.contains("Email delivery"));
+        assert!(email.contains("test_smtp"));
+        assert!(email.contains(r#"name="integration_email_present" value="1""#));
+    }
+
+    #[test]
+    fn account_identity_section_has_no_tag_choice_in_username_mode() {
+        let markup = account_identity_section(&AccountIdentityConfigResponse {
+            mode: AccountIdentityMode::Username,
+            locked: Some(true),
+            tag_style: TagStyle::None,
+        })
+        .into_string();
+        assert!(markup.contains("Sign-in Method"));
+        assert!(markup.contains("Username"));
+        assert!(markup.contains("Fixed"));
+        assert!(!markup.contains("No tags"));
+        assert!(!markup.contains("Random tags"));
+        assert!(!markup.contains("username tags"));
+        assert!(!markup.contains("<form"));
+        assert!(!markup.contains("<input"));
+    }
+
+    #[test]
+    fn account_identity_section_shows_random_tags_in_email_mode() {
+        let markup = account_identity_section(&AccountIdentityConfigResponse {
+            mode: AccountIdentityMode::Email,
+            locked: Some(true),
+            tag_style: TagStyle::Random,
+        })
+        .into_string();
+        assert!(markup.contains("Random tags"));
+        assert!(!markup.contains("No tags"));
+        assert!(markup.contains("username tags"));
+    }
+
+    #[test]
+    fn account_identity_section_shows_no_tags_in_email_mode() {
+        let markup = account_identity_section(&AccountIdentityConfigResponse {
+            mode: AccountIdentityMode::Email,
+            locked: Some(true),
+            tag_style: TagStyle::None,
+        })
+        .into_string();
+        assert!(markup.contains("No tags"));
+        assert!(!markup.contains("Random tags"));
+        assert!(!markup.contains("<input"));
+    }
+
+    #[test]
+    fn account_identity_section_shows_the_lock_state_only_when_known() {
+        let render = |locked| {
+            account_identity_section(&AccountIdentityConfigResponse {
+                mode: AccountIdentityMode::Email,
+                locked,
+                tag_style: TagStyle::Random,
+            })
+            .into_string()
+        };
+        let unlocked = render(Some(false));
+        assert!(unlocked.contains("Not fixed yet"));
+        let unknown = render(None);
+        assert!(!unknown.contains("Fixed"));
+        assert!(!unknown.contains("Not fixed yet"));
+        assert!(unknown.contains("Random tags"));
+    }
 
     #[test]
     fn captcha_section_posts_the_switch_and_difficulty_fields() {

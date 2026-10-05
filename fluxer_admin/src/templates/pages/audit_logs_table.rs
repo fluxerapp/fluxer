@@ -9,7 +9,7 @@ use crate::{
         resource_link::{ResourceType, resource_link},
         table::{table_body, table_cell, table_head, table_header_cell, table_row},
     },
-    utils::bigint::format_discriminator,
+    utils::{bigint::format_discriminator, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
@@ -42,10 +42,10 @@ fn type_label(target_type: &str) -> String {
 }
 
 fn user_label(user: &AuditLogUserSummary) -> String {
-    let tag = format!(
-        "{}#{}",
-        user.username,
-        format_discriminator(&user.discriminator)
+    let tag = user_tag(
+        &user.username,
+        &format_discriminator(&user.discriminator),
+        false,
     );
     match user
         .global_name
@@ -349,6 +349,20 @@ mod tests {
         assert!(markup.contains(r#"href="/admin/jobs/1900000000000000002""#));
         assert!(markup.contains("Bulk job"));
         assert!(!markup.contains("/admin/users/"));
+    }
+
+    #[test]
+    fn admin_labels_drop_the_zero_tag_only_without_tags() {
+        let admin = AuditLogUserSummary {
+            id: "1500000000000000001".to_owned(),
+            username: "lilith".to_owned(),
+            discriminator: "0".to_owned(),
+            global_name: Some("Lilith".to_owned()),
+        };
+        assert_eq!(user_label(&admin), "Lilith (lilith#0000)");
+        crate::utils::user_tag::sync_with_unique_usernames(true, || {
+            assert_eq!(user_label(&admin), "Lilith (lilith)");
+        });
     }
 
     #[test]

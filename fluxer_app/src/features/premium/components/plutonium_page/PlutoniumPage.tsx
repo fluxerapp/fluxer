@@ -610,21 +610,23 @@ export const PlutoniumPage = observer(function PlutoniumPage() {
 							</div>
 						</section>
 					)}
-					<p id={FOOTNOTE_ID} className={styles.footnote} data-flx="premium.plutonium-page.footnote">
-						<span>{`* ${footnoteBefore}`}</span>
-						<FocusRing offset={-2}>
-							<a
-								className={styles.inlineLink}
-								href={Routes.helpArticle('visionary')}
-								target="_blank"
-								rel="noopener noreferrer"
-								data-flx="premium.plutonium-page.footnote.visionary-link"
-							>
-								{i18n._(TAG_FOOTNOTE_LINK_DESCRIPTOR)}
-							</a>
-						</FocusRing>
-						<span>{footnoteAfter}</span>
-					</p>
+					{!RuntimeConfig.usesUniqueUsernames && (
+						<p id={FOOTNOTE_ID} className={styles.footnote} data-flx="premium.plutonium-page.footnote">
+							<span>{`* ${footnoteBefore}`}</span>
+							<FocusRing offset={-2}>
+								<a
+									className={styles.inlineLink}
+									href={Routes.helpArticle('visionary')}
+									target="_blank"
+									rel="noopener noreferrer"
+									data-flx="premium.plutonium-page.footnote.visionary-link"
+								>
+									{i18n._(TAG_FOOTNOTE_LINK_DESCRIPTOR)}
+								</a>
+							</FocusRing>
+							<span>{footnoteAfter}</span>
+						</p>
+					)}
 				</div>
 			</div>
 		</div>

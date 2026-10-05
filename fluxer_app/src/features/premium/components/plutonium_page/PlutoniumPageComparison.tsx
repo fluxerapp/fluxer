@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import styles from '@app/features/premium/components/plutonium_page/PlutoniumPage.module.css';
 import {
@@ -118,6 +119,7 @@ function resolveNumericValue(perk: LimitTierPerk, value: number, premium: boolea
 function buildRows(locale: string, translate: (descriptor: MessageDescriptor) => string): Array<PerkRow> {
 	const rows: Array<PerkRow> = [];
 	for (const definition of PERK_DEFINITIONS) {
+		if (definition.perkId === 'custom_discriminator' && RuntimeConfig.usesUniqueUsernames) continue;
 		const perk = LIMIT_TIER_PERKS.find((candidate) => candidate.id === definition.perkId);
 		if (!perk) continue;
 		if (isBooleanTierPerk(perk)) {

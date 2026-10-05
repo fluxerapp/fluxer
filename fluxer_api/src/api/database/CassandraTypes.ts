@@ -91,6 +91,7 @@ export interface KvQueryMeta<Row extends object = Record<string, unknown>> {
 	where?: ReadonlyArray<WhereExpr<Row>>;
 	orderBy?: OrderBy<Row>;
 	limit?: number;
+	unordered?: boolean;
 	columns?: ReadonlyArray<ColumnName<Row>>;
 	patch?: Partial<Record<ColumnName<Row>, DbOp<unknown>>>;
 	patchKeys?: ReadonlyArray<ColumnName<Row>>;
@@ -197,6 +198,7 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 		where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>;
 		orderBy?: OrderBy<Row>;
 		limit?: number;
+		unordered?: boolean;
 	}): string;
 	select(opts?: {
 		columns?: ReadonlyArray<ColumnName<Row>>;

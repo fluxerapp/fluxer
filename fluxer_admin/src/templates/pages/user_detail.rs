@@ -15,7 +15,7 @@ use crate::{
         layout::admin_layout,
         pages::user_detail_tabs,
     },
-    utils::bigint::format_discriminator,
+    utils::{bigint::format_discriminator, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
@@ -163,7 +163,7 @@ fn render_user_detail(
                     ))
                 }
                 p class="break-words text-sm text-neutral-500" {
-                    (user.username) "#" (format_discriminator(&user.discriminator))
+                    (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                 }
                 p class="break-all text-sm text-neutral-500" {
                     (user.id)

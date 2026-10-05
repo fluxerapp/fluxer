@@ -3,7 +3,10 @@
 use crate::{
     api::types::AdminUser,
     templates::components::page_container::{card_with_header, detail_row},
-    utils::bigint::{format_discriminator, has_flag, list_flags},
+    utils::{
+        bigint::{format_discriminator, has_flag, list_flags},
+        user_tag::user_tag,
+    },
 };
 use maud::{Markup, html};
 
@@ -13,7 +16,7 @@ pub fn settings_tab(user: &AdminUser) -> Markup {
             (card_with_header("Profile Settings", html! {
                 dl class="divide-y divide-neutral-100" {
                     (detail_row("Username", html! {
-                        (user.username) "#" (format_discriminator(&user.discriminator))
+                        (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                     }))
                     (detail_row("Display Name", html! {
                         @if let Some(ref name) = user.global_name {

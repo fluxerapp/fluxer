@@ -1176,12 +1176,30 @@ export class PostgresKvQueryExecutor {
 		return this.matchingEntries(meta, stored, params).map((entry) => entry.row);
 	}
 
+	private async unorderedScan(meta: KvQueryMeta, limit: number, db: PostgresQueryable): Promise<Array<Row>> {
+		const result = await db.query<StoredRow>(
+			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1 AND (kv.expires_at IS NULL OR kv.expires_at > now()) LIMIT $2`,
+			[meta.table.name, limit],
+		);
+		return this.matchingRows(meta, result.rows, {}).map((row) =>
+			projectRow(row, meta.columns as ReadonlyArray<string> | undefined),
+		);
+	}
+
 	private async select(
 		meta: KvQueryMeta,
 		params: CassandraParams,
 		plan: QueryPlan,
 		db: PostgresQueryable,
 	): Promise<Array<Row>> {
+		if (
+			meta.unordered &&
+			typeof meta.limit === 'number' &&
+			plan.candidates.kind === 'scan' &&
+			queryShape(meta).clauseCount === 0
+		) {
+			return this.unorderedScan(meta, meta.limit, db);
+		}
 		let rows = this.matchingRows(meta, await this.candidates(meta, plan, db), params);
 		rows = sortRows(meta, rows);
 		if (typeof meta.limit === 'number') rows = rows.slice(0, meta.limit);

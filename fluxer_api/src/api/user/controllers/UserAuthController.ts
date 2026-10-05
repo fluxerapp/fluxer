@@ -1,19 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createRecoveryKit, getRecoveryKitStatus} from '@app/api/auth/AuthRecoveryKit';
 import {
 	completePasskeyMigration,
 	getPasskeyMigration,
 	getPasskeyMigrationRegistrationOptions,
 } from '@app/api/auth/services/PasskeyMigrationService';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {
+	RequireEmailAccountIdentity,
+	RequireUsernameAccountIdentity,
+} from '@app/api/middleware/AccountIdentityMiddleware';
 import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {LocalAuthMiddleware} from '@app/api/middleware/LocalAuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {assertValidTotpSetupCode} from '@app/api/user/services/UserAuth';
+import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
 import {Validator} from '@app/api/Validator';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
@@ -39,6 +48,10 @@ import {
 } from '@fluxer/schema/src/domains/auth/PasskeyMigrationSchemas';
 import {CredentialIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {EmptyBodyRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
+import {
+	RecoveryKitCreateResponse,
+	RecoveryKitStatusResponse,
+} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 export function UserAuthController(app: HonoApp) {
 	app.post(
@@ -125,11 +138,60 @@ export function UserAuthController(app: HonoApp) {
 			);
 		},
 	);
+	app.get(
+		'/users/@me/recovery-kit',
+		RateLimitMiddleware(RateLimitConfigs.USER_RECOVERY_KIT_GET),
+		LoginRequired,
+		DefaultUserOnly,
+		RequireUsernameAccountIdentity,
+		OpenAPI({
+			operationId: 'get_recovery_kit_status',
+			summary: 'Get recovery kit status',
+			responseSchema: RecoveryKitStatusResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Check whether the current account has a recovery kit and when it was created. Only available on instances where people sign in with a username. The recovery key itself is never returned here.',
+		}),
+		async (ctx) => {
+			return ctx.json(await getRecoveryKitStatus(ctx.get('user').id));
+		},
+	);
+	app.post(
+		'/users/@me/recovery-kit',
+		RateLimitMiddleware(RateLimitConfigs.USER_RECOVERY_KIT_CREATE),
+		LocalAuthMiddleware,
+		LoginRequired,
+		DefaultUserOnly,
+		RequireUsernameAccountIdentity,
+		SudoModeMiddleware,
+		Validator('json', SudoVerificationSchema),
+		OpenAPI({
+			operationId: 'create_recovery_kit',
+			summary: 'Create recovery kit',
+			responseSchema: RecoveryKitCreateResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Create a recovery kit for the current account and return its recovery key. The key is shown only once and any previous kit stops working. Only available on instances where people sign in with a username. Requires sudo mode verification.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			if (isSsoUserWithoutPassword(user)) {
+				throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_NOT_SET);
+			}
+			await requireSudoMode(ctx, user, ctx.req.valid('json'));
+			return ctx.json(await createRecoveryKit(user.id));
+		},
+	);
 	app.post(
 		'/users/@me/mfa/backup-codes/challenge',
 		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_START),
 		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmptyBodyRequest),
 		OpenAPI({
 			operationId: 'start_backup_codes_challenge',
@@ -151,6 +213,7 @@ export function UserAuthController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_RESEND),
 		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', MfaBackupCodesChallengeResendRequest),
 		OpenAPI({
 			operationId: 'resend_backup_codes_challenge',
@@ -174,6 +237,7 @@ export function UserAuthController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_VERIFY),
 		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', MfaBackupCodesChallengeVerifyRequest),
 		OpenAPI({
 			operationId: 'verify_backup_codes_challenge',
@@ -196,6 +260,7 @@ export function UserAuthController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_REGENERATE),
 		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', MfaBackupCodesChallengeRegenerateRequest),
 		OpenAPI({
 			operationId: 'regenerate_backup_codes_challenge',

@@ -564,6 +564,48 @@ describe('ConfigLoader', () => {
 		expect(config.instance.setup.configured).toBe(true);
 	});
 
+	test('leaves the account identity unset by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.instance.account_identity).toBeNull();
+	});
+
+	test('treats an empty account identity as unset', async () => {
+		stubMinimalEnv({FLUXER_ACCOUNT_IDENTITY: ' '});
+		const config = await loadConfig();
+		expect(config.instance.account_identity).toBeNull();
+	});
+
+	test.each([
+		['email', 'email'],
+		['username', 'username'],
+		[' Username ', 'username'],
+	])('parses FLUXER_ACCOUNT_IDENTITY=%j', async (raw, expected) => {
+		stubMinimalEnv({FLUXER_ACCOUNT_IDENTITY: raw});
+		const config = await loadConfig();
+		expect(config.instance.account_identity).toBe(expected);
+	});
+
+	test.each([
+		['none', 'none'],
+		[' Random ', 'random'],
+		['', null],
+	])('parses FLUXER_TAG_STYLE=%j', async (raw, expected) => {
+		stubMinimalEnv({FLUXER_TAG_STYLE: raw});
+		const config = await loadConfig();
+		expect(config.instance.tag_style).toBe(expected);
+	});
+
+	test.each(['sequential', 'zero_first'])('rejects the tag style %j', async (raw) => {
+		stubMinimalEnv({FLUXER_TAG_STYLE: raw});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_TAG_STYLE must be none or random');
+	});
+
+	test('rejects an unknown account identity', async () => {
+		stubMinimalEnv({FLUXER_ACCOUNT_IDENTITY: 'phone'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_ACCOUNT_IDENTITY must be email or username');
+	});
+
 	test('leaves both stores off with no apps, packages or products by default', async () => {
 		stubMinimalEnv();
 		const config = await loadConfig();

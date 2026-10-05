@@ -507,6 +507,8 @@ export async function initializeServiceSingletons(): Promise<void> {
 			owner.limitConfigService = limitConfigService;
 			await getInstanceConfigRepository().initialize();
 			assertServiceSingletonInitializationActive(owner);
+			await getInstanceConfigRepository().ensureAccountIdentityMode();
+			assertServiceSingletonInitializationActive(owner);
 			await limitConfigService.initialize();
 			assertServiceSingletonInitializationActive(owner);
 			limitConfigService.setAsGlobalInstance();

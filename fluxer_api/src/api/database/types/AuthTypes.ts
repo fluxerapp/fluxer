@@ -42,6 +42,12 @@ export interface MfaBackupCodeRow {
 	consumed: boolean;
 }
 
+export interface UserRecoveryKitRow {
+	user_id: UserID;
+	secret_hash: string;
+	created_at: Date;
+}
+
 export interface EmailVerificationTokenRow {
 	token_: EmailVerificationToken;
 	user_id: UserID;
@@ -51,7 +57,7 @@ export interface EmailVerificationTokenRow {
 export interface PasswordResetTokenRow {
 	token_: PasswordResetToken;
 	user_id: UserID;
-	email: string;
+	email: string | null;
 }
 
 export interface EmailRevertTokenRow {
@@ -149,6 +155,9 @@ export const AUTH_SESSION_TOMBSTONE_COLUMNS = [
 ] as const satisfies ReadonlyArray<keyof AuthSessionTombstoneRow>;
 export const MFA_BACKUP_CODE_COLUMNS = ['user_id', 'code', 'consumed'] as const satisfies ReadonlyArray<
 	keyof MfaBackupCodeRow
+>;
+export const USER_RECOVERY_KIT_COLUMNS = ['user_id', 'secret_hash', 'created_at'] as const satisfies ReadonlyArray<
+	keyof UserRecoveryKitRow
 >;
 export const EMAIL_VERIFICATION_TOKEN_COLUMNS = ['token_', 'user_id', 'email'] as const satisfies ReadonlyArray<
 	keyof EmailVerificationTokenRow

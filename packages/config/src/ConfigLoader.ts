@@ -11,7 +11,13 @@ import {
 	parsePublicOrigin,
 	parseWebOrigin,
 } from '@fluxer/config/src/EndpointDerivation';
-import {CACHE_PURGE_ADAPTER_NAMES, type MasterConfig, STORE_PRODUCT_SLOT_NAMES} from '@fluxer/config/src/MasterConfig';
+import {
+	ACCOUNT_IDENTITY_MODE_NAMES,
+	CACHE_PURGE_ADAPTER_NAMES,
+	type MasterConfig,
+	STORE_PRODUCT_SLOT_NAMES,
+	TAG_STYLE_NAMES,
+} from '@fluxer/config/src/MasterConfig';
 
 let cachedConfig: MasterConfig | null = null;
 
@@ -247,6 +253,8 @@ function defaultConfig(): MasterConfig {
 			setup: {
 				configured: false,
 			},
+			account_identity: null,
+			tag_style: null,
 		},
 		dev: {
 			relax_registration_rate_limits: false,
@@ -569,6 +577,12 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertOneOf(config.integrations.email.provider, ['smtp', 'none'], 'FLUXER_EMAIL_PROVIDER');
 	assertOneOf(config.integrations.search.engine, ['elasticsearch', 'meilisearch'], 'FLUXER_SEARCH_ENGINE');
 	assertOneOf(config.integrations.cache_purge.adapter, CACHE_PURGE_ADAPTER_NAMES, 'FLUXER_CACHE_PURGE_ADAPTER');
+	if (config.instance.tag_style !== null) {
+		assertOneOf(config.instance.tag_style, TAG_STYLE_NAMES, 'FLUXER_TAG_STYLE');
+	}
+	if (config.instance.account_identity !== null) {
+		assertOneOf(config.instance.account_identity, ACCOUNT_IDENTITY_MODE_NAMES, 'FLUXER_ACCOUNT_IDENTITY');
+	}
 	validatePostgresConfig(config);
 	validateApiWorkerConfig(config);
 	validateStorageChangeFeedConfig(config);

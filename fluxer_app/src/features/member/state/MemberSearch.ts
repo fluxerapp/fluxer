@@ -7,6 +7,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {makeAutoObservable} from 'mobx';
 
@@ -119,7 +120,7 @@ function isFriendRelationship(userId: string): boolean {
 function getTransformedUser(user: User): TransformedMember {
 	return {
 		id: user.id,
-		username: `${user.username}#${user.discriminator}`,
+		username: formatUserTag(user),
 		globalName: user.globalName,
 		isBot: user.bot,
 		isFriend: isFriendRelationship(user.id),

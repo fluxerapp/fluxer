@@ -4,6 +4,7 @@ import type {UserID} from '@app/api/BrandedTypes';
 import type {UserContactChangeLogRow} from '@app/api/database/types/UserTypes';
 import type {User} from '@app/api/models/User';
 import type {UserContactChangeLogRepository} from '@app/api/user/repositories/UserContactChangeLogRepository';
+import {formatUserTag} from '@app/api/user/UserTag';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
 
 type ContactChangeReason = 'user_requested' | 'admin_action';
@@ -75,7 +76,6 @@ export class UserContactChangeLogService {
 		if (!user.username || discriminator === '') {
 			return null;
 		}
-		const paddedDiscriminator = discriminator.padStart(4, '0');
-		return `${user.username}#${paddedDiscriminator}`;
+		return formatUserTag(user);
 	}
 }

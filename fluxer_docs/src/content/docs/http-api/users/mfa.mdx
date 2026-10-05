@@ -54,6 +54,8 @@ An account that lost its saved backup codes reads the set back through an emaile
 
 [Sudo mode](#sudo-mode) applies to none of the four, so a user who no longer has the authenticator app still reaches the codes through the email address. The account needs a verified email address and TOTP enabled. Only [Start MFA backup codes challenge](#start-mfa-backup-codes-challenge) checks the address, and [Regenerate MFA backup codes](#regenerate-mfa-backup-codes) checks TOTP a second time.
 
+An instance where members sign in with a username keeps no email address, and all four return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE` there. An account on such an instance reads and replaces its set through [List MFA backup codes](#list-mfa-backup-codes) under sudo mode.
+
 A ticket is a version 4 UUID valid for 30 minutes after the challenge starts, the code is resent, or the code is verified. Regeneration does not extend it. An expired, unknown, or another account's ticket fails with `INVALID_OR_EXPIRED_TICKET`.
 
 A verification code is eight characters drawn from the uppercase Latin alphabet and the decimal digits, written as two four-character groups separated by a hyphen. A code is valid for 10 minutes from the moment it is sent, and each send replaces the code the previous send issued.

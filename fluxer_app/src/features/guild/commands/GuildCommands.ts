@@ -64,6 +64,7 @@ export interface GuildBan {
 		tag: string;
 		discriminator: string;
 		avatar: string | null;
+		bot?: boolean;
 	};
 	reason: string | null;
 	moderator_id: string;

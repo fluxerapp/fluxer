@@ -14,7 +14,7 @@ use crate::{
         },
         layout::admin_layout,
     },
-    utils::forms::parse_comma_separated,
+    utils::{forms::parse_comma_separated, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
@@ -270,7 +270,7 @@ fn owner_display(guild: &GuildInfo) -> String {
     let Some(discriminator) = guild.owner_discriminator.as_deref() else {
         return guild.owner_id.clone();
     };
-    let tag = format!("{username}#{discriminator}");
+    let tag = user_tag(username, discriminator, false);
     if let Some(global_name) = guild
         .owner_global_name
         .as_deref()

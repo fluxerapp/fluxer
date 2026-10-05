@@ -1,0 +1,159 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.keyGrid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 0.5rem 0.75rem;
+	border-radius: 0.5rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	background: var(--background-secondary);
+	padding: 1rem;
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.keyGroup {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 1.25rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	line-height: 1.75rem;
+	text-align: center;
+	color: var(--text-primary);
+}
+
+.warning {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+}
+
+.buttonRow {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+	.buttonRow {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+}
+
+.buttonIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.options {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	border-top: 0.0625rem solid var(--background-modifier-accent);
+	padding-top: 1rem;
+}
+
+.optionLabel {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.printSheet {
+	display: none;
+}
+
+@media print {
+	.printing > *:not(.printSheet) {
+		display: none !important;
+	}
+
+	.printing .printSheet {
+		display: block;
+		background: #ffffff;
+		color: #111827;
+		font-family: var(--font-sans, sans-serif);
+		font-size: 11pt;
+		line-height: 1.4;
+	}
+}
+
+.printTitle {
+	margin: 0 0 0.5rem;
+	font-size: 20pt;
+	font-weight: 700;
+}
+
+.printIntro {
+	margin: 0 0 1.25rem;
+	color: #4b5563;
+}
+
+.printTop {
+	display: flex;
+	justify-content: space-between;
+	gap: 1.5rem;
+}
+
+.printDetails {
+	margin: 0;
+}
+
+.printDetailLabel {
+	font-size: 9pt;
+	font-weight: 700;
+	color: #4b5563;
+}
+
+.printDetailValue {
+	margin: 0 0 0.6rem;
+	font-size: 12pt;
+	word-break: break-all;
+}
+
+.printQr {
+	display: flex;
+	width: 40mm;
+	flex-shrink: 0;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-size: 8pt;
+	color: #4b5563;
+}
+
+.printQrImage {
+	width: 40mm;
+	height: 40mm;
+}
+
+.printSectionTitle {
+	margin: 1.25rem 0 0.4rem;
+	font-size: 13pt;
+	font-weight: 700;
+}
+
+.printKey {
+	border: 1pt solid #d1d5db;
+	border-radius: 4pt;
+	background: #f3f4f6;
+	padding: 0.75rem;
+	text-align: center;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 16pt;
+	font-weight: 700;
+	letter-spacing: 0.05em;
+}
+
+.printSteps {
+	margin: 0;
+	padding-left: 1.25rem;
+}
+
+.printCodes {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 0.3rem 1.5rem;
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 12pt;
+}

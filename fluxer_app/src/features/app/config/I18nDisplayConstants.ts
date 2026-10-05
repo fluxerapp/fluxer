@@ -48,6 +48,7 @@ export const EXAMPLE_CHANNEL_NAME = 'new-channel';
 export const EXAMPLE_GENERAL_CHANNEL_NAME = 'general';
 export const EXAMPLE_USERNAME_MENTION = '@username';
 export const EXAMPLE_FLUXER_TAG_FULL = 'Username#0000';
+export const EXAMPLE_USERNAME = 'Username';
 export const FLUXER_TAG_LABEL = 'FluxerTag';
 export const VISIONARY_LIFETIME_BADGE_LABEL = 'Visionary #42';
 export const FLUXER_TAG_MIN_WITH_ZERO_LABEL = '#0000';

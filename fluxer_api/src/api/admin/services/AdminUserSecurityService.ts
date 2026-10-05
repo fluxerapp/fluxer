@@ -9,12 +9,15 @@ import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
+import {RecoveryKitRepository} from '@app/api/auth/services/RecoveryKitRepository';
 import {createPasswordResetToken, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import {Logger} from '@app/api/Logger';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {User} from '@app/api/models/User';
 import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
+import {PASSWORD_RESET_TOKEN_TTL_SECONDS} from '@app/api/user/repositories/auth/TokenRepository';
 import {mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
 import {resolveAssignedTraits} from '@app/api/user/UserTraits';
 import {getIpAddressReverse, getLocationLabelFromIp} from '@app/api/utils/IpUtils';
@@ -29,6 +32,7 @@ import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
+	AdminPasswordResetLinkResponse,
 	DeleteWebAuthnCredentialRequest,
 	DisableMfaRequest,
 	ListWebAuthnCredentialsRequest,
@@ -259,6 +263,68 @@ export class AdminUserSecurityService {
 			action: 'send_password_reset',
 			auditLogReason,
 			metadata: new Map([['email', user.email]]),
+		});
+	}
+
+	async createPasswordResetLink(
+		data: SendPasswordResetRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+		acls: ReadonlySet<string>,
+	): Promise<AdminPasswordResetLinkResponse> {
+		const {users: userRepository} = this.deps.apiContext.services;
+		const {apiContext, auditService} = this.deps;
+		const userId = createUserID(data.user_id);
+		const user = await userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		AuthUtility.assertNonBotUser(apiContext, user);
+		assertCallerHoldsTargetAcls(user.acls, acls);
+		const token = createPasswordResetToken(await AuthUtility.generateSecureToken(apiContext));
+		const expiresAt = new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_SECONDS * 1000);
+		await userRepository.deleteAllPasswordResetTokens(userId);
+		await new RecoveryKitRepository().delete(userId);
+		await userRepository.createPasswordResetToken({
+			token_: token,
+			user_id: userId,
+			email: null,
+		});
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: 'create_password_reset_link',
+			auditLogReason,
+			metadata: new Map(),
+		});
+		return {
+			url: `${Config.email.appBaseUrl}/reset#token=${token}`,
+			expires_at: expiresAt.toISOString(),
+		};
+	}
+
+	async revokeRecoveryKit(
+		data: SendPasswordResetRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+		acls: ReadonlySet<string>,
+	): Promise<void> {
+		const {users: userRepository} = this.deps.apiContext.services;
+		const userId = createUserID(data.user_id);
+		const user = await userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		assertCallerHoldsTargetAcls(user.acls, acls);
+		await new RecoveryKitRepository().delete(userId);
+		await this.deps.auditService.createAuditLog({
+			adminUserId,
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: 'revoke_recovery_kit',
+			auditLogReason,
+			metadata: new Map(),
 		});
 	}
 
@@ -571,5 +637,13 @@ export class AdminUserSecurityService {
 				};
 			}),
 		};
+	}
+}
+
+function assertCallerHoldsTargetAcls(targetAcls: ReadonlySet<string>, callerAcls: ReadonlySet<string>): void {
+	if (callerAcls.has(AdminACLs.WILDCARD)) return;
+	const missing = [...targetAcls].find((acl) => !callerAcls.has(acl));
+	if (missing !== undefined) {
+		throw new MissingACLError(missing);
 	}
 }

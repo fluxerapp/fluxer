@@ -10,6 +10,10 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import {EmailChangeModal} from '@app/features/user/components/modals/EmailChangeModal';
 import {PasswordChangeModal} from '@app/features/user/components/modals/PasswordChangeModal';
 import styles from '@app/features/user/components/modals/tabs/account_security_tab/AccountTab.module.css';
+import {
+	RecoveryKitReminderAlert,
+	RecoveryKitRow,
+} from '@app/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings';
 import type {User} from '@app/features/user/models/User';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import {msg} from '@lingui/core/macro';
@@ -41,7 +45,8 @@ interface AccountTabProps {
 export const AccountTabContent: React.FC<AccountTabProps> = observer(
 	({user, isClaimed, showMaskedEmail, setShowMaskedEmail}) => {
 		const {i18n} = useLingui();
-		const emailRow = isClaimed ? (
+		const usesUsernameSignIn = RuntimeConfig.usesUsernameSignIn;
+		const emailRow = usesUsernameSignIn ? null : isClaimed ? (
 			<>
 				<div className={styles.row} data-flx="user.account-security-tab.account-tab.account-tab-content.email-row">
 					<div
@@ -129,7 +134,7 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(
 		);
 		const passwordRow = (
 			<div
-				className={styles.divider}
+				className={emailRow ? styles.divider : undefined}
 				data-flx="user.account-security-tab.account-tab.account-tab-content.password-block"
 			>
 				<div className={styles.row} data-flx="user.account-security-tab.account-tab.account-tab-content.password-row">
@@ -208,9 +213,21 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(
 				{!isClaimed && (
 					<UnclaimedAccountAlert data-flx="user.account-security-tab.account-tab.account-tab-content.unclaimed-account-alert" />
 				)}
+				{usesUsernameSignIn && isClaimed && (
+					<RecoveryKitReminderAlert
+						user={user}
+						data-flx="user.account-security-tab.account-tab.account-tab-content.recovery-kit-reminder"
+					/>
+				)}
 				<div className={styles.accountRows} data-flx="user.account-security-tab.account-tab.account-tab-content.rows">
 					{emailRow}
 					{passwordRow}
+					{usesUsernameSignIn && isClaimed && (
+						<RecoveryKitRow
+							user={user}
+							data-flx="user.account-security-tab.account-tab.account-tab-content.recovery-kit-row"
+						/>
+					)}
 				</div>
 			</>
 		);

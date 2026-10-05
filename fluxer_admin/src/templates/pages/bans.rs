@@ -4,7 +4,7 @@ use crate::{
     config::AdminConfig,
     middleware::auth::AuthContext,
     templates::{
-        components::{form::csrf_input, page_container::page_header},
+        components::{alert::alert_info, form::csrf_input, page_container::page_header},
         layout::admin_layout,
     },
 };
@@ -149,10 +149,16 @@ pub fn bans_page(
     ban_cfg: &BanConfig,
     flash: Option<&crate::api::types::FlashMessage>,
     csrf_token: &str,
+    username_sign_in: bool,
 ) -> Markup {
     let base = &config.base_path;
     let content = html! {
         (page_header(ban_cfg.title, None))
+        @if username_sign_in && ban_cfg.active_page == "email-bans" {
+            div class="mb-6" {
+                (alert_info(html! { "People sign in with a username on this instance. Accounts have no email address, so email bans have no effect." }))
+            }
+        }
         div class="grid gap-6 lg:grid-cols-2" {
             (ban_card(base, ban_cfg, csrf_token))
             (check_ban_card(base, ban_cfg, csrf_token))

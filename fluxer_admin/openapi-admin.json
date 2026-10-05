@@ -7124,6 +7124,68 @@
 				]
 			}
 		},
+		"/admin/users/{user_id}/password-reset-link": {
+			"post": {
+				"operationId": "create_admin_user_password_reset_link",
+				"summary": "Create user password reset link",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminPasswordResetLinkResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Create a one-time password reset link on an instance where people sign in with a username. Hand the link to the user yourself. It works once and expires after an hour. Deletes the recovery kit of the account. Creates audit log entry. Requires USER_CREATE_PASSWORD_RESET_LINK permission and every ACL the target account holds. Fails with USERNAME_SIGN_IN_ONLY on email instances.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				]
+			}
+		},
 		"/admin/users/{user_id}/premium-flags": {
 			"patch": {
 				"operationId": "update_admin_user_premium_flags",
@@ -7256,6 +7318,65 @@
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserClearFieldsRequest"}}}
 				}
+			}
+		},
+		"/admin/users/{user_id}/recovery-kit": {
+			"delete": {
+				"operationId": "revoke_admin_user_recovery_kit",
+				"summary": "Revoke user recovery kit",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes the recovery kit of an account on an instance where people sign in with a username, so its key stops working. Creates audit log entry. Requires USER_DELETE_RECOVERY_KIT permission and every ACL the target account holds. Fails with USERNAME_SIGN_IN_ONLY on email instances.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				]
 			}
 		},
 		"/admin/users/{user_id}/relationships": {
@@ -9317,6 +9438,20 @@
 					}
 				}
 			},
+			"AdminPasswordResetLinkResponse": {
+				"type": "object",
+				"properties": {
+					"url": {"type": "string", "description": "Password reset link to hand to the user. It is shown only once"},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "ISO 8601 timestamp when the link stops working"
+					}
+				},
+				"required": ["url", "expires_at"],
+				"additionalProperties": false
+			},
 			"DeleteAllUserMessagesResponse": {
 				"type": "object",
 				"properties": {
@@ -9727,7 +9862,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 103,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -10536,6 +10671,19 @@
 						"additionalProperties": false
 					},
 					"self_hosted": {"type": "boolean"},
+					"account_identity": {
+						"type": "object",
+						"properties": {
+							"mode": {
+								"description": "Sign-in method in effect on this instance",
+								"allOf": [{"$ref": "#/components/schemas/AccountIdentityModeSchema"}]
+							},
+							"locked": {"type": "boolean", "description": "Whether the sign-in method can no longer change"},
+							"tag_style": {"allOf": [{"$ref": "#/components/schemas/TagStyleSchema"}]}
+						},
+						"required": ["mode", "locked", "tag_style"],
+						"additionalProperties": false
+					},
 					"app_public": {
 						"type": "object",
 						"properties": {
@@ -10843,6 +10991,7 @@
 					"experiment_delivery",
 					"registration",
 					"self_hosted",
+					"account_identity",
 					"app_public",
 					"policy",
 					"integrations",
@@ -12603,7 +12752,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 103,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -12621,7 +12770,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 103,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -12651,7 +12800,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 103,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -12672,7 +12821,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 103,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -12685,7 +12834,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 103,
+						"maxItems": 105,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -12773,6 +12922,8 @@
 					"report:view:reporter_pii",
 					"system_dm:send",
 					"user:cancel:bulk_message_deletion",
+					"user:create:password_reset_link",
+					"user:delete:recovery_kit",
 					"user:delete",
 					"user:list:dm_channels",
 					"user:list:guilds",
@@ -15232,6 +15383,23 @@
 				],
 				"additionalProperties": false
 			},
+			"TagStyleSchema": {
+				"description": "How usernames are tagged",
+				"x-enumNames": ["NONE", "RANDOM"],
+				"x-enumDescriptions": ["Usernames are unique and shown without a tag", "Every account gets a random tag"],
+				"enum": ["none", "random"],
+				"type": "string"
+			},
+			"AccountIdentityModeSchema": {
+				"description": "How people identify themselves when they sign in",
+				"x-enumNames": ["EMAIL", "USERNAME"],
+				"x-enumDescriptions": [
+					"People sign in with an email address",
+					"People sign in with a username and no email is collected"
+				],
+				"enum": ["email", "username"],
+				"type": "string"
+			},
 			"ExperimentDeliveryConfigResponse": {
 				"type": "object",
 				"properties": {
@@ -15515,7 +15683,7 @@
 						"description": "ISO 8601 timestamp when the pending deletion was scheduled",
 						"type": "string"
 					},
-					"acls": {"maxItems": 103, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 105, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},

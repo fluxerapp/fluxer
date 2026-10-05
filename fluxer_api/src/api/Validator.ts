@@ -96,6 +96,9 @@ type PreHook<E extends Env, P extends string, Target extends keyof ValidationTar
 	c: Context<E, P, V>,
 	target: Target,
 ) => unknown | Promise<unknown>;
+type SchemaSelector<T extends ZodType, E extends Env, P extends string, V extends Input> = (
+	c: Context<E, P, V>,
+) => ZodType<output<T>> | null | Promise<ZodType<output<T>> | null>;
 type ValidatorOptions<
 	T extends ZodType,
 	E extends Env,
@@ -104,6 +107,7 @@ type ValidatorOptions<
 	V extends Input,
 > = {
 	pre?: PreHook<E, P, Target, V>;
+	schemaFor?: SchemaSelector<T, E, P, V>;
 	post?: Hook<T, E, P, Target, V>;
 };
 
@@ -211,8 +215,9 @@ export const Validator = <
 		if (options.pre) {
 			value = await options.pre(value, c, target);
 		}
-		const transformedValue = convertEmptyValuesToNull(value, schema);
-		const result = await schema.safeParseAsync(transformedValue);
+		const activeSchema = (await options.schemaFor?.(c)) ?? (schema as ZodType<output<T>>);
+		const transformedValue = convertEmptyValuesToNull(value, activeSchema);
+		const result = await activeSchema.safeParseAsync(transformedValue);
 		if (options.post) {
 			const hookResult = await options.post({...result, target}, c);
 			if (hookResult) {

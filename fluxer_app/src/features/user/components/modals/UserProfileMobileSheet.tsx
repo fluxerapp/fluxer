@@ -74,6 +74,7 @@ import {
 	toProfileDisplayContext,
 } from '@app/features/user/utils/ProfileGuildMembership';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
+import {shouldShowDiscriminator} from '@app/features/user/utils/UserTagUtils';
 import * as CallUtils from '@app/features/voice/utils/CallUtils';
 import {hasActiveDirectCallWithUser} from '@app/features/voice/utils/PrivateCallMenuUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
@@ -609,7 +610,7 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 													>
 														{displayName}
 													</span>
-													{isDisplayNameUsername && (
+													{isDisplayNameUsername && shouldShowDiscriminator(user) && (
 														<span
 															className={styles.discriminator}
 															data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.discriminator"
@@ -627,7 +628,7 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 															className={styles.fullTag}
 															data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.full-tag"
 														>
-															{NicknameUtils.formatTagForStreamerMode(`${user.username}#${user.discriminator}`)}
+															{NicknameUtils.formatTagForStreamerMode(user.tag)}
 														</span>
 													)}
 													<div

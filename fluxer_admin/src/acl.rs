@@ -76,6 +76,8 @@ pub const REPORT_VIEW: &str = "report:view";
 pub const REPORT_VIEW_REPORTER_PII: &str = "report:view:reporter_pii";
 pub const SYSTEM_DM_SEND: &str = "system_dm:send";
 pub const USER_CANCEL_BULK_MESSAGE_DELETION: &str = "user:cancel:bulk_message_deletion";
+pub const USER_CREATE_PASSWORD_RESET_LINK: &str = "user:create:password_reset_link";
+pub const USER_DELETE_RECOVERY_KIT: &str = "user:delete:recovery_kit";
 pub const USER_DELETE: &str = "user:delete";
 pub const USER_LIST_DM_CHANNELS: &str = "user:list:dm_channels";
 pub const USER_LIST_GUILDS: &str = "user:list:guilds";
@@ -180,6 +182,8 @@ pub const ALL_ACLS: &[&str] = &[
     REPORT_VIEW_REPORTER_PII,
     SYSTEM_DM_SEND,
     USER_CANCEL_BULK_MESSAGE_DELETION,
+    USER_CREATE_PASSWORD_RESET_LINK,
+    USER_DELETE_RECOVERY_KIT,
     USER_DELETE,
     USER_LIST_DM_CHANNELS,
     USER_LIST_GUILDS,

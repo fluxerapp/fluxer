@@ -228,6 +228,7 @@
 		"mobx-react-lite": "catalog:",
 		"motion": "catalog:",
 		"onnxruntime-web": "catalog:",
+		"pdf-lib": "catalog:",
 		"qrcode": "catalog:",
 		"react": "catalog:",
 		"react-aria-components": "catalog:",

@@ -5,7 +5,8 @@ use crate::api::generated::{snowflake, types as generated_types};
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
     AdminUser, AdminUserMeResponse, GuildInfo, ListUserGuildsResponse, LookupUserResponse,
-    SearchUsersResponse, TerminateSessionsResponse, UserMutationResponse,
+    PasswordResetLinkResponse, SearchUsersResponse, TerminateSessionsResponse,
+    UserMutationResponse,
 };
 
 impl AdminApiClient {
@@ -468,6 +469,26 @@ impl AdminApiClient {
     pub async fn send_password_reset(&self, user_id: &str) -> ApiResult<()> {
         self.generated()
             .send_admin_user_password_reset(&snowflake(user_id))
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        Ok(())
+    }
+
+    pub async fn create_password_reset_link(
+        &self,
+        user_id: &str,
+    ) -> ApiResult<PasswordResetLinkResponse> {
+        let response = self
+            .generated()
+            .create_admin_user_password_reset_link(&snowflake(user_id))
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        self.generated_value(response.into_inner())
+    }
+
+    pub async fn revoke_recovery_kit(&self, user_id: &str) -> ApiResult<()> {
+        self.generated()
+            .revoke_admin_user_recovery_kit(&snowflake(user_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         Ok(())

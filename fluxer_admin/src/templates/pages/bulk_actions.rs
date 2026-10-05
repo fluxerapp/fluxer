@@ -177,7 +177,12 @@ fn guild_feature_label(feature: &str) -> String {
     }
 }
 
-pub fn bulk_actions_page(config: &AdminConfig, auth: &AuthContext, csrf_token: &str) -> Markup {
+pub fn bulk_actions_page(
+    config: &AdminConfig,
+    auth: &AuthContext,
+    csrf_token: &str,
+    username_sign_in: bool,
+) -> Markup {
     let base = &config.base_path;
     let admin_acls = auth
         .admin_user
@@ -198,7 +203,7 @@ pub fn bulk_actions_page(config: &AdminConfig, auth: &AuthContext, csrf_token: &
                 (bulk_add_guild_members_section(base, csrf_token))
             }
             @if acl::has_permission(admin_acls, acl::BULK_DELETE_USERS) {
-                (bulk_schedule_deletion_section(base, csrf_token))
+                (bulk_schedule_deletion_section(base, csrf_token, username_sign_in))
             }
             @if acl::has_permission(admin_acls, acl::BULK_DELETE_USER_MESSAGES) {
                 (bulk_delete_user_messages_section(base, csrf_token))
@@ -331,7 +336,7 @@ fn bulk_add_guild_members_section(base: &str, csrf_token: &str) -> Markup {
     )
 }
 
-fn bulk_schedule_deletion_section(base: &str, csrf_token: &str) -> Markup {
+fn bulk_schedule_deletion_section(base: &str, csrf_token: &str, username_sign_in: bool) -> Markup {
     section_card_simple(
         "Bulk Schedule User Deletion",
         html! {
@@ -370,7 +375,11 @@ fn bulk_schedule_deletion_section(base: &str, csrf_token: &str) -> Markup {
                         },
                     ))
                     (text_input("audit_log_reason", "Audit Log Reason (optional)", "", "Reason for this bulk operation"))
-                    (opt_out_checkbox("notify_user", "Email each user about the scheduled deletion"))
+                    @if username_sign_in {
+                        input type="hidden" name="notify_user_present" value="1";
+                    } @else {
+                        (opt_out_checkbox("notify_user", "Email each user about the scheduled deletion"))
+                    }
                     (form_actions(html! {
                         (danger_button("Schedule Deletion"))
                     }))
@@ -416,7 +425,7 @@ mod tests {
 
     #[test]
     fn deletion_form_has_no_preselected_reason() {
-        let markup = bulk_schedule_deletion_section("/admin", "csrf").into_string();
+        let markup = bulk_schedule_deletion_section("/admin", "csrf", false).into_string();
         assert!(markup.contains(r#"<option value="" selected>Select a reason</option>"#));
         for (value, _) in DELETION_REASONS {
             assert!(!markup.contains(&format!(r#"<option value="{value}" selected>"#)));
@@ -425,15 +434,23 @@ mod tests {
 
     #[test]
     fn deletion_form_defaults_to_the_moderation_retention_floor() {
-        let markup = bulk_schedule_deletion_section("/admin", "csrf").into_string();
+        let markup = bulk_schedule_deletion_section("/admin", "csrf", false).into_string();
         assert!(markup.contains(r#"name="days_until_deletion" value="60" min="14" max="365""#));
     }
 
     #[test]
     fn deletion_form_emails_each_user_by_default() {
-        let markup = bulk_schedule_deletion_section("/admin", "csrf").into_string();
+        let markup = bulk_schedule_deletion_section("/admin", "csrf", false).into_string();
         assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
         assert!(markup.contains(r#"name="notify_user_present" value="1""#));
+    }
+
+    #[test]
+    fn username_mode_hides_the_email_choices() {
+        let deletion = bulk_schedule_deletion_section("/admin", "csrf", true).into_string();
+        assert!(!deletion.contains("Email each user"));
+        assert!(!deletion.contains(r#"name="notify_user" value="true""#));
+        assert!(deletion.contains(r#"name="notify_user_present" value="1""#));
     }
 
     #[test]

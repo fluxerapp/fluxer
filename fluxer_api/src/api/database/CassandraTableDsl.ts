@@ -185,6 +185,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 			where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>;
 			orderBy?: OrderBy<Row>;
 			limit?: number;
+			unordered?: boolean;
 		} = {},
 	): string {
 		const cql = buildSelectCql(opts);
@@ -194,6 +195,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 			where: normalizeWhereArray(opts.where),
 			orderBy: opts.orderBy,
 			limit: opts.limit,
+			...(opts.unordered ? {unordered: true} : {}),
 			columns: opts.columns ?? columns,
 		};
 		registerKvMeta(cql, kvMeta as KvQueryMeta<Record<string, unknown>>);

@@ -10,6 +10,8 @@ These routes read and edit any account on the instance. An account has more fiel
 
 Each mutable field group has its own route, its own [ACL](/admin-api/#acl-registry), and its own [audit action](/admin-api/#audit-actions), so there is no combined update.
 
+On an instance where members sign in with a username, [Change user email](#change-user-email), [Verify user email](#verify-user-email), [Resend verification email](#resend-verification-email) and [Send password reset](#send-password-reset) return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`. [Create password reset link](#create-password-reset-link) is the way to reset a password there, and it returns 400 `USERNAME_SIGN_IN_ONLY` on an email instance.
+
 Every operation on this page records an [Admin audit entry](/admin-api/#admin-audit-entry-object), reads included. [Get current Admin user](#get-current-admin-user) is the exception and records nothing. `POST /v1/admin/users/{user_id}/avatar-block` addresses a user path but belongs to [Blocklists](/admin-api/blocklists/#block-a-users-current-avatar).
 
 :::caution[A missing PII ACL nulls the protected fields]
@@ -66,7 +68,7 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | last_active_ip_reverse<sup>10</sup> <sup>11</sup> | ?string | The reverse DNS name of that IP address |
 | last_active_location<sup>10</sup> <sup>11</sup> | ?string | The approximate location of that IP address |
 
-<sup>1</sup> An unpadded JSON number here, unlike the zero-padded string `discriminator` of the [Admin user summary](/admin-api/#admin-user-summary-object) and the [Admin resolved user](#admin-resolved-user-object) embedded in other Admin objects
+<sup>1</sup> An unpadded JSON number here, unlike the zero-padded string `discriminator` of the [Admin user summary](/admin-api/#admin-user-summary-object) and the [Admin resolved user](#admin-resolved-user-object) embedded in other Admin objects. On an instance with the `none` tag style every account that is not a bot has `0`, and its username is unique on its own
 
 <sup>2</sup> Serialised as a decimal string
 
@@ -223,6 +225,19 @@ The values [Clear user profile fields](#clear-user-profile-fields) accepts in `f
 | blocked | An account this account has blocked |
 
 Removing a friendship or friend request removes it for both accounts. Removing a block affects only the account that set it.
+
+## Password reset link object
+
+A password reset link an administrator hands to the account holder.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url<sup>1</sup> | string | The web app reset link, the app base URL followed by `/reset#token=` and the token |
+| expires_at | ISO8601 timestamp | When the link stops working |
+
+<sup>1</sup> The token is in the URL fragment, which a browser never sends to a server. It is the same 64-character token [reset a password](/http-api/authentication/#reset-a-password) accepts, and it expires one hour after it is issued
 
 ## Admin user session object
 
@@ -656,7 +671,7 @@ A target account may hold a custom discriminator on a self-hosted instance in th
 
 <sup>1</sup> Trimmed before validation, restricted to letters, digits, and underscores, and rejected when it lowercases to `everyone` or `here` or contains `fluxer` or `system message`
 
-<sup>2</sup> Honoured only when the target account may hold a custom discriminator. In every other case, including an omitted field, Fluxer allocates a free discriminator for the submitted username
+<sup>2</sup> Honoured only when the target account may hold a custom discriminator. In every other case, including an omitted field, Fluxer allocates a free discriminator for the submitted username. On an instance with the `none` tag style an account that is not a bot always gets `0`, any other value returns the field code `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE`, and a username another account holds in any letter case returns `USERNAME_ALREADY_TAKEN`
 
 ### Response body
 
@@ -719,6 +734,7 @@ The replacement address is stored unverified. Use [Verify user email](#verify-us
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | Email address was replaced |
+| 400 | [error response](/admin-api/#error-response) | `EMAIL_UNAVAILABLE_ON_INSTANCE`, because members sign in with a username |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
 ### Side effects
@@ -760,6 +776,7 @@ The operation accepts no request body and never clears verification, so the one 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200<sup>1</sup> | response body | Email address was marked verified |
+| 400 | [error response](/admin-api/#error-response) | `EMAIL_UNAVAILABLE_ON_INSTANCE`, because members sign in with a username |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
 <sup>1</sup> An account that has no stored email address is still accepted, and `email_verified` is set to true while `email` stays null
@@ -850,6 +867,74 @@ Unlike [Resend verification email](#resend-verification-email), this operation h
 A single-use password reset token is stored against the account ID and its current email address, and the token is emailed to that address. The account's password, sessions, and other credentials are unchanged until the account holder completes the reset.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `send_password_reset`, target type `user`, and a metadata key `email`. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Create password reset link
+
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/password-reset-link" auditReason />
+
+Creates a password reset token for the account and returns the link that redeems it, with nothing emailed. Requires `user:create:password_reset_link` and every ACL the target account holds. A target holding an ACL the caller lacks returns 403 `MISSING_ACL`, and a bot target returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`. Returns a [password reset link](#password-reset-link-object) object.
+
+Only an instance where members sign in with a username serves this operation, and an email instance returns 400 `USERNAME_SIGN_IN_ONLY`. The account holder opens the link in the web app, which calls [validate a password reset token](/http-api/authentication/#validate-a-password-reset-token) and then [reset a password](/http-api/authentication/#reset-a-password).
+
+:::caution[The link is a credential]
+Anyone holding the link can set the account's password until it expires. Hand it to the account holder over a channel you trust. The response is the only place the link appears.
+:::
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [password reset link](#password-reset-link-object) object | The token was stored and its link returned |
+| 400 | [error response](/admin-api/#error-response) | The path parameter is not a snowflake, or the instance signs members in with email |
+| 403 | [error response](/admin-api/#error-response) | ACL evaluation denies the request, the target holds an ACL the caller lacks, or the target is a bot |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+
+### Side effects
+
+Every earlier password reset token for the account is deleted, so a link created before this one stops working. The account's recovery kit is deleted too, so its key stops working. A single-use password reset token is then stored against the account ID with no email address. The account's password, sessions, and other credentials are unchanged until the account holder completes the reset.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `create_password_reset_link` and target type `user`. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## Revoke user recovery kit
+
+<RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/recovery-kit" auditReason />
+
+Deletes the account's recovery kit, so its recovery key stops working. Requires `user:delete:recovery_kit` and every ACL the target account holds, and a target holding an ACL the caller lacks returns 403 `MISSING_ACL`. Returns no body.
+
+Only an instance where members sign in with a username serves this operation, and an email instance returns 400 `USERNAME_SIGN_IN_ONLY`. The account holder can issue a new kit from their settings.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | none | The kit was deleted, or the account had none |
+| 400 | [error response](/admin-api/#error-response) | The path parameter is not a snowflake, or the instance signs members in with email |
+| 403 | [error response](/admin-api/#error-response) | ACL evaluation denies the request, or the target holds an ACL the caller lacks |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+
+### Side effects
+
+The account's password, sessions, and other credentials are unchanged. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `revoke_recovery_kit` and target type `user`. No Gateway Dispatch is emitted.
 
 ### Rate limit
 

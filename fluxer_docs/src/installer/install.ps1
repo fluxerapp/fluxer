@@ -216,13 +216,13 @@ function Stop-Fluxer([string]$Message, [int]$Code) {
 }
 
 function Show-FluxerUsage {
-	Write-FluxerLine 'Usage: install.ps1 -Domain <host> -Email <address> [options]'
+	Write-FluxerLine 'Usage: install.ps1 -Domain <host> [options]'
 	Write-FluxerLine '       install.ps1 -Update [options]'
 	Write-FluxerLine '       install.ps1 -Rollback [options]'
 	Write-FluxerLine ''
 	Write-FluxerLine 'Options:'
 	Write-FluxerLine '  -Domain <host>          Hostname the instance answers on. Prompted when absent.'
-	Write-FluxerLine '  -Email <address>        Contact email for web push. Prompted when absent.'
+	Write-FluxerLine '  -Email <address>        Contact email for web push. Default: admin@<domain>.'
 	Write-FluxerLine '  -Engine <command>       Container engine to drive. Default: docker, or podman when'
 	Write-FluxerLine '                          docker is absent.'
 	Write-FluxerLine '  -Dir <path>             Working directory. Default: the fluxer folder in the home'
@@ -680,9 +680,9 @@ function Move-FluxerStackFiles([string]$StagingDir, [string]$TargetDir) {
 #
 #   Copy-Item .env.example .env
 #
-# Close .env to every account but your own, then set FLUXER_DOMAIN and FLUXER_VAPID_EMAIL, the two
-# values only the operator knows. The five other non-secret keys in the list above ship correct in
-# .env.example and need no edit.
+# Close .env to every account but your own, then set FLUXER_DOMAIN, the one value only the operator
+# knows. FLUXER_VAPID_EMAIL is optional, and compose derives admin@FLUXER_DOMAIN while it is unset.
+# The five other non-secret keys in the list above ship correct in .env.example and need no edit.
 #
 # Every secret in .env.example contains the literal CHANGE_ME. A key whose name ends in _BASE64
 # takes 32 random bytes as base64, every other key takes 32 random bytes as hex, and the VAPID pair
@@ -2093,9 +2093,11 @@ function Invoke-FluxerInstall {
 	}
 
 	$domainValue = Resolve-FluxerValue $Domain 'Hostname the instance answers on' '-Domain' $allowPrompt
-	$emailValue = Resolve-FluxerValue $Email 'Contact email for web push' '-Email' $allowPrompt
+	$emailValue = $Email
 	Assert-FluxerDomain $domainValue
-	Assert-FluxerEmail $emailValue
+	if ($emailValue.Length -gt 0) {
+		Assert-FluxerEmail $emailValue
+	}
 
 	if ($Ref.Length -eq 0) {
 		$script:Ref = Get-FluxerRefForTag $ImageTag
@@ -2112,7 +2114,11 @@ function Invoke-FluxerInstall {
 			Write-FluxerLine "  Edge bind:  $EdgeBind"
 		}
 		Write-FluxerLine "  Domain:     $domainValue"
-		Write-FluxerLine "  Email:      $emailValue"
+		if ($emailValue.Length -gt 0) {
+			Write-FluxerLine "  Email:      $emailValue"
+		} else {
+			Write-FluxerLine "  Email:      admin@$domainValue, derived by compose"
+		}
 		Write-FluxerLine "  Files:      $($FluxerStackFiles -join ', ')"
 		Write-FluxerLine "  Secrets:    $($FluxerSecretKeys.Count) generated into .env"
 		Write-FluxerLine 'Nothing was written.'
@@ -2145,6 +2151,9 @@ function Invoke-FluxerInstall {
 			} elseif ($entry.Kind -eq 'domain') {
 				$value = $domainValue
 			} elseif ($entry.Kind -eq 'email') {
+				if ($emailValue.Length -eq 0) {
+					continue
+				}
 				$value = $emailValue
 			} elseif ($entry.Kind -eq 'image_tag') {
 				$value = $ImageTag

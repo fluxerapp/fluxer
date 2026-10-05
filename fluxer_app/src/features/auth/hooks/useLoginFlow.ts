@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {showBrowserLoginHandoffModal} from '@app/features/auth/flow/BrowserLoginHandoffModal';
 import {useAuthForm} from '@app/features/auth/hooks/useAuthForm';
 import {
@@ -94,6 +95,12 @@ const handleLoginOutcome = async (
 	}
 };
 
+type LoginIdentifierField = 'email' | 'login';
+
+function loginIdentifierField(): LoginIdentifierField {
+	return RuntimeConfig.usesUsernameSignIn ? 'login' : 'email';
+}
+
 interface LoginFormControllerOptions {
 	inviteCode?: string;
 	redirectPath?: string;
@@ -110,17 +117,19 @@ export function useLoginFormController({
 	onRequireIpAuthorization,
 }: LoginFormControllerOptions) {
 	const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
+	const identifierField = loginIdentifierField();
 	const {form, isLoading, fieldErrors, error} = useAuthForm({
-		initialValues: {email: '', password: ''},
+		initialValues: {[identifierField]: '', password: ''},
 		onSubmit: async (values) => {
+			const identifier = values[identifierField];
 			const result = await loginWithPassword({
-				email: values.email,
+				...(identifierField === 'login' ? {login: identifier.trim()} : {email: identifier}),
 				password: values.password,
 				inviteCode,
 			});
 			handleLoginOutcome(result, onLoginSuccess, onRequireMfa, onRequireIpAuthorization, redirectPath);
 		},
-		firstFieldName: 'email',
+		firstFieldName: identifierField,
 		redirectPath: undefined,
 	});
 	const handleDesktopPasskeyHandoff = useCallback(() => {
@@ -187,6 +196,7 @@ export function useLoginFormController({
 	}, [inviteCode, onLoginSuccess, redirectPath, handleDesktopPasskeyHandoff]);
 	return {
 		form,
+		identifierField,
 		isLoading,
 		fieldErrors,
 		error,

@@ -15,6 +15,7 @@ use crate::{
         },
         layout::admin_layout,
     },
+    utils::user_tag::user_tag,
 };
 use maud::{Markup, PreEscaped, html};
 
@@ -189,7 +190,7 @@ fn format_category(category: Option<&str>) -> String {
 fn reporter_label(report: &ReportEntry) -> String {
     if let Some(username) = &report.reporter_username {
         let discriminator = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        let tag = format!("{username}#{discriminator}");
+        let tag = user_tag(username, discriminator, false);
         if let Some(display) = report
             .reporter_global_name
             .as_ref()
@@ -214,7 +215,7 @@ fn reported_user_label(report: &ReportEntry) -> String {
             .reported_user_discriminator
             .as_deref()
             .unwrap_or("0000");
-        let tag = format!("{username}#{discriminator}");
+        let tag = user_tag(username, discriminator, false);
         if let Some(display) = report
             .reported_user_global_name
             .as_ref()

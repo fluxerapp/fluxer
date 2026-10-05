@@ -6,10 +6,13 @@ import {
 	createUniqueUsername,
 	registerUser,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {getConfig} from '@app/api/Config';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {CAPTCHA_TEST_HEADER, useCheapCaptcha} from '@app/api/test/CaptchaTestUtils';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -66,5 +69,22 @@ describe('Auth Captcha Bypass Flags', () => {
 			.body({email: account.email, password: account.password})
 			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CAPTCHA_REQUIRED)
 			.execute();
+	});
+	it('never looks up the email field for an exemption on a username instance', async () => {
+		const account = await registerAndFlag(harness, ['APP_STORE_REVIEWER']);
+		const config = getConfig();
+		const originalSelfHosted = config.instance.selfHosted;
+		config.instance.selfHosted = true;
+		try {
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+			await createBuilderWithoutAuth(harness)
+				.post('/auth/login')
+				.header(CAPTCHA_TEST_HEADER, 'true')
+				.body({email: account.email, password: account.password})
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CAPTCHA_REQUIRED)
+				.execute();
+		} finally {
+			config.instance.selfHosted = originalSelfHosted;
+		}
 	});
 });

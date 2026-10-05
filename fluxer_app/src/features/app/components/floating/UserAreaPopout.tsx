@@ -10,7 +10,11 @@ import {
 	type TimeWindowPreset,
 } from '@app/features/app/config/TimeWindowPresets';
 import {getStatusTypeLabel, STATUS_UNTIL_I_CHANGE_IT_DESCRIPTOR} from '@app/features/app/constants/AppConstants';
-import {getAccountAvatarUrl, getAccountDisplayName} from '@app/features/auth/components/accounts/AccountListItem';
+import {
+	getAccountAvatarUrl,
+	getAccountDisplayName,
+	getAccountTag,
+} from '@app/features/auth/components/accounts/AccountListItem';
 import AccountSwitcherModal from '@app/features/auth/components/accounts/AccountSwitcherModal';
 import {useAccountSwitcherLogic} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
@@ -299,10 +303,8 @@ const SwitchAccountsMenu = observer(
 						const isCurrent = account.userId === currentAccountId;
 						const avatarUrl = getAccountAvatarUrl(account);
 						const displayName = getAccountDisplayName(account, '???');
-						const userData = account.userData;
-						const accountTag = userData
-							? NicknameUtils.formatTagForStreamerMode(`${userData.username}#${userData.discriminator}`)
-							: displayName;
+						const rawAccountTag = getAccountTag(account);
+						const accountTag = rawAccountTag ? NicknameUtils.formatTagForStreamerMode(rawAccountTag) : displayName;
 						return (
 							<FocusRing
 								key={account.userId}

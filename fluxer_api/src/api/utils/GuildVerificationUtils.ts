@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createRoleIDSet, createUserID, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import {usesUsernameSignIn} from '@app/api/instance/AccountIdentityModeCache';
 import type {Guild} from '@app/api/models/Guild';
 import type {GuildMember} from '@app/api/models/GuildMember';
 import type {User} from '@app/api/models/User';
@@ -39,12 +40,18 @@ function checkGuildVerification(params: VerificationParams): void {
 	if (memberRoles && memberRoles.size > 0) {
 		return;
 	}
-	if (!user.email) {
-		throw new GuildVerificationRequiredError('You need to claim your account to send messages in this guild.');
-	}
-	if (verificationLevel >= GuildVerificationLevel.LOW) {
-		if (!user.emailVerified) {
-			throw new GuildEmailVerificationRequiredError();
+	if (usesUsernameSignIn()) {
+		if (user.isUnclaimedAccount()) {
+			throw new GuildVerificationRequiredError('You need to claim your account to send messages in this guild.');
+		}
+	} else {
+		if (!user.email) {
+			throw new GuildVerificationRequiredError('You need to claim your account to send messages in this guild.');
+		}
+		if (verificationLevel >= GuildVerificationLevel.LOW) {
+			if (!user.emailVerified) {
+				throw new GuildEmailVerificationRequiredError();
+			}
 		}
 	}
 	if (verificationLevel >= GuildVerificationLevel.MEDIUM) {

@@ -4,6 +4,7 @@ import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/aler
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {TemporaryInviteRequiresPresenceModal} from '@app/features/app/components/alerts/TemporaryInviteRequiresPresenceModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import {isAbortError} from '@app/features/auth/state/SudoPrompt';
 import {GuildAtCapacityModal} from '@app/features/guild/components/alerts/GuildAtCapacityModal';
@@ -43,6 +44,11 @@ const PLEASE_VERIFY_YOUR_ACCOUNT_BY_SETTING_AN_EMAIL_DESCRIPTOR = msg({
 	comment:
 		'Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.',
 });
+const ADD_A_USERNAME_AND_PASSWORD_DESCRIPTOR = msg({
+	message: 'Add a username and password to your account first.',
+	comment:
+		'Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite on an instance where people sign in with a username.',
+});
 const logger = new Logger('Invites');
 const ACCEPT_INVITE_BODY = {} as Invite;
 const isUnclaimedAccountInviteError = (code?: string): boolean => {
@@ -76,7 +82,11 @@ function showUnclaimedAccountInviteModal(i18n: I18n): void {
 		modal(() => (
 			<GenericErrorModal
 				title={i18n._(ACCOUNT_VERIFICATION_REQUIRED_DESCRIPTOR)}
-				message={i18n._(PLEASE_VERIFY_YOUR_ACCOUNT_BY_SETTING_AN_EMAIL_DESCRIPTOR)}
+				message={i18n._(
+					RuntimeConfig.usesUsernameSignIn
+						? ADD_A_USERNAME_AND_PASSWORD_DESCRIPTOR
+						: PLEASE_VERIFY_YOUR_ACCOUNT_BY_SETTING_AN_EMAIL_DESCRIPTOR,
+				)}
 				data-flx="invite.invite-commands.show-unclaimed-account-invite-modal.generic-error-modal"
 			/>
 		)),

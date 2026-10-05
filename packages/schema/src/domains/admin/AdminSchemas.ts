@@ -34,7 +34,11 @@ import {
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import {InstanceRegistrationModeSchema} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
+import {
+	AccountIdentityModeSchema,
+	InstanceRegistrationModeSchema,
+	TagStyleSchema,
+} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {GiftCodeDurationTypeSchema} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
@@ -656,6 +660,12 @@ const InstanceIntegrationsResponse = z.object({
 	}),
 });
 
+const InstanceAccountIdentityConfigResponse = z.object({
+	mode: AccountIdentityModeSchema.describe('Sign-in method in effect on this instance'),
+	locked: z.boolean().describe('Whether the sign-in method can no longer change'),
+	tag_style: TagStyleSchema.describe('How usernames are tagged'),
+});
+
 export const InstanceConfigResponse = z.object({
 	sso: SsoConfigResponse,
 	gateway_rollout: GatewayRolloutConfigResponse,
@@ -666,6 +676,7 @@ export const InstanceConfigResponse = z.object({
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
+	account_identity: InstanceAccountIdentityConfigResponse,
 	app_public: AppPublicConfigResponse,
 	policy: InstancePolicyResponse,
 	integrations: InstanceIntegrationsResponse,

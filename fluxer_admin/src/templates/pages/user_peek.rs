@@ -10,7 +10,9 @@ use crate::{
         media::user_avatar_url,
         user_profile_badges::user_profile_badges,
     },
-    utils::{bigint::format_discriminator, timestamps::snowflake_creation_date},
+    utils::{
+        bigint::format_discriminator, timestamps::snowflake_creation_date, user_tag::user_tag,
+    },
 };
 use maud::{Markup, html};
 
@@ -72,7 +74,7 @@ pub fn user_peek_fragment(
                         ))
                     }
                     p class="break-words text-sm text-neutral-500" {
-                        (user.username) "#" (format_discriminator(&user.discriminator))
+                        (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                     }
                     div class="flex flex-wrap items-center justify-center gap-2 \
                                 sm:justify-start" {

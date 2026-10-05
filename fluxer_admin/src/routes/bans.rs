@@ -48,15 +48,39 @@ pub fn router() -> Router<AppState> {
         )
 }
 
-fn render_ban_page(state: &AppState, auth: &AuthContext, key: &str, req: &Request) -> Response {
+async fn render_ban_page(
+    state: &AppState,
+    auth: &AuthContext,
+    key: &str,
+    csrf_token: String,
+) -> Response {
     let config = state.config();
     let ban_cfg = match templates::pages::bans::get_ban_config(key) {
         Some(c) => c,
         None => return axum::http::StatusCode::NOT_FOUND.into_response(),
     };
-    let csrf_token = csrf::get_csrf_token(req);
-    let markup = templates::pages::bans::bans_page(config, auth, ban_cfg, None, &csrf_token);
+    let username_sign_in = email_bans_on_username_instance(state, auth, key).await;
+    let markup = templates::pages::bans::bans_page(
+        config,
+        auth,
+        ban_cfg,
+        None,
+        &csrf_token,
+        username_sign_in,
+    );
     Html(markup.into_string()).into_response()
+}
+
+async fn email_bans_on_username_instance(state: &AppState, auth: &AuthContext, key: &str) -> bool {
+    key == "email-bans"
+        && state
+            .account_identity(&AdminApiClient::new(
+                state.http_client(),
+                state.config(),
+                &auth.session,
+            ))
+            .await
+            .is_username()
 }
 
 macro_rules! ban_get {
@@ -66,7 +90,8 @@ macro_rules! ban_get {
             auth: axum::Extension<AuthContext>,
             request: Request,
         ) -> Response {
-            render_ban_page(&state, &auth.0, $key, &request)
+            let csrf_token = csrf::get_csrf_token(&request);
+            render_ban_page(&state, &auth.0, $key, csrf_token).await
         }
     };
 }
@@ -96,7 +121,17 @@ async fn generic_ban_post(
     let value = extract_value(form, ban_cfg.input_name);
     let is_htmx = htmx::is_htmx_request(headers);
     let (level, msg) = execute_ban(&client, ban_key, action, &value, form).await;
-    flash_response(config, auth, is_htmx, level, &msg, ban_cfg, csrf_token)
+    let username_sign_in = !is_htmx && email_bans_on_username_instance(state, auth, ban_key).await;
+    flash_response(
+        config,
+        auth,
+        is_htmx,
+        level,
+        &msg,
+        ban_cfg,
+        csrf_token,
+        username_sign_in,
+    )
 }
 
 macro_rules! ban_post {
@@ -114,14 +149,18 @@ macro_rules! ban_post {
             let form: BanFormData = match Form::from_request(request, &state).await {
                 Ok(Form(f)) => f,
                 Err(_) => {
+                    let is_htmx = htmx::is_htmx_request(&headers);
+                    let username_sign_in =
+                        !is_htmx && email_bans_on_username_instance(&state, &auth.0, $key).await;
                     return flash_response(
                         state.config(),
                         &auth.0,
-                        htmx::is_htmx_request(&headers),
+                        is_htmx,
                         "error",
                         "Invalid form data",
                         templates::pages::bans::get_ban_config($key).unwrap(),
                         &csrf_token,
+                        username_sign_in,
                     );
                 }
             };

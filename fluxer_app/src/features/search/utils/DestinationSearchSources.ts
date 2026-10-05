@@ -63,7 +63,7 @@ function buildForwardUserCandidates(): ReadonlyArray<ForwardUserCandidate> {
 				globalName: user.globalName,
 				id: user.id,
 				nicknames: nicknames.get(user.id) ?? NO_STRINGS,
-				username: user.discriminator === '0' ? user.username : `${user.username}#${user.discriminator}`,
+				username: user.discriminator === '0' ? user.username : user.tag,
 			}),
 		);
 	}

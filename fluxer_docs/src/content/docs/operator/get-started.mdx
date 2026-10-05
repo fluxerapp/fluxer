@@ -122,16 +122,16 @@ Read the script before you run it. It writes `.env`, and that file holds every s
 
 The run below uses the bundled TLS. Add `--tls proxy` when something else terminates TLS, and read [Behind your own reverse proxy](/operator/reverse-proxy/) first.
 
-Then run it, with the hostname from Step 2. `--email` becomes the contact address on outgoing web push:
+Then run it with the hostname from Step 2. `--email` is optional and sets the contact address on outgoing web push. It defaults to `admin@` and the hostname.
 
 ```bash
-sh install.sh --domain chat.example.com --email you@example.com
+sh install.sh --domain chat.example.com
 ```
 
 On Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -Domain chat.example.com -Email you@example.com
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Domain chat.example.com
 ```
 
 The run prints one line per phase and ends with the URL to open.
@@ -162,7 +162,7 @@ Leave `FLUXER_PUBLIC_ORIGIN` commented out, or keep it consistent with the publi
 | Flag | Meaning |
 | --- | --- |
 | `--domain <host>` | Hostname the instance answers on. Prompted when absent |
-| `--email <address>` | Contact address written as `FLUXER_VAPID_EMAIL`. Prompted when absent |
+| `--email <address>` | Contact address on outgoing web push, written as `FLUXER_VAPID_EMAIL`. Default `admin@` and the hostname |
 | `--dir <path>` | Working directory. Default `~/fluxer`, or the current directory when it holds an instance |
 | `--ref <git ref>` | Ref the stack files come from. Defaults to the image tag, and to `main` when that tag is `v1` or `latest` |
 | `--image-tag <tag>` | Image tag the stack runs. Default `v1` |
@@ -220,15 +220,25 @@ Every path returns 200. `/.well-known/fluxer` lists the endpoints clients use, w
 
 Open the hostname in a browser. A fresh instance is unconfigured, so it serves the setup wizard.
 
-Create an account, then choose branding, registration mode, community policy, media expiry, integrations and premium settings. Completing the wizard closes setup access.
+The wizard first asks how members sign in. Usernames is the default and needs no email setup at all. Email suits an instance that sends mail through SMTP. The choice is fixed once the owner account exists. [Sign-in methods](/operator/sign-in/) explains both.
 
-Create the owner account with an email address at a domain you control. The first registration that includes an email address receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
+Then create the owner account, and choose branding, registration mode, community policy, media expiry, integrations and premium settings. Completing the wizard closes setup access.
+
+The first registration receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. On a username instance that is the first registration with a password. On an email instance it is the first registration that includes an email address. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
+
+On a username instance the wizard shows the owner's [recovery kit](/operator/sign-in/#recovery-kits) next. Store it somewhere safe. Without the kit, a forgotten owner password needs another admin to issue a [reset link](/operator/sign-in/#admin-reset-links). Register a passkey or a second admin account before you open registration.
+
+### On an email instance
+
+Create the owner account with an email address at a domain you control. Email delivery is optional, and [Email](/operator/configuration/#email) sets it up at any time.
 
 Once email is on, the address goes through a DNS check before the account exists. Email counts as on when the switch is set and the provider is `smtp` with a complete SMTP configuration, so `FLUXER_EMAIL_ENABLED=true` on its own does not turn the check on. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback. A name that resolves on your own network alone, such as a `.lan`, `.internal` or `home.arpa` name, publishes neither, and the account form answers `That email domain cannot receive mail.` whatever the address looks like. Use a domain with public records, or leave email off.
 
 `.env.example` ships `FLUXER_EMAIL_ENABLED=false`, which marks every address verified at creation and sends no mail at all. A forgotten owner password therefore has no email reset. Record it, and register a passkey or a second admin account before you open registration.
 
-Then sign in to the admin dashboard at `https://chat.example.com/admin` with the account holding the wildcard ACL. The **Instance Config** page has everything the wizard asked, plus registration mode, approvals and integration keys. **Limit Config** holds the instance limits published to clients. **Voice Regions** and **Voice Servers** come seeded, so voice needs no setup there.
+### The admin dashboard
+
+Sign in to the admin dashboard at `https://chat.example.com/admin` with the account holding the wildcard ACL. The **Instance Config** page has everything the wizard asked, plus registration mode, approvals and integration keys. **Limit Config** holds the instance limits published to clients. **Voice Regions** and **Voice Servers** come seeded, so voice needs no setup there.
 
 The desktop client opens the hosted web app for its release channel, so reach your own instance in a browser. [Issue #1088](https://github.com/fluxerapp/fluxer/issues/1088) tracks that, and is being worked on.
 

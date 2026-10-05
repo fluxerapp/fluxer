@@ -85,14 +85,17 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
 		instanceConfigRepository.getPendingRegistrations(),
 	]);
-	const [appPublic, policy, resolvedServices, integrations, media, billing] = await Promise.all([
-		instanceConfigRepository.getAppPublicConfig(),
-		instanceConfigRepository.getInstancePolicyConfig(),
-		instanceConfigRepository.getResolvedServicesConfig(),
-		instanceConfigRepository.getInstanceIntegrationsAdminConfig(),
-		instanceConfigRepository.getInstanceMediaAdminConfig(),
-		instanceConfigRepository.getInstanceBillingAdminConfig(),
-	]);
+	const [appPublic, policy, resolvedServices, integrations, media, billing, accountIdentity, accountIdentityLocked] =
+		await Promise.all([
+			instanceConfigRepository.getAppPublicConfig(),
+			instanceConfigRepository.getInstancePolicyConfig(),
+			instanceConfigRepository.getResolvedServicesConfig(),
+			instanceConfigRepository.getInstanceIntegrationsAdminConfig(),
+			instanceConfigRepository.getInstanceMediaAdminConfig(),
+			instanceConfigRepository.getInstanceBillingAdminConfig(),
+			instanceConfigRepository.getAccountIdentity(),
+			instanceConfigRepository.isAccountIdentityLocked(),
+		]);
 	return {
 		sso: {
 			enabled: ssoConfig.enabled,
@@ -122,6 +125,11 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 			pending_registrations: pendingRegistrations,
 		},
 		self_hosted: Config.instance.selfHosted,
+		account_identity: {
+			mode: accountIdentity.mode,
+			locked: accountIdentityLocked,
+			tag_style: accountIdentity.tagStyle,
+		},
 		app_public: appPublic,
 		policy: {
 			single_community_enabled: policy.single_community_enabled,

@@ -88,9 +88,9 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 | webauthn_response? | [WebAuthn assertion](/http-api/users/mfa/#webauthn-assertion-object) object | [Sudo verification](/http-api/users/mfa/#sudo-mode) WebAuthn assertion |
 | webauthn_challenge? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) WebAuthn challenge (1-256 characters) |
 
-<sup>1</sup> The value cannot be `everyone` or `here` and cannot contain `fluxer` or `system message`, on every instance including a self-hosted one
+<sup>1</sup> The value cannot be `everyone` or `here` and cannot contain `fluxer` or `system message`, on every instance including a self-hosted one. On an instance with the `none` tag style, a username another account holds in any letter case returns `USERNAME_ALREADY_TAKEN`
 
-<sup>2</sup> Supplying the field without a username requires the custom discriminator entitlement and is otherwise rejected with `CHANGING_DISCRIMINATOR_REQUIRES_PREMIUM`. A pair already assigned to another account is rejected with `TAG_ALREADY_TAKEN`
+<sup>2</sup> Supplying the field without a username requires the custom discriminator entitlement and is otherwise rejected with `CHANGING_DISCRIMINATOR_REQUIRES_PREMIUM`. A pair already assigned to another account is rejected with `TAG_ALREADY_TAKEN`. On an instance with the `none` tag style an account that is not a bot always has the discriminator `0000`. Any other value returns the field code `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE`, and a username change keeps `0000`
 
 <sup>3</sup> Sanitisation strips standalone surrogates, invisible characters, and variation selectors and collapses whitespace before the length is measured
 
@@ -126,7 +126,7 @@ A claimed account needs a verified email before changing the username, discrimin
 
 A [limited account](/http-api/users/#account-limitation) cannot change any of those fields. A request that sets one returns 403 [`ACCOUNT_LIMITED`](/http-api/errors/).
 
-An account is unclaimed while it holds no password credential, is not a bot, and does not have the SSO trait. Such an account may set only `new_password`, `has_dismissed_premium_onboarding`, and `has_unread_gift_inventory`. Any other field is rejected with [`UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN`](/http-api/errors/) on the path of the first offending field. The allow-list covers the profile payload only, so `email_token` and the sudo fields stay available as the way such an account claims itself.
+An account is unclaimed while it holds no password credential, is not a bot, and does not have the SSO trait. Such an account may set only `new_password`, `has_dismissed_premium_onboarding`, and `has_unread_gift_inventory`. Any other field is rejected with [`UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN`](/http-api/errors/) on the path of the first offending field. The allow-list covers the profile payload only, so `email_token` and the sudo fields stay available as the way such an account claims itself. On an instance where members sign in with a username, a body with `new_password` may also set `username`, which claims the account in one request.
 
 ### Image validation
 

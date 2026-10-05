@@ -30,6 +30,7 @@ export interface IUserAccountRepository {
 	findUniqueAssert(userId: UserID): Promise<User>;
 	findByUsernameDiscriminator(username: string, discriminator: number): Promise<User | null>;
 	findDiscriminatorsByUsername(username: string): Promise<Set<number>>;
+	findUsersByUsername(username: string): Promise<Array<User>>;
 	findByEmail(email: string): Promise<User | null>;
 	findByStripeSubscriptionId(stripeSubscriptionId: string): Promise<User | null>;
 	findByStripeCustomerId(stripeCustomerId: string): Promise<User | null>;

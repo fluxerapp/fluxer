@@ -9,6 +9,7 @@ export const Routes = {
 	REGISTER: '/register',
 	FORGOT_PASSWORD: '/forgot',
 	RESET_PASSWORD: '/reset',
+	RECOVER_ACCOUNT: '/recover',
 	VERIFY_EMAIL: '/verify',
 	AUTHORIZE_IP: '/authorize-ip',
 	EMAIL_REVERT: '/wasntme',

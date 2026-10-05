@@ -171,6 +171,8 @@ export class UserAccountService {
 				'User profile update failed with unknown commit status; retaining uploaded assets',
 			);
 			throw error;
+		} finally {
+			await securityResult.metadata.usernameReservation?.release();
 		}
 		const finalizationSteps: Array<() => Promise<unknown>> = [
 			() =>

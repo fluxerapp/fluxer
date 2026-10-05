@@ -93,6 +93,15 @@ export class UserLookupRepository {
 		return new Set(result.map((r) => r.discriminator));
 	}
 
+	async findUsersByUsername(username: string): Promise<Array<User>> {
+		const usernameLower = username.toLowerCase();
+		const rows = await fetchMany<Pick<UserByUsernameRow, 'discriminator' | 'user_id'>>(
+			FETCH_DISCRIMINATORS_BY_USERNAME_QUERY.bind({username: usernameLower}),
+		);
+		const users = await Promise.all(rows.map((row) => this.findUniqueUser(row.user_id)));
+		return users.filter((user): user is User => user !== null);
+	}
+
 	async listUserIdsByLastActiveIp(
 		lastActiveIp: string,
 		limit: number,

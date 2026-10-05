@@ -34,13 +34,14 @@ export type BrowserLoginHandoffVariant = 'browser' | 'old_app';
 
 interface BrowserLoginHandoffModalProps {
 	onSuccess: (payload: LoginSuccessPayload) => Promise<void>;
-	prefillEmail?: string;
+	prefillLogin?: string;
 	variant?: BrowserLoginHandoffVariant;
 }
 
 const POLL_INTERVAL_MS = 2000;
 
-const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail, variant}: BrowserLoginHandoffModalProps) => {
+const BrowserLoginHandoffModal = observer(({onSuccess, prefillLogin, variant}: BrowserLoginHandoffModalProps) => {
+	const prefillEmail = prefillLogin;
 	const {i18n} = useLingui();
 	const isOldAppVariant = variant === 'old_app';
 	const currentWebAppUrl = RuntimeConfig.webAppBaseUrl;
@@ -102,11 +103,11 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail, variant}: B
 	const handleOpenBrowser = useCallback(async () => {
 		const loginUrl = new URL('/login', currentWebAppUrl);
 		loginUrl.searchParams.set('handoff', '1');
-		if (prefillEmail) {
-			loginUrl.searchParams.set('email', prefillEmail);
+		if (prefillLogin) {
+			loginUrl.searchParams.set(RuntimeConfig.usesUsernameSignIn ? 'login' : 'email', prefillLogin);
 		}
 		await openExternalUrl(loginUrl.toString());
-	}, [currentWebAppUrl, prefillEmail]);
+	}, [currentWebAppUrl, prefillLogin]);
 	return (
 		<Modal.Root
 			size="small"
@@ -144,7 +145,7 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail, variant}: B
 						}
 						data-flx="auth.flow.browser-login-handoff-modal.handoff-code-display"
 					/>
-					{prefillEmail && !isOldAppVariant ? (
+					{prefillLogin && !isOldAppVariant ? (
 						<Modal.Description
 							className={styles.prefillHint}
 							data-flx="auth.flow.browser-login-handoff-modal.prefill-hint"
@@ -185,7 +186,7 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail, variant}: B
 
 export function showBrowserLoginHandoffModal(
 	onSuccess: (payload: LoginSuccessPayload) => Promise<void>,
-	prefillEmail?: string,
+	prefillLogin?: string,
 	variant: BrowserLoginHandoffVariant = 'browser',
 ): void {
 	ModalCommands.push(
@@ -194,7 +195,7 @@ export function showBrowserLoginHandoffModal(
 				onSuccess={async (payload) => {
 					await onSuccess(payload);
 				}}
-				prefillEmail={prefillEmail}
+				prefillLogin={prefillLogin}
 				variant={variant}
 				data-flx="auth.flow.browser-login-handoff-modal.show-browser-login-handoff-modal.browser-login-handoff-modal"
 			/>

@@ -60,6 +60,10 @@ A completed deletion returns the username `DeletedUser`, the discriminator `0000
 A system account never receives the deleted representation. An account only scheduled for deletion keeps its ordinary representation throughout the grace period.
 :::
 
+:::note[An instance without tags]
+On an instance whose `tag_style` [feature](/http-api/instance/#instance-features-object) is `none`, the username is unique on its own, whatever the [account identity mode](/http-api/instance/#account-identity-modes). Every account that is not a bot has the discriminator `0000` there, and apps show the bare username without `#0000`. Bot accounts keep their random discriminators and show them. Elsewhere `0000` keeps its usual meaning.
+:::
+
 ## Public user flags
 
 `flags` holds the publicly visible subset of the account's stored flags. `STAFF` is also removed from `flags` while the account has the stored `STAFF_HIDDEN` flag.
@@ -170,7 +174,7 @@ The private representation of the current account, returned by [Get current user
 
 <sup>11</sup> After `premium_until` passes, premium entitlements stay active until this time. While the value is null, they stay active for 3 days after `premium_until`
 
-<sup>12</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and after that premium access ends, Fluxer replaces the discriminator with a newly generated one the next time the account starts a Gateway session
+<sup>12</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and after that premium access ends, Fluxer replaces the discriminator with a newly generated one the next time the account starts a Gateway session. An instance with the `none` tag style skips the replacement and keeps `0000`
 
 <sup>13</sup> The value drives the 24-hour cooldown on changing the default voice activity sharing state
 
@@ -649,6 +653,8 @@ Reports whether a username and discriminator pair is unavailable.
 <sup>2</sup> The value is parsed as a decimal integer before the lookup, so `7`, `07`, and `0007` describe the same tag
 
 The caller's current tag returns `false`. The username comparison is case-insensitive and the discriminator is compared as an integer.
+
+When the caller is not a bot on an instance with the `none` tag style, the discriminator is ignored. There `taken` reports whether another account that is not a bot holds the username in any letter case. An account waiting to be deleted still holds its username.
 
 A reserved username fails validation with `USERNAME_RESERVED_VALUE` or `USERNAME_CANNOT_CONTAIN_RESERVED_TERMS`, and no `taken` value comes back for it.
 

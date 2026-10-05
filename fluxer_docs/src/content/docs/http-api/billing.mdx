@@ -193,7 +193,7 @@ The conversion requires a stored billing cycle on the account that differs from 
 
 <sup>3</sup> Considered only when the effective country is inside the European Union or European Economic Area. The effective country is the request-time geolocation country, then the client-observed country, then the pricing country
 
-<sup>4</sup> `pix` requires a BRL recurring price and `upi` requires an INR recurring price. Both are rejected for a gift price or a non-recurring price with 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`
+<sup>4</sup> `pix` requires a BRL recurring price and `upi` requires an INR recurring price. Both are rejected for a gift price or a non-recurring price with 400 `STRIPE_INVALID_PRODUCT_CONFIGURATION`. A recurring BRL price from the Fluxer price catalogue always checks out with `pix`, whatever this field says. A catalogue the operator manages has no such rule
 
 ### Response
 

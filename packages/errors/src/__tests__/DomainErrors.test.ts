@@ -3,9 +3,13 @@
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {AccountIdentityLockedError} from '@fluxer/errors/src/domains/auth/AccountIdentityLockedError';
+import {EmailUnavailableOnInstanceError} from '@fluxer/errors/src/domains/auth/EmailUnavailableOnInstanceError';
+import {UsernameSignInOnlyError} from '@fluxer/errors/src/domains/auth/UsernameSignInOnlyError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
+import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
@@ -66,6 +70,14 @@ it.each([BadRequestError, ForbiddenError, NotFoundError])(
 
 describe.each([
 	[APIErrorCodes.ACCOUNT_LIMITED, AccountLimitedError, ForbiddenError, HttpStatus.FORBIDDEN],
+	[APIErrorCodes.ACCOUNT_IDENTITY_LOCKED, AccountIdentityLockedError, ConflictError, HttpStatus.CONFLICT],
+	[
+		APIErrorCodes.EMAIL_UNAVAILABLE_ON_INSTANCE,
+		EmailUnavailableOnInstanceError,
+		BadRequestError,
+		HttpStatus.BAD_REQUEST,
+	],
+	[APIErrorCodes.USERNAME_SIGN_IN_ONLY, UsernameSignInOnlyError, BadRequestError, HttpStatus.BAD_REQUEST],
 	[APIErrorCodes.UNKNOWN_CHANNEL, UnknownChannelError, NotFoundError, HttpStatus.NOT_FOUND],
 	[APIErrorCodes.UNKNOWN_MESSAGE, UnknownMessageError, NotFoundError, HttpStatus.NOT_FOUND],
 	[APIErrorCodes.STORE_PURCHASE_INVALID, StorePurchaseInvalidError, BadRequestError, HttpStatus.BAD_REQUEST],

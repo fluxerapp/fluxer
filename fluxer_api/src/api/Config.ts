@@ -412,6 +412,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		},
 		instance: {
 			selfHosted: master.instance.self_hosted,
+			baseDomain: master.domain.base_domain,
 			autoJoinInviteCode: master.instance.auto_join_invite_code,
 			visionariesGuildId: master.instance.visionaries_guild_id,
 			visionariesGuildVisionaryRoleId: master.instance.visionaries_guild_visionary_role_id,
@@ -429,6 +430,8 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			setup: {
 				configured: master.instance.setup.configured,
 			},
+			accountIdentity: master.instance.account_identity,
+			tagStyle: master.instance.tag_style,
 		},
 		discovery: {
 			enabled: master.discovery.enabled,

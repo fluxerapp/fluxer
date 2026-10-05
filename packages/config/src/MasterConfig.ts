@@ -9,6 +9,10 @@ export const CACHE_PURGE_ADAPTER_NAMES = ['none', 'http'] as const;
 export type CachePurgeAdapterName = (typeof CACHE_PURGE_ADAPTER_NAMES)[number];
 export const STORE_PRODUCT_SLOT_NAMES = ['monthly', 'yearly', 'gift_1_month', 'gift_1_year'] as const;
 export type StoreProductSlotName = (typeof STORE_PRODUCT_SLOT_NAMES)[number];
+export const ACCOUNT_IDENTITY_MODE_NAMES = ['email', 'username'] as const;
+export type AccountIdentityModeName = (typeof ACCOUNT_IDENTITY_MODE_NAMES)[number];
+export const TAG_STYLE_NAMES = ['none', 'random'] as const;
+export type TagStyleName = (typeof TAG_STYLE_NAMES)[number];
 
 export interface InstanceBrandingConfig {
 	product_name: string;
@@ -299,6 +303,8 @@ export interface MasterConfig {
 		setup: {
 			configured: boolean;
 		};
+		account_identity: AccountIdentityModeName | null;
+		tag_style: TagStyleName | null;
 	};
 	dev: {
 		relax_registration_rate_limits: boolean;

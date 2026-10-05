@@ -28,16 +28,25 @@ const DISABLED_OPERATIONS: &[(&str, i32)] = &[
     ("MEMBER_LIST_UPDATES", 1 << 6),
 ];
 
+fn low_verification_label(username_sign_in: bool) -> &'static str {
+    if username_sign_in {
+        "Low (claimed account)"
+    } else {
+        "Low (verified email)"
+    }
+}
+
 pub fn settings_tab(
     config: &AdminConfig,
     guild: &GuildDetailInfo,
     csrf_token: &str,
     admin_acls: &[String],
+    username_sign_in: bool,
 ) -> Markup {
     let can_edit = acl::has_permission(admin_acls, acl::GUILD_UPDATE_SETTINGS);
 
     if !can_edit {
-        return settings_tab_readonly(guild);
+        return settings_tab_readonly(guild, username_sign_in);
     }
 
     let base = &config.base_path;
@@ -55,7 +64,7 @@ pub fn settings_tab(
                             guild.verification_level.unwrap_or(0).min(3),
                             &[
                                 (0, "None"),
-                                (1, "Low (verified email)"),
+                                (1, low_verification_label(username_sign_in)),
                                 (2, "Medium (5+ minutes)"),
                                 (3, "High (10+ minutes)"),
                             ],
@@ -223,10 +232,10 @@ fn select_field(
     }
 }
 
-fn settings_tab_readonly(guild: &GuildDetailInfo) -> Markup {
+fn settings_tab_readonly(guild: &GuildDetailInfo, username_sign_in: bool) -> Markup {
     let verification_label = match guild.verification_level.unwrap_or(0).min(3) {
         0 => "None",
-        1 => "Low (verified email)",
+        1 => low_verification_label(username_sign_in),
         2 => "Medium (5+ minutes)",
         3 => "High (10+ minutes)",
         _ => "Unknown",
@@ -283,5 +292,34 @@ fn readonly_field(label: &str, value: &str) -> Markup {
             dt class="text-sm font-medium text-neutral-700" { (label) }
             dd class="text-sm text-neutral-900" { (value) }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    fn guild() -> GuildDetailInfo {
+        serde_json::from_value(json!({
+            "id": "1500000000000000001",
+            "owner_id": "1400000000000000001",
+            "name": "Guild",
+            "verification_level": 1
+        }))
+        .expect("valid guild detail")
+    }
+
+    #[test]
+    fn low_verification_names_a_claimed_account_in_username_mode() {
+        let markup = settings_tab_readonly(&guild(), true).into_string();
+        assert!(markup.contains("Low (claimed account)"));
+        assert!(!markup.contains("verified email"));
+    }
+
+    #[test]
+    fn low_verification_names_a_verified_email_in_email_mode() {
+        let markup = settings_tab_readonly(&guild(), false).into_string();
+        assert!(markup.contains("Low (verified email)"));
     }
 }

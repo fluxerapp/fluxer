@@ -367,6 +367,11 @@ pub async fn dispatch(
             "Password reset sent successfully",
             "Failed to send password reset",
         ),
+        "revoke_recovery_kit" => DispatchOutcome::from_result(
+            client.revoke_recovery_kit(user_id).await,
+            "Recovery kit revoked",
+            "Failed to revoke recovery kit",
+        ),
         "remove_relationship" => {
             let Some(target_id) = get("target_user_id").or_else(|| get("target_id")) else {
                 return DispatchOutcome::error("Target user ID is required");

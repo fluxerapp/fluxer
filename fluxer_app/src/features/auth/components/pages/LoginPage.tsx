@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {AuthLoginLayout} from '@app/features/auth/flow/AuthLoginLayout';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
@@ -31,7 +32,7 @@ const LoginPage = observer(function LoginPage() {
 	const rawRedirect = params['get']('redirect_to');
 	const safeRedirect = safeRedirectTarget(rawRedirect);
 	const isHandoff = isHandoffRequest(params);
-	const initialEmail = params['get']('email') ?? undefined;
+	const initialIdentifier = params['get'](RuntimeConfig.usesUsernameSignIn ? 'login' : 'email') ?? undefined;
 	const registerSearch = safeRedirect ? {redirect_to: safeRedirect} : undefined;
 	const redirectPath = isHandoff ? undefined : (safeRedirect ?? '/');
 	return (
@@ -39,7 +40,7 @@ const LoginPage = observer(function LoginPage() {
 			redirectPath={redirectPath}
 			desktopHandoff={isHandoff}
 			excludeCurrentUser={false}
-			initialEmail={initialEmail}
+			initialIdentifier={initialIdentifier}
 			registerLink={
 				<AuthRouterLink to="/register" search={registerSearch} data-flx="auth.login-page.auth-router-link">
 					{i18n._(REGISTER_DESCRIPTOR)}

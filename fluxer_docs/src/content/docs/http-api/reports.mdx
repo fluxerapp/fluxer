@@ -367,6 +367,8 @@ One reporter creates at most 5 reports each hour across all report types.
 
 Issues a Digital Services Act verification code for an email address and returns a [success object](#success-object).
 
+An instance where members sign in with a username sends no email, and returns 400 `EMAIL_UNAVAILABLE_ON_INSTANCE` before it issues a code.
+
 The address must be deliverable. A domain with no MX, A, or AAAA record returns 400 `INVALID_FORM_BODY` with `INVALID_EMAIL_ADDRESS` on `email`. A temporary DNS failure does not reject the address.
 
 ### JSON body
@@ -402,7 +404,7 @@ The response is 200 when the provider accepts the message and when it refuses it
 
 <RouteHeader method="POST" path="/v1/reports/dsa/email/verify" unauthenticated />
 
-Consumes a verification code and returns the [ticket object](#ticket-object) that [Create DSA report](#create-dsa-report) requires.
+Consumes a verification code and returns the [ticket object](#ticket-object) that [Create DSA report](#create-dsa-report) requires. An instance where members sign in with a username returns 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`.
 
 ### JSON body
 

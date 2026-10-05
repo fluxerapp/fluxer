@@ -11,6 +11,10 @@ import type {
 	InstanceEmailSmtpTestRequest,
 	InstanceEmailSmtpTestResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {
+	InstanceAccountIdentityResponse,
+	InstanceAccountIdentityUpdateRequest,
+} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 
 const logger = new Logger('SetupWizardClient');
 
@@ -32,6 +36,15 @@ export async function uploadBrandingAsset(
 ): Promise<InstanceConfigResponse> {
 	const body: BrandingAssetUploadRequest = {kind, image};
 	const response = await http.post<InstanceConfigResponse>(Endpoints.ADMIN_INSTANCE_CONFIG_BRANDING_ASSETS, {body});
+	return response.body;
+}
+
+export async function setSetupAccountIdentity(
+	mode: InstanceAccountIdentityUpdateRequest['mode'],
+	tagStyle?: InstanceAccountIdentityUpdateRequest['tag_style'],
+): Promise<InstanceAccountIdentityResponse> {
+	const body: InstanceAccountIdentityUpdateRequest = tagStyle === undefined ? {mode} : {mode, tag_style: tagStyle};
+	const response = await http.put<InstanceAccountIdentityResponse>(Endpoints.INSTANCE_SETUP_ACCOUNT_IDENTITY, {body});
 	return response.body;
 }
 

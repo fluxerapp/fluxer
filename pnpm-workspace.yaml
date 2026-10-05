@@ -139,6 +139,7 @@ catalog:
   msw: 2.15.0
   nodemailer: 10.0.10
   onnxruntime-web: 1.30.0
+  pdf-lib: 1.17.1
   pg: 8.23.0
   pino: 10.3.1
   pino-pretty: 13.1.3

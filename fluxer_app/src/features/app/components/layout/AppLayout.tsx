@@ -7,6 +7,7 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import AccountManager from '@app/features/auth/state/AccountManager';
 import Authentication from '@app/features/auth/state/Authentication';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
+import {RecoveryKitReminderGate} from '@app/features/user/components/RecoveryKitReminderGate';
 import {MediaDeviceStartupPreloadManager} from '@app/features/voice/components/MediaDeviceStartupPreloadManager';
 import {NewDeviceMonitoringManager} from '@app/features/voice/components/NewDeviceMonitoringManager';
 import {VoiceReconnectionManager} from '@app/features/voice/components/VoiceReconnectionManager';
@@ -39,6 +40,7 @@ export const AppLayout = observer(({children}: {children: React.ReactNode}) => {
 				<MediaDeviceStartupPreloadManager data-flx="app.app-layout.media-device-startup-preload-manager" />
 			)}
 			{isAuthenticated && <NewDeviceMonitoringManager data-flx="app.app-layout.new-device-monitoring-manager" />}
+			{isAuthenticated && <RecoveryKitReminderGate data-flx="app.app-layout.recovery-kit-reminder-gate" />}
 			<div
 				className={clsx(styles.appLayout, appState.isStandalone && styles.appLayoutStandalone)}
 				data-flx="app.app-layout.app-layout"

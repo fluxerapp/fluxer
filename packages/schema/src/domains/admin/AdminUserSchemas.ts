@@ -265,6 +265,13 @@ export const SendPasswordResetRequest = z.object({
 
 export type SendPasswordResetRequest = z.infer<typeof SendPasswordResetRequest>;
 
+export const AdminPasswordResetLinkResponse = z.object({
+	url: z.string().describe('Password reset link to hand to the user. It is shown only once'),
+	expires_at: z.iso.datetime().describe('ISO 8601 timestamp when the link stops working'),
+});
+
+export type AdminPasswordResetLinkResponse = z.infer<typeof AdminPasswordResetLinkResponse>;
+
 export const ChangeUsernameRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to change username for'),
 	username: UsernameType.describe('New username for the user'),

@@ -123,6 +123,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.accountRepo.findDiscriminatorsByUsername(username);
 	}
 
+	async findUsersByUsername(username: string): Promise<Array<User>> {
+		return this.accountRepo.findUsersByUsername(username);
+	}
+
 	async findByEmail(email: string): Promise<User | null> {
 		return this.accountRepo.findByEmail(email);
 	}

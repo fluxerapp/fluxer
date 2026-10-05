@@ -132,6 +132,10 @@ Several source messages append a further recovery sentence with a template value
 
 You don't have access to this resource or feature
 
+### `ACCOUNT_IDENTITY_LOCKED`
+
+The sign-in method is already set and can't be changed
+
 ### `ACCOUNT_LIMITED`
 
 Messaging is paused on your account
@@ -403,6 +407,10 @@ Magic link has already been used
 ### `EMAIL_SERVICE_NOT_TESTABLE`
 
 Email service is temporarily unavailable
+
+### `EMAIL_UNAVAILABLE_ON_INSTANCE`
+
+This instance doesn't use email
 
 ### `EMAIL_VERIFICATION_REQUIRED`
 
@@ -1176,6 +1184,10 @@ We couldn't update the resource
 
 This username is not available
 
+### `USERNAME_SIGN_IN_ONLY`
+
+This is only available on instances where people sign in with a username
+
 ### `USER_BANNED_FROM_GUILD`
 
 This user is banned from this community
@@ -1421,6 +1433,10 @@ Discoverable communities must have a verification level of at least Low
 
 `Discriminator must be {min}–{max} digits`
 
+### `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE`
+
+This instance doesn't use tags. Your username is unique on its own
+
 ### `DISCRIMINATOR_OUT_OF_RANGE`
 
 Discriminator must be between {min} and {max}
@@ -1577,6 +1593,10 @@ Community ID is required for channel message and member search indexes
 
 Image size exceeds {maxSize} bytes
 
+### `INSTANCE_ADDRESS_REQUIRED`
+
+This server uses usernames. Enter the username you want followed by @{host}
+
 ### `INTEGER_OUT_OF_INT64_RANGE`
 
 Integer value is out of the valid int64 range
@@ -1645,6 +1665,10 @@ Must be a valid ISO timestamp
 
 Invalid JSON in `payload_json`
 
+### `INVALID_LOGIN_OR_PASSWORD`
+
+Invalid username or password
+
 ### `INVALID_MESSAGE_DATA`
 
 Invalid message data
@@ -1696,6 +1720,10 @@ Invalid email or password
 ### `INVALID_PROOF_TOKEN`
 
 Invalid proof token
+
+### `INVALID_RECOVERY_KEY`
+
+Invalid username or recovery key
 
 ### `INVALID_ROLE_ID`
 
@@ -1961,6 +1989,10 @@ System channel must be a text channel
 
 This tag is already taken
 
+### `TAG_STYLE_REQUIRES_EMAIL_SIGN_IN`
+
+Tags are only available when people sign in with email
+
 ### `THIS_VANITY_URL_IS_ALREADY_TAKEN`
 
 This vanity URL is already taken
@@ -2016,6 +2048,10 @@ URL must be between {min} and {max} characters
 ### `URL_NOT_PUBLICLY_ROUTABLE`
 
 URL must resolve to a publicly routable address
+
+### `USERNAME_ALREADY_TAKEN`
+
+This username is already taken
 
 ### `USERNAME_CANNOT_CONTAIN_RESERVED_TERMS`
 

@@ -71,34 +71,51 @@ describe('harvestMessages', () => {
 	});
 });
 
+function userDataParams(overrides: Partial<Parameters<typeof buildUserDataJson>[0]> = {}) {
+	return {
+		user: new User({...EMPTY_USER_ROW, user_id: AUTHOR, username: 'exporter', discriminator: 1}),
+		userId: AUTHOR,
+		productName: 'Fluxer',
+		authSessions: [],
+		relationships: [],
+		userNotes: new Map(),
+		userSettings: null,
+		guildMemberships: [],
+		guildSettings: [],
+		savedMessages: [],
+		privateChannels: [],
+		favoriteMemes: [],
+		pushSubscriptions: [],
+		webAuthnCredentials: [],
+		mfaBackupCodes: [],
+		recoveryKitCreatedAt: null,
+		createdGiftCodes: [],
+		payments: [],
+		storePurchases: [],
+		oauthClients: [],
+		connections: [],
+		pinnedDms: [],
+		authorizedIps: [],
+		activityData: {last_active_at: null, last_active_ip: null},
+		...overrides,
+	};
+}
+
 describe('buildUserDataJson', () => {
 	it('exports the store purchases in their public shape', () => {
 		const purchase = buildStorePurchaseRow({user_id: AUTHOR});
-		const data = buildUserDataJson({
-			user: new User({...EMPTY_USER_ROW, user_id: AUTHOR, username: 'exporter', discriminator: 1}),
-			userId: AUTHOR,
-			productName: 'Fluxer',
-			authSessions: [],
-			relationships: [],
-			userNotes: new Map(),
-			userSettings: null,
-			guildMemberships: [],
-			guildSettings: [],
-			savedMessages: [],
-			privateChannels: [],
-			favoriteMemes: [],
-			pushSubscriptions: [],
-			webAuthnCredentials: [],
-			mfaBackupCodes: [],
-			createdGiftCodes: [],
-			payments: [],
-			storePurchases: [purchase],
-			oauthClients: [],
-			connections: [],
-			pinnedDms: [],
-			authorizedIps: [],
-			activityData: {last_active_at: null, last_active_ip: null},
-		});
+		const data = buildUserDataJson(userDataParams({storePurchases: [purchase]}));
 		expect(data.store_purchases).toEqual([mapStorePurchaseToResponse(purchase)]);
+	});
+
+	it('exports when the recovery kit was created and nothing else about it', () => {
+		const createdAt = new Date('2026-10-01T12:00:00.000Z');
+		const data = buildUserDataJson(userDataParams({recoveryKitCreatedAt: createdAt}));
+		expect(data.recovery_kit).toEqual({created_at: '2026-10-01T12:00:00.000Z'});
+	});
+
+	it('leaves the recovery kit out when the account has none', () => {
+		const data = buildUserDataJson(userDataParams());
+		expect('recovery_kit' in data).toBe(false);
 	});
 });

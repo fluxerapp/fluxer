@@ -716,6 +716,8 @@ The `Caddyfile` is a bind mount, so the edge reads the copy that sits on disk be
 
 ## Email
 
+Only an instance where members sign in with email sends mail. A username instance sends none whatever the values below hold, and needs none of them. [Sign-in methods](/operator/sign-in/) covers the difference.
+
 Email is off by default, and the conditions below turn it on. The email switch must be on. It is the value saved in the admin dashboard, or `FLUXER_EMAIL_ENABLED` when the dashboard has no saved value. Also, the provider must be `smtp` with a complete SMTP configuration, meaning `FLUXER_EMAIL_FROM_EMAIL`, `FLUXER_EMAIL_SMTP_HOST`, `FLUXER_EMAIL_SMTP_PORT`, `FLUXER_EMAIL_SMTP_USERNAME`, and `FLUXER_EMAIL_SMTP_PASSWORD` are all non-empty. All are optional.
 
 The same conditions turn on a DNS check at registration. The check runs when email is on by the rule above. A switch or SMTP value saved in the admin dashboard wins over the matching variable. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback, and an address at a domain that publishes neither is answered `That email domain cannot receive mail.` however well formed it is. The first admin account is no exception, so an owner address at a `.lan`, `.internal` or `home.arpa` name needs email left off.
@@ -1020,6 +1022,7 @@ The API and worker read configuration saved by older releases under these rules:
 - Registration accepts `adminRegistrationUrlsEnabled` only when `admin_registration_urls_enabled` is absent. Missing registration settings default to `open` with admin registration URLs enabled.
 - Missing SSO settings default to disabled. A missing enforcement flag takes the value of the enabled flag, and automatic provisioning defaults to on. Stored flags require `true` or `false`.
 - SSO allowed domains accept a JSON string array or a legacy comma-separated list of at most 100 entries. Domains are trimmed, lowercased, IDNA encoded and deduplicated. An empty list leaves domains unrestricted. Invalid lists must be repaired even while SSO is disabled.
+- A self-hosted instance with no stored sign-in method gets one on its next start, by the rules in [Sign-in methods](/operator/sign-in/#instances-that-already-exist). Until that write succeeds the instance behaves as an email instance.
 - Missing registration URL and pending-registration lists mean empty lists. Invalid records are rejected rather than discarded. Timestamps require an explicit UTC marker or offset, and null is accepted only for nullable fields.
 
 Explicit `false` values and supported null clears remain valid. Branding and integration strings retain their documented trimming and blank-value behaviour. Media size and lifetime adjustments also remain unchanged. These checks do not make a multi-section update atomic. Read back the result after a failed write before retrying.
@@ -1215,6 +1218,14 @@ Default empty. The incident history page of the status page. Compose forwards it
 #### `FLUXER_INSTANCE_SETUP_CONFIGURED`
 
 Default `false`. Whether setup is marked complete. The stored `app_public_config` row wins whenever its `setup.configured` is a boolean. This variable supplies the default only while no such row exists, and only on a self-hosted instance. Off a self-hosted instance the state is always true whatever this says. Compose forwards it from `.env`.
+
+#### `FLUXER_ACCOUNT_IDENTITY`
+
+Default empty, which means `email` when SMTP is set up and `username` otherwise. How members sign in on a new self-hosted instance, `username` or `email`. Case is ignored, and any other value fails startup. The API reads it once, on the first start of an instance with no stored sign-in method, and stores the result. An instance that is already in use is stored as `email` whatever this says, by the rules in [Instances that already exist](/operator/sign-in/#instances-that-already-exist). The setup wizard can change the stored method until setup is complete or the first account exists, and after that nothing changes it. Off a self-hosted instance the method is always `email`. Compose forwards it from `.env`. See [Sign-in methods](/operator/sign-in/).
+
+#### `FLUXER_TAG_STYLE`
+
+Default empty, which means `none`. How usernames are tagged on a new self-hosted email instance. `none` gives unique usernames with no tag, and `random` gives every account a random tag. A username instance always uses `none` and ignores this value. Case is ignored, and any other value fails startup. The API reads it once, together with `FLUXER_ACCOUNT_IDENTITY`, on the first start of an instance with no stored sign-in method. An instance that is already in use is stored as `random` whatever this says. The setup wizard can change it until setup is complete or the first account exists. Compose forwards it from `.env`. See [Sign-in methods](/operator/sign-in/).
 
 #### `FLUXER_AUTO_JOIN_INVITE_CODE`
 
@@ -1720,7 +1731,7 @@ Single-community mode, direct messages and friends, the premium model, and optio
 
 #### Instance Config, Runtime Integrations
 
-The Klipy GIF key, the YouTube Data API key, email delivery with an SMTP connection test, and Bluesky OAuth.
+The Klipy GIF key, the YouTube Data API key, email delivery with an SMTP connection test, and Bluesky OAuth. Email delivery and its test show only on an email instance.
 
 #### Instance Config, Premium & billing
 

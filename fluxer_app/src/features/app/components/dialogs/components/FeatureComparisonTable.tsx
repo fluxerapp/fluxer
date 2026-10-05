@@ -4,6 +4,7 @@ import {ComparisonCheckRow} from '@app/features/app/components/dialogs/component
 import {ComparisonRow} from '@app/features/app/components/dialogs/components/ComparisonRow';
 import styles from '@app/features/app/components/dialogs/components/FeatureComparisonTable.module.css';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import {COMMUNITIES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
@@ -111,7 +112,14 @@ export const FeatureComparisonTable = observer(() => {
 		}),
 		[i18n.locale],
 	);
-	const availablePerks = useMemo(() => LIMIT_TIER_PERKS.filter((perk) => perk.status === 'available'), []);
+	const hideCustomTag = RuntimeConfig.usesUniqueUsernames;
+	const availablePerks = useMemo(
+		() =>
+			LIMIT_TIER_PERKS.filter(
+				(perk) => perk.status === 'available' && !(hideCustomTag && perk.id === 'custom_discriminator'),
+			),
+		[hideCustomTag],
+	);
 	const formatPerkValue = (perk: LimitTierPerk, value: number, isStock: boolean): string => {
 		if (!isNumericTierPerk(perk)) return String(value);
 		const resolvedValue = perk.limitKey

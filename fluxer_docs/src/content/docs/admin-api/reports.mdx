@@ -32,7 +32,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | --- | --- | --- |
 | report_id | snowflake | The ID of the report |
 | reporter_id<sup>1</sup> | ?snowflake | The account that filed the report |
-| reporter_tag<sup>1</sup> <sup>2</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
+| reporter_tag<sup>1</sup> <sup>2</sup> <sup>10</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
 | reporter_username<sup>1</sup> <sup>2</sup> | ?string | The username of the reporter |
 | reporter_global_name<sup>1</sup> <sup>2</sup> | ?string | The display name of the reporter, or null when unset |
 | reporter_discriminator<sup>1</sup> <sup>2</sup> | ?string | The zero-padded four-digit reporter discriminator |
@@ -45,7 +45,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | category | ?string | The category the reporter filed the report under |
 | additional_info | ?string | The free-text detail the reporter supplied |
 | reported_user_id | ?snowflake | The reported account, or null for a guild report |
-| reported_user_tag<sup>2</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
+| reported_user_tag<sup>2</sup> <sup>10</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
 | reported_user_username<sup>2</sup> | ?string | The username of the reported account |
 | reported_user_global_name<sup>2</sup> | ?string | The display name of the reported account, or null when unset |
 | reported_user_discriminator<sup>2</sup> | ?string | The zero-padded four-digit reported account discriminator |
@@ -89,6 +89,8 @@ A report is written once, when the reporter files it. [Update report](#update-re
 <sup>8</sup> Computed when the report was filed by applying the guild setting over the channel setting
 
 <sup>9</sup> Null while the report is PENDING and set when it moves to RESOLVED
+
+<sup>10</sup> On an instance with the `none` tag style the tag of an account that is not a bot is the bare username, with no `#0000`
 
 ### Example
 

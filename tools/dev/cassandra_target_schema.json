@@ -6375,6 +6375,25 @@
 			"options": ""
 		},
 		{
+			"name": "user_recovery_kits",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "secret_hash",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
 			"name": "ncmec_attachment_submissions",
 			"columns": [
 				{

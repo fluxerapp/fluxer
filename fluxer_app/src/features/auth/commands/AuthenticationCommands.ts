@@ -104,6 +104,13 @@ export function isRegistrationPendingApprovalResponse(
 
 export type ResetPasswordResponse = AuthTokenResponse | MfaLoginResponse;
 
+interface RecoveryKitIssued {
+	recovery_key: string;
+	recovery_kit_created_at: string;
+}
+
+export type RecoverAccountResponse = (AuthTokenResponse | MfaLoginResponse) & RecoveryKitIssued;
+
 interface DesktopHandoffInitiateResponse {
 	code: string;
 	expires_at: string;
@@ -132,22 +139,27 @@ export interface DesktopHandoffInfoResponse {
 	client_info?: DesktopHandoffInfoClientInfo | null;
 }
 
-interface LoginParams {
-	email: string;
+export type LoginIdentifier = {email: string; login?: undefined} | {login: string; email?: undefined};
+
+type LoginParams = LoginIdentifier & {
 	password: string;
 	inviteCode?: string;
-}
+};
 
 function withInviteCode<T extends object>(body: T, inviteCode?: string): T & {invite_code?: string} {
 	return inviteCode ? {...body, invite_code: inviteCode} : body;
 }
 
-function loginBody({email, password, inviteCode}: Pick<LoginParams, 'email' | 'password' | 'inviteCode'>): {
-	email: string;
+function loginBody(params: LoginParams): {
+	email?: string;
+	login?: string;
 	password: string;
 	invite_code?: string;
 } {
-	return withInviteCode({email, password}, inviteCode);
+	if (params.login !== undefined) {
+		return withInviteCode({login: params.login, password: params.password}, params.inviteCode);
+	}
+	return withInviteCode({email: params.email, password: params.password}, params.inviteCode);
 }
 
 function mfaTotpBody(
@@ -218,14 +230,10 @@ function verificationResultFromError(
 	return responseErr.status === invalidStatus ? invalidResult : VerificationResult.SERVER_ERROR;
 }
 
-export async function login({
-	email,
-	password,
-	inviteCode,
-}: LoginParams): Promise<LoginResponse | IpAuthorizationRequiredResponse> {
+export async function login(params: LoginParams): Promise<LoginResponse | IpAuthorizationRequiredResponse> {
 	try {
 		const response = await http.post<LoginResponse>(Endpoints.AUTH_LOGIN, {
-			body: loginBody({email, password, inviteCode}),
+			body: loginBody(params),
 			headers: withAuthLocaleHeader(),
 		});
 		logger.debug('Login successful', {mfa: response.body?.mfa});
@@ -234,7 +242,7 @@ export async function login({
 		if (error instanceof HttpError) {
 			const ipAuthorization = loginIpAuthorizationResponse(error);
 			if (ipAuthorization) {
-				logger.info('Login requires IP authorization', {email});
+				logger.info('Login requires IP authorization', {email: params.email});
 				return ipAuthorization;
 			}
 		}
@@ -360,6 +368,19 @@ export async function getUsernameSuggestions(globalName: string): Promise<Array<
 	}
 }
 
+interface UsernameAvailabilityResponse {
+	available: boolean;
+}
+
+export async function checkUsernameAvailability(username: string, signal?: AbortSignal): Promise<boolean> {
+	const response = await http.get<UsernameAvailabilityResponse>(Endpoints.AUTH_USERNAME_AVAILABILITY, {
+		query: {username},
+		headers: withAuthLocaleHeader(),
+		signal,
+	});
+	return response.body.available;
+}
+
 export async function forgotPassword(email: string): Promise<void> {
 	try {
 		await http.post(Endpoints.AUTH_FORGOT_PASSWORD, {
@@ -397,6 +418,28 @@ export async function resetPassword(token: string, password: string): Promise<Re
 		return responseBody;
 	} catch (error) {
 		logger.error('Password reset failed', error);
+		throw error;
+	}
+}
+
+export async function recoverAccount({
+	login,
+	recoveryKey,
+	password,
+}: {
+	login: string;
+	recoveryKey: string;
+	password: string;
+}): Promise<RecoverAccountResponse> {
+	try {
+		const response = await http.post<RecoverAccountResponse>(Endpoints.AUTH_RECOVER, {
+			body: {login, recovery_key: recoveryKey, password},
+			headers: withAuthLocaleHeader(),
+		});
+		logger.info('Account recovery successful');
+		return response.body;
+	} catch (error) {
+		logger.error('Account recovery failed', error);
 		throw error;
 	}
 }

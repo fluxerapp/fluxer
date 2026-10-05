@@ -22,7 +22,7 @@ use crate::{
         },
         layout::admin_layout,
     },
-    utils::timestamps::format_admin_timestamp,
+    utils::{timestamps::format_admin_timestamp, user_tag::user_tag},
 };
 use maud::{Markup, html};
 
@@ -54,7 +54,7 @@ fn reporter_label(report: &ReportEntry) -> String {
     }
     if let Some(username) = &report.reporter_username {
         let discriminator = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        return format!("{username}#{discriminator}");
+        return user_tag(username, discriminator, false);
     }
     if let Some(email) = &report.reporter_email {
         return email.to_owned();
@@ -71,7 +71,7 @@ fn reported_user_label(report: &ReportEntry) -> String {
             .reported_user_discriminator
             .as_deref()
             .unwrap_or("0000");
-        return format!("{username}#{discriminator}");
+        return user_tag(username, discriminator, false);
     }
     format!(
         "User {}",

@@ -7,7 +7,11 @@ import {
 	PASSWORD_DESCRIPTOR,
 	TWO_FACTOR_AUTHENTICATION_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {shouldShowClaimedAccountSettings} from '@app/features/user/components/settings_utils/search_index/SearchIndexHelpers';
+import {
+	shouldShowClaimedAccountSettings,
+	shouldShowEmailAccountSettings,
+	shouldShowRecoveryKitSettings,
+} from '@app/features/user/components/settings_utils/search_index/SearchIndexHelpers';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	CODES_DESCRIPTOR,
@@ -29,6 +33,22 @@ const CONTACT_DESCRIPTOR = msg({
 });
 const CHANGE_YOUR_EMAIL_ADDRESS_DESCRIPTOR = msg({
 	message: 'Change your email address',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+const RECOVERY_KIT_DESCRIPTOR = msg({
+	message: 'Recovery kit',
+	comment: 'Settings search entry label for the account recovery kit used to reset a forgotten password.',
+});
+const LOST_PASSWORD_DESCRIPTOR = msg({
+	message: 'Lost password',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const PRINT_DESCRIPTOR = msg({
+	message: 'Print',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const CREATE_A_RECOVERY_KIT_DESCRIPTOR = msg({
+	message: 'Create a recovery kit to reset a forgotten password',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const CREDENTIALS_DESCRIPTOR = msg({
@@ -195,7 +215,7 @@ export const accountSecurityIndex: Array<SearchableSettingDescriptor> = [
 		label: EMAIL_DESCRIPTOR,
 		keywords: [EMAIL_DESCRIPTOR, MAIL_DESCRIPTOR, ADDRESS_DESCRIPTOR, CONTACT_DESCRIPTOR],
 		description: CHANGE_YOUR_EMAIL_ADDRESS_DESCRIPTOR,
-		isVisible: shouldShowClaimedAccountSettings,
+		isVisible: shouldShowEmailAccountSettings,
 	},
 	{
 		id: 'account-password',
@@ -211,6 +231,21 @@ export const accountSecurityIndex: Array<SearchableSettingDescriptor> = [
 		],
 		description: CHANGE_YOUR_PASSWORD_DESCRIPTOR,
 		isVisible: shouldShowClaimedAccountSettings,
+	},
+	{
+		id: 'account-recovery-kit',
+		tabType: 'account_security',
+		sectionId: 'account',
+		label: RECOVERY_KIT_DESCRIPTOR,
+		keywords: [
+			RECOVERY_KIT_DESCRIPTOR,
+			RECOVERY_DESCRIPTOR,
+			LOST_PASSWORD_DESCRIPTOR,
+			PRINT_DESCRIPTOR,
+			PASSWORD_DESCRIPTOR,
+		],
+		description: CREATE_A_RECOVERY_KIT_DESCRIPTOR,
+		isVisible: shouldShowRecoveryKitSettings,
 	},
 	{
 		id: 'account-2fa',

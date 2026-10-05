@@ -4,6 +4,10 @@ import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
 import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import {createUserID} from '@app/api/BrandedTypes';
+import {
+	RequireEmailAccountIdentity,
+	RequireUsernameAccountIdentity,
+} from '@app/api/middleware/AccountIdentityMiddleware';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -16,6 +20,7 @@ import {ListUserGuildsResponse} from '@fluxer/schema/src/domains/admin/AdminGuil
 import {SearchUsersResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
 	AdminAclListResponse,
+	AdminPasswordResetLinkResponse,
 	AdminUserAclsRequest,
 	AdminUserBanNoteRequest,
 	AdminUserBanRequest,
@@ -632,6 +637,7 @@ export function UserAdminController(app: HonoApp) {
 		'/admin/users/:user_id/email',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		RequireEmailAccountIdentity,
 		Validator('param', UserIdParam),
 		Validator('json', AdminUserEmailUpdateRequest),
 		OpenAPI({
@@ -664,6 +670,7 @@ export function UserAdminController(app: HonoApp) {
 		'/admin/users/:user_id/email-verification',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		RequireEmailAccountIdentity,
 		Validator('param', UserIdParam),
 		OpenAPI({
 			operationId: 'verify_admin_user_email',
@@ -695,6 +702,7 @@ export function UserAdminController(app: HonoApp) {
 		'/admin/users/:user_id/verification-email',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		RequireEmailAccountIdentity,
 		Validator('param', UserIdParam),
 		OpenAPI({
 			operationId: 'resend_admin_user_verification_email',
@@ -723,6 +731,7 @@ export function UserAdminController(app: HonoApp) {
 		'/admin/users/:user_id/password-reset',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		RequireEmailAccountIdentity,
 		Validator('param', UserIdParam),
 		OpenAPI({
 			operationId: 'send_admin_user_password_reset',
@@ -740,6 +749,65 @@ export function UserAdminController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason');
 			const {user_id: userId} = ctx.req.valid('param');
 			await adminService.userService.securityService.sendPasswordReset({user_id: userId}, adminUserId, auditLogReason);
+			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/admin/users/:user_id/password-reset-link',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_CREATE_PASSWORD_RESET_LINK),
+		RequireUsernameAccountIdentity,
+		Validator('param', UserIdParam),
+		OpenAPI({
+			operationId: 'create_admin_user_password_reset_link',
+			summary: 'Create user password reset link',
+			responseSchema: AdminPasswordResetLinkResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Create a one-time password reset link on an instance where people sign in with a username. Hand the link to the user yourself. It works once and expires after an hour. Deletes the recovery kit of the account. Creates audit log entry. Requires USER_CREATE_PASSWORD_RESET_LINK permission and every ACL the target account holds. Fails with USERNAME_SIGN_IN_ONLY on email instances.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
+			const {user_id: userId} = ctx.req.valid('param');
+			return ctx.json(
+				await adminService.userService.securityService.createPasswordResetLink(
+					{user_id: userId},
+					adminUserId,
+					auditLogReason,
+					ctx.get('adminUserAcls'),
+				),
+			);
+		},
+	);
+	app.delete(
+		'/admin/users/:user_id/recovery-kit',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_DELETE_RECOVERY_KIT),
+		RequireUsernameAccountIdentity,
+		Validator('param', UserIdParam),
+		OpenAPI({
+			operationId: 'revoke_admin_user_recovery_kit',
+			summary: 'Revoke user recovery kit',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Deletes the recovery kit of an account on an instance where people sign in with a username, so its key stops working. Creates audit log entry. Requires USER_DELETE_RECOVERY_KIT permission and every ACL the target account holds. Fails with USERNAME_SIGN_IN_ONLY on email instances.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const {user_id: userId} = ctx.req.valid('param');
+			await adminService.userService.securityService.revokeRecoveryKit(
+				{user_id: userId},
+				ctx.get('adminUserId'),
+				ctx.get('auditLogReason'),
+				ctx.get('adminUserAcls'),
+			);
 			return ctx.body(null, 204);
 		},
 	);

@@ -189,6 +189,7 @@ export interface HonoEnv {
 		oauth2TokenRepository: IOAuth2TokenRepository;
 		botAuthService: BotAuthService;
 		sudoModeValid: boolean;
+		captchaVerified?: boolean;
 		sudoModeToken: string | null;
 		instanceConfigRepository: InstanceConfigRepository;
 		singleCommunityService: SingleCommunityService;

@@ -226,6 +226,7 @@ fn ban_action_result(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn flash_response(
     config: &crate::config::AdminConfig,
     auth: &AuthContext,
@@ -234,13 +235,20 @@ pub fn flash_response(
     message: &str,
     ban_cfg: &templates::pages::bans::BanConfig,
     csrf_token: &str,
+    username_sign_in: bool,
 ) -> Response {
     if is_htmx {
         render_inline_flash(level, message)
     } else {
         let flash = to_flash(level, message);
-        let markup =
-            templates::pages::bans::bans_page(config, auth, ban_cfg, Some(&flash), csrf_token);
+        let markup = templates::pages::bans::bans_page(
+            config,
+            auth,
+            ban_cfg,
+            Some(&flash),
+            csrf_token,
+            username_sign_in,
+        );
         Html(markup.into_string()).into_response()
     }
 }

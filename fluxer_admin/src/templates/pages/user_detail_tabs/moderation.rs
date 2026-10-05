@@ -63,6 +63,7 @@ pub struct CurrentBan<'a> {
 pub struct ModerationContext<'a> {
     pub deletion_scheduler: Option<&'a AdminUser>,
     pub current_ban: Option<CurrentBan<'a>>,
+    pub username_sign_in: bool,
 }
 
 pub fn find_current_ban<'a>(user: &AdminUser, logs: &'a [AuditLogEntry]) -> Option<CurrentBan<'a>> {
@@ -118,8 +119,8 @@ pub fn moderation_tab(
     html! {
         div class="space-y-6" {
             div class="grid grid-cols-1 gap-6 md:grid-cols-2" {
-                (ban_actions_card(base, user, csrf_token, context.current_ban.as_ref()))
-                (deletion_card(base, user, csrf_token, context.deletion_scheduler))
+                (ban_actions_card(base, user, csrf_token, context.current_ban.as_ref(), context.username_sign_in))
+                (deletion_card(base, user, csrf_token, context.deletion_scheduler, context.username_sign_in))
             }
             @if can_delete_all_messages {
                 (delete_all_messages_card(base, user, csrf_token, delete_all_messages_dry_run))
@@ -131,11 +132,20 @@ pub fn moderation_tab(
     }
 }
 
+fn notify_user_checkbox(username_sign_in: bool, label: &str) -> Markup {
+    if username_sign_in {
+        html! { input type="hidden" name="notify_user_present" value="1"; }
+    } else {
+        opt_out_checkbox("notify_user", label)
+    }
+}
+
 fn ban_actions_card(
     base: &str,
     user: &AdminUser,
     csrf_token: &str,
     current_ban: Option<&CurrentBan<'_>>,
+    username_sign_in: bool,
 ) -> Markup {
     html! {
         (card_with_header("Ban Actions", html! {
@@ -159,7 +169,7 @@ fn ban_actions_card(
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary";
-                        (opt_out_checkbox("notify_user", "Email the user that the suspension was lifted"))
+                        (notify_user_checkbox(username_sign_in, "Email the user that the suspension was lifted"))
                         (form_actions(html! {
                             (submit_button("Unban User"))
                         }))
@@ -194,7 +204,7 @@ fn ban_actions_card(
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary";
-                        (opt_out_checkbox("notify_user", "Email the user about this suspension (temporary bans only)"))
+                        (notify_user_checkbox(username_sign_in, "Email the user about this suspension (temporary bans only)"))
                         (form_actions(html! {
                             (submit_button("Ban/Suspend User"))
                         }))
@@ -335,6 +345,7 @@ fn deletion_card(
     user: &AdminUser,
     csrf_token: &str,
     scheduler: Option<&AdminUser>,
+    username_sign_in: bool,
 ) -> Markup {
     html! {
         (card_with_header("Account Deletion", html! {
@@ -353,7 +364,9 @@ fn deletion_card(
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary";
-                        (checkbox("notify_user", "true", "Email the user that the deletion was cancelled", false, true))
+                        @if !username_sign_in {
+                            (checkbox("notify_user", "true", "Email the user that the deletion was cancelled", false, true))
+                        }
                         (checkbox("confirm", "true", &confirmation, false, true))
                         (form_actions(html! {
                             (danger_button("Cancel Deletion"))
@@ -397,7 +410,7 @@ fn deletion_card(
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary";
-                        (opt_out_checkbox("notify_user", "Email the user about the scheduled deletion"))
+                        (notify_user_checkbox(username_sign_in, "Email the user about the scheduled deletion"))
                         (form_actions(html! {
                             (submit_button("Schedule Deletion"))
                         }))
@@ -776,7 +789,8 @@ mod tests {
             "deletion_scheduled_at": "2026-08-31T17:40:29.690Z"
         }));
         let scheduler = user(json!({"id": "1400000000000000001", "username": "lilith"}));
-        let markup = deletion_card("/admin", &target, "csrf", Some(&scheduler)).into_string();
+        let markup =
+            deletion_card("/admin", &target, "csrf", Some(&scheduler), false).into_string();
         assert!(markup.contains(r#"href="/admin/users/1400000000000000001""#));
         assert!(markup.contains("lilith"));
         assert!(markup.contains("Report batch 12"));
@@ -793,7 +807,7 @@ mod tests {
 
     #[test]
     fn schedule_form_makes_the_reason_an_explicit_choice() {
-        let markup = deletion_card("/admin", &user(json!({})), "csrf", None).into_string();
+        let markup = deletion_card("/admin", &user(json!({})), "csrf", None, false).into_string();
         assert!(markup.contains(r#"<option value="" disabled selected>Choose a reason</option>"#));
         assert!(!markup.contains(r#"<option value="1" selected>"#));
         assert!(!markup.contains("replace_pending_deletion_at"));
@@ -801,22 +815,46 @@ mod tests {
 
     #[test]
     fn schedule_form_emails_the_user_by_default() {
-        let markup = deletion_card("/admin", &user(json!({})), "csrf", None).into_string();
+        let markup = deletion_card("/admin", &user(json!({})), "csrf", None, false).into_string();
         assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
         assert!(markup.contains(r#"name="notify_user_present" value="1""#));
     }
 
     #[test]
     fn temp_ban_form_emails_the_user_by_default() {
-        let markup = ban_actions_card("/admin", &user(json!({})), "csrf", None).into_string();
+        let markup =
+            ban_actions_card("/admin", &user(json!({})), "csrf", None, false).into_string();
         assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
         assert!(markup.contains(r#"name="notify_user_present" value="1""#));
     }
 
     #[test]
+    fn username_mode_offers_no_email_and_sends_none() {
+        let pending = user(json!({
+            "pending_deletion_at": "2026-10-30T17:40:29.690Z",
+            "deletion_reason_code": 3
+        }));
+        let banned = user(json!({"temp_banned_until": "2026-10-01T00:00:00.000Z"}));
+        let forms = [
+            deletion_card("/admin", &user(json!({})), "csrf", None, true).into_string(),
+            deletion_card("/admin", &pending, "csrf", None, true).into_string(),
+            ban_actions_card("/admin", &user(json!({})), "csrf", None, true).into_string(),
+            ban_actions_card("/admin", &banned, "csrf", None, true).into_string(),
+        ];
+        for markup in &forms {
+            assert!(!markup.contains("Email the user"));
+            assert!(!markup.contains(r#"name="notify_user" value="true""#));
+        }
+        assert!(forms[0].contains(r#"name="notify_user_present" value="1""#));
+        assert!(!forms[1].contains("notify_user"));
+        assert!(forms[2].contains(r#"name="notify_user_present" value="1""#));
+        assert!(forms[3].contains(r#"name="notify_user_present" value="1""#));
+    }
+
+    #[test]
     fn unban_form_separates_the_public_and_private_reasons() {
         let target = user(json!({"temp_banned_until": "2026-10-01T00:00:00.000Z"}));
-        let markup = ban_actions_card("/admin", &target, "csrf", None).into_string();
+        let markup = ban_actions_card("/admin", &target, "csrf", None, false).into_string();
         assert!(markup.contains("?action=unban&amp;tab=moderation"));
         assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
         assert!(markup.contains(r#"name="notify_user_present" value="1""#));
@@ -864,7 +902,7 @@ mod tests {
                 .collect::<Vec<_>>(),
             ["3"]
         );
-        let markup = ban_actions_card("/admin", &target, "csrf", Some(&ban)).into_string();
+        let markup = ban_actions_card("/admin", &target, "csrf", Some(&ban), false).into_string();
         assert!(markup.contains("Regel § 3"));
         assert!(markup.contains("Also sent links"));
         assert!(markup.contains(r#"name="ban_audit_log_id" value="2""#));

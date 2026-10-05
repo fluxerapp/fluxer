@@ -19,14 +19,20 @@ import {
 	type WebAuthnRegistrationOptions,
 } from '@app/api/auth/tests/WebAuthnTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
-import {getAdminRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import {
+	getAdminRepository,
+	getInstanceConfigRepository,
+	getUserRepository,
+} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {expect} from 'vitest';
+import {expect, onTestFinished} from 'vitest';
 
 async function loadUser(account: TestAccount): Promise<User> {
 	const user = await getUserRepository().findUnique(createUserID(BigInt(account.userId)));
@@ -267,6 +273,50 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					targetType: 'user',
 					targetId: target.userId,
 					metadata: {email: (await loadUser(target)).email!},
+				},
+			};
+		},
+	},
+	{
+		method: 'POST',
+		route: '/admin/users/:user_id/password-reset-link',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const originalSelfHosted = Config.instance.selfHosted;
+			onTestFinished(() => {
+				Config.instance.selfHosted = originalSelfHosted;
+			});
+			Config.instance.selfHosted = true;
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+			return {
+				request: {path: `/admin/users/${target.userId}/password-reset-link`},
+				expected: {
+					action: 'create_password_reset_link',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
+				},
+			};
+		},
+	},
+	{
+		method: 'DELETE',
+		route: '/admin/users/:user_id/recovery-kit',
+		async prepare({harness}) {
+			const target = await createTestAccount(harness);
+			const originalSelfHosted = Config.instance.selfHosted;
+			onTestFinished(() => {
+				Config.instance.selfHosted = originalSelfHosted;
+			});
+			Config.instance.selfHosted = true;
+			await getInstanceConfigRepository().setAccountIdentityMode(AccountIdentityModes.USERNAME, 'setup');
+			return {
+				request: {path: `/admin/users/${target.userId}/recovery-kit`, expectStatus: 204},
+				expected: {
+					action: 'revoke_recovery_kit',
+					targetType: 'user',
+					targetId: target.userId,
+					metadata: {},
 				},
 			};
 		},

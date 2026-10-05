@@ -13,6 +13,10 @@ import {
 import {MS_PER_DAY} from '@fluxer/date_utils/src/DateConstants';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 
+export function isSsoUserWithoutPassword(user: Pick<User, 'traits' | 'passwordHash'>): boolean {
+	return user.passwordHash === null && user.traits.has('sso');
+}
+
 export function isAccountClosed(user: Pick<User, 'flags' | 'deletionStartedAt'>): boolean {
 	return (user.flags & UserFlags.DELETED) !== 0n || user.deletionStartedAt != null;
 }

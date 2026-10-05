@@ -27,6 +27,7 @@ import {
 	mapUserToProfileResponse,
 } from '@app/api/user/UserMappers';
 import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
+import {AccountIdentityModes} from '@fluxer/constants/src/AccountIdentityConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {getCurrentTimeZoneOffsetMinutes} from '@fluxer/date_utils/src/TimeZoneUtils';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -158,6 +159,12 @@ export class UserAccountRequestService {
 		}
 		if (isUnclaimed) {
 			const allowed = new Set(['new_password', 'has_dismissed_premium_onboarding', 'has_unread_gift_inventory']);
+			if (
+				userUpdateData.new_password !== undefined &&
+				(await ctx.get('instanceConfigRepository').getAccountIdentityMode()) === AccountIdentityModes.USERNAME
+			) {
+				allowed.add('username');
+			}
 			const disallowedField = Object.keys(userUpdateData).find((key) => !allowed.has(key));
 			if (disallowedField) {
 				throw InputValidationError.fromCode(

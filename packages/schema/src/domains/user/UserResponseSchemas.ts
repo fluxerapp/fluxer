@@ -239,6 +239,29 @@ export const PasswordChangeCompleteResponse = z.object({
 
 export type PasswordChangeCompleteResponse = z.infer<typeof PasswordChangeCompleteResponse>;
 
+export const UserPasswordUpdateResponse = z.object({
+	token: z.string().describe('Authentication token for the newly created session'),
+	auth_session_id_hash: z.string().describe('Base64url-encoded hash of the newly created authentication session'),
+});
+
+export type UserPasswordUpdateResponse = z.infer<typeof UserPasswordUpdateResponse>;
+
+export const RecoveryKitStatusResponse = z.object({
+	has_recovery_kit: z.boolean().describe('Whether the account has a recovery kit'),
+	created_at: z.iso.datetime().nullable().describe('ISO 8601 timestamp when the current recovery kit was created'),
+});
+
+export type RecoveryKitStatusResponse = z.infer<typeof RecoveryKitStatusResponse>;
+
+export const RecoveryKitCreateResponse = z.object({
+	recovery_key: z
+		.string()
+		.describe('New recovery key as 8 groups of 4 joined by dashes, shown only once. Any previous kit stops working'),
+	created_at: z.iso.datetime().describe('ISO 8601 timestamp when the recovery kit was created'),
+});
+
+export type RecoveryKitCreateResponse = z.infer<typeof RecoveryKitCreateResponse>;
+
 export interface UserProfileResponse {
 	bio: string | null;
 	pronouns: string | null;

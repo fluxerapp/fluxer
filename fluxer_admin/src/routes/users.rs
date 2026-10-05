@@ -9,7 +9,12 @@ use crate::{
     middleware::{auth::AuthContext, csrf::CsrfToken, flash, htmx},
     routes::user_tabs,
     state::AppState,
-    templates,
+    templates::{
+        self,
+        pages::user_detail_tabs::account::{
+            PASSWORD_RESET_LINK_RESULT_ID, password_reset_link_result,
+        },
+    },
     utils::forms::MultiValueForm,
 };
 use axum::{
@@ -86,8 +91,9 @@ async fn users_list(
         .as_ref()
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
-    let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let username_sign_in = state.account_identity(&client).await.is_username();
+    let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL) && !username_sign_in;
     let searching = params.has_id_lookup() || params.has_search();
     let results = async {
         if params.has_id_lookup() {
@@ -136,6 +142,7 @@ async fn users_list(
         result_users,
         has_more,
         can_view_email,
+        username_sign_in,
         premium_badge_name.as_deref(),
         is_results_fragment,
     );
@@ -204,8 +211,16 @@ async fn user_detail(
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
     let tab_body = if user.is_some() {
+        let account_identity = state.account_identity(&client).await;
         user_tabs::render(
-            &client, config, &csrf.0.0, &user_id, active_tab, &tq, admin_acls,
+            &client,
+            config,
+            &csrf.0.0,
+            &user_id,
+            active_tab,
+            &tq,
+            admin_acls,
+            account_identity,
         )
         .await
     } else {
@@ -229,6 +244,7 @@ async fn user_detail_post(
     State(state): State<AppState>,
     headers: HeaderMap,
     auth: axum::Extension<AuthContext>,
+    csrf: axum::Extension<CsrfToken>,
     Path(user_id): Path<String>,
     Query(aq): Query<ActionQuery>,
     request: Request,
@@ -252,6 +268,10 @@ async fn user_detail_post(
     };
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let action = aq.action.as_deref().unwrap_or("");
+    if action == "create_password_reset_link" {
+        return create_password_reset_link(&state, &headers, &auth.0, &csrf.0.0, &client, &user_id)
+            .await;
+    }
     let outcome = super::user_actions::dispatch(&client, &user_id, action, &form).await;
     let mut redirect = if tab.is_empty() {
         format!("{base}/users/{user_id}")
@@ -266,6 +286,74 @@ async fn user_detail_post(
         return htmx::toast_response(&outcome.flash);
     }
     flash::redirect_with_flash(&redirect, outcome.flash, config.secure_cookies())
+}
+
+async fn create_password_reset_link(
+    state: &AppState,
+    headers: &HeaderMap,
+    auth: &AuthContext,
+    csrf_token: &str,
+    client: &AdminApiClient,
+    user_id: &str,
+) -> Response {
+    let config = state.config();
+    let account_url = format!("{}/users/{user_id}?tab=account", config.base_path);
+    let link = match client.create_password_reset_link(user_id).await {
+        Ok(link) => link,
+        Err(error) => {
+            tracing::warn!(%error, user_id, "admin API request failed: create password reset link");
+            let flash = flash::FlashData::error("Failed to create password reset link");
+            if htmx::is_htmx_request(headers)
+                && (htmx::targets(headers, "flash-container")
+                    || htmx::targets(headers, PASSWORD_RESET_LINK_RESULT_ID))
+            {
+                return htmx::toast_response(&flash);
+            }
+            return flash::redirect_with_flash(&account_url, flash, config.secure_cookies());
+        }
+    };
+    if htmx::is_htmx_request(headers) && htmx::targets(headers, PASSWORD_RESET_LINK_RESULT_ID) {
+        return Html(password_reset_link_result(Some(&link)).into_string()).into_response();
+    }
+    let admin_acls = auth
+        .admin_user
+        .as_ref()
+        .map(|user| user.acls.as_slice())
+        .unwrap_or(&[]);
+    let (user, badge_name, account_identity) = tokio::join!(
+        async {
+            client
+                .get_user_by_id(user_id)
+                .await
+                .log_error("load user after creating password reset link")
+        },
+        self_hosted_premium_badge_name(state, client),
+        state.account_identity(client)
+    );
+    let tab_body = user_tabs::render_account(
+        client,
+        config,
+        csrf_token,
+        user_id,
+        &templates::pages::user_detail_tabs::account::AccountTabOptions {
+            admin_acls,
+            account_identity,
+            password_reset_link: Some(&link),
+        },
+    )
+    .await;
+    let premium_badge_name = user.as_ref().and(badge_name);
+    let markup = templates::pages::user_detail::user_detail_with_tab(
+        config,
+        auth,
+        user.as_ref(),
+        user_id,
+        "account",
+        tab_body,
+        premium_badge_name.as_deref(),
+        htmx::targets(headers, "main-content"),
+    );
+    Html(markup.into_string()).into_response()
 }
 
 async fn user_tab(
@@ -299,14 +387,20 @@ async fn user_tab(
         .as_ref()
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
+    let account_identity = state.account_identity(&client).await;
     let markup = match user {
-        Some(ref u) => {
-            user_tabs::render(&client, config, &csrf.0.0, &user_id, &tab, &tq, admin_acls)
-                .await
-                .unwrap_or_else(|| {
-                    templates::pages::user_detail::simple_tab_content(config, u, &tab)
-                })
-        }
+        Some(ref u) => user_tabs::render(
+            &client,
+            config,
+            &csrf.0.0,
+            &user_id,
+            &tab,
+            &tq,
+            admin_acls,
+            account_identity,
+        )
+        .await
+        .unwrap_or_else(|| templates::pages::user_detail::simple_tab_content(config, u, &tab)),
         None => maud::html! {
             div class="p-4 text-red-600 text-sm" { "Failed to load user data." }
         },

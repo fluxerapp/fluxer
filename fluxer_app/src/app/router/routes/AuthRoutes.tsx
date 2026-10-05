@@ -38,6 +38,10 @@ const OAuthAuthorizePage = createAuthRoutePage(
 	'OAuthAuthorizePage',
 	() => import('@app/features/auth/components/pages/OAuthAuthorizePage'),
 );
+const RecoverAccountPage = createAuthRoutePage(
+	'RecoverAccountPage',
+	() => import('@app/features/auth/components/pages/RecoverAccountPage'),
+);
 const RegisterPage = createAuthRoutePage(
 	'RegisterPage',
 	() => import('@app/features/auth/components/pages/RegisterPage'),
@@ -114,6 +118,13 @@ type AuthRedirectHandler = (ctx: RouteContext) => Redirect | undefined;
 
 const redirectWhenEmailsDisabled: RouteConfig['onEnter'] = () => {
 	if (!RuntimeConfig.emailsEnabled) {
+		return new Redirect(Routes.LOGIN);
+	}
+	return undefined;
+};
+
+const redirectWhenPasswordResetUnavailable: RouteConfig['onEnter'] = () => {
+	if (!RuntimeConfig.emailsEnabled && !RuntimeConfig.usesUsernameSignIn) {
 		return new Redirect(Routes.LOGIN);
 	}
 	return undefined;
@@ -295,7 +306,22 @@ const forgotPasswordRoute = createAuthPageRoute({
 	page: ForgotPasswordPage,
 	dataFlx: 'app.router.auth-routes.forgot-password-page',
 	onEnter: (ctx) => {
+		if (RuntimeConfig.usesUsernameSignIn) {
+			return new Redirect(Routes.RECOVER_ACCOUNT);
+		}
 		if (!RuntimeConfig.emailsEnabled) {
+			return new Redirect(Routes.LOGIN);
+		}
+		return whenAuthenticated(() => new Redirect(Routes.ME))(ctx);
+	},
+});
+const recoverAccountRoute = createAuthPageRoute({
+	id: 'recoverAccount',
+	path: Routes.RECOVER_ACCOUNT,
+	page: RecoverAccountPage,
+	dataFlx: 'app.router.auth-routes.recover-account-page',
+	onEnter: (ctx) => {
+		if (!RuntimeConfig.usesUsernameSignIn) {
 			return new Redirect(Routes.LOGIN);
 		}
 		return whenAuthenticated(() => new Redirect(Routes.ME))(ctx);
@@ -306,7 +332,7 @@ const resetPasswordRoute = createAuthPageRoute({
 	path: Routes.RESET_PASSWORD,
 	page: ResetPasswordPage,
 	dataFlx: 'app.router.auth-routes.reset-password-page',
-	onEnter: redirectWhenEmailsDisabled,
+	onEnter: redirectWhenPasswordResetUnavailable,
 });
 const emailRevertRoute = createAuthPageRoute({
 	id: 'emailRevert',
@@ -383,6 +409,7 @@ export const authRouteTree = authLayoutRoute.addChildren([
 	themeRegisterRoute,
 	themeLoginRoute,
 	forgotPasswordRoute,
+	recoverAccountRoute,
 	resetPasswordRoute,
 	emailRevertRoute,
 	verifyEmailRoute,

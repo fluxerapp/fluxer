@@ -12,6 +12,7 @@ use crate::{
     utils::{
         bigint::format_discriminator,
         timestamps::{format_admin_timestamp, snowflake_creation_date},
+        user_tag::user_tag,
     },
 };
 use maud::{Markup, html};
@@ -24,10 +25,11 @@ pub fn overview_tab(
     change_log: Option<&ListUserChangeLogResponse>,
 ) -> Markup {
     render_overview_tab(
-        config, user, admin_acls, csrf_token, change_log, None, false,
+        config, user, admin_acls, csrf_token, change_log, None, false, false,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn overview_tab_with_limit_config(
     config: &AdminConfig,
     user: &AdminUser,
@@ -35,6 +37,7 @@ pub fn overview_tab_with_limit_config(
     csrf_token: &str,
     change_log: Option<&ListUserChangeLogResponse>,
     limit_config: Option<&LimitConfigResponse>,
+    username_sign_in: bool,
 ) -> Markup {
     render_overview_tab(
         config,
@@ -44,9 +47,11 @@ pub fn overview_tab_with_limit_config(
         change_log,
         limit_config,
         true,
+        username_sign_in,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_overview_tab(
     config: &AdminConfig,
     user: &AdminUser,
@@ -55,6 +60,7 @@ fn render_overview_tab(
     change_log: Option<&ListUserChangeLogResponse>,
     limit_config: Option<&LimitConfigResponse>,
     show_traits: bool,
+    username_sign_in: bool,
 ) -> Markup {
     html! {
         div class="space-y-6" {
@@ -118,7 +124,7 @@ fn render_overview_tab(
                         (snowflake_creation_date(&user.id))
                     }))
                     (detail_row("Username", html! {
-                        (user.username) "#" (format_discriminator(&user.discriminator))
+                        (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                     }))
                     (detail_row("Display Name", html! {
                         @if let Some(ref name) = user.global_name {
@@ -127,7 +133,7 @@ fn render_overview_tab(
                             span class="text-neutral-400" { "Not set" }
                         }
                     }))
-                    @if acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL) {
+                    @if acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL) && !username_sign_in {
                         (detail_row("Email", html! {
                             @if let Some(ref email) = user.email {
                                 (email)
@@ -572,4 +578,65 @@ fn custom_traits<'a>(user: &'a AdminUser, trait_definitions: &[&str]) -> Vec<&'a
         .filter(|trait_name| !trait_definitions.contains(trait_name))
         .filter(|trait_name| !DERIVED_TRAITS.contains(trait_name))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_config() -> AdminConfig {
+        AdminConfig {
+            env: crate::config::RuntimeEnv::Test,
+            host: String::new(),
+            port: 3020,
+            secret_key_base: "test-secret".to_owned(),
+            base_path: "/admin".to_owned(),
+            api_endpoint: String::new(),
+            media_endpoint: String::new(),
+            static_cdn_endpoint: String::new(),
+            admin_endpoint: String::new(),
+            web_app_endpoint: String::new(),
+            oauth_client_id: String::new(),
+            oauth_client_secret: String::new(),
+            oauth_redirect_uri: String::new(),
+            build_version: "test".to_owned(),
+            self_hosted: true,
+            proxy: crate::config::ProxyConfig {
+                trust_client_ip_header: false,
+                client_ip_header_name: String::new(),
+            },
+        }
+    }
+
+    fn render_email_row(username_sign_in: bool) -> String {
+        let user: AdminUser = serde_json::from_value(serde_json::json!({
+            "id": "1500000000000000001",
+            "username": "target",
+            "discriminator": "0001",
+            "email": "target@example.com"
+        }))
+        .expect("valid admin user");
+        let acls = vec![acl::USER_VIEW_EMAIL.to_owned()];
+        render_overview_tab(
+            &test_config(),
+            &user,
+            &acls,
+            "csrf",
+            None,
+            None,
+            false,
+            username_sign_in,
+        )
+        .into_string()
+    }
+
+    #[test]
+    fn username_mode_hides_the_email_row() {
+        assert!(!render_email_row(true).contains("target@example.com"));
+    }
+
+    #[test]
+    fn email_mode_shows_the_email_row() {
+        assert!(render_email_row(false).contains("target@example.com"));
+    }
 }

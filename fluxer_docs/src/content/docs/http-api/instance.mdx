@@ -1,18 +1,18 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Instance
-description: Instance discovery, client geolocation, the limit key registry, and the served OpenAPI document.
+description: Instance discovery, client geolocation, the limit key registry, the served OpenAPI document, and the setup sign-in method.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Discover a deployment's endpoints, available features, and [limits](#limit-keys), look up the client's approximate location, or download its OpenAPI document.
+Discover a deployment's endpoints, available features, and [limits](#limit-keys), look up the client's approximate location, download its OpenAPI document, or choose how members of a new deployment sign in.
 
 [Get instance discovery](#get-instance-discovery) is the entry point of the API. A client that knows only a Fluxer origin reads `/.well-known/fluxer` first, and that one unauthenticated response has every field of the [instance discovery object](#instance-discovery-object). Those values include the API base URLs, the [main Gateway](/gateway/overview/) WebSocket URL, and the [Media Proxy](/media-proxy/overview/) base URL. They override the [endpoint path defaults](#instance-endpoints-object) a deployment would otherwise serve from its canonical public origin.
 
 Every route here is unauthenticated. A credential changes no response body. One that resolves to an account moves the [rate limit bucket](/topics/rate-limits/) from the client IP address onto that account.
 
-Each of the routes answers with `Access-Control-Allow-Origin: *`, replaced by the request `Origin` when the deployment-wide [cross-origin policy](/http-api/#cross-origin-requests) allows that origin. The [Admin Instance API](/admin-api/instance/) defines the operator side of the same configuration.
+Each `GET` route answers with `Access-Control-Allow-Origin: *`, replaced by the request `Origin` when the deployment-wide [cross-origin policy](/http-api/#cross-origin-requests) allows that origin. The [Admin Instance API](/admin-api/instance/) defines the operator side of the same configuration.
 
 ## Instance discovery object
 
@@ -139,8 +139,10 @@ Deployment-wide switches a client reads before it offers a feature, plus whether
 | presigned_attachment_uploads | boolean | Whether a client can request presigned attachment upload URLs |
 | emails_enabled<sup>1</sup> | boolean | Whether the deployment sends email |
 | phone_verification_enabled | boolean | Deprecated. Always false |
+| account_identity<sup>5</sup> | string | How members sign in, one of the [account identity modes](#account-identity-modes) |
+| tag_style<sup>6</sup> | string | How usernames are tagged, one of the [tag styles](#tag-styles) |
 
-<sup>1</sup> The value is true only when email is switched on and the transport is completely configured
+<sup>1</sup> The value is true only when email is switched on and the transport is completely configured. It is always false on a `username` deployment
 
 <sup>2</sup> True only when billing is switched on, a Stripe secret key is set, at least one currency has both a monthly and a yearly price, and `premium_enabled` is true. It is computed on each request
 
@@ -148,7 +150,27 @@ Deployment-wide switches a client reads before it offers a feature, plus whether
 
 <sup>4</sup> On a hosted deployment, true while billing is switched on and a Stripe secret key is set. A self-hosted deployment reports true while a Stripe secret key is set and `premium_enabled` is true, even after billing is switched off
 
+<sup>5</sup> Always `email` on a hosted deployment. A client treats a missing value as `email`, which is what a deployment from before the field existed means
+
+<sup>6</sup> Always `none` on a `username` deployment. Always `random` on a hosted deployment and on an instance that existed before the field. A client treats a missing value as `random`
+
 A deployment that reports `emails_enabled` as false sends no verification, password recovery, or IP authorisation message, and the flows that depend on one are unusable there. [Deployment availability](/http-api/deployment-availability/) states which routes a self-hosted deployment does not serve at all.
+
+### Account identity modes
+
+| Value | Description |
+| --- | --- |
+| email | Members register and sign in with an email address |
+| username | Members register and sign in with a username, and the deployment collects no email address |
+
+### Tag styles
+
+| Value | Description |
+| --- | --- |
+| none | Usernames are unique and shown without a tag. Every account that is not a bot has the discriminator `0000` |
+| random | Every account gets a random tag. Tags are shown and can be changed |
+
+A `username` deployment answers its email routes with 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`. [Authentication](/http-api/authentication/#shared-behaviour) and [Email and password changes](/http-api/users/email-and-password/) list them. Routes that exist only for username sign-in, such as [recover an account](/http-api/authentication/#recover-an-account), answer 400 `USERNAME_SIGN_IN_ONLY` on an `email` deployment.
 
 ## GIF provider object
 
@@ -317,7 +339,7 @@ Each key names one limit. A key whose name begins with `feature_` is a feature g
 | emoji_max_size | Maximum file size for emoji uploads in bytes, in guild scope |
 | feature_animated_avatar | Allow animated avatar uploads, in user scope |
 | feature_animated_banner | Allow animated banner uploads, in user scope |
-| feature_custom_discriminator | Allow custom discriminator selection, in user scope |
+| feature_custom_discriminator | Allow custom discriminator selection, in user scope. Ignored for people on an instance with the `none` tag style |
 | feature_custom_notification_sounds | Allow custom notification sounds, in user scope |
 | feature_early_access | Access to beta features, in user scope |
 | feature_global_expressions | Use expressions across all guilds, in user scope |
@@ -407,8 +429,11 @@ Whether the deployment has finished its initial configuration, and where an oper
 | --- | --- | --- |
 | configured | boolean | Whether initial deployment configuration is complete |
 | admin_url<sup>1</sup> | ?string | The admin application URL used to continue setup, or null |
+| account_identity_locked? | boolean | Whether the sign-in method can no longer change, sent only while a self-hosted deployment is not configured |
 
 <sup>1</sup> The value is the deployment's configured admin endpoint, and it is null when no admin endpoint is configured
+
+`account_identity_locked` is true once the first account exists, and on a deployment stored as already in use. [Set the setup sign-in method](#set-the-setup-sign-in-method) returns 409 there.
 
 ## Public legal configuration object
 
@@ -497,6 +522,17 @@ A geo entry names a whole country when its `regionCode` is null and names one su
 | countryCode | string | The ISO 3166-1 alpha-2 country code |
 | regionCode | ?string | The ISO 3166-2 subdivision code within the country, or null when the entry covers the whole country |
 
+## Account identity object
+
+The sign-in method a new deployment uses after [set the setup sign-in method](#set-the-setup-sign-in-method).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mode | string | The [account identity mode](#account-identity-modes) now in effect |
+| tag_style | string | How usernames are tagged, one of the [tag styles](#tag-styles) |
+
 ## Get instance discovery
 
 <RouteHeader method="GET" path="/.well-known/fluxer" unauthenticated />
@@ -532,6 +568,45 @@ A lookup that resolves nothing still returns 200 with `countryCode`, `regionCode
 ### Rate limit
 
 30 requests per minute for each authenticated user, or for each client IP address when the request has no credential, on the `ip:geo_lookup` bucket.
+
+## Set the setup sign-in method
+
+<RouteHeader method="PUT" path="/v1/instance/setup/account-identity" unauthenticated />
+
+Chooses how members sign in on a new self-hosted deployment, and on an `email` deployment whether usernames have tags. Returns an [account identity](#account-identity-object) object with the choice now in effect.
+
+The setup wizard calls this before the owner account exists. The choice stays open on a self-hosted deployment until setup is complete or the first account exists. After that, on a deployment that was already in use before username sign-in existed, and on every hosted deployment, the route returns 409 `ACCOUNT_IDENTITY_LOCKED`. The choice and the first registration take turns, so a choice never lands after the first account exists. A repeated call while the choice is open replaces the earlier one.
+
+:::caution[Anyone can call this before the first account exists]
+The route needs no credential, the same as the rule that makes the first registration the instance admin. An operator finishes setup in the same sitting that brings the deployment up.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mode | string | The [account identity mode](#account-identity-modes) to use |
+| tag_style?<sup>1</sup> | string | How usernames are tagged, one of the [tag styles](#tag-styles). Defaults to `none` |
+
+<sup>1</sup> A `username` instance always uses `none`. Sending `random` with `username` returns the field code `TAG_STYLE_REQUIRES_EMAIL_SIGN_IN` on `tag_style`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [account identity](#account-identity-object) object | The mode was stored |
+| 400 | [error response](/http-api/#error-response) | The body is invalid, or `random` tags were requested with `username` |
+| 409 | [error response](/http-api/#error-response) | `ACCOUNT_IDENTITY_LOCKED`, because the sign-in method can no longer change |
+| 423 | [error response](/http-api/#error-response) | `GENERAL_ERROR`, because a registration or another choice held the turn for more than 15 seconds |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+
+### Side effects
+
+The deployment stores the choice, and [instance discovery](#get-instance-discovery) reports it as `account_identity` and `tag_style` from then on. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, or for each client IP address when the request has no credential, on the `instance:setup:account_identity` bucket.
 
 ## Get OpenAPI document
 

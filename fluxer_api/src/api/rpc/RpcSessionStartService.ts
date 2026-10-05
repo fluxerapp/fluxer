@@ -7,6 +7,7 @@ import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {getCachedTagStyle} from '@app/api/instance/AccountIdentityModeCache';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
@@ -21,6 +22,7 @@ import type {UserData} from '@app/api/rpc/RpcTypes';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {RpcSessionTimings} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 
@@ -123,7 +125,11 @@ export class RpcSessionStartService {
 				}
 			});
 		}
-		if (!isPremium && (user.premiumFlags & PremiumFlags.DISCRIMINATOR) !== 0) {
+		if (
+			!isPremium &&
+			(user.premiumFlags & PremiumFlags.DISCRIMINATOR) !== 0 &&
+			getCachedTagStyle() === TagStyles.RANDOM
+		) {
 			const resetDiscriminatorSteps: RpcTimingSteps = {};
 			const resetDiscriminatorStartedAtNs = startRpcTiming();
 			try {

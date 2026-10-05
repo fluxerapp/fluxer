@@ -203,13 +203,13 @@ VOLUMES
 
 fluxer_usage() {
 	cat <<'USAGE'
-Usage: sh install.sh --domain <host> --email <address> [options]
+Usage: sh install.sh --domain <host> [options]
        sh install.sh --update [options]
        sh install.sh --rollback [options]
 
 Options:
   --domain <host>          Hostname the instance answers on. Prompted when absent.
-  --email <address>        Contact email for web push. Prompted when absent.
+  --email <address>        Contact email for web push. Default admin@<domain>.
   --engine <command>       Container engine to drive. Default docker, or podman
                            when docker is absent.
   --dir <path>             Working directory. Default ~/fluxer, or the working
@@ -661,15 +661,10 @@ fluxer_resolve_values() {
 		fluxer_prompt 'Hostname the instance answers on' || fluxer_fail 1 'No hostname given.'
 		opt_domain=$fluxer_prompt_value
 	fi
-	if [ -z "$opt_email" ]; then
-		if [ "$opt_non_interactive" -eq 1 ] || [ "$opt_dry_run" -eq 1 ] || [ ! -t 0 ]; then
-			fluxer_bad_usage '--email is required.'
-		fi
-		fluxer_prompt 'Contact email for web push' || fluxer_fail 1 'No address given.'
-		opt_email=$fluxer_prompt_value
-	fi
 	fluxer_valid_domain "$opt_domain" || fluxer_bad_usage "--domain $opt_domain is not a lowercase hostname. Give a bare hostname such as chat.example.com."
-	fluxer_valid_email "$opt_email" || fluxer_bad_usage "--email $opt_email is not an address."
+	if [ -n "$opt_email" ]; then
+		fluxer_valid_email "$opt_email" || fluxer_bad_usage "--email $opt_email is not an address."
+	fi
 }
 
 fluxer_validate_options() {
@@ -745,9 +740,15 @@ fluxer_print_plan() {
 		fluxer_say "  edge bind     $opt_edge_bind"
 	fi
 	fluxer_say "  domain        $opt_domain"
-	fluxer_say "  email         $opt_email"
+	fluxer_plan_non_secret=$(fluxer_non_secret_keys | wc -l | tr -d ' ')
+	if [ -n "$opt_email" ]; then
+		fluxer_say "  email         $opt_email"
+	else
+		fluxer_say "  email         admin@$opt_domain, derived by compose"
+		fluxer_plan_non_secret=$((fluxer_plan_non_secret - 1))
+	fi
 	fluxer_say '  action        download the stack files, write .env, start the stack'
-	fluxer_say "  .env keys     $(fluxer_non_secret_keys | wc -l | tr -d ' ') non-secret values and $(fluxer_secret_keys | wc -l | tr -d ' ') secrets"
+	fluxer_say "  .env keys     $fluxer_plan_non_secret non-secret values and $(fluxer_secret_keys | wc -l | tr -d ' ') secrets"
 	fluxer_say '  files         docker-compose.yml docker-compose.proxy.yml tunnel.compose.yml Caddyfile .env.example'
 	if [ -e "$opt_dir/.env" ]; then
 		fluxer_say "  note          $opt_dir/.env exists. A run without --update refuses it."
@@ -896,9 +897,10 @@ fluxer_generate_vapid() {
 #   cp .env.example .env
 #   chmod 600 .env
 #
-# Then set FLUXER_DOMAIN and FLUXER_VAPID_EMAIL, the two values only the
-# operator knows. The five other non-secret keys in the list above ship correct
-# in .env.example and need no edit.
+# Then set FLUXER_DOMAIN, the one value only the operator knows. FLUXER_VAPID_EMAIL
+# is optional, and compose derives admin@FLUXER_DOMAIN while it is unset. The five
+# other non-secret keys in the list above ship correct in .env.example and need no
+# edit.
 #
 # Every secret in .env.example contains the literal CHANGE_ME. A key whose name
 # ends in _BASE64 takes openssl rand -base64 32, every other key takes
@@ -917,7 +919,10 @@ fluxer_write_env() {
 		[ -n "$fluxer_key" ] || continue
 		case $fluxer_kind in
 			domain) fluxer_value=$opt_domain ;;
-			email) fluxer_value=$opt_email ;;
+			email)
+				[ -n "$opt_email" ] || continue
+				fluxer_value=$opt_email
+				;;
 			image_tag) fluxer_value=$opt_image_tag ;;
 			literal) fluxer_value=$fluxer_literal ;;
 			*) fluxer_fail 5 "Unknown non-secret kind $fluxer_kind for $fluxer_key." ;;

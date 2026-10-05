@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
 import {
@@ -47,6 +48,10 @@ const DELETE_TITLE_DESCRIPTOR = msg({
 const EXPORT_SUCCESS_DESCRIPTOR = msg({
 	message: "We'll process this as soon as possible. You'll get an email when your archive is ready.",
 	comment: 'Success toast shown after a filtered data export job is queued.',
+});
+const EXPORT_SUCCESS_IN_APP_DESCRIPTOR = msg({
+	message: "We'll process this as soon as possible. Check back here to download your archive when it's ready.",
+	comment: 'Success toast shown after a data export job is queued on an instance where people sign in with a username.',
 });
 const DELETE_SUCCESS_DESCRIPTOR = msg({
 	message: "We'll process this as soon as possible. You'll get a DM from us when it's done.",
@@ -118,6 +123,18 @@ const EXPORT_CONFIRM_CUSTOM_DESCRIPTOR = msg({
 	message:
 		"We'll build a downloadable archive that matches the filters below and email you when it's ready. The download link in that email expires after 7 days.",
 	comment: 'Confirm-step copy in the data-export modal when scope is custom.',
+});
+const EXPORT_CONFIRM_EVERYTHING_IN_APP_DESCRIPTOR = msg({
+	message:
+		"We'll build a downloadable archive of every message you have ever sent. You can download it from this page when it's ready. The download expires after 7 days.",
+	comment:
+		'Confirm-step copy in the data-export modal when scope is everything, on an instance where people sign in with a username.',
+});
+const EXPORT_CONFIRM_CUSTOM_IN_APP_DESCRIPTOR = msg({
+	message:
+		"We'll build a downloadable archive that matches the filters below. You can download it from this page when it's ready. The download expires after 7 days.",
+	comment:
+		'Confirm-step copy in the data-export modal when scope is custom, on an instance where people sign in with a username.',
 });
 const DELETE_CONFIRM_DESCRIPTOR = msg({
 	message: 'Permanently delete the messages that match the filters below. This cannot be undone.',
@@ -295,7 +312,7 @@ interface VariantConfig {
 	isDelete: boolean;
 }
 
-function getVariantConfig(variant: DataRequestVariant): VariantConfig {
+function getVariantConfig(variant: DataRequestVariant, usesUsernameSignIn: boolean): VariantConfig {
 	if (variant === 'export') {
 		return {
 			titleDescriptor: EXPORT_TITLE_DESCRIPTOR,
@@ -315,9 +332,13 @@ function getVariantConfig(variant: DataRequestVariant): VariantConfig {
 			],
 			submitLabelDescriptor: EXPORT_SUBMIT_DESCRIPTOR,
 			submitVariant: 'primary',
-			successToastDescriptor: EXPORT_SUCCESS_DESCRIPTOR,
-			confirmSimpleDescriptor: EXPORT_CONFIRM_EVERYTHING_DESCRIPTOR,
-			confirmCustomDescriptor: EXPORT_CONFIRM_CUSTOM_DESCRIPTOR,
+			successToastDescriptor: usesUsernameSignIn ? EXPORT_SUCCESS_IN_APP_DESCRIPTOR : EXPORT_SUCCESS_DESCRIPTOR,
+			confirmSimpleDescriptor: usesUsernameSignIn
+				? EXPORT_CONFIRM_EVERYTHING_IN_APP_DESCRIPTOR
+				: EXPORT_CONFIRM_EVERYTHING_DESCRIPTOR,
+			confirmCustomDescriptor: usesUsernameSignIn
+				? EXPORT_CONFIRM_CUSTOM_IN_APP_DESCRIPTOR
+				: EXPORT_CONFIRM_CUSTOM_DESCRIPTOR,
 			isDelete: false,
 		};
 	}
@@ -352,11 +373,13 @@ function formatDateForSummary(date: Date, locale: string): string {
 
 interface DataRequestModalProps {
 	variant: DataRequestVariant;
+	onExportRequested?: () => void;
 }
 
-export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({variant}) => {
+export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({variant, onExportRequested}) => {
 	const {i18n} = useLingui();
-	const config = useMemo(() => getVariantConfig(variant), [variant]);
+	const usesUsernameSignIn = RuntimeConfig.usesUsernameSignIn;
+	const config = useMemo(() => getVariantConfig(variant, usesUsernameSignIn), [variant, usesUsernameSignIn]);
 	const scopeOptions = useMemo<ReadonlyArray<RadioOption<ScopeValue>>>(
 		() =>
 			config.scopeOptionDescriptors.map((opt) => ({
@@ -490,6 +513,7 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 				} else {
 					await UserCommands.requestFilteredDataHarvest(buildFilter('selected'));
 				}
+				onExportRequested?.();
 			} else {
 				const filterScope: BulkDeleteMyMessagesFilter['scope'] =
 					scope === 'inaccessible_only' ? 'inaccessible_only' : 'selected';
@@ -502,7 +526,7 @@ export const DataRequestModal: React.FC<DataRequestModalProps> = observer(({vari
 		} finally {
 			setIsSubmitting(false);
 		}
-	}, [variant, scope, buildFilter, isSubmitting, i18n, config.successToastDescriptor, closeModal]);
+	}, [variant, scope, buildFilter, isSubmitting, i18n, config.successToastDescriptor, closeModal, onExportRequested]);
 	const dateModeOptions = useMemo(
 		() => [
 			{value: 'all_time' as const, label: i18n._(DATE_MODE_ALL_TIME_DESCRIPTOR)},

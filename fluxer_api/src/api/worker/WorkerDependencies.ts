@@ -196,6 +196,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 	const instanceConfigRepository = getInstanceConfigRepository();
 	const limitConfigService = getLimitConfigService();
 	await instanceConfigRepository.initialize();
+	await instanceConfigRepository.ensureAccountIdentityMode();
 	await limitConfigService.initialize();
 	limitConfigService.setAsGlobalInstance();
 	const userCacheService = createUserCacheService();

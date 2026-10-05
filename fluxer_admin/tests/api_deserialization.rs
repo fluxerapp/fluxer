@@ -441,6 +441,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "pending_registrations": []
         },
         "self_hosted": false,
+        "account_identity": {"mode": "username", "locked": true, "tag_style": "none"},
         "app_public": {
             "branding": {
                 "product_name": "Fluxer",
@@ -601,9 +602,15 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.app_public.branding.premium_product_name, "Gold");
     assert!(resp.billing.billing_active);
     assert!(resp.media.attachment_decay.effective.enabled);
+    assert!(resp.account_identity.locked);
 
     let ours: types::InstanceConfigResponse =
         serde_json::from_str(json).expect("hand-written instance config");
+    assert_eq!(
+        ours.account_identity.mode,
+        types::AccountIdentityMode::Username
+    );
+    assert_eq!(ours.account_identity.locked, Some(true));
     assert_eq!(ours.app_public.branding.premium_product_name, "Gold");
     assert!(ours.billing.stripe_secret_key_stored);
     assert_eq!(ours.billing.tax_id_collection, Some(true));
@@ -1068,4 +1075,12 @@ fn deserialize_list_admin_api_key_entry() {
     assert_eq!(resp.key_id, "k_123");
     assert_eq!(resp.created_by_user_id, "1130650140672000000");
     assert_eq!(resp.acls.len(), 2);
+}
+
+#[test]
+fn account_identity_lock_is_unknown_when_the_api_omits_it() {
+    let identity: types::AccountIdentityConfigResponse =
+        serde_json::from_str("{}").expect("empty account identity");
+    assert_eq!(identity.mode, types::AccountIdentityMode::Email);
+    assert_eq!(identity.locked, None);
 }

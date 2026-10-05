@@ -10,6 +10,7 @@ import {
 	PREMIUM_PRODUCT_NAME,
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
@@ -198,10 +199,17 @@ export const AvatarUploader = observer(
 												className={styles.spacedParagraph}
 												data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.spaced-paragraph"
 											>
-												<Trans>
-													With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and
-													profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
-												</Trans>
+												{RuntimeConfig.usesUniqueUsernames ? (
+													<Trans>
+														With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and
+														profile banners, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
+													</Trans>
+												) : (
+													<Trans>
+														With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and
+														profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks.
+													</Trans>
+												)}
 											</p>
 										</>
 									}

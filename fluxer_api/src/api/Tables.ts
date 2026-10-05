@@ -63,7 +63,9 @@ import {
 	PASSWORD_RESET_TOKEN_COLUMNS,
 	type PasswordChangeTicketRow,
 	type PasswordResetTokenRow,
+	USER_RECOVERY_KIT_COLUMNS,
 	USER_SSO_IDENTITY_COLUMNS,
+	type UserRecoveryKitRow,
 	type UserSsoIdentityRow,
 	WEBAUTHN_CREDENTIAL_COLUMNS,
 	type WebAuthnCredentialRow,
@@ -892,6 +894,11 @@ export const MfaBackupCodes = defineTable<MfaBackupCodeRow, 'user_id' | 'code'>(
 	name: 'mfa_backup_codes',
 	columns: MFA_BACKUP_CODE_COLUMNS,
 	primaryKey: ['user_id', 'code'],
+});
+export const UserRecoveryKits = defineTable<UserRecoveryKitRow, 'user_id'>({
+	name: 'user_recovery_kits',
+	columns: USER_RECOVERY_KIT_COLUMNS,
+	primaryKey: ['user_id'],
 });
 export const WebAuthnCredentials = defineTable<WebAuthnCredentialRow, 'user_id' | 'credential_id'>({
 	name: 'webauthn_credentials',

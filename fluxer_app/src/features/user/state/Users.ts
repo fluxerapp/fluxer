@@ -2,6 +2,7 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import {User} from '@app/features/user/models/User';
+import {shouldShowDiscriminator} from '@app/features/user/utils/UserTagUtils';
 import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
@@ -81,7 +82,13 @@ class Users {
 	}
 
 	getUserByTag(tag: string): User | undefined {
-		return this.usersList.find((user) => user.tag === tag);
+		const bareName = tag.toLowerCase();
+		return this.usersList.find(
+			(user) =>
+				user.tag === tag ||
+				`${user.username}#${user.discriminator}` === tag ||
+				(!shouldShowDiscriminator(user) && user.username.toLowerCase() === bareName),
+		);
 	}
 
 	getUsers(): ReadonlyArray<User> {

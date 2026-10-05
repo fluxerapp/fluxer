@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildModerationTab.module.css';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -62,6 +63,11 @@ const VERIFICATION_LEVEL_LOW_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'Requires a verified email address.',
 	comment: 'Helper text for the "Low" member verification level option in the community moderation settings tab.',
 });
+const VERIFICATION_LEVEL_LOW_USERNAME_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Requires a claimed account.',
+	comment:
+		'Helper text for the "Low" member verification level option on an instance where people sign in with a username and no email.',
+});
 const VERIFICATION_LEVEL_MEDIUM_NAME_DESCRIPTOR = msg({
 	message: 'Medium',
 	comment:
@@ -70,6 +76,11 @@ const VERIFICATION_LEVEL_MEDIUM_NAME_DESCRIPTOR = msg({
 const VERIFICATION_LEVEL_MEDIUM_DESCRIPTION_DESCRIPTOR = msg({
 	message: "Requires a verified email address and an account that's at least 5 minutes old.",
 	comment: 'Helper text for the "Medium" member verification level option in the community moderation settings tab.',
+});
+const VERIFICATION_LEVEL_MEDIUM_USERNAME_DESCRIPTION_DESCRIPTOR = msg({
+	message: "Requires a claimed account that's at least 5 minutes old.",
+	comment:
+		'Helper text for the "Medium" member verification level option on an instance where people sign in with a username and no email.',
 });
 const VERIFICATION_LEVEL_HIGH_NAME_DESCRIPTOR = msg({
 	message: 'High',
@@ -249,6 +260,7 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		}
 		return;
 	};
+	const usesUsernameSignIn = RuntimeConfig.usesUsernameSignIn;
 	const verificationLevelOptions: ReadonlyArray<RadioOption<number>> = [
 		{
 			value: GuildVerificationLevel.NONE,
@@ -259,12 +271,20 @@ const GuildModerationTab: React.FC<{guildId: string}> = observer(({guildId}) => 
 		{
 			value: GuildVerificationLevel.LOW,
 			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_LOW_NAME_DESCRIPTOR), '#22c55e'),
-			desc: i18n._(VERIFICATION_LEVEL_LOW_DESCRIPTION_DESCRIPTOR),
+			desc: i18n._(
+				usesUsernameSignIn
+					? VERIFICATION_LEVEL_LOW_USERNAME_DESCRIPTION_DESCRIPTOR
+					: VERIFICATION_LEVEL_LOW_DESCRIPTION_DESCRIPTOR,
+			),
 		},
 		{
 			value: GuildVerificationLevel.MEDIUM,
 			name: colorizeLabel(i18n._(VERIFICATION_LEVEL_MEDIUM_NAME_DESCRIPTOR), '#f59e0b'),
-			desc: i18n._(VERIFICATION_LEVEL_MEDIUM_DESCRIPTION_DESCRIPTOR),
+			desc: i18n._(
+				usesUsernameSignIn
+					? VERIFICATION_LEVEL_MEDIUM_USERNAME_DESCRIPTION_DESCRIPTOR
+					: VERIFICATION_LEVEL_MEDIUM_DESCRIPTION_DESCRIPTOR,
+			),
 		},
 		{
 			value: GuildVerificationLevel.HIGH,

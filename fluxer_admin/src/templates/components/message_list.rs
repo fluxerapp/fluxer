@@ -198,6 +198,7 @@ fn message_row(
         msg.author_global_name.as_deref(),
         Some(&msg.author_username),
         None,
+        false,
     );
     let row_class = format!(
         "group relative mt-4 py-0.5 pr-4 pl-4 transition-colors first:mt-0{hover}{highlight}"

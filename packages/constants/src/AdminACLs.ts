@@ -77,6 +77,8 @@ export const AdminACLs = {
 	REPORT_VIEW_REPORTER_PII: 'report:view:reporter_pii',
 	SYSTEM_DM_SEND: 'system_dm:send',
 	USER_CANCEL_BULK_MESSAGE_DELETION: 'user:cancel:bulk_message_deletion',
+	USER_CREATE_PASSWORD_RESET_LINK: 'user:create:password_reset_link',
+	USER_DELETE_RECOVERY_KIT: 'user:delete:recovery_kit',
 	USER_DELETE: 'user:delete',
 	USER_LIST_DM_CHANNELS: 'user:list:dm_channels',
 	USER_LIST_GUILDS: 'user:list:guilds',

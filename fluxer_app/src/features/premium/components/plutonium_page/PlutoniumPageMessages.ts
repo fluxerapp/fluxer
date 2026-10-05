@@ -92,6 +92,11 @@ export const SHOWCASE_PROFILE_TITLE_DESCRIPTOR = msg({
 	message: 'A profile that stands out',
 	comment: 'Plutonium page perk card title about profile customization.',
 });
+export const SHOWCASE_PROFILE_BODY_WITHOUT_TAG_DESCRIPTOR = msg({
+	message: 'Get an animated avatar and banner, a subscriber badge and a separate profile for each community.',
+	comment:
+		'Plutonium page perk card body about profile perks, shown on instances where people sign in with a username and have no tag.',
+});
 export const SHOWCASE_PROFILE_BODY_DESCRIPTOR = msg({
 	message:
 		'Get an animated avatar and banner, a subscriber badge, the four-digit tag you want after your username{footnote}, and a separate profile for each community.',

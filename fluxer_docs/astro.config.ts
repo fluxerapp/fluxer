@@ -161,7 +161,13 @@ export default defineConfig({
 				},
 				{
 					label: 'Self-hosting',
-					items: ['operator/get-started', 'operator/configuration', 'operator/reverse-proxy', 'operator/upgrading'],
+					items: [
+						'operator/get-started',
+						'operator/sign-in',
+						'operator/configuration',
+						'operator/reverse-proxy',
+						'operator/upgrading',
+					],
 				},
 				{
 					label: 'Topics',

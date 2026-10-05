@@ -130,6 +130,10 @@ export class UserAccountRepository implements IUserAccountRepository {
 		return this.lookupRepo.findDiscriminatorsByUsername(username);
 	}
 
+	async findUsersByUsername(username: string): Promise<Array<User>> {
+		return this.lookupRepo.findUsersByUsername(username);
+	}
+
 	async getActivityTracking(userId: UserID): Promise<{
 		last_active_at: Date | null;
 		last_active_ip: string | null;

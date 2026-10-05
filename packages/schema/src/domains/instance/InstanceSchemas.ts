@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {SsoStatusResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {createNamedStringLiteralUnion} from '@fluxer/schema/src/primitives/SchemaPrimitives';
@@ -49,6 +50,12 @@ export const InstanceSetupSchema = z
 	.object({
 		configured: z.boolean().describe('Whether the instance administrator has completed initial setup'),
 		admin_url: z.string().nullable().describe('Admin panel URL to continue instance setup'),
+		account_identity_locked: z
+			.boolean()
+			.optional()
+			.describe(
+				'Present only while a self-hosted instance is unconfigured. True when the sign-in method can no longer change',
+			),
 	})
 	.describe('Initial setup state for self-hosted instances');
 export type InstanceSetup = z.infer<typeof InstanceSetupSchema>;
@@ -100,6 +107,22 @@ export const InstanceCaptchaSchema = z
 	.describe('Captcha configuration');
 export type InstanceCaptcha = z.infer<typeof InstanceCaptchaSchema>;
 
+export const AccountIdentityModeSchema = createNamedStringLiteralUnion(
+	[
+		[AccountIdentityModes.EMAIL, 'EMAIL', 'People sign in with an email address'],
+		[AccountIdentityModes.USERNAME, 'USERNAME', 'People sign in with a username and no email is collected'],
+	],
+	'How people identify themselves when they sign in',
+);
+
+export const TagStyleSchema = createNamedStringLiteralUnion(
+	[
+		[TagStyles.NONE, 'NONE', 'Usernames are unique and shown without a tag'],
+		[TagStyles.RANDOM, 'RANDOM', 'Every account gets a random tag'],
+	],
+	'How usernames are tagged',
+);
+
 export const InstanceFeaturesSchema = z
 	.object({
 		voice_enabled: z.boolean().describe('Whether voice/video calling is enabled'),
@@ -114,6 +137,10 @@ export const InstanceFeaturesSchema = z
 		presigned_attachment_uploads: z.boolean().describe('Whether clients can request presigned attachment upload URLs'),
 		emails_enabled: z.boolean().describe('Whether the instance sends emails (verification, password reset, etc.)'),
 		phone_verification_enabled: z.boolean().describe('Deprecated. Always false.'),
+		account_identity: AccountIdentityModeSchema.describe(
+			'How people sign in on this instance. Clients treat a missing value as email',
+		),
+		tag_style: TagStyleSchema.describe('How usernames are tagged. Clients treat a missing value as random'),
 	})
 	.describe('Feature flags for this instance');
 export type InstanceFeatures = z.infer<typeof InstanceFeaturesSchema>;
@@ -205,3 +232,19 @@ export const WellKnownFluxerResponse = z.object({
 });
 
 export type WellKnownFluxerResponse = z.infer<typeof WellKnownFluxerResponse>;
+
+export const InstanceAccountIdentityUpdateRequest = z.object({
+	mode: AccountIdentityModeSchema.describe('Sign-in method for the new instance'),
+	tag_style: TagStyleSchema.optional().describe(
+		'How usernames are tagged. Defaults to none. Username sign-in accepts only none',
+	),
+});
+
+export type InstanceAccountIdentityUpdateRequest = z.infer<typeof InstanceAccountIdentityUpdateRequest>;
+
+export const InstanceAccountIdentityResponse = z.object({
+	mode: AccountIdentityModeSchema.describe('Sign-in method now in effect'),
+	tag_style: TagStyleSchema.describe('How usernames are tagged'),
+});
+
+export type InstanceAccountIdentityResponse = z.infer<typeof InstanceAccountIdentityResponse>;

@@ -8,6 +8,7 @@ use crate::{
         page_container::card_with_header,
         table::data_table,
     },
+    utils::user_tag::user_tag,
 };
 use maud::{Markup, html};
 
@@ -162,7 +163,7 @@ fn format_status(status: i32) -> &'static str {
 fn format_reporter(report: &ReportEntry) -> String {
     if let Some(ref username) = report.reporter_username {
         let disc = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        let tag = format!("{username}#{disc}");
+        let tag = user_tag(username, disc, false);
         if let Some(ref gn) = report.reporter_global_name {
             let trimmed = gn.trim();
             if !trimmed.is_empty() {
@@ -260,7 +261,7 @@ fn format_reported_entity(report: &ReportEntry) -> String {
             .reported_user_discriminator
             .as_deref()
             .unwrap_or("0000");
-        let tag = format!("{username}#{disc}");
+        let tag = user_tag(username, disc, false);
         if let Some(ref gn) = report.reported_user_global_name {
             let trimmed = gn.trim();
             if !trimmed.is_empty() {

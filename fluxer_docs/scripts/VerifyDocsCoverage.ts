@@ -2258,6 +2258,14 @@ async function verifyInstallerExecution(installerRoot: string): Promise<Array<st
 			}
 		}
 
+		const withoutEmail = INSTALL_ARGS.filter(
+			(arg, index) => arg !== '--email' && INSTALL_ARGS[index - 1] !== '--email',
+		);
+		const withoutEmailPlan = planned('without --email', withoutEmail);
+		if (withoutEmailPlan != null && !/^ {2}email\s+admin@x\.example, derived by compose$/mu.test(withoutEmailPlan)) {
+			problems.push('install.sh without --email does not plan the admin@FLUXER_DOMAIN contact that compose derives');
+		}
+
 		const composeYmlInstance = path.join(sandbox, 'compose-yml-instance');
 		await mkdir(composeYmlInstance, {recursive: true});
 		await writeFile(

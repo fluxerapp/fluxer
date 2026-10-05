@@ -181,6 +181,14 @@ export const PasswordChangeCompleteRequest = PasswordChangeTicketRequest.extend(
 
 export type PasswordChangeCompleteRequest = z.infer<typeof PasswordChangeCompleteRequest>;
 
+export const UserPasswordUpdateRequest = z
+	.object({
+		new_password: PasswordType.describe('The new password to set'),
+	})
+	.extend(SudoVerificationSchema.shape);
+
+export type UserPasswordUpdateRequest = z.infer<typeof UserPasswordUpdateRequest>;
+
 export const FriendRequestByTagRequest = z.object({
 	username: UsernameType.describe('Username of the user to send friend request'),
 	discriminator: DiscriminatorType.describe('Discriminator tag of the user'),

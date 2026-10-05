@@ -28,6 +28,8 @@ When SSO is both enabled and enforced, every local authentication operation retu
 An enforced instance returns 403 `SSO_REQUIRED` even for a malformed or unauthenticated local authentication request.
 :::
 
+An instance reports how members sign in as `account_identity` in its [instance features](/http-api/instance/#instance-features-object). On a `username` instance, [verify an email address](#verify-an-email-address), [resend email verification](#resend-email-verification), [request password recovery](#request-password-recovery), [revert an email change](#revert-an-email-change), [authorise an IP address](#authorise-an-ip-address) and [resend IP authorisation](#resend-ip-authorisation) return 400 `EMAIL_UNAVAILABLE_ON_INSTANCE` and send nothing. [Recover an account](#recover-an-account) is the reverse. Only a `username` instance serves it, and an `email` instance returns 400 `USERNAME_SIGN_IN_ONLY`. [Check username availability](#check-username-availability) is served by any instance with the `none` tag style.
+
 A successful sign-in creates one authentication session and issues its token. Fluxer sets no ceiling on live sessions and evicts none when a further session starts, so an account holds one session per sign-in until it revokes them through [terminate authentication sessions](#terminate-authentication-sessions).
 
 Revoking a session, whether the account revoked it or an administrator terminated it, stops its token authenticating requests. Its main Gateway connection receives [Invalid Session](/gateway/overview/#invalid-session) with `d: false` and stays open, unauthenticated. No Gateway Dispatch is emitted for the revocation itself, so a client learns of it from that frame or from the next request that fails to authenticate.
@@ -36,7 +38,7 @@ Revoking a session, whether the account revoked it or an administrator terminate
 
 ## Authentication token response object
 
-A newly issued session token and the account it belongs to. Password login without a second factor, MFA completion, discoverable WebAuthn authentication, immediate registration, password reset, email reversion, SSO completion, IP authorisation polling, and handoff polling all return these fields.
+A newly issued session token and the account it belongs to. Password login without a second factor, MFA completion, discoverable WebAuthn authentication, immediate registration, password reset, account recovery, email reversion, SSO completion, IP authorisation polling, and handoff polling all return these fields.
 
 ### Structure
 
@@ -226,6 +228,19 @@ The result of checking a password reset token without consuming it.
 
 <sup>1</sup> A password reset token expires one hour after it is issued
 
+## Account recovery response object
+
+The result of [recover an account](#recover-an-account). It is an [authentication token response](#authentication-token-response) or an [MFA challenge response](#mfa-challenge-response), with the two fields below added to either shape.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| recovery_key<sup>1</sup> | string | The new recovery key, 8 groups of 4 characters joined by `-` |
+| recovery_kit_created_at | ISO8601 timestamp | When the new recovery kit was created |
+
+<sup>1</sup> The key replaces the one the request used, and this response is the only way to read it. Next to an MFA ticket the key works only after the MFA completion accepts that ticket
+
 ## IP authorisation poll object
 
 The state of one IP authorisation ticket, as observed by the device whose sign-in was held.
@@ -252,6 +267,16 @@ Username candidates derived from a display name.
 | suggestions<sup>1</sup> | array[string] | The generated username candidates (max 20 items) |
 
 <sup>1</sup> The array has at most one candidate. It is empty when the supplied display name derives no permitted username
+
+## Username availability object
+
+Whether a username is free for a new account.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| available | boolean | Whether no other account holds the username |
 
 ## Handoff initiation object
 
@@ -506,7 +531,7 @@ Approval mode registration instead returns 403 `REGISTRATION_PENDING_APPROVAL` a
 
 Creates an ordinary account. Returns an [authentication token response](#authentication-token-response) when the instance admits the account immediately and a [registration pending approval response](#registration-pending-approval-response-object) when it does not. Emits a [Guild Member Add](/gateway/events/#guild-member-add) Gateway event for each guild the new account joins through an invite or through the instance's single community guild.
 
-Registration verifies a [CAPTCHA](/topics/captcha/). It permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own. Those allowances are separate from the route bucket, and only a deployment with `dev.relax_registration_rate_limits` set to true disables them.
+Registration verifies a [CAPTCHA](/topics/captcha/). It permits 3 attempts per hour for each client IP address and 15 per hour for each client subnet, which is the IPv4 /24 or IPv6 /48 network. A supplied email address permits 3 attempts per 15 minutes of its own, except on a `username` instance, which discards the address. Those allowances are separate from the route bucket, and only a deployment with `dev.relax_registration_rate_limits` set to true disables them.
 
 ### Request headers
 
@@ -533,9 +558,9 @@ Registration verifies a [CAPTCHA](/topics/captcha/). It permits 3 attempts per h
 | registration_url_code?<sup>6</sup> | ?string | The administrator-issued registration URL code (1-256 characters) |
 | theme? | string | The initial theme preference, one of `dark`, `dark_legacy`, `coal`, `light`, or `system` |
 
-<sup>1</sup> Omitting the email address creates an unclaimed account, which has no recovery path until it is claimed. An address whose domain has no usable DNS records, or whose top-level domain the instance blocks, returns the field code `INVALID_EMAIL_ADDRESS`, and an address already in use returns `EMAIL_ALREADY_IN_USE`
+<sup>1</sup> Omitting the email address creates an unclaimed account, which has no recovery path until it is claimed. An address whose domain has no usable DNS records, or whose top-level domain the instance blocks, returns the field code `INVALID_EMAIL_ADDRESS`, and an address already in use returns `EMAIL_ALREADY_IN_USE`. A `username` instance accepts any string of 1-320 characters here, because older apps send one, and discards it. It stores no address and sends no email. It does not check the address against DNS or the blocklists, or whether another account uses it
 
-<sup>2</sup> Omitting the username derives one from `global_name` when that value produces a permitted username, and otherwise allocates a generated username, in both cases with a server-allocated discriminator
+<sup>2</sup> Omitting the username derives one from `global_name` when that value produces a permitted username, and otherwise allocates a generated username, in both cases with a server-allocated discriminator. On a `username` instance a body with `password` and neither `username` nor `email` returns the field code `USERNAME_LENGTH_INVALID`. A body there with `email` and no `username` asks for the part before the `@` as the username when the address is at the [instance host](#log-in-with-a-password), normalised the way a display name is, so `alex.lee@chat.example.com` asks for `alex_lee` and `alex#0@chat.example.com` asks for `alex`. A name another account holds then returns `USERNAME_ALREADY_TAKEN` on `username`. A part that cannot be a username returns the field code a `username` value would, such as `USERNAME_RESERVED_VALUE`, on `username`. An address at any other host, a value with no `@` and a value with a second `@` return `INSTANCE_ADDRESS_REQUIRED` on `email`, whose message names the instance host. Only a body without `email` gets a username from `global_name` or the generator. With the `none` [tag style](/http-api/instance/#tag-styles), a username another account holds in any letter case returns `USERNAME_ALREADY_TAKEN`, a derived username is made unique first, and every account gets the discriminator `0000`. With `random`, which only an `email` instance can use, the discriminator is random
 
 <sup>3</sup> The password is checked against the public breached-password corpus described under [reset a password](#reset-a-password), and a match returns the field code `PASSWORD_IS_TOO_COMMON`
 
@@ -564,6 +589,7 @@ There is no retry key. A repeated request with the same values creates a second 
 | 200 | [authentication token response](#authentication-token-response) \| [registration pending approval response](#registration-pending-approval-response-object) | Registration completed or entered the approval state |
 | 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, account fields, or registration URL code is invalid |
 | 403 | [error response](/http-api/#error-response) | SSO enforcement, registration policy, or content moderation rejects the registration |
+| 423 | [error response](/http-api/#error-response) | `GENERAL_ERROR`, because a self-hosted instance with no account yet is still settling its [sign-in method](/http-api/instance/#set-the-setup-sign-in-method) after 15 seconds |
 | 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, IP, or subnet bucket denies the request |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
@@ -584,9 +610,9 @@ Approval mode registration creates no guild membership and no authentication ses
 
 <RouteHeader method="POST" path="/v1/auth/login" unauthenticated />
 
-Validates local email and password credentials. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when no second factor and no IP approval are outstanding, and an [MFA challenge response](#mfa-challenge-response) when the account has a second factor.
+Validates a local password against an email address or a username. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when no second factor and no IP approval are outstanding, and an [MFA challenge response](#mfa-challenge-response) when the account has a second factor.
 
-Login verifies a [CAPTCHA](/topics/captcha/). It also permits 10 attempts per client IP address in 30 minutes, keyed by the exact IPv4 address or the IPv6 /64 network, and 5 attempts per email address in 15 minutes. Every admitted attempt consumes both allowances, whether or not the credentials turn out to be correct, and a successful login clears neither.
+Login verifies a [CAPTCHA](/topics/captcha/). It also permits 10 attempts per client IP address in 30 minutes, keyed by the exact IPv4 address or the IPv6 /64 network, and 5 attempts per sign-in identifier in 15 minutes. The identifier is the email address. On a `username` instance it is the lowercased username together with that same IP key, whichever field and form named it, so one source cannot use up the allowance of another. Every admitted attempt consumes these allowances, whether or not the credentials turn out to be correct, and a successful login clears none of them. Each username also permits 100 failed attempts per hour from all sources together, and only a failed attempt consumes that allowance. Once it runs out, a failed attempt returns 429. A correct password then returns 429 too, unless the request carried a solved CAPTCHA or came from an IP address the account has already authorised.
 
 ### Request headers
 
@@ -604,19 +630,22 @@ Login verifies a [CAPTCHA](/topics/captcha/). It also permits 10 attempts per cl
 
 | Field | Type | Description |
 | --- | --- | --- |
-| email | string | The account email address |
+| email?<sup>1</sup> | string | The account email address, or the sign-in identifier from older apps on a `username` instance |
+| login?<sup>1</sup> | string | The sign-in identifier (1-320 characters) |
 | password | string | The account password (8-256 characters) |
-| invite_code?<sup>1</sup> | ?string | The invite accepted immediately after a successful login (0-256 characters) |
+| invite_code?<sup>2</sup> | ?string | The invite accepted immediately after a successful login (0-256 characters) |
 
-<sup>1</sup> The invite is accepted only on a login that completes without a second factor, and a failure to accept it does not fail the login. A login held for IP authorisation discards the invite
+<sup>1</sup> Send one of the two. Sending neither returns the field code `INVALID_FORMAT` on `email`, and an empty or `null` `login` counts as not sent. A body with both uses `email` and ignores `login`. On an `email` instance `login` is an email address, and a value that is not one returns the field code `INVALID_EMAIL_FORMAT` on `login`. On a `username` instance `login` is a username, and `alex#0` or `alex#0000` reads the same as `alex`. There `email` is any string of 1-320 characters, for older apps that only send `email`. It takes the same forms as `login`, and also `alex@` followed by the instance host. The instance host is the host of the public web app address, of any app origin alias or of the instance domain, in any letter case and with or without a port. A host written in Unicode matches its punycode form. The part before the `@` may also be written the way registration normalises it, so `alex.lee@` reaches `alex_lee`. An address at any other host fails like an unknown username
+
+<sup>2</sup> The invite is accepted only on a login that completes without a second factor, and a failure to accept it does not fail the login. A login held for IP authorisation discards the invite
 
 :::note[Unknown accounts and unknown passwords are indistinguishable]
-An unknown email address and an incorrect password both return the same paired field codes `INVALID_EMAIL_OR_PASSWORD` on `email` and `password`.
+An unknown email address and an incorrect password both return the same paired field codes `INVALID_EMAIL_OR_PASSWORD` on `password` and on whichever of `email` and `login` the request sent. On a `username` instance an unknown username, an address at another host, and an incorrect password all return `INVALID_LOGIN_OR_PASSWORD` on `password` and on whichever of `email` and `login` the request sent, after the same password hashing work.
 :::
 
 A new client IP address on an account that has neither a second factor nor the app store reviewer flag returns 403 `IP_AUTHORIZATION_REQUIRED`. That error body has `ip_authorization_required` set to true, the `ticket` used by the IP authorisation operations, the account `email`, and `resend_available_in` set to 30 seconds.
 
-When the instance has disabled new-IP authorisation or sends no email, Fluxer authorises the client IP address silently and the login continues. An account that already has a second factor never enters IP authorisation.
+When the instance has disabled new-IP authorisation or sends no email, Fluxer authorises the client IP address silently and the login continues. A `username` instance never sends email. An account that already has a second factor never enters IP authorisation.
 
 Account policy can return 403 `REGISTRATION_PENDING_APPROVAL`, 403 `REGISTRATION_REJECTED`, 403 `ACCOUNT_SUSPENDED_TEMPORARILY`, or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. A bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
@@ -631,10 +660,10 @@ A correct password also clears an expired temporary suspension before any second
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [authentication token response](#authentication-token-response) \| [MFA challenge response](#mfa-challenge-response) | The credentials are accepted |
-| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, email, or password is invalid |
+| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, sign-in identifier, or password is invalid |
 | 403 | [error response](/http-api/#error-response) | Account policy, SSO enforcement, or IP authorisation prevents the login |
 | 409 | [error response](/http-api/#error-response) | `CONFLICT`, because the deletion state changed while cancelling a self-scheduled deletion |
-| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, email, or IP bucket denies the request |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, identifier, or IP bucket denies the request |
 | 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
 | 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
 
@@ -665,7 +694,7 @@ MFA verification also permits 10 failed attempts per account in 15 minutes and d
 
 <sup>1</sup> A validated authenticator code is claimed for 30 seconds, so the same code cannot be presented twice. A backup code is consumed permanently on the attempt that accepts it
 
-An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no TOTP enrolment reads `code` as a backup code, and it returns the field code `TOTP_NOT_ENABLED` on `code` only when it holds no unconsumed backup code either. Both an incorrect code and any code presented after the per-account or per-ticket attempt allowance is exhausted return the field code `INVALID_CODE` on `code`. A ticket that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
+A ticket from [recover an account](#recover-an-account) applies that recovery before the session is created, and returns the field code `INVALID_RECOVERY_KEY` on `recovery_key` when the recovery kit changed in the meantime. An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no TOTP enrolment reads `code` as a backup code, and it returns the field code `TOTP_NOT_ENABLED` on `code` only when it holds no unconsumed backup code either. Both an incorrect code and any code presented after the per-account or per-ticket attempt allowance is exhausted return the field code `INVALID_CODE` on `code`. A ticket that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
 ### Response
 
@@ -738,7 +767,7 @@ Consumes the MFA ticket, verifies the WebAuthn assertion against the challenge, 
 
 <sup>1</sup> The challenge is consumed before verification and is accepted only when its bound context, account, and ticket all match this request
 
-An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A ticket for an account that does not count passkeys as its second factor returns 400 `TWO_FACTOR_REQUIRED`, which is what a TOTP account holding registered credentials without [Set WebAuthn two-factor authentication](/http-api/users/mfa/#set-webauthn-two-factor-authentication) receives. A challenge mismatch, an unknown credential, a credential the options did not list, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
+A ticket from [recover an account](#recover-an-account) applies that recovery before the session is created, and returns the field code `INVALID_RECOVERY_KEY` on `recovery_key` when the recovery kit changed in the meantime. An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A ticket for an account that does not count passkeys as its second factor returns 400 `TWO_FACTOR_REQUIRED`, which is what a TOTP account holding registered credentials without [Set WebAuthn two-factor authentication](/http-api/users/mfa/#set-webauthn-two-factor-authentication) receives. A challenge mismatch, an unknown credential, a credential the options did not list, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
 
 This operation shares the MFA attempt allowances of [complete login with TOTP](#complete-login-with-totp). It permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts. An exhausted allowance returns the field code `INVALID_CODE` on `ticket`.
 
@@ -1017,6 +1046,8 @@ A token in the path reaches proxy logs, browser history, and referrer headers. A
 
 Consumes a valid reset token and replaces the account password, then issues a new session or an MFA challenge. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when the account has no second factor, and an [MFA challenge response](#mfa-challenge-response) when it has one.
 
+On a `username` instance a reset token comes only from an administrator's [password reset link](/admin-api/users/#create-password-reset-link). Validation and the reset itself work the same way there.
+
 Fluxer reads the second factor from the account as it stood before the reset. An account that held no password and holds at least one registered WebAuthn credential counts as having one, because the passkey was its primary credential, so it receives an MFA challenge with `webauthn` in `allowed_methods` and MUST prove the passkey before the reset yields a session.
 
 ### JSON body
@@ -1049,13 +1080,80 @@ A successful reset terminates every authentication session on the account, inclu
 
 ### Side effects
 
-The operation replaces the password, records the change time, clears an expired temporary suspension, terminates every authentication session on the account, and consumes the presented reset token. Every terminated session loses its Gateway session as [shared behaviour](#shared-behaviour) states. Other outstanding reset tokens are not invalidated, so a second recovery link issued earlier still works.
+The operation replaces the password, records the change time, clears an expired temporary suspension, terminates every authentication session on the account, and consumes the presented reset token before it creates a session or an MFA ticket. A failure after that point still leaves the token used. Every terminated session loses its Gateway session as [shared behaviour](#shared-behaviour) states. Other outstanding emailed reset tokens are not invalidated, so a second recovery link issued earlier still works. A token from an administrator's [password reset link](/admin-api/users/#create-password-reset-link) is the exception, and using one invalidates every outstanding reset token on the account.
 
 An account with no second factor then receives one new session and its token. An account with a second factor receives a five-minute MFA ticket instead, and the MFA completion creates the session. An account that had no password and holds a registered WebAuthn credential is one of those, and its ticket is completed through [complete login with WebAuthn MFA](#complete-login-with-webauthn-mfa), or through [complete login with TOTP](#complete-login-with-totp) when `allowed_methods` lists `backup_codes`.
 
 ### Rate limit
 
 10 requests per minute, on the `auth:reset` bucket.
+
+## Recover an account
+
+<RouteHeader method="POST" path="/v1/auth/recover" unauthenticated />
+
+Replaces the account password using the recovery key from a recovery kit, then issues a new session or an MFA challenge together with a new recovery key. Authentication is not required. Returns an [account recovery response](#account-recovery-response-object).
+
+Only a `username` instance serves this operation, and an `email` instance returns 400 `USERNAME_SIGN_IN_ONLY`.
+
+Recovery verifies a [CAPTCHA](/topics/captcha/). It also permits 10 attempts per client IP address and 5 attempts per sign-in identifier from each client IP address in 30 minutes. The identifier is the lowercased `login`, and the IP key is the exact IPv4 address or the IPv6 /64 network. Every admitted attempt consumes both allowances, whether or not the key turns out to be correct.
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
+
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Verification is skipped entirely while the check is off for the instance
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| login<sup>1</sup> | string | The username (1-320 characters) |
+| recovery_key<sup>2</sup> | string | The recovery key from the account's recovery kit (1-128 characters) |
+| password<sup>3</sup> | string | The replacement password (8-256 characters) |
+
+<sup>1</sup> `alex#0` and `alex#0000` read the same as `alex`, and any other tag never matches. A bot account never matches
+
+<sup>2</sup> Spaces and dashes are dropped and lowercase letters count as uppercase. `O` reads as `0`, `I` and `L` read as `1`, and a key containing `U` never matches
+
+<sup>3</sup> The password is checked against the public breached-password corpus described under [reset a password](#reset-a-password), and a match returns the field code `PASSWORD_IS_TOO_COMMON`
+
+:::note[Unknown accounts and wrong keys are indistinguishable]
+An unknown `login` and an account with no recovery kit return the same field code as a wrong key, `INVALID_RECOVERY_KEY` on `recovery_key`.
+:::
+
+A matching key on a deleted account also returns `INVALID_RECOVERY_KEY`. A live temporary suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY`, and a closed account returns 403 `ACCOUNT_SUSPENDED_PERMANENTLY`. An account awaiting approval returns 403 `REGISTRATION_PENDING_APPROVAL`, and a rejected registration returns 403 `REGISTRATION_REJECTED`. Each of these checks runs only after the key matched.
+
+:::caution[Recovery revokes every session and the old key]
+A successful recovery terminates every authentication session on the account and replaces the recovery kit. The key the request used stops working. The new key is in the response and nowhere else. A client MUST keep it and show it to the user once the recovery has taken effect.
+:::
+
+:::note[An account with a second factor changes only after MFA]
+For an account with a second factor this operation writes nothing. It returns an MFA ticket together with the new key. The password, the sessions and the kit change only when [complete login with TOTP](#complete-login-with-totp) or [complete login with WebAuthn MFA](#complete-login-with-webauthn-mfa) accepts that ticket, and the new key works only from then on. A ticket that expires unused leaves the old password, sessions and kit as they were.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [account recovery response](#account-recovery-response-object) | The password and the recovery kit were replaced |
+| 400 | [error response](/http-api/#error-response) | The body, CAPTCHA, recovery key, or replacement password is invalid, or the instance signs members in with email |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement, an account suspension, or a registration that is not admitted rejects the recovery |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | A route, global, identifier, or IP bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+For an account with no second factor the operation swaps the recovery kit for a new one, replaces the password, records the change time, terminates every authentication session on the account, invalidates every outstanding password reset token, and issues one new session. If the password reset fails after the swap, the old kit is put back. Every terminated session loses its Gateway session as [shared behaviour](#shared-behaviour) states.
+
+For an account with a second factor the operation only issues a five-minute MFA ticket. The MFA completion makes the same changes and then creates the session. When the kit changed after the ticket was issued, the completion changes nothing and returns the field code `INVALID_RECOVERY_KEY` on `recovery_key`. The new recovery key is in the response in both cases.
+
+### Rate limit
+
+10 requests per minute, on the `auth:recover` bucket.
 
 ## Revert an email change
 
@@ -1328,6 +1426,47 @@ The operation does no availability check and holds nothing. Registration allocat
 ### Side effects
 
 This read reserves no username and changes no account state. No Gateway Dispatch is emitted.
+
+## Check username availability
+
+<RouteHeader method="GET" path="/v1/auth/username-availability" unauthenticated />
+
+Reports whether a username is free for a new account. Authentication is not required. Returns a [username availability](#username-availability-object) object.
+
+Only an instance with the `none` tag style serves this operation, and any other instance returns 400 `USERNAME_SIGN_IN_ONLY`.
+
+### Query parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| username<sup>1</sup> | string | The username to check (1-32 characters) |
+
+<sup>1</sup> The value follows the `username` rules of [register an account](#register-an-account). An invalid or reserved value returns 400 `INVALID_FORM_BODY` with the same field code registration would return, not `available` false
+
+A name counts as held when an account that is not a bot and not deleted has it, compared without regard to case.
+
+:::note[An available name can be taken before use]
+The operation holds nothing. Registration checks the name again and returns the field code `USERNAME_ALREADY_TAKEN` when another account claimed it first.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [username availability](#username-availability-object) object | The username was checked |
+| 400 | [error response](/http-api/#error-response) | The query or username is invalid, or the instance signs members in with email |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+This read reserves no username and changes no account state. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+30 requests per minute, on the `auth:username_availability` bucket.
 
 ## Initiate desktop handoff
 

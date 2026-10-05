@@ -4,6 +4,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {getPremiumGraceEndDate} from '@app/features/premium/utils/PremiumGrace';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {
 	type MentionReplyPreference,
@@ -364,7 +365,7 @@ export class User {
 	}
 
 	get tag(): string {
-		return `${this.username}#${this.discriminator}`;
+		return formatUserTag(this);
 	}
 
 	get createdAt(): Date {
@@ -582,7 +583,8 @@ export class User {
 	}
 
 	isClaimed(): boolean {
-		return !!this.email;
+		if (!RuntimeConfig.usesUsernameSignIn) return !!this.email;
+		return this.passwordLastChangedAt != null || this._traits.includes('sso');
 	}
 
 	equals(other: User): boolean {

@@ -7,6 +7,7 @@ import {MockAvatar} from '@app/features/ui/components/MockAvatar';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {formatLastActive} from '@fluxer/date_utils/src/DateFormatting';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -43,6 +44,9 @@ export const getAccountAvatarUrl = (account: Account): string | undefined => {
 export const getAccountDisplayName = (account: Account, fallback: string): string => {
 	return account.userData ? NicknameUtils.getDisplayName(account.userData) : fallback;
 };
+export const getAccountTag = (account: Account): string | null => {
+	return account.userData ? formatUserTag(account.userData) : null;
+};
 export const AccountListItem = ({
 	account,
 	disabled = false,
@@ -57,17 +61,21 @@ export const AccountListItem = ({
 	const avatarUrl = getAccountAvatarUrl(account);
 	const avatarSize = variant === 'compact' ? 32 : 40;
 	const emailUnavailableLabel = i18n._(EMAIL_UNAVAILABLE_DESCRIPTOR);
+	const accountSubtitle =
+		RuntimeConfig.usesUsernameSignIn && account.userData
+			? formatUserTag(account.userData)
+			: (account.userData?.email ?? emailUnavailableLabel);
 	const defaultMeta =
 		variant === 'compact' ? (
 			isCurrent ? (
-				(account.userData?.email ?? emailUnavailableLabel)
+				accountSubtitle
 			) : (
 				<Trans comment="Account switcher metadata showing when a saved account was last used.">
 					Last active {{lastActive: formatLastActive(account.lastActive, getCurrentLocale())}}
 				</Trans>
 			)
 		) : (
-			(account.userData?.email ?? emailUnavailableLabel)
+			accountSubtitle
 		);
 	return (
 		<button

@@ -15,6 +15,7 @@ import type {ILogger} from '@app/api/ILogger';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {usesUsernameSignIn} from '@app/api/instance/AccountIdentityModeCache';
 import {
 	type InstanceConfigRepository,
 	type InstanceSsoConfig,
@@ -32,11 +33,14 @@ import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstri
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
 import {UserSettings} from '@app/api/models/UserSettings';
+import {deriveAvailableUsername, reserveUsername, type UsernameReservation} from '@app/api/user/UniqueUsernames';
+import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
 import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
+import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {SSO_MOBILE_CALLBACK_URI, SSO_MOBILE_STATE_PREFIX} from '@fluxer/constants/src/SsoConstants';
 import {ProfileFieldPrivacyFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -374,7 +378,10 @@ export class SsoService {
 			throw InputValidationError.fromCode('email_verified', ValidationErrorCodes.INVALID_SSO_TOKEN);
 		}
 		const emailLower = claims.email.toLowerCase();
-		getLogger().info({email: emailLower, has_sub: true}, 'SSO login with sub claim');
+		getLogger().info(
+			usesUsernameSignIn() ? {has_sub: true} : {email: emailLower, has_sub: true},
+			'SSO login with sub claim',
+		);
 		const identityUserId = await this.ssoIdentityRepository.findUserId(config.providerId, claims.sub);
 		if (identityUserId) {
 			const user = await this.apiContext.services.users.findUnique(identityUserId);
@@ -450,6 +457,14 @@ export class SsoService {
 		return users.patchUpsert(user.id, {traits}, user.toRow());
 	}
 
+	private async allocateDiscriminator(username: string): Promise<number> {
+		const result = await this.discriminatorService.generateDiscriminator({username});
+		if (!result.available) {
+			throw InputValidationError.fromCode('username', ValidationErrorCodes.SSO_UNABLE_TO_ALLOCATE_DISCRIMINATOR);
+		}
+		return result.discriminator;
+	}
+
 	private async provisionUserFromClaims(
 		claims: ResolvedSsoClaims,
 		config: ResolvedSsoConfig,
@@ -457,14 +472,15 @@ export class SsoService {
 			pendingApproval?: boolean;
 		},
 	): Promise<User> {
-		const {users, snowflake} = this.apiContext.services;
+		const {users, snowflake, cache} = this.apiContext.services;
+		const accountIdentity = await this.instanceConfigRepository.getAccountIdentity();
+		const usernameMode = accountIdentity.mode === AccountIdentityModes.USERNAME;
+		const uniqueUsernames = accountIdentity.tagStyle === TagStyles.NONE;
 		const userId = (await snowflake.generate()) as UserID;
 		const baseName = claims.name?.trim() || claims.email.split('@')[0] || generateRandomUsername();
-		const username = deriveUsernameFromDisplayName(baseName) ?? generateRandomUsername();
-		const discriminatorResult = await this.discriminatorService.generateDiscriminator({username});
-		if (!discriminatorResult.available) {
-			throw InputValidationError.fromCode('username', ValidationErrorCodes.SSO_UNABLE_TO_ALLOCATE_DISCRIMINATOR);
-		}
+		const derivedUsername = deriveUsernameFromDisplayName(baseName) ?? generateRandomUsername();
+		const username = uniqueUsernames ? await deriveAvailableUsername(users, derivedUsername) : derivedUsername;
+		const discriminator = uniqueUsernames ? USERNAME_MODE_DISCRIMINATOR : await this.allocateDiscriminator(username);
 		const now = new Date();
 		const traits = new Set<string>([
 			'sso',
@@ -485,11 +501,11 @@ export class SsoService {
 		const userRow = {
 			user_id: userId,
 			username,
-			discriminator: discriminatorResult.discriminator,
+			discriminator,
 			global_name: globalName,
 			bot: false,
 			system: false,
-			email: claims.email.toLowerCase(),
+			email: usernameMode ? null : claims.email.toLowerCase(),
 			email_verified: claims.emailVerified,
 			email_bounced: false,
 			password_hash: null,
@@ -544,12 +560,16 @@ export class SsoService {
 		await this.claimSsoIdentity(userId, claims.sub, config);
 		let createAttempted = false;
 		let userCreated = false;
+		let usernameReservation: UsernameReservation | null = null;
 		try {
+			if (uniqueUsernames) {
+				usernameReservation = await reserveUsername({users, cache}, username);
+			}
 			if (options?.pendingApproval) {
 				await this.instanceConfigRepository.addPendingRegistration({
 					user_id: userId.toString(),
 					username,
-					discriminator: discriminatorResult.discriminator,
+					discriminator,
 					global_name: globalName,
 					email: userRow.email,
 					requested_at: now.toISOString(),
@@ -606,6 +626,8 @@ export class SsoService {
 				}
 			}
 			throw error;
+		} finally {
+			await usernameReservation?.release();
 		}
 	}
 

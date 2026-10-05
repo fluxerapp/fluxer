@@ -30,6 +30,8 @@ const FETCH_PASSWORD_RESET_TOKEN_CQL = PasswordResetTokens.selectCql({
 const FETCH_PASSWORD_RESET_TOKENS_BY_USER_CQL = PasswordResetTokensByUserId.selectCql({
 	where: PasswordResetTokensByUserId.where.eq('user_id'),
 });
+export const PASSWORD_RESET_TOKEN_TTL_SECONDS = seconds('1 hour');
+
 const FETCH_EMAIL_REVERT_TOKEN_CQL = EmailRevertTokens.selectCql({
 	where: EmailRevertTokens.where.eq('token_'),
 	limit: 1,
@@ -61,11 +63,13 @@ export class TokenRepository {
 	}
 
 	async createPasswordResetToken(tokenData: PasswordResetTokenRow): Promise<PasswordResetToken> {
-		const TTL = seconds('1 hour');
 		const batch = new BatchBuilder();
-		batch.addPrepared(PasswordResetTokens.insertWithTtl(tokenData, TTL));
+		batch.addPrepared(PasswordResetTokens.insertWithTtl(tokenData, PASSWORD_RESET_TOKEN_TTL_SECONDS));
 		batch.addPrepared(
-			PasswordResetTokensByUserId.insertWithTtl({user_id: tokenData.user_id, token_: tokenData.token_}, TTL),
+			PasswordResetTokensByUserId.insertWithTtl(
+				{user_id: tokenData.user_id, token_: tokenData.token_},
+				PASSWORD_RESET_TOKEN_TTL_SECONDS,
+			),
 		);
 		await batch.execute();
 		return new PasswordResetToken(tokenData);

@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHoverState';
-import {getAccountAvatarUrl, getAccountDisplayName} from '@app/features/auth/components/accounts/AccountListItem';
+import {
+	getAccountAvatarUrl,
+	getAccountDisplayName,
+	getAccountTag,
+} from '@app/features/auth/components/accounts/AccountListItem';
 import styles from '@app/features/auth/components/accounts/AccountRow.module.css';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -53,10 +57,8 @@ export const AccountRow = observer(
 		const {i18n} = useLingui();
 		const avatarUrl = getAccountAvatarUrl(account);
 		const displayName = getAccountDisplayName(account, '???');
-		const userData = account.userData;
-		const accountTag = userData
-			? NicknameUtils.formatTagForStreamerMode(`${userData.username}#${userData.discriminator}`)
-			: displayName;
+		const rawAccountTag = getAccountTag(account);
+		const accountTag = rawAccountTag ? NicknameUtils.formatTagForStreamerMode(rawAccountTag) : displayName;
 		const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 		const isContextMenuOpen = useContextMenuHoverState(menuButtonRef, Boolean(onMenuClick));
 		const handleMenuClick = useCallback(

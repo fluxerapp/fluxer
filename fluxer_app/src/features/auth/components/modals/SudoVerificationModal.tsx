@@ -2,6 +2,7 @@
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/auth/components/modals/SudoVerificationModal.module.css';
 import {
 	isPasskeyCeremonyDismissed,
@@ -31,6 +32,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import WebAuthnCredentials from '@app/features/user/state/WebAuthnCredentials';
 import * as FormUtils from '@app/lib/forms';
 import {PASSKEY_MIGRATION_RP_ID} from '@fluxer/constants/src/PasskeyConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -80,6 +82,25 @@ const BACKUP_CODE_DESCRIPTOR = msg({
 		'Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.',
 });
 const VERIFICATION_FAILED_DESCRIPTOR = msg({message: 'Verification failed'});
+const INCORRECT_PASSWORD_DESCRIPTOR = msg({
+	message: 'Incorrect password.',
+	comment:
+		'Error under the password field when confirming identity on an instance where people sign in with a username.',
+});
+
+function isInvalidPasswordError(body: unknown): boolean {
+	if (typeof body !== 'object' || body === null) return false;
+	const errors = (body as {errors?: unknown}).errors;
+	return (
+		Array.isArray(errors) &&
+		errors.some(
+			(entry) =>
+				typeof entry === 'object' &&
+				entry !== null &&
+				(entry as {code?: unknown}).code === ValidationErrorCodes.INVALID_PASSWORD,
+		)
+	);
+}
 const FINISH_IN_THE_NEW_TAB_DESCRIPTOR = msg({
 	message: 'Finish in the new tab. If you closed it, press Continue with passkey again.',
 	comment:
@@ -131,6 +152,9 @@ const SudoVerificationModal: React.FC = observer(() => {
 		const fallback: keyof FormInputs = showCode ? 'totp' : 'password';
 		if (rawError) {
 			FormUtils.handleError(i18n, form, rawError, fallback);
+			if (RuntimeConfig.usesUsernameSignIn && isInvalidPasswordError(rawError.body)) {
+				form.setError('password', {type: 'server', message: i18n._(INCORRECT_PASSWORD_DESCRIPTOR)});
+			}
 		} else if (verificationFailed) {
 			form.setError(fallback, {type: 'server', message: i18n._(VERIFICATION_FAILED_DESCRIPTOR)});
 		}
@@ -381,6 +405,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 										{...form.register('password')}
 										label={i18n._(PASSWORD_DESCRIPTOR)}
 										type="password"
+										autoComplete={RuntimeConfig.usesUsernameSignIn ? 'current-password' : undefined}
 										autoFocus={!showPasskey && !showCode}
 										error={form.formState.errors.password?.message}
 									/>

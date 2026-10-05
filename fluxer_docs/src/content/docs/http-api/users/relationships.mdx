@@ -133,7 +133,7 @@ Fluxer resolves the tag to exactly one account before any relationship rule runs
 
 <sup>1</sup> Trimmed before validation, then 1 to 32 characters of ASCII letters, digits, and underscores. It cannot be `everyone` or `here`, or contain `fluxer` or `system message`, in any casing
 
-<sup>2</sup> An integer and a decimal string of 1 to 4 digits are both accepted, and `0007` and `7` resolve the same account
+<sup>2</sup> An integer and a decimal string of 1 to 4 digits are both accepted, and `0007` and `7` resolve the same account. On an instance with the `none` tag style a person is reached by their username with the discriminator `0` or `"0000"`. A bot keeps its own discriminator
 
 ### Response
 

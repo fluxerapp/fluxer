@@ -9,6 +9,12 @@ import {
 } from '@app/features/app/state/GifProviderConfig';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {
+	type AccountIdentityMode,
+	AccountIdentityModes,
+	type TagStyle,
+	TagStyles,
+} from '@fluxer/constants/src/AccountIdentityConstants';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
 import type {
 	InstanceAppPublic,
@@ -101,6 +107,8 @@ const DEFAULT_INSTANCE_FEATURES: InstanceFeatures = {
 	presigned_attachment_uploads: false,
 	emails_enabled: false,
 	phone_verification_enabled: false,
+	account_identity: AccountIdentityModes.EMAIL,
+	tag_style: TagStyles.RANDOM,
 };
 
 export const DEFAULT_INSTANCE_REGISTRATION: InstanceRegistration = {
@@ -379,6 +387,17 @@ class RuntimeConfig {
 		return this.normalizeLimits(limits as LimitConfigSnapshot | undefined);
 	}
 
+	applyAccountIdentity(mode: AccountIdentityMode, tagStyle: TagStyle): void {
+		runInAction(() => {
+			this.features = {
+				...this.features,
+				account_identity: mode,
+				tag_style: tagStyle,
+				emails_enabled: mode === AccountIdentityModes.USERNAME ? false : this.features.emails_enabled,
+			};
+		});
+	}
+
 	applyAdminInstanceConfig(config: InstanceConfigResponse): void {
 		const appPublic = normalizeAppPublicConfig({
 			branding: config.app_public.branding,
@@ -396,6 +415,10 @@ class RuntimeConfig {
 				premium_enabled: !config.self_hosted || config.policy.premium_mode === 'mirror',
 				stripe_enabled: config.billing.billing_active,
 				stripe_serviceable: config.billing.stripe_serviceable,
+				account_identity: config.account_identity.mode,
+				tag_style: config.account_identity.tag_style,
+				emails_enabled:
+					config.account_identity.mode === AccountIdentityModes.USERNAME ? false : this.features.emails_enabled,
 			};
 			this.registration = normalizeInstanceRegistration(config.registration);
 			this.community = normalizeInstanceCommunity({
@@ -414,6 +437,23 @@ class RuntimeConfig {
 			this.appPublic = appPublic;
 		});
 		applyDocumentBranding(appPublic);
+	}
+
+	async refreshDiscovery(): Promise<void> {
+		const response = await fetch(`${this.apiEndpoint.replace(/\/$/, '')}/.well-known/fluxer`, {
+			cache: 'no-store',
+			headers: {Accept: 'application/json'},
+		});
+		if (!response.ok) {
+			throw new Error(`Discovery refresh failed with status ${response.status}`);
+		}
+		const instance = (await response.json()) as InstanceDiscoveryResponse;
+		runInAction(() => {
+			this.features = {
+				...DEFAULT_INSTANCE_FEATURES,
+				...instance.features,
+			};
+		});
 	}
 
 	private updateFromInstance(instance: InstanceDiscoveryResponse): void {
@@ -515,6 +555,23 @@ class RuntimeConfig {
 
 	get emailsEnabled(): boolean {
 		return this.features.emails_enabled;
+	}
+
+	get accountIdentity(): AccountIdentityMode {
+		return this.features.account_identity;
+	}
+
+	get usesUsernameSignIn(): boolean {
+		return this.accountIdentity === AccountIdentityModes.USERNAME;
+	}
+
+	get tagStyle(): TagStyle {
+		if (this.usesUsernameSignIn) return TagStyles.NONE;
+		return this.features.tag_style ?? TagStyles.RANDOM;
+	}
+
+	get usesUniqueUsernames(): boolean {
+		return this.tagStyle === TagStyles.NONE;
 	}
 
 	get productName(): string {

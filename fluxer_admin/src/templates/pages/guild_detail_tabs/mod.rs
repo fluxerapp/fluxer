@@ -12,7 +12,7 @@ pub mod reports;
 pub mod settings;
 pub mod stickers;
 
-use crate::api::types::GuildDetailInfo;
+use crate::{api::types::GuildDetailInfo, utils::user_tag::user_tag};
 
 pub(crate) fn owner_display(guild: &GuildDetailInfo) -> String {
     let Some(username) = guild.owner_username.as_deref() else {
@@ -21,7 +21,7 @@ pub(crate) fn owner_display(guild: &GuildDetailInfo) -> String {
     let Some(discriminator) = guild.owner_discriminator.as_deref() else {
         return guild.owner_id.clone();
     };
-    let tag = format!("{username}#{discriminator}");
+    let tag = user_tag(username, discriminator, false);
     if let Some(global_name) = guild
         .owner_global_name
         .as_deref()

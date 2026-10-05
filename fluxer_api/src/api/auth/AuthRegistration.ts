@@ -5,6 +5,11 @@ import * as AuthPassword from '@app/api/auth/AuthPassword';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
+import {
+	getLocalPartAtInstance,
+	getPrimaryInstanceHost,
+	usernameFromInstanceLocalPart,
+} from '@app/api/auth/InstanceAddress';
 import {createEmailVerificationToken, createInviteCode, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import type {UserRow} from '@app/api/database/types/UserTypes';
@@ -12,6 +17,7 @@ import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import {isBlockedEmailDomain} from '@app/api/infrastructure/activity/SharedLists';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {withAccountIdentitySetupLock} from '@app/api/instance/AccountIdentitySetupLock';
 import {
 	type InstanceConfigRepository,
 	type InstanceRegistrationUrl,
@@ -25,12 +31,21 @@ import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstri
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
 import {UserSettings} from '@app/api/models/UserSettings';
+import {
+	deriveAvailableUsername,
+	isUsernameTaken,
+	reserveUsername,
+	type UsernameReservation,
+} from '@app/api/user/UniqueUsernames';
+import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import * as AgeUtils from '@app/api/utils/AgeUtils';
 import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
 import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
 import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
+import {inputValidationErrorFromZodIssues} from '@app/api/Validator';
+import {AccountIdentityModes, TagStyles} from '@fluxer/constants/src/AccountIdentityConstants';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {getRegionalMinimumAge} from '@fluxer/constants/src/RegionalMinimumAge';
 import {ProfileFieldPrivacyFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -42,6 +57,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey, getSubnet} from '@fluxer/ip_utils/src/IpAddress';
 import type {RegisterRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
 import {types} from 'cassandra-driver';
 import {ms} from 'itty-time';
@@ -94,6 +110,17 @@ function shouldRequireHostedLegalConsent(config: APIConfig): boolean {
 export async function register(
 	ctx: ApiContext,
 	deps: RegistrationDependencies,
+	params: RegisterParams,
+): Promise<RegisterResult> {
+	if (!ctx.services.config.instance.selfHosted || (await deps.instanceConfigRepository.isAccountIdentityLocked())) {
+		return await registerAccount(ctx, deps, params);
+	}
+	return await withAccountIdentitySetupLock(ctx.services.cache, () => registerAccount(ctx, deps, params));
+}
+
+async function registerAccount(
+	ctx: ApiContext,
+	deps: RegistrationDependencies,
 	{data, request, requestCache}: RegisterParams,
 ): Promise<RegisterResult> {
 	const {users, snowflake, emailDnsValidation, config} = ctx.services;
@@ -101,6 +128,14 @@ export async function register(
 		deps;
 	const appPublicConfig = await instanceConfigRepository.getAppPublicConfig();
 	const emailEnabled = await instanceConfigRepository.isEmailEnabled();
+	const accountIdentity = await instanceConfigRepository.getAccountIdentity();
+	const usernameMode = accountIdentity.mode === AccountIdentityModes.USERNAME;
+	const uniqueUsernames = accountIdentity.tagStyle === TagStyles.NONE;
+	let olderAppUsername: string | undefined;
+	if (usernameMode) {
+		assertUsernameModeRegistration(data);
+		olderAppUsername = data.username ? undefined : requestedUsernameFromOlderApp(config, data.email);
+	}
 	const requiresTermsConsent = shouldRequireHostedLegalConsent(config) || appPublicConfig.legal.terms_url !== null;
 	const requiresPrivacyConsent = shouldRequireHostedLegalConsent(config) || appPublicConfig.legal.privacy_url !== null;
 	if ((requiresTermsConsent || requiresPrivacyConsent) && !data.consent) {
@@ -132,7 +167,7 @@ export async function register(
 	if (data.password && (await AuthPassword.isPasswordPwned(ctx, data.password))) {
 		throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 	}
-	const rawEmail = data.email ?? null;
+	const rawEmail = usernameMode ? null : (data.email ?? null);
 	const emailKey = rawEmail ? rawEmail.toLowerCase() : null;
 	const enforceRateLimits = !config.dev.relaxRegistrationRateLimits;
 	await enforceRegistrationRateLimits(ctx, {enforceRateLimits, clientIp, emailKey});
@@ -148,8 +183,21 @@ export async function register(
 		const emailTaken = await users.findByEmail(rawEmail);
 		if (emailTaken) throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_ALREADY_IN_USE);
 	}
-	let usernameCandidate: string | undefined = data.username ?? undefined;
+	let usernameCandidate: string | undefined = data.username ?? olderAppUsername;
 	let discriminator: number | null = null;
+	if (uniqueUsernames) {
+		discriminator = USERNAME_MODE_DISCRIMINATOR;
+		if (usernameCandidate) {
+			if (await isUsernameTaken(users, usernameCandidate)) {
+				throw InputValidationError.fromCode('username', ValidationErrorCodes.USERNAME_ALREADY_TAKEN);
+			}
+		} else {
+			usernameCandidate = await deriveAvailableUsername(
+				users,
+				deriveUsernameFromDisplayName(data.global_name ?? '') ?? generateRandomUsername(),
+			);
+		}
+	}
 	if (!usernameCandidate) {
 		const derivedUsername = deriveUsernameFromDisplayName(data.global_name ?? '');
 		if (derivedUsername) {
@@ -173,6 +221,8 @@ export async function register(
 	const grantBootstrapAdmin =
 		shouldAttemptBootstrapAdminGrant(config, {
 			rawEmail,
+			hasPassword: Boolean(data.password),
+			usernameMode,
 			pendingApproval: registrationAccess.pendingApproval,
 			setupConfigured: appPublicConfig.setup.configured,
 		}) && !(await instanceConfigRepository.isAdminBootstrapped());
@@ -253,7 +303,11 @@ export async function register(
 	);
 	let user: User;
 	let createAttempted = false;
+	let usernameReservation: UsernameReservation | null = null;
 	try {
+		if (uniqueUsernames) {
+			usernameReservation = await reserveUsername({users, cache: ctx.services.cache}, username);
+		}
 		if (registrationAccess.pendingApproval) {
 			await instanceConfigRepository.addPendingRegistration({
 				user_id: userId.toString(),
@@ -277,6 +331,8 @@ export async function register(
 			});
 		}
 		throw error;
+	} finally {
+		await usernameReservation?.release();
 	}
 	await users.upsertSettings(
 		UserSettings.getDefaultUserSettings({
@@ -338,17 +394,43 @@ function shouldAttemptBootstrapAdminGrant(
 	config: APIConfig,
 	params: {
 		rawEmail: string | null;
+		hasPassword: boolean;
+		usernameMode: boolean;
 		pendingApproval: boolean;
 		setupConfigured: boolean;
 	},
 ): boolean {
 	const localDevInstance = config.nodeEnv === 'development' && !config.dev.testModeEnabled;
 	const setupBootstrapOpen = !params.setupConfigured;
+	const claimedAccount = params.usernameMode ? params.hasPassword : params.rawEmail !== null;
 	return (
-		(config.instance.selfHosted || localDevInstance || setupBootstrapOpen) &&
-		params.rawEmail !== null &&
-		!params.pendingApproval
+		(config.instance.selfHosted || localDevInstance || setupBootstrapOpen) && claimedAccount && !params.pendingApproval
 	);
+}
+
+function assertUsernameModeRegistration(data: RegisterRequest): void {
+	if (data.password && !data.username && data.email == null) {
+		throw InputValidationError.fromCode('username', ValidationErrorCodes.USERNAME_LENGTH_INVALID);
+	}
+}
+
+function requestedUsernameFromOlderApp(config: APIConfig, email: string | null | undefined): string | undefined {
+	if (email == null) return undefined;
+	const localPart = getLocalPartAtInstance(config, email.trim());
+	if (localPart === null) {
+		throw InputValidationError.fromCode('email', ValidationErrorCodes.INSTANCE_ADDRESS_REQUIRED, {
+			host: getPrimaryInstanceHost(config),
+		});
+	}
+	const candidate = usernameFromInstanceLocalPart(localPart);
+	if (candidate === null) {
+		throw InputValidationError.fromCode('username', ValidationErrorCodes.USERNAME_INVALID_CHARACTERS);
+	}
+	const parsed = UsernameType.safeParse(candidate);
+	if (!parsed.success) {
+		throw inputValidationErrorFromZodIssues(parsed.error.issues.map((issue) => ({...issue, path: ['username']})));
+	}
+	return parsed.data;
 }
 
 async function claimRegistrationUrlUse(

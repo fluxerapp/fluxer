@@ -41,11 +41,26 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
 | registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
+| account_identity | [account identity configuration](#account-identity-configuration-object) object | How members sign in, and whether that can still change |
 | app_public | [public application configuration](#public-application-configuration-object) object | Branding, legal, setup, and registration field policy |
 | policy | [instance policy](#instance-policy-object) object | Community, direct message, premium, and gating policy |
 | integrations | [instance integrations](#instance-integrations-object) object | Third party provider settings and their resolved availability |
 | media | [instance media](#instance-media-object) object | Attachment retention settings |
 | billing | [instance billing](#instance-billing-object) object | Premium billing settings and the state resolved from them |
+
+## Account identity configuration object
+
+How members of the deployment sign in. It is read-only here. The setup wizard chooses it through [set the setup sign-in method](/http-api/instance/#set-the-setup-sign-in-method), and [Sign-in methods](/operator/sign-in/) explains the rules.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mode | string | The [account identity mode](/http-api/instance/#account-identity-modes) in effect, `email` or `username` |
+| locked<sup>1</sup> | boolean | Whether the mode can no longer change |
+| tag_style | string | How usernames are tagged, one of the [tag styles](/http-api/instance/#tag-styles) |
+
+<sup>1</sup> True on a hosted deployment, and on a self-hosted one once setup is complete or the first account exists
 
 ## SSO configuration object
 
@@ -375,6 +390,8 @@ Outbound email settings, and the provider resolved from them.
 <sup>1</sup> `host`, `username`, and `secure` are nullable, `port` is a nullable integer from 1 to 65535, and `password_set` is a plain boolean
 
 <sup>2</sup> True whenever the stored setting is true or outbound email is not in force
+
+On a deployment whose account identity mode is `username`, `effective_enabled` is always false whatever the stored settings hold.
 
 ## Bluesky integration object
 

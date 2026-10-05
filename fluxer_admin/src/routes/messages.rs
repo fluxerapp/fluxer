@@ -201,6 +201,13 @@ async fn bulk_actions_page(
     csrf: axum::Extension<CsrfToken>,
 ) -> Response {
     let config = state.config();
-    let markup = templates::pages::bulk_actions::bulk_actions_page(config, &auth.0, &csrf.0.0);
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let account_identity = state.account_identity(&client).await;
+    let markup = templates::pages::bulk_actions::bulk_actions_page(
+        config,
+        &auth.0,
+        &csrf.0.0,
+        account_identity.is_username(),
+    );
     Html(markup.into_string()).into_response()
 }

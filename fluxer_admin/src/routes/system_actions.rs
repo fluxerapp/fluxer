@@ -838,7 +838,9 @@ fn build_integrations_update(form: &MultiValueForm) -> InstanceConfigUpdateReque
             youtube: Some(InstanceYoutubeIntegrationUpdateRequest {
                 api_key: clean("integration_youtube_api_key"),
             }),
-            email: Some(InstanceEmailIntegrationUpdateRequest {
+            email: (form.has_key_starting_with("integration_email_")
+                || form.has_key_starting_with("integration_smtp_"))
+            .then(|| InstanceEmailIntegrationUpdateRequest {
                 enabled: Some(form.bool_value("integration_email_enabled")),
                 provider: Some("smtp".to_owned()),
                 from_email: clean("integration_email_from_email"),
@@ -1194,6 +1196,37 @@ pub async fn limit_config_post(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn build_integrations_update_leaves_email_alone_when_its_fields_are_hidden() {
+        let hidden = build_integrations_update(&MultiValueForm::parse(
+            b"integration_klipy_api_key=&integration_youtube_api_key=",
+        ));
+        let integrations = hidden.integrations.expect("integrations update");
+        assert!(integrations.email.is_none());
+        assert!(integrations.gif.is_some());
+
+        let shown = build_integrations_update(&MultiValueForm::parse(
+            b"integration_email_present=1&integration_smtp_host=smtp.example.com",
+        ));
+        let email = shown
+            .integrations
+            .and_then(|integrations| integrations.email)
+            .expect("email update");
+        assert_eq!(email.enabled, Some(false));
+
+        let from_an_older_page = build_integrations_update(&MultiValueForm::parse(
+            b"integration_klipy_api_key=&integration_smtp_host=smtp.example.com",
+        ));
+        let email = from_an_older_page
+            .integrations
+            .and_then(|integrations| integrations.email)
+            .expect("email update from a page without the presence marker");
+        assert_eq!(
+            email.smtp.and_then(|smtp| smtp.host).as_deref(),
+            Some("smtp.example.com")
+        );
+    }
 
     #[test]
     fn build_sso_update_keeps_repeated_allowed_domains() {

@@ -6,6 +6,7 @@ import * as AuthEmailRevert from '@app/api/auth/AuthEmailRevert';
 import * as AuthLogin from '@app/api/auth/AuthLogin';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthRecoveryKit from '@app/api/auth/AuthRecoveryKit';
 import * as AuthRegistration from '@app/api/auth/AuthRegistration';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {getTokenIdHash} from '@app/api/auth/AuthUtility';
@@ -21,6 +22,7 @@ import {
 	encodePushSessionIdHash,
 	recordPushSessionPredecessor,
 } from '@app/api/user/services/WebPushOriginReplacement';
+import {isUsernameTaken} from '@app/api/user/UniqueUsernames';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
@@ -46,10 +48,13 @@ import type {
 	LoginRequest,
 	LogoutAuthSessionsRequest,
 	MfaTicketRequest,
+	RecoverAccountRequest,
+	RecoverAccountResponse,
 	RegisterRequest,
 	ResetPasswordRequest,
 	SsoCompleteRequest,
 	SsoStartRequest,
+	UsernameAvailabilityResponse,
 	UsernameSuggestionsResponse,
 	VerifyEmailRequest,
 	WebAuthnAuthenticateRequest,
@@ -67,6 +72,7 @@ interface AuthLoginRequest {
 	data: LoginRequest;
 	request: Request;
 	requestCache: RequestCache;
+	captchaVerified?: boolean;
 }
 
 interface AuthForgotPasswordRequest {
@@ -76,6 +82,11 @@ interface AuthForgotPasswordRequest {
 
 interface AuthResetPasswordRequest {
 	data: ResetPasswordRequest;
+	request: Request;
+}
+
+interface AuthRecoverAccountRequest {
+	data: RecoverAccountRequest;
 	request: Request;
 }
 
@@ -186,8 +197,13 @@ export class AuthRequestService {
 		return await this.toAuthLoginResponse(result);
 	}
 
-	async login({data, request, requestCache: _requestCache}: AuthLoginRequest): Promise<AuthLoginResponse> {
-		const result = await AuthLogin.login(this.apiContext, this.loginDependencies, {data, request});
+	async login({
+		data,
+		request,
+		requestCache: _requestCache,
+		captchaVerified,
+	}: AuthLoginRequest): Promise<AuthLoginResponse> {
+		const result = await AuthLogin.login(this.apiContext, this.loginDependencies, {data, request, captchaVerified});
 		return await this.toAuthLoginResponse(result);
 	}
 
@@ -227,6 +243,15 @@ export class AuthRequestService {
 	async resetPassword({data, request}: AuthResetPasswordRequest): Promise<AuthLoginResponse> {
 		const result = await AuthPassword.resetPassword(this.apiContext, {data, request});
 		return await this.toAuthLoginResponse(result);
+	}
+
+	async recoverAccount({data, request}: AuthRecoverAccountRequest): Promise<RecoverAccountResponse> {
+		const {result, recoveryKey, createdAt} = await AuthRecoveryKit.recoverAccount(this.apiContext, {data, request});
+		return {
+			...(await this.toAuthLoginResponse(result)),
+			recovery_key: recoveryKey,
+			recovery_kit_created_at: createdAt.toISOString(),
+		};
 	}
 
 	async revertEmailChange({data, request}: AuthRevertEmailChangeRequest): Promise<AuthLoginResponse> {
@@ -308,6 +333,10 @@ export class AuthRequestService {
 
 	getUsernameSuggestions({globalName}: AuthUsernameSuggestionsRequest): UsernameSuggestionsResponse {
 		return {suggestions: generateUsernameSuggestions(globalName)};
+	}
+
+	async getUsernameAvailability(username: string): Promise<UsernameAvailabilityResponse> {
+		return {available: !(await isUsernameTaken(this.apiContext.services.users, username))};
 	}
 
 	async initiateHandoff({request}: AuthHandoffInitiateRequest): Promise<HandoffInitiateResponse> {

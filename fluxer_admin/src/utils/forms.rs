@@ -55,6 +55,10 @@ impl MultiValueForm {
         self.fields.contains_key(key)
     }
 
+    pub fn has_key_starting_with(&self, prefix: &str) -> bool {
+        self.fields.keys().any(|key| key.starts_with(prefix))
+    }
+
     pub fn values(&self, key: &str) -> &[String] {
         self.fields.get(key).map(Vec::as_slice).unwrap_or_default()
     }

@@ -1,0 +1,117 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Sign-in methods
+description: Usernames or email addresses as the way members sign in, recovery kits, and admin reset links.
+---
+
+A self-hosted instance signs members in with a username or with an email address. A new instance uses usernames unless SMTP is set up. The method is chosen once, before setup is complete and before the first account exists, and it cannot change after that.
+
+## Usernames
+
+Usernames are the default on a new instance. Members register with a username and a password. The instance never asks for an email address and stores none. It sends no email at all and needs no SMTP server.
+
+Every username is unique, and members sign in with the username alone. A username instance never uses tags, as [username tags](#username-tags) describes.
+
+A forgotten password is recovered with a [recovery kit](#recovery-kits), or with an [admin reset link](#admin-reset-links) when the kit is gone too.
+
+## Username tags
+
+A username instance always uses no tags. An email instance can use no tags or random tags, and setup asks which. No tags is the default on a new email instance.
+
+| Style | Value | Example |
+| --- | --- | --- |
+| No tags | `none` | `alex` |
+| Random tags | `random` | `alex#4821` |
+
+### No tags
+
+A username is unique on the instance, ignoring case. Bot accounts do not count towards the uniqueness rule, and a bot never signs in with a password.
+
+The username is unique on its own, so a member account has no tag. Every account that is not a bot has the discriminator `0000`. The apps and the admin dashboard show the bare username, such as `alex`, and never `alex#0000`. Signing in with `alex#0` or `alex#0000` works the same as `alex`.
+
+Members cannot pick a discriminator. The API refuses any value other than `0000` with `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE`. That covers profile changes, the custom tag perk and Change Username in the admin dashboard, which hides the discriminator field for these accounts. When premium ends, the account keeps `0000`.
+
+Bot accounts keep their random discriminators, and the apps and the admin dashboard show them, such as `helper#4363`.
+
+### Random tags
+
+Every account gets a random tag of four digits, such as `alex#4821`. Several members can share a name. This is how every instance worked before tag styles existed. Random tags need email sign-in.
+
+Members can change their tag after confirming their password or second factor, where the custom tag perk allows it. A tag someone else holds returns `TAG_ALREADY_TAKEN`.
+
+## Email
+
+Members register and sign in with an email address. This is how every instance worked before username sign-in existed. Email verification and password recovery send mail. An email instance needs SMTP set up under [Email](/operator/configuration/#email). Without SMTP, every address is marked verified at registration and a forgotten password has no reset path.
+
+## Choosing the method
+
+The setup wizard asks how members sign in, straight after the theme step and before the owner account is created. Usernames is the recommended choice. Picking Email there switches the instance before the owner registers.
+
+When Email is picked, the same step asks how usernames are tagged. No tags is the recommended choice.
+
+To decide before the first start, set `FLUXER_ACCOUNT_IDENTITY` to `username` or `email` in `.env`. For an email instance, set `FLUXER_TAG_STYLE` to `none` or `random`. A username instance ignores `FLUXER_TAG_STYLE`. The API reads them once, on the first start of a new instance, and stores the result. Without `FLUXER_ACCOUNT_IDENTITY`, a new instance with SMTP set up starts as an email instance with the tag style from `FLUXER_TAG_STYLE`, and any other new instance starts as a username instance. The wizard can still change the stored choice until setup is complete or the first account exists. An instance stored as already in use never offers the choice.
+
+The method and the tag style are fixed once the instance has its first account or setup is complete. The Instance Config page in the admin dashboard shows them, read-only. Nothing changes them later.
+
+The hosted service at `fluxer.app` always uses email.
+
+### Instances that already exist
+
+An instance that was running before this release stays on email with random tags. On its first start after the upgrade, the API stores `email` and `random` when any of the conditions below hold.
+
+- The instance has at least one account.
+- Setup is marked complete, in the database or through `FLUXER_INSTANCE_SETUP_CONFIGURED`.
+- The first admin was already granted.
+
+An instance with none of these is new. It starts on the value of `FLUXER_ACCOUNT_IDENTITY` when that is set. Otherwise it starts on email when email delivery is switched on, through `FLUXER_EMAIL_ENABLED` or the admin dashboard, and on usernames when it is not. The setup wizard can still change the choice on a new instance.
+
+When that check cannot read the database, the API stores nothing and the instance behaves as an email instance. The next start runs the check again.
+
+## Recovery kits
+
+On a username instance, a recovery kit is how a member gets back in after forgetting the password. The kit is a recovery key of 32 letters and digits, shown in 8 groups of 4, such as `7K2M-9QXD-4HNB-C8RT-1VWE-5ZJF-3GPA-6YSK`. The app shows it right after registration, ready to download as a PDF or print. The instance stores only a hash of the key and cannot show it again.
+
+A member who forgets the password follows Forgot your password on the sign-in page. They enter the username, the recovery key and a new password. A correct key sets the new password and signs out every session. The instance also issues a new kit, and the old key stops working. The app shows the new key to store in its place. An account with two-factor authentication still has to pass its second factor, and nothing changes until it does. A key alone cannot change the password, sign anyone out or replace the kit on such an account.
+
+Members create a new kit from account settings at any time, after confirming their password or second factor. A new kit replaces the old one, and the app asks first. The app reminds a member who has no kit. A member who signs in only through single sign-on has no password, and cannot set one or create a kit.
+
+Key input ignores case. Spaces and dashes are optional, `O` reads as `0`, and `I` or `L` reads as `1`. An unknown username gets the same answer as a wrong key. Recovery is rate limited per IP address, and per username from each IP address, so failed attempts from one place do not lock the member out elsewhere. It asks for a [CAPTCHA](/topics/captcha/) while bot protection is on.
+
+## Admin reset links
+
+A member who has lost both the password and the kit needs an admin. Open the member's page in the admin dashboard and choose Create password reset link. The dashboard shows the link once. Send it to the member over a channel you trust, because anyone holding it can set the account's password until it expires. Setting a password through the link signs out every session. A new link replaces any earlier one, and a recovery with the kit cancels every outstanding link.
+
+Creating a link needs the `user:create:password_reset_link` ACL, which the wildcard ACL includes. Every link is written to the admin audit log. The Admin API has the same action as [Create password reset link](/admin-api/users/#create-password-reset-link).
+
+:::caution[Keep a second way in for the owner]
+An owner who loses both the password and the kit has nobody to issue a link. Store the owner's recovery kit somewhere safe, and register a passkey or grant a second account admin access.
+:::
+
+## What a username instance turns off
+
+The email features below are off on a username instance. Their API routes answer 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`.
+
+- Email verification, and resending it.
+- Changing the account email address, and reverting a change.
+- Password recovery by email.
+- New-IP sign-in approval by email. A sign-in from a new IP address goes through without it.
+- The emailed code for viewing two-factor backup codes. Members confirm their password or second factor to view them.
+- The emailed code for changing a password. Members confirm their current password or second factor.
+- Send password reset, Resend verification email, Change email and Verify email in the admin dashboard and the Admin API.
+- The emailed code for a Digital Services Act report.
+
+The admin dashboard also hides the SMTP settings and the SMTP test.
+
+Checks elsewhere that ask for a verified email address, such as the one on creating a guild, treat every account as verified. A data export is downloaded from the app once it is ready. An account created through [single sign-on](/operator/configuration/#single-sign-on-and-passkeys) stores no email address.
+
+A guild ban on an email instance also blocks the banned account's email address, which stops the member returning with a new account at the same address. A username instance has no address to match. Its bans block the account and its last active IP address. A banned member can return with a new account from another IP address.
+
+## Apps
+
+The web app an instance serves supports both methods. A Fluxer app built before username sign-in only offers email sign-in, and it checks that the value looks like an email address. The mobile app is one of them until an update adds username sign-in.
+
+Members on such an app sign in with the username, `@` and the instance host, such as `alex@chat.example.com`, until the app is updated. The instance host is the host of the instance web address, of any address in `FLUXER_APP_ORIGIN_ALIASES` or of `FLUXER_DOMAIN`, in any letter case and with or without a port. These apps expect a dot in the host, so an instance at a host without one, such as `localhost`, cannot be reached this way.
+
+Such an app also asks for an email address at sign-up. The instance does not store the address and sends nothing to it. When the username field is filled in, the account gets that username and the address is discarded. Otherwise the address must be the chosen username at the instance host, such as `alex@chat.example.com`, and the account gets that username. Any other address is refused with a message that names the instance host.
+
+An older app cannot show a recovery kit or recover an account with one. Members create a kit from account settings in the web app.

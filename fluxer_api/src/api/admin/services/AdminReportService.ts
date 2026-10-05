@@ -36,6 +36,7 @@ import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import {isHiddenPartial} from '@app/api/user/ProfileVisibility';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import {formatUserTag} from '@app/api/user/UserTag';
 import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
@@ -633,7 +634,11 @@ export class AdminReportService {
 				: cached;
 			const discriminator = user.discriminator?.padStart(4, '0') ?? '0000';
 			return {
-				tag: `${user.username}#${discriminator}`,
+				tag: formatUserTag({
+					username: user.username,
+					discriminator: Number.parseInt(discriminator, 10),
+					isBot: user.bot ?? false,
+				}),
 				username: user.username,
 				global_name: user.global_name ?? null,
 				discriminator,

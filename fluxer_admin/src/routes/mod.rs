@@ -73,6 +73,10 @@ pub fn build_router(config: AdminConfig) -> Router {
         .merge(admin::router())
         .route("/", get(dashboard))
         .route("/dashboard", get(dashboard))
+        .layer(from_fn_with_state(
+            state.clone(),
+            middleware::account_identity::scope_account_identity,
+        ))
         .layer(from_fn(middleware::htmx::flash_redirect_to_toast))
         .layer(from_fn_with_state(
             state.clone(),

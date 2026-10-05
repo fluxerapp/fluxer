@@ -745,7 +745,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Authenticate with email and password. Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification. Requires a solved captcha challenge (X-Captcha-Token).",
+				"description": "Authenticate with a password and either email (or login on email instances) or login (a username on username instances). Returns authentication token if credentials are valid and MFA is not required. If MFA is enabled, returns a ticket for MFA verification. Requires a solved captcha challenge (X-Captcha-Token).",
 				"requestBody": {
 					"required": true,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/LoginRequest"}}}
@@ -1339,6 +1339,54 @@
 				}
 			}
 		},
+		"/auth/recover": {
+			"post": {
+				"operationId": "recover_account",
+				"summary": "Recover account with recovery kit",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/RecoverAccountResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Set a new password using the recovery key from a recovery kit. Only available on instances where people sign in with a username. Ends every session, replaces the recovery kit and returns the new recovery key. Returns an MFA ticket instead of a token when the account has two-factor authentication. Requires a solved captcha challenge (X-Captcha-Token).",
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/RecoverAccountRequest"}}}
+				}
+			}
+		},
 		"/auth/register": {
 			"post": {
 				"operationId": "register_account",
@@ -1380,7 +1428,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Create a new user account with email and password. Requires a solved captcha challenge (X-Captcha-Token). User account is created but must verify email before logging in.",
+				"description": "Create a new user account. Email instances take an email and password, and the account must verify its email before logging in. Username instances take a username and password, and an email sent by an older client is discarded. Requires a solved captcha challenge (X-Captcha-Token).",
 				"requestBody": {
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/RegisterRequest"}}}
@@ -1737,6 +1785,62 @@
 					}
 				},
 				"description": "Retrieve the current status of the SSO authentication session without authentication required."
+			}
+		},
+		"/auth/username-availability": {
+			"get": {
+				"operationId": "get_username_availability",
+				"summary": "Check username availability",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UsernameAvailabilityResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Check whether a username is free for a new account. Only available on instances where people sign in with a username or where usernames are unique. Usernames are compared without regard to case, and bots do not hold names. An invalid or reserved username returns a validation error.",
+				"parameters": [
+					{
+						"name": "username",
+						"in": "query",
+						"required": true,
+						"schema": {
+							"description": "Username to check (1-32 characters)",
+							"$ref": "#/components/schemas/UsernameType"
+						},
+						"description": "Username to check (1-32 characters)"
+					}
+				]
 			}
 		},
 		"/auth/username-suggestions": {
@@ -9771,6 +9875,58 @@
 						"description": "The ID of the harvest request"
 					}
 				]
+			}
+		},
+		"/instance/setup/account-identity": {
+			"put": {
+				"operationId": "set_instance_account_identity",
+				"summary": "Choose the sign-in method for a new instance",
+				"tags": ["Instance"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/InstanceAccountIdentityResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Sets how people sign in on a new self-hosted instance, and for email sign-in whether usernames are unique with no tag. Username sign-in always uses unique usernames. It works only before setup is finished and before the first account exists. After that it fails with ACCOUNT_IDENTITY_LOCKED.",
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/InstanceAccountIdentityUpdateRequest"}}
+					}
+				}
 			}
 		},
 		"/invites/{invite_code}": {
@@ -18574,6 +18730,63 @@
 				}
 			}
 		},
+		"/users/@me/password": {
+			"post": {
+				"operationId": "update_current_user_password",
+				"summary": "Change password",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserPasswordUpdateResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Changes the password on instances where people sign in with a username. Requires sudo mode verification. Ends every other session, deletes the recovery kit and returns a token for a new session that replaces the current one. Fails with USERNAME_SIGN_IN_ONLY on email instances.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserPasswordUpdateRequest"}}}
+				}
+			}
+		},
 		"/users/@me/password-change/complete": {
 			"post": {
 				"operationId": "complete_password_change",
@@ -19133,6 +19346,114 @@
 						"description": "The ID of the push subscription"
 					}
 				]
+			}
+		},
+		"/users/@me/recovery-kit": {
+			"get": {
+				"operationId": "get_recovery_kit_status",
+				"summary": "Get recovery kit status",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/RecoveryKitStatusResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Check whether the current account has a recovery kit and when it was created. Only available on instances where people sign in with a username. The recovery key itself is never returned here.",
+				"security": [{"sessionToken": []}]
+			},
+			"post": {
+				"operationId": "create_recovery_kit",
+				"summary": "Create recovery kit",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/RecoveryKitCreateResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Create a recovery kit for the current account and return its recovery key. The key is shown only once and any previous kit stops working. Only available on instances where people sign in with a username. Requires sudo mode verification.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
+				}
 			}
 		},
 		"/users/@me/relationships": {
@@ -23345,6 +23666,67 @@
 				"required": ["username", "discriminator"]
 			},
 			"RelationshipListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/RelationshipResponse"}},
+			"SudoVerificationSchema": {
+				"type": "object",
+				"properties": {
+					"password": {
+						"description": "Account password for sudo verification",
+						"$ref": "#/components/schemas/PasswordType"
+					},
+					"mfa_method": {
+						"description": "MFA method to use for verification",
+						"x-enumNames": ["TOTP", "WebAuthn"],
+						"x-enumDescriptions": [
+							"Time-based one-time password authentication via authenticator app",
+							"Security key or biometric authentication"
+						],
+						"enum": ["totp", "webauthn"],
+						"type": "string"
+					},
+					"mfa_code": {"description": "MFA verification code from an authenticator app", "type": "string"},
+					"webauthn_response": {
+						"description": "WebAuthn authentication response",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+					},
+					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"}
+				}
+			},
+			"RecoveryKitCreateResponse": {
+				"type": "object",
+				"properties": {
+					"recovery_key": {
+						"type": "string",
+						"description": "New recovery key as 8 groups of 4 joined by dashes, shown only once. Any previous kit stops working"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "ISO 8601 timestamp when the recovery kit was created"
+					}
+				},
+				"required": ["recovery_key", "created_at"],
+				"additionalProperties": false
+			},
+			"RecoveryKitStatusResponse": {
+				"type": "object",
+				"properties": {
+					"has_recovery_kit": {"type": "boolean", "description": "Whether the account has a recovery kit"},
+					"created_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "ISO 8601 timestamp when the current recovery kit was created"
+					}
+				},
+				"required": ["has_recovery_kit", "created_at"],
+				"additionalProperties": false
+			},
 			"SuccessResponse": {
 				"type": "object",
 				"properties": {"success": {"type": "boolean", "const": true, "description": "Whether the operation succeeded"}},
@@ -23484,6 +23866,45 @@
 				"required": ["ticket", "verification_proof", "new_password"]
 			},
 			"PasswordChangeCompleteResponse": {
+				"type": "object",
+				"properties": {
+					"token": {"type": "string", "description": "Authentication token for the newly created session"},
+					"auth_session_id_hash": {
+						"type": "string",
+						"description": "Base64url-encoded hash of the newly created authentication session"
+					}
+				},
+				"required": ["token", "auth_session_id_hash"],
+				"additionalProperties": false
+			},
+			"UserPasswordUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"new_password": {"description": "The new password to set", "$ref": "#/components/schemas/PasswordType"},
+					"password": {
+						"description": "Account password for sudo verification",
+						"$ref": "#/components/schemas/PasswordType"
+					},
+					"mfa_method": {
+						"description": "MFA method to use for verification",
+						"x-enumNames": ["TOTP", "WebAuthn"],
+						"x-enumDescriptions": [
+							"Time-based one-time password authentication via authenticator app",
+							"Security key or biometric authentication"
+						],
+						"enum": ["totp", "webauthn"],
+						"type": "string"
+					},
+					"mfa_code": {"description": "MFA verification code from an authenticator app", "type": "string"},
+					"webauthn_response": {
+						"description": "WebAuthn authentication response",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+					},
+					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"}
+				},
+				"required": ["new_password"]
+			},
+			"UserPasswordUpdateResponse": {
 				"type": "object",
 				"properties": {
 					"token": {"type": "string", "description": "Authentication token for the newly created session"},
@@ -23772,31 +24193,6 @@
 				},
 				"required": ["pending"],
 				"additionalProperties": false
-			},
-			"SudoVerificationSchema": {
-				"type": "object",
-				"properties": {
-					"password": {
-						"description": "Account password for sudo verification",
-						"$ref": "#/components/schemas/PasswordType"
-					},
-					"mfa_method": {
-						"description": "MFA method to use for verification",
-						"x-enumNames": ["TOTP", "WebAuthn"],
-						"x-enumDescriptions": [
-							"Time-based one-time password authentication via authenticator app",
-							"Security key or biometric authentication"
-						],
-						"enum": ["totp", "webauthn"],
-						"type": "string"
-					},
-					"mfa_code": {"description": "MFA verification code from an authenticator app", "type": "string"},
-					"webauthn_response": {
-						"description": "WebAuthn authentication response",
-						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
-					},
-					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"}
-				}
 			},
 			"WebAuthnCredentialUpdateRequest": {
 				"type": "object",
@@ -27143,6 +27539,32 @@
 					{"$ref": "#/components/schemas/GroupDmInviteResponse"}
 				]
 			},
+			"InstanceAccountIdentityUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"mode": {
+						"description": "Sign-in method for the new instance",
+						"$ref": "#/components/schemas/AccountIdentityModeSchema"
+					},
+					"tag_style": {
+						"description": "How usernames are tagged. Defaults to none. Username sign-in accepts only none",
+						"$ref": "#/components/schemas/TagStyleSchema"
+					}
+				},
+				"required": ["mode"]
+			},
+			"InstanceAccountIdentityResponse": {
+				"type": "object",
+				"properties": {
+					"mode": {
+						"description": "Sign-in method now in effect",
+						"$ref": "#/components/schemas/AccountIdentityModeSchema"
+					},
+					"tag_style": {"$ref": "#/components/schemas/TagStyleSchema"}
+				},
+				"required": ["mode", "tag_style"],
+				"additionalProperties": false
+			},
 			"HarvestArchiveResponse": {
 				"type": "string",
 				"format": "binary",
@@ -29696,6 +30118,12 @@
 				"required": ["suggestions"],
 				"additionalProperties": false
 			},
+			"UsernameAvailabilityResponse": {
+				"type": "object",
+				"properties": {"available": {"type": "boolean", "description": "Whether no other account holds this username"}},
+				"required": ["available"],
+				"additionalProperties": false
+			},
 			"SsoStatusResponse": {
 				"type": "object",
 				"properties": {
@@ -29894,6 +30322,92 @@
 					{"$ref": "#/components/schemas/AuthRegistrationPendingApprovalResponse"}
 				]
 			},
+			"RecoverAccountRequest": {
+				"type": "object",
+				"properties": {
+					"login": {"description": "Username of the account to recover", "type": "string"},
+					"recovery_key": {
+						"description": "Recovery key from the recovery kit. Spaces and dashes are ignored",
+						"type": "string"
+					},
+					"password": {"description": "New password to set", "$ref": "#/components/schemas/PasswordType"}
+				},
+				"required": ["login", "recovery_key", "password"]
+			},
+			"RecoverAccountResponse": {
+				"anyOf": [
+					{
+						"type": "object",
+						"properties": {
+							"token": {"type": "string", "description": "Authentication token for API requests"},
+							"user_id": {
+								"description": "ID of the authenticated user",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"user": {
+								"description": "Partial user data for the authenticated account",
+								"$ref": "#/components/schemas/UserPartialResponse"
+							},
+							"recovery_key": {
+								"type": "string",
+								"description": "New recovery key as 8 groups of 4 joined by dashes. It replaces the one just used and is shown only once"
+							},
+							"recovery_kit_created_at": {
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+								"description": "ISO 8601 timestamp when the new recovery kit was created"
+							}
+						},
+						"required": ["token", "user_id", "user", "recovery_key", "recovery_kit_created_at"],
+						"additionalProperties": false
+					},
+					{
+						"type": "object",
+						"properties": {
+							"mfa": {
+								"type": "boolean",
+								"const": true,
+								"description": "Indicates MFA is required to complete authentication"
+							},
+							"ticket": {"type": "string", "description": "MFA ticket to use when completing MFA verification"},
+							"allowed_methods": {
+								"maxItems": 10,
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "List of allowed MFA methods"
+							},
+							"totp": {"type": "boolean", "description": "Whether TOTP authenticator MFA is available"},
+							"webauthn": {"type": "boolean", "description": "Whether WebAuthn security key MFA is available"},
+							"backup_codes": {
+								"type": "boolean",
+								"description": "Whether the account has at least one unconsumed backup code"
+							},
+							"recovery_key": {
+								"type": "string",
+								"description": "New recovery key as 8 groups of 4 joined by dashes. It replaces the one just used and is shown only once"
+							},
+							"recovery_kit_created_at": {
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+								"description": "ISO 8601 timestamp when the new recovery kit was created"
+							}
+						},
+						"required": [
+							"mfa",
+							"ticket",
+							"allowed_methods",
+							"totp",
+							"webauthn",
+							"backup_codes",
+							"recovery_key",
+							"recovery_kit_created_at"
+						],
+						"additionalProperties": false
+					}
+				]
+			},
 			"PasskeyBridgeLoginRedeemResponse": {
 				"oneOf": [
 					{"$ref": "#/components/schemas/CancelledPasskeyBridgeLoginRedeemResponse"},
@@ -30037,11 +30551,18 @@
 			"LoginRequest": {
 				"type": "object",
 				"properties": {
-					"email": {"description": "Email address for authentication", "$ref": "#/components/schemas/EmailType"},
+					"email": {
+						"description": "Email address for authentication. Send this or login, not both",
+						"$ref": "#/components/schemas/EmailType"
+					},
+					"login": {
+						"description": "Sign-in identifier. An email address on email instances, a username on username instances",
+						"type": "string"
+					},
 					"password": {"description": "Account password", "$ref": "#/components/schemas/PasswordType"},
 					"invite_code": {"description": "Guild invite code to join after login", "type": ["string", "null"]}
 				},
-				"required": ["email", "password"]
+				"required": ["password"]
 			},
 			"IpAuthorizationPollResponse": {
 				"type": "object",
@@ -30463,7 +30984,11 @@
 						"type": "boolean",
 						"description": "Whether the instance administrator has completed initial setup"
 					},
-					"admin_url": {"description": "Admin panel URL to continue instance setup", "type": ["string", "null"]}
+					"admin_url": {"description": "Admin panel URL to continue instance setup", "type": ["string", "null"]},
+					"account_identity_locked": {
+						"description": "Present only while a self-hosted instance is unconfigured. True when the sign-in method can no longer change",
+						"type": "boolean"
+					}
 				},
 				"required": ["configured", "admin_url"],
 				"additionalProperties": false,
@@ -30637,7 +31162,15 @@
 						"type": "boolean",
 						"description": "Whether the instance sends emails (verification, password reset, etc.)"
 					},
-					"phone_verification_enabled": {"type": "boolean", "description": "Deprecated. Always false."}
+					"phone_verification_enabled": {"type": "boolean", "description": "Deprecated. Always false."},
+					"account_identity": {
+						"description": "How people sign in on this instance. Clients treat a missing value as email",
+						"$ref": "#/components/schemas/AccountIdentityModeSchema"
+					},
+					"tag_style": {
+						"description": "How usernames are tagged. Clients treat a missing value as random",
+						"$ref": "#/components/schemas/TagStyleSchema"
+					}
 				},
 				"required": [
 					"voice_enabled",
@@ -30647,7 +31180,9 @@
 					"self_hosted",
 					"presigned_attachment_uploads",
 					"emails_enabled",
-					"phone_verification_enabled"
+					"phone_verification_enabled",
+					"account_identity",
+					"tag_style"
 				],
 				"additionalProperties": false,
 				"description": "Feature flags for this instance"
@@ -30696,6 +31231,23 @@
 				"description": "Endpoint URLs for various services"
 			},
 			"InstanceCaptchaProviderSchema": {"type": "string", "enum": ["altcha", "none"]},
+			"TagStyleSchema": {
+				"description": "How usernames are tagged",
+				"x-enumNames": ["NONE", "RANDOM"],
+				"x-enumDescriptions": ["Usernames are unique and shown without a tag", "Every account gets a random tag"],
+				"enum": ["none", "random"],
+				"type": "string"
+			},
+			"AccountIdentityModeSchema": {
+				"description": "How people identify themselves when they sign in",
+				"x-enumNames": ["EMAIL", "USERNAME"],
+				"x-enumDescriptions": [
+					"People sign in with an email address",
+					"People sign in with a username and no email is collected"
+				],
+				"enum": ["email", "username"],
+				"type": "string"
+			},
 			"InstanceRegistrationModeSchema": {
 				"description": "Registration mode",
 				"x-enumNames": ["open", "approval", "closed"],
