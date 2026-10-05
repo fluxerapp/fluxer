@@ -62,7 +62,6 @@ impl PostgresConfig {
 }
 
 pub async fn connect(config: &PostgresConfig) -> anyhow::Result<Pool> {
-    let has_url = config.url.is_some();
     let mut pg = if let Some(url) = &config.url {
         PgConfig::from_str(url).context("failed to parse FLUXER_POSTGRES_URL")?
     } else {
@@ -77,11 +76,7 @@ pub async fn connect(config: &PostgresConfig) -> anyhow::Result<Pool> {
         pg
     };
 
-    if config.ssl {
-        pg.ssl_mode(SslMode::Require);
-    } else if !has_url {
-        pg.ssl_mode(SslMode::Disable);
-    }
+    apply_ssl_mode(&mut pg, config.ssl);
 
     let tls = if pg.get_ssl_mode() == SslMode::Disable {
         build_disabled_tls_connector()
@@ -109,6 +104,14 @@ pub async fn connect(config: &PostgresConfig) -> anyhow::Result<Pool> {
         "connected to Postgres"
     );
     Ok(pool)
+}
+
+fn apply_ssl_mode(pg: &mut PgConfig, ssl: bool) {
+    if ssl {
+        pg.ssl_mode(SslMode::Require);
+    } else if pg.get_ssl_mode() == SslMode::Prefer {
+        pg.ssl_mode(SslMode::Disable);
+    }
 }
 
 fn build_tls_connector(ca_pem: Option<&str>) -> anyhow::Result<MakeRustlsConnect> {
@@ -779,6 +782,27 @@ fn decode_value(value: Value, date_mode: DecodeDateMode) -> anyhow::Result<Value
 mod tests {
     use super::*;
     use serde_json::json;
+
+    fn ssl_mode_for(url: &str, ssl: bool) -> SslMode {
+        let mut pg = PgConfig::from_str(url).unwrap();
+        apply_ssl_mode(&mut pg, ssl);
+        pg.get_ssl_mode()
+    }
+
+    #[test]
+    fn ssl_flag_decides_tls_unless_url_names_a_mode() {
+        let socket = "postgres://fluxer@/fluxer?host=/run/postgresql";
+        assert_eq!(SslMode::Disable, ssl_mode_for(socket, false));
+        assert_eq!(SslMode::Require, ssl_mode_for(socket, true));
+        assert_eq!(
+            SslMode::Require,
+            ssl_mode_for("postgres://db.example.com/fluxer?sslmode=require", false)
+        );
+        assert_eq!(
+            SslMode::Require,
+            ssl_mode_for("postgres://db.example.com/fluxer?sslmode=disable", true)
+        );
+    }
 
     #[test]
     fn encodes_row_keys_like_postgres_kv_executor() {

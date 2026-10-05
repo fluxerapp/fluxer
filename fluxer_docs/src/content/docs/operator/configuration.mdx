@@ -388,7 +388,7 @@ Default `fluxer`. The password. The literal `fluxer` is rejected in production. 
 
 #### `FLUXER_POSTGRES_SSL`
 
-Default `false`. TLS to the database. Must be `true` or `false`. In production it must be `true` unless `FLUXER_SELF_HOSTED=true`. Compose forwards it from `.env`.
+Default `false`. TLS to the database. Must be `true` or `false`. When `false`, an `sslmode` other than `prefer` in `FLUXER_POSTGRES_URL` still applies. In production it must be `true` unless `FLUXER_SELF_HOSTED=true`. Compose forwards it from `.env`.
 
 #### `FLUXER_POSTGRES_SSL_CA`
 
