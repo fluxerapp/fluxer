@@ -237,7 +237,7 @@ export const DMList = observer(() => {
 		},
 		[requestPurgePersonalNotes],
 	);
-	const filteredDmChannels = useMemo(() => getSortedDmChannels(dmChannels, currentUserId), [dmChannels, currentUserId]);
+	const filteredDmChannels = getSortedDmChannels(dmChannels, currentUserId);
 	const dmListNavigationRef = useRovingFocusList<HTMLDivElement>({
 		focusableSelector: '[data-dm-list-focus-item="true"]',
 		orientation: 'vertical',
