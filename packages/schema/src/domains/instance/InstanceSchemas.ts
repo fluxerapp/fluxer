@@ -137,10 +137,10 @@ export const InstanceFeaturesSchema = z
 		presigned_attachment_uploads: z.boolean().describe('Whether clients can request presigned attachment upload URLs'),
 		emails_enabled: z.boolean().describe('Whether the instance sends emails (verification, password reset, etc.)'),
 		phone_verification_enabled: z.boolean().describe('Deprecated. Always false.'),
-		account_identity: AccountIdentityModeSchema.describe(
+		account_identity: AccountIdentityModeSchema.optional().describe(
 			'How people sign in on this instance. Clients treat a missing value as email',
 		),
-		tag_style: TagStyleSchema.describe('How usernames are tagged. Clients treat a missing value as random'),
+		tag_style: TagStyleSchema.optional().describe('How usernames are tagged. Clients treat a missing value as random'),
 	})
 	.describe('Feature flags for this instance');
 export type InstanceFeatures = z.infer<typeof InstanceFeaturesSchema>;

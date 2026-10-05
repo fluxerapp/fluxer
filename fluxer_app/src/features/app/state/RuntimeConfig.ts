@@ -558,7 +558,7 @@ class RuntimeConfig {
 	}
 
 	get accountIdentity(): AccountIdentityMode {
-		return this.features.account_identity;
+		return this.features.account_identity ?? AccountIdentityModes.EMAIL;
 	}
 
 	get usesUsernameSignIn(): boolean {

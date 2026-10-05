@@ -31180,9 +31180,7 @@
 					"self_hosted",
 					"presigned_attachment_uploads",
 					"emails_enabled",
-					"phone_verification_enabled",
-					"account_identity",
-					"tag_style"
+					"phone_verification_enabled"
 				],
 				"additionalProperties": false,
 				"description": "Feature flags for this instance"
