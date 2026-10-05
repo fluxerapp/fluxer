@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import {AdminMessageDeletionService} from '@app/api/admin/services/AdminMessageDeletionService';
-import {AdminMessageShredService} from '@app/api/admin/services/AdminMessageShredService';
 import {Config} from '@app/api/Config';
 import {createApiContext} from '@app/api/CreateApiContext';
 import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
@@ -29,6 +26,7 @@ import {
 	shutdownVoiceResources,
 } from '@app/api/middleware/ServiceRegistry';
 import {
+	getAdminArchiveService,
 	getAdminRepository,
 	getCacheService,
 	getInstanceConfigRepository,
@@ -58,6 +56,7 @@ import {BACKGROUND_READ_TIMEOUT_MS, initCassandra, shutdownCassandra} from '@pkg
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import {ms} from 'itty-time';
 
 function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
@@ -286,12 +285,6 @@ export async function startWorkerMain(): Promise<void> {
 		startSharedListWatch(jsConnectionManager.getJetStreamClient());
 		if (activeWorkerLanes.some((lane) => lane.name === 'lifecycle')) {
 			const apiContext = createApiContext();
-			const auditService = new AdminAuditService(getAdminRepository(), apiContext.services.snowflake);
-			const messagePurge = new AdminMessageDeletionService({
-				channelRepository: dependencies.channelRepository,
-				messageShredService: new AdminMessageShredService({apiContext, auditService}),
-				auditService,
-			});
 			startAccountActionConsumer({
 				js: jsConnectionManager.getJetStreamClient(),
 				state: accountStateDepsFromContext(
@@ -301,7 +294,11 @@ export async function startWorkerMain(): Promise<void> {
 						userCacheService: dependencies.userCacheService,
 						guildRepository: dependencies.guildRepository,
 					},
-					messagePurge,
+					{
+						archives: getAdminArchiveService(),
+						messageDeletionQueue: dependencies.bulkMessageDeletionQueueService,
+						messageDeletionDelayMs: Config.automatedMessageDeletionDelayDays * ms('1 day'),
+					},
 					dependencies.channelRepository,
 				),
 			});

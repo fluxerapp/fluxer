@@ -20,6 +20,7 @@ const API_SETTINGS_NOT_FORWARDED: Record<string, string> = {
 	FLUXER_TEST_MODE_ENABLED: 'test and development only',
 	FLUXER_TEST_HARNESS_TOKEN: 'test and development only',
 	FLUXER_VALIDATE_RESPONSES: 'test and development only',
+	FLUXER_API_AUTOMATED_MESSAGE_DELETION_DELAY_DAYS: 'automated account actions run only on the hosted service',
 	...Object.fromEntries(
 		['MONTHLY', 'YEARLY', 'GIFT_1_MONTH', 'GIFT_1_YEAR'].flatMap((slot) =>
 			['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY'].map((currency) => [

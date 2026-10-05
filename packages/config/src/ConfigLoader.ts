@@ -102,6 +102,7 @@ function defaultConfig(): MasterConfig {
 				headers_timeout_ms: 30_000,
 				request_timeout_ms: 120_000,
 				max_inflight_requests: 512,
+				automated_message_deletion_delay_days: 7,
 				ip_ban_exempt_ips: [],
 				donation_proxy_key: '',
 				trusted_callers: [],
@@ -604,6 +605,12 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateReplyToEmail(config.integrations.email.reply_to_email);
 	normalizeAppOriginAliases(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
+	assertIntegerInRange(
+		config.services.api.automated_message_deletion_delay_days,
+		'FLUXER_API_AUTOMATED_MESSAGE_DELETION_DELAY_DAYS',
+		1,
+		365,
+	);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);
 	assertIntegerInRange(config.services.api.request_timeout_ms, 'FLUXER_API_REQUEST_TIMEOUT_MS', 1_000, 3_600_000);
 	assertIntegerInRange(config.domain.public_port, 'FLUXER_PUBLIC_PORT', 1, 65_535);

@@ -42,6 +42,7 @@ import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
 import {serializeSelfMessageFilter} from '@app/api/worker/utils/SelfMessageFilterPayload';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
@@ -748,6 +749,7 @@ export class UserContentService {
 	async cancelBulkMessageDeletion(userId: UserID): Promise<void> {
 		Logger.debug({userId: userId.toString()}, 'Canceling pending bulk message deletion');
 		const user = await this.userRepository.findUniqueAssert(userId);
+		if ((user.flags & UserFlags.SPAMMER) !== 0n) return;
 		const updatedUser = await this.userRepository.patchUpsert(
 			userId,
 			{

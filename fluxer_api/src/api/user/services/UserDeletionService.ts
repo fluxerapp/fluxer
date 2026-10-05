@@ -7,6 +7,7 @@ import {createMessageID, createUserID, type MessageID, type UserID} from '@app/a
 import {Config} from '@app/api/Config';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
 import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
 import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
@@ -370,6 +371,25 @@ export async function processUserDeletion(
 		} catch (error) {
 			Logger.error({error, userId, channelId: channel.id}, 'Failed to leave group DM');
 		}
+	}
+	if (user.pendingBulkMessageDeletionAt) {
+		const deleted = await new UserMessageDeletionService({
+			channelRepository,
+			gatewayService,
+			storageService,
+			purgeQueue,
+			workerService,
+		}).deleteUserMessagesBulk(userId);
+		await userRepository.patchUpsert(
+			userId,
+			{
+				pending_bulk_message_deletion_at: null,
+				pending_bulk_message_deletion_channel_count: null,
+				pending_bulk_message_deletion_message_count: null,
+			},
+			user.toRow(),
+		);
+		Logger.debug({userId, deleted}, 'Deleted messages scheduled for deletion before anonymizing the rest');
 	}
 	Logger.debug({userId}, 'Anonymizing user messages');
 	let lastMessageId: MessageID | undefined;

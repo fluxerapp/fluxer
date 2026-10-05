@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AdminMessageDeletionService} from '@app/api/admin/services/AdminMessageDeletionService';
 import {
 	type ChannelID,
 	createChannelID,
@@ -29,6 +28,7 @@ import {
 	stopAccountActionConsumer,
 } from '@app/api/worker/AccountActionConsumer';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import type {AdminArchiveResponse} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
 import {AckPolicy, DeliverPolicy, type JsMsg, jetstream, jetstreamManager} from '@nats-io/jetstream';
 import {connect} from '@nats-io/transport-node';
@@ -37,6 +37,33 @@ import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 const USER_ID = '1174109840998400001';
 const NOW = 1_759_000_000_000;
 const NATS_URL = process.env.FLUXER_TEST_ACTIVITY_NATS_URL;
+const DAY_MS = 86_400_000;
+const DELETION_DELAY_MS = 7 * DAY_MS;
+
+function archiveAt(
+	requestedAtMs: number,
+	userId: UserID,
+	requestedBy: UserID,
+	archiveId: string,
+	failed = false,
+): AdminArchiveResponse {
+	return {
+		archive_id: archiveId,
+		subject_type: 'user',
+		subject_id: userId.toString(),
+		requested_by: requestedBy.toString(),
+		requested_at: new Date(requestedAtMs).toISOString(),
+		started_at: null,
+		completed_at: null,
+		failed_at: failed ? new Date(requestedAtMs + 1_000).toISOString() : null,
+		file_size: null,
+		progress_percent: 0,
+		progress_step: 'Queued',
+		error_message: null,
+		download_url_expires_at: null,
+		expires_at: null,
+	};
+}
 
 function limitEnvelope(overrides: Partial<Extract<ActionEnvelope, {type: 'set_account_limit'}>> = {}) {
 	return envelope<'set_account_limit'>({
@@ -108,8 +135,9 @@ interface Harness {
 	authored: Array<{channelId: ChannelID; messageId: MessageID}>;
 	visibility: Array<UserID>;
 	removed: Array<{channelId: ChannelID; authorId: UserID; messageIds: Array<MessageID>}>;
-	audits: Array<{adminUserId: UserID; action: string; targetId: bigint; auditLogReason: string | null}>;
-	shreds: Array<{userId: bigint; entries: number; adminUserId: UserID; auditLogReason: string | null}>;
+	archives: Array<AdminArchiveResponse>;
+	archiveRequests: Array<{userId: UserID; requestedBy: UserID; includeAttachments: boolean}>;
+	queued: Map<string, number>;
 	deps: AccountActionDeps;
 }
 
@@ -125,8 +153,9 @@ function harness(): Harness {
 		authored: [],
 		visibility: [],
 		removed: [],
-		audits: [],
-		shreds: [],
+		archives: [],
+		archiveRequests: [],
+		queued: new Map(),
 		deps: null as never,
 	};
 	const authored = {
@@ -136,34 +165,6 @@ function harness(): Harness {
 				.filter((m) => before === undefined || m.messageId < before)
 				.slice(0, limit),
 	};
-	const messages = new AdminMessageDeletionService({
-		channelRepository: authored,
-		messageShredService: {
-			queueMessageShred: async (
-				data: {user_id: bigint; entries: Array<unknown>},
-				adminUserId: UserID,
-				auditLogReason: string | null,
-			) => {
-				h.shreds.push({userId: data.user_id, entries: data.entries.length, adminUserId, auditLogReason});
-				return {success: true, job_id: '77', requested: data.entries.length};
-			},
-		},
-		auditService: {
-			createAuditLog: async (log: {
-				adminUserId: UserID;
-				action: string;
-				targetId: bigint;
-				auditLogReason: string | null;
-			}) => {
-				h.audits.push({
-					adminUserId: log.adminUserId,
-					action: log.action,
-					targetId: log.targetId,
-					auditLogReason: log.auditLogReason,
-				});
-			},
-		},
-	} as unknown as ConstructorParameters<typeof AdminMessageDeletionService>[0]);
 	const state: AccountStateDeps = {
 		users: users as unknown as AccountStateDeps['users'],
 		dispatch: {
@@ -198,7 +199,25 @@ function harness(): Harness {
 				h.cached.delete(key);
 			},
 		} as unknown as AccountStateDeps['cache'],
-		messages,
+		archives: {
+			listArchives: async ({subjectId}) =>
+				h.archives.filter((archive) => archive.subject_id === subjectId?.toString()).reverse(),
+			triggerUserArchive: async (userId, requestedBy, includeAttachments) => {
+				h.archiveRequests.push({userId, requestedBy, includeAttachments});
+				const archive = archiveAt(NOW, userId, requestedBy, String(9000 + h.archives.length));
+				h.archives.push(archive);
+				return archive;
+			},
+		},
+		messageDeletionQueue: {
+			scheduleDeletion: async (userId, scheduledAt) => {
+				h.queued.set(userId.toString(), scheduledAt.getTime());
+			},
+			removeFromQueue: async (userId) => {
+				h.queued.delete(userId.toString());
+			},
+		},
+		messageDeletionDelayMs: DELETION_DELAY_MS,
 		authored: authored as unknown as AccountStateDeps['authored'],
 		now: () => NOW,
 	};
@@ -453,7 +472,7 @@ describe('account action apply', () => {
 			}
 		}
 		expect(h.users.current().flags).toBe(0n);
-		expect(h.shreds).toHaveLength(0);
+		expect(h.queued.size).toBe(0);
 	});
 
 	it('keeps the wider window when asked again and resends the deletes as a noop', async () => {
@@ -529,103 +548,121 @@ describe('account action apply', () => {
 		expect(h.users.current().contentHiddenSince?.getTime()).toBe(since);
 	});
 
-	it('still purges a hidden account through the admin purge', async () => {
-		const since = NOW - 86_400_000;
-		authorAt(since - 5_000, 100);
-		authorAt(since + 5_000, 101);
-		await applyAction(h.deps, hideEnvelope(true, since));
-		const purge = await applyAction(
-			h.deps,
-			envelope<'delete_user_messages'>({type: 'delete_user_messages', user_id: USER_ID, on: true}),
-		);
-		expect(purge).toMatchObject({status: 'applied', detail: 'messages=2 job=77'});
-		expect(h.shreds).toEqual([expect.objectContaining({entries: 2})]);
+	it('hides every message the account ever sent when the window starts at zero', async () => {
+		const all = [authorAt(1_420_070_401_000, 100), authorAt(NOW - 400 * DAY_MS, 101), authorAt(NOW - 1_000, 102)];
+		const outcome = await applyAction(h.deps, hideEnvelope(true, 0));
+		expect(outcome).toMatchObject({status: 'applied', detail: 'messages=3'});
+		expect(h.users.current().contentHiddenSince?.getTime()).toBe(0);
+		expect(removedIds()).toEqual([...all].sort((a, b) => (a < b ? -1 : 1)));
+		expect((await applyAction(h.deps, hideEnvelope(true, NOW - DAY_MS))).status).toBe('noop');
+		expect(h.users.current().contentHiddenSince?.getTime()).toBe(0);
+		expect((await applyAction(h.deps, hideEnvelope(false, 0))).status).toBe('applied');
+		expect(h.users.current().contentHiddenSince).toBeNull();
+	});
+
+	it('hides the messages of an account whose deletion is only scheduled', async () => {
+		authorAt(NOW - 1_000, 100);
+		h.users.put({flags: UserFlags.DELETED | UserFlags.SPAMMER, pending_deletion_at: new Date(NOW + 60 * DAY_MS)});
+		expect((await applyAction(h.deps, hideEnvelope(true, 0))).status).toBe('applied');
+		expect(h.users.current().contentHiddenSince?.getTime()).toBe(0);
 	});
 
 	function purgeEnvelope(on = true) {
 		return envelope<'delete_user_messages'>({type: 'delete_user_messages', user_id: USER_ID, on});
 	}
 
-	function author(count: number): void {
-		for (let i = 0; i < count; i++) {
-			h.authored.push({
-				channelId: createChannelID(BigInt(100 + (i % 3))),
-				messageId: createMessageID(BigInt(1000 + i)),
-			});
-		}
-	}
+	const userId = createUserID(BigInt(USER_ID));
 
-	it('purges every message through the admin purge and audits it as the system', async () => {
-		author(450);
+	it('archives with attachments and schedules the deletion instead of deleting now', async () => {
+		authorAt(NOW - 1_000, 100);
 		const outcome = await applyAction(h.deps, purgeEnvelope());
+		const scheduledAt = NOW + DELETION_DELAY_MS;
 		expect(outcome).toEqual({
 			action_id: 'a:07:4242:0',
 			action_type: 'delete_user_messages',
 			status: 'applied',
-			detail: 'messages=450 job=77',
+			detail: `archive=9000 reused=false scheduled_at=${new Date(scheduledAt).toISOString()}`,
 			observed: {flags: '0', deleted: false},
 			user_id: USER_ID,
 		});
-		expect(h.shreds).toEqual([
-			{
-				userId: BigInt(USER_ID),
-				entries: 450,
-				adminUserId: SYSTEM_USER_ID,
-				auditLogReason: 'Automated action a:07:4242:0',
-			},
-		]);
-		expect(h.audits).toEqual([
-			{
-				adminUserId: SYSTEM_USER_ID,
-				action: 'delete_all_user_messages',
-				targetId: BigInt(USER_ID),
-				auditLogReason: 'Automated action a:07:4242:0',
-			},
-		]);
-		expect(h.users.current().flags).toBe(0n);
-		expect(h.presence).toHaveLength(0);
+		expect(h.archiveRequests).toEqual([{userId, requestedBy: SYSTEM_USER_ID, includeAttachments: true}]);
+		expect(h.users.current().pendingBulkMessageDeletionAt?.getTime()).toBe(scheduledAt);
+		expect(h.queued.get(USER_ID)).toBe(scheduledAt);
+		expect(h.removed).toEqual([]);
+		expect(h.authored).toHaveLength(1);
+		expect(h.presence).toEqual([userId]);
 	});
 
-	it('purges accounts already scheduled for deletion and paid accounts', async () => {
-		author(2);
+	it('reuses an archive from the last day and makes a new one when it is older or failed', async () => {
+		h.archives.push(archiveAt(NOW - DAY_MS + 60_000, userId, createUserID(42n), '777'));
+		expect((await applyAction(h.deps, purgeEnvelope())).detail).toMatch(/^archive=777 reused=true /);
+		expect(h.archiveRequests).toEqual([]);
+		h.archives.length = 0;
+		h.archives.push(archiveAt(NOW - DAY_MS - 60_000, userId, createUserID(42n), '778'));
+		h.archives.push(archiveAt(NOW - 60_000, userId, createUserID(42n), '779', true));
+		h.users.put();
+		expect((await applyAction(h.deps, purgeEnvelope())).detail).toMatch(/^archive=9002 reused=false /);
+		expect(h.archiveRequests).toHaveLength(1);
+	});
+
+	it('keeps an earlier schedule and pulls a later one forward', async () => {
+		const earlier = NOW + DAY_MS;
+		h.users.put({pending_bulk_message_deletion_at: new Date(earlier), pending_bulk_message_deletion_message_count: 4});
+		const kept = await applyAction(h.deps, purgeEnvelope());
+		expect(kept).toMatchObject({status: 'noop'});
+		expect(kept.detail).toContain(`scheduled_at=${new Date(earlier).toISOString()}`);
+		expect(h.users.current().pendingBulkMessageDeletionAt?.getTime()).toBe(earlier);
+		expect(h.users.current().pendingBulkMessageDeletionMessageCount).toBe(4);
+		expect(h.queued.get(USER_ID)).toBe(earlier);
+		expect(h.presence).toHaveLength(0);
+		h.users.put({pending_bulk_message_deletion_at: new Date(NOW + 30 * DAY_MS)});
+		expect((await applyAction(h.deps, purgeEnvelope())).status).toBe('applied');
+		expect(h.users.current().pendingBulkMessageDeletionAt?.getTime()).toBe(NOW + DELETION_DELAY_MS);
+		expect(h.queued.get(USER_ID)).toBe(NOW + DELETION_DELAY_MS);
+		expect(h.archiveRequests).toHaveLength(1);
+	});
+
+	it('schedules for accounts already scheduled for deletion and paid accounts', async () => {
 		for (const overrides of [
-			{flags: UserFlags.DELETED | UserFlags.SPAMMER, pending_deletion_at: new Date(NOW + 86_400_000)},
+			{flags: UserFlags.DELETED | UserFlags.SPAMMER, pending_deletion_at: new Date(NOW + 60 * DAY_MS)},
 			{has_ever_purchased: true, premium_type: 2},
 		] satisfies Array<Partial<UserRow>>) {
 			h.users.put(overrides);
 			expect((await applyAction(h.deps, purgeEnvelope())).status).toBe('applied');
+			expect(h.users.current().pendingBulkMessageDeletionAt?.getTime()).toBe(NOW + DELETION_DELAY_MS);
 		}
-		expect(h.shreds).toHaveLength(2);
 	});
 
-	it('reports a noop when nothing is left to purge', async () => {
-		const outcome = await applyAction(h.deps, purgeEnvelope());
-		expect(outcome).toMatchObject({status: 'noop', detail: null});
-		expect(h.shreds).toHaveLength(0);
+	it('cancels the schedule on off and is a noop when nothing is scheduled', async () => {
+		await applyAction(h.deps, purgeEnvelope());
+		const cancelled = await applyAction(h.deps, purgeEnvelope(false));
+		expect(cancelled).toMatchObject({status: 'applied', detail: null, observed: {flags: '0', deleted: false}});
+		expect(h.users.current().pendingBulkMessageDeletionAt).toBeNull();
+		expect(h.queued.has(USER_ID)).toBe(false);
+		expect(h.presence).toHaveLength(2);
+		expect((await applyAction(h.deps, purgeEnvelope(false))).status).toBe('noop');
+		expect(h.archives).toHaveLength(1);
+		h.users.put({flags: UserFlags.STAFF, pending_bulk_message_deletion_at: new Date(NOW + DAY_MS)});
+		expect((await applyAction(h.deps, purgeEnvelope(false))).status).toBe('applied');
+		h.users.rows.clear();
+		expect(await applyAction(h.deps, purgeEnvelope(false))).toMatchObject({status: 'ineligible', observed: null});
 	});
 
-	it('never purges staff, trusted, system, bot or missing accounts', async () => {
-		author(3);
+	it('never schedules for staff, trusted, system, bot, deleted or missing accounts', async () => {
 		for (const overrides of [{flags: UserFlags.STAFF}, {flags: UserFlags.LIMIT_EXEMPT}, {system: true}] satisfies Array<
 			Partial<UserRow>
 		>) {
 			h.users.put(overrides);
 			expect((await applyAction(h.deps, purgeEnvelope())).status).toBe('exempt');
 		}
-		h.users.put({bot: true});
-		expect((await applyAction(h.deps, purgeEnvelope())).status).toBe('ineligible');
+		for (const overrides of [{bot: true}, {flags: UserFlags.DELETED}] satisfies Array<Partial<UserRow>>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, purgeEnvelope())).status).toBe('ineligible');
+		}
 		h.users.rows.clear();
 		expect(await applyAction(h.deps, purgeEnvelope())).toMatchObject({status: 'ineligible', observed: null});
-		expect(h.shreds).toHaveLength(0);
-		expect(h.audits).toHaveLength(0);
-	});
-
-	it('answers a purge with on false as unsupported, since it cannot be reversed', async () => {
-		author(3);
-		const outcome = await applyAction(h.deps, purgeEnvelope(false));
-		expect(outcome).toMatchObject({status: 'unsupported', detail: 'a message purge cannot be reversed'});
-		expect(h.shreds).toHaveLength(0);
-		expect(h.audits).toHaveLength(0);
+		expect(h.archiveRequests).toEqual([]);
+		expect(h.queued.size).toBe(0);
 	});
 
 	it('answers expired actions and unknown shapes without touching the account', async () => {
