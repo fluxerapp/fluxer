@@ -567,7 +567,12 @@ describe('account action apply', () => {
 			user_id: USER_ID,
 		});
 		expect(h.shreds).toEqual([
-			{userId: BigInt(USER_ID), entries: 450, adminUserId: SYSTEM_USER_ID, auditLogReason: 'Automated action a:07:4242:0'},
+			{
+				userId: BigInt(USER_ID),
+				entries: 450,
+				adminUserId: SYSTEM_USER_ID,
+				auditLogReason: 'Automated action a:07:4242:0',
+			},
 		]);
 		expect(h.audits).toEqual([
 			{

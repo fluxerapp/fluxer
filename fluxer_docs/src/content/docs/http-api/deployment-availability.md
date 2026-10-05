@@ -48,8 +48,6 @@ When billing is switched off or no Stripe secret key is configured on a hosted d
 | Method | Route | Operation |
 | --- | --- | --- |
 | POST | /v1/stripe/checkout/subscription | [Create subscription checkout](/http-api/billing/#create-subscription-checkout) |
-| POST | /v1/stripe/checkout/subscription/preapproval | [Create localised card preapproval](/http-api/billing/#create-localised-card-preapproval) |
-| POST | /v1/stripe/checkout/subscription/preapproval/continue | [Continue localised card preapproval](/http-api/billing/#continue-localised-card-preapproval) |
 | POST | /v1/stripe/checkout/gift | [Create gift checkout](/http-api/billing/#create-gift-checkout) |
 | GET | /v1/premium/price-ids | [Get price IDs](/http-api/premium/#get-price-ids) |
 

@@ -303,7 +303,7 @@ Fluxer produces at most one entry for each distinct pair of `path` and `code`, s
 | [Webhooks](/http-api/webhooks/) | Webhook management, message execution, GitHub, Slack, and Instatus callbacks |
 | [Search](/http-api/search/) | Authenticated global message search |
 | [Unfurl](/http-api/unfurl/) | Authenticated external URL metadata resolution |
-| [Billing](/http-api/billing/) | Stripe checkout, card preapproval, gift purchase, age verification, refunds, the Stripe webhook |
+| [Billing](/http-api/billing/) | Stripe checkout, gift purchase, age verification, refunds, the Stripe webhook |
 | [Premium](/http-api/premium/) | Premium pricing, entitlement state, subscription self-service, billing portal handoff |
 | [Gifts](/http-api/gifts/) | Public gift code lookup and authenticated redemption |
 | [Donations](/http-api/donations/) | Donation currencies and intervals, checkout sessions, the donor management link |
