@@ -740,6 +740,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.contentRepo.getPaymentByCheckoutSession(checkoutSessionId);
 	}
 
+	async findPaymentsByUserId(userId: UserID): Promise<Array<Payment>> {
+		return this.contentRepo.findPaymentsByUserId(userId);
+	}
+
 	async getPaymentByPaymentIntent(paymentIntentId: string): Promise<Payment | null> {
 		return this.contentRepo.getPaymentByPaymentIntent(paymentIntentId);
 	}

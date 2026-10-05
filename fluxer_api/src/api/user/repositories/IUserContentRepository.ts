@@ -74,6 +74,7 @@ export interface IUserContentRepository {
 			checkout_session_id: string;
 		},
 	): Promise<void>;
+	findPaymentsByUserId(userId: UserID): Promise<Array<Payment>>;
 	getPaymentByCheckoutSession(checkoutSessionId: string): Promise<Payment | null>;
 	getPaymentByPaymentIntent(paymentIntentId: string): Promise<Payment | null>;
 	getSubscriptionInfo(subscriptionId: string): Promise<PaymentBySubscriptionRow | null>;

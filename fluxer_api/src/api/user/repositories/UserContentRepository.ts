@@ -116,6 +116,10 @@ export class UserContentRepository implements IUserContentRepository {
 		return this.paymentRepository.getPaymentByCheckoutSession(checkoutSessionId);
 	}
 
+	async findPaymentsByUserId(userId: UserID): Promise<Array<Payment>> {
+		return this.paymentRepository.findPaymentsByUserId(userId);
+	}
+
 	async getPaymentByPaymentIntent(paymentIntentId: string): Promise<Payment | null> {
 		return this.paymentRepository.getPaymentByPaymentIntent(paymentIntentId);
 	}
