@@ -35,12 +35,7 @@ class ControlledReader {
 }
 
 function fixture(
-	run: (
-		reader: GuildEventImageReader,
-		loads: Array<string>,
-		errors: Array<string>,
-		pending: Array<boolean>,
-	) => void,
+	run: (reader: GuildEventImageReader, loads: Array<string>, errors: Array<string>, pending: Array<boolean>) => void,
 ): void {
 	const previous = globalThis.FileReader;
 	globalThis.FileReader = ControlledReader as unknown as typeof FileReader;
@@ -153,6 +148,9 @@ it('keeps only one read outstanding across repeated selections', () => {
 			reader.read(file);
 			assert.equal(ControlledReader.instances.filter((native) => native.readyState === 1).length, 1);
 		}
-		assert.equal(ControlledReader.instances.reduce((total, native) => total + native.aborts, 0), 19);
+		assert.equal(
+			ControlledReader.instances.reduce((total, native) => total + native.aborts, 0),
+			19,
+		);
 	});
 });
