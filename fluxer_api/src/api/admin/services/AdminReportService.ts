@@ -630,7 +630,12 @@ export class AdminReportService {
 			const cached = await this.deps.userCacheService.getUserPartialResponse(userId, requestCache);
 			const stored = isHiddenPartial(cached) ? await this.deps.apiContext.services.users.findUnique(userId) : null;
 			const user = stored
-				? {username: stored.username, global_name: stored.globalName, discriminator: stored.discriminator.toString()}
+				? {
+						username: stored.username,
+						global_name: stored.globalName,
+						discriminator: stored.discriminator.toString(),
+						bot: stored.isBot,
+					}
 				: cached;
 			const discriminator = user.discriminator?.padStart(4, '0') ?? '0000';
 			return {
