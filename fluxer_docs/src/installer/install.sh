@@ -51,6 +51,7 @@ LC_ALL=C
 export LC_ALL
 
 FLUXER_RAW_BASE='https://raw.githubusercontent.com/fluxerapp/fluxer'
+FLUXER_INSTALLER_URL='https://fluxer.dev/install.sh'
 FLUXER_STACK_PATH='deploy/self-hosting'
 FLUXER_MIN_ENGINE='24.0.0'
 # Podman numbers its releases on its own scale, so the Docker Engine floor says
@@ -304,6 +305,18 @@ opt_no_volume_backup=0
 opt_no_volume_compression=0
 opt_skip_backup=0
 opt_allow_root=0
+
+fluxer_self=''
+if [ -f "$0" ]; then
+	case $0 in
+		/*) fluxer_self=$0 ;;
+		*) fluxer_self="$(pwd)/$0" ;;
+	esac
+fi
+fluxer_self_args=''
+for fluxer_arg in "$@"; do
+	fluxer_self_args="$fluxer_self_args '$(printf '%s' "$fluxer_arg" | sed "s/'/'\\\\''/g")'"
+done
 
 while [ $# -gt 0 ]; do
 	case $1 in
@@ -649,6 +662,74 @@ fluxer_prompt() {
 		fluxer_prompt_tries=$((fluxer_prompt_tries + 1))
 	done
 	return 1
+}
+
+fluxer_sha256() {
+	openssl dgst -sha256 < "$1" | awk '{print $NF}'
+}
+
+fluxer_drop_scratch() {
+	fluxer_cleanup
+	fluxer_scratch=''
+}
+
+fluxer_refresh_installer() {
+	[ -z "${FLUXER_INSTALLER_REFRESHED:-}" ] || return 0
+	[ -n "$fluxer_self" ] || return 0
+	fluxer_self_dir=$(dirname "$fluxer_self")
+	if [ "$opt_dry_run" -eq 1 ]; then
+		fluxer_open_scratch "${TMPDIR:-/tmp}"
+	elif [ -w "$fluxer_self_dir" ]; then
+		fluxer_open_scratch "$fluxer_self_dir"
+	else
+		fluxer_say "$fluxer_self_dir is not writable, so this run cannot check $fluxer_self against $FLUXER_INSTALLER_URL and goes on with it."
+		return 0
+	fi
+	if ! curl -fsSL --proto '=https' --tlsv1.2 -o "$fluxer_scratch/install.sh.sha256" "$FLUXER_INSTALLER_URL.sha256"; then
+		fluxer_say "Could not reach $FLUXER_INSTALLER_URL.sha256, so this run goes on with $fluxer_self."
+		fluxer_drop_scratch
+		return 0
+	fi
+	fluxer_published=$(awk 'NR == 1 {print $1}' "$fluxer_scratch/install.sh.sha256")
+	case $fluxer_published in
+		''|*[!0-9a-f]*) fluxer_fail 4 "$FLUXER_INSTALLER_URL.sha256 holds no sha256 digest. Nothing was changed." ;;
+	esac
+	if [ "$(fluxer_sha256 "$fluxer_self")" = "$fluxer_published" ]; then
+		fluxer_drop_scratch
+		return 0
+	fi
+	if ! curl -fsSL --proto '=https' --tlsv1.2 -o "$fluxer_scratch/install.sh" "$FLUXER_INSTALLER_URL"; then
+		fluxer_fail 4 "Download failed for $FLUXER_INSTALLER_URL. Nothing was changed."
+	fi
+	if [ "$(fluxer_sha256 "$fluxer_scratch/install.sh")" != "$fluxer_published" ]; then
+		fluxer_fail 4 "$FLUXER_INSTALLER_URL does not match the digest in $FLUXER_INSTALLER_URL.sha256. Nothing was changed."
+	fi
+	fluxer_say "$fluxer_self differs from the installer $FLUXER_INSTALLER_URL serves. The stack files an upgrade downloads can require .env keys that only the current installer writes."
+	if [ "$opt_dry_run" -eq 1 ]; then
+		fluxer_say 'The run asks to replace it with the current installer before it changes anything. The plan below is the one this copy would follow.'
+		fluxer_drop_scratch
+		return 0
+	fi
+	if [ "$opt_non_interactive" -eq 1 ] || [ ! -t 0 ]; then
+		fluxer_fail 3 "Nothing was changed. Download the current installer and run it:
+  curl -fsSLO $FLUXER_INSTALLER_URL"
+	fi
+	printf 'Replace %s with the current installer and run that? [y/N] ' "$fluxer_self" >&2
+	fluxer_answer=''
+	read -r fluxer_answer || true
+	case $fluxer_answer in
+		y|Y|yes|Yes|YES) ;;
+		*) fluxer_fail 3 "Kept $fluxer_self. Nothing was changed. Read the current installer at $FLUXER_INSTALLER_URL and run it once it is in place." ;;
+	esac
+	if [ -x "$fluxer_self" ]; then
+		chmod +x "$fluxer_scratch/install.sh"
+	fi
+	mv "$fluxer_scratch/install.sh" "$fluxer_self"
+	fluxer_drop_scratch
+	fluxer_say "Replaced $fluxer_self. Running it."
+	FLUXER_INSTALLER_REFRESHED=1
+	export FLUXER_INSTALLER_REFRESHED
+	eval "exec sh \"\$fluxer_self\" $fluxer_self_args"
 }
 
 fluxer_resolve_values() {
@@ -2099,6 +2180,10 @@ fluxer_run_rollback() {
 fluxer_preflight
 fluxer_validate_options
 fluxer_resolve_values
+
+if [ "$opt_update" -eq 1 ]; then
+	fluxer_refresh_installer
+fi
 
 if [ "$opt_update" -eq 1 ] || [ "$opt_rollback" -eq 1 ]; then
 	fluxer_require_instance

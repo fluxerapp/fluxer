@@ -59,11 +59,17 @@ param(
 	[string[]]$Rest = @()
 )
 
+$FluxerScriptArguments = @{}
+foreach ($entry in $PSBoundParameters.GetEnumerator()) {
+	$FluxerScriptArguments[$entry.Key] = $entry.Value
+}
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
 $FluxerRawBase = 'https://raw.githubusercontent.com/fluxerapp/fluxer'
+$FluxerInstallerUrl = 'https://fluxer.dev/install.ps1'
 $FluxerStackPath = 'deploy/self-hosting'
 $FluxerHealthPath = '/_health'
 $FluxerInitService = 'seaweedfs-init'
@@ -1980,6 +1986,71 @@ function Assert-FluxerComposeFiles([string]$TargetDir, [string]$EnvPath) {
 	}
 }
 
+function Get-FluxerSha256([string]$Path) {
+	return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+function Update-FluxerInstaller {
+	if ($env:FLUXER_INSTALLER_REFRESHED) {
+		return
+	}
+	$self = $PSCommandPath
+	if (-not $self) {
+		return
+	}
+	$selfDir = Split-Path -Parent $self
+	if ($DryRun) {
+		$staging = New-FluxerStagingDirectory ([System.IO.Path]::GetTempPath())
+	} else {
+		$staging = New-FluxerStagingDirectory $selfDir
+	}
+	try {
+		$digestPath = Join-Path $staging 'install.ps1.sha256'
+		try {
+			Invoke-WebRequest -Uri "$FluxerInstallerUrl.sha256" -OutFile $digestPath -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 60
+		} catch {
+			Write-FluxerLine "Could not reach $FluxerInstallerUrl.sha256, so this run goes on with $self."
+			return
+		}
+		$published = ([System.IO.File]::ReadAllText($digestPath).Trim() -split '\s+')[0].ToLowerInvariant()
+		if ($published -notmatch '^[0-9a-f]{64}$') {
+			Stop-Fluxer "$FluxerInstallerUrl.sha256 holds no sha256 digest. Nothing was changed." $FluxerExitDownload
+		}
+		if ((Get-FluxerSha256 $self) -eq $published) {
+			return
+		}
+		$fresh = Join-Path $staging 'install.ps1'
+		try {
+			Invoke-WebRequest -Uri $FluxerInstallerUrl -OutFile $fresh -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 120
+		} catch {
+			Stop-Fluxer "Download failed for $FluxerInstallerUrl. Nothing was changed." $FluxerExitDownload
+		}
+		if ((Get-FluxerSha256 $fresh) -ne $published) {
+			Stop-Fluxer "$FluxerInstallerUrl does not match the digest in $FluxerInstallerUrl.sha256. Nothing was changed." $FluxerExitDownload
+		}
+		Write-FluxerLine "$self differs from the installer $FluxerInstallerUrl serves. The stack files an upgrade downloads can require .env keys that only the current installer writes."
+		if ($DryRun) {
+			Write-FluxerLine 'The run asks to replace it with the current installer before it changes anything. The plan below is the one this copy would follow.'
+			return
+		}
+		if ($NonInteractive -or [Console]::IsInputRedirected) {
+			Stop-Fluxer "Nothing was changed. Download the current installer and run it:`n  Invoke-WebRequest -Uri $FluxerInstallerUrl -OutFile install.ps1 -UseBasicParsing" $FluxerExitRefused
+		}
+		$answer = Read-Host -Prompt "Replace $self with the current installer and run that? [y/N]"
+		if ($null -eq $answer -or $answer.Trim() -notmatch '^(y|yes)$') {
+			Stop-Fluxer "Kept $self. Nothing was changed. Read the current installer at $FluxerInstallerUrl and run it once it is in place." $FluxerExitRefused
+		}
+		Move-Item -LiteralPath $fresh -Destination $self -Force
+	} finally {
+		Remove-FluxerStagingDirectory $staging
+	}
+	Write-FluxerLine "Replaced $self. Running it."
+	$env:FLUXER_INSTALLER_REFRESHED = '1'
+	$global:LASTEXITCODE = 0
+	& $self @FluxerScriptArguments
+	exit $LASTEXITCODE
+}
+
 function Invoke-FluxerInstall {
 	if ($Help) {
 		Show-FluxerUsage
@@ -2021,6 +2092,10 @@ function Invoke-FluxerInstall {
 	}
 
 	Invoke-FluxerPreflight
+
+	if ($Update) {
+		Update-FluxerInstaller
+	}
 
 	$targetPath = $Dir
 	$adoptedCwd = $false

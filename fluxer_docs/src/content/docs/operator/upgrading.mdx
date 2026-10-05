@@ -128,6 +128,8 @@ Removing the line from `.env` also lets the upgrade run, and it is the wrong fix
 
 Keep the installer beside the stack files. [Get started](/operator/get-started/#step-4-bring-up-the-instance) has the download and the checksum check for a fresh copy.
 
+`--update` first compares the installer against the digest at `https://fluxer.dev/install.sh.sha256`. When the copy differs, it downloads the current one, checks it against that digest, and asks before it replaces the copy and runs it with the same options. Answering no, `--non-interactive`, or a run without a terminal stops before anything changes. On Windows the same check reads `https://fluxer.dev/install.ps1.sha256`.
+
 See the plan first:
 
 ```bash

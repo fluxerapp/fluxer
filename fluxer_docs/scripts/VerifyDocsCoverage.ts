@@ -2198,6 +2198,7 @@ async function verifyInstallerExecution(installerRoot: string): Promise<Array<st
 				env: {
 					...process.env,
 					PATH: `${stubBin}${path.delimiter}${process.env.PATH ?? ''}`,
+					FLUXER_INSTALLER_REFRESHED: '1',
 					...(cwd == null ? {} : {PWD: cwd}),
 				},
 			});
