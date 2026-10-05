@@ -2736,12 +2736,12 @@ msgid "Accept the friend request from {userName}?"
 msgstr "Да приемеш ли поканата за приятелство от {userName}?"
 
 #. Label for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:367
+#: src/features/app/components/setup/SetupWizardSteps.tsx:372
 msgid "Accept the push relay supplemental privacy notice"
 msgstr "Приемам допълнителното уведомление за поверителност относно релето за известия"
 
 #. Summary value when the operator accepted the push relay notice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:484
+#: src/features/app/components/setup/SetupWizardSteps.tsx:489
 msgid "Accepted"
 msgstr "Прието"
 
@@ -3046,7 +3046,7 @@ msgid "Add a friend to get started."
 msgstr "Добави приятел, за да започнеш."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1183
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Добави API ключ за Klipy, за да включиш търсенето на GIF по време на работа."
 
@@ -3090,7 +3090,7 @@ msgid "Add a working email"
 msgstr "Добави работещ имейл адрес"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1181
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1191
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Добави ключ за YouTube Data API, за да обогатиш линковете към YouTube."
 
@@ -3136,7 +3136,7 @@ msgid "Add another reaction"
 msgstr "Добавяне на друга реакция"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1207
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Добави метаданни за OAuth клиента на Bluesky и ключ за подписване."
 
@@ -3286,7 +3286,7 @@ msgid "Add shortcut"
 msgstr "Добавяне на клавишна комбинация"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1199
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "Добави SMTP идентификационни данни, за да може инстанцията да изпраща имейли за потвърждение и известия."
 
@@ -3313,7 +3313,7 @@ msgid "Add stream"
 msgstr "Добавяне на стрийм"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1165
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1175
 msgid "Add the credentials during setup."
 msgstr "Добави идентификационните данни по време на настройката."
 
@@ -4392,12 +4392,12 @@ msgid "Anyone can call you, including strangers"
 msgstr "Всеки може да ти се обади, включително непознати"
 
 #. Description for the open registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:251
+#: src/features/app/components/setup/SetupWizardSteps.tsx:256
 msgid "Anyone can create an account."
 msgstr "Всеки може да създаде акаунт."
 
 #. Description for the approval registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:259
+#: src/features/app/components/setup/SetupWizardSteps.tsx:264
 msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Всеки може да поиска акаунт, но администратор трябва да го одобри."
 
@@ -4407,7 +4407,7 @@ msgid "Anyone with this key can reset your password. Never share it."
 msgstr "Всеки с този ключ може да нулира паролата ви. Никога не го споделяйте."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1211
 msgid "API key"
 msgstr "API ключ"
 
@@ -4566,7 +4566,7 @@ msgid "Apply to all communities"
 msgstr "Приложи към всички общности"
 
 #. Registration mode option requiring admin approval.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:255
+#: src/features/app/components/setup/SetupWizardSteps.tsx:260
 msgid "Approval required"
 msgstr "Изисква се одобрение"
 
@@ -4786,8 +4786,8 @@ msgstr "Действия с прикачен файл"
 
 #. Setup wizard media expiry step title.
 #. Summary row label for the attachment expiry choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:309
-#: src/features/app/components/setup/SetupWizardSteps.tsx:468
+#: src/features/app/components/setup/SetupWizardSteps.tsx:314
+#: src/features/app/components/setup/SetupWizardSteps.tsx:473
 msgid "Attachment expiration"
 msgstr "Изтичане на прикачените файлове"
 
@@ -5877,12 +5877,12 @@ msgid "Bluesky"
 msgstr "Bluesky"
 
 #. Label for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:409
+#: src/features/app/components/setup/SetupWizardSteps.tsx:414
 msgid "Bluesky connections"
 msgstr "Връзки с Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1203
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -6111,7 +6111,7 @@ msgid "Branding"
 msgstr "Брандиране"
 
 #. Accessible label for a branding image preview in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:233
+#: src/features/app/components/setup/SetupWizardSteps.tsx:238
 msgid "Branding asset preview"
 msgstr "Преглед на изображението за брандиране"
 
@@ -7676,7 +7676,7 @@ msgid "Choose a supported audio file and try again."
 msgstr "Избери поддържан аудиофайл и опитай отново."
 
 #. Setup wizard title for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:69
+#: src/features/app/components/setup/SetupWizardSteps.tsx:70
 msgid "Choose a theme"
 msgstr "Избери тема"
 
@@ -7740,12 +7740,12 @@ msgid "Choose how messages are displayed in chat channels."
 msgstr "Избери как да се показват съобщенията в чат каналите."
 
 #. Setup wizard registration step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:247
 msgid "Choose how new accounts are created on this instance."
 msgstr "Избери как се създават нови акаунти в тази инстанция."
 
 #. Setup wizard title for choosing whether accounts use usernames or email addresses to sign in.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:77
+#: src/features/app/components/setup/SetupWizardSteps.tsx:78
 msgid "Choose how people sign in"
 msgstr "Изберете как хората да влизат"
 
@@ -7765,7 +7765,7 @@ msgid "Choose how you'd like to pay for this subscription."
 msgstr "Избери как искаш да платиш за този абонамент."
 
 #. Setup wizard community model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:272
+#: src/features/app/components/setup/SetupWizardSteps.tsx:277
 msgid "Choose how your instance works"
 msgstr "Избери как да работи инстанцията ти"
 
@@ -7788,7 +7788,7 @@ msgid "Choose the category that best describes your community. You can change th
 msgstr "Избери категорията, която най-добре описва общността ти. Можеш да я промениш по всяко време."
 
 #. Setup wizard premium model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:418
+#: src/features/app/components/setup/SetupWizardSteps.tsx:423
 msgid "Choose the premium model"
 msgstr "Избери премиум модела"
 
@@ -7848,7 +7848,7 @@ msgid "Choose where its published messages should go. You can unfollow any time 
 msgstr "Изберете къде да се публикуват съобщенията. Можете да прекратите следването по всяко време в настройките на общността → Уебкуки."
 
 #. Setup wizard media expiry step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:313
+#: src/features/app/components/setup/SetupWizardSteps.tsx:318
 msgid "Choose whether uploaded attachments should expire automatically based on size."
 msgstr "Избери дали качените прикачени файлове да изтичат автоматично според размера."
 
@@ -8049,7 +8049,7 @@ msgstr "Изчиства звука от микрофона ти за ясна �
 #. Button or menu action label in the theme studio quick css section. Keep it concise.
 #. Button that removes an uploaded branding image.
 #. Inline button in the Recent searches section that wipes the search history list.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:209
+#: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
@@ -8277,7 +8277,7 @@ msgid "Client"
 msgstr "Клиент"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1248
 msgid "Client name"
 msgstr "Име на клиента"
 
@@ -8294,7 +8294,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Клиентската тайна е генерирана наново. Актуализирай всеки код, който използва старата тайна."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1252
 msgid "Client URL"
 msgstr "URL на клиента"
 
@@ -8427,7 +8427,7 @@ msgid "Close your DM with {username}? You can reopen it anytime."
 msgstr "Да се затвори ли DM с {username}? Можеш да го отвориш отново по всяко време."
 
 #. Registration mode option that disables public registration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:263
+#: src/features/app/components/setup/SetupWizardSteps.tsx:268
 msgid "Closed"
 msgstr "Затворена"
 
@@ -8846,7 +8846,7 @@ msgstr "Изключване на микрофона в общността"
 
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:288
+#: src/features/app/components/setup/SetupWizardSteps.tsx:293
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:124
 msgid "Community name"
 msgstr "Име на общността"
@@ -9055,7 +9055,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "Настройване на клавишните комбинации"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1161
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1171
 msgid "Configure now"
 msgstr "Конфигуриране сега"
 
@@ -10595,7 +10595,7 @@ msgstr "Създаване на нова група с {userName}"
 
 #. Button in the setup wizard that replaces the administrator recovery kit with a new one.
 #. Confirm button that replaces the existing account recovery kit with a new one.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:148
+#: src/features/app/components/setup/SetupWizardSteps.tsx:153
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 msgid "Create a new kit"
@@ -10607,7 +10607,7 @@ msgid "Create a new recovery kit?"
 msgstr "Създаване на нов комплект за възстановяване?"
 
 #. Status shown in the setup wizard while the administrator has no recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:156
+#: src/features/app/components/setup/SetupWizardSteps.tsx:161
 msgid "Create a recovery kit to continue."
 msgstr "Създайте комплект за възстановяване, за да продължите."
 
@@ -10629,7 +10629,7 @@ msgid "Create account to claim gift"
 msgstr "Създай акаунт, за да вземеш подаръка си"
 
 #. Button that opens the registration flow to create the first administrator account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:160
+#: src/features/app/components/setup/SetupWizardSteps.tsx:165
 msgid "Create administrator account"
 msgstr "Създаване на администраторски акаунт"
 
@@ -10736,7 +10736,7 @@ msgstr "Създаване на общност или присъединяван
 
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:144
+#: src/features/app/components/setup/SetupWizardSteps.tsx:149
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
@@ -10749,7 +10749,7 @@ msgid "Create role"
 msgstr "Създаване на роля"
 
 #. Setup wizard title prompting the operator to create the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:57
+#: src/features/app/components/setup/SetupWizardSteps.tsx:58
 msgid "Create the administrator account"
 msgstr "Създай администраторския акаунт"
 
@@ -11515,7 +11515,7 @@ msgid "Debug user"
 msgstr "Отстраняване на грешки за потребител"
 
 #. Setup wizard premium model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:422
+#: src/features/app/components/setup/SetupWizardSteps.tsx:427
 msgid "Decide how premium limits apply to people on this instance."
 msgstr "Реши как премиум ограниченията да се прилагат за хората в тази инстанция."
 
@@ -12399,7 +12399,7 @@ msgstr "Визуализации на директни съобщения"
 
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:464
+#: src/features/app/components/setup/SetupWizardSteps.tsx:469
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:630
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
@@ -12479,7 +12479,7 @@ msgid "Disable desktop notifications?"
 msgstr "Да се изключат ли известията на работния плот?"
 
 #. Label for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:300
+#: src/features/app/components/setup/SetupWizardSteps.tsx:305
 msgid "Disable direct messages and friend requests"
 msgstr "Изключване на директните съобщения и поканите за приятелство"
 
@@ -12556,7 +12556,7 @@ msgstr "Спиране на видеото локално"
 
 #. Status next to a built-in shortcut the user turned off in the keybinds tab.
 #. Summary value when a setup option is disabled.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:496
+#: src/features/app/components/setup/SetupWizardSteps.tsx:501
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:45
 msgid "Disabled"
 msgstr "Изключено"
@@ -13372,7 +13372,7 @@ msgid "Each key can run only one system-wide shortcut."
 msgstr "Всеки клавиш може да задейства само една системна клавишна комбинация."
 
 #. Description for the no tags option when people sign in with email. Keep the example name alex.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:123
+#: src/features/app/components/setup/SetupWizardSteps.tsx:128
 msgid "Each name belongs to one person and shows on its own, like alex."
 msgstr "Всяко име принадлежи на един човек и се показва самостоятелно, например alex."
 
@@ -13684,7 +13684,7 @@ msgstr "Отговаряш на условията за възстановява
 
 #. Generic form-field label for an email address.
 #. Setup wizard option where people sign in with an email address and password.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:94
+#: src/features/app/components/setup/SetupWizardSteps.tsx:99
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:211
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
 msgid "Email"
@@ -13712,7 +13712,7 @@ msgid "Email changed"
 msgstr "Имейлът е променен"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1195
 msgid "Email delivery"
 msgstr "Доставка на имейли"
 
@@ -13971,7 +13971,7 @@ msgid "Enable at least one translator below."
 msgstr "Активирай поне един преводач по-долу."
 
 #. Label for enabling attachment expiry during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:317
+#: src/features/app/components/setup/SetupWizardSteps.tsx:322
 msgid "Enable attachment expiration"
 msgstr "Активиране на изтичане на прикачени файлове"
 
@@ -13985,7 +13985,7 @@ msgid "Enable beta feature"
 msgstr "Включване на бета функция"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1234
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1244
 msgid "Enable Bluesky OAuth"
 msgstr "Активиране на Bluesky OAuth"
 
@@ -14018,7 +14018,7 @@ msgid "Enable developer mode"
 msgstr "Включване на режим за разработчици"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1202
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1212
 msgid "Enable email delivery"
 msgstr "Активиране на доставка на имейли"
 
@@ -14155,7 +14155,7 @@ msgid "Enable text selection"
 msgstr "Разрешаване на избиране на текст"
 
 #. Setup wizard optional services step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:385
+#: src/features/app/components/setup/SetupWizardSteps.tsx:390
 msgid "Enable the integrations whose credentials you have configured. Only available services are shown."
 msgstr "Активирай интеграциите, чиито идентификационни данни са конфигурирани. Показват се само наличните услуги."
 
@@ -14196,7 +14196,7 @@ msgstr "Активиране на миниатюри при превъртане
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Summary value when a setup option is enabled.
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:492
+#: src/features/app/components/setup/SetupWizardSteps.tsx:497
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
@@ -14320,7 +14320,7 @@ msgid "Enter a code in the format ABCD-1234."
 msgstr "Въведи код във формат ABCD-1234."
 
 #. Validation error for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:296
+#: src/features/app/components/setup/SetupWizardSteps.tsx:301
 msgid "Enter a community name between 1 and 100 characters."
 msgstr "Въведи име на общност между 1 и 100 знака."
 
@@ -14330,7 +14330,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "Въведи код за подарък, за да осребриш {premiumProductName} за акаунта си."
 
 #. Validation error for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:194
 msgid "Enter a product name between 1 and 80 characters."
 msgstr "Въведи име на продукт с дължина между 1 и 80 знака."
 
@@ -14669,7 +14669,7 @@ msgid "Everyone"
 msgstr "Всеки"
 
 #. Premium model option that gives everyone the highest limits.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:435
+#: src/features/app/components/setup/SetupWizardSteps.tsx:440
 msgid "Everyone is premium"
 msgstr "Всички са премиум"
 
@@ -14798,7 +14798,7 @@ msgid "EXPERIMENTAL"
 msgstr "ЕКСПЕРИМЕНТАЛНО"
 
 #. Label for attachment decay curve.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:345
+#: src/features/app/components/setup/SetupWizardSteps.tsx:350
 msgid "Expiration curve"
 msgstr "Крива на изтичане"
 
@@ -15322,7 +15322,7 @@ msgid "False claims likely to cause real-world harm."
 msgstr "Неверни твърдения, които вероятно ще причинят реална вреда."
 
 #. Label for the favicon branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:229
+#: src/features/app/components/setup/SetupWizardSteps.tsx:234
 msgid "Favicon"
 msgstr "Икона на сайта"
 
@@ -15621,7 +15621,7 @@ msgstr "Завърши в новия раздел. Ако си го затвор
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:100
-#: src/features/app/components/setup/SetupWizardSteps.tsx:444
+#: src/features/app/components/setup/SetupWizardSteps.tsx:449
 msgid "Finish setup"
 msgstr "Завърши настройката"
 
@@ -15668,7 +15668,7 @@ msgid "Florida"
 msgstr "Флорида"
 
 #. Placeholder for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:190
 msgid "Fluxer"
 msgstr "Fluxer"
 
@@ -16266,12 +16266,12 @@ msgid "from <0>{0}</0>"
 msgstr "от <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1206
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
 msgid "From email"
 msgstr "Имейл на подател"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1210
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1220
 msgid "From name"
 msgstr "Име на подател"
 
@@ -16577,7 +16577,7 @@ msgid "GIF preview"
 msgstr "Преглед на GIF"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1169
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1179
 msgid "GIF search"
 msgstr "Търсене на GIF"
 
@@ -16767,7 +16767,7 @@ msgid "Gifts aren't available right now."
 msgstr "Подаръци не са налични в момента."
 
 #. Description for the everyone-is-premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:439
+#: src/features/app/components/setup/SetupWizardSteps.tsx:444
 msgid "Give everyone on this instance the highest premium limits."
 msgstr "Дай на всички в тази инстанция най-високите премиум лимити."
 
@@ -17825,7 +17825,7 @@ msgstr "Съхраних комплекта си за възстановяван
 
 #. Label for the icon branding asset.
 #. Short label in the guild icon upload field. Keep it concise.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:213
+#: src/features/app/components/setup/SetupWizardSteps.tsx:218
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:27
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:89
 msgid "Icon"
@@ -18044,7 +18044,7 @@ msgid "Image"
 msgstr "Изображение"
 
 #. Label for the branding image asset uploaders in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:202
 msgid "Image assets"
 msgstr "Изображения"
 
@@ -19381,7 +19381,7 @@ msgid "Keep attachments when clearing an edit"
 msgstr "Запазване на прикачени файлове при изчистване на редакция"
 
 #. Description for the mirror premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:430
+#: src/features/app/components/setup/SetupWizardSteps.tsx:435
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Запазете безплатни и премиум нива. Можете да персонализирате нивата, да продавате премиум чрез Stripe или по-късно да раздавате кодове за подаръци от административния панел."
 
@@ -19520,7 +19520,7 @@ msgid "Kicked {targetUserTag} from the community"
 msgstr "{targetUserTag} е изгонен от общността"
 
 #. Label for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:393
+#: src/features/app/components/setup/SetupWizardSteps.tsx:398
 msgid "Klipy GIFs"
 msgstr "GIF файлове от Klipy"
 
@@ -19532,7 +19532,7 @@ msgstr "Корейски"
 #. Label for the setup wizard language selector.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for language, locale, and time display preferences.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:65
+#: src/features/app/components/setup/SetupWizardSteps.tsx:66
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:6
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:132
 msgid "Language"
@@ -19556,7 +19556,7 @@ msgid "Large"
 msgstr "Голям"
 
 #. Label for attachment decay maximum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:329
+#: src/features/app/components/setup/SetupWizardSteps.tsx:334
 msgid "Large file threshold (MB)"
 msgstr "Праг за големи файлове (MB)"
 
@@ -19724,7 +19724,7 @@ msgid "Leave voice call"
 msgstr "Напускане на гласово повикване"
 
 #. Description for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:371
+#: src/features/app/components/setup/SetupWizardSteps.tsx:376
 msgid "Leaving this off keeps the relay unused and drops notifications to the official mobile apps. You can accept it later in the admin panel."
 msgstr "Ако оставите това изключено, релето няма да се използва и официалните мобилни приложения няма да получават известия. Можете да го приемете по-късно в административния панел."
 
@@ -19802,12 +19802,12 @@ msgid "Let others clone your stickers"
 msgstr "Позволяване на други да клонират стикерите ти"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:413
+#: src/features/app/components/setup/SetupWizardSteps.tsx:418
 msgid "Let people link their Bluesky account to their profile."
 msgstr "Позволи на хората да свързват акаунта си в Bluesky с профила си."
 
 #. Description for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:397
+#: src/features/app/components/setup/SetupWizardSteps.tsx:402
 msgid "Let people search and send GIFs powered by Klipy."
 msgstr "Позволи на хората да търсят и изпращат GIF файлове чрез Klipy."
 
@@ -20197,7 +20197,7 @@ msgid "Loading states"
 msgstr "Състояния на зареждане"
 
 #. Setup wizard body while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:168
+#: src/features/app/components/setup/SetupWizardSteps.tsx:173
 msgid "Loading the current instance configuration."
 msgstr "Зареждане на текущата конфигурация на инстанцията."
 
@@ -20264,12 +20264,12 @@ msgid "Login"
 msgstr "Вход"
 
 #. Label for the logo branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:221
+#: src/features/app/components/setup/SetupWizardSteps.tsx:226
 msgid "Logo"
 msgstr "Лого"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1256
 msgid "Logo URL"
 msgstr "URL адрес на логото"
 
@@ -20399,7 +20399,7 @@ msgid "Make group owner"
 msgstr "Направи собственик на групата"
 
 #. Setup wizard branding step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:178
 msgid "Make the instance yours"
 msgstr "Персонализирай инстанцията си"
 
@@ -20848,12 +20848,12 @@ msgid "Maximizes visible messages with minimal spacing."
 msgstr "Максимизира видимите съобщения с минимално разстояние."
 
 #. Label for attachment decay maximum eligible size.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:333
+#: src/features/app/components/setup/SetupWizardSteps.tsx:338
 msgid "Maximum eligible size (MB)"
 msgstr "Максимален допустим размер (MB)"
 
 #. Label for attachment decay maximum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:341
+#: src/features/app/components/setup/SetupWizardSteps.tsx:346
 msgid "Maximum lifetime (days)"
 msgstr "Максимален срок на живот (дни)"
 
@@ -21699,7 +21699,7 @@ msgid "Minimize window"
 msgstr "Минимизиране на прозореца"
 
 #. Label for attachment decay minimum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:337
+#: src/features/app/components/setup/SetupWizardSteps.tsx:342
 msgid "Minimum lifetime (days)"
 msgstr "Минимален срок на живот (дни)"
 
@@ -21728,7 +21728,7 @@ msgid "Mirror of the Appearance tab toggle for light/dark/coal preference. Disab
 msgstr "Дублира превключвателя от раздела „Външен вид“ за светъл/тъмен/въглен режим. Изключи го, за да зададеш отделна основна тема за това устройство."
 
 #. Premium model option that mirrors free and premium tiers.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:426
+#: src/features/app/components/setup/SetupWizardSteps.tsx:431
 msgid "Mirror tiers"
 msgstr "Огледални нива"
 
@@ -21778,7 +21778,7 @@ msgstr "Мобилен онлайн статус на аватари"
 #. Section label for mobile push notification settings.
 #. Setup wizard push relay consent step title.
 #. Switch label in the community notification settings modal. Controls whether mobile push notifications are delivered for this community.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:358
+#: src/features/app/components/setup/SetupWizardSteps.tsx:363
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:112
 #: src/features/ui/action_menu/items/GuildMenuItems.tsx:81
 msgid "Mobile push notifications"
@@ -22456,7 +22456,7 @@ msgid "My category"
 msgstr "Моята категория"
 
 #. Placeholder for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:292
+#: src/features/app/components/setup/SetupWizardSteps.tsx:297
 msgid "My community"
 msgstr "Моята общност"
 
@@ -22566,7 +22566,7 @@ msgid "Name passkey form"
 msgstr "Формуляр за наименуване на ключ за достъп"
 
 #. Description for the random tags option when people sign in with email. Keep alex#4821.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:131
+#: src/features/app/components/setup/SetupWizardSteps.tsx:136
 msgid "Names get a random tag, like alex#4821, so several people can share a name."
 msgstr "Имената получават произволен таг, като alex#4821, така че няколко души да могат да споделят едно име."
 
@@ -23278,7 +23278,7 @@ msgid "No one can add you to group chats without asking"
 msgstr "Никой не може да те добавя в групови чатове, без да попита"
 
 #. Message shown when no optional services are available in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:389
+#: src/features/app/components/setup/SetupWizardSteps.tsx:394
 msgid "No optional services are available on this instance. You can skip this step."
 msgstr "Няма налични допълнителни услуги в тази инстанция. Можеш да пропуснеш тази стъпка."
 
@@ -23463,12 +23463,12 @@ msgid "No system channel"
 msgstr "Няма системен канал"
 
 #. Setup wizard finish summary value when usernames are unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:107
+#: src/features/app/components/setup/SetupWizardSteps.tsx:112
 msgid "No tags"
 msgstr "Без тагове"
 
 #. Setup wizard option where every username is unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:119
+#: src/features/app/components/setup/SetupWizardSteps.tsx:124
 msgid "No tags (recommended)"
 msgstr "Без етикети (препоръчително)"
 
@@ -23643,7 +23643,7 @@ msgid "Not a whole number"
 msgstr "Не е цяло число"
 
 #. Summary value when the operator left the push relay notice unaccepted.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:488
+#: src/features/app/components/setup/SetupWizardSteps.tsx:493
 msgid "Not accepted"
 msgstr "Не е прието"
 
@@ -24124,7 +24124,7 @@ msgid "Open"
 msgstr "Отваряне"
 
 #. Registration mode option allowing anyone to register.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:251
 msgctxt "registration-policy"
 msgid "Open"
 msgstr "Отворена"
@@ -24671,7 +24671,7 @@ msgid "Optional arguments"
 msgstr "Незадължителни аргументи"
 
 #. Setup wizard optional services step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:381
+#: src/features/app/components/setup/SetupWizardSteps.tsx:386
 msgid "Optional services"
 msgstr "Допълнителни услуги"
 
@@ -24984,7 +24984,7 @@ msgstr "Ключовете за достъп изискват подписан �
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1227
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
@@ -25224,12 +25224,12 @@ msgid "People"
 msgstr "Хора"
 
 #. Description for the username sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:89
+#: src/features/app/components/setup/SetupWizardSteps.tsx:90
 msgid "People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password."
 msgstr "Хората влизат с потребителско име и парола. Не се събира имейл адрес. Всеки може да запази комплект за възстановяване, в случай че забрави паролата си."
 
 #. Description for the email sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:98
+#: src/features/app/components/setup/SetupWizardSteps.tsx:103
 msgid "People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later."
 msgstr "Хората влизат с имейл адрес и парола. Нулирането на пароли и потвърждението изискват доставка на имейл, която можете да настроите по-късно."
 
@@ -25434,7 +25434,7 @@ msgid "Pick the 4-digit number after your username"
 msgstr "Избери 4-цифреното число след потребителското си име"
 
 #. Setup wizard body for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:73
+#: src/features/app/components/setup/SetupWizardSteps.tsx:74
 msgid "Pick the appearance this administrator account should start with."
 msgstr "Избери външния вид, с който да започне този администраторски акаунт."
 
@@ -25752,7 +25752,7 @@ msgid "Popup"
 msgstr "Изскачащ прозорец"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1215
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1225
 msgid "Port"
 msgstr "Порт"
 
@@ -25863,7 +25863,7 @@ msgid "Premium grace period nagbar"
 msgstr "Лента за гратисен период на премиум"
 
 #. Summary row label for the premium model in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:476
+#: src/features/app/components/setup/SetupWizardSteps.tsx:481
 msgid "Premium model"
 msgstr "Премиум модел"
 
@@ -25903,7 +25903,7 @@ msgid "Preparing"
 msgstr "Подготвяне"
 
 #. Setup wizard title while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:164
+#: src/features/app/components/setup/SetupWizardSteps.tsx:169
 msgid "Preparing setup"
 msgstr "Подготовка на настройката"
 
@@ -26160,7 +26160,7 @@ msgid "Privacy settings"
 msgstr "Настройки за поверителност"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1254
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1264
 msgid "Privacy URL"
 msgstr "URL адрес за поверителност"
 
@@ -26185,7 +26185,7 @@ msgid "Private details"
 msgstr "Лични данни"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1262
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1272
 msgid "Private key"
 msgstr "Частен ключ"
 
@@ -26210,8 +26210,8 @@ msgstr "Обработва се"
 
 #. Label for the product name input in the setup wizard.
 #. Summary row label for the product name in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:181
-#: src/features/app/components/setup/SetupWizardSteps.tsx:452
+#: src/features/app/components/setup/SetupWizardSteps.tsx:186
+#: src/features/app/components/setup/SetupWizardSteps.tsx:457
 msgid "Product name"
 msgstr "Име на продукта"
 
@@ -26412,7 +26412,7 @@ msgid "Public community"
 msgstr "Публична общност"
 
 #. Description for the closed registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:267
+#: src/features/app/components/setup/SetupWizardSteps.tsx:272
 msgid "Public registration is closed."
 msgstr "Публичната регистрация е затворена."
 
@@ -26537,7 +26537,7 @@ msgid "Push notification inactive timeout"
 msgstr "Време на неактивност преди push известия"
 
 #. Summary row label for the push relay consent on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:472
+#: src/features/app/components/setup/SetupWizardSteps.tsx:477
 msgid "Push relay notice"
 msgstr "Известие за Push релета"
 
@@ -26756,8 +26756,8 @@ msgstr "Координиране на атаки"
 
 #. Setup wizard finish summary value when every username gets a random four digit tag.
 #. Setup wizard option where every username gets a random four digit tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:111
-#: src/features/app/components/setup/SetupWizardSteps.tsx:127
+#: src/features/app/components/setup/SetupWizardSteps.tsx:116
+#: src/features/app/components/setup/SetupWizardSteps.tsx:132
 msgid "Random tags"
 msgstr "Случайни тагове"
 
@@ -26853,7 +26853,7 @@ msgid "Read the documentation ({domain})"
 msgstr "Прочети документацията ({domain})"
 
 #. Link to the push relay supplemental privacy notice shown during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:376
+#: src/features/app/components/setup/SetupWizardSteps.tsx:381
 msgid "Read the supplemental privacy notice"
 msgstr "Прочети допълнителното уведомление за поверителност"
 
@@ -27197,7 +27197,7 @@ msgid "Registered passkeys"
 msgstr "Регистрирани ключове за достъп"
 
 #. Summary row label for the registration mode in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:456
+#: src/features/app/components/setup/SetupWizardSteps.tsx:461
 msgid "Registration"
 msgstr "Регистрация"
 
@@ -27809,12 +27809,12 @@ msgid "Render placeholders"
 msgstr "Показване на плейсхолдъри"
 
 #. Label for attachment decay renewal threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:349
+#: src/features/app/components/setup/SetupWizardSteps.tsx:354
 msgid "Renew threshold (days)"
 msgstr "Праг на подновяване (дни)"
 
 #. Label for attachment decay renewal window.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:353
+#: src/features/app/components/setup/SetupWizardSteps.tsx:358
 msgid "Renew window (days)"
 msgstr "Период за подновяване (дни)"
 
@@ -27824,7 +27824,7 @@ msgstr "Подновява се на <0>{renewalDate}.</0>"
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that replaces an already uploaded branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:205
+#: src/features/app/components/setup/SetupWizardSteps.tsx:210
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:80
 msgid "Replace"
 msgstr "Замени"
@@ -28642,7 +28642,7 @@ msgid "Review what this app is asking for before you continue."
 msgstr "Прегледай какво иска това приложение, преди да продължиш."
 
 #. Setup wizard finish step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:448
+#: src/features/app/components/setup/SetupWizardSteps.tsx:453
 msgid "Review your choices below, then finish. This saves the configuration and opens the instance."
 msgstr "Прегледай избора си по-долу и завърши. Това ще запази конфигурацията и ще отвори инстанцията."
 
@@ -28898,7 +28898,7 @@ msgid "Run at login"
 msgstr "Стартиране при влизане"
 
 #. Description for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:284
+#: src/features/app/components/setup/SetupWizardSteps.tsx:289
 msgid "Run the instance as one community instead of many. This can only be enabled now, during setup."
 msgstr "Пусни инстанцията като една общност, вместо като много. Това може да бъде активирано само сега, по време на настройката."
 
@@ -29036,7 +29036,7 @@ msgid "Save theme"
 msgstr "Запазване на темата"
 
 #. Setup wizard title asking the administrator to create an account recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:135
+#: src/features/app/components/setup/SetupWizardSteps.tsx:140
 msgid "Save your recovery kit"
 msgstr "Запазете комплекта за възстановяване"
 
@@ -30435,7 +30435,7 @@ msgid "Set the nickname to {nick}"
 msgstr "Зададе прякора на {nick}"
 
 #. Setup wizard branding step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:182
 msgid "Set the public product name, theme color, and image assets that clients display."
 msgstr "Задай публичното име на продукта, цвета на темата и ресурсите с изображения, които клиентите показват."
 
@@ -30490,7 +30490,7 @@ msgid "Set up authenticator app"
 msgstr "Настройване на приложение за удостоверяване"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1153
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1163
 msgid "Set up later"
 msgstr "Настрой по-късно"
 
@@ -31168,7 +31168,7 @@ msgid "Show quick reactions"
 msgstr "Показване на бързи реакции"
 
 #. Description for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:405
+#: src/features/app/components/setup/SetupWizardSteps.tsx:410
 msgid "Show rich previews for YouTube links."
 msgstr "Показвай богати визуализации за линковете към YouTube."
 
@@ -31387,7 +31387,7 @@ msgid "Sign-in flow"
 msgstr "Процес на вход"
 
 #. Summary row label for how people sign in, on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:480
+#: src/features/app/components/setup/SetupWizardSteps.tsx:485
 msgid "Sign-in method"
 msgstr "Метод за вход"
 
@@ -31412,7 +31412,7 @@ msgid "Signed-in devices"
 msgstr "Устройства с активен вход"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1258
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1268
 msgid "Signing key ID"
 msgstr "ID на ключ за подписване"
 
@@ -31479,12 +31479,12 @@ msgid "Single column"
 msgstr "Една колона"
 
 #. Summary row label for the single community choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:460
+#: src/features/app/components/setup/SetupWizardSteps.tsx:465
 msgid "Single community"
 msgstr "Една общност"
 
 #. Label for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:280
+#: src/features/app/components/setup/SetupWizardSteps.tsx:285
 msgid "Single community mode"
 msgstr "Режим на една общност"
 
@@ -31551,7 +31551,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "Пропускане на системното съобщение за напускане – никой няма да бъде уведомен."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1157
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1167
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Пропусни това сега и го конфигурирай от административния панел."
 
@@ -31738,7 +31738,7 @@ msgid "Small button clicked."
 msgstr "Натиснат е малък бутон."
 
 #. Label for attachment decay minimum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:325
+#: src/features/app/components/setup/SetupWizardSteps.tsx:330
 msgid "Small file threshold (MB)"
 msgstr "Праг за малки файлове (MB)"
 
@@ -31794,17 +31794,17 @@ msgid "Smoother video"
 msgstr "По-плавно видео"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1236
 msgid "SMTP connection verified."
 msgstr "SMTP връзката е проверена."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1214
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1224
 msgid "SMTP host"
 msgstr "SMTP хост"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1230
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1240
 msgid "SMTP validation failed."
 msgstr "Проверката на SMTP е неуспешна."
 
@@ -33267,7 +33267,7 @@ msgid "Switches"
 msgstr "Превключватели"
 
 #. Label for the symbol branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:222
 msgid "Symbol"
 msgstr "Символ"
 
@@ -33635,7 +33635,7 @@ msgid "Terms of service"
 msgstr "Общи условия"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1250
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1260
 msgid "Terms URL"
 msgstr "URL на условията"
 
@@ -33645,7 +33645,7 @@ msgid "Terrorism or violent extremism"
 msgstr "Тероризъм или насилствен екстремизъм"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1222
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1232
 msgid "Test SMTP"
 msgstr "Тествай SMTP"
 
@@ -34016,7 +34016,7 @@ msgid "The new voice channel will reuse the permissions, user limit, and bitrate
 msgstr "Новият гласов канал ще използва същите разрешения, лимит за потребители и битрейт като <0>{channelLabel}</0>."
 
 #. Setup wizard push relay consent step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:362
+#: src/features/app/components/setup/SetupWizardSteps.tsx:367
 msgid "The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement."
 msgstr "Официалните мобилни приложения на Fluxer получават известия чрез релето за известия на Fluxer, което ги предава на Apple и Google. Самостоятелно хостваните крайни точки UnifiedPush и ntfy никога не достигат до релето и не се нуждаят от съгласие."
 
@@ -34128,7 +34128,7 @@ msgstr "Промените в темата се синхронизират с в
 
 #. Label for the theme color picker in the setup wizard.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:198
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:165
 msgid "Theme color"
 msgstr "Цвят на темата"
@@ -34228,7 +34228,7 @@ msgid "There was an error loading the webhooks. Try again."
 msgstr "Възникна грешка при зареждането на уебхуковете. Опитай отново."
 
 #. Setup wizard community model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:276
+#: src/features/app/components/setup/SetupWizardSteps.tsx:281
 msgid "These options change how people use the instance. Some can only be chosen during setup."
 msgstr "Тези опции променят начина, по който хората използват инстанцията. Някои могат да бъдат избрани само по време на настройката."
 
@@ -34642,7 +34642,7 @@ msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "Тази инстанция в момента позволява споделяне на екран до 720p при 30 FPS."
 
 #. Setup wizard body prompting the operator to register the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:61
+#: src/features/app/components/setup/SetupWizardSteps.tsx:62
 msgid "This instance has no accounts yet. The first account you create automatically becomes the administrator."
 msgstr "Тази инстанция още няма акаунти. Първият акаунт, който създадеш, автоматично става администратор."
 
@@ -35805,7 +35805,7 @@ msgid "Turn off device stream"
 msgstr "Изключване на стрийма на устройството"
 
 #. Description for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:304
+#: src/features/app/components/setup/SetupWizardSteps.tsx:309
 msgid "Turn off private messaging and friends across the instance. This can be reversed only once later."
 msgstr "Изключи личните съобщения и поканите за приятелство в цялата инстанция. Това може да бъде върнато само веднъж по-късно."
 
@@ -36994,7 +36994,7 @@ msgstr "Надгради, за да съхраняваш до 15 персона�
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that opens a file picker to upload a branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:206
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:84
 msgid "Upload"
 msgstr "Качване"
@@ -37489,7 +37489,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "Използвай това при отстраняване на неизправности на клиента или събиране на регистрационни файлове. Може да добави подробни съобщения в конзолата на браузъра за текущия клиент."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1218
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1228
 msgid "Use TLS"
 msgstr "Използване на TLS"
 
@@ -37659,7 +37659,7 @@ msgstr "Сила на звука на потребителя"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:577
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:226
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:57
@@ -37702,8 +37702,13 @@ msgstr "Потребителското име трябва да е поне 1 з
 msgid "Username must be at most 32 characters"
 msgstr "Потребителското име трябва да е до 32 знака"
 
+#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
+#: src/features/app/components/setup/SetupWizardSteps.tsx:95
+msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
+msgstr "Влизането с потребителско име все още се въвежда в мобилните приложения. Пълна поддръжка на всяка платформа идва скоро."
+
 #. Heading above the choice of how usernames are tagged in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:115
+#: src/features/app/components/setup/SetupWizardSteps.tsx:120
 msgid "Username tags"
 msgstr "Етикети на потребителско име"
 
@@ -37713,12 +37718,12 @@ msgid "Username updated"
 msgstr "Потребителското име е актуализирано"
 
 #. Summary value on the setup wizard finish step when people sign in with a username.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:103
+#: src/features/app/components/setup/SetupWizardSteps.tsx:108
 msgid "Usernames"
 msgstr "Потребителски имена"
 
 #. Setup wizard option where people sign in with a username and password and no email is collected.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:85
+#: src/features/app/components/setup/SetupWizardSteps.tsx:86
 msgid "Usernames (recommended)"
 msgstr "Потребителски имена (препоръчително)"
 
@@ -39232,7 +39237,7 @@ msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {
 msgstr "Добре дошли в {premiumProductFullName}. Годишният ти абонамент се подновява на {formattedDate}. Разгледай предимствата на {premiumProductName} и управлявай абонамента си."
 
 #. Setup wizard title shown once the operator is signed in as the instance admin.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:48
+#: src/features/app/components/setup/SetupWizardSteps.tsx:49
 msgid "Welcome to {productName}"
 msgstr "Добре дошли в {productName}"
 
@@ -39330,7 +39335,7 @@ msgid "When a custom threshold date is not set, members without the <0>{readMess
 msgstr "Когато не е зададена персонализирана гранична дата, членовете без разрешението <0>{readMessageHistoryPermissionLabel}</0> не могат да виждат стари съобщения. Ще виждат само съобщенията в реално време, докато пристигат, и те ще изчезват при рестартиране на клиента."
 
 #. Description for the attachment expiry setup switch.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:321
+#: src/features/app/components/setup/SetupWizardSteps.tsx:326
 msgid "When attachment expiration is disabled, attachments remain available until manually removed."
 msgstr "Когато изтичането на срока на валидност на прикачените файлове е изключено, те остават налични, докато не бъдат премахнати ръчно."
 
@@ -39436,7 +39441,7 @@ msgid "Who can friend"
 msgstr "Кой може да ме добавя като приятел"
 
 #. Setup wizard registration step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:243
 msgid "Who can join"
 msgstr "Кой може да се присъедини"
 
@@ -39575,7 +39580,7 @@ msgid "Without this permission, push-to-talk is required."
 msgstr "Без това разрешение се изисква „Натисни и говори“."
 
 #. Label for the wordmark branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:225
+#: src/features/app/components/setup/SetupWizardSteps.tsx:230
 msgid "Wordmark"
 msgstr "Текстово лого"
 
@@ -39716,7 +39721,7 @@ msgid "You are now navigating to {paymentProviderName} to complete the payment. 
 msgstr "Прехвърляме те към {paymentProviderName}, за да завършиш плащането. Върни се във {productName}, след като приключиш."
 
 #. Setup wizard body shown to the signed-in instance administrator.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:52
+#: src/features/app/components/setup/SetupWizardSteps.tsx:53
 msgid "You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance."
 msgstr "Влезе като администратор на инстанцията. Следващите стъпки конфигурират брандирането, регистрацията и основните правила за всички в тази инстанция."
 
@@ -39969,7 +39974,7 @@ msgid "You can't view the members of this channel in this community"
 msgstr "Не можеш да видиш членовете на този канал в тази общност"
 
 #. Setup wizard body for the sign-in method step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:81
+#: src/features/app/components/setup/SetupWizardSteps.tsx:82
 msgid "You cannot change this once the first account exists."
 msgstr "Не можете да промените това, след като първият акаунт бъде създаден."
 
@@ -40578,7 +40583,7 @@ msgid "Your account has been linked successfully. You can now close this tab and
 msgstr "Акаунтът ти е свързан успешно. Вече можеш да затвориш този раздел и да се върнеш в приложението."
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:139
+#: src/features/app/components/setup/SetupWizardSteps.tsx:144
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. Create one now and keep it somewhere safe."
 msgstr "Във вашия акаунт няма имейл адрес. Ако забравите паролата си, комплектът за възстановяване е единственият начин да влезете отново. Създайте го сега и го пазете на сигурно място."
 
@@ -40880,7 +40885,7 @@ msgid "Your recovery kit"
 msgstr "Вашият комплект за възстановяване"
 
 #. Status shown in the setup wizard once the administrator has a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:152
+#: src/features/app/components/setup/SetupWizardSteps.tsx:157
 msgid "Your recovery kit is ready. You can continue."
 msgstr "Вашият комплект за възстановяване е готов. Можете да продължите."
 
@@ -41010,12 +41015,12 @@ msgid "Your video encoder stopped encoding frames, so your screen share was stop
 msgstr "Видеоенкодерът ти спря да кодира кадри, затова споделянето на екрана беше спряно. Опитай да споделиш отново."
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:401
+#: src/features/app/components/setup/SetupWizardSteps.tsx:406
 msgid "YouTube enrichment"
 msgstr "Обогатяване за YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1187
 msgid "YouTube previews"
 msgstr "Визуализации за YouTube"
 

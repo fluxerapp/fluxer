@@ -15,6 +15,7 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
+import {WarningAlert} from '@app/features/ui/warning_alert/WarningAlert';
 import {ThemeSelector} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent';
 import {LanguageSelector} from '@app/features/user/components/modals/tabs/LanguageTab';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
@@ -90,6 +91,10 @@ const SIGN_IN_METHOD_USERNAME_DESC_DESCRIPTOR = msg({
 	message:
 		'People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password.',
 	comment: 'Description for the username sign-in option in the setup wizard.',
+});
+const SIGN_IN_METHOD_USERNAME_MOBILE_NOTICE_DESCRIPTOR = msg({
+	message: 'Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon.',
+	comment: 'Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.',
 });
 const SIGN_IN_METHOD_EMAIL_NAME_DESCRIPTOR = msg({
 	message: 'Email',
@@ -746,6 +751,11 @@ export const SignInMethodStep = observer(
 					aria-label={i18n._(SIGN_IN_METHOD_TITLE_DESCRIPTOR)}
 					data-flx="app.self-hosted-setup-wizard-gate.sign-in-method-radio-group"
 				/>
+				{usernameSignIn && (
+					<WarningAlert data-flx="app.self-hosted-setup-wizard-gate.username-mobile-notice">
+						{i18n._(SIGN_IN_METHOD_USERNAME_MOBILE_NOTICE_DESCRIPTOR)}
+					</WarningAlert>
+				)}
 				{!usernameSignIn && (
 					<div className={styles.usernameStyle} data-flx="app.self-hosted-setup-wizard-gate.username-style">
 						<h3 className={styles.usernameStyleTitle}>{i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}</h3>

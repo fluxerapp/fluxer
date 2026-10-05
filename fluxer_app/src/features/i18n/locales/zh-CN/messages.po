@@ -2736,12 +2736,12 @@ msgid "Accept the friend request from {userName}?"
 msgstr "接受 {userName} 的好友请求吗？"
 
 #. Label for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:367
+#: src/features/app/components/setup/SetupWizardSteps.tsx:372
 msgid "Accept the push relay supplemental privacy notice"
 msgstr "接受推送中继补充隐私声明"
 
 #. Summary value when the operator accepted the push relay notice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:484
+#: src/features/app/components/setup/SetupWizardSteps.tsx:489
 msgid "Accepted"
 msgstr "已接受"
 
@@ -3046,7 +3046,7 @@ msgid "Add a friend to get started."
 msgstr "添加好友以开始聊天。"
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1183
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "添加 Klipy API 密钥，以在运行时启用 GIF 搜索。"
 
@@ -3090,7 +3090,7 @@ msgid "Add a working email"
 msgstr "添加有效的邮箱地址"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1181
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1191
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "添加 YouTube Data API 密钥，以丰富 YouTube 链接的信息。"
 
@@ -3136,7 +3136,7 @@ msgid "Add another reaction"
 msgstr "添加其他反应"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1207
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "添加 Bluesky OAuth 客户端元数据和签名密钥。"
 
@@ -3286,7 +3286,7 @@ msgid "Add shortcut"
 msgstr "添加快捷键"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1199
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "添加 SMTP 凭据，以便实例可以发送验证和通知电子邮件。"
 
@@ -3313,7 +3313,7 @@ msgid "Add stream"
 msgstr "添加直播"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1165
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1175
 msgid "Add the credentials during setup."
 msgstr "在设置过程中添加凭据。"
 
@@ -4392,12 +4392,12 @@ msgid "Anyone can call you, including strangers"
 msgstr "任何人都可以给你打电话，包括陌生人"
 
 #. Description for the open registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:251
+#: src/features/app/components/setup/SetupWizardSteps.tsx:256
 msgid "Anyone can create an account."
 msgstr "任何人都可以创建账号。"
 
 #. Description for the approval registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:259
+#: src/features/app/components/setup/SetupWizardSteps.tsx:264
 msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "任何人都可以申请账号，但需要管理员批准。"
 
@@ -4407,7 +4407,7 @@ msgid "Anyone with this key can reset your password. Never share it."
 msgstr "拥有此密钥的任何人都可以重置您的密码。切勿分享。"
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1211
 msgid "API key"
 msgstr "API 密钥"
 
@@ -4566,7 +4566,7 @@ msgid "Apply to all communities"
 msgstr "应用于所有社区"
 
 #. Registration mode option requiring admin approval.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:255
+#: src/features/app/components/setup/SetupWizardSteps.tsx:260
 msgid "Approval required"
 msgstr "需要批准"
 
@@ -4786,8 +4786,8 @@ msgstr "附件操作"
 
 #. Setup wizard media expiry step title.
 #. Summary row label for the attachment expiry choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:309
-#: src/features/app/components/setup/SetupWizardSteps.tsx:468
+#: src/features/app/components/setup/SetupWizardSteps.tsx:314
+#: src/features/app/components/setup/SetupWizardSteps.tsx:473
 msgid "Attachment expiration"
 msgstr "附件到期时间"
 
@@ -5877,12 +5877,12 @@ msgid "Bluesky"
 msgstr "Bluesky"
 
 #. Label for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:409
+#: src/features/app/components/setup/SetupWizardSteps.tsx:414
 msgid "Bluesky connections"
 msgstr "Bluesky 连接"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1203
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -6111,7 +6111,7 @@ msgid "Branding"
 msgstr "品牌"
 
 #. Accessible label for a branding image preview in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:233
+#: src/features/app/components/setup/SetupWizardSteps.tsx:238
 msgid "Branding asset preview"
 msgstr "品牌资源预览"
 
@@ -7676,7 +7676,7 @@ msgid "Choose a supported audio file and try again."
 msgstr "请选择受支持的音频文件，然后重试。"
 
 #. Setup wizard title for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:69
+#: src/features/app/components/setup/SetupWizardSteps.tsx:70
 msgid "Choose a theme"
 msgstr "选择主题"
 
@@ -7740,12 +7740,12 @@ msgid "Choose how messages are displayed in chat channels."
 msgstr "选择聊天频道中消息的显示方式。"
 
 #. Setup wizard registration step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:247
 msgid "Choose how new accounts are created on this instance."
 msgstr "选择此实例上新账号的创建方式。"
 
 #. Setup wizard title for choosing whether accounts use usernames or email addresses to sign in.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:77
+#: src/features/app/components/setup/SetupWizardSteps.tsx:78
 msgid "Choose how people sign in"
 msgstr "选择用户登录方式"
 
@@ -7765,7 +7765,7 @@ msgid "Choose how you'd like to pay for this subscription."
 msgstr "选择此订阅的付款方式。"
 
 #. Setup wizard community model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:272
+#: src/features/app/components/setup/SetupWizardSteps.tsx:277
 msgid "Choose how your instance works"
 msgstr "选择实例的工作方式"
 
@@ -7788,7 +7788,7 @@ msgid "Choose the category that best describes your community. You can change th
 msgstr "选择最能描述你社区的类别。你可以随时更改。"
 
 #. Setup wizard premium model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:418
+#: src/features/app/components/setup/SetupWizardSteps.tsx:423
 msgid "Choose the premium model"
 msgstr "选择会员模式"
 
@@ -7848,7 +7848,7 @@ msgid "Choose where its published messages should go. You can unfollow any time 
 msgstr "选择要发布消息的目的地。你随时可以在社区设置 → Webhooks 中取消关注。"
 
 #. Setup wizard media expiry step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:313
+#: src/features/app/components/setup/SetupWizardSteps.tsx:318
 msgid "Choose whether uploaded attachments should expire automatically based on size."
 msgstr "选择上传的附件是否应根据大小自动过期。"
 
@@ -8049,7 +8049,7 @@ msgstr "优化麦克风收音，让语音更清晰。"
 #. Button or menu action label in the theme studio quick css section. Keep it concise.
 #. Button that removes an uploaded branding image.
 #. Inline button in the Recent searches section that wipes the search history list.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:209
+#: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
@@ -8277,7 +8277,7 @@ msgid "Client"
 msgstr "客户端"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1248
 msgid "Client name"
 msgstr "客户端名称"
 
@@ -8294,7 +8294,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "客户端密钥已重新生成。请更新所有使用旧密钥的代码。"
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1252
 msgid "Client URL"
 msgstr "客户端网址"
 
@@ -8427,7 +8427,7 @@ msgid "Close your DM with {username}? You can reopen it anytime."
 msgstr "要关闭与 {username} 的私信吗？你可以随时重新打开。"
 
 #. Registration mode option that disables public registration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:263
+#: src/features/app/components/setup/SetupWizardSteps.tsx:268
 msgid "Closed"
 msgstr "已关闭"
 
@@ -8846,7 +8846,7 @@ msgstr "社区静音"
 
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:288
+#: src/features/app/components/setup/SetupWizardSteps.tsx:293
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:124
 msgid "Community name"
 msgstr "社区名称"
@@ -9055,7 +9055,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "配置键盘快捷键"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1161
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1171
 msgid "Configure now"
 msgstr "立即配置"
 
@@ -10595,7 +10595,7 @@ msgstr "与 {userName} 创建新群聊"
 
 #. Button in the setup wizard that replaces the administrator recovery kit with a new one.
 #. Confirm button that replaces the existing account recovery kit with a new one.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:148
+#: src/features/app/components/setup/SetupWizardSteps.tsx:153
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 msgid "Create a new kit"
@@ -10607,7 +10607,7 @@ msgid "Create a new recovery kit?"
 msgstr "创建新的恢复套件？"
 
 #. Status shown in the setup wizard while the administrator has no recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:156
+#: src/features/app/components/setup/SetupWizardSteps.tsx:161
 msgid "Create a recovery kit to continue."
 msgstr "创建恢复工具包以继续。"
 
@@ -10629,7 +10629,7 @@ msgid "Create account to claim gift"
 msgstr "创建账号以领取礼物"
 
 #. Button that opens the registration flow to create the first administrator account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:160
+#: src/features/app/components/setup/SetupWizardSteps.tsx:165
 msgid "Create administrator account"
 msgstr "创建管理员账号"
 
@@ -10736,7 +10736,7 @@ msgstr "创建或加入社区"
 
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:144
+#: src/features/app/components/setup/SetupWizardSteps.tsx:149
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
@@ -10749,7 +10749,7 @@ msgid "Create role"
 msgstr "创建身份组"
 
 #. Setup wizard title prompting the operator to create the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:57
+#: src/features/app/components/setup/SetupWizardSteps.tsx:58
 msgid "Create the administrator account"
 msgstr "创建管理员账号"
 
@@ -11515,7 +11515,7 @@ msgid "Debug user"
 msgstr "调试用户"
 
 #. Setup wizard premium model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:422
+#: src/features/app/components/setup/SetupWizardSteps.tsx:427
 msgid "Decide how premium limits apply to people on this instance."
 msgstr "决定高级限制如何应用于此实例上的用户。"
 
@@ -12399,7 +12399,7 @@ msgstr "私信预览"
 
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:464
+#: src/features/app/components/setup/SetupWizardSteps.tsx:469
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:630
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
@@ -12479,7 +12479,7 @@ msgid "Disable desktop notifications?"
 msgstr "要关闭桌面通知吗？"
 
 #. Label for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:300
+#: src/features/app/components/setup/SetupWizardSteps.tsx:305
 msgid "Disable direct messages and friend requests"
 msgstr "停用私信和好友请求"
 
@@ -12556,7 +12556,7 @@ msgstr "本地停用视频"
 
 #. Status next to a built-in shortcut the user turned off in the keybinds tab.
 #. Summary value when a setup option is disabled.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:496
+#: src/features/app/components/setup/SetupWizardSteps.tsx:501
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:45
 msgid "Disabled"
 msgstr "已禁用"
@@ -13372,7 +13372,7 @@ msgid "Each key can run only one system-wide shortcut."
 msgstr "每个按键只能触发一个全局快捷键。"
 
 #. Description for the no tags option when people sign in with email. Keep the example name alex.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:123
+#: src/features/app/components/setup/SetupWizardSteps.tsx:128
 msgid "Each name belongs to one person and shows on its own, like alex."
 msgstr "每个人都有一个名字，并且会单独显示，例如 alex。"
 
@@ -13684,7 +13684,7 @@ msgstr "在 {windowEndsOn} 之前可申请退款。此操作还会立即取消�
 
 #. Generic form-field label for an email address.
 #. Setup wizard option where people sign in with an email address and password.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:94
+#: src/features/app/components/setup/SetupWizardSteps.tsx:99
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:211
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
 msgid "Email"
@@ -13712,7 +13712,7 @@ msgid "Email changed"
 msgstr "邮箱已更改"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1195
 msgid "Email delivery"
 msgstr "邮件发送"
 
@@ -13971,7 +13971,7 @@ msgid "Enable at least one translator below."
 msgstr "请至少启用一个翻译器。"
 
 #. Label for enabling attachment expiry during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:317
+#: src/features/app/components/setup/SetupWizardSteps.tsx:322
 msgid "Enable attachment expiration"
 msgstr "启用附件到期"
 
@@ -13985,7 +13985,7 @@ msgid "Enable beta feature"
 msgstr "启用测试功能"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1234
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1244
 msgid "Enable Bluesky OAuth"
 msgstr "启用 Bluesky OAuth"
 
@@ -14018,7 +14018,7 @@ msgid "Enable developer mode"
 msgstr "启用开发者模式"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1202
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1212
 msgid "Enable email delivery"
 msgstr "启用邮件发送"
 
@@ -14155,7 +14155,7 @@ msgid "Enable text selection"
 msgstr "启用文本选择"
 
 #. Setup wizard optional services step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:385
+#: src/features/app/components/setup/SetupWizardSteps.tsx:390
 msgid "Enable the integrations whose credentials you have configured. Only available services are shown."
 msgstr "启用你已配置凭据的集成。仅显示可用服务。"
 
@@ -14196,7 +14196,7 @@ msgstr "启用视频进度预览缩略图"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Summary value when a setup option is enabled.
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:492
+#: src/features/app/components/setup/SetupWizardSteps.tsx:497
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
@@ -14320,7 +14320,7 @@ msgid "Enter a code in the format ABCD-1234."
 msgstr "输入格式为 ABCD-1234 的代码。"
 
 #. Validation error for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:296
+#: src/features/app/components/setup/SetupWizardSteps.tsx:301
 msgid "Enter a community name between 1 and 100 characters."
 msgstr "请输入 1 到 100 个字符的社区名称。"
 
@@ -14330,7 +14330,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "输入礼物码，为你的账号兑换 {premiumProductName}。"
 
 #. Validation error for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:194
 msgid "Enter a product name between 1 and 80 characters."
 msgstr "请输入 1 到 80 个字符的产品名称。"
 
@@ -14669,7 +14669,7 @@ msgid "Everyone"
 msgstr "所有人"
 
 #. Premium model option that gives everyone the highest limits.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:435
+#: src/features/app/components/setup/SetupWizardSteps.tsx:440
 msgid "Everyone is premium"
 msgstr "所有人都是高级用户"
 
@@ -14798,7 +14798,7 @@ msgid "EXPERIMENTAL"
 msgstr "实验性"
 
 #. Label for attachment decay curve.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:345
+#: src/features/app/components/setup/SetupWizardSteps.tsx:350
 msgid "Expiration curve"
 msgstr "到期曲线"
 
@@ -15322,7 +15322,7 @@ msgid "False claims likely to cause real-world harm."
 msgstr "可能在现实中造成伤害的不实信息。"
 
 #. Label for the favicon branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:229
+#: src/features/app/components/setup/SetupWizardSteps.tsx:234
 msgid "Favicon"
 msgstr "网站图标"
 
@@ -15621,7 +15621,7 @@ msgstr "在新标签页中完成。如果已关闭，请再次按“使用通行
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:100
-#: src/features/app/components/setup/SetupWizardSteps.tsx:444
+#: src/features/app/components/setup/SetupWizardSteps.tsx:449
 msgid "Finish setup"
 msgstr "完成设置"
 
@@ -15668,7 +15668,7 @@ msgid "Florida"
 msgstr "佛罗里达州"
 
 #. Placeholder for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:190
 msgid "Fluxer"
 msgstr "Fluxer"
 
@@ -16266,12 +16266,12 @@ msgid "from <0>{0}</0>"
 msgstr "来自 <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1206
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
 msgid "From email"
 msgstr "发件人邮箱"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1210
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1220
 msgid "From name"
 msgstr "发件人名称"
 
@@ -16577,7 +16577,7 @@ msgid "GIF preview"
 msgstr "GIF 预览"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1169
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1179
 msgid "GIF search"
 msgstr "GIF 搜索"
 
@@ -16767,7 +16767,7 @@ msgid "Gifts aren't available right now."
 msgstr "暂时无法购买礼物。"
 
 #. Description for the everyone-is-premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:439
+#: src/features/app/components/setup/SetupWizardSteps.tsx:444
 msgid "Give everyone on this instance the highest premium limits."
 msgstr "让本实例上的所有人都享有最高的高级版上限。"
 
@@ -17825,7 +17825,7 @@ msgstr "我已将恢复工具包存放在安全的地方"
 
 #. Label for the icon branding asset.
 #. Short label in the guild icon upload field. Keep it concise.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:213
+#: src/features/app/components/setup/SetupWizardSteps.tsx:218
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:27
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:89
 msgid "Icon"
@@ -18044,7 +18044,7 @@ msgid "Image"
 msgstr "图片"
 
 #. Label for the branding image asset uploaders in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:202
 msgid "Image assets"
 msgstr "图片素材"
 
@@ -19381,7 +19381,7 @@ msgid "Keep attachments when clearing an edit"
 msgstr "清除编辑时保留附件"
 
 #. Description for the mirror premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:430
+#: src/features/app/components/setup/SetupWizardSteps.tsx:435
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "保留免费和高级套餐。您可以自定义套餐，通过 Stripe 出售高级服务，或稍后从管理面板发放礼品码。"
 
@@ -19520,7 +19520,7 @@ msgid "Kicked {targetUserTag} from the community"
 msgstr "已将 {targetUserTag} 踢出社区"
 
 #. Label for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:393
+#: src/features/app/components/setup/SetupWizardSteps.tsx:398
 msgid "Klipy GIFs"
 msgstr "Klipy GIF"
 
@@ -19532,7 +19532,7 @@ msgstr "韩语"
 #. Label for the setup wizard language selector.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for language, locale, and time display preferences.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:65
+#: src/features/app/components/setup/SetupWizardSteps.tsx:66
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:6
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:132
 msgid "Language"
@@ -19556,7 +19556,7 @@ msgid "Large"
 msgstr "大"
 
 #. Label for attachment decay maximum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:329
+#: src/features/app/components/setup/SetupWizardSteps.tsx:334
 msgid "Large file threshold (MB)"
 msgstr "大文件阈值（MB）"
 
@@ -19724,7 +19724,7 @@ msgid "Leave voice call"
 msgstr "离开语音通话"
 
 #. Description for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:371
+#: src/features/app/components/setup/SetupWizardSteps.tsx:376
 msgid "Leaving this off keeps the relay unused and drops notifications to the official mobile apps. You can accept it later in the admin panel."
 msgstr "关闭此选项将停用中继，并导致通知无法发送到官方移动应用。你之后可以在管理面板中接受此选项。"
 
@@ -19802,12 +19802,12 @@ msgid "Let others clone your stickers"
 msgstr "允许他人克隆你的贴纸"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:413
+#: src/features/app/components/setup/SetupWizardSteps.tsx:418
 msgid "Let people link their Bluesky account to their profile."
 msgstr "允许用户将自己的 Bluesky 账号关联到个人资料。"
 
 #. Description for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:397
+#: src/features/app/components/setup/SetupWizardSteps.tsx:402
 msgid "Let people search and send GIFs powered by Klipy."
 msgstr "允许用户通过 Klipy 搜索和发送 GIF。"
 
@@ -20197,7 +20197,7 @@ msgid "Loading states"
 msgstr "加载状态"
 
 #. Setup wizard body while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:168
+#: src/features/app/components/setup/SetupWizardSteps.tsx:173
 msgid "Loading the current instance configuration."
 msgstr "正在加载当前实例配置。"
 
@@ -20264,12 +20264,12 @@ msgid "Login"
 msgstr "登录"
 
 #. Label for the logo branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:221
+#: src/features/app/components/setup/SetupWizardSteps.tsx:226
 msgid "Logo"
 msgstr "Logo"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1256
 msgid "Logo URL"
 msgstr "Logo 网址"
 
@@ -20399,7 +20399,7 @@ msgid "Make group owner"
 msgstr "设为群主"
 
 #. Setup wizard branding step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:178
 msgid "Make the instance yours"
 msgstr "个性化你的实例"
 
@@ -20848,12 +20848,12 @@ msgid "Maximizes visible messages with minimal spacing."
 msgstr "以最小间距显示更多消息。"
 
 #. Label for attachment decay maximum eligible size.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:333
+#: src/features/app/components/setup/SetupWizardSteps.tsx:338
 msgid "Maximum eligible size (MB)"
 msgstr "符合条件的最大大小（MB）"
 
 #. Label for attachment decay maximum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:341
+#: src/features/app/components/setup/SetupWizardSteps.tsx:346
 msgid "Maximum lifetime (days)"
 msgstr "最大保留天数"
 
@@ -21699,7 +21699,7 @@ msgid "Minimize window"
 msgstr "最小化窗口"
 
 #. Label for attachment decay minimum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:337
+#: src/features/app/components/setup/SetupWizardSteps.tsx:342
 msgid "Minimum lifetime (days)"
 msgstr "最短保留天数"
 
@@ -21728,7 +21728,7 @@ msgid "Mirror of the Appearance tab toggle for light/dark/coal preference. Disab
 msgstr "外观选项卡中浅色/深色/煤炭偏好设置的镜像开关。禁用后可为每台设备单独设置基础主题。"
 
 #. Premium model option that mirrors free and premium tiers.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:426
+#: src/features/app/components/setup/SetupWizardSteps.tsx:431
 msgid "Mirror tiers"
 msgstr "镜像层级"
 
@@ -21778,7 +21778,7 @@ msgstr "头像上的手机在线状态"
 #. Section label for mobile push notification settings.
 #. Setup wizard push relay consent step title.
 #. Switch label in the community notification settings modal. Controls whether mobile push notifications are delivered for this community.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:358
+#: src/features/app/components/setup/SetupWizardSteps.tsx:363
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:112
 #: src/features/ui/action_menu/items/GuildMenuItems.tsx:81
 msgid "Mobile push notifications"
@@ -22456,7 +22456,7 @@ msgid "My category"
 msgstr "我的类别"
 
 #. Placeholder for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:292
+#: src/features/app/components/setup/SetupWizardSteps.tsx:297
 msgid "My community"
 msgstr "我的社区"
 
@@ -22566,7 +22566,7 @@ msgid "Name passkey form"
 msgstr "命名通行密钥表单"
 
 #. Description for the random tags option when people sign in with email. Keep alex#4821.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:131
+#: src/features/app/components/setup/SetupWizardSteps.tsx:136
 msgid "Names get a random tag, like alex#4821, so several people can share a name."
 msgstr "名字会带一个随机标签，例如 alex#4821，这样就能有几个人共用一个名字了。"
 
@@ -23278,7 +23278,7 @@ msgid "No one can add you to group chats without asking"
 msgstr "没有人可以未经询问将你添加到群聊"
 
 #. Message shown when no optional services are available in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:389
+#: src/features/app/components/setup/SetupWizardSteps.tsx:394
 msgid "No optional services are available on this instance. You can skip this step."
 msgstr "此实例没有可选服务。你可以跳过此步骤。"
 
@@ -23463,12 +23463,12 @@ msgid "No system channel"
 msgstr "无系统频道"
 
 #. Setup wizard finish summary value when usernames are unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:107
+#: src/features/app/components/setup/SetupWizardSteps.tsx:112
 msgid "No tags"
 msgstr "无标签"
 
 #. Setup wizard option where every username is unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:119
+#: src/features/app/components/setup/SetupWizardSteps.tsx:124
 msgid "No tags (recommended)"
 msgstr "无标签（推荐）"
 
@@ -23643,7 +23643,7 @@ msgid "Not a whole number"
 msgstr "不是整数"
 
 #. Summary value when the operator left the push relay notice unaccepted.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:488
+#: src/features/app/components/setup/SetupWizardSteps.tsx:493
 msgid "Not accepted"
 msgstr "未接受"
 
@@ -24124,7 +24124,7 @@ msgid "Open"
 msgstr "打开"
 
 #. Registration mode option allowing anyone to register.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:251
 msgctxt "registration-policy"
 msgid "Open"
 msgstr "开放"
@@ -24671,7 +24671,7 @@ msgid "Optional arguments"
 msgstr "可选参数"
 
 #. Setup wizard optional services step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:381
+#: src/features/app/components/setup/SetupWizardSteps.tsx:386
 msgid "Optional services"
 msgstr "可选服务"
 
@@ -24984,7 +24984,7 @@ msgstr "通行密钥需要带有有效应用标识符的已签名 macOS 软件�
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1227
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
@@ -25224,12 +25224,12 @@ msgid "People"
 msgstr "用户"
 
 #. Description for the username sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:89
+#: src/features/app/components/setup/SetupWizardSteps.tsx:90
 msgid "People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password."
 msgstr "用户使用用户名和密码登录。不会收集电子邮件地址。每个人都可以保存一个恢复工具包，以防忘记密码。"
 
 #. Description for the email sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:98
+#: src/features/app/components/setup/SetupWizardSteps.tsx:103
 msgid "People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later."
 msgstr "人们使用电子邮件地址和密码登录。密码重置和验证需要通过电子邮件发送，这部分设置可以稍后进行。"
 
@@ -25434,7 +25434,7 @@ msgid "Pick the 4-digit number after your username"
 msgstr "选择你用户名后的四位数字"
 
 #. Setup wizard body for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:73
+#: src/features/app/components/setup/SetupWizardSteps.tsx:74
 msgid "Pick the appearance this administrator account should start with."
 msgstr "选择此管理员账号的初始外观。"
 
@@ -25752,7 +25752,7 @@ msgid "Popup"
 msgstr "弹窗"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1215
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1225
 msgid "Port"
 msgstr "端口"
 
@@ -25863,7 +25863,7 @@ msgid "Premium grace period nagbar"
 msgstr "会员宽限期提示栏"
 
 #. Summary row label for the premium model in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:476
+#: src/features/app/components/setup/SetupWizardSteps.tsx:481
 msgid "Premium model"
 msgstr "会员模式"
 
@@ -25903,7 +25903,7 @@ msgid "Preparing"
 msgstr "准备中"
 
 #. Setup wizard title while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:164
+#: src/features/app/components/setup/SetupWizardSteps.tsx:169
 msgid "Preparing setup"
 msgstr "正在准备设置"
 
@@ -26160,7 +26160,7 @@ msgid "Privacy settings"
 msgstr "隐私设置"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1254
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1264
 msgid "Privacy URL"
 msgstr "隐私网址"
 
@@ -26185,7 +26185,7 @@ msgid "Private details"
 msgstr "个人信息"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1262
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1272
 msgid "Private key"
 msgstr "私钥"
 
@@ -26210,8 +26210,8 @@ msgstr "处理中"
 
 #. Label for the product name input in the setup wizard.
 #. Summary row label for the product name in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:181
-#: src/features/app/components/setup/SetupWizardSteps.tsx:452
+#: src/features/app/components/setup/SetupWizardSteps.tsx:186
+#: src/features/app/components/setup/SetupWizardSteps.tsx:457
 msgid "Product name"
 msgstr "产品名称"
 
@@ -26412,7 +26412,7 @@ msgid "Public community"
 msgstr "公开社区"
 
 #. Description for the closed registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:267
+#: src/features/app/components/setup/SetupWizardSteps.tsx:272
 msgid "Public registration is closed."
 msgstr "公开注册已关闭。"
 
@@ -26537,7 +26537,7 @@ msgid "Push notification inactive timeout"
 msgstr "推送通知不活跃超时"
 
 #. Summary row label for the push relay consent on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:472
+#: src/features/app/components/setup/SetupWizardSteps.tsx:477
 msgid "Push relay notice"
 msgstr "推送中继通知"
 
@@ -26756,8 +26756,8 @@ msgstr "组织突袭"
 
 #. Setup wizard finish summary value when every username gets a random four digit tag.
 #. Setup wizard option where every username gets a random four digit tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:111
-#: src/features/app/components/setup/SetupWizardSteps.tsx:127
+#: src/features/app/components/setup/SetupWizardSteps.tsx:116
+#: src/features/app/components/setup/SetupWizardSteps.tsx:132
 msgid "Random tags"
 msgstr "随机标签"
 
@@ -26853,7 +26853,7 @@ msgid "Read the documentation ({domain})"
 msgstr "阅读文档（{domain}）"
 
 #. Link to the push relay supplemental privacy notice shown during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:376
+#: src/features/app/components/setup/SetupWizardSteps.tsx:381
 msgid "Read the supplemental privacy notice"
 msgstr "阅读补充隐私声明"
 
@@ -27197,7 +27197,7 @@ msgid "Registered passkeys"
 msgstr "已注册通行密钥"
 
 #. Summary row label for the registration mode in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:456
+#: src/features/app/components/setup/SetupWizardSteps.tsx:461
 msgid "Registration"
 msgstr "注册"
 
@@ -27809,12 +27809,12 @@ msgid "Render placeholders"
 msgstr "渲染占位符"
 
 #. Label for attachment decay renewal threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:349
+#: src/features/app/components/setup/SetupWizardSteps.tsx:354
 msgid "Renew threshold (days)"
 msgstr "续期阈值（天）"
 
 #. Label for attachment decay renewal window.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:353
+#: src/features/app/components/setup/SetupWizardSteps.tsx:358
 msgid "Renew window (days)"
 msgstr "续期窗口（天）"
 
@@ -27824,7 +27824,7 @@ msgstr "续订日期：<0>{renewalDate}</0>。"
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that replaces an already uploaded branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:205
+#: src/features/app/components/setup/SetupWizardSteps.tsx:210
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:80
 msgid "Replace"
 msgstr "替换"
@@ -28642,7 +28642,7 @@ msgid "Review what this app is asking for before you continue."
 msgstr "继续前请查看此应用请求的权限。"
 
 #. Setup wizard finish step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:448
+#: src/features/app/components/setup/SetupWizardSteps.tsx:453
 msgid "Review your choices below, then finish. This saves the configuration and opens the instance."
 msgstr "在下方查看你的选择，然后完成。这将保存配置并打开实例。"
 
@@ -28898,7 +28898,7 @@ msgid "Run at login"
 msgstr "登录时运行"
 
 #. Description for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:284
+#: src/features/app/components/setup/SetupWizardSteps.tsx:289
 msgid "Run the instance as one community instead of many. This can only be enabled now, during setup."
 msgstr "将实例作为一个社区运行，而不是多个。此选项只能在当前的初始设置过程中启用。"
 
@@ -29036,7 +29036,7 @@ msgid "Save theme"
 msgstr "保存主题"
 
 #. Setup wizard title asking the administrator to create an account recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:135
+#: src/features/app/components/setup/SetupWizardSteps.tsx:140
 msgid "Save your recovery kit"
 msgstr "保存你的恢复套件"
 
@@ -30435,7 +30435,7 @@ msgid "Set the nickname to {nick}"
 msgstr "将昵称设置为 {nick}"
 
 #. Setup wizard branding step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:182
 msgid "Set the public product name, theme color, and image assets that clients display."
 msgstr "设置客户端显示的公开产品名称、主题颜色和图片资源。"
 
@@ -30490,7 +30490,7 @@ msgid "Set up authenticator app"
 msgstr "设置身份验证器应用"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1153
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1163
 msgid "Set up later"
 msgstr "稍后设置"
 
@@ -31168,7 +31168,7 @@ msgid "Show quick reactions"
 msgstr "显示快捷回应"
 
 #. Description for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:405
+#: src/features/app/components/setup/SetupWizardSteps.tsx:410
 msgid "Show rich previews for YouTube links."
 msgstr "为 YouTube 链接显示丰富的预览内容。"
 
@@ -31387,7 +31387,7 @@ msgid "Sign-in flow"
 msgstr "登录流程"
 
 #. Summary row label for how people sign in, on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:480
+#: src/features/app/components/setup/SetupWizardSteps.tsx:485
 msgid "Sign-in method"
 msgstr "登录方式"
 
@@ -31412,7 +31412,7 @@ msgid "Signed-in devices"
 msgstr "已登录的设备"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1258
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1268
 msgid "Signing key ID"
 msgstr "签名密钥 ID"
 
@@ -31479,12 +31479,12 @@ msgid "Single column"
 msgstr "单列"
 
 #. Summary row label for the single community choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:460
+#: src/features/app/components/setup/SetupWizardSteps.tsx:465
 msgid "Single community"
 msgstr "单个社区"
 
 #. Label for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:280
+#: src/features/app/components/setup/SetupWizardSteps.tsx:285
 msgid "Single community mode"
 msgstr "单社区模式"
 
@@ -31551,7 +31551,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "不发送系统退群通知，也不会有人收到提醒。"
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1157
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1167
 msgid "Skip this now and configure it from the admin panel."
 msgstr "现在跳过，稍后从管理面板配置。"
 
@@ -31738,7 +31738,7 @@ msgid "Small button clicked."
 msgstr "已点击小按钮。"
 
 #. Label for attachment decay minimum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:325
+#: src/features/app/components/setup/SetupWizardSteps.tsx:330
 msgid "Small file threshold (MB)"
 msgstr "小文件阈值（MB）"
 
@@ -31794,17 +31794,17 @@ msgid "Smoother video"
 msgstr "更流畅的视频"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1236
 msgid "SMTP connection verified."
 msgstr "SMTP 连接已验证。"
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1214
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1224
 msgid "SMTP host"
 msgstr "SMTP 主机"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1230
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1240
 msgid "SMTP validation failed."
 msgstr "SMTP 验证失败。"
 
@@ -33267,7 +33267,7 @@ msgid "Switches"
 msgstr "开关"
 
 #. Label for the symbol branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:222
 msgid "Symbol"
 msgstr "符号"
 
@@ -33635,7 +33635,7 @@ msgid "Terms of service"
 msgstr "服务条款"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1250
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1260
 msgid "Terms URL"
 msgstr "条款网址"
 
@@ -33645,7 +33645,7 @@ msgid "Terrorism or violent extremism"
 msgstr "恐怖主义或暴力极端主义"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1222
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1232
 msgid "Test SMTP"
 msgstr "测试 SMTP"
 
@@ -34016,7 +34016,7 @@ msgid "The new voice channel will reuse the permissions, user limit, and bitrate
 msgstr "新的语音频道将沿用 <0>{channelLabel}</0> 的权限、用户上限和比特率。"
 
 #. Setup wizard push relay consent step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:362
+#: src/features/app/components/setup/SetupWizardSteps.tsx:367
 msgid "The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement."
 msgstr "Fluxer 官方移动应用通过 Fluxer 的推送中继接收通知，该中继会将通知转交给 Apple 和 Google。自托管的 UnifiedPush 和 ntfy 端点不会触及中继，也无需同意。"
 
@@ -34128,7 +34128,7 @@ msgstr "主题更改会同步到你的所有设备。关闭后，此设备将使
 
 #. Label for the theme color picker in the setup wizard.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:198
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:165
 msgid "Theme color"
 msgstr "主题颜色"
@@ -34228,7 +34228,7 @@ msgid "There was an error loading the webhooks. Try again."
 msgstr "加载 Webhook 时出错。请重试。"
 
 #. Setup wizard community model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:276
+#: src/features/app/components/setup/SetupWizardSteps.tsx:281
 msgid "These options change how people use the instance. Some can only be chosen during setup."
 msgstr "这些选项会改变人们使用实例的方式。有些选项只能在设置期间选择。"
 
@@ -34642,7 +34642,7 @@ msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "此实例目前支持最高 720p、30 FPS 的屏幕共享。"
 
 #. Setup wizard body prompting the operator to register the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:61
+#: src/features/app/components/setup/SetupWizardSteps.tsx:62
 msgid "This instance has no accounts yet. The first account you create automatically becomes the administrator."
 msgstr "此实例尚无任何账号。你创建的第一个账号将自动成为管理员。"
 
@@ -35805,7 +35805,7 @@ msgid "Turn off device stream"
 msgstr "关闭设备直播"
 
 #. Description for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:304
+#: src/features/app/components/setup/SetupWizardSteps.tsx:309
 msgid "Turn off private messaging and friends across the instance. This can be reversed only once later."
 msgstr "关闭实例上的私信和好友请求。此设置之后只能撤销一次。"
 
@@ -36994,7 +36994,7 @@ msgstr "升级后可存储多达 15 个自定义背景，并解锁高清视频�
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that opens a file picker to upload a branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:206
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:84
 msgid "Upload"
 msgstr "上传"
@@ -37489,7 +37489,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "在排查客户端问题或收集日志时使用此选项。它可能会在当前客户端的浏览器控制台中输出详细消息。"
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1218
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1228
 msgid "Use TLS"
 msgstr "使用 TLS"
 
@@ -37659,7 +37659,7 @@ msgstr "用户音量"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:577
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:226
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:57
@@ -37702,8 +37702,13 @@ msgstr "用户名至少需要 1 个字符"
 msgid "Username must be at most 32 characters"
 msgstr "用户名最多 32 个字符"
 
+#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
+#: src/features/app/components/setup/SetupWizardSteps.tsx:95
+msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
+msgstr "用户名登录仍在逐步推广到移动应用。完整平台支持即将推出。"
+
 #. Heading above the choice of how usernames are tagged in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:115
+#: src/features/app/components/setup/SetupWizardSteps.tsx:120
 msgid "Username tags"
 msgstr "用户名标签"
 
@@ -37713,12 +37718,12 @@ msgid "Username updated"
 msgstr "用户名已更新"
 
 #. Summary value on the setup wizard finish step when people sign in with a username.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:103
+#: src/features/app/components/setup/SetupWizardSteps.tsx:108
 msgid "Usernames"
 msgstr "用户名"
 
 #. Setup wizard option where people sign in with a username and password and no email is collected.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:85
+#: src/features/app/components/setup/SetupWizardSteps.tsx:86
 msgid "Usernames (recommended)"
 msgstr "用户名（推荐）"
 
@@ -39232,7 +39237,7 @@ msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {
 msgstr "欢迎使用 {premiumProductFullName}。你的年度订阅将于 {formattedDate} 续订。探索你的 {premiumProductName} 福利并管理你的订阅。"
 
 #. Setup wizard title shown once the operator is signed in as the instance admin.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:48
+#: src/features/app/components/setup/SetupWizardSteps.tsx:49
 msgid "Welcome to {productName}"
 msgstr "欢迎使用 {productName}"
 
@@ -39330,7 +39335,7 @@ msgid "When a custom threshold date is not set, members without the <0>{readMess
 msgstr "如果未设置自定义阈值日期，则没有 <0>{readMessageHistoryPermissionLabel}</0> 权限的成员无法查看任何历史消息。他们只能实时查看收到的消息，并且这些消息会在他们重启客户端后消失。"
 
 #. Description for the attachment expiry setup switch.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:321
+#: src/features/app/components/setup/SetupWizardSteps.tsx:326
 msgid "When attachment expiration is disabled, attachments remain available until manually removed."
 msgstr "禁用附件到期功能后，附件会一直保留，直到被手动移除。"
 
@@ -39436,7 +39441,7 @@ msgid "Who can friend"
 msgstr "谁可以加我为好友"
 
 #. Setup wizard registration step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:243
 msgid "Who can join"
 msgstr "谁可以加入"
 
@@ -39575,7 +39580,7 @@ msgid "Without this permission, push-to-talk is required."
 msgstr "没有此权限时，必须使用按住说话。"
 
 #. Label for the wordmark branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:225
+#: src/features/app/components/setup/SetupWizardSteps.tsx:230
 msgid "Wordmark"
 msgstr "文字标志"
 
@@ -39716,7 +39721,7 @@ msgid "You are now navigating to {paymentProviderName} to complete the payment. 
 msgstr "你即将前往 {paymentProviderName} 完成支付。完成后请返回 {productName}。"
 
 #. Setup wizard body shown to the signed-in instance administrator.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:52
+#: src/features/app/components/setup/SetupWizardSteps.tsx:53
 msgid "You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance."
 msgstr "你已作为实例管理员登录。接下来将为本实例的所有人配置品牌、注册和核心策略。"
 
@@ -39969,7 +39974,7 @@ msgid "You can't view the members of this channel in this community"
 msgstr "你无法查看此社区中此频道的成员"
 
 #. Setup wizard body for the sign-in method step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:81
+#: src/features/app/components/setup/SetupWizardSteps.tsx:82
 msgid "You cannot change this once the first account exists."
 msgstr "第一个账号创建后，你将无法更改此设置。"
 
@@ -40578,7 +40583,7 @@ msgid "Your account has been linked successfully. You can now close this tab and
 msgstr "你的账号已成功关联。现在可以关闭此标签页并返回应用。"
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:139
+#: src/features/app/components/setup/SetupWizardSteps.tsx:144
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. Create one now and keep it somewhere safe."
 msgstr "您的账号没有设置邮箱。如果忘记密码，恢复工具是您回家的唯一途径。立即创建并妥善保管。"
 
@@ -40880,7 +40885,7 @@ msgid "Your recovery kit"
 msgstr "你的恢复工具包"
 
 #. Status shown in the setup wizard once the administrator has a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:152
+#: src/features/app/components/setup/SetupWizardSteps.tsx:157
 msgid "Your recovery kit is ready. You can continue."
 msgstr "您的恢复工具已准备就绪。您可以继续了。"
 
@@ -41010,12 +41015,12 @@ msgid "Your video encoder stopped encoding frames, so your screen share was stop
 msgstr "你的视频编码器已停止编码帧，因此屏幕共享已停止。请重新共享。"
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:401
+#: src/features/app/components/setup/SetupWizardSteps.tsx:406
 msgid "YouTube enrichment"
 msgstr "YouTube 增强功能"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1187
 msgid "YouTube previews"
 msgstr "YouTube 预览"
 

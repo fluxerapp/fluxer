@@ -2736,12 +2736,12 @@ msgid "Accept the friend request from {userName}?"
 msgstr "Přijmout žádost o přátelství od uživatele {userName}?"
 
 #. Label for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:367
+#: src/features/app/components/setup/SetupWizardSteps.tsx:372
 msgid "Accept the push relay supplemental privacy notice"
 msgstr "Přijmout dodatečné oznámení o ochraně osobních údajů pro předávací službu push zpráv"
 
 #. Summary value when the operator accepted the push relay notice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:484
+#: src/features/app/components/setup/SetupWizardSteps.tsx:489
 msgid "Accepted"
 msgstr "Přijato"
 
@@ -3046,7 +3046,7 @@ msgid "Add a friend to get started."
 msgstr "Přidejte si přítele a začněte."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1183
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Přidejte klíč API Klipy, aby bylo možné za běhu aplikace vyhledávat GIFy."
 
@@ -3090,7 +3090,7 @@ msgid "Add a working email"
 msgstr "Přidat funkční e-mailovou adresu"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1181
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1191
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Přidejte klíč YouTube Data API pro doplnění informací k odkazům na YouTube."
 
@@ -3136,7 +3136,7 @@ msgid "Add another reaction"
 msgstr "Přidat další reakci"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1207
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Přidejte metadata klienta OAuth pro Bluesky a podepisovací klíč."
 
@@ -3286,7 +3286,7 @@ msgid "Add shortcut"
 msgstr "Přidat zkratku"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1199
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "Přidejte přihlašovací údaje SMTP, aby instance mohla odesílat ověřovací e-maily a e-mailová oznámení."
 
@@ -3313,7 +3313,7 @@ msgid "Add stream"
 msgstr "Přidat stream"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1165
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1175
 msgid "Add the credentials during setup."
 msgstr "Při nastavení přidejte přihlašovací údaje."
 
@@ -4392,12 +4392,12 @@ msgid "Anyone can call you, including strangers"
 msgstr "Kdokoli vám může zavolat, včetně neznámých lidí"
 
 #. Description for the open registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:251
+#: src/features/app/components/setup/SetupWizardSteps.tsx:256
 msgid "Anyone can create an account."
 msgstr "Kdokoli si může vytvořit účet."
 
 #. Description for the approval registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:259
+#: src/features/app/components/setup/SetupWizardSteps.tsx:264
 msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "O účet může požádat kdokoli, ale správce ho musí schválit."
 
@@ -4407,7 +4407,7 @@ msgid "Anyone with this key can reset your password. Never share it."
 msgstr "Kdokoli s tímto klíčem může resetovat vaše heslo. Nikdy ho nesdílejte."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1211
 msgid "API key"
 msgstr "Klíč API"
 
@@ -4566,7 +4566,7 @@ msgid "Apply to all communities"
 msgstr "Použít pro všechny komunity"
 
 #. Registration mode option requiring admin approval.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:255
+#: src/features/app/components/setup/SetupWizardSteps.tsx:260
 msgid "Approval required"
 msgstr "Vyžaduje schválení"
 
@@ -4786,8 +4786,8 @@ msgstr "Akce s přílohou"
 
 #. Setup wizard media expiry step title.
 #. Summary row label for the attachment expiry choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:309
-#: src/features/app/components/setup/SetupWizardSteps.tsx:468
+#: src/features/app/components/setup/SetupWizardSteps.tsx:314
+#: src/features/app/components/setup/SetupWizardSteps.tsx:473
 msgid "Attachment expiration"
 msgstr "Vypršení platnosti příloh"
 
@@ -5877,12 +5877,12 @@ msgid "Bluesky"
 msgstr "Bluesky"
 
 #. Label for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:409
+#: src/features/app/components/setup/SetupWizardSteps.tsx:414
 msgid "Bluesky connections"
 msgstr "Propojení s Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1203
 msgid "Bluesky OAuth"
 msgstr "OAuth pro Bluesky"
 
@@ -6111,7 +6111,7 @@ msgid "Branding"
 msgstr "Vizuální identita"
 
 #. Accessible label for a branding image preview in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:233
+#: src/features/app/components/setup/SetupWizardSteps.tsx:238
 msgid "Branding asset preview"
 msgstr "Náhled grafického podkladu"
 
@@ -7676,7 +7676,7 @@ msgid "Choose a supported audio file and try again."
 msgstr "Vyberte podporovaný zvukový soubor a zkuste to znovu."
 
 #. Setup wizard title for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:69
+#: src/features/app/components/setup/SetupWizardSteps.tsx:70
 msgid "Choose a theme"
 msgstr "Vyberte motiv"
 
@@ -7740,12 +7740,12 @@ msgid "Choose how messages are displayed in chat channels."
 msgstr "Vyberte, jak se budou zprávy zobrazovat v chatech."
 
 #. Setup wizard registration step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:247
 msgid "Choose how new accounts are created on this instance."
 msgstr "Vyberte, jak se na této instanci vytvářejí nové účty."
 
 #. Setup wizard title for choosing whether accounts use usernames or email addresses to sign in.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:77
+#: src/features/app/components/setup/SetupWizardSteps.tsx:78
 msgid "Choose how people sign in"
 msgstr "Vyberte, jak se lidé přihlašují"
 
@@ -7765,7 +7765,7 @@ msgid "Choose how you'd like to pay for this subscription."
 msgstr "Zvolte, jak chcete zaplatit za toto předplatné."
 
 #. Setup wizard community model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:272
+#: src/features/app/components/setup/SetupWizardSteps.tsx:277
 msgid "Choose how your instance works"
 msgstr "Zvolte, jak bude vaše instance fungovat"
 
@@ -7788,7 +7788,7 @@ msgid "Choose the category that best describes your community. You can change th
 msgstr "Vyberte kategorii, která nejlépe popisuje vaši komunitu. Můžete to kdykoli změnit."
 
 #. Setup wizard premium model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:418
+#: src/features/app/components/setup/SetupWizardSteps.tsx:423
 msgid "Choose the premium model"
 msgstr "Vyberte prémiový model"
 
@@ -7848,7 +7848,7 @@ msgid "Choose where its published messages should go. You can unfollow any time 
 msgstr "Vyberte, kam se mají publikované zprávy odesílat. Kdykoli se můžete odhlásit v nastavení komunity → Webhooky."
 
 #. Setup wizard media expiry step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:313
+#: src/features/app/components/setup/SetupWizardSteps.tsx:318
 msgid "Choose whether uploaded attachments should expire automatically based on size."
 msgstr "Zvolte, zda má platnost nahraných příloh automaticky vypršet podle jejich velikosti."
 
@@ -8049,7 +8049,7 @@ msgstr "Vyčistí zvuk mikrofonu, aby vám bylo dobře rozumět."
 #. Button or menu action label in the theme studio quick css section. Keep it concise.
 #. Button that removes an uploaded branding image.
 #. Inline button in the Recent searches section that wipes the search history list.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:209
+#: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
@@ -8277,7 +8277,7 @@ msgid "Client"
 msgstr "Klient"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1248
 msgid "Client name"
 msgstr "Název klienta"
 
@@ -8294,7 +8294,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Klientský tajný klíč byl vygenerován znovu. Aktualizujte veškerý kód, který používá starý klíč."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1252
 msgid "Client URL"
 msgstr "URL klienta"
 
@@ -8427,7 +8427,7 @@ msgid "Close your DM with {username}? You can reopen it anytime."
 msgstr "Zavřít soukromou konverzaci s uživatelem {username}? Můžete ji kdykoli znovu otevřít."
 
 #. Registration mode option that disables public registration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:263
+#: src/features/app/components/setup/SetupWizardSteps.tsx:268
 msgid "Closed"
 msgstr "Zavřeno"
 
@@ -8846,7 +8846,7 @@ msgstr "Ztlumit mikrofon v komunitě"
 
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:288
+#: src/features/app/components/setup/SetupWizardSteps.tsx:293
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:124
 msgid "Community name"
 msgstr "Název komunity"
@@ -9055,7 +9055,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "Nastavit klávesové zkratky"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1161
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1171
 msgid "Configure now"
 msgstr "Nastavit nyní"
 
@@ -10595,7 +10595,7 @@ msgstr "Vytvořit novou skupinu s uživatelem {userName}"
 
 #. Button in the setup wizard that replaces the administrator recovery kit with a new one.
 #. Confirm button that replaces the existing account recovery kit with a new one.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:148
+#: src/features/app/components/setup/SetupWizardSteps.tsx:153
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 msgid "Create a new kit"
@@ -10607,7 +10607,7 @@ msgid "Create a new recovery kit?"
 msgstr "Vytvořit nový obnovovací klíč?"
 
 #. Status shown in the setup wizard while the administrator has no recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:156
+#: src/features/app/components/setup/SetupWizardSteps.tsx:161
 msgid "Create a recovery kit to continue."
 msgstr "Vytvořte obnovovací sadu pro pokračování."
 
@@ -10629,7 +10629,7 @@ msgid "Create account to claim gift"
 msgstr "Vytvořit účet a převzít dárek"
 
 #. Button that opens the registration flow to create the first administrator account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:160
+#: src/features/app/components/setup/SetupWizardSteps.tsx:165
 msgid "Create administrator account"
 msgstr "Vytvořit účet správce"
 
@@ -10736,7 +10736,7 @@ msgstr "Vytvořit komunitu nebo se k nějaké připojit"
 
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:144
+#: src/features/app/components/setup/SetupWizardSteps.tsx:149
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
@@ -10749,7 +10749,7 @@ msgid "Create role"
 msgstr "Vytvořit roli"
 
 #. Setup wizard title prompting the operator to create the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:57
+#: src/features/app/components/setup/SetupWizardSteps.tsx:58
 msgid "Create the administrator account"
 msgstr "Vytvořte účet správce"
 
@@ -11515,7 +11515,7 @@ msgid "Debug user"
 msgstr "Ladit uživatele"
 
 #. Setup wizard premium model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:422
+#: src/features/app/components/setup/SetupWizardSteps.tsx:427
 msgid "Decide how premium limits apply to people on this instance."
 msgstr "Rozhodněte, jak se prémiové limity vztahují na lidi v této instanci."
 
@@ -12399,7 +12399,7 @@ msgstr "Náhledy přímých zpráv"
 
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:464
+#: src/features/app/components/setup/SetupWizardSteps.tsx:469
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:630
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
@@ -12479,7 +12479,7 @@ msgid "Disable desktop notifications?"
 msgstr "Vypnout oznámení na počítači?"
 
 #. Label for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:300
+#: src/features/app/components/setup/SetupWizardSteps.tsx:305
 msgid "Disable direct messages and friend requests"
 msgstr "Zakázat přímé zprávy a žádosti o přátelství"
 
@@ -12556,7 +12556,7 @@ msgstr "Vypnout video lokálně"
 
 #. Status next to a built-in shortcut the user turned off in the keybinds tab.
 #. Summary value when a setup option is disabled.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:496
+#: src/features/app/components/setup/SetupWizardSteps.tsx:501
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:45
 msgid "Disabled"
 msgstr "Vypnuto"
@@ -13372,7 +13372,7 @@ msgid "Each key can run only one system-wide shortcut."
 msgstr "Každá klávesa může spouštět jen jednu zkratku pro celý systém."
 
 #. Description for the no tags option when people sign in with email. Keep the example name alex.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:123
+#: src/features/app/components/setup/SetupWizardSteps.tsx:128
 msgid "Each name belongs to one person and shows on its own, like alex."
 msgstr "Každé jméno patří jedné osobě a zobrazuje se samostatně, například alex."
 
@@ -13684,7 +13684,7 @@ msgstr "Nárok na vrácení peněz do {windowEndsOn}. Tím se také okamžitě z
 
 #. Generic form-field label for an email address.
 #. Setup wizard option where people sign in with an email address and password.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:94
+#: src/features/app/components/setup/SetupWizardSteps.tsx:99
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:211
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
 msgid "Email"
@@ -13712,7 +13712,7 @@ msgid "Email changed"
 msgstr "E-mail změněn"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1195
 msgid "Email delivery"
 msgstr "Doručování e-mailů"
 
@@ -13971,7 +13971,7 @@ msgid "Enable at least one translator below."
 msgstr "Povolte alespoň jeden překladač níže."
 
 #. Label for enabling attachment expiry during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:317
+#: src/features/app/components/setup/SetupWizardSteps.tsx:322
 msgid "Enable attachment expiration"
 msgstr "Povolit vypršení platnosti příloh"
 
@@ -13985,7 +13985,7 @@ msgid "Enable beta feature"
 msgstr "Zapnout beta funkci"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1234
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1244
 msgid "Enable Bluesky OAuth"
 msgstr "Povolit OAuth pro Bluesky"
 
@@ -14018,7 +14018,7 @@ msgid "Enable developer mode"
 msgstr "Zapnout režim pro vývojáře"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1202
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1212
 msgid "Enable email delivery"
 msgstr "Povolit doručování e-mailů"
 
@@ -14155,7 +14155,7 @@ msgid "Enable text selection"
 msgstr "Povolit výběr textu"
 
 #. Setup wizard optional services step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:385
+#: src/features/app/components/setup/SetupWizardSteps.tsx:390
 msgid "Enable the integrations whose credentials you have configured. Only available services are shown."
 msgstr "Povolte integrace, pro které jste nakonfigurovali přihlašovací údaje. Zobrazují se pouze dostupné služby."
 
@@ -14196,7 +14196,7 @@ msgstr "Povolit náhledy při posouvání videa"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Summary value when a setup option is enabled.
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:492
+#: src/features/app/components/setup/SetupWizardSteps.tsx:497
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
@@ -14320,7 +14320,7 @@ msgid "Enter a code in the format ABCD-1234."
 msgstr "Zadejte kód ve formátu ABCD-1234."
 
 #. Validation error for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:296
+#: src/features/app/components/setup/SetupWizardSteps.tsx:301
 msgid "Enter a community name between 1 and 100 characters."
 msgstr "Zadejte název komunity s 1 až 100 znaky."
 
@@ -14330,7 +14330,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "Zadejte dárkový kód pro uplatnění {premiumProductName} pro váš účet."
 
 #. Validation error for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:194
 msgid "Enter a product name between 1 and 80 characters."
 msgstr "Zadejte název produktu v rozsahu 1 až 80 znaků."
 
@@ -14669,7 +14669,7 @@ msgid "Everyone"
 msgstr "Všichni"
 
 #. Premium model option that gives everyone the highest limits.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:435
+#: src/features/app/components/setup/SetupWizardSteps.tsx:440
 msgid "Everyone is premium"
 msgstr "Všichni mají prémiové výhody"
 
@@ -14798,7 +14798,7 @@ msgid "EXPERIMENTAL"
 msgstr "EXPERIMENTÁLNÍ"
 
 #. Label for attachment decay curve.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:345
+#: src/features/app/components/setup/SetupWizardSteps.tsx:350
 msgid "Expiration curve"
 msgstr "Křivka vypršení platnosti"
 
@@ -15322,7 +15322,7 @@ msgid "False claims likely to cause real-world harm."
 msgstr "Nepravdivá tvrzení, která pravděpodobně způsobí skutečnou újmu."
 
 #. Label for the favicon branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:229
+#: src/features/app/components/setup/SetupWizardSteps.tsx:234
 msgid "Favicon"
 msgstr "Ikona webu"
 
@@ -15621,7 +15621,7 @@ msgstr "Dokončete to v nové kartě. Pokud jste ji zavřeli, znovu stiskněte P
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:100
-#: src/features/app/components/setup/SetupWizardSteps.tsx:444
+#: src/features/app/components/setup/SetupWizardSteps.tsx:449
 msgid "Finish setup"
 msgstr "Dokončit nastavení"
 
@@ -15668,7 +15668,7 @@ msgid "Florida"
 msgstr "Florida"
 
 #. Placeholder for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:190
 msgid "Fluxer"
 msgstr "Fluxer"
 
@@ -16266,12 +16266,12 @@ msgid "from <0>{0}</0>"
 msgstr "z <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1206
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
 msgid "From email"
 msgstr "Odesílatel (e-mail)"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1210
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1220
 msgid "From name"
 msgstr "Odesílatel (jméno)"
 
@@ -16577,7 +16577,7 @@ msgid "GIF preview"
 msgstr "Náhled GIFu"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1169
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1179
 msgid "GIF search"
 msgstr "Vyhledávání GIFů"
 
@@ -16767,7 +16767,7 @@ msgid "Gifts aren't available right now."
 msgstr "Dárky momentálně nejsou k dispozici."
 
 #. Description for the everyone-is-premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:439
+#: src/features/app/components/setup/SetupWizardSteps.tsx:444
 msgid "Give everyone on this instance the highest premium limits."
 msgstr "Dejte všem v této instanci nejvyšší prémiové limity."
 
@@ -17825,7 +17825,7 @@ msgstr "Uložil/a jsem si svou sadu pro obnovení na bezpečné místo"
 
 #. Label for the icon branding asset.
 #. Short label in the guild icon upload field. Keep it concise.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:213
+#: src/features/app/components/setup/SetupWizardSteps.tsx:218
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:27
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:89
 msgid "Icon"
@@ -18044,7 +18044,7 @@ msgid "Image"
 msgstr "Obrázek"
 
 #. Label for the branding image asset uploaders in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:202
 msgid "Image assets"
 msgstr "Obrázky"
 
@@ -19381,7 +19381,7 @@ msgid "Keep attachments when clearing an edit"
 msgstr "Ponechat přílohy při vymazání textu během úprav"
 
 #. Description for the mirror premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:430
+#: src/features/app/components/setup/SetupWizardSteps.tsx:435
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "Ponechte bezplatnou i prémiovou úroveň. Úrovně můžete přizpůsobit, prodávat prémiové členství přes Stripe nebo později rozdávat dárkové kódy z administračního panelu."
 
@@ -19520,7 +19520,7 @@ msgid "Kicked {targetUserTag} from the community"
 msgstr "Uživatel {targetUserTag} byl vyhozen z komunity"
 
 #. Label for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:393
+#: src/features/app/components/setup/SetupWizardSteps.tsx:398
 msgid "Klipy GIFs"
 msgstr "GIFy z Klipy"
 
@@ -19532,7 +19532,7 @@ msgstr "Korejština"
 #. Label for the setup wizard language selector.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for language, locale, and time display preferences.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:65
+#: src/features/app/components/setup/SetupWizardSteps.tsx:66
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:6
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:132
 msgid "Language"
@@ -19556,7 +19556,7 @@ msgid "Large"
 msgstr "Velké"
 
 #. Label for attachment decay maximum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:329
+#: src/features/app/components/setup/SetupWizardSteps.tsx:334
 msgid "Large file threshold (MB)"
 msgstr "Hranice velikosti pro velké soubory (MB)"
 
@@ -19724,7 +19724,7 @@ msgid "Leave voice call"
 msgstr "Opustit hlasový hovor"
 
 #. Description for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:371
+#: src/features/app/components/setup/SetupWizardSteps.tsx:376
 msgid "Leaving this off keeps the relay unused and drops notifications to the official mobile apps. You can accept it later in the admin panel."
 msgstr "Vypnutím této možnosti se přeposílání nevyužije a oznámení se nebudou doručovat do oficiálních mobilních aplikací. Můžete ji později přijmout v administraci."
 
@@ -19802,12 +19802,12 @@ msgid "Let others clone your stickers"
 msgstr "Umožnit ostatním klonovat vaše samolepky"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:413
+#: src/features/app/components/setup/SetupWizardSteps.tsx:418
 msgid "Let people link their Bluesky account to their profile."
 msgstr "Umožněte lidem propojit svůj účet na síti Bluesky s jejich profilem."
 
 #. Description for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:397
+#: src/features/app/components/setup/SetupWizardSteps.tsx:402
 msgid "Let people search and send GIFs powered by Klipy."
 msgstr "Umožněte lidem vyhledávat a posílat GIFy pomocí Klipy."
 
@@ -20197,7 +20197,7 @@ msgid "Loading states"
 msgstr "Stavy načítání"
 
 #. Setup wizard body while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:168
+#: src/features/app/components/setup/SetupWizardSteps.tsx:173
 msgid "Loading the current instance configuration."
 msgstr "Načítání aktuálního nastavení instance."
 
@@ -20264,12 +20264,12 @@ msgid "Login"
 msgstr "Přihlášení"
 
 #. Label for the logo branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:221
+#: src/features/app/components/setup/SetupWizardSteps.tsx:226
 msgid "Logo"
 msgstr "Logo"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1256
 msgid "Logo URL"
 msgstr "URL loga"
 
@@ -20399,7 +20399,7 @@ msgid "Make group owner"
 msgstr "Nastavit jako vlastníka skupiny"
 
 #. Setup wizard branding step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:178
 msgid "Make the instance yours"
 msgstr "Přizpůsobte si instanci"
 
@@ -20848,12 +20848,12 @@ msgid "Maximizes visible messages with minimal spacing."
 msgstr "Zobrazuje co nejvíce zpráv s minimálními mezerami."
 
 #. Label for attachment decay maximum eligible size.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:333
+#: src/features/app/components/setup/SetupWizardSteps.tsx:338
 msgid "Maximum eligible size (MB)"
 msgstr "Maximální velikost přílohy pro automatické vypršení (MB)"
 
 #. Label for attachment decay maximum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:341
+#: src/features/app/components/setup/SetupWizardSteps.tsx:346
 msgid "Maximum lifetime (days)"
 msgstr "Maximální doba platnosti (dny)"
 
@@ -21699,7 +21699,7 @@ msgid "Minimize window"
 msgstr "Minimalizovat okno"
 
 #. Label for attachment decay minimum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:337
+#: src/features/app/components/setup/SetupWizardSteps.tsx:342
 msgid "Minimum lifetime (days)"
 msgstr "Minimální doba platnosti (dny)"
 
@@ -21728,7 +21728,7 @@ msgid "Mirror of the Appearance tab toggle for light/dark/coal preference. Disab
 msgstr "Odpovídá přepínači světlého, tmavého a uhelného motivu na kartě Vzhled. Vypněte ho, chcete-li zvolit základní motiv zvlášť pro každé zařízení."
 
 #. Premium model option that mirrors free and premium tiers.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:426
+#: src/features/app/components/setup/SetupWizardSteps.tsx:431
 msgid "Mirror tiers"
 msgstr "Zrcadlit úrovně"
 
@@ -21778,7 +21778,7 @@ msgstr "Stav online na mobilu u avatarů"
 #. Section label for mobile push notification settings.
 #. Setup wizard push relay consent step title.
 #. Switch label in the community notification settings modal. Controls whether mobile push notifications are delivered for this community.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:358
+#: src/features/app/components/setup/SetupWizardSteps.tsx:363
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:112
 #: src/features/ui/action_menu/items/GuildMenuItems.tsx:81
 msgid "Mobile push notifications"
@@ -22456,7 +22456,7 @@ msgid "My category"
 msgstr "Moje kategorie"
 
 #. Placeholder for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:292
+#: src/features/app/components/setup/SetupWizardSteps.tsx:297
 msgid "My community"
 msgstr "Moje komunita"
 
@@ -22566,7 +22566,7 @@ msgid "Name passkey form"
 msgstr "Formulář pro pojmenování přístupového klíče"
 
 #. Description for the random tags option when people sign in with email. Keep alex#4821.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:131
+#: src/features/app/components/setup/SetupWizardSteps.tsx:136
 msgid "Names get a random tag, like alex#4821, so several people can share a name."
 msgstr "Jména dostanou náhodný štítek, například alex#4821, takže více lidí může sdílet jedno jméno."
 
@@ -23278,7 +23278,7 @@ msgid "No one can add you to group chats without asking"
 msgstr "Nikdo vás nemůže přidat do skupinových konverzací bez vašeho souhlasu"
 
 #. Message shown when no optional services are available in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:389
+#: src/features/app/components/setup/SetupWizardSteps.tsx:394
 msgid "No optional services are available on this instance. You can skip this step."
 msgstr "Na této instanci nejsou k dispozici žádné volitelné služby. Tento krok můžete přeskočit."
 
@@ -23463,12 +23463,12 @@ msgid "No system channel"
 msgstr "Žádný systémový kanál"
 
 #. Setup wizard finish summary value when usernames are unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:107
+#: src/features/app/components/setup/SetupWizardSteps.tsx:112
 msgid "No tags"
 msgstr "Bez značek"
 
 #. Setup wizard option where every username is unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:119
+#: src/features/app/components/setup/SetupWizardSteps.tsx:124
 msgid "No tags (recommended)"
 msgstr "Bez značek (doporučeno)"
 
@@ -23643,7 +23643,7 @@ msgid "Not a whole number"
 msgstr "Není to celé číslo"
 
 #. Summary value when the operator left the push relay notice unaccepted.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:488
+#: src/features/app/components/setup/SetupWizardSteps.tsx:493
 msgid "Not accepted"
 msgstr "Nepřijato"
 
@@ -24124,7 +24124,7 @@ msgid "Open"
 msgstr "Otevřít"
 
 #. Registration mode option allowing anyone to register.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:251
 msgctxt "registration-policy"
 msgid "Open"
 msgstr "Otevřená"
@@ -24671,7 +24671,7 @@ msgid "Optional arguments"
 msgstr "Volitelné argumenty"
 
 #. Setup wizard optional services step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:381
+#: src/features/app/components/setup/SetupWizardSteps.tsx:386
 msgid "Optional services"
 msgstr "Volitelné služby"
 
@@ -24984,7 +24984,7 @@ msgstr "Přístupové klíče vyžadují podepsaný balíček macOS s platným i
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1227
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
@@ -25224,12 +25224,12 @@ msgid "People"
 msgstr "Lidé"
 
 #. Description for the username sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:89
+#: src/features/app/components/setup/SetupWizardSteps.tsx:90
 msgid "People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password."
 msgstr "Lidé se přihlašují pomocí uživatelského jména a hesla. E-mailová adresa se neshromažďuje. Každý si může uložit záchrannou sadu pro případ, že zapomene heslo."
 
 #. Description for the email sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:98
+#: src/features/app/components/setup/SetupWizardSteps.tsx:103
 msgid "People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later."
 msgstr "Lidé se přihlašují pomocí e-mailové adresy a hesla. Resetování a ověření hesla vyžaduje doručení e-mailu, které můžete nastavit později."
 
@@ -25434,7 +25434,7 @@ msgid "Pick the 4-digit number after your username"
 msgstr "Vyberte 4místné číslo za svým uživatelským jménem"
 
 #. Setup wizard body for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:73
+#: src/features/app/components/setup/SetupWizardSteps.tsx:74
 msgid "Pick the appearance this administrator account should start with."
 msgstr "Vyberte vzhled, se kterým by měl tento účet správce začít."
 
@@ -25752,7 +25752,7 @@ msgid "Popup"
 msgstr "Vyskakovací okno"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1215
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1225
 msgid "Port"
 msgstr "Port"
 
@@ -25863,7 +25863,7 @@ msgid "Premium grace period nagbar"
 msgstr "Lišta s upozorněním na dodatečnou lhůtu předplatného"
 
 #. Summary row label for the premium model in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:476
+#: src/features/app/components/setup/SetupWizardSteps.tsx:481
 msgid "Premium model"
 msgstr "Model prémiových funkcí"
 
@@ -25903,7 +25903,7 @@ msgid "Preparing"
 msgstr "Připravuji"
 
 #. Setup wizard title while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:164
+#: src/features/app/components/setup/SetupWizardSteps.tsx:169
 msgid "Preparing setup"
 msgstr "Příprava nastavení"
 
@@ -26160,7 +26160,7 @@ msgid "Privacy settings"
 msgstr "Nastavení soukromí"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1254
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1264
 msgid "Privacy URL"
 msgstr "URL zásad ochrany osobních údajů"
 
@@ -26185,7 +26185,7 @@ msgid "Private details"
 msgstr "Soukromé údaje"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1262
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1272
 msgid "Private key"
 msgstr "Soukromý klíč"
 
@@ -26210,8 +26210,8 @@ msgstr "Zpracovává se"
 
 #. Label for the product name input in the setup wizard.
 #. Summary row label for the product name in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:181
-#: src/features/app/components/setup/SetupWizardSteps.tsx:452
+#: src/features/app/components/setup/SetupWizardSteps.tsx:186
+#: src/features/app/components/setup/SetupWizardSteps.tsx:457
 msgid "Product name"
 msgstr "Název produktu"
 
@@ -26412,7 +26412,7 @@ msgid "Public community"
 msgstr "Veřejná komunita"
 
 #. Description for the closed registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:267
+#: src/features/app/components/setup/SetupWizardSteps.tsx:272
 msgid "Public registration is closed."
 msgstr "Veřejná registrace je uzavřena."
 
@@ -26537,7 +26537,7 @@ msgid "Push notification inactive timeout"
 msgstr "Doba neaktivity před zasíláním oznámení push"
 
 #. Summary row label for the push relay consent on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:472
+#: src/features/app/components/setup/SetupWizardSteps.tsx:477
 msgid "Push relay notice"
 msgstr "Oznámení o předávání zpráv"
 
@@ -26756,8 +26756,8 @@ msgstr "Koordinace nájezdu"
 
 #. Setup wizard finish summary value when every username gets a random four digit tag.
 #. Setup wizard option where every username gets a random four digit tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:111
-#: src/features/app/components/setup/SetupWizardSteps.tsx:127
+#: src/features/app/components/setup/SetupWizardSteps.tsx:116
+#: src/features/app/components/setup/SetupWizardSteps.tsx:132
 msgid "Random tags"
 msgstr "Náhodné štítky"
 
@@ -26853,7 +26853,7 @@ msgid "Read the documentation ({domain})"
 msgstr "Přečtěte si dokumentaci ({domain})"
 
 #. Link to the push relay supplemental privacy notice shown during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:376
+#: src/features/app/components/setup/SetupWizardSteps.tsx:381
 msgid "Read the supplemental privacy notice"
 msgstr "Přečtěte si doplňující oznámení o ochraně osobních údajů"
 
@@ -27197,7 +27197,7 @@ msgid "Registered passkeys"
 msgstr "Registrované přístupové klíče"
 
 #. Summary row label for the registration mode in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:456
+#: src/features/app/components/setup/SetupWizardSteps.tsx:461
 msgid "Registration"
 msgstr "Registrace"
 
@@ -27809,12 +27809,12 @@ msgid "Render placeholders"
 msgstr "Vykreslit zástupné prvky"
 
 #. Label for attachment decay renewal threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:349
+#: src/features/app/components/setup/SetupWizardSteps.tsx:354
 msgid "Renew threshold (days)"
 msgstr "Prahová hodnota obnovení (dny)"
 
 #. Label for attachment decay renewal window.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:353
+#: src/features/app/components/setup/SetupWizardSteps.tsx:358
 msgid "Renew window (days)"
 msgstr "Období obnovení (dny)"
 
@@ -27824,7 +27824,7 @@ msgstr "Obnoví se dne <0>{renewalDate}.</0>"
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that replaces an already uploaded branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:205
+#: src/features/app/components/setup/SetupWizardSteps.tsx:210
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:80
 msgid "Replace"
 msgstr "Nahradit"
@@ -28642,7 +28642,7 @@ msgid "Review what this app is asking for before you continue."
 msgstr "Než budete pokračovat, zkontrolujte, co tato aplikace požaduje."
 
 #. Setup wizard finish step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:448
+#: src/features/app/components/setup/SetupWizardSteps.tsx:453
 msgid "Review your choices below, then finish. This saves the configuration and opens the instance."
 msgstr "Zkontrolujte níže svá nastavení a poté dokončete. Tím se uloží konfigurace a otevře instance."
 
@@ -28898,7 +28898,7 @@ msgid "Run at login"
 msgstr "Spustit při přihlášení"
 
 #. Description for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:284
+#: src/features/app/components/setup/SetupWizardSteps.tsx:289
 msgid "Run the instance as one community instead of many. This can only be enabled now, during setup."
 msgstr "Spusťte instanci jako jednu komunitu místo mnoha. Toto lze povolit pouze nyní, během nastavení."
 
@@ -29036,7 +29036,7 @@ msgid "Save theme"
 msgstr "Uložit motiv"
 
 #. Setup wizard title asking the administrator to create an account recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:135
+#: src/features/app/components/setup/SetupWizardSteps.tsx:140
 msgid "Save your recovery kit"
 msgstr "Uložte si záchrannou sadu"
 
@@ -30435,7 +30435,7 @@ msgid "Set the nickname to {nick}"
 msgstr "Přezdívka nastavena na {nick}"
 
 #. Setup wizard branding step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:182
 msgid "Set the public product name, theme color, and image assets that clients display."
 msgstr "Nastavte veřejný název produktu, barvu motivu a obrázkové podklady, které se zobrazují v klientech."
 
@@ -30490,7 +30490,7 @@ msgid "Set up authenticator app"
 msgstr "Nastavit ověřovací aplikaci"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1153
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1163
 msgid "Set up later"
 msgstr "Nastavit později"
 
@@ -31168,7 +31168,7 @@ msgid "Show quick reactions"
 msgstr "Zobrazit rychlé reakce"
 
 #. Description for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:405
+#: src/features/app/components/setup/SetupWizardSteps.tsx:410
 msgid "Show rich previews for YouTube links."
 msgstr "Zobrazit bohaté náhledy pro odkazy na YouTube."
 
@@ -31387,7 +31387,7 @@ msgid "Sign-in flow"
 msgstr "Průběh přihlášení"
 
 #. Summary row label for how people sign in, on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:480
+#: src/features/app/components/setup/SetupWizardSteps.tsx:485
 msgid "Sign-in method"
 msgstr "Metoda přihlášení"
 
@@ -31412,7 +31412,7 @@ msgid "Signed-in devices"
 msgstr "Přihlášená zařízení"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1258
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1268
 msgid "Signing key ID"
 msgstr "ID podepisovacího klíče"
 
@@ -31479,12 +31479,12 @@ msgid "Single column"
 msgstr "Jeden sloupec"
 
 #. Summary row label for the single community choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:460
+#: src/features/app/components/setup/SetupWizardSteps.tsx:465
 msgid "Single community"
 msgstr "Jedna komunita"
 
 #. Label for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:280
+#: src/features/app/components/setup/SetupWizardSteps.tsx:285
 msgid "Single community mode"
 msgstr "Režim jedné komunity"
 
@@ -31551,7 +31551,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "Přeskočit systémové oznámení o odchodu – nikdo nedostane upozornění."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1157
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1167
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Přeskočit teď a nakonfigurovat z administračního panelu."
 
@@ -31738,7 +31738,7 @@ msgid "Small button clicked."
 msgstr "Bylo kliknuto na malé tlačítko."
 
 #. Label for attachment decay minimum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:325
+#: src/features/app/components/setup/SetupWizardSteps.tsx:330
 msgid "Small file threshold (MB)"
 msgstr "Prahová hodnota malých souborů (MB)"
 
@@ -31794,17 +31794,17 @@ msgid "Smoother video"
 msgstr "Plynulejší video"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1236
 msgid "SMTP connection verified."
 msgstr "Spojení SMTP ověřeno."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1214
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1224
 msgid "SMTP host"
 msgstr "Hostitel SMTP"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1230
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1240
 msgid "SMTP validation failed."
 msgstr "Ověření SMTP se nezdařilo."
 
@@ -33267,7 +33267,7 @@ msgid "Switches"
 msgstr "Přepínače"
 
 #. Label for the symbol branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:222
 msgid "Symbol"
 msgstr "Symbol"
 
@@ -33635,7 +33635,7 @@ msgid "Terms of service"
 msgstr "Podmínky služby"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1250
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1260
 msgid "Terms URL"
 msgstr "URL podmínek"
 
@@ -33645,7 +33645,7 @@ msgid "Terrorism or violent extremism"
 msgstr "Terorismus nebo násilný extremismus"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1222
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1232
 msgid "Test SMTP"
 msgstr "Otestovat SMTP"
 
@@ -34016,7 +34016,7 @@ msgid "The new voice channel will reuse the permissions, user limit, and bitrate
 msgstr "Nový hlasový kanál znovu použije oprávnění, limit uživatelů a datový tok z <0>{channelLabel}</0>."
 
 #. Setup wizard push relay consent step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:362
+#: src/features/app/components/setup/SetupWizardSteps.tsx:367
 msgid "The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement."
 msgstr "Oficiální mobilní aplikace Fluxeru přijímají oznámení prostřednictvím služby push relay Fluxeru, která je předává Applu a Googlu. Vlastní koncové body UnifiedPush a ntfy se k této službě nikdy nedostanou a nevyžadují žádnou dohodu."
 
@@ -34128,7 +34128,7 @@ msgstr "Změny motivu se synchronizují se všemi vašimi zařízeními. Vypnuto
 
 #. Label for the theme color picker in the setup wizard.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:198
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:165
 msgid "Theme color"
 msgstr "Barva motivu"
@@ -34228,7 +34228,7 @@ msgid "There was an error loading the webhooks. Try again."
 msgstr "Při načítání webhooků došlo k chybě. Zkuste to znovu."
 
 #. Setup wizard community model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:276
+#: src/features/app/components/setup/SetupWizardSteps.tsx:281
 msgid "These options change how people use the instance. Some can only be chosen during setup."
 msgstr "Tyto možnosti mění způsob, jakým lidé instanci používají. Některé lze zvolit pouze během nastavení."
 
@@ -34642,7 +34642,7 @@ msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "Tato instance momentálně umožňuje sdílení obrazovky až do rozlišení 720p při 30 snímcích za sekundu."
 
 #. Setup wizard body prompting the operator to register the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:61
+#: src/features/app/components/setup/SetupWizardSteps.tsx:62
 msgid "This instance has no accounts yet. The first account you create automatically becomes the administrator."
 msgstr "Tato instance zatím nemá žádné účty. První účet, který vytvoříte, se automaticky stane administrátorem."
 
@@ -35805,7 +35805,7 @@ msgid "Turn off device stream"
 msgstr "Vypnout stream zařízení"
 
 #. Description for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:304
+#: src/features/app/components/setup/SetupWizardSteps.tsx:309
 msgid "Turn off private messaging and friends across the instance. This can be reversed only once later."
 msgstr "Vypnout soukromé zprávy a přátele napříč instancí. Toto lze později zvrátit pouze jednou."
 
@@ -36994,7 +36994,7 @@ msgstr "Upgradujte a uložte si až 15 vlastních pozadí a odemkněte HD kvalit
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that opens a file picker to upload a branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:206
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:84
 msgid "Upload"
 msgstr "Nahrát"
@@ -37489,7 +37489,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "Použijte to při řešení problémů s klientem nebo sběru protokolů. Může to přidat podrobné zprávy do konzole prohlížeče pro aktuálního klienta."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1218
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1228
 msgid "Use TLS"
 msgstr "Použít TLS"
 
@@ -37659,7 +37659,7 @@ msgstr "Hlasitost uživatele"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:577
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:226
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:57
@@ -37702,8 +37702,13 @@ msgstr "Uživatelské jméno musí mít alespoň 1 znak"
 msgid "Username must be at most 32 characters"
 msgstr "Uživatelské jméno může mít maximálně 32 znaků"
 
+#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
+#: src/features/app/components/setup/SetupWizardSteps.tsx:95
+msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
+msgstr "Přihlašování pomocí uživatelského jména se na mobilních aplikacích stále zavádí. Plná podpora na všech platformách bude brzy."
+
 #. Heading above the choice of how usernames are tagged in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:115
+#: src/features/app/components/setup/SetupWizardSteps.tsx:120
 msgid "Username tags"
 msgstr "Označení uživatelů"
 
@@ -37713,12 +37718,12 @@ msgid "Username updated"
 msgstr "Uživatelské jméno aktualizováno"
 
 #. Summary value on the setup wizard finish step when people sign in with a username.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:103
+#: src/features/app/components/setup/SetupWizardSteps.tsx:108
 msgid "Usernames"
 msgstr "Uživatelská jména"
 
 #. Setup wizard option where people sign in with a username and password and no email is collected.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:85
+#: src/features/app/components/setup/SetupWizardSteps.tsx:86
 msgid "Usernames (recommended)"
 msgstr "Uživatelská jména (doporučeno)"
 
@@ -39232,7 +39237,7 @@ msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {
 msgstr "Vítejte v {premiumProductFullName}. Vaše roční předplatné se obnovuje dne {formattedDate}. Prozkoumejte výhody vašeho předplatného {premiumProductName} a spravujte jej."
 
 #. Setup wizard title shown once the operator is signed in as the instance admin.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:48
+#: src/features/app/components/setup/SetupWizardSteps.tsx:49
 msgid "Welcome to {productName}"
 msgstr "Vítejte v {productName}"
 
@@ -39330,7 +39335,7 @@ msgid "When a custom threshold date is not set, members without the <0>{readMess
 msgstr "Pokud není nastavené vlastní datum zpřístupnění historie, členové bez oprávnění <0>{readMessageHistoryPermissionLabel}</0> nemohou zobrazit žádné historické zprávy. Uvidí pouze zprávy přicházející v reálném čase. Po restartování aplikace jim tyto zprávy zmizí."
 
 #. Description for the attachment expiry setup switch.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:321
+#: src/features/app/components/setup/SetupWizardSteps.tsx:326
 msgid "When attachment expiration is disabled, attachments remain available until manually removed."
 msgstr "Když je automatické vypršení platnosti příloh vypnuté, přílohy zůstanou dostupné, dokud nebudou ručně odstraněny."
 
@@ -39436,7 +39441,7 @@ msgid "Who can friend"
 msgstr "Kdo si mě může přidat do přátel"
 
 #. Setup wizard registration step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:243
 msgid "Who can join"
 msgstr "Kdo se může připojit"
 
@@ -39575,7 +39580,7 @@ msgid "Without this permission, push-to-talk is required."
 msgstr "Bez tohoto oprávnění je nutné používat režim Stisknutím mluvit."
 
 #. Label for the wordmark branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:225
+#: src/features/app/components/setup/SetupWizardSteps.tsx:230
 msgid "Wordmark"
 msgstr "Textové logo"
 
@@ -39716,7 +39721,7 @@ msgid "You are now navigating to {paymentProviderName} to complete the payment. 
 msgstr "Nyní přecházíte na {paymentProviderName} k dokončení platby. Po dokončení se vraťte do aplikace {productName}."
 
 #. Setup wizard body shown to the signed-in instance administrator.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:52
+#: src/features/app/components/setup/SetupWizardSteps.tsx:53
 msgid "You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance."
 msgstr "Jste přihlášeni jako administrátor instance. Další kroky nakonfigurují značku, registraci a základní zásady pro všechny uživatele této instance."
 
@@ -39969,7 +39974,7 @@ msgid "You can't view the members of this channel in this community"
 msgstr "V této komunitě nemůžete zobrazit členy tohoto kanálu"
 
 #. Setup wizard body for the sign-in method step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:81
+#: src/features/app/components/setup/SetupWizardSteps.tsx:82
 msgid "You cannot change this once the first account exists."
 msgstr "Tuto možnost nelze změnit, jakmile existuje první účet."
 
@@ -40578,7 +40583,7 @@ msgid "Your account has been linked successfully. You can now close this tab and
 msgstr "Váš účet byl úspěšně propojen. Nyní můžete zavřít tuto kartu a vrátit se do aplikace."
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:139
+#: src/features/app/components/setup/SetupWizardSteps.tsx:144
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. Create one now and keep it somewhere safe."
 msgstr "Váš účet nemá zadanou e-mailovou adresu. Pokud zapomenete heslo, jediná cesta zpět je záchranná sada. Vytvořte si ji nyní a uložte ji na bezpečné místo."
 
@@ -40880,7 +40885,7 @@ msgid "Your recovery kit"
 msgstr "Vaše sada pro obnovení"
 
 #. Status shown in the setup wizard once the administrator has a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:152
+#: src/features/app/components/setup/SetupWizardSteps.tsx:157
 msgid "Your recovery kit is ready. You can continue."
 msgstr "Vaše záchranná sada je připravena. Můžete pokračovat."
 
@@ -41010,12 +41015,12 @@ msgid "Your video encoder stopped encoding frames, so your screen share was stop
 msgstr "Enkodér videa přestal kódovat snímky, takže sdílení obrazovky bylo ukončeno. Zkuste sdílet znovu."
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:401
+#: src/features/app/components/setup/SetupWizardSteps.tsx:406
 msgid "YouTube enrichment"
 msgstr "Rozšířené náhledy YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1187
 msgid "YouTube previews"
 msgstr "Náhledy YouTube"
 

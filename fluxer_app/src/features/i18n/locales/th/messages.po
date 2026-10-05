@@ -2736,12 +2736,12 @@ msgid "Accept the friend request from {userName}?"
 msgstr "ยอมรับคำขอเป็นเพื่อนจาก {userName} หรือไม่"
 
 #. Label for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:367
+#: src/features/app/components/setup/SetupWizardSteps.tsx:372
 msgid "Accept the push relay supplemental privacy notice"
 msgstr "ยอมรับประกาศความเป็นส่วนตัวเพิ่มเติมเกี่ยวกับ Push Relay"
 
 #. Summary value when the operator accepted the push relay notice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:484
+#: src/features/app/components/setup/SetupWizardSteps.tsx:489
 msgid "Accepted"
 msgstr "ยอมรับแล้ว"
 
@@ -3046,7 +3046,7 @@ msgid "Add a friend to get started."
 msgstr "เพิ่มเพื่อนเพื่อเริ่มต้นใช้งาน"
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1183
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "เพิ่มคีย์ API ของ Klipy เพื่อเปิดใช้งานการค้นหา GIF ขณะใช้งาน"
 
@@ -3090,7 +3090,7 @@ msgid "Add a working email"
 msgstr "เพิ่มอีเมลที่ใช้งานได้"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1181
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1191
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "เพิ่มคีย์ YouTube Data API เพื่อปรับปรุงลิงก์ YouTube"
 
@@ -3136,7 +3136,7 @@ msgid "Add another reaction"
 msgstr "เพิ่มรีแอ็กชันอื่น"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1207
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "เพิ่มข้อมูลเมตาไคลเอ็นต์ OAuth ของ Bluesky และคีย์การลงนาม"
 
@@ -3286,7 +3286,7 @@ msgid "Add shortcut"
 msgstr "เพิ่มปุ่มลัด"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1199
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "เพิ่มข้อมูลประจำตัว SMTP เพื่อให้อินสแตนซ์สามารถส่งอีเมลยืนยันและแจ้งเตือนได้"
 
@@ -3313,7 +3313,7 @@ msgid "Add stream"
 msgstr "เพิ่มสตรีม"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1165
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1175
 msgid "Add the credentials during setup."
 msgstr "เพิ่มข้อมูลประจำตัวระหว่างการตั้งค่า"
 
@@ -4392,12 +4392,12 @@ msgid "Anyone can call you, including strangers"
 msgstr "ทุกคนสามารถโทรหาคุณได้ รวมถึงคนแปลกหน้า"
 
 #. Description for the open registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:251
+#: src/features/app/components/setup/SetupWizardSteps.tsx:256
 msgid "Anyone can create an account."
 msgstr "ทุกคนสามารถสร้างบัญชีได้"
 
 #. Description for the approval registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:259
+#: src/features/app/components/setup/SetupWizardSteps.tsx:264
 msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "ทุกคนสามารถขอบัญชีได้ แต่ผู้ดูแลระบบต้องอนุมัติ"
 
@@ -4407,7 +4407,7 @@ msgid "Anyone with this key can reset your password. Never share it."
 msgstr "ใครก็ตามที่มีคีย์นี้สามารถรีเซ็ตรหัสผ่านของคุณได้ ห้ามแชร์เด็ดขาด"
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1211
 msgid "API key"
 msgstr "คีย์ API"
 
@@ -4566,7 +4566,7 @@ msgid "Apply to all communities"
 msgstr "ใช้กับทุกคอมมูนิตี้"
 
 #. Registration mode option requiring admin approval.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:255
+#: src/features/app/components/setup/SetupWizardSteps.tsx:260
 msgid "Approval required"
 msgstr "ต้องได้รับการอนุมัติ"
 
@@ -4786,8 +4786,8 @@ msgstr "การดำเนินการไฟล์แนบ"
 
 #. Setup wizard media expiry step title.
 #. Summary row label for the attachment expiry choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:309
-#: src/features/app/components/setup/SetupWizardSteps.tsx:468
+#: src/features/app/components/setup/SetupWizardSteps.tsx:314
+#: src/features/app/components/setup/SetupWizardSteps.tsx:473
 msgid "Attachment expiration"
 msgstr "การหมดอายุของไฟล์แนบ"
 
@@ -5877,12 +5877,12 @@ msgid "Bluesky"
 msgstr "บลูสกาย"
 
 #. Label for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:409
+#: src/features/app/components/setup/SetupWizardSteps.tsx:414
 msgid "Bluesky connections"
 msgstr "การเชื่อมต่อ Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1203
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -6111,7 +6111,7 @@ msgid "Branding"
 msgstr "แบรนด์"
 
 #. Accessible label for a branding image preview in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:233
+#: src/features/app/components/setup/SetupWizardSteps.tsx:238
 msgid "Branding asset preview"
 msgstr "ตัวอย่างสื่อแบรนด์"
 
@@ -7676,7 +7676,7 @@ msgid "Choose a supported audio file and try again."
 msgstr "เลือกไฟล์เสียงที่รองรับแล้วลองอีกครั้ง"
 
 #. Setup wizard title for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:69
+#: src/features/app/components/setup/SetupWizardSteps.tsx:70
 msgid "Choose a theme"
 msgstr "เลือกธีม"
 
@@ -7740,12 +7740,12 @@ msgid "Choose how messages are displayed in chat channels."
 msgstr "เลือกวิธีแสดงข้อความในช่องแชท"
 
 #. Setup wizard registration step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:247
 msgid "Choose how new accounts are created on this instance."
 msgstr "เลือกวิธีสร้างบัญชีใหม่ในอินสแตนซ์นี้"
 
 #. Setup wizard title for choosing whether accounts use usernames or email addresses to sign in.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:77
+#: src/features/app/components/setup/SetupWizardSteps.tsx:78
 msgid "Choose how people sign in"
 msgstr "เลือกวิธีที่ผู้คนจะใช้ลงชื่อเข้าใช้"
 
@@ -7765,7 +7765,7 @@ msgid "Choose how you'd like to pay for this subscription."
 msgstr "เลือกช่องทางชำระเงินสำหรับการสมัครสมาชิกนี้"
 
 #. Setup wizard community model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:272
+#: src/features/app/components/setup/SetupWizardSteps.tsx:277
 msgid "Choose how your instance works"
 msgstr "เลือกวิธีการทำงานของอินสแตนซ์ของคุณ"
 
@@ -7788,7 +7788,7 @@ msgid "Choose the category that best describes your community. You can change th
 msgstr "เลือกหมวดหมู่ที่ตรงกับคอมมูนิตี้ของคุณมากที่สุด เปลี่ยนได้ทุกเมื่อ"
 
 #. Setup wizard premium model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:418
+#: src/features/app/components/setup/SetupWizardSteps.tsx:423
 msgid "Choose the premium model"
 msgstr "เลือกโมเดลพรีเมียม"
 
@@ -7848,7 +7848,7 @@ msgid "Choose where its published messages should go. You can unfollow any time 
 msgstr "เลือกปลายทางสำหรับข้อความที่เผยแพร่ คุณสามารถเลิกติดตามได้ทุกเมื่อในการตั้งค่าชุมชน → เว็บฮุก"
 
 #. Setup wizard media expiry step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:313
+#: src/features/app/components/setup/SetupWizardSteps.tsx:318
 msgid "Choose whether uploaded attachments should expire automatically based on size."
 msgstr "เลือกว่าไฟล์แนบที่อัปโหลดควรหมดอายุโดยอัตโนมัติตามขนาดหรือไม่"
 
@@ -8049,7 +8049,7 @@ msgstr "ปรับปรุงไมโครโฟนของคุณเพ
 #. Button or menu action label in the theme studio quick css section. Keep it concise.
 #. Button that removes an uploaded branding image.
 #. Inline button in the Recent searches section that wipes the search history list.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:209
+#: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
@@ -8277,7 +8277,7 @@ msgid "Client"
 msgstr "ไคลเอ็นต์"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1248
 msgid "Client name"
 msgstr "ชื่อไคลเอ็นต์"
 
@@ -8294,7 +8294,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "สร้าง Client secret ใหม่แล้ว โปรดอัปเดตโค้ดที่ใช้ secret เก่า"
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1252
 msgid "Client URL"
 msgstr "URL ไคลเอ็นต์"
 
@@ -8427,7 +8427,7 @@ msgid "Close your DM with {username}? You can reopen it anytime."
 msgstr "ปิดข้อความส่วนตัวของคุณกับ {username} ใช่หรือไม่ คุณสามารถเปิดใหม่ได้ทุกเมื่อ"
 
 #. Registration mode option that disables public registration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:263
+#: src/features/app/components/setup/SetupWizardSteps.tsx:268
 msgid "Closed"
 msgstr "ปิด"
 
@@ -8846,7 +8846,7 @@ msgstr "ปิดไมโครโฟนในคอมมูนิตี้"
 
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:288
+#: src/features/app/components/setup/SetupWizardSteps.tsx:293
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:124
 msgid "Community name"
 msgstr "ชื่อคอมมูนิตี้"
@@ -9055,7 +9055,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "ตั้งค่าปุ่มลัด"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1161
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1171
 msgid "Configure now"
 msgstr "ตั้งค่าเลย"
 
@@ -10595,7 +10595,7 @@ msgstr "สร้างกลุ่มใหม่กับ {userName}"
 
 #. Button in the setup wizard that replaces the administrator recovery kit with a new one.
 #. Confirm button that replaces the existing account recovery kit with a new one.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:148
+#: src/features/app/components/setup/SetupWizardSteps.tsx:153
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 msgid "Create a new kit"
@@ -10607,7 +10607,7 @@ msgid "Create a new recovery kit?"
 msgstr "สร้างชุดกู้คืนใหม่หรือไม่"
 
 #. Status shown in the setup wizard while the administrator has no recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:156
+#: src/features/app/components/setup/SetupWizardSteps.tsx:161
 msgid "Create a recovery kit to continue."
 msgstr "สร้างชุดกู้คืนเพื่อดำเนินการต่อ"
 
@@ -10629,7 +10629,7 @@ msgid "Create account to claim gift"
 msgstr "สร้างบัญชีเพื่อรับของขวัญ"
 
 #. Button that opens the registration flow to create the first administrator account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:160
+#: src/features/app/components/setup/SetupWizardSteps.tsx:165
 msgid "Create administrator account"
 msgstr "สร้างบัญชีผู้ดูแลระบบ"
 
@@ -10736,7 +10736,7 @@ msgstr "สร้างหรือเข้าร่วมคอมมูนิ
 
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:144
+#: src/features/app/components/setup/SetupWizardSteps.tsx:149
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
@@ -10749,7 +10749,7 @@ msgid "Create role"
 msgstr "สร้างบทบาท"
 
 #. Setup wizard title prompting the operator to create the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:57
+#: src/features/app/components/setup/SetupWizardSteps.tsx:58
 msgid "Create the administrator account"
 msgstr "สร้างบัญชีผู้ดูแลระบบ"
 
@@ -11515,7 +11515,7 @@ msgid "Debug user"
 msgstr "ดีบักผู้ใช้"
 
 #. Setup wizard premium model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:422
+#: src/features/app/components/setup/SetupWizardSteps.tsx:427
 msgid "Decide how premium limits apply to people on this instance."
 msgstr "เลือกว่าข้อจำกัดระดับพรีเมียมจะมีผลกับผู้คนในอินสแตนซ์นี้อย่างไร"
 
@@ -12399,7 +12399,7 @@ msgstr "แสดงตัวอย่างข้อความส่วนต
 
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:464
+#: src/features/app/components/setup/SetupWizardSteps.tsx:469
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:630
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
@@ -12479,7 +12479,7 @@ msgid "Disable desktop notifications?"
 msgstr "ปิดการแจ้งเตือนบนเดสก์ท็อปหรือไม่"
 
 #. Label for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:300
+#: src/features/app/components/setup/SetupWizardSteps.tsx:305
 msgid "Disable direct messages and friend requests"
 msgstr "ปิดข้อความส่วนตัวและคำขอเป็นเพื่อน"
 
@@ -12556,7 +12556,7 @@ msgstr "ปิดวิดีโอเฉพาะฉัน"
 
 #. Status next to a built-in shortcut the user turned off in the keybinds tab.
 #. Summary value when a setup option is disabled.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:496
+#: src/features/app/components/setup/SetupWizardSteps.tsx:501
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:45
 msgid "Disabled"
 msgstr "ปิดใช้งานแล้ว"
@@ -13372,7 +13372,7 @@ msgid "Each key can run only one system-wide shortcut."
 msgstr "แต่ละคีย์ใช้กับปุ่มลัดทั่วทั้งระบบได้เพียงรายการเดียว"
 
 #. Description for the no tags option when people sign in with email. Keep the example name alex.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:123
+#: src/features/app/components/setup/SetupWizardSteps.tsx:128
 msgid "Each name belongs to one person and shows on its own, like alex."
 msgstr "แต่ละชื่อเป็นของผู้ใช้คนเดียวและจะแสดงแยกกัน เช่น alex"
 
@@ -13684,7 +13684,7 @@ msgstr "มีสิทธิ์ได้รับเงินคืนจนถ
 
 #. Generic form-field label for an email address.
 #. Setup wizard option where people sign in with an email address and password.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:94
+#: src/features/app/components/setup/SetupWizardSteps.tsx:99
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:211
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
 msgid "Email"
@@ -13712,7 +13712,7 @@ msgid "Email changed"
 msgstr "เปลี่ยนอีเมลแล้ว"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1195
 msgid "Email delivery"
 msgstr "การส่งอีเมล"
 
@@ -13971,7 +13971,7 @@ msgid "Enable at least one translator below."
 msgstr "เปิดใช้งานเครื่องมือแปลภาษาอย่างน้อยหนึ่งรายการด้านล่าง"
 
 #. Label for enabling attachment expiry during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:317
+#: src/features/app/components/setup/SetupWizardSteps.tsx:322
 msgid "Enable attachment expiration"
 msgstr "เปิดใช้งานการหมดอายุไฟล์แนบ"
 
@@ -13985,7 +13985,7 @@ msgid "Enable beta feature"
 msgstr "เปิดใช้ฟีเจอร์เบต้า"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1234
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1244
 msgid "Enable Bluesky OAuth"
 msgstr "เปิดใช้งาน Bluesky OAuth"
 
@@ -14018,7 +14018,7 @@ msgid "Enable developer mode"
 msgstr "เปิดโหมดนักพัฒนา"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1202
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1212
 msgid "Enable email delivery"
 msgstr "เปิดใช้งานการส่งอีเมล"
 
@@ -14155,7 +14155,7 @@ msgid "Enable text selection"
 msgstr "เปิดใช้งานการเลือกข้อความ"
 
 #. Setup wizard optional services step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:385
+#: src/features/app/components/setup/SetupWizardSteps.tsx:390
 msgid "Enable the integrations whose credentials you have configured. Only available services are shown."
 msgstr "เปิดใช้งานการผสานรวมที่คุณได้กำหนดค่าข้อมูลประจำตัวไว้แล้ว จะแสดงเฉพาะบริการที่พร้อมใช้งานเท่านั้น"
 
@@ -14196,7 +14196,7 @@ msgstr "เปิดใช้งานภาพตัวอย่างการ
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Summary value when a setup option is enabled.
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:492
+#: src/features/app/components/setup/SetupWizardSteps.tsx:497
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
@@ -14320,7 +14320,7 @@ msgid "Enter a code in the format ABCD-1234."
 msgstr "ป้อนรหัสในรูปแบบ ABCD-1234"
 
 #. Validation error for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:296
+#: src/features/app/components/setup/SetupWizardSteps.tsx:301
 msgid "Enter a community name between 1 and 100 characters."
 msgstr "ป้อนชื่อคอมมูนิตี้ที่มีความยาวระหว่าง 1 ถึง 100 ตัวอักษร"
 
@@ -14330,7 +14330,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "ป้อนรหัสของขวัญเพื่อแลก {premiumProductName} สำหรับบัญชีของคุณ"
 
 #. Validation error for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:194
 msgid "Enter a product name between 1 and 80 characters."
 msgstr "ป้อนชื่อผลิตภัณฑ์ระหว่าง 1 ถึง 80 ตัวอักษร"
 
@@ -14669,7 +14669,7 @@ msgid "Everyone"
 msgstr "ทุกคน"
 
 #. Premium model option that gives everyone the highest limits.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:435
+#: src/features/app/components/setup/SetupWizardSteps.tsx:440
 msgid "Everyone is premium"
 msgstr "ทุกคนเป็นพรีเมียม"
 
@@ -14798,7 +14798,7 @@ msgid "EXPERIMENTAL"
 msgstr "ทดลอง"
 
 #. Label for attachment decay curve.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:345
+#: src/features/app/components/setup/SetupWizardSteps.tsx:350
 msgid "Expiration curve"
 msgstr "เส้นโค้งการหมดอายุ"
 
@@ -15322,7 +15322,7 @@ msgid "False claims likely to cause real-world harm."
 msgstr "การกล่าวอ้างที่เป็นเท็จซึ่งอาจก่อให้เกิดอันตรายในโลกแห่งความเป็นจริง"
 
 #. Label for the favicon branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:229
+#: src/features/app/components/setup/SetupWizardSteps.tsx:234
 msgid "Favicon"
 msgstr "ไอคอน Favicon"
 
@@ -15621,7 +15621,7 @@ msgstr "ดำเนินการให้เสร็จในแท็บใ
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:100
-#: src/features/app/components/setup/SetupWizardSteps.tsx:444
+#: src/features/app/components/setup/SetupWizardSteps.tsx:449
 msgid "Finish setup"
 msgstr "เสร็จสิ้นการตั้งค่า"
 
@@ -15668,7 +15668,7 @@ msgid "Florida"
 msgstr "ฟลอริดา"
 
 #. Placeholder for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:190
 msgid "Fluxer"
 msgstr "Fluxer"
 
@@ -16266,12 +16266,12 @@ msgid "from <0>{0}</0>"
 msgstr "จาก <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1206
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
 msgid "From email"
 msgstr "อีเมลผู้ส่ง"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1210
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1220
 msgid "From name"
 msgstr "ชื่อผู้ส่ง"
 
@@ -16577,7 +16577,7 @@ msgid "GIF preview"
 msgstr "ตัวอย่าง GIF"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1169
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1179
 msgid "GIF search"
 msgstr "ค้นหา GIF"
 
@@ -16767,7 +16767,7 @@ msgid "Gifts aren't available right now."
 msgstr "ตอนนี้ยังไม่สามารถซื้อของขวัญได้"
 
 #. Description for the everyone-is-premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:439
+#: src/features/app/components/setup/SetupWizardSteps.tsx:444
 msgid "Give everyone on this instance the highest premium limits."
 msgstr "ให้ทุกคนในอินสแตนซ์นี้ได้รับขีดจำกัดพรีเมียมสูงสุด"
 
@@ -17825,7 +17825,7 @@ msgstr "ฉันได้เก็บชุดกู้คืนไว้ใน
 
 #. Label for the icon branding asset.
 #. Short label in the guild icon upload field. Keep it concise.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:213
+#: src/features/app/components/setup/SetupWizardSteps.tsx:218
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:27
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:89
 msgid "Icon"
@@ -18044,7 +18044,7 @@ msgid "Image"
 msgstr "รูปภาพ"
 
 #. Label for the branding image asset uploaders in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:202
 msgid "Image assets"
 msgstr "รูปภาพประกอบ"
 
@@ -19381,7 +19381,7 @@ msgid "Keep attachments when clearing an edit"
 msgstr "เก็บไฟล์แนบเมื่อล้างการแก้ไข"
 
 #. Description for the mirror premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:430
+#: src/features/app/components/setup/SetupWizardSteps.tsx:435
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "คงระดับฟรีและระดับพรีเมียมไว้ คุณสามารถปรับแต่งระดับต่างๆ ขายแบบพรีเมียมผ่าน Stripe หรือแจกโค้ดของขวัญในภายหลังจากแผงผู้ดูแลระบบ"
 
@@ -19520,7 +19520,7 @@ msgid "Kicked {targetUserTag} from the community"
 msgstr "เตะ {targetUserTag} ออกจากคอมมูนิตี้แล้ว"
 
 #. Label for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:393
+#: src/features/app/components/setup/SetupWizardSteps.tsx:398
 msgid "Klipy GIFs"
 msgstr "GIF จาก Klipy"
 
@@ -19532,7 +19532,7 @@ msgstr "เกาหลี"
 #. Label for the setup wizard language selector.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for language, locale, and time display preferences.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:65
+#: src/features/app/components/setup/SetupWizardSteps.tsx:66
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:6
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:132
 msgid "Language"
@@ -19556,7 +19556,7 @@ msgid "Large"
 msgstr "ใหญ่"
 
 #. Label for attachment decay maximum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:329
+#: src/features/app/components/setup/SetupWizardSteps.tsx:334
 msgid "Large file threshold (MB)"
 msgstr "เกณฑ์ไฟล์ขนาดใหญ่ (MB)"
 
@@ -19724,7 +19724,7 @@ msgid "Leave voice call"
 msgstr "ออกจากการโทรด้วยเสียง"
 
 #. Description for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:371
+#: src/features/app/components/setup/SetupWizardSteps.tsx:376
 msgid "Leaving this off keeps the relay unused and drops notifications to the official mobile apps. You can accept it later in the admin panel."
 msgstr "การปิดตัวเลือกนี้จะทำให้ไม่ใช้รีเลย์และจะไม่ส่งการแจ้งเตือนไปยังแอปมือถืออย่างเป็นทางการ คุณสามารถยอมรับภายหลังได้ในแผงผู้ดูแลระบบ"
 
@@ -19802,12 +19802,12 @@ msgid "Let others clone your stickers"
 msgstr "ให้ผู้อื่นคัดลอกสติกเกอร์ของคุณได้"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:413
+#: src/features/app/components/setup/SetupWizardSteps.tsx:418
 msgid "Let people link their Bluesky account to their profile."
 msgstr "ให้ผู้คนเชื่อมโยงบัญชี Bluesky เข้ากับโปรไฟล์ของตนเองได้"
 
 #. Description for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:397
+#: src/features/app/components/setup/SetupWizardSteps.tsx:402
 msgid "Let people search and send GIFs powered by Klipy."
 msgstr "ให้ผู้คนค้นหาและส่ง GIF ผ่าน Klipy"
 
@@ -20197,7 +20197,7 @@ msgid "Loading states"
 msgstr "สถานะกำลังโหลด"
 
 #. Setup wizard body while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:168
+#: src/features/app/components/setup/SetupWizardSteps.tsx:173
 msgid "Loading the current instance configuration."
 msgstr "กำลังโหลดการกำหนดค่าอินสแตนซ์ปัจจุบัน"
 
@@ -20264,12 +20264,12 @@ msgid "Login"
 msgstr "เข้าสู่ระบบ"
 
 #. Label for the logo branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:221
+#: src/features/app/components/setup/SetupWizardSteps.tsx:226
 msgid "Logo"
 msgstr "โลโก้"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1256
 msgid "Logo URL"
 msgstr "URL โลโก้"
 
@@ -20399,7 +20399,7 @@ msgid "Make group owner"
 msgstr "ตั้งเป็นเจ้าของกลุ่ม"
 
 #. Setup wizard branding step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:178
 msgid "Make the instance yours"
 msgstr "ปรับแต่งอินสแตนซ์ของคุณ"
 
@@ -20848,12 +20848,12 @@ msgid "Maximizes visible messages with minimal spacing."
 msgstr "เพิ่มข้อความที่มองเห็นได้สูงสุดด้วยระยะห่างที่น้อยที่สุด"
 
 #. Label for attachment decay maximum eligible size.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:333
+#: src/features/app/components/setup/SetupWizardSteps.tsx:338
 msgid "Maximum eligible size (MB)"
 msgstr "ขนาดสูงสุดที่มีสิทธิ์ (MB)"
 
 #. Label for attachment decay maximum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:341
+#: src/features/app/components/setup/SetupWizardSteps.tsx:346
 msgid "Maximum lifetime (days)"
 msgstr "อายุการใช้งานสูงสุด (วัน)"
 
@@ -21699,7 +21699,7 @@ msgid "Minimize window"
 msgstr "ย่อหน้าต่าง"
 
 #. Label for attachment decay minimum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:337
+#: src/features/app/components/setup/SetupWizardSteps.tsx:342
 msgid "Minimum lifetime (days)"
 msgstr "อายุการใช้งานขั้นต่ำ (วัน)"
 
@@ -21728,7 +21728,7 @@ msgid "Mirror of the Appearance tab toggle for light/dark/coal preference. Disab
 msgstr "สะท้อนสวิตช์ในแท็บรูปลักษณ์สำหรับค่ากำหนดสว่าง/มืด/ถ่าน ปิดใช้งานเพื่อตั้งธีมพื้นฐานแยกตามอุปกรณ์"
 
 #. Premium model option that mirrors free and premium tiers.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:426
+#: src/features/app/components/setup/SetupWizardSteps.tsx:431
 msgid "Mirror tiers"
 msgstr "สะท้อนระดับชั้น"
 
@@ -21778,7 +21778,7 @@ msgstr "สถานะออนไลน์จากมือถือบนร
 #. Section label for mobile push notification settings.
 #. Setup wizard push relay consent step title.
 #. Switch label in the community notification settings modal. Controls whether mobile push notifications are delivered for this community.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:358
+#: src/features/app/components/setup/SetupWizardSteps.tsx:363
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:112
 #: src/features/ui/action_menu/items/GuildMenuItems.tsx:81
 msgid "Mobile push notifications"
@@ -22456,7 +22456,7 @@ msgid "My category"
 msgstr "หมวดหมู่ของฉัน"
 
 #. Placeholder for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:292
+#: src/features/app/components/setup/SetupWizardSteps.tsx:297
 msgid "My community"
 msgstr "คอมมูนิตี้ของฉัน"
 
@@ -22566,7 +22566,7 @@ msgid "Name passkey form"
 msgstr "แบบฟอร์มตั้งชื่อพาสคีย์"
 
 #. Description for the random tags option when people sign in with email. Keep alex#4821.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:131
+#: src/features/app/components/setup/SetupWizardSteps.tsx:136
 msgid "Names get a random tag, like alex#4821, so several people can share a name."
 msgstr "ชื่อจะได้รับแท็กสุ่ม เช่น alex#4821 เพื่อให้หลายคนสามารถใช้ชื่อเดียวกันได้"
 
@@ -23278,7 +23278,7 @@ msgid "No one can add you to group chats without asking"
 msgstr "ไม่มีใครสามารถเพิ่มคุณเข้าแชทกลุ่มได้โดยที่คุณยังไม่ได้อนุญาต"
 
 #. Message shown when no optional services are available in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:389
+#: src/features/app/components/setup/SetupWizardSteps.tsx:394
 msgid "No optional services are available on this instance. You can skip this step."
 msgstr "ไม่มีบริการเสริมใดพร้อมใช้งานในอินสแตนซ์นี้ คุณสามารถข้ามขั้นตอนนี้ได้"
 
@@ -23463,12 +23463,12 @@ msgid "No system channel"
 msgstr "ไม่มีช่องระบบ"
 
 #. Setup wizard finish summary value when usernames are unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:107
+#: src/features/app/components/setup/SetupWizardSteps.tsx:112
 msgid "No tags"
 msgstr "ไม่มีแท็ก"
 
 #. Setup wizard option where every username is unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:119
+#: src/features/app/components/setup/SetupWizardSteps.tsx:124
 msgid "No tags (recommended)"
 msgstr "ไม่มีแท็ก (แนะนำ)"
 
@@ -23643,7 +23643,7 @@ msgid "Not a whole number"
 msgstr "ไม่ใช่จำนวนเต็ม"
 
 #. Summary value when the operator left the push relay notice unaccepted.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:488
+#: src/features/app/components/setup/SetupWizardSteps.tsx:493
 msgid "Not accepted"
 msgstr "ไม่ยอมรับ"
 
@@ -24124,7 +24124,7 @@ msgid "Open"
 msgstr "เปิด"
 
 #. Registration mode option allowing anyone to register.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:251
 msgctxt "registration-policy"
 msgid "Open"
 msgstr "เปิด"
@@ -24671,7 +24671,7 @@ msgid "Optional arguments"
 msgstr "อาร์กิวเมนต์เสริม"
 
 #. Setup wizard optional services step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:381
+#: src/features/app/components/setup/SetupWizardSteps.tsx:386
 msgid "Optional services"
 msgstr "บริการเสริม"
 
@@ -24984,7 +24984,7 @@ msgstr "พาสคีย์ต้องใช้บันเดิล macOS �
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1227
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
@@ -25224,12 +25224,12 @@ msgid "People"
 msgstr "ผู้คน"
 
 #. Description for the username sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:89
+#: src/features/app/components/setup/SetupWizardSteps.tsx:90
 msgid "People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password."
 msgstr "ผู้คนลงชื่อเข้าใช้ด้วยชื่อผู้ใช้และรหัสผ่าน จะไม่มีการเก็บที่อยู่อีเมล แต่ละคนสามารถบันทึกชุดกู้คืนไว้ได้ หากลืมรหัสผ่าน"
 
 #. Description for the email sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:98
+#: src/features/app/components/setup/SetupWizardSteps.tsx:103
 msgid "People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later."
 msgstr "ผู้คนลงชื่อเข้าใช้ด้วยที่อยู่อีเมลและรหัสผ่าน การรีเซ็ตรหัสผ่านและการยืนยันต้องมีการส่งอีเมล ซึ่งคุณสามารถตั้งค่าได้ในภายหลัง"
 
@@ -25434,7 +25434,7 @@ msgid "Pick the 4-digit number after your username"
 msgstr "เลือกตัวเลข 4 หลักต่อท้ายชื่อผู้ใช้ของคุณ"
 
 #. Setup wizard body for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:73
+#: src/features/app/components/setup/SetupWizardSteps.tsx:74
 msgid "Pick the appearance this administrator account should start with."
 msgstr "เลือกรูปลักษณ์เริ่มต้นสำหรับบัญชีผู้ดูแลระบบนี้"
 
@@ -25752,7 +25752,7 @@ msgid "Popup"
 msgstr "ป๊อปอัป"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1215
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1225
 msgid "Port"
 msgstr "พอร์ต"
 
@@ -25863,7 +25863,7 @@ msgid "Premium grace period nagbar"
 msgstr "แถบแจ้งเตือนช่วงผ่อนผันสำหรับสมาชิกพรีเมียม"
 
 #. Summary row label for the premium model in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:476
+#: src/features/app/components/setup/SetupWizardSteps.tsx:481
 msgid "Premium model"
 msgstr "โมเดลพรีเมียม"
 
@@ -25903,7 +25903,7 @@ msgid "Preparing"
 msgstr "กำลังเตรียม"
 
 #. Setup wizard title while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:164
+#: src/features/app/components/setup/SetupWizardSteps.tsx:169
 msgid "Preparing setup"
 msgstr "กำลังเตรียมการตั้งค่า"
 
@@ -26160,7 +26160,7 @@ msgid "Privacy settings"
 msgstr "การตั้งค่าความเป็นส่วนตัว"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1254
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1264
 msgid "Privacy URL"
 msgstr "URL ความเป็นส่วนตัว"
 
@@ -26185,7 +26185,7 @@ msgid "Private details"
 msgstr "ข้อมูลส่วนตัว"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1262
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1272
 msgid "Private key"
 msgstr "คีย์ส่วนตัว"
 
@@ -26210,8 +26210,8 @@ msgstr "กำลังดำเนินการ"
 
 #. Label for the product name input in the setup wizard.
 #. Summary row label for the product name in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:181
-#: src/features/app/components/setup/SetupWizardSteps.tsx:452
+#: src/features/app/components/setup/SetupWizardSteps.tsx:186
+#: src/features/app/components/setup/SetupWizardSteps.tsx:457
 msgid "Product name"
 msgstr "ชื่อผลิตภัณฑ์"
 
@@ -26412,7 +26412,7 @@ msgid "Public community"
 msgstr "คอมมูนิตี้สาธารณะ"
 
 #. Description for the closed registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:267
+#: src/features/app/components/setup/SetupWizardSteps.tsx:272
 msgid "Public registration is closed."
 msgstr "การลงทะเบียนแบบสาธารณะปิดอยู่"
 
@@ -26537,7 +26537,7 @@ msgid "Push notification inactive timeout"
 msgstr "หมดเวลาการแจ้งเตือนแบบพุชเมื่อไม่ใช้งาน"
 
 #. Summary row label for the push relay consent on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:472
+#: src/features/app/components/setup/SetupWizardSteps.tsx:477
 msgid "Push relay notice"
 msgstr "การแจ้งเตือนการส่งต่อ"
 
@@ -26756,8 +26756,8 @@ msgstr "ประสานงานการโจมตี"
 
 #. Setup wizard finish summary value when every username gets a random four digit tag.
 #. Setup wizard option where every username gets a random four digit tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:111
-#: src/features/app/components/setup/SetupWizardSteps.tsx:127
+#: src/features/app/components/setup/SetupWizardSteps.tsx:116
+#: src/features/app/components/setup/SetupWizardSteps.tsx:132
 msgid "Random tags"
 msgstr "แท็กสุ่ม"
 
@@ -26853,7 +26853,7 @@ msgid "Read the documentation ({domain})"
 msgstr "อ่านเอกสารประกอบ ({domain})"
 
 #. Link to the push relay supplemental privacy notice shown during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:376
+#: src/features/app/components/setup/SetupWizardSteps.tsx:381
 msgid "Read the supplemental privacy notice"
 msgstr "อ่านประกาศความเป็นส่วนตัวเพิ่มเติม"
 
@@ -27197,7 +27197,7 @@ msgid "Registered passkeys"
 msgstr "พาสคีย์ที่ลงทะเบียนแล้ว"
 
 #. Summary row label for the registration mode in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:456
+#: src/features/app/components/setup/SetupWizardSteps.tsx:461
 msgid "Registration"
 msgstr "การลงทะเบียน"
 
@@ -27809,12 +27809,12 @@ msgid "Render placeholders"
 msgstr "แสดงตัวยึด"
 
 #. Label for attachment decay renewal threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:349
+#: src/features/app/components/setup/SetupWizardSteps.tsx:354
 msgid "Renew threshold (days)"
 msgstr "เกณฑ์การต่ออายุ (วัน)"
 
 #. Label for attachment decay renewal window.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:353
+#: src/features/app/components/setup/SetupWizardSteps.tsx:358
 msgid "Renew window (days)"
 msgstr "ช่วงเวลาต่ออายุ (วัน)"
 
@@ -27824,7 +27824,7 @@ msgstr "ต่ออายุในวันที่ <0>{renewalDate}</0>"
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that replaces an already uploaded branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:205
+#: src/features/app/components/setup/SetupWizardSteps.tsx:210
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:80
 msgid "Replace"
 msgstr "แทนที่"
@@ -28642,7 +28642,7 @@ msgid "Review what this app is asking for before you continue."
 msgstr "ตรวจสอบคำขอของแอปนี้ก่อนดำเนินการต่อ"
 
 #. Setup wizard finish step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:448
+#: src/features/app/components/setup/SetupWizardSteps.tsx:453
 msgid "Review your choices below, then finish. This saves the configuration and opens the instance."
 msgstr "ตรวจสอบตัวเลือกของคุณด้านล่าง จากนั้นกดเสร็จสิ้น การดำเนินการนี้จะบันทึกการกำหนดค่าและเปิดอินสแตนซ์"
 
@@ -28898,7 +28898,7 @@ msgid "Run at login"
 msgstr "ทำงานเมื่อเข้าสู่ระบบ"
 
 #. Description for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:284
+#: src/features/app/components/setup/SetupWizardSteps.tsx:289
 msgid "Run the instance as one community instead of many. This can only be enabled now, during setup."
 msgstr "เรียกใช้อินสแตนซ์เป็นคอมมูนิตี้เดียวแทนที่จะเป็นหลายคอมมูนิตี้ เปิดใช้งานได้เฉพาะตอนนี้ระหว่างการตั้งค่าเท่านั้น"
 
@@ -29036,7 +29036,7 @@ msgid "Save theme"
 msgstr "บันทึกธีม"
 
 #. Setup wizard title asking the administrator to create an account recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:135
+#: src/features/app/components/setup/SetupWizardSteps.tsx:140
 msgid "Save your recovery kit"
 msgstr "บันทึกชุดกู้คืนของคุณ"
 
@@ -30435,7 +30435,7 @@ msgid "Set the nickname to {nick}"
 msgstr "ตั้งชื่อเล่นเป็น {nick}"
 
 #. Setup wizard branding step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:182
 msgid "Set the public product name, theme color, and image assets that clients display."
 msgstr "ตั้งชื่อผลิตภัณฑ์ที่แสดงต่อสาธารณะ สีธีม และชุดรูปภาพที่ไคลเอ็นต์จะแสดง"
 
@@ -30490,7 +30490,7 @@ msgid "Set up authenticator app"
 msgstr "ตั้งค่าแอปยืนยันตัวตน"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1153
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1163
 msgid "Set up later"
 msgstr "ตั้งค่าทีหลัง"
 
@@ -31168,7 +31168,7 @@ msgid "Show quick reactions"
 msgstr "แสดงรีแอ็กชันด่วน"
 
 #. Description for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:405
+#: src/features/app/components/setup/SetupWizardSteps.tsx:410
 msgid "Show rich previews for YouTube links."
 msgstr "แสดงตัวอย่างแบบเต็มสำหรับลิงก์ YouTube"
 
@@ -31387,7 +31387,7 @@ msgid "Sign-in flow"
 msgstr "ขั้นตอนการลงชื่อเข้าใช้"
 
 #. Summary row label for how people sign in, on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:480
+#: src/features/app/components/setup/SetupWizardSteps.tsx:485
 msgid "Sign-in method"
 msgstr "วิธีลงชื่อเข้าใช้"
 
@@ -31412,7 +31412,7 @@ msgid "Signed-in devices"
 msgstr "อุปกรณ์ที่ลงชื่อเข้าใช้"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1258
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1268
 msgid "Signing key ID"
 msgstr "ID คีย์การลงนาม"
 
@@ -31479,12 +31479,12 @@ msgid "Single column"
 msgstr "คอลัมน์เดียว"
 
 #. Summary row label for the single community choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:460
+#: src/features/app/components/setup/SetupWizardSteps.tsx:465
 msgid "Single community"
 msgstr "คอมมูนิตี้เดียว"
 
 #. Label for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:280
+#: src/features/app/components/setup/SetupWizardSteps.tsx:285
 msgid "Single community mode"
 msgstr "โหมดคอมมูนิตี้เดียว"
 
@@ -31551,7 +31551,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "ข้ามข้อความระบบแจ้งการออกจากกลุ่ม ไม่มีใครได้รับการแจ้งเตือน"
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1157
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1167
 msgid "Skip this now and configure it from the admin panel."
 msgstr "ข้ามตอนนี้และกำหนดค่าจากแผงผู้ดูแลระบบ"
 
@@ -31738,7 +31738,7 @@ msgid "Small button clicked."
 msgstr "คลิกปุ่มเล็กแล้ว"
 
 #. Label for attachment decay minimum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:325
+#: src/features/app/components/setup/SetupWizardSteps.tsx:330
 msgid "Small file threshold (MB)"
 msgstr "เกณฑ์ไฟล์ขนาดเล็ก (MB)"
 
@@ -31794,17 +31794,17 @@ msgid "Smoother video"
 msgstr "วิดีโอที่ราบรื่นขึ้น"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1236
 msgid "SMTP connection verified."
 msgstr "ยืนยันการเชื่อมต่อ SMTP แล้ว"
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1214
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1224
 msgid "SMTP host"
 msgstr "โฮสต์ SMTP"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1230
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1240
 msgid "SMTP validation failed."
 msgstr "ตรวจสอบ SMTP ไม่สำเร็จ"
 
@@ -33267,7 +33267,7 @@ msgid "Switches"
 msgstr "สวิตช์"
 
 #. Label for the symbol branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:222
 msgid "Symbol"
 msgstr "สัญลักษณ์"
 
@@ -33635,7 +33635,7 @@ msgid "Terms of service"
 msgstr "ข้อกำหนดในการให้บริการ"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1250
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1260
 msgid "Terms URL"
 msgstr "URL ข้อกำหนด"
 
@@ -33645,7 +33645,7 @@ msgid "Terrorism or violent extremism"
 msgstr "การก่อการร้ายหรือแนวคิดสุดโต่งที่ใช้ความรุนแรง"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1222
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1232
 msgid "Test SMTP"
 msgstr "ทดสอบ SMTP"
 
@@ -34016,7 +34016,7 @@ msgid "The new voice channel will reuse the permissions, user limit, and bitrate
 msgstr "ช่องเสียงใหม่จะใช้สิทธิ์ ขีดจำกัดผู้ใช้ และบิตเรตจาก <0>{channelLabel}</0> ซ้ำ"
 
 #. Setup wizard push relay consent step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:362
+#: src/features/app/components/setup/SetupWizardSteps.tsx:367
 msgid "The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement."
 msgstr "แอปมือถือ Fluxer อย่างเป็นทางการจะได้รับการแจ้งเตือนผ่านรีเลย์การแจ้งเตือนของ Fluxer ซึ่งจะส่งต่อไปยัง Apple และ Google ส่วนจุดสิ้นสุด UnifiedPush และ ntfy ที่โฮสต์ด้วยตนเองจะไม่ถึงรีเลย์และไม่จำเป็นต้องมีข้อตกลง"
 
@@ -34128,7 +34128,7 @@ msgstr "การเปลี่ยนธีมจะซิงค์กับอ
 
 #. Label for the theme color picker in the setup wizard.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:198
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:165
 msgid "Theme color"
 msgstr "สีของธีม"
@@ -34228,7 +34228,7 @@ msgid "There was an error loading the webhooks. Try again."
 msgstr "เกิดข้อผิดพลาดในการโหลด webhook ลองอีกครั้ง"
 
 #. Setup wizard community model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:276
+#: src/features/app/components/setup/SetupWizardSteps.tsx:281
 msgid "These options change how people use the instance. Some can only be chosen during setup."
 msgstr "ตัวเลือกเหล่านี้จะเปลี่ยนวิธีที่ผู้คนใช้อินสแตนซ์ บางตัวเลือกเลือกได้เฉพาะตอนตั้งค่าเท่านั้น"
 
@@ -34642,7 +34642,7 @@ msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "ปัจจุบันอินสแตนซ์นี้อนุญาตให้แชร์หน้าจอได้สูงสุด 720p ที่ 30 FPS"
 
 #. Setup wizard body prompting the operator to register the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:61
+#: src/features/app/components/setup/SetupWizardSteps.tsx:62
 msgid "This instance has no accounts yet. The first account you create automatically becomes the administrator."
 msgstr "อินสแตนซ์นี้ยังไม่มีบัญชี บัญชีแรกที่คุณสร้างจะกลายเป็นผู้ดูแลระบบโดยอัตโนมัติ"
 
@@ -35805,7 +35805,7 @@ msgid "Turn off device stream"
 msgstr "ปิดสตรีมของอุปกรณ์"
 
 #. Description for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:304
+#: src/features/app/components/setup/SetupWizardSteps.tsx:309
 msgid "Turn off private messaging and friends across the instance. This can be reversed only once later."
 msgstr "ปิดข้อความส่วนตัวและระบบเพื่อนทั่วทั้งอินสแตนซ์ ภายหลังจะย้อนกลับได้เพียงครั้งเดียวเท่านั้น"
 
@@ -36994,7 +36994,7 @@ msgstr "อัปเกรดเพื่อจัดเก็บพื้นห
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that opens a file picker to upload a branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:206
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:84
 msgid "Upload"
 msgstr "อัปโหลด"
@@ -37489,7 +37489,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "ใช้เมื่อแก้ไขปัญหาไคลเอ็นต์หรือรวบรวมบันทึก อาจเพิ่มข้อความที่ละเอียดลงในคอนโซลเบราว์เซอร์สำหรับไคลเอ็นต์ปัจจุบัน"
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1218
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1228
 msgid "Use TLS"
 msgstr "ใช้ TLS"
 
@@ -37659,7 +37659,7 @@ msgstr "ระดับเสียงของผู้ใช้"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:577
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:226
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:57
@@ -37702,8 +37702,13 @@ msgstr "ชื่อผู้ใช้ต้องมีอย่างน้อ
 msgid "Username must be at most 32 characters"
 msgstr "ชื่อผู้ใช้ต้องมีความยาวไม่เกิน 32 ตัวอักษร"
 
+#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
+#: src/features/app/components/setup/SetupWizardSteps.tsx:95
+msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
+msgstr "การลงชื่อเข้าใช้ด้วยชื่อผู้ใช้ยังอยู่ระหว่างการทยอยเปิดให้ใช้งานบนแอปมือถือ การรองรับเต็มรูปแบบในทุกแพลตฟอร์มกำลังจะมาเร็วๆ นี้"
+
 #. Heading above the choice of how usernames are tagged in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:115
+#: src/features/app/components/setup/SetupWizardSteps.tsx:120
 msgid "Username tags"
 msgstr "แท็กชื่อผู้ใช้"
 
@@ -37713,12 +37718,12 @@ msgid "Username updated"
 msgstr "อัปเดตชื่อผู้ใช้แล้ว"
 
 #. Summary value on the setup wizard finish step when people sign in with a username.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:103
+#: src/features/app/components/setup/SetupWizardSteps.tsx:108
 msgid "Usernames"
 msgstr "ชื่อผู้ใช้"
 
 #. Setup wizard option where people sign in with a username and password and no email is collected.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:85
+#: src/features/app/components/setup/SetupWizardSteps.tsx:86
 msgid "Usernames (recommended)"
 msgstr "ชื่อผู้ใช้ (แนะนำ)"
 
@@ -39232,7 +39237,7 @@ msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {
 msgstr "ยินดีต้อนรับสู่ {premiumProductFullName} การสมัครสมาชิกรายปีของคุณจะต่ออายุในวันที่ {formattedDate} สำรวจสิทธิประโยชน์ {premiumProductName} ของคุณและจัดการการสมัครสมาชิกของคุณ"
 
 #. Setup wizard title shown once the operator is signed in as the instance admin.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:48
+#: src/features/app/components/setup/SetupWizardSteps.tsx:49
 msgid "Welcome to {productName}"
 msgstr "ยินดีต้อนรับสู่ {productName}"
 
@@ -39330,7 +39335,7 @@ msgid "When a custom threshold date is not set, members without the <0>{readMess
 msgstr "หากไม่ได้ตั้งวันที่กำหนดเอง สมาชิกที่ไม่มีสิทธิ์ <0>{readMessageHistoryPermissionLabel}</0> จะดูข้อความย้อนหลังไม่ได้ โดยจะเห็นเฉพาะข้อความที่เข้ามาแบบเรียลไทม์ และข้อความจะหายไปเมื่อรีสตาร์ทแอป"
 
 #. Description for the attachment expiry setup switch.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:321
+#: src/features/app/components/setup/SetupWizardSteps.tsx:326
 msgid "When attachment expiration is disabled, attachments remain available until manually removed."
 msgstr "เมื่อปิดใช้งานการหมดอายุของไฟล์แนบ ไฟล์แนบจะยังคงอยู่จนกว่าจะถูกลบด้วยตนเอง"
 
@@ -39436,7 +39441,7 @@ msgid "Who can friend"
 msgstr "ใครเพิ่มเพื่อนได้บ้าง"
 
 #. Setup wizard registration step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:243
 msgid "Who can join"
 msgstr "ใครเข้าร่วมได้บ้าง"
 
@@ -39575,7 +39580,7 @@ msgid "Without this permission, push-to-talk is required."
 msgstr "หากไม่มีสิทธิ์นี้ จะต้องใช้การกดเพื่อพูด"
 
 #. Label for the wordmark branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:225
+#: src/features/app/components/setup/SetupWizardSteps.tsx:230
 msgid "Wordmark"
 msgstr "เวิร์ดมาร์ก"
 
@@ -39716,7 +39721,7 @@ msgid "You are now navigating to {paymentProviderName} to complete the payment. 
 msgstr "คุณกำลังจะไปยัง {paymentProviderName} เพื่อดำเนินการชำระเงินให้เสร็จสมบูรณ์ โปรดกลับมาที่ {productName} เมื่อคุณชำระเงินเรียบร้อยแล้ว"
 
 #. Setup wizard body shown to the signed-in instance administrator.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:52
+#: src/features/app/components/setup/SetupWizardSteps.tsx:53
 msgid "You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance."
 msgstr "คุณลงชื่อเข้าใช้ในฐานะผู้ดูแลระบบของอินสแตนซ์แล้ว ขั้นตอนต่อไปคือการตั้งค่าแบรนด์ การลงทะเบียน และนโยบายหลักสำหรับทุกคนในอินสแตนซ์นี้"
 
@@ -39969,7 +39974,7 @@ msgid "You can't view the members of this channel in this community"
 msgstr "คุณไม่สามารถดูสมาชิกของช่องนี้ในคอมมูนิตี้นี้ได้"
 
 #. Setup wizard body for the sign-in method step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:81
+#: src/features/app/components/setup/SetupWizardSteps.tsx:82
 msgid "You cannot change this once the first account exists."
 msgstr "คุณจะไม่สามารถเปลี่ยนแปลงสิ่งนี้ได้เมื่อมีบัญชีแรกอยู่แล้ว"
 
@@ -40578,7 +40583,7 @@ msgid "Your account has been linked successfully. You can now close this tab and
 msgstr "เชื่อมบัญชีของคุณสำเร็จแล้ว ปิดแท็บนี้แล้วกลับไปที่แอปได้เลย"
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:139
+#: src/features/app/components/setup/SetupWizardSteps.tsx:144
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. Create one now and keep it somewhere safe."
 msgstr "บัญชีของคุณไม่มีที่อยู่อีเมล หากคุณลืมรหัสผ่าน ชุดกู้คืนจะเป็นวิธีเดียวที่จะกลับเข้าสู่ระบบได้ สร้างตอนนี้และเก็บไว้ในที่ปลอดภัย"
 
@@ -40880,7 +40885,7 @@ msgid "Your recovery kit"
 msgstr "ชุดกู้คืนของคุณ"
 
 #. Status shown in the setup wizard once the administrator has a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:152
+#: src/features/app/components/setup/SetupWizardSteps.tsx:157
 msgid "Your recovery kit is ready. You can continue."
 msgstr "ชุดกู้คืนของคุณพร้อมแล้ว คุณสามารถดำเนินการต่อได้"
 
@@ -41010,12 +41015,12 @@ msgid "Your video encoder stopped encoding frames, so your screen share was stop
 msgstr "ตัวเข้ารหัสวิดีโอของคุณหยุดการเข้ารหัสเฟรม จึงหยุดการแชร์หน้าจอของคุณแล้ว ลองแชร์อีกครั้ง"
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:401
+#: src/features/app/components/setup/SetupWizardSteps.tsx:406
 msgid "YouTube enrichment"
 msgstr "การเสริมข้อมูล YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1187
 msgid "YouTube previews"
 msgstr "ตัวอย่าง YouTube"
 

@@ -2736,12 +2736,12 @@ msgid "Accept the friend request from {userName}?"
 msgstr "{userName}님의 친구 요청을 수락하시겠어요?"
 
 #. Label for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:367
+#: src/features/app/components/setup/SetupWizardSteps.tsx:372
 msgid "Accept the push relay supplemental privacy notice"
 msgstr "푸시 릴레이 추가 개인정보처리방침에 동의"
 
 #. Summary value when the operator accepted the push relay notice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:484
+#: src/features/app/components/setup/SetupWizardSteps.tsx:489
 msgid "Accepted"
 msgstr "수락됨"
 
@@ -3046,7 +3046,7 @@ msgid "Add a friend to get started."
 msgstr "친구를 추가하여 시작해 보세요."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1183
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Klipy API 키를 추가하여 실행 시 GIF 검색을 사용 설정하세요."
 
@@ -3090,7 +3090,7 @@ msgid "Add a working email"
 msgstr "사용 가능한 이메일 추가"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1181
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1191
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "YouTube 링크에 더 자세한 정보를 표시하려면 YouTube Data API 키를 추가하세요."
 
@@ -3136,7 +3136,7 @@ msgid "Add another reaction"
 msgstr "다른 반응 추가"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1207
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Bluesky OAuth 클라이언트 메타데이터와 서명 키를 추가하세요."
 
@@ -3286,7 +3286,7 @@ msgid "Add shortcut"
 msgstr "단축키 추가"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1199
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "인스턴스에서 확인 및 알림 이메일을 보낼 수 있도록 SMTP 자격 증명을 추가하세요."
 
@@ -3313,7 +3313,7 @@ msgid "Add stream"
 msgstr "스트림 추가"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1165
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1175
 msgid "Add the credentials during setup."
 msgstr "설정 중에 자격 증명을 추가하세요."
 
@@ -4392,12 +4392,12 @@ msgid "Anyone can call you, including strangers"
 msgstr "모르는 사람을 포함해 누구나 회원님에게 전화를 걸 수 있습니다"
 
 #. Description for the open registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:251
+#: src/features/app/components/setup/SetupWizardSteps.tsx:256
 msgid "Anyone can create an account."
 msgstr "누구나 계정을 만들 수 있습니다."
 
 #. Description for the approval registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:259
+#: src/features/app/components/setup/SetupWizardSteps.tsx:264
 msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "누구나 계정을 요청할 수 있지만, 관리자의 승인이 필요합니다."
 
@@ -4407,7 +4407,7 @@ msgid "Anyone with this key can reset your password. Never share it."
 msgstr "이 키를 가진 사람은 누구나 비밀번호를 재설정할 수 있습니다. 절대 공유하지 마세요."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1211
 msgid "API key"
 msgstr "API 키"
 
@@ -4566,7 +4566,7 @@ msgid "Apply to all communities"
 msgstr "모든 커뮤니티에 적용"
 
 #. Registration mode option requiring admin approval.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:255
+#: src/features/app/components/setup/SetupWizardSteps.tsx:260
 msgid "Approval required"
 msgstr "승인 필요"
 
@@ -4786,8 +4786,8 @@ msgstr "첨부 파일 작업"
 
 #. Setup wizard media expiry step title.
 #. Summary row label for the attachment expiry choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:309
-#: src/features/app/components/setup/SetupWizardSteps.tsx:468
+#: src/features/app/components/setup/SetupWizardSteps.tsx:314
+#: src/features/app/components/setup/SetupWizardSteps.tsx:473
 msgid "Attachment expiration"
 msgstr "첨부 파일 만료"
 
@@ -5877,12 +5877,12 @@ msgid "Bluesky"
 msgstr "블루스카이"
 
 #. Label for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:409
+#: src/features/app/components/setup/SetupWizardSteps.tsx:414
 msgid "Bluesky connections"
 msgstr "Bluesky 연결"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1203
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -6111,7 +6111,7 @@ msgid "Branding"
 msgstr "브랜딩"
 
 #. Accessible label for a branding image preview in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:233
+#: src/features/app/components/setup/SetupWizardSteps.tsx:238
 msgid "Branding asset preview"
 msgstr "브랜딩 에셋 미리보기"
 
@@ -7676,7 +7676,7 @@ msgid "Choose a supported audio file and try again."
 msgstr "지원되는 오디오 파일을 선택하고 다시 시도하세요."
 
 #. Setup wizard title for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:69
+#: src/features/app/components/setup/SetupWizardSteps.tsx:70
 msgid "Choose a theme"
 msgstr "테마 선택"
 
@@ -7740,12 +7740,12 @@ msgid "Choose how messages are displayed in chat channels."
 msgstr "채팅 채널에서 메시지가 표시되는 방식을 선택하세요."
 
 #. Setup wizard registration step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:247
 msgid "Choose how new accounts are created on this instance."
 msgstr "이 인스턴스에서 새 계정이 생성되는 방식을 선택하세요."
 
 #. Setup wizard title for choosing whether accounts use usernames or email addresses to sign in.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:77
+#: src/features/app/components/setup/SetupWizardSteps.tsx:78
 msgid "Choose how people sign in"
 msgstr "사람들이 로그인하는 방법 선택"
 
@@ -7765,7 +7765,7 @@ msgid "Choose how you'd like to pay for this subscription."
 msgstr "구독 결제 방법을 선택해 주세요."
 
 #. Setup wizard community model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:272
+#: src/features/app/components/setup/SetupWizardSteps.tsx:277
 msgid "Choose how your instance works"
 msgstr "인스턴스 작동 방식 선택"
 
@@ -7788,7 +7788,7 @@ msgid "Choose the category that best describes your community. You can change th
 msgstr "커뮤니티를 가장 잘 나타내는 카테고리를 선택하세요. 언제든지 변경할 수 있습니다."
 
 #. Setup wizard premium model step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:418
+#: src/features/app/components/setup/SetupWizardSteps.tsx:423
 msgid "Choose the premium model"
 msgstr "프리미엄 모델 선택"
 
@@ -7848,7 +7848,7 @@ msgid "Choose where its published messages should go. You can unfollow any time 
 msgstr "팔로우한 메시지를 게시할 위치를 선택하세요. 커뮤니티 설정 → 웹훅에서 언제든지 팔로우를 취소할 수 있습니다."
 
 #. Setup wizard media expiry step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:313
+#: src/features/app/components/setup/SetupWizardSteps.tsx:318
 msgid "Choose whether uploaded attachments should expire automatically based on size."
 msgstr "업로드된 첨부 파일이 크기에 따라 자동으로 만료되도록 설정할지 선택하세요."
 
@@ -8049,7 +8049,7 @@ msgstr "마이크 소리를 다듬어 음성을 선명하게 만듭니다."
 #. Button or menu action label in the theme studio quick css section. Keep it concise.
 #. Button that removes an uploaded branding image.
 #. Inline button in the Recent searches section that wipes the search history list.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:209
+#: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
@@ -8277,7 +8277,7 @@ msgid "Client"
 msgstr "클라이언트"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1248
 msgid "Client name"
 msgstr "클라이언트 이름"
 
@@ -8294,7 +8294,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "클라이언트 보안 비밀이 재생성되었습니다. 이전 보안 비밀을 사용하는 코드를 업데이트하세요."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1242
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1252
 msgid "Client URL"
 msgstr "클라이언트 URL"
 
@@ -8427,7 +8427,7 @@ msgid "Close your DM with {username}? You can reopen it anytime."
 msgstr "{username}님과의 DM을 닫으시겠어요? 언제든지 다시 열 수 있습니다."
 
 #. Registration mode option that disables public registration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:263
+#: src/features/app/components/setup/SetupWizardSteps.tsx:268
 msgid "Closed"
 msgstr "비공개"
 
@@ -8846,7 +8846,7 @@ msgstr "커뮤니티 음소거"
 
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:288
+#: src/features/app/components/setup/SetupWizardSteps.tsx:293
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:124
 msgid "Community name"
 msgstr "커뮤니티 이름"
@@ -9055,7 +9055,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "키보드 단축키 설정"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1161
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1171
 msgid "Configure now"
 msgstr "지금 설정"
 
@@ -10595,7 +10595,7 @@ msgstr "{userName}님과 새 그룹 만들기"
 
 #. Button in the setup wizard that replaces the administrator recovery kit with a new one.
 #. Confirm button that replaces the existing account recovery kit with a new one.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:148
+#: src/features/app/components/setup/SetupWizardSteps.tsx:153
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:33
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 msgid "Create a new kit"
@@ -10607,7 +10607,7 @@ msgid "Create a new recovery kit?"
 msgstr "새 복구 키트를 만드시겠어요?"
 
 #. Status shown in the setup wizard while the administrator has no recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:156
+#: src/features/app/components/setup/SetupWizardSteps.tsx:161
 msgid "Create a recovery kit to continue."
 msgstr "복구 키트를 만들어 계속 진행하세요."
 
@@ -10629,7 +10629,7 @@ msgid "Create account to claim gift"
 msgstr "계정 만들고 선물 받기"
 
 #. Button that opens the registration flow to create the first administrator account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:160
+#: src/features/app/components/setup/SetupWizardSteps.tsx:165
 msgid "Create administrator account"
 msgstr "관리자 계정 만들기"
 
@@ -10736,7 +10736,7 @@ msgstr "커뮤니티 만들기 또는 참여하기"
 
 #. Button in the setup wizard that creates a recovery kit for the administrator account.
 #. Primary button in the one-time recovery kit prompt.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:144
+#: src/features/app/components/setup/SetupWizardSteps.tsx:149
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:109
 #: src/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings.tsx:133
 #: src/features/user/components/RecoveryKitReminderGate.tsx:30
@@ -10749,7 +10749,7 @@ msgid "Create role"
 msgstr "역할 만들기"
 
 #. Setup wizard title prompting the operator to create the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:57
+#: src/features/app/components/setup/SetupWizardSteps.tsx:58
 msgid "Create the administrator account"
 msgstr "관리자 계정 만들기"
 
@@ -11515,7 +11515,7 @@ msgid "Debug user"
 msgstr "사용자 디버그"
 
 #. Setup wizard premium model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:422
+#: src/features/app/components/setup/SetupWizardSteps.tsx:427
 msgid "Decide how premium limits apply to people on this instance."
 msgstr "이 인스턴스의 사용자에게 프리미엄 제한을 적용할 방식을 결정하세요."
 
@@ -12399,7 +12399,7 @@ msgstr "DM 미리보기"
 
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:464
+#: src/features/app/components/setup/SetupWizardSteps.tsx:469
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:630
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
@@ -12479,7 +12479,7 @@ msgid "Disable desktop notifications?"
 msgstr "데스크톱 알림을 사용 중지할까요?"
 
 #. Label for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:300
+#: src/features/app/components/setup/SetupWizardSteps.tsx:305
 msgid "Disable direct messages and friend requests"
 msgstr "DM 및 친구 요청 비활성화"
 
@@ -12556,7 +12556,7 @@ msgstr "내 비디오 끄기"
 
 #. Status next to a built-in shortcut the user turned off in the keybinds tab.
 #. Summary value when a setup option is disabled.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:496
+#: src/features/app/components/setup/SetupWizardSteps.tsx:501
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList.tsx:45
 msgid "Disabled"
 msgstr "사용 안 함"
@@ -13372,7 +13372,7 @@ msgid "Each key can run only one system-wide shortcut."
 msgstr "각 키는 시스템 전체 단축키 하나만 실행할 수 있습니다."
 
 #. Description for the no tags option when people sign in with email. Keep the example name alex.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:123
+#: src/features/app/components/setup/SetupWizardSteps.tsx:128
 msgid "Each name belongs to one person and shows on its own, like alex."
 msgstr "각 이름은 한 사람에게 속하며, alex처럼 개별적으로 표시됩니다."
 
@@ -13684,7 +13684,7 @@ msgstr "{windowEndsOn}까지 환불받을 수 있습니다. 구독도 즉시 취
 
 #. Generic form-field label for an email address.
 #. Setup wizard option where people sign in with an email address and password.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:94
+#: src/features/app/components/setup/SetupWizardSteps.tsx:99
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:211
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
 msgid "Email"
@@ -13712,7 +13712,7 @@ msgid "Email changed"
 msgstr "이메일 변경 완료"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1195
 msgid "Email delivery"
 msgstr "이메일 전송"
 
@@ -13971,7 +13971,7 @@ msgid "Enable at least one translator below."
 msgstr "아래에서 번역기를 1개 이상 사용 설정하세요."
 
 #. Label for enabling attachment expiry during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:317
+#: src/features/app/components/setup/SetupWizardSteps.tsx:322
 msgid "Enable attachment expiration"
 msgstr "첨부 파일 만료 사용 설정"
 
@@ -13985,7 +13985,7 @@ msgid "Enable beta feature"
 msgstr "베타 기능 활성화"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1234
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1244
 msgid "Enable Bluesky OAuth"
 msgstr "Bluesky OAuth 사용 설정"
 
@@ -14018,7 +14018,7 @@ msgid "Enable developer mode"
 msgstr "개발자 모드 활성화"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1202
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1212
 msgid "Enable email delivery"
 msgstr "이메일 전송 사용 설정"
 
@@ -14155,7 +14155,7 @@ msgid "Enable text selection"
 msgstr "텍스트 선택 활성화"
 
 #. Setup wizard optional services step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:385
+#: src/features/app/components/setup/SetupWizardSteps.tsx:390
 msgid "Enable the integrations whose credentials you have configured. Only available services are shown."
 msgstr "인증 정보를 설정한 연동 기능을 켜세요. 사용 가능한 서비스만 표시됩니다."
 
@@ -14196,7 +14196,7 @@ msgstr "비디오 탐색 미리보기 사용"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Summary value when a setup option is enabled.
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:492
+#: src/features/app/components/setup/SetupWizardSteps.tsx:497
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
@@ -14320,7 +14320,7 @@ msgid "Enter a code in the format ABCD-1234."
 msgstr "ABCD-1234 형식으로 코드를 입력하세요."
 
 #. Validation error for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:296
+#: src/features/app/components/setup/SetupWizardSteps.tsx:301
 msgid "Enter a community name between 1 and 100 characters."
 msgstr "커뮤니티 이름은 1자에서 100자 사이로 입력해 주세요."
 
@@ -14330,7 +14330,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "선물 코드를 입력하여 계정으로 {premiumProductName}을(를) 받으세요."
 
 #. Validation error for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:189
+#: src/features/app/components/setup/SetupWizardSteps.tsx:194
 msgid "Enter a product name between 1 and 80 characters."
 msgstr "제품 이름은 1자 이상 80자 이하로 입력해 주세요."
 
@@ -14669,7 +14669,7 @@ msgid "Everyone"
 msgstr "모든 사람"
 
 #. Premium model option that gives everyone the highest limits.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:435
+#: src/features/app/components/setup/SetupWizardSteps.tsx:440
 msgid "Everyone is premium"
 msgstr "모두 프리미엄"
 
@@ -14798,7 +14798,7 @@ msgid "EXPERIMENTAL"
 msgstr "실험적"
 
 #. Label for attachment decay curve.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:345
+#: src/features/app/components/setup/SetupWizardSteps.tsx:350
 msgid "Expiration curve"
 msgstr "만료 곡선"
 
@@ -15322,7 +15322,7 @@ msgid "False claims likely to cause real-world harm."
 msgstr "실제 피해를 야기할 수 있는 허위 주장."
 
 #. Label for the favicon branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:229
+#: src/features/app/components/setup/SetupWizardSteps.tsx:234
 msgid "Favicon"
 msgstr "파비콘"
 
@@ -15621,7 +15621,7 @@ msgstr "새 탭에서 완료하세요. 탭을 닫았다면 '패스키로 계속�
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:100
-#: src/features/app/components/setup/SetupWizardSteps.tsx:444
+#: src/features/app/components/setup/SetupWizardSteps.tsx:449
 msgid "Finish setup"
 msgstr "설정 완료"
 
@@ -15668,7 +15668,7 @@ msgid "Florida"
 msgstr "플로리다"
 
 #. Placeholder for the product name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:185
+#: src/features/app/components/setup/SetupWizardSteps.tsx:190
 msgid "Fluxer"
 msgstr "Fluxer"
 
@@ -16266,12 +16266,12 @@ msgid "from <0>{0}</0>"
 msgstr "<0>{0}</0>에서"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1206
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
 msgid "From email"
 msgstr "보내는 사람 이메일"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1210
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1220
 msgid "From name"
 msgstr "보내는 사람 이름"
 
@@ -16577,7 +16577,7 @@ msgid "GIF preview"
 msgstr "GIF 미리보기"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1169
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1179
 msgid "GIF search"
 msgstr "GIF 검색"
 
@@ -16767,7 +16767,7 @@ msgid "Gifts aren't available right now."
 msgstr "지금은 선물을 구매할 수 없습니다."
 
 #. Description for the everyone-is-premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:439
+#: src/features/app/components/setup/SetupWizardSteps.tsx:444
 msgid "Give everyone on this instance the highest premium limits."
 msgstr "이 인스턴스의 모든 사용자에게 프리미엄 최고 한도를 적용합니다."
 
@@ -17825,7 +17825,7 @@ msgstr "복구 키트를 안전한 곳에 보관했어요"
 
 #. Label for the icon branding asset.
 #. Short label in the guild icon upload field. Keep it concise.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:213
+#: src/features/app/components/setup/SetupWizardSteps.tsx:218
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:27
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:89
 msgid "Icon"
@@ -18044,7 +18044,7 @@ msgid "Image"
 msgstr "이미지"
 
 #. Label for the branding image asset uploaders in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:197
+#: src/features/app/components/setup/SetupWizardSteps.tsx:202
 msgid "Image assets"
 msgstr "이미지 에셋"
 
@@ -19381,7 +19381,7 @@ msgid "Keep attachments when clearing an edit"
 msgstr "편집 내용을 지울 때 첨부 파일 유지"
 
 #. Description for the mirror premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:430
+#: src/features/app/components/setup/SetupWizardSteps.tsx:435
 msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
 msgstr "무료 및 프리미엄 등급을 유지하세요. 등급을 맞춤 설정하거나, Stripe를 통해 프리미엄을 판매하거나, 나중에 관리자 패널에서 선물 코드를 배포할 수 있습니다."
 
@@ -19520,7 +19520,7 @@ msgid "Kicked {targetUserTag} from the community"
 msgstr "{targetUserTag}님을 커뮤니티에서 추방했습니다"
 
 #. Label for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:393
+#: src/features/app/components/setup/SetupWizardSteps.tsx:398
 msgid "Klipy GIFs"
 msgstr "Klipy GIF"
 
@@ -19532,7 +19532,7 @@ msgstr "한국어"
 #. Label for the setup wizard language selector.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for language, locale, and time display preferences.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:65
+#: src/features/app/components/setup/SetupWizardSteps.tsx:66
 #: src/features/user/components/settings_utils/search_index/LanguageIndex.ts:6
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:132
 msgid "Language"
@@ -19556,7 +19556,7 @@ msgid "Large"
 msgstr "크게"
 
 #. Label for attachment decay maximum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:329
+#: src/features/app/components/setup/SetupWizardSteps.tsx:334
 msgid "Large file threshold (MB)"
 msgstr "대용량 파일 임계값(MB)"
 
@@ -19724,7 +19724,7 @@ msgid "Leave voice call"
 msgstr "음성 통화 나가기"
 
 #. Description for the push relay consent switch during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:371
+#: src/features/app/components/setup/SetupWizardSteps.tsx:376
 msgid "Leaving this off keeps the relay unused and drops notifications to the official mobile apps. You can accept it later in the admin panel."
 msgstr "이 설정을 끄면 릴레이가 사용되지 않고 공식 모바일 앱으로 알림이 전송되지 않습니다. 나중에 관리자 패널에서 설정을 변경할 수 있습니다."
 
@@ -19802,12 +19802,12 @@ msgid "Let others clone your stickers"
 msgstr "다른 사람이 내 스티커를 복제하도록 허용"
 
 #. Description for the Bluesky connections service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:413
+#: src/features/app/components/setup/SetupWizardSteps.tsx:418
 msgid "Let people link their Bluesky account to their profile."
 msgstr "사람들이 Bluesky 계정을 프로필에 연결할 수 있도록 허용합니다."
 
 #. Description for the Klipy GIF service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:397
+#: src/features/app/components/setup/SetupWizardSteps.tsx:402
 msgid "Let people search and send GIFs powered by Klipy."
 msgstr "사람들이 Klipy 기반 GIF를 검색하고 보낼 수 있도록 허용합니다."
 
@@ -20197,7 +20197,7 @@ msgid "Loading states"
 msgstr "로딩 상태"
 
 #. Setup wizard body while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:168
+#: src/features/app/components/setup/SetupWizardSteps.tsx:173
 msgid "Loading the current instance configuration."
 msgstr "현재 인스턴스 구성을 불러오는 중입니다."
 
@@ -20264,12 +20264,12 @@ msgid "Login"
 msgstr "로그인"
 
 #. Label for the logo branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:221
+#: src/features/app/components/setup/SetupWizardSteps.tsx:226
 msgid "Logo"
 msgstr "로고"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1256
 msgid "Logo URL"
 msgstr "로고 URL"
 
@@ -20399,7 +20399,7 @@ msgid "Make group owner"
 msgstr "그룹 소유자로 지정"
 
 #. Setup wizard branding step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:173
+#: src/features/app/components/setup/SetupWizardSteps.tsx:178
 msgid "Make the instance yours"
 msgstr "인스턴스를 나만의 것으로 만들기"
 
@@ -20848,12 +20848,12 @@ msgid "Maximizes visible messages with minimal spacing."
 msgstr "메시지 간격을 최소화하여 더 많은 메시지를 볼 수 있습니다."
 
 #. Label for attachment decay maximum eligible size.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:333
+#: src/features/app/components/setup/SetupWizardSteps.tsx:338
 msgid "Maximum eligible size (MB)"
 msgstr "적용 대상 최대 크기(MB)"
 
 #. Label for attachment decay maximum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:341
+#: src/features/app/components/setup/SetupWizardSteps.tsx:346
 msgid "Maximum lifetime (days)"
 msgstr "최대 수명(일)"
 
@@ -21699,7 +21699,7 @@ msgid "Minimize window"
 msgstr "창 최소화"
 
 #. Label for attachment decay minimum lifetime.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:337
+#: src/features/app/components/setup/SetupWizardSteps.tsx:342
 msgid "Minimum lifetime (days)"
 msgstr "최소 수명(일)"
 
@@ -21728,7 +21728,7 @@ msgid "Mirror of the Appearance tab toggle for light/dark/coal preference. Disab
 msgstr "모양 및 느낌 탭에 있는 밝게/어둡게/석탄 설정 토글과 같습니다. 기기마다 다른 기본 테마를 쓰려면 끄세요."
 
 #. Premium model option that mirrors free and premium tiers.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:426
+#: src/features/app/components/setup/SetupWizardSteps.tsx:431
 msgid "Mirror tiers"
 msgstr "등급 미러링"
 
@@ -21778,7 +21778,7 @@ msgstr "아바타에 모바일 온라인 상태 표시"
 #. Section label for mobile push notification settings.
 #. Setup wizard push relay consent step title.
 #. Switch label in the community notification settings modal. Controls whether mobile push notifications are delivered for this community.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:358
+#: src/features/app/components/setup/SetupWizardSteps.tsx:363
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:112
 #: src/features/ui/action_menu/items/GuildMenuItems.tsx:81
 msgid "Mobile push notifications"
@@ -22456,7 +22456,7 @@ msgid "My category"
 msgstr "내 카테고리"
 
 #. Placeholder for the single community name input in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:292
+#: src/features/app/components/setup/SetupWizardSteps.tsx:297
 msgid "My community"
 msgstr "내 커뮤니티"
 
@@ -22566,7 +22566,7 @@ msgid "Name passkey form"
 msgstr "패스키 이름 양식"
 
 #. Description for the random tags option when people sign in with email. Keep alex#4821.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:131
+#: src/features/app/components/setup/SetupWizardSteps.tsx:136
 msgid "Names get a random tag, like alex#4821, so several people can share a name."
 msgstr "이름에 alex#4821과 같은 랜덤 태그가 붙어 여러 사람이 같은 이름을 사용할 수 있습니다."
 
@@ -23278,7 +23278,7 @@ msgid "No one can add you to group chats without asking"
 msgstr "누구도 요청 없이 나를 그룹 채팅에 추가할 수 없습니다"
 
 #. Message shown when no optional services are available in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:389
+#: src/features/app/components/setup/SetupWizardSteps.tsx:394
 msgid "No optional services are available on this instance. You can skip this step."
 msgstr "이 인스턴스에서는 선택적 서비스를 사용할 수 없습니다. 이 단계를 건너뛸 수 있습니다."
 
@@ -23463,12 +23463,12 @@ msgid "No system channel"
 msgstr "시스템 채널 없음"
 
 #. Setup wizard finish summary value when usernames are unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:107
+#: src/features/app/components/setup/SetupWizardSteps.tsx:112
 msgid "No tags"
 msgstr "태그 없음"
 
 #. Setup wizard option where every username is unique and shown without a tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:119
+#: src/features/app/components/setup/SetupWizardSteps.tsx:124
 msgid "No tags (recommended)"
 msgstr "태그 없음 (권장)"
 
@@ -23643,7 +23643,7 @@ msgid "Not a whole number"
 msgstr "정수가 아닙니다"
 
 #. Summary value when the operator left the push relay notice unaccepted.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:488
+#: src/features/app/components/setup/SetupWizardSteps.tsx:493
 msgid "Not accepted"
 msgstr "수락되지 않음"
 
@@ -24124,7 +24124,7 @@ msgid "Open"
 msgstr "열기"
 
 #. Registration mode option allowing anyone to register.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:246
+#: src/features/app/components/setup/SetupWizardSteps.tsx:251
 msgctxt "registration-policy"
 msgid "Open"
 msgstr "공개"
@@ -24671,7 +24671,7 @@ msgid "Optional arguments"
 msgstr "선택적 인수"
 
 #. Setup wizard optional services step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:381
+#: src/features/app/components/setup/SetupWizardSteps.tsx:386
 msgid "Optional services"
 msgstr "선택 서비스"
 
@@ -24984,7 +24984,7 @@ msgstr "패스키를 사용하려면 유효한 앱 식별자가 있는 서명된
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1227
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:151
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:188
@@ -25224,12 +25224,12 @@ msgid "People"
 msgstr "사람"
 
 #. Description for the username sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:89
+#: src/features/app/components/setup/SetupWizardSteps.tsx:90
 msgid "People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password."
 msgstr "사용자는 사용자 이름과 비밀번호로 로그인합니다. 이메일 주소는 수집되지 않습니다. 비밀번호를 잊어버린 경우를 대비해 각 사용자는 복구 키트를 저장할 수 있습니다."
 
 #. Description for the email sign-in option in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:98
+#: src/features/app/components/setup/SetupWizardSteps.tsx:103
 msgid "People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later."
 msgstr "이메일 주소와 비밀번호로 로그인합니다. 비밀번호 재설정 및 인증에는 이메일 전송이 필요하며, 이는 나중에 설정할 수 있습니다."
 
@@ -25434,7 +25434,7 @@ msgid "Pick the 4-digit number after your username"
 msgstr "사용자 이름 뒤에 오는 4자리 숫자 선택"
 
 #. Setup wizard body for choosing the initial account theme.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:73
+#: src/features/app/components/setup/SetupWizardSteps.tsx:74
 msgid "Pick the appearance this administrator account should start with."
 msgstr "이 관리자 계정에서 처음 사용할 테마를 선택하세요."
 
@@ -25752,7 +25752,7 @@ msgid "Popup"
 msgstr "팝업"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1215
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1225
 msgid "Port"
 msgstr "포트"
 
@@ -25863,7 +25863,7 @@ msgid "Premium grace period nagbar"
 msgstr "프리미엄 유예 기간 알림 표시줄"
 
 #. Summary row label for the premium model in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:476
+#: src/features/app/components/setup/SetupWizardSteps.tsx:481
 msgid "Premium model"
 msgstr "프리미엄 모델"
 
@@ -25903,7 +25903,7 @@ msgid "Preparing"
 msgstr "준비 중"
 
 #. Setup wizard title while the instance configuration loads.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:164
+#: src/features/app/components/setup/SetupWizardSteps.tsx:169
 msgid "Preparing setup"
 msgstr "설정 준비 중"
 
@@ -26160,7 +26160,7 @@ msgid "Privacy settings"
 msgstr "개인 정보 보호 설정"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1254
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1264
 msgid "Privacy URL"
 msgstr "개인정보처리방침 URL"
 
@@ -26185,7 +26185,7 @@ msgid "Private details"
 msgstr "개인 정보"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1262
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1272
 msgid "Private key"
 msgstr "개인 키"
 
@@ -26210,8 +26210,8 @@ msgstr "처리 중"
 
 #. Label for the product name input in the setup wizard.
 #. Summary row label for the product name in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:181
-#: src/features/app/components/setup/SetupWizardSteps.tsx:452
+#: src/features/app/components/setup/SetupWizardSteps.tsx:186
+#: src/features/app/components/setup/SetupWizardSteps.tsx:457
 msgid "Product name"
 msgstr "제품 이름"
 
@@ -26412,7 +26412,7 @@ msgid "Public community"
 msgstr "공개 커뮤니티"
 
 #. Description for the closed registration mode.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:267
+#: src/features/app/components/setup/SetupWizardSteps.tsx:272
 msgid "Public registration is closed."
 msgstr "공개 가입이 닫혀 있습니다."
 
@@ -26537,7 +26537,7 @@ msgid "Push notification inactive timeout"
 msgstr "푸시 알림 비활성 대기 시간"
 
 #. Summary row label for the push relay consent on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:472
+#: src/features/app/components/setup/SetupWizardSteps.tsx:477
 msgid "Push relay notice"
 msgstr "푸시 릴레이 알림"
 
@@ -26756,8 +26756,8 @@ msgstr "레이드 조율"
 
 #. Setup wizard finish summary value when every username gets a random four digit tag.
 #. Setup wizard option where every username gets a random four digit tag.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:111
-#: src/features/app/components/setup/SetupWizardSteps.tsx:127
+#: src/features/app/components/setup/SetupWizardSteps.tsx:116
+#: src/features/app/components/setup/SetupWizardSteps.tsx:132
 msgid "Random tags"
 msgstr "랜덤 태그"
 
@@ -26853,7 +26853,7 @@ msgid "Read the documentation ({domain})"
 msgstr "문서 읽기({domain})"
 
 #. Link to the push relay supplemental privacy notice shown during setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:376
+#: src/features/app/components/setup/SetupWizardSteps.tsx:381
 msgid "Read the supplemental privacy notice"
 msgstr "추가 개인정보처리방침 읽기"
 
@@ -27197,7 +27197,7 @@ msgid "Registered passkeys"
 msgstr "등록된 패스키"
 
 #. Summary row label for the registration mode in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:456
+#: src/features/app/components/setup/SetupWizardSteps.tsx:461
 msgid "Registration"
 msgstr "가입"
 
@@ -27809,12 +27809,12 @@ msgid "Render placeholders"
 msgstr "자리표시자 렌더링"
 
 #. Label for attachment decay renewal threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:349
+#: src/features/app/components/setup/SetupWizardSteps.tsx:354
 msgid "Renew threshold (days)"
 msgstr "갱신 임계값(일)"
 
 #. Label for attachment decay renewal window.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:353
+#: src/features/app/components/setup/SetupWizardSteps.tsx:358
 msgid "Renew window (days)"
 msgstr "갱신 기간(일)"
 
@@ -27824,7 +27824,7 @@ msgstr "<0>{renewalDate}</0>에 갱신됩니다."
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that replaces an already uploaded branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:205
+#: src/features/app/components/setup/SetupWizardSteps.tsx:210
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:80
 msgid "Replace"
 msgstr "바꾸기"
@@ -28642,7 +28642,7 @@ msgid "Review what this app is asking for before you continue."
 msgstr "계속하기 전에 이 앱이 요청하는 권한을 검토하세요."
 
 #. Setup wizard finish step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:448
+#: src/features/app/components/setup/SetupWizardSteps.tsx:453
 msgid "Review your choices below, then finish. This saves the configuration and opens the instance."
 msgstr "아래 선택 사항을 검토한 후 완료하세요. 이렇게 하면 구성이 저장되고 인스턴스가 열립니다."
 
@@ -28898,7 +28898,7 @@ msgid "Run at login"
 msgstr "로그인 시 실행"
 
 #. Description for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:284
+#: src/features/app/components/setup/SetupWizardSteps.tsx:289
 msgid "Run the instance as one community instead of many. This can only be enabled now, during setup."
 msgstr "인스턴스를 여러 커뮤니티가 아닌 하나의 커뮤니티로 운영합니다. 지금 설정 중에만 켤 수 있습니다."
 
@@ -29036,7 +29036,7 @@ msgid "Save theme"
 msgstr "테마 저장"
 
 #. Setup wizard title asking the administrator to create an account recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:135
+#: src/features/app/components/setup/SetupWizardSteps.tsx:140
 msgid "Save your recovery kit"
 msgstr "복구 키트를 저장하세요"
 
@@ -30435,7 +30435,7 @@ msgid "Set the nickname to {nick}"
 msgstr "닉네임을 {nick}(으)로 설정했습니다"
 
 #. Setup wizard branding step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:182
 msgid "Set the public product name, theme color, and image assets that clients display."
 msgstr "클라이언트가 표시할 공개 제품 이름, 테마 색상 및 이미지 에셋을 설정하세요."
 
@@ -30490,7 +30490,7 @@ msgid "Set up authenticator app"
 msgstr "인증 앱 설정"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1153
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1163
 msgid "Set up later"
 msgstr "나중에 설정"
 
@@ -31168,7 +31168,7 @@ msgid "Show quick reactions"
 msgstr "빠른 반응 표시"
 
 #. Description for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:405
+#: src/features/app/components/setup/SetupWizardSteps.tsx:410
 msgid "Show rich previews for YouTube links."
 msgstr "YouTube 링크에 대한 풍부한 미리보기를 표시합니다."
 
@@ -31387,7 +31387,7 @@ msgid "Sign-in flow"
 msgstr "로그인 절차"
 
 #. Summary row label for how people sign in, on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:480
+#: src/features/app/components/setup/SetupWizardSteps.tsx:485
 msgid "Sign-in method"
 msgstr "로그인 방법"
 
@@ -31412,7 +31412,7 @@ msgid "Signed-in devices"
 msgstr "로그인된 기기"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1258
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1268
 msgid "Signing key ID"
 msgstr "서명 키 ID"
 
@@ -31479,12 +31479,12 @@ msgid "Single column"
 msgstr "1열"
 
 #. Summary row label for the single community choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:460
+#: src/features/app/components/setup/SetupWizardSteps.tsx:465
 msgid "Single community"
 msgstr "커뮤니티 하나"
 
 #. Label for the single community toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:280
+#: src/features/app/components/setup/SetupWizardSteps.tsx:285
 msgid "Single community mode"
 msgstr "단일 커뮤니티 모드"
 
@@ -31551,7 +31551,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "시스템 퇴장 알림을 건너뛰어 아무도 알림을 받지 않도록 합니다."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1157
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1167
 msgid "Skip this now and configure it from the admin panel."
 msgstr "지금 건너뛰고 관리자 패널에서 설정하세요."
 
@@ -31738,7 +31738,7 @@ msgid "Small button clicked."
 msgstr "작은 버튼을 클릭했습니다."
 
 #. Label for attachment decay minimum size threshold.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:325
+#: src/features/app/components/setup/SetupWizardSteps.tsx:330
 msgid "Small file threshold (MB)"
 msgstr "작은 파일 임계값(MB)"
 
@@ -31794,17 +31794,17 @@ msgid "Smoother video"
 msgstr "더 부드러운 영상"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1236
 msgid "SMTP connection verified."
 msgstr "SMTP 연결이 확인되었습니다."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1214
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1224
 msgid "SMTP host"
 msgstr "SMTP 호스트"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1230
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1240
 msgid "SMTP validation failed."
 msgstr "SMTP 검증에 실패했습니다."
 
@@ -33267,7 +33267,7 @@ msgid "Switches"
 msgstr "스위치"
 
 #. Label for the symbol branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:217
+#: src/features/app/components/setup/SetupWizardSteps.tsx:222
 msgid "Symbol"
 msgstr "심볼"
 
@@ -33635,7 +33635,7 @@ msgid "Terms of service"
 msgstr "이용약관"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1250
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1260
 msgid "Terms URL"
 msgstr "이용약관 URL"
 
@@ -33645,7 +33645,7 @@ msgid "Terrorism or violent extremism"
 msgstr "테러 또는 폭력적 극단주의"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1222
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1232
 msgid "Test SMTP"
 msgstr "SMTP 테스트"
 
@@ -34016,7 +34016,7 @@ msgid "The new voice channel will reuse the permissions, user limit, and bitrate
 msgstr "새로운 음성 채널은 <0>{channelLabel}</0>의 권한, 사용자 제한 및 비트레이트를 재사용합니다."
 
 #. Setup wizard push relay consent step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:362
+#: src/features/app/components/setup/SetupWizardSteps.tsx:367
 msgid "The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement."
 msgstr "Fluxer 공식 모바일 앱은 Fluxer의 푸시 릴레이를 통해 알림을 수신하며, 이는 Apple 및 Google로 전달됩니다. 자체 호스팅된 UnifiedPush 및 ntfy 엔드포인트는 릴레이에 도달하지 않으며 별도의 동의가 필요하지 않습니다."
 
@@ -34128,7 +34128,7 @@ msgstr "테마 변경 사항은 모든 기기에 동기화됩니다. 끄면 이 
 
 #. Label for the theme color picker in the setup wizard.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:193
+#: src/features/app/components/setup/SetupWizardSteps.tsx:198
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:165
 msgid "Theme color"
 msgstr "테마 색상"
@@ -34228,7 +34228,7 @@ msgid "There was an error loading the webhooks. Try again."
 msgstr "웹훅을 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요."
 
 #. Setup wizard community model step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:276
+#: src/features/app/components/setup/SetupWizardSteps.tsx:281
 msgid "These options change how people use the instance. Some can only be chosen during setup."
 msgstr "이 옵션들은 사람들이 인스턴스를 사용하는 방식을 바꿉니다. 일부는 초기 설정 중에만 선택할 수 있습니다."
 
@@ -34642,7 +34642,7 @@ msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "이 인스턴스에서는 현재 최대 720p, 30 FPS로 화면 공유가 가능합니다."
 
 #. Setup wizard body prompting the operator to register the first account.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:61
+#: src/features/app/components/setup/SetupWizardSteps.tsx:62
 msgid "This instance has no accounts yet. The first account you create automatically becomes the administrator."
 msgstr "이 인스턴스에는 아직 계정이 없습니다. 생성하는 첫 번째 계정이 자동으로 관리자가 됩니다."
 
@@ -35805,7 +35805,7 @@ msgid "Turn off device stream"
 msgstr "기기 스트림 끄기"
 
 #. Description for the toggle that disables direct messages and friend requests.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:304
+#: src/features/app/components/setup/SetupWizardSteps.tsx:309
 msgid "Turn off private messaging and friends across the instance. This can be reversed only once later."
 msgstr "인스턴스 전체에서 DM과 친구 요청을 비활성화합니다. 이 설정은 나중에 한 번만 되돌릴 수 있습니다."
 
@@ -36994,7 +36994,7 @@ msgstr "업그레이드하여 최대 15개의 맞춤 배경을 저장하고 HD �
 
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Button that opens a file picker to upload a branding image.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:201
+#: src/features/app/components/setup/SetupWizardSteps.tsx:206
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:84
 msgid "Upload"
 msgstr "업로드"
@@ -37489,7 +37489,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "클라이언트 문제 해결 또는 로그 수집 시 사용하세요. 현재 클라이언트에 대한 자세한 메시지가 브라우저 콘솔에 추가될 수 있습니다."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1218
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1228
 msgid "Use TLS"
 msgstr "TLS 사용"
 
@@ -37659,7 +37659,7 @@ msgstr "사용자 볼륨"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1216
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1226
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:577
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:226
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:57
@@ -37702,8 +37702,13 @@ msgstr "사용자 이름은 1자 이상이어야 합니다"
 msgid "Username must be at most 32 characters"
 msgstr "사용자 이름은 32자 이하여야 합니다"
 
+#. Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.
+#: src/features/app/components/setup/SetupWizardSteps.tsx:95
+msgid "Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon."
+msgstr "사용자 이름 로그인은 아직 모바일 앱에 점진적으로 적용되고 있습니다. 모든 플랫폼에서 완벽하게 지원될 예정입니다."
+
 #. Heading above the choice of how usernames are tagged in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:115
+#: src/features/app/components/setup/SetupWizardSteps.tsx:120
 msgid "Username tags"
 msgstr "사용자 이름 태그"
 
@@ -37713,12 +37718,12 @@ msgid "Username updated"
 msgstr "사용자 이름 업데이트됨"
 
 #. Summary value on the setup wizard finish step when people sign in with a username.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:103
+#: src/features/app/components/setup/SetupWizardSteps.tsx:108
 msgid "Usernames"
 msgstr "사용자 이름"
 
 #. Setup wizard option where people sign in with a username and password and no email is collected.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:85
+#: src/features/app/components/setup/SetupWizardSteps.tsx:86
 msgid "Usernames (recommended)"
 msgstr "사용자 이름 (권장)"
 
@@ -39232,7 +39237,7 @@ msgid "Welcome to {premiumProductFullName}. Your yearly subscription renews on {
 msgstr "{premiumProductFullName}에 오신 것을 환영합니다. 연간 구독은 {formattedDate}에 갱신됩니다. {premiumProductName} 혜택을 살펴보고 구독을 관리하세요."
 
 #. Setup wizard title shown once the operator is signed in as the instance admin.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:48
+#: src/features/app/components/setup/SetupWizardSteps.tsx:49
 msgid "Welcome to {productName}"
 msgstr "{productName}에 오신 것을 환영합니다"
 
@@ -39330,7 +39335,7 @@ msgid "When a custom threshold date is not set, members without the <0>{readMess
 msgstr "사용자 지정 임계값 날짜가 설정되지 않은 경우, <0>{readMessageHistoryPermissionLabel}</0> 권한이 없는 멤버는 이전 메시지를 볼 수 없습니다. 메시지가 도착하는 대로 실시간으로만 볼 수 있으며, 클라이언트를 다시 시작하면 사라집니다."
 
 #. Description for the attachment expiry setup switch.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:321
+#: src/features/app/components/setup/SetupWizardSteps.tsx:326
 msgid "When attachment expiration is disabled, attachments remain available until manually removed."
 msgstr "첨부 파일 만료가 비활성화되어 있으면 첨부 파일은 수동으로 삭제할 때까지 계속 사용할 수 있습니다."
 
@@ -39436,7 +39441,7 @@ msgid "Who can friend"
 msgstr "친구 추가 허용 범위"
 
 #. Setup wizard registration step title.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:238
+#: src/features/app/components/setup/SetupWizardSteps.tsx:243
 msgid "Who can join"
 msgstr "누가 가입할 수 있나요"
 
@@ -39575,7 +39580,7 @@ msgid "Without this permission, push-to-talk is required."
 msgstr "이 권한이 없으면 눌러서 말하기를 사용해야 합니다."
 
 #. Label for the wordmark branding asset.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:225
+#: src/features/app/components/setup/SetupWizardSteps.tsx:230
 msgid "Wordmark"
 msgstr "워드마크"
 
@@ -39716,7 +39721,7 @@ msgid "You are now navigating to {paymentProviderName} to complete the payment. 
 msgstr "결제를 완료하려면 {paymentProviderName}(으)로 이동합니다. 결제 완료 후 {productName}(으)로 돌아와 주세요."
 
 #. Setup wizard body shown to the signed-in instance administrator.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:52
+#: src/features/app/components/setup/SetupWizardSteps.tsx:53
 msgid "You are signed in as the instance administrator. The next steps configure branding, registration, and core policy for everyone on this instance."
 msgstr "인스턴스 관리자로 로그인하셨습니다. 다음 단계에서는 이 인스턴스의 모든 사용자를 위한 브랜딩, 가입 및 핵심 정책을 구성합니다."
 
@@ -39969,7 +39974,7 @@ msgid "You can't view the members of this channel in this community"
 msgstr "이 커뮤니티에서는 이 채널의 멤버를 볼 수 없습니다"
 
 #. Setup wizard body for the sign-in method step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:81
+#: src/features/app/components/setup/SetupWizardSteps.tsx:82
 msgid "You cannot change this once the first account exists."
 msgstr "첫 번째 계정이 생성되면 변경할 수 없습니다."
 
@@ -40578,7 +40583,7 @@ msgid "Your account has been linked successfully. You can now close this tab and
 msgstr "계정이 성공적으로 연결되었습니다. 이 탭을 닫고 앱으로 돌아가세요."
 
 #. Setup wizard body explaining why the administrator needs a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:139
+#: src/features/app/components/setup/SetupWizardSteps.tsx:144
 msgid "Your account has no email address. If you forget your password, a recovery kit is the only way back in. Create one now and keep it somewhere safe."
 msgstr "계정에 이메일 주소가 없습니다. 비밀번호를 잊어버리면 복구 키가 유일한 복구 방법입니다. 지금 만들고 안전한 곳에 보관하세요."
 
@@ -40880,7 +40885,7 @@ msgid "Your recovery kit"
 msgstr "복구 키트"
 
 #. Status shown in the setup wizard once the administrator has a recovery kit.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:152
+#: src/features/app/components/setup/SetupWizardSteps.tsx:157
 msgid "Your recovery kit is ready. You can continue."
 msgstr "복구 키트가 준비되었습니다. 계속 진행할 수 있습니다."
 
@@ -41010,12 +41015,12 @@ msgid "Your video encoder stopped encoding frames, so your screen share was stop
 msgstr "비디오 인코더에서 프레임을 더 이상 인코딩하지 않아 화면 공유가 중지되었습니다. 다시 공유해 보세요."
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:401
+#: src/features/app/components/setup/SetupWizardSteps.tsx:406
 msgid "YouTube enrichment"
 msgstr "YouTube 콘텐츠 연동"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1177
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1187
 msgid "YouTube previews"
 msgstr "YouTube 미리보기"
 
