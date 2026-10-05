@@ -69,6 +69,7 @@ import {shouldUseKeyboardShortcutsOverlayFallbackFromEvent} from '@app/features/
 import {jsKeyToUiohookKeycode} from '@app/features/input/utils/UiohookKeycodes';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
+import {getSortedDmChannels} from '@app/features/messaging/utils/DmChannelUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
@@ -374,7 +375,7 @@ class KeybindManager {
 	}
 
 	private cycleDirectMessageContext(direction: 1 | -1): void {
-		const dmChannels = Channels.dmChannels;
+		const dmChannels = getSortedDmChannels(Channels.dmChannels, Authentication.currentUserId);
 		const slotCount = dmChannels.length + 1;
 		const currentChannelId = this.currentChannelId;
 		const currentIndex = currentChannelId ? dmChannels.findIndex((channel) => channel.id === currentChannelId) + 1 : 0;
