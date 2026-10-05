@@ -143,6 +143,7 @@ function defaultConfig(): MasterConfig {
 		auth: {
 			sudo_mode_secret: '',
 			connection_initiation_secret: '',
+			profile_pseudonym_secret: '',
 			sso_allow_private_addresses: false,
 			passkeys: {
 				rp_name: 'Fluxer',
@@ -300,6 +301,18 @@ function requireString(value: string | undefined, envName: string): void {
 	if (!value || value.trim().length === 0) {
 		throw new Error(`${envName} is required`);
 	}
+}
+
+const DEVELOPMENT_PROFILE_PSEUDONYM_SECRET = 'fluxer-dev-profile-pseudonym-secret';
+
+function applyProfilePseudonymSecret(config: MasterConfig): void {
+	if (config.auth.profile_pseudonym_secret.trim().length > 0) {
+		return;
+	}
+	if (config.env === 'production') {
+		throw new Error('FLUXER_PROFILE_PSEUDONYM_SECRET is required');
+	}
+	config.auth.profile_pseudonym_secret = DEVELOPMENT_PROFILE_PSEUDONYM_SECRET;
 }
 
 function validateReplyToEmail(value: string): void {
@@ -600,6 +613,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	}
 	requireString(config.auth.sudo_mode_secret, 'FLUXER_SUDO_MODE_SECRET');
 	requireString(config.auth.connection_initiation_secret, 'FLUXER_CONNECTION_INITIATION_SECRET');
+	applyProfilePseudonymSecret(config);
 	validateVapidConfig(config);
 	requireString(config.s3?.access_key_id, 'FLUXER_S3_ACCESS_KEY_ID');
 	requireString(config.s3?.secret_access_key, 'FLUXER_S3_SECRET_ACCESS_KEY');

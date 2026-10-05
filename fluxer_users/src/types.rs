@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use fluxer_common::user_flags::{
-    AccountStanding, USER_FLAG_PROFILE_HIDDEN, USER_FLAG_STAFF, visible_user_flags,
-};
+use crate::pseudonym::pseudonym;
+use fluxer_common::user_flags::{AccountStanding, USER_FLAG_STAFF, visible_user_flags};
 #[cfg(test)]
 use fluxer_common::user_flags::{USER_FLAG_PARTNER, USER_FLAG_STAFF_HIDDEN};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -145,8 +144,6 @@ const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
 
-const HIDDEN_USER_USERNAME: &str = "HiddenUser";
-
 pub fn now_ms() -> i64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -193,12 +190,12 @@ impl UserPartial {
         if self.user_id == FLUXER_SYSTEM_USER_ID || !standing.profile_hidden(now_ms) {
             return self;
         }
+        let pseudonym = pseudonym(self.user_id);
         UserPartial {
-            username: HIDDEN_USER_USERNAME.to_owned(),
-            discriminator: 0,
+            username: pseudonym.username,
+            discriminator: pseudonym.discriminator,
             global_name: None,
             avatar_hash: None,
-            flags: Some(self.flags.unwrap_or_default() | USER_FLAG_PROFILE_HIDDEN),
             banner_hash: None,
             banner_color: None,
             accent_color: None,

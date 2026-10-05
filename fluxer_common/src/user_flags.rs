@@ -13,8 +13,7 @@ const PUBLIC_USER_FLAGS: i64 = USER_FLAG_STAFF
     | USER_FLAG_BUG_HUNTER
     | USER_FLAG_FRIENDLY_BOT
     | USER_FLAG_FRIENDLY_BOT_MANUAL_APPROVAL
-    | USER_FLAG_SPAMMER
-    | USER_FLAG_PROFILE_HIDDEN;
+    | USER_FLAG_SPAMMER;
 const PUBLIC_USER_FLAGS_WITHOUT_STAFF: i64 = PUBLIC_USER_FLAGS & !USER_FLAG_STAFF;
 const NON_ENFORCEMENT_DELETION_REASONS: [i32; 3] = [1, 2, 19];
 
@@ -95,10 +94,10 @@ mod tests {
     }
 
     #[test]
-    fn the_hidden_bit_is_public() {
+    fn the_hidden_bit_is_never_public() {
         assert_eq!(
-            visible_user_flags(USER_FLAG_PROFILE_HIDDEN | USER_FLAG_DISABLED),
-            USER_FLAG_PROFILE_HIDDEN as i32
+            visible_user_flags(USER_FLAG_PROFILE_HIDDEN | USER_FLAG_DISABLED | USER_FLAG_PARTNER),
+            USER_FLAG_PARTNER as i32
         );
     }
 }

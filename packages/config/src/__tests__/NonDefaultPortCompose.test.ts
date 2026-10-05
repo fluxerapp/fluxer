@@ -21,6 +21,7 @@ const SECRETS: Record<string, string> = {
 	FLUXER_ERLANG_COOKIE: 'erlang-cookie',
 	FLUXER_SUDO_MODE_SECRET: 'sudo-mode-secret',
 	FLUXER_CONNECTION_INITIATION_SECRET: 'connection-initiation-secret',
+	FLUXER_PROFILE_PSEUDONYM_SECRET: 'profile-pseudonym-secret',
 	FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'gateway-rpc-auth-token',
 	FLUXER_MEDIA_PROXY_SECRET_KEY: 'media-proxy-secret-key',
 	FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',

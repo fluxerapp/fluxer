@@ -249,6 +249,7 @@ export interface APIConfig {
 	auth: {
 		sudoModeSecret: string;
 		connectionInitiationSecret: string;
+		profilePseudonymSecret: string;
 		ssoAllowPrivateAddresses: boolean;
 		passkeys: {
 			rpName: string;

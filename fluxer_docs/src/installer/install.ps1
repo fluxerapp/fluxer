@@ -173,6 +173,7 @@ $FluxerBackupVolumes = @(
 $FluxerUpgradeSecretKeys = @(
 	@{Name = 'FLUXER_ERLANG_COOKIE'; Kind = 'hex'}
 	@{Name = 'FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64'; Kind = 'base64'}
+	@{Name = 'FLUXER_PROFILE_PSEUDONYM_SECRET'; Kind = 'hex'}
 )
 
 $FluxerSecretKeys = @(
@@ -181,6 +182,7 @@ $FluxerSecretKeys = @(
 	@{Name = 'FLUXER_S3_SECRET_KEY'; Kind = 'hex'}
 	@{Name = 'FLUXER_SUDO_MODE_SECRET'; Kind = 'hex'}
 	@{Name = 'FLUXER_CONNECTION_INITIATION_SECRET'; Kind = 'hex'}
+	@{Name = 'FLUXER_PROFILE_PSEUDONYM_SECRET'; Kind = 'hex'}
 	@{Name = 'FLUXER_GATEWAY_RPC_AUTH_TOKEN'; Kind = 'hex'}
 	@{Name = 'FLUXER_ERLANG_COOKIE'; Kind = 'hex'}
 	@{Name = 'FLUXER_MEDIA_PROXY_SECRET_KEY'; Kind = 'hex'}

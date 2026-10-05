@@ -1244,21 +1244,44 @@ mod tests {
     }
 
     fn assert_hidden(partial: &UserPartial) {
-        assert_eq!(partial.username, "HiddenUser");
-        assert_eq!(partial.discriminator, 0);
+        let expected = crate::pseudonym::pseudonym(partial.user_id);
+        assert_eq!(partial.username, expected.username);
+        assert_eq!(partial.discriminator, expected.discriminator);
+        assert_ne!(partial.username, "Ada");
         assert_eq!(partial.global_name, None);
         assert_eq!(partial.avatar_hash, None);
         assert_eq!(partial.avatar_color, None);
         assert_eq!(partial.banner_hash, None);
         assert_eq!(partial.banner_color, None);
         assert_eq!(partial.accent_color, None);
-        assert_ne!(partial.flags.unwrap_or_default() & PROFILE_HIDDEN, 0);
         let api = partial.to_api_partial();
+        assert_eq!(api.username, expected.username);
+        assert_eq!(api.discriminator, format!("{:04}", expected.discriminator));
+        assert_eq!(api.flags & PROFILE_HIDDEN as i32, 0);
+    }
+
+    #[test]
+    fn a_masked_partial_matches_the_shared_development_vector() {
+        let api = styled(1_174_109_840_998_400_001, SPAMMER)
+            .to_partial()
+            .to_api_partial();
         assert_eq!(
             (api.username.as_str(), api.discriminator.as_str()),
-            ("HiddenUser", "0000")
+            ("MambaEgret", "6542")
         );
-        assert_ne!(api.flags & PROFILE_HIDDEN as i32, 0);
+        assert_eq!(api.flags & PROFILE_HIDDEN as i32, 0);
+        assert_eq!(api.global_name, None);
+        assert_eq!(api.avatar, None);
+    }
+
+    #[test]
+    fn a_masked_partial_is_stable_across_reads() {
+        let first = styled(53, PROFILE_HIDDEN).to_partial();
+        let second = styled(53, PROFILE_HIDDEN).to_partial();
+        assert_eq!(
+            (first.username, first.discriminator),
+            (second.username, second.discriminator)
+        );
     }
 
     #[test]
@@ -1294,6 +1317,7 @@ mod tests {
             assert_eq!(partial.username, "Ada", "{}", user.user_id);
             assert_eq!(partial.global_name.as_deref(), Some("Ada Lovelace"));
             assert_eq!(partial.banner_hash.as_deref(), Some("banner_hash"));
+            assert_eq!(partial.discriminator, 7);
             assert_eq!(partial.flags.unwrap_or_default() & PROFILE_HIDDEN, 0);
         }
     }

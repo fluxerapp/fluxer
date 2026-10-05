@@ -25,6 +25,7 @@ const MINIMAL_ENV: Record<string, string> = {
 	FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-token',
 	FLUXER_SUDO_MODE_SECRET: 'test-sudo-secret',
 	FLUXER_CONNECTION_INITIATION_SECRET: 'test-connection-secret',
+	FLUXER_PROFILE_PSEUDONYM_SECRET: 'test-profile-pseudonym-secret',
 	FLUXER_VAPID_PUBLIC_KEY: 'BB76bTFIuoqmxJtTfZX0yGTn1f_qu9H03B_nkj8OyExJFkN7Y-HBZZzShnHZoEhXKc5ZRy3jFu7OkBbnaQG-4aw',
 	FLUXER_VAPID_PRIVATE_KEY: 'Xgi-3P8J-I3Q6U1HlCcXMuc_tKLGAM9nIfznX3Hz68o',
 };
@@ -473,6 +474,25 @@ describe('ConfigLoader', () => {
 	test('rejects an unknown KV mode', async () => {
 		stubMinimalEnv({FLUXER_KV_MODE: 'sentinel'});
 		await expect(loadConfig()).rejects.toThrow('Invalid FLUXER_KV_MODE: sentinel');
+	});
+
+	test('reads the profile pseudonym secret and requires it in production', async () => {
+		stubMinimalEnv();
+		expect((await loadConfig()).auth.profile_pseudonym_secret).toBe('test-profile-pseudonym-secret');
+		resetConfig();
+		stubMinimalEnv({FLUXER_PROFILE_PSEUDONYM_SECRET: ''});
+		expect((await loadConfig()).auth.profile_pseudonym_secret).toBe('fluxer-dev-profile-pseudonym-secret');
+		resetConfig();
+		stubMinimalEnv({
+			FLUXER_ENV: 'production',
+			FLUXER_POSTGRES_HOST: 'postgres.internal',
+			FLUXER_POSTGRES_DATABASE: 'fluxer_prod',
+			FLUXER_POSTGRES_USERNAME: 'fluxer_app',
+			FLUXER_POSTGRES_PASSWORD: 'prod-postgres-secret',
+			FLUXER_POSTGRES_SSL: 'true',
+			FLUXER_PROFILE_PSEUDONYM_SECRET: '',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_PROFILE_PSEUDONYM_SECRET is required');
 	});
 
 	test('rejects unsafe production Postgres defaults', async () => {

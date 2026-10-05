@@ -9,7 +9,7 @@ import {LimitConfigService, resetGlobalLimitConfigServiceForTesting} from '@app/
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {GuildMember} from '@app/api/models/GuildMember';
 import {User} from '@app/api/models/User';
-import {isProfileHidden, isUnderEnforcement} from '@app/api/user/ProfileVisibility';
+import {isHiddenPartial, isProfileHidden, isUnderEnforcement, profilePseudonym} from '@app/api/user/ProfileVisibility';
 import {
 	hasPartialUserFieldsChanged,
 	mapGuildMemberToProfileResponse,
@@ -18,17 +18,21 @@ import {
 	mapUserToProfileResponse,
 } from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {PublicUserFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {NON_SELF_HOSTED_RESERVED_DISCRIMINATORS} from '@fluxer/constants/src/DiscriminatorConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {InMemoryProvider} from '@pkgs/cache/src/providers/InMemoryProvider';
 import {afterAll, beforeAll, describe, expect, it} from 'vitest';
 
 const NOW = Date.now();
 const HOUR = 3_600_000;
+const USER_ID = 1174109840998400001n;
+const PROFILE_HIDDEN_BIT = Number(UserFlags.PROFILE_HIDDEN);
+const GENERATED_USERNAME = /^[A-Z][a-z0-9_]*[A-Z][a-z0-9_]*$/;
 
 function user(overrides: Partial<UserRow> = {}): User {
 	return new User({
 		...EMPTY_USER_ROW,
-		user_id: createUserID(1174109840998400001n),
+		user_id: createUserID(USER_ID),
 		username: 'ada',
 		discriminator: 7,
 		global_name: 'Ada Lovelace',
@@ -96,16 +100,16 @@ describe('profile visibility', () => {
 		const subject = user(overrides);
 		expect(isProfileHidden(subject, NOW)).toBe(hidden);
 		const partial = mapUserToPartialResponse(subject);
+		expect(partial.flags & PROFILE_HIDDEN_BIT).toBe(0);
 		if (hidden) {
 			expect(partial).toMatchObject({
 				id: subject.id.toString(),
-				username: 'HiddenUser',
-				discriminator: '0000',
+				...profilePseudonym(USER_ID),
 				global_name: null,
 				avatar: null,
 				avatar_color: null,
 			});
-			expect(partial.flags & PublicUserFlags.PROFILE_HIDDEN).toBe(PublicUserFlags.PROFILE_HIDDEN);
+			expect(isHiddenPartial(partial)).toBe(true);
 			expect(mapUserToProfileResponse(subject)).toEqual({
 				bio: null,
 				pronouns: null,
@@ -114,7 +118,7 @@ describe('profile visibility', () => {
 				accent_color: null,
 			});
 		} else {
-			expect(partial.flags & PublicUserFlags.PROFILE_HIDDEN).toBe(0);
+			expect(isHiddenPartial(partial)).toBe(false);
 			expect(partial.username).toBe('ada');
 			expect(partial.global_name).toBe('Ada Lovelace');
 			expect(partial.avatar).toBe('a1b2c3');
@@ -126,12 +130,54 @@ describe('profile visibility', () => {
 		const own = mapUserToPrivateResponse(user({flags: UserFlags.PROFILE_HIDDEN}));
 		expect(own).toMatchObject({
 			username: 'ada',
+			discriminator: '0007',
 			global_name: 'Ada Lovelace',
 			avatar: 'a1b2c3',
 			bio: 'analytical engine enjoyer',
 			pronouns: 'she/her',
 			accent_color: 99,
 		});
+		expect(own.flags & PROFILE_HIDDEN_BIT).toBe(0);
+	});
+
+	it('gives each account one stable pseudonym in the generated username format', () => {
+		const first = profilePseudonym(USER_ID);
+		expect(profilePseudonym(USER_ID)).toEqual(first);
+		expect(mapUserToPartialResponse(user({flags: UserFlags.SPAMMER}))).toMatchObject(first);
+		expect(mapUserToPartialResponse(user({flags: UserFlags.PROFILE_HIDDEN}))).toMatchObject(first);
+		const seen = new Set<string>();
+		for (let offset = 0n; offset < 200n; offset++) {
+			const pseudonym = profilePseudonym(USER_ID + offset);
+			seen.add(`${pseudonym.username}#${pseudonym.discriminator}`);
+			expect(pseudonym.username).toMatch(GENERATED_USERNAME);
+			expect(pseudonym.username.length).toBeLessThanOrEqual(32);
+			expect(pseudonym.discriminator).toMatch(/^\d{4}$/);
+			const discriminator = Number(pseudonym.discriminator);
+			expect(discriminator).toBeGreaterThanOrEqual(1);
+			expect(discriminator).toBeLessThanOrEqual(9999);
+			expect(NON_SELF_HOSTED_RESERVED_DISCRIMINATORS.has(discriminator)).toBe(false);
+		}
+		expect(seen.size).toBe(200);
+		expect(profilePseudonym(USER_ID, 'another-secret')).not.toEqual(first);
+	});
+
+	it('restores the stored profile as soon as the mask lifts', () => {
+		const masked = mapUserToPartialResponse(user({flags: UserFlags.PROFILE_HIDDEN}));
+		const lifted = mapUserToPartialResponse(user({flags: 0n}));
+		expect(masked.username).not.toBe('ada');
+		expect(lifted).toMatchObject({
+			username: 'ada',
+			discriminator: '0007',
+			global_name: 'Ada Lovelace',
+			avatar: 'a1b2c3',
+		});
+		expect(isHiddenPartial(lifted)).toBe(false);
+	});
+
+	it('does not mistake a deleted account for a masked one', () => {
+		const deleted = mapUserToPartialResponse(user({flags: UserFlags.DELETED | UserFlags.SPAMMER}));
+		expect(deleted).toMatchObject({username: 'DeletedUser', discriminator: '0000', global_name: 'Deleted User'});
+		expect(isHiddenPartial(deleted)).toBe(false);
 	});
 
 	it('treats hiding and restoring as a partial change so clients are told both ways', () => {
@@ -150,7 +196,7 @@ describe('profile visibility', () => {
 	it('hides guild-specific profile details for a hidden member', async () => {
 		const member = new GuildMember({
 			guild_id: createGuildID(5n),
-			user_id: createUserID(1174109840998400001n),
+			user_id: createUserID(USER_ID),
 			joined_at: new Date(NOW - HOUR),
 			nick: 'Countess',
 			avatar_hash: 'm4v',
@@ -178,7 +224,7 @@ describe('profile visibility', () => {
 			createRequestCache(),
 		);
 		expect(hidden).toMatchObject({nick: null, avatar: null, banner: null, accent_color: null});
-		expect(hidden.user.username).toBe('HiddenUser');
+		expect(hidden.user).toMatchObject(profilePseudonym(USER_ID));
 		const shown = await mapGuildMemberToResponse(member, cache(mapUserToPartialResponse(user())), createRequestCache());
 		expect(shown).toMatchObject({nick: 'Countess', avatar: 'm4v', banner: 'm8n', accent_color: 12});
 		expect(mapGuildMemberToProfileResponse(member, {hidden: true})).toEqual({

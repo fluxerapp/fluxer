@@ -75,6 +75,14 @@ To write it by hand, run the generator in a shell the same way:
 printf '\nFLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64=%s\n' "$(openssl rand -base64 32)" >> .env
 ```
 
+The refreshed stack requires `FLUXER_PROFILE_PSEUDONYM_SECRET` on `api`, `worker`, and `users-shard`. `--update` replaces a missing or `CHANGE_ME` value with 64 hex characters. Without it, Compose commands fail with `set FLUXER_PROFILE_PSEUDONYM_SECRET in .env`.
+
+To write it by hand, run the generator in a shell the same way:
+
+```bash
+printf '\nFLUXER_PROFILE_PSEUDONYM_SECRET=%s\n' "$(openssl rand -hex 32)" >> .env
+```
+
 ## The script is the reference
 
 Read the [Linux and macOS installer](https://fluxer.dev/install.sh) or [Windows installer](https://fluxer.dev/install.ps1) before running it.

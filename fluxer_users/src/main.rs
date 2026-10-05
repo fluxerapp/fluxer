@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod pseudonym;
 mod router_impl;
 mod shard_impl;
 mod types;
@@ -28,6 +29,7 @@ async fn main() -> anyhow::Result<()> {
     match config.mode {
         Mode::Router => fluxer_svc::router::run_router(&config, UsersRouter, transport).await,
         Mode::Shard => {
+            pseudonym::configure_from_env()?;
             let shard = match config.database_backend {
                 DatabaseBackend::Postgres => {
                     let postgres_config =

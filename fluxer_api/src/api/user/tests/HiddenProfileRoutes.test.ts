@@ -6,11 +6,14 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {profilePseudonym} from '@app/api/user/ProfileVisibility';
 import {fetchUser, fetchUserMe, fetchUserProfile} from '@app/api/user/tests/UserTestUtils';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {PublicUserFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
+
+const PROFILE_HIDDEN_BIT = Number(UserFlags.PROFILE_HIDDEN);
 
 interface AdminUser {
 	username: string;
@@ -27,6 +30,7 @@ describe('hidden profiles', () => {
 	let target: TestAccount;
 	let guildId: string;
 	let targetName: string;
+	let pseudonym: {username: string; discriminator: string};
 
 	beforeEach(async () => {
 		harness = await createApiTestHarness();
@@ -52,6 +56,7 @@ describe('hidden profiles', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		targetName = (await fetchUser(harness, target.userId, viewer.token)).json.username;
+		pseudonym = profilePseudonym(target.userId);
 	});
 
 	afterEach(async () => {
@@ -62,7 +67,7 @@ describe('hidden profiles', () => {
 	async function expectShown(): Promise<void> {
 		const {json} = await fetchUser(harness, target.userId, viewer.token);
 		expect(json).toMatchObject({username: targetName, global_name: 'Shown Name'});
-		expect(json.flags & PublicUserFlags.PROFILE_HIDDEN).toBe(0);
+		expect(json.flags & PROFILE_HIDDEN_BIT).toBe(0);
 		const profile = await fetchUserProfile(harness, target.userId, viewer.token);
 		expect(profile.json.user_profile).toMatchObject({bio: 'shown bio', pronouns: 'they/them'});
 		const member = await getMember(harness, viewer.token, guildId, target.userId);
@@ -71,13 +76,15 @@ describe('hidden profiles', () => {
 
 	async function expectHidden(): Promise<void> {
 		const {json} = await fetchUser(harness, target.userId, viewer.token);
-		expect(json).toMatchObject({username: 'HiddenUser', discriminator: '0000', global_name: null, avatar: null});
-		expect(json.flags & PublicUserFlags.PROFILE_HIDDEN).toBe(PublicUserFlags.PROFILE_HIDDEN);
+		expect(json).toMatchObject({...pseudonym, global_name: null, avatar: null});
+		expect(json.username).not.toBe(targetName);
+		expect(json.flags & PROFILE_HIDDEN_BIT).toBe(0);
 		const profile = await fetchUserProfile(harness, target.userId, viewer.token);
 		expect(profile.json.user_profile).toMatchObject({bio: null, pronouns: null, banner: null, accent_color: null});
 		const member = await getMember(harness, viewer.token, guildId, target.userId);
 		expect(member).toMatchObject({nick: null, avatar: null, banner: null});
-		expect(member.user.username).toBe('HiddenUser');
+		expect(member.user).toMatchObject(pseudonym);
+		expect(member.user.flags & PROFILE_HIDDEN_BIT).toBe(0);
 	}
 
 	async function expectStaffSeeStoredProfile(): Promise<void> {
@@ -111,8 +118,15 @@ describe('hidden profiles', () => {
 			.execute();
 		await expectHidden();
 		await expectStaffSeeStoredProfile();
-		expect(memberUpdates().map((member) => [member.user.username, member.nick])).toEqual([['HiddenUser', null]]);
-		expect(presence.mock.calls.some(([params]) => params.event === 'USER_UPDATE')).toBe(true);
+		expect(memberUpdates().map((member) => [member.user.username, member.user.discriminator, member.nick])).toEqual([
+			[pseudonym.username, pseudonym.discriminator, null],
+		]);
+		const ownUpdates = presence.mock.calls
+			.map(([params]) => params)
+			.filter((params) => params.event === 'USER_UPDATE' && params.userId.toString() === target.userId)
+			.map((params) => params.data as {username: string});
+		expect(ownUpdates.length).toBeGreaterThan(0);
+		expect(ownUpdates.every((update) => update.username === targetName)).toBe(true);
 		await createBuilder(harness, admin.token)
 			.delete(`/admin/users/${target.userId}/ban`)
 			.body({notify_user: false})
@@ -120,7 +134,7 @@ describe('hidden profiles', () => {
 			.execute();
 		await expectShown();
 		expect(memberUpdates().map((member) => [member.user.username, member.nick])).toEqual([
-			['HiddenUser', null],
+			[pseudonym.username, null],
 			[targetName, 'Shown Nick'],
 		]);
 	});
@@ -168,6 +182,7 @@ describe('hidden profiles', () => {
 		await expectHidden();
 		const own = await fetchUserMe(harness, target.token);
 		expect(own.json).toMatchObject({username: targetName, global_name: 'Shown Name', bio: 'shown bio'});
+		expect(own.json.flags & PROFILE_HIDDEN_BIT).toBe(0);
 		await createBuilder(harness, admin.token)
 			.patch(`/admin/users/${target.userId}/flags`)
 			.body({remove_flags: [UserFlags.PROFILE_HIDDEN.toString()]})

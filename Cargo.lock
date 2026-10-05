@@ -1986,11 +1986,13 @@ dependencies = [
  "fluxer-svc",
  "fluxer_common",
  "futures",
+ "hmac 0.13.0",
  "moka",
  "rmp-serde",
  "scylla",
  "serde",
  "serde_json",
+ "sha2 0.11.0",
  "tokio",
  "tracing",
 ]

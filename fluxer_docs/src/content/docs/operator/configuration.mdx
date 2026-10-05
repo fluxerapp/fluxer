@@ -78,6 +78,10 @@ Sudo mode JWTs, as a raw HS256 key. Changing it ends every active sudo mode sess
 
 Connection initiation tokens and harvest download links. Changing it invalidates connection initiation tokens not yet verified and harvest download links already issued.
 
+#### `FLUXER_PROFILE_PSEUDONYM_SECRET`
+
+Derives the stable placeholder name and tag that other users see while an account's profile is hidden. Must be byte-identical on `api`, `worker`, and `users-shard`, or the same account shows two different names. Changing it gives every hidden profile a new placeholder. `api` and `worker` refuse to start without it when `FLUXER_ENV` is `production`. `users-shard` refuses to start without it unless `FLUXER_ENV` is `development` or `test`.
+
 #### `FLUXER_GATEWAY_RPC_AUTH_TOKEN`
 
 Internal RPC between the API and the Gateway. Must be byte-identical on `api`, `worker`, and `gateway`.

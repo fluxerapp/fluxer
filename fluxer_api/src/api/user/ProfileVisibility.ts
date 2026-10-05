@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createHmac} from 'node:crypto';
+import {Config} from '@app/api/Config';
 import type {User} from '@app/api/models/User';
 import {isTemporarilyBanned} from '@app/api/user/UserHelpers';
+import {generateSeededUsername} from '@app/api/utils/UsernameGenerator';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {
-	HIDDEN_USER_DISCRIMINATOR,
-	HIDDEN_USER_USERNAME,
-	PublicUserFlags,
-	UserFlags,
-} from '@fluxer/constants/src/UserConstants';
+import {NON_SELF_HOSTED_RESERVED_DISCRIMINATORS} from '@fluxer/constants/src/DiscriminatorConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
@@ -42,20 +41,50 @@ export function isProfileHidden(user: ProfileStanding, now = Date.now()): boolea
 	return (user.flags & UserFlags.PROFILE_HIDDEN) !== 0n || isUnderEnforcement(user, now);
 }
 
-export function hiddenUserPartial(partial: UserPartialResponse): UserPartialResponse {
+const MAX_DISCRIMINATOR = 9999;
+
+interface ProfilePseudonym {
+	username: string;
+	discriminator: string;
+}
+
+function pseudonymDiscriminator(seed: Buffer): number {
+	let value = (seed.readUInt32BE(seed.byteLength - 4) % MAX_DISCRIMINATOR) + 1;
+	while (NON_SELF_HOSTED_RESERVED_DISCRIMINATORS.has(value)) {
+		value = (value % MAX_DISCRIMINATOR) + 1;
+	}
+	return value;
+}
+
+export function profilePseudonym(
+	userId: string | bigint,
+	secret: string = Config.auth.profilePseudonymSecret,
+): ProfilePseudonym {
+	const seed = createHmac('sha256', secret).update(userId.toString()).digest();
 	return {
-		...partial,
-		username: HIDDEN_USER_USERNAME,
-		discriminator: HIDDEN_USER_DISCRIMINATOR.toString().padStart(4, '0'),
-		global_name: null,
-		avatar: null,
-		avatar_color: null,
-		flags: partial.flags | PublicUserFlags.PROFILE_HIDDEN,
+		username: generateSeededUsername(seed),
+		discriminator: pseudonymDiscriminator(seed).toString().padStart(4, '0'),
 	};
 }
 
-export function isHiddenPartial(partial: Pick<UserPartialResponse, 'flags'>): boolean {
-	return (partial.flags & PublicUserFlags.PROFILE_HIDDEN) !== 0;
+export function hiddenUserPartial(partial: UserPartialResponse): UserPartialResponse {
+	const pseudonym = profilePseudonym(partial.id);
+	return {
+		...partial,
+		username: pseudonym.username,
+		discriminator: pseudonym.discriminator,
+		global_name: null,
+		avatar: null,
+		avatar_color: null,
+	};
+}
+
+export function isHiddenPartial(
+	partial: Pick<UserPartialResponse, 'id' | 'username' | 'discriminator' | 'global_name' | 'avatar'>,
+): boolean {
+	if (partial.global_name != null || partial.avatar != null) return false;
+	const pseudonym = profilePseudonym(partial.id);
+	return partial.username === pseudonym.username && partial.discriminator === pseudonym.discriminator;
 }
 
 export function hiddenGuildMember(member: GuildMemberResponse): GuildMemberResponse {
