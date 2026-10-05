@@ -8218,6 +8218,10 @@
 				{
 					"name": "timezone_privacy_flags",
 					"type": "int"
+				},
+				{
+					"name": "content_hidden_since",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((user_id))",

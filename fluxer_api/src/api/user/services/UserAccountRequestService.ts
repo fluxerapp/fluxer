@@ -15,6 +15,7 @@ import type {User} from '@app/api/models/User';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {isProfileHidden} from '@app/api/user/ProfileVisibility';
 import type {EmailChangeService} from '@app/api/user/services/EmailChangeService';
 import type {UserAccountService} from '@app/api/user/services/UserAccountService';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
@@ -301,8 +302,12 @@ export class UserAccountRequestService {
 			}
 		}
 		const restrictProfile = profile.restrictProfile;
+		const hidden = isProfileHidden(profileUser);
 		const userProfile = mapUserToProfileResponse(profileUser, {restrictProfile});
-		const guildMemberProfile = mapGuildMemberToProfileResponse(profile.guildMemberDomain ?? null, {restrictProfile});
+		const guildMemberProfile = mapGuildMemberToProfileResponse(profile.guildMemberDomain ?? null, {
+			restrictProfile,
+			hidden,
+		});
 		const timezoneOffset = profile.timezoneVisible ? getCurrentTimeZoneOffsetMinutes(profileUser.timezone) : null;
 		const mutualFriends = profile.mutualFriends
 			? profile.mutualFriends.map((user) =>
@@ -313,7 +318,8 @@ export class UserAccountRequestService {
 					}),
 				)
 			: undefined;
-		const connectedAccounts = profile.connections ? this.mapConnectionsToResponse(profile.connections) : undefined;
+		const connectedAccounts =
+			profile.connections && !hidden ? this.mapConnectionsToResponse(profile.connections) : undefined;
 		return {
 			user: mapUserToPartialResponseWithCache({
 				user: profileUser,

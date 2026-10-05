@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {AdminMessageDeletionService} from '@app/api/admin/services/AdminMessageDeletionService';
+import {
+	type ChannelID,
+	createChannelID,
+	createMessageID,
+	createUserID,
+	type MessageID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import {
@@ -20,6 +29,7 @@ import {
 	stopAccountActionConsumer,
 } from '@app/api/worker/AccountActionConsumer';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
 import {AckPolicy, DeliverPolicy, type JsMsg, jetstream, jetstreamManager} from '@nats-io/jetstream';
 import {connect} from '@nats-io/transport-node';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
@@ -80,14 +90,26 @@ class FakeUsers {
 		this.rows.set(user.id.toString(), next);
 		return new User(next);
 	}
+
+	async patchUpsert(userId: UserID, patch: Partial<UserRow>): Promise<User> {
+		const next = {...this.rows.get(userId.toString())!, ...patch};
+		this.rows.set(userId.toString(), next);
+		return new User(next);
+	}
 }
 
 interface Harness {
 	users: FakeUsers;
 	cached: Map<string, unknown>;
 	presence: Array<unknown>;
+	profiles: Array<unknown>;
 	bans: Array<{ip: string; ttl: number}>;
 	refreshes: number;
+	authored: Array<{channelId: ChannelID; messageId: MessageID}>;
+	visibility: Array<UserID>;
+	removed: Array<{channelId: ChannelID; authorId: UserID; messageIds: Array<MessageID>}>;
+	audits: Array<{adminUserId: UserID; action: string; targetId: bigint; auditLogReason: string | null}>;
+	shreds: Array<{userId: bigint; entries: number; adminUserId: UserID; auditLogReason: string | null}>;
 	deps: AccountActionDeps;
 }
 
@@ -97,15 +119,65 @@ function harness(): Harness {
 		users,
 		cached: new Map(),
 		presence: [],
+		profiles: [],
 		bans: [],
 		refreshes: 0,
+		authored: [],
+		visibility: [],
+		removed: [],
+		audits: [],
+		shreds: [],
 		deps: null as never,
 	};
+	const authored = {
+		listMessagesByAuthor: async (_authorId: UserID, limit: number, before?: MessageID) =>
+			[...h.authored]
+				.sort((a, b) => (a.messageId > b.messageId ? -1 : 1))
+				.filter((m) => before === undefined || m.messageId < before)
+				.slice(0, limit),
+	};
+	const messages = new AdminMessageDeletionService({
+		channelRepository: authored,
+		messageShredService: {
+			queueMessageShred: async (
+				data: {user_id: bigint; entries: Array<unknown>},
+				adminUserId: UserID,
+				auditLogReason: string | null,
+			) => {
+				h.shreds.push({userId: data.user_id, entries: data.entries.length, adminUserId, auditLogReason});
+				return {success: true, job_id: '77', requested: data.entries.length};
+			},
+		},
+		auditService: {
+			createAuditLog: async (log: {
+				adminUserId: UserID;
+				action: string;
+				targetId: bigint;
+				auditLogReason: string | null;
+			}) => {
+				h.audits.push({
+					adminUserId: log.adminUserId,
+					action: log.action,
+					targetId: log.targetId,
+					auditLogReason: log.auditLogReason,
+				});
+			},
+		},
+	} as unknown as ConstructorParameters<typeof AdminMessageDeletionService>[0]);
 	const state: AccountStateDeps = {
 		users: users as unknown as AccountStateDeps['users'],
 		dispatch: {
 			userUpdated: async (user) => {
 				h.presence.push(user.id);
+			},
+			profileChanged: async (user) => {
+				h.profiles.push(user.id);
+			},
+			contentVisibilityChanged: async (user) => {
+				h.visibility.push(user.id);
+			},
+			messagesRemoved: async (channelId, authorId, messageIds) => {
+				h.removed.push({channelId, authorId, messageIds});
 			},
 		},
 		ipBans: {
@@ -126,6 +198,8 @@ function harness(): Harness {
 				h.cached.delete(key);
 			},
 		} as unknown as AccountStateDeps['cache'],
+		messages,
+		authored: authored as unknown as AccountStateDeps['authored'],
 		now: () => NOW,
 	};
 	h.deps = {js: {} as AccountActionDeps['js'], state, now: () => NOW};
@@ -308,6 +382,245 @@ describe('account action apply', () => {
 		);
 		expect(ending.status).toBe('noop');
 		expect(h.bans).toEqual([]);
+	});
+
+	it('hides the profile reversibly and tells clients both ways', async () => {
+		h.users.put({flags: UserFlags.ACCOUNT_LIMITED});
+		const hide = envelope<'hide_profile'>({type: 'hide_profile', user_id: USER_ID, on: true});
+		expect(await applyAction(h.deps, hide)).toMatchObject({status: 'applied', action_type: 'hide_profile'});
+		expect(h.users.current().flags).toBe(UserFlags.ACCOUNT_LIMITED | UserFlags.PROFILE_HIDDEN);
+		expect((await applyAction(h.deps, hide)).status).toBe('noop');
+		const show = envelope<'hide_profile'>({type: 'hide_profile', user_id: USER_ID, on: false});
+		expect((await applyAction(h.deps, show)).status).toBe('applied');
+		expect(h.users.current().flags).toBe(UserFlags.ACCOUNT_LIMITED);
+		expect((await applyAction(h.deps, show)).status).toBe('noop');
+		expect(h.presence).toHaveLength(2);
+		expect(h.profiles).toHaveLength(2);
+	});
+
+	it('never hides staff or trusted profiles and skips bots and deleted accounts', async () => {
+		const hide = envelope<'hide_profile'>({type: 'hide_profile', user_id: USER_ID, on: true});
+		for (const flags of [UserFlags.STAFF, UserFlags.LIMIT_EXEMPT]) {
+			h.users.put({flags});
+			expect((await applyAction(h.deps, hide)).status).toBe('exempt');
+		}
+		for (const overrides of [{bot: true}, {flags: UserFlags.DELETED}] satisfies Array<Partial<UserRow>>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, hide)).status).toBe('ineligible');
+		}
+		h.users.put({flags: UserFlags.STAFF | UserFlags.PROFILE_HIDDEN});
+		const show = envelope<'hide_profile'>({type: 'hide_profile', user_id: USER_ID, on: false});
+		expect((await applyAction(h.deps, show)).status).toBe('applied');
+		expect(h.profiles).toHaveLength(1);
+	});
+
+	function hideEnvelope(on: boolean, sinceMs = NOW - 86_400_000) {
+		return envelope<'hide_recent_messages'>({type: 'hide_recent_messages', user_id: USER_ID, since_ms: sinceMs, on});
+	}
+
+	function authorAt(timestampMs: number, channel: number): MessageID {
+		const messageId = createMessageID(createSnowflakeFromTimestamp(timestampMs) + BigInt(h.authored.length));
+		h.authored.push({channelId: createChannelID(BigInt(channel)), messageId});
+		return messageId;
+	}
+
+	function removedIds(): Array<MessageID> {
+		return h.removed.flatMap((entry) => entry.messageIds).sort((a, b) => (a < b ? -1 : 1));
+	}
+
+	it('hides every message from the window onward and tells each channel they are gone', async () => {
+		const since = NOW - 86_400_000;
+		const before = [authorAt(since - 60_000, 100), authorAt(since - 1, 101)];
+		const inside: Array<MessageID> = [authorAt(since, 100)];
+		for (let i = 0; i < 250; i++) inside.push(authorAt(since + 1_000 + i, 100 + (i % 3)));
+		const outcome = await applyAction(h.deps, hideEnvelope(true, since));
+		expect(outcome).toEqual({
+			action_id: 'a:07:4242:0',
+			action_type: 'hide_recent_messages',
+			status: 'applied',
+			detail: 'messages=251',
+			observed: {flags: '0', deleted: false},
+			user_id: USER_ID,
+		});
+		expect(h.users.current().contentHiddenSince?.getTime()).toBe(since);
+		expect(h.visibility).toEqual([createUserID(BigInt(USER_ID))]);
+		expect(removedIds()).toEqual([...inside].sort((a, b) => (a < b ? -1 : 1)));
+		for (const id of before) expect(removedIds()).not.toContain(id);
+		for (const entry of h.removed) {
+			expect(entry.authorId).toBe(createUserID(BigInt(USER_ID)));
+			for (const id of entry.messageIds) {
+				expect(h.authored.find((m) => m.messageId === id)?.channelId).toBe(entry.channelId);
+			}
+		}
+		expect(h.users.current().flags).toBe(0n);
+		expect(h.shreds).toHaveLength(0);
+	});
+
+	it('keeps the wider window when asked again and resends the deletes as a noop', async () => {
+		const since = NOW - 86_400_000;
+		authorAt(since + 5_000, 100);
+		await applyAction(h.deps, hideEnvelope(true, since));
+		const later = await applyAction(h.deps, hideEnvelope(true, since + 60_000));
+		expect(later).toMatchObject({status: 'noop', detail: 'messages=1'});
+		expect(h.users.current().contentHiddenSince?.getTime()).toBe(since);
+		expect(h.visibility).toHaveLength(1);
+		const wider = await applyAction(h.deps, hideEnvelope(true, since - 60_000));
+		expect(wider.status).toBe('applied');
+		expect(h.users.current().contentHiddenSince?.getTime()).toBe(since - 60_000);
+		expect(h.visibility).toHaveLength(2);
+	});
+
+	it('reports a hide with nothing in the window as applied with no deletes', async () => {
+		authorAt(NOW - 2 * 86_400_000, 100);
+		const outcome = await applyAction(h.deps, hideEnvelope(true));
+		expect(outcome).toMatchObject({status: 'applied', detail: 'messages=0'});
+		expect(h.removed).toEqual([]);
+	});
+
+	it('restores by clearing the window and sends no gateway events', async () => {
+		const since = NOW - 86_400_000;
+		authorAt(since + 5_000, 100);
+		h.users.put({content_hidden_since: new Date(since)});
+		const outcome = await applyAction(h.deps, hideEnvelope(false));
+		expect(outcome).toMatchObject({status: 'applied', detail: null, observed: {flags: '0', deleted: false}});
+		expect(h.users.current().contentHiddenSince).toBeNull();
+		expect(h.removed).toEqual([]);
+		expect(h.presence).toHaveLength(0);
+		expect(h.visibility).toHaveLength(1);
+		expect((await applyAction(h.deps, hideEnvelope(false))).status).toBe('noop');
+		expect(h.visibility).toHaveLength(1);
+	});
+
+	it('never hides staff, trusted or system messages and skips bots and deleted accounts', async () => {
+		authorAt(NOW - 1_000, 100);
+		for (const overrides of [{flags: UserFlags.STAFF}, {flags: UserFlags.LIMIT_EXEMPT}, {system: true}] satisfies Array<
+			Partial<UserRow>
+		>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, hideEnvelope(true))).status).toBe('exempt');
+			expect(h.users.current().contentHiddenSince).toBeNull();
+		}
+		for (const overrides of [{bot: true}, {flags: UserFlags.DELETED}] satisfies Array<Partial<UserRow>>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, hideEnvelope(true))).status).toBe('ineligible');
+		}
+		h.users.rows.clear();
+		expect(await applyAction(h.deps, hideEnvelope(true))).toMatchObject({status: 'ineligible', observed: null});
+		expect(h.removed).toEqual([]);
+		expect(h.visibility).toEqual([]);
+		h.users.put({flags: UserFlags.STAFF, content_hidden_since: new Date(NOW - 1_000)});
+		expect((await applyAction(h.deps, hideEnvelope(false))).status).toBe('applied');
+		expect(h.users.current().contentHiddenSince).toBeNull();
+	});
+
+	it('keeps the message hide and the profile mask independent', async () => {
+		const since = NOW - 86_400_000;
+		authorAt(since + 5_000, 100);
+		await applyAction(h.deps, hideEnvelope(true, since));
+		await applyAction(h.deps, envelope<'hide_profile'>({type: 'hide_profile', user_id: USER_ID, on: true}));
+		expect(h.users.current().flags).toBe(UserFlags.PROFILE_HIDDEN);
+		expect(h.users.current().contentHiddenSince?.getTime()).toBe(since);
+		await applyAction(h.deps, hideEnvelope(false));
+		expect(h.users.current().flags).toBe(UserFlags.PROFILE_HIDDEN);
+		expect(h.users.current().contentHiddenSince).toBeNull();
+		await applyAction(h.deps, hideEnvelope(true, since));
+		await applyAction(h.deps, envelope<'hide_profile'>({type: 'hide_profile', user_id: USER_ID, on: false}));
+		expect(h.users.current().flags).toBe(0n);
+		expect(h.users.current().contentHiddenSince?.getTime()).toBe(since);
+	});
+
+	it('still purges a hidden account through the admin purge', async () => {
+		const since = NOW - 86_400_000;
+		authorAt(since - 5_000, 100);
+		authorAt(since + 5_000, 101);
+		await applyAction(h.deps, hideEnvelope(true, since));
+		const purge = await applyAction(
+			h.deps,
+			envelope<'delete_user_messages'>({type: 'delete_user_messages', user_id: USER_ID, on: true}),
+		);
+		expect(purge).toMatchObject({status: 'applied', detail: 'messages=2 job=77'});
+		expect(h.shreds).toEqual([expect.objectContaining({entries: 2})]);
+	});
+
+	function purgeEnvelope(on = true) {
+		return envelope<'delete_user_messages'>({type: 'delete_user_messages', user_id: USER_ID, on});
+	}
+
+	function author(count: number): void {
+		for (let i = 0; i < count; i++) {
+			h.authored.push({
+				channelId: createChannelID(BigInt(100 + (i % 3))),
+				messageId: createMessageID(BigInt(1000 + i)),
+			});
+		}
+	}
+
+	it('purges every message through the admin purge and audits it as the system', async () => {
+		author(450);
+		const outcome = await applyAction(h.deps, purgeEnvelope());
+		expect(outcome).toEqual({
+			action_id: 'a:07:4242:0',
+			action_type: 'delete_user_messages',
+			status: 'applied',
+			detail: 'messages=450 job=77',
+			observed: {flags: '0', deleted: false},
+			user_id: USER_ID,
+		});
+		expect(h.shreds).toEqual([
+			{userId: BigInt(USER_ID), entries: 450, adminUserId: SYSTEM_USER_ID, auditLogReason: 'Automated action a:07:4242:0'},
+		]);
+		expect(h.audits).toEqual([
+			{
+				adminUserId: SYSTEM_USER_ID,
+				action: 'delete_all_user_messages',
+				targetId: BigInt(USER_ID),
+				auditLogReason: 'Automated action a:07:4242:0',
+			},
+		]);
+		expect(h.users.current().flags).toBe(0n);
+		expect(h.presence).toHaveLength(0);
+	});
+
+	it('purges accounts already scheduled for deletion and paid accounts', async () => {
+		author(2);
+		for (const overrides of [
+			{flags: UserFlags.DELETED | UserFlags.SPAMMER, pending_deletion_at: new Date(NOW + 86_400_000)},
+			{has_ever_purchased: true, premium_type: 2},
+		] satisfies Array<Partial<UserRow>>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, purgeEnvelope())).status).toBe('applied');
+		}
+		expect(h.shreds).toHaveLength(2);
+	});
+
+	it('reports a noop when nothing is left to purge', async () => {
+		const outcome = await applyAction(h.deps, purgeEnvelope());
+		expect(outcome).toMatchObject({status: 'noop', detail: null});
+		expect(h.shreds).toHaveLength(0);
+	});
+
+	it('never purges staff, trusted, system, bot or missing accounts', async () => {
+		author(3);
+		for (const overrides of [{flags: UserFlags.STAFF}, {flags: UserFlags.LIMIT_EXEMPT}, {system: true}] satisfies Array<
+			Partial<UserRow>
+		>) {
+			h.users.put(overrides);
+			expect((await applyAction(h.deps, purgeEnvelope())).status).toBe('exempt');
+		}
+		h.users.put({bot: true});
+		expect((await applyAction(h.deps, purgeEnvelope())).status).toBe('ineligible');
+		h.users.rows.clear();
+		expect(await applyAction(h.deps, purgeEnvelope())).toMatchObject({status: 'ineligible', observed: null});
+		expect(h.shreds).toHaveLength(0);
+		expect(h.audits).toHaveLength(0);
+	});
+
+	it('answers a purge with on false as unsupported, since it cannot be reversed', async () => {
+		author(3);
+		const outcome = await applyAction(h.deps, purgeEnvelope(false));
+		expect(outcome).toMatchObject({status: 'unsupported', detail: 'a message purge cannot be reversed'});
+		expect(h.shreds).toHaveLength(0);
+		expect(h.audits).toHaveLength(0);
 	});
 
 	it('answers expired actions and unknown shapes without touching the account', async () => {

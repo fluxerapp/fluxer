@@ -178,7 +178,7 @@ export function ReportAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const auditLogReason = ctx.get('auditLogReason');
 			const {report_id} = ctx.req.valid('param');
-			const {public_comment, notify_reporter} = ctx.req.valid('json');
+			const {public_comment, notify_reporter, resolution} = ctx.req.valid('json');
 			return ctx.json(
 				await adminService.reportServiceAggregate.resolveReport(
 					createReportID(report_id),
@@ -186,6 +186,7 @@ export function ReportAdminController(app: HonoApp) {
 					public_comment || null,
 					auditLogReason,
 					notify_reporter,
+					resolution,
 				),
 			);
 		},

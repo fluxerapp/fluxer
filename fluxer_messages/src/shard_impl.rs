@@ -41,6 +41,9 @@ const BUCKET_DURATION_MS: i64 = 864_000_000;
 const FLUXER_EPOCH_MS: i64 = 1_420_070_400_000;
 const SERVICE_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 const MESSAGE_REFERENCE_TYPE_DEFAULT: i32 = 0;
+const MESSAGE_REFERENCE_TYPE_FORWARD: i32 = 1;
+const HIDDEN_REFILL_ROUNDS: usize = 5;
+const HIDDEN_REFILL_MAX_PAGE: u32 = 800;
 const MESSAGE_FLAG_IS_CROSSPOST: i64 = 1 << 1;
 
 fn effective_reference_type(reference: &MessageReference) -> i32 {
@@ -70,6 +73,16 @@ fn reply_target(message: &Message) -> Option<(i64, i64)> {
     }
     let reference = message.message_reference.as_ref()?;
     if effective_reference_type(reference) != MESSAGE_REFERENCE_TYPE_DEFAULT {
+        return None;
+    }
+    Some((reference.channel_id?, reference.message_id?))
+}
+
+fn copy_source(message: &Message) -> Option<(i64, i64)> {
+    let reference = message.message_reference.as_ref()?;
+    if !is_crosspost_copy(message)
+        && effective_reference_type(reference) != MESSAGE_REFERENCE_TYPE_FORWARD
+    {
         return None;
     }
     Some((reference.channel_id?, reference.message_id?))
@@ -124,6 +137,62 @@ enum MessagesStorage {
     Scylla(Box<ScyllaMessagesStorage>),
     #[cfg(test)]
     Deletions(DeletedMessageKeys),
+    #[cfg(test)]
+    Memory(std::sync::Arc<Vec<Message>>),
+}
+
+#[cfg(test)]
+fn memory_buckets(
+    messages: &[Message],
+    channel_id: i64,
+    min_bucket: i32,
+    max_bucket: i32,
+    limit: u32,
+    descending: bool,
+) -> Vec<i32> {
+    let mut buckets = messages
+        .iter()
+        .filter(|message| message.channel_id == channel_id)
+        .map(|message| snowflake_to_bucket(message.message_id))
+        .filter(|bucket| (min_bucket..=max_bucket).contains(bucket))
+        .collect::<Vec<_>>();
+    buckets.sort_unstable();
+    buckets.dedup();
+    if descending {
+        buckets.reverse();
+    }
+    buckets.truncate(limit as usize);
+    buckets
+}
+
+#[cfg(test)]
+fn memory_bucket(
+    messages: &[Message],
+    channel_id: i64,
+    bucket: i32,
+    bound: Option<BucketBound>,
+    limit: i32,
+) -> Vec<Message> {
+    let mut rows = messages
+        .iter()
+        .filter(|message| {
+            message.channel_id == channel_id
+                && snowflake_to_bucket(message.message_id) == bucket
+                && match bound {
+                    Some(BucketBound::Before(id)) => message.message_id < id,
+                    Some(BucketBound::After(id)) => message.message_id > id,
+                    None => true,
+                }
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    if matches!(bound, Some(BucketBound::After(_))) {
+        rows.sort_unstable_by_key(|message| message.message_id);
+    } else {
+        rows.sort_unstable_by_key(|message| std::cmp::Reverse(message.message_id));
+    }
+    rows.truncate(limit.max(0) as usize);
+    rows
 }
 
 #[derive(Clone)]
@@ -244,6 +313,45 @@ struct UserPartialServiceResponse {
     flags: Option<i64>,
     avatar_color: Option<i32>,
     mention_flags: Option<i32>,
+    #[serde(default)]
+    content_hidden_since: Option<i64>,
+}
+
+#[derive(Debug, Default)]
+struct UserLookup {
+    partials: HashMap<i64, UserPartialServiceResponse>,
+    requested: HashSet<i64>,
+}
+
+impl UserLookup {
+    fn hides(&self, author_id: Option<i64>, message_id: i64) -> bool {
+        author_id
+            .and_then(|author_id| self.partials.get(&author_id))
+            .and_then(|partial| partial.content_hidden_since)
+            .is_some_and(|since| snowflake_to_epoch_millis(message_id) >= since)
+    }
+
+    fn merge(&mut self, other: UserLookup) {
+        self.requested.extend(other.requested);
+        self.partials.extend(other.partials);
+    }
+}
+
+#[derive(Clone, Copy)]
+enum PageCursor {
+    Latest,
+    Before(i64),
+    After(i64),
+}
+
+impl PageCursor {
+    fn next(self, page: &[Message]) -> Option<Self> {
+        let ids = page.iter().map(|message| message.message_id);
+        match self {
+            PageCursor::Latest | PageCursor::Before(_) => ids.min().map(PageCursor::Before),
+            PageCursor::After(_) => ids.max().map(PageCursor::After),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -288,6 +396,7 @@ struct ResponseBuildOptions {
     include_reactions: bool,
     nonce: Option<String>,
     tts: bool,
+    include_hidden: bool,
 }
 
 #[derive(Debug, Default)]
@@ -583,21 +692,112 @@ impl<T: Transport> MessagesShard<T> {
             .await
     }
 
-    async fn get_around(
+    async fn fetch_page(
+        &self,
+        channel_id: i64,
+        cursor: PageCursor,
+        limit: u32,
+    ) -> anyhow::Result<Vec<Message>> {
+        match cursor {
+            PageCursor::Latest => self.get_latest(channel_id, limit).await,
+            PageCursor::Before(before_id) => self.get_before(channel_id, before_id, limit).await,
+            PageCursor::After(after_id) => self.get_after(channel_id, after_id, limit).await,
+        }
+    }
+
+    async fn visible_page(
+        &self,
+        channel_id: i64,
+        start: PageCursor,
+        limit: u32,
+        floor: Option<i64>,
+        options: &ResponseBuildOptions,
+        users: &mut UserLookup,
+    ) -> anyhow::Result<Vec<Message>> {
+        let mut out = Vec::new();
+        let mut cursor = start;
+        let mut page_size = limit;
+        for _ in 0..HIDDEN_REFILL_ROUNDS {
+            if limit == 0 {
+                break;
+            }
+            let page = self.fetch_page(channel_id, cursor, page_size).await?;
+            let exhausted = page.len() < page_size as usize;
+            let reached_floor =
+                floor.is_some_and(|floor| page.iter().any(|message| message.message_id <= floor));
+            let next = cursor.next(&page);
+            let hidden = self.hidden_message_ids(&page, options, users).await;
+            let refill = !hidden.is_empty();
+            out.extend(
+                page.into_iter()
+                    .filter(|message| !hidden.contains(&message.message_id)),
+            );
+            let Some(next) = next else {
+                break;
+            };
+            if !refill || exhausted || reached_floor || out.len() >= limit as usize {
+                break;
+            }
+            cursor = next;
+            page_size = page_size
+                .saturating_mul(2)
+                .min(HIDDEN_REFILL_MAX_PAGE.max(limit));
+        }
+        if matches!(start, PageCursor::After(_)) {
+            out.sort_unstable_by_key(|message| message.message_id);
+        } else {
+            out.sort_unstable_by_key(|message| std::cmp::Reverse(message.message_id));
+        }
+        out.truncate(limit as usize);
+        Ok(out)
+    }
+
+    async fn visible_around(
         &self,
         channel_id: i64,
         around_id: i64,
         limit: u32,
+        options: &ResponseBuildOptions,
+        users: &mut UserLookup,
     ) -> anyhow::Result<Vec<Message>> {
         if limit == 0 {
             return Ok(Vec::new());
         }
         let (newer_limit, older_limit) = around_window_limits(limit);
+        let mut target_users = UserLookup::default();
+        let mut newer_users = UserLookup::default();
+        let mut older_users = UserLookup::default();
         let (target, newer, older) = tokio::try_join!(
-            self.get_by_id(channel_id, around_id),
-            self.get_after(channel_id, around_id, newer_limit),
-            self.get_before(channel_id, around_id, older_limit)
+            async {
+                let target = self.get_by_id(channel_id, around_id).await?;
+                let Some(target) = target else {
+                    return anyhow::Ok(None);
+                };
+                let hidden = self
+                    .hidden_message_ids(std::slice::from_ref(&target), options, &mut target_users)
+                    .await;
+                Ok((!hidden.contains(&target.message_id)).then_some(target))
+            },
+            self.visible_page(
+                channel_id,
+                PageCursor::After(around_id),
+                newer_limit,
+                None,
+                options,
+                &mut newer_users,
+            ),
+            self.visible_page(
+                channel_id,
+                PageCursor::Before(around_id),
+                older_limit,
+                None,
+                options,
+                &mut older_users,
+            )
         )?;
+        users.merge(target_users);
+        users.merge(newer_users);
+        users.merge(older_users);
         let mut out = Vec::new();
         let mut seen = HashSet::new();
         for message in newer.into_iter().rev() {
@@ -631,18 +831,31 @@ impl<T: Transport> MessagesShard<T> {
         if !options.can_read_message_history && options.message_history_cutoff_ms.is_none() {
             return Ok(Vec::new());
         }
+        let mut users = UserLookup::default();
         let mut messages = if let Some(around_id) = around_id {
-            self.get_around(channel_id, around_id, limit).await?
+            self.visible_around(channel_id, around_id, limit, &options, &mut users)
+                .await?
         } else if let (Some(before_id), Some(after_id)) = (before_id, after_id) {
-            let mut before = self.get_before(channel_id, before_id, limit).await?;
+            let mut before = self
+                .visible_page(
+                    channel_id,
+                    PageCursor::Before(before_id),
+                    limit,
+                    Some(after_id),
+                    &options,
+                    &mut users,
+                )
+                .await?;
             before.retain(|message| message.message_id > after_id);
             before
-        } else if let Some(before_id) = before_id {
-            self.get_before(channel_id, before_id, limit).await?
-        } else if let Some(after_id) = after_id {
-            self.get_after(channel_id, after_id, limit).await?
         } else {
-            self.get_latest(channel_id, limit).await?
+            let cursor = match (before_id, after_id) {
+                (Some(before_id), _) => PageCursor::Before(before_id),
+                (None, Some(after_id)) => PageCursor::After(after_id),
+                (None, None) => PageCursor::Latest,
+            };
+            self.visible_page(channel_id, cursor, limit, None, &options, &mut users)
+                .await?
         };
         messages
             .retain(|message| self.is_message_visible_to_requester(message.message_id, &options));
@@ -652,7 +865,7 @@ impl<T: Transport> MessagesShard<T> {
         self.cleanup_orphaned_messages(orphaned_messages).await;
         messages.sort_unstable_by_key(|message| std::cmp::Reverse(message.message_id));
         let context = self
-            .build_response_context(&messages, &options, true)
+            .build_response_context(&messages, &options, true, users)
             .await?;
         Ok(messages
             .iter()
@@ -676,8 +889,15 @@ impl<T: Transport> MessagesShard<T> {
             self.cleanup_orphaned_messages(vec![message]).await;
             return Ok(None);
         }
+        let mut users = UserLookup::default();
+        let hidden = self
+            .hidden_message_ids(std::slice::from_ref(&message), &options, &mut users)
+            .await;
+        if !hidden.is_empty() {
+            return Ok(None);
+        }
         let context = self
-            .build_response_context(std::slice::from_ref(&message), &options, true)
+            .build_response_context(std::slice::from_ref(&message), &options, true, users)
             .await?;
         Ok(Some(
             self.map_message_response(&message, &options, &context, true),
@@ -697,7 +917,12 @@ impl<T: Transport> MessagesShard<T> {
             return Ok(None);
         }
         let context = self
-            .build_response_context(std::slice::from_ref(&message), &options, true)
+            .build_response_context(
+                std::slice::from_ref(&message),
+                &options,
+                true,
+                UserLookup::default(),
+            )
             .await?;
         Ok(Some(
             self.map_message_response(&message, &options, &context, true),
@@ -714,13 +939,68 @@ impl<T: Transport> MessagesShard<T> {
             .filter(|message| self.is_message_visible_to_requester(message.message_id, &options))
             .partition(|message| message.author_id.is_some() || message.webhook_id.is_some());
         self.cleanup_orphaned_messages(orphaned_messages).await;
+        let mut users = UserLookup::default();
+        let hidden = self
+            .hidden_message_ids(&messages, &options, &mut users)
+            .await;
+        let messages = messages
+            .into_iter()
+            .filter(|message| !hidden.contains(&message.message_id))
+            .collect::<Vec<_>>();
         let context = self
-            .build_response_context(&messages, &options, true)
+            .build_response_context(&messages, &options, true, users)
             .await?;
         Ok(messages
             .iter()
             .map(|message| self.map_message_response(message, &options, &context, true))
             .collect())
+    }
+
+    async fn hidden_message_ids(
+        &self,
+        messages: &[Message],
+        options: &ResponseBuildOptions,
+        users: &mut UserLookup,
+    ) -> HashSet<i64> {
+        if options.include_hidden || messages.is_empty() {
+            return HashSet::new();
+        }
+        let copies = messages
+            .iter()
+            .filter_map(|message| copy_source(message).map(|source| (message.message_id, source)))
+            .collect::<Vec<_>>();
+        let sources = stream::iter(copies)
+            .map(|(message_id, (channel_id, source_id))| async move {
+                match self.get_by_id(channel_id, source_id).await {
+                    Ok(Some(source)) => Some((message_id, (source.author_id, source.message_id))),
+                    _ => None,
+                }
+            })
+            .buffer_unordered(ENRICHMENT_QUERY_CONCURRENCY)
+            .filter_map(|source| async move { source })
+            .collect::<HashMap<_, _>>()
+            .await;
+        let user_ids = messages
+            .iter()
+            .flat_map(|message| {
+                message
+                    .author_id
+                    .into_iter()
+                    .chain(message.mention_users.iter().copied())
+            })
+            .chain(sources.values().filter_map(|(author_id, _)| *author_id))
+            .collect::<HashSet<_>>();
+        self.load_user_partials(user_ids, users).await;
+        messages
+            .iter()
+            .filter(|message| {
+                users.hides(message.author_id, message.message_id)
+                    || sources
+                        .get(&message.message_id)
+                        .is_some_and(|(author_id, source_id)| users.hides(*author_id, *source_id))
+            })
+            .map(|message| message.message_id)
+            .collect()
     }
 
     fn is_message_visible_to_requester(
@@ -773,8 +1053,9 @@ impl<T: Transport> MessagesShard<T> {
         messages: &[Message],
         options: &ResponseBuildOptions,
         include_referenced_messages: bool,
+        mut users: UserLookup,
     ) -> anyhow::Result<ResponseContext> {
-        let referenced_messages = if include_referenced_messages {
+        let mut referenced_messages = if include_referenced_messages {
             self.fetch_referenced_messages(messages, options).await
         } else {
             HashMap::new()
@@ -790,14 +1071,23 @@ impl<T: Transport> MessagesShard<T> {
         let reactions_future = self.fetch_reactions_for_messages(messages, options);
         let attachment_decay_future = self.fetch_attachment_decay(attachment_ids);
         let channel_mentions_future = self.resolve_channel_mentions(channel_ids, options);
-        let users_future = self.fetch_user_partials(user_ids);
-        let (reactions, attachment_decay, channel_mentions, users) = tokio::join!(
+        let users_future = self.load_user_partials(user_ids, &mut users);
+        let (reactions, attachment_decay, channel_mentions, ()) = tokio::join!(
             reactions_future,
             attachment_decay_future,
             channel_mentions_future,
             users_future
         );
         let attachment_decay = attachment_decay?;
+        if !options.include_hidden {
+            referenced_messages
+                .retain(|_, referenced| !users.hides(referenced.author_id, referenced.message_id));
+        }
+        let users = users
+            .partials
+            .into_values()
+            .map(|partial| (partial.user_id, map_user_partial(partial)))
+            .collect();
         Ok(ResponseContext {
             users,
             reactions,
@@ -938,19 +1228,18 @@ impl<T: Transport> MessagesShard<T> {
             .await
     }
 
-    async fn fetch_user_partials(
-        &self,
-        user_ids: HashSet<i64>,
-    ) -> HashMap<i64, ApiUserPartialResponse> {
-        if user_ids.is_empty() {
-            return HashMap::new();
+    async fn load_user_partials(&self, user_ids: HashSet<i64>, users: &mut UserLookup) {
+        let mut missing = user_ids
+            .into_iter()
+            .filter(|user_id| users.requested.insert(*user_id))
+            .collect::<Vec<_>>();
+        if missing.is_empty() {
+            return;
         }
-        let mut user_ids: Vec<i64> = user_ids.into_iter().collect();
-        user_ids.sort_unstable();
-        user_ids.dedup();
+        missing.sort_unstable();
         let payload = serde_json::json!({
             "op": "GetPartialsByIds",
-            "user_ids": user_ids,
+            "user_ids": missing,
         });
         let payload_bytes = serde_json::to_vec(&payload).unwrap_or_default();
         let response = self
@@ -968,13 +1257,11 @@ impl<T: Transport> MessagesShard<T> {
             Some(UserServiceResponse::FoundPartial(partial)) => vec![partial],
             _ => Vec::new(),
         };
-        partials
-            .into_iter()
-            .map(|partial| {
-                let id = partial.user_id;
-                (id, map_user_partial(partial))
-            })
-            .collect()
+        users.partials.extend(
+            partials
+                .into_iter()
+                .map(|partial| (partial.user_id, partial)),
+        );
     }
 
     async fn resolve_channel_mentions(
@@ -1497,6 +1784,13 @@ impl MessagesStorage {
             }
             #[cfg(test)]
             MessagesStorage::Deletions(_) => Ok(None),
+            #[cfg(test)]
+            MessagesStorage::Memory(messages) => Ok(messages
+                .iter()
+                .find(|message| {
+                    message.channel_id == channel_id && message.message_id == message_id
+                })
+                .cloned()),
         }
     }
 
@@ -1521,6 +1815,10 @@ impl MessagesStorage {
             }
             #[cfg(test)]
             MessagesStorage::Deletions(_) => Ok(Vec::new()),
+            #[cfg(test)]
+            MessagesStorage::Memory(messages) => Ok(memory_buckets(
+                messages, channel_id, min_bucket, max_bucket, limit, true,
+            )),
         }
     }
 
@@ -1545,6 +1843,10 @@ impl MessagesStorage {
             }
             #[cfg(test)]
             MessagesStorage::Deletions(_) => Ok(Vec::new()),
+            #[cfg(test)]
+            MessagesStorage::Memory(messages) => Ok(memory_buckets(
+                messages, channel_id, min_bucket, max_bucket, limit, false,
+            )),
         }
     }
 
@@ -1566,6 +1868,10 @@ impl MessagesStorage {
             }
             #[cfg(test)]
             MessagesStorage::Deletions(_) => Ok(Vec::new()),
+            #[cfg(test)]
+            MessagesStorage::Memory(messages) => {
+                Ok(memory_bucket(messages, channel_id, bucket, None, limit))
+            }
         }
     }
 
@@ -1596,6 +1902,14 @@ impl MessagesStorage {
             }
             #[cfg(test)]
             MessagesStorage::Deletions(_) => Ok(Vec::new()),
+            #[cfg(test)]
+            MessagesStorage::Memory(messages) => Ok(memory_bucket(
+                messages,
+                channel_id,
+                bucket,
+                Some(BucketBound::Before(before_id)),
+                limit,
+            )),
         }
     }
 
@@ -1626,6 +1940,14 @@ impl MessagesStorage {
             }
             #[cfg(test)]
             MessagesStorage::Deletions(_) => Ok(Vec::new()),
+            #[cfg(test)]
+            MessagesStorage::Memory(messages) => Ok(memory_bucket(
+                messages,
+                channel_id,
+                bucket,
+                Some(BucketBound::After(after_id)),
+                limit,
+            )),
         }
     }
 
@@ -1651,6 +1973,8 @@ impl MessagesStorage {
                     .push((channel_id, bucket, message_id));
                 Ok(())
             }
+            #[cfg(test)]
+            MessagesStorage::Memory(_) => Ok(()),
         }
     }
 
@@ -1684,7 +2008,7 @@ impl MessagesStorage {
                     .await
             }
             #[cfg(test)]
-            MessagesStorage::Deletions(_) => HashMap::new(),
+            MessagesStorage::Deletions(_) | MessagesStorage::Memory(_) => HashMap::new(),
         }
     }
 
@@ -1701,7 +2025,7 @@ impl MessagesStorage {
                 storage.fetch_attachment_decay_batch(attachment_ids).await
             }
             #[cfg(test)]
-            MessagesStorage::Deletions(_) => Ok(HashMap::new()),
+            MessagesStorage::Deletions(_) | MessagesStorage::Memory(_) => Ok(HashMap::new()),
         }
     }
 }
@@ -2174,6 +2498,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 include_reactions,
                 nonce,
                 tts,
+                include_hidden,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 let message_id = parse_i64(&message_id, "message_id")?;
@@ -2199,6 +2524,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce,
                             tts: tts.unwrap_or(false),
+                            include_hidden,
                         },
                     )
                     .await?;
@@ -2219,6 +2545,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 include_reactions,
                 nonce,
                 tts,
+                include_hidden,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2241,6 +2568,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce,
                             tts: tts.unwrap_or(false),
+                            include_hidden,
                         },
                     )
                     .await?;
@@ -2259,6 +2587,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 media_proxy_secret_key,
                 attachment_url_secret_base64,
                 include_reactions,
+                include_hidden,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2281,6 +2610,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce: None,
                             tts: false,
+                            include_hidden,
                         },
                     )
                     .await?;
@@ -2300,6 +2630,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                 media_proxy_secret_key,
                 attachment_url_secret_base64,
                 include_reactions,
+                include_hidden,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
@@ -2339,6 +2670,7 @@ impl<T: Transport> ShardService for MessagesShard<T> {
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce: None,
                             tts: false,
+                            include_hidden,
                         },
                     )
                     .await?;
@@ -3265,7 +3597,9 @@ impl From<MessageDbRow> for Message {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fluxer_svc::transport::{InMemoryTransport, TransportSubscriber, reply_message};
+    use fluxer_svc::transport::{
+        InMemoryTransport, TransportMessage, TransportSubscriber, reply_message,
+    };
     use serde_json::json;
 
     #[test]
@@ -3281,6 +3615,7 @@ mod tests {
             flags: Some(USER_FLAG_DELETED),
             avatar_color: None,
             mention_flags: None,
+            content_hidden_since: None,
         });
 
         assert_eq!(mapped.id, "0");
@@ -3330,6 +3665,7 @@ mod tests {
             flags: Some(USER_FLAG_DELETED),
             avatar_color: Some(0x336699),
             mention_flags: None,
+            content_hidden_since: None,
         });
 
         assert_eq!(mapped.id, "42");
@@ -3773,6 +4109,7 @@ mod tests {
             include_reactions: false,
             nonce: None,
             tts: false,
+            include_hidden: false,
         }
     }
 
@@ -4863,5 +5200,261 @@ mod tests {
         });
 
         assert!(mapped.is_none());
+    }
+
+    const HIDDEN_AUTHOR: i64 = 1_472_426_752_046_002_301;
+    const OTHER_AUTHOR: i64 = 1_472_426_752_046_002_302;
+    const CHANNEL: i64 = 10;
+    const WINDOW_MS: i64 = 1_790_000_000_000;
+
+    fn snowflake_at(epoch_millis: i64, sequence: i64) -> i64 {
+        ((epoch_millis - FLUXER_EPOCH_MS) << 22) | sequence
+    }
+
+    fn message_by(author_id: i64, message_id: i64, extra: serde_json::Value) -> Message {
+        let mut row = json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": CHANNEL.to_string()},
+            "bucket": snowflake_to_bucket(message_id),
+            "message_id": {"__fluxer_type": "bigint", "value": message_id.to_string()},
+            "author_id": {"__fluxer_type": "bigint", "value": author_id.to_string()},
+            "content": format!("message {message_id}"),
+        });
+        row.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
+        decode_postgres_message(row).unwrap()
+    }
+
+    async fn user_service(
+        transport: &InMemoryTransport,
+        hidden_since: Option<i64>,
+    ) -> tokio::task::JoinHandle<()> {
+        let mut subscriber = transport.subscribe("svc.users").await.unwrap();
+        let transport = transport.clone();
+        tokio::spawn(async move {
+            while let Some(message) = subscriber.next().await {
+                let request: serde_json::Value = serde_json::from_slice(message.payload()).unwrap();
+                let partials = request["user_ids"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|id| {
+                        let id = id.as_i64().unwrap();
+                        json!({
+                            "user_id": id,
+                            "username": format!("user{id}"),
+                            "discriminator": 1,
+                            "content_hidden_since": (id == HIDDEN_AUTHOR).then_some(hidden_since).flatten(),
+                        })
+                    })
+                    .collect::<Vec<_>>();
+                let reply = serde_json::to_vec(&json!({"FoundPartials": partials})).unwrap();
+                let _ = reply_message(&message, &transport, &reply).await;
+            }
+        })
+    }
+
+    fn memory_shard(messages: Vec<Message>) -> MessagesShard<InMemoryTransport> {
+        MessagesShard {
+            storage: MessagesStorage::Memory(std::sync::Arc::new(messages)),
+            transport: InMemoryTransport::new(),
+        }
+    }
+
+    fn channel_history() -> (Vec<Message>, Vec<i64>, Vec<i64>) {
+        let mut messages = Vec::new();
+        let mut hidden = Vec::new();
+        let mut visible = Vec::new();
+        for offset in 0..3 {
+            let id = snowflake_at(WINDOW_MS - 60_000 + offset, 0);
+            messages.push(message_by(HIDDEN_AUTHOR, id, json!({})));
+            visible.push(id);
+        }
+        for offset in 0..2 {
+            let id = snowflake_at(WINDOW_MS - 30_000 + offset, 0);
+            messages.push(message_by(OTHER_AUTHOR, id, json!({})));
+            visible.push(id);
+        }
+        hidden.push(snowflake_at(WINDOW_MS, 0));
+        messages.push(message_by(HIDDEN_AUTHOR, hidden[0], json!({})));
+        for offset in 1..7 {
+            let id = snowflake_at(WINDOW_MS + offset * 1_000, 0);
+            messages.push(message_by(HIDDEN_AUTHOR, id, json!({})));
+            hidden.push(id);
+        }
+        visible.sort_unstable_by_key(|id| std::cmp::Reverse(*id));
+        (messages, hidden, visible)
+    }
+
+    fn ids(responses: &[ApiMessageResponse]) -> Vec<i64> {
+        responses
+            .iter()
+            .map(|response| response.id.parse().unwrap())
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn hidden_window_drops_messages_from_every_list_shape_and_refills_the_page() {
+        let (messages, hidden, visible) = channel_history();
+        let shard = memory_shard(messages);
+        let users = user_service(&shard.transport, Some(WINDOW_MS)).await;
+
+        let latest = shard
+            .list_api_responses(CHANNEL, 3, None, None, None, build_options())
+            .await
+            .unwrap();
+        assert_eq!(ids(&latest), visible[..3].to_vec());
+
+        let before = shard
+            .list_api_responses(CHANNEL, 50, Some(hidden[6]), None, None, build_options())
+            .await
+            .unwrap();
+        assert_eq!(ids(&before), visible);
+
+        let after = shard
+            .list_api_responses(CHANNEL, 50, None, Some(visible[1]), None, build_options())
+            .await
+            .unwrap();
+        assert_eq!(ids(&after), vec![visible[0]]);
+
+        let around = shard
+            .list_api_responses(CHANNEL, 4, None, None, Some(hidden[0]), build_options())
+            .await
+            .unwrap();
+        assert!(ids(&around).iter().all(|id| visible.contains(id)));
+        assert!(!around.is_empty());
+
+        let mut staff_view = build_options();
+        staff_view.include_hidden = true;
+        let all = shard
+            .list_api_responses(CHANNEL, 50, None, None, None, staff_view)
+            .await
+            .unwrap();
+        assert_eq!(all.len(), visible.len() + hidden.len());
+        users.abort();
+    }
+
+    #[tokio::test]
+    async fn clearing_the_window_restores_every_message() {
+        let (messages, hidden, visible) = channel_history();
+        let shard = memory_shard(messages);
+        let users = user_service(&shard.transport, None).await;
+
+        let latest = shard
+            .list_api_responses(CHANNEL, 50, None, None, None, build_options())
+            .await
+            .unwrap();
+        assert_eq!(latest.len(), visible.len() + hidden.len());
+        let single = shard
+            .get_api_response(CHANNEL, hidden[0], build_options())
+            .await
+            .unwrap();
+        assert_eq!(single.unwrap().id, hidden[0].to_string());
+        users.abort();
+    }
+
+    #[tokio::test]
+    async fn single_fetch_hides_messages_inside_the_window_only() {
+        let (messages, hidden, visible) = channel_history();
+        let shard = memory_shard(messages);
+        let users = user_service(&shard.transport, Some(WINDOW_MS)).await;
+
+        for id in &hidden {
+            let response = shard
+                .get_api_response(CHANNEL, *id, build_options())
+                .await
+                .unwrap();
+            assert!(response.is_none(), "{id}");
+        }
+        let earlier = visible.last().copied().unwrap();
+        let response = shard
+            .get_api_response(CHANNEL, earlier, build_options())
+            .await
+            .unwrap();
+        assert_eq!(response.unwrap().author.id, HIDDEN_AUTHOR.to_string());
+
+        let mut staff_view = build_options();
+        staff_view.include_hidden = true;
+        assert!(
+            shard
+                .get_api_response(CHANNEL, hidden[0], staff_view)
+                .await
+                .unwrap()
+                .is_some()
+        );
+        users.abort();
+    }
+
+    #[tokio::test]
+    async fn search_pins_and_saved_builds_drop_hidden_messages() {
+        let (messages, hidden, visible) = channel_history();
+        let shard = memory_shard(messages.clone());
+        let users = user_service(&shard.transport, Some(WINDOW_MS)).await;
+
+        let built = shard
+            .build_api_responses_from_messages(messages.clone(), build_options())
+            .await
+            .unwrap();
+        let mut built_ids = ids(&built);
+        built_ids.sort_unstable_by_key(|id| std::cmp::Reverse(*id));
+        assert_eq!(built_ids, visible);
+        assert!(built_ids.iter().all(|id| !hidden.contains(id)));
+        users.abort();
+
+        let shard = memory_shard(messages.clone());
+        let users = user_service(&shard.transport, None).await;
+        let restored = shard
+            .build_api_responses_from_messages(messages, build_options())
+            .await
+            .unwrap();
+        assert_eq!(restored.len(), visible.len() + hidden.len());
+        users.abort();
+    }
+
+    #[tokio::test]
+    async fn replies_lose_their_preview_and_forwards_vanish_when_the_source_is_hidden() {
+        let (mut messages, hidden, _) = channel_history();
+        let reply_id = snowflake_at(WINDOW_MS + 20_000, 0);
+        let forward_id = snowflake_at(WINDOW_MS + 21_000, 0);
+        let reference = |kind: i32| {
+            json!({"message_reference": {
+                "channel_id": {"__fluxer_type": "bigint", "value": CHANNEL.to_string()},
+                "message_id": {"__fluxer_type": "bigint", "value": hidden[1].to_string()},
+                "type": kind,
+            }})
+        };
+        messages.push(message_by(OTHER_AUTHOR, reply_id, reference(0)));
+        let mut forward = reference(1);
+        forward["message_snapshots"] = json!([{"content": "copied", "type": 0}]);
+        forward["content"] = json!("");
+        messages.push(message_by(OTHER_AUTHOR, forward_id, forward));
+        let shard = memory_shard(messages);
+        let users = user_service(&shard.transport, Some(WINDOW_MS)).await;
+
+        let reply = shard
+            .get_api_response(CHANNEL, reply_id, build_options())
+            .await
+            .unwrap()
+            .unwrap();
+        let reply = serde_json::to_value(&reply).unwrap();
+        assert!(reply["referenced_message"].is_null());
+        assert_eq!(
+            reply["message_reference"]["message_id"],
+            hidden[1].to_string()
+        );
+        assert!(
+            shard
+                .get_api_response(CHANNEL, forward_id, build_options())
+                .await
+                .unwrap()
+                .is_none()
+        );
+        let latest = shard
+            .list_api_responses(CHANNEL, 2, None, None, None, build_options())
+            .await
+            .unwrap();
+        assert_eq!(ids(&latest)[0], reply_id);
+        assert!(!ids(&latest).contains(&forward_id));
+        users.abort();
     }
 }

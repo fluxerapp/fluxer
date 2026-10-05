@@ -261,7 +261,8 @@ export class AdminMessageService {
 
 	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
 		const channel = await this.deps.channelRepository.findUnique(channelId);
-		return channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
+		const access = channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
+		return {...access, includeHidden: true};
 	}
 
 	private async listMessageResponsesForAdmin(params: {

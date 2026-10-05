@@ -8,10 +8,13 @@ import {mapGuildBansToResponse} from '@app/api/guild/GuildModel';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
 import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
+import type {BanBy} from '@app/api/infrastructure/activity/Contract.generated';
+import {emitGuildMemberBanned, emitGuildMemberUnbanned} from '@app/api/infrastructure/activity/ModerationEvents';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
 import type {GuildBan} from '@app/api/models/GuildBan';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -29,6 +32,8 @@ import type {GuildBanResponse} from '@fluxer/schema/src/domains/guild/GuildMembe
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 
 const SECONDS_PER_DAY = 86_400;
+const GUILD_MODERATION_PERMISSIONS =
+	Permissions.ADMINISTRATOR | Permissions.BAN_MEMBERS | Permissions.KICK_MEMBERS | Permissions.MANAGE_GUILD;
 
 export class GuildModerationService {
 	private readonly searchIndexService: GuildMemberSearchIndexService;
@@ -67,6 +72,7 @@ export class GuildModerationService {
 			reason?: string | null;
 			banDurationSeconds?: number;
 			skipGuildAuditLog?: boolean;
+			by?: BanBy;
 		},
 		auditLogReason?: string | null,
 	): Promise<void> {
@@ -79,6 +85,7 @@ export class GuildModerationService {
 			reason,
 			banDurationSeconds,
 			skipGuildAuditLog,
+			by = 'moderator',
 		} = params;
 		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
 		if (userId === targetId) throw new UnknownGuildMemberError();
@@ -106,6 +113,8 @@ export class GuildModerationService {
 		if (banDurationSeconds && banDurationSeconds > 0) {
 			expiresAt = new Date(Date.now() + banDurationSeconds * 1000);
 		}
+		const guildBeforeBan = await this.guildRepository.findUnique(guildId);
+		const targetModerator = await this.isGuildModerator(guildId, targetId, guildBeforeBan, targetMember !== null);
 		const ban = await this.guildRepository.upsertBan({
 			guild_id: guildId,
 			user_id: targetId,
@@ -131,6 +140,16 @@ export class GuildModerationService {
 				changes: this.guildAuditLogService.computeChanges(null, this.serializeBanForAudit(ban)),
 			});
 		}
+		await emitGuildMemberBanned({
+			guildId,
+			userId: targetId,
+			moderatorId: userId,
+			by,
+			memberCount: guildBeforeBan?.memberCount ?? 0,
+			targetModerator,
+			bannedAt: ban.bannedAt,
+			expiresAt: ban.expiresAt,
+		});
 		await this.gatewayService.dispatchGuild({
 			guildId,
 			event: 'GUILD_BAN_ADD',
@@ -177,16 +196,18 @@ export class GuildModerationService {
 			userId: UserID;
 			targetId: UserID;
 			guildId: GuildID;
+			by?: BanBy;
 		},
 		auditLogReason?: string | null,
 	): Promise<void> {
-		const {userId, guildId, targetId} = params;
+		const {userId, guildId, targetId, by = 'moderator'} = params;
 		await this.checkModerationPermission({guildId, userId, permission: Permissions.BAN_MEMBERS});
 		const ban = await this.guildRepository.getBan(guildId, targetId);
 		if (!ban) {
 			throw InputValidationError.fromCode('user_id', ValidationErrorCodes.USER_IS_NOT_BANNED);
 		}
 		await this.guildRepository.deleteBan(guildId, targetId);
+		await emitGuildMemberUnbanned({guildId, userId: targetId, moderatorId: userId, by});
 		await this.recordAuditLog({
 			guildId,
 			userId,
@@ -222,6 +243,23 @@ export class GuildModerationService {
 		if (userEmail) {
 			const emailBan = await this.guildRepository.getBanByEmail(guildId, userEmail);
 			if (emailBan) throw new BannedFromGuildError();
+		}
+	}
+
+	private async isGuildModerator(
+		guildId: GuildID,
+		targetId: UserID,
+		guild: Guild | null,
+		isMember: boolean,
+	): Promise<boolean> {
+		if (guild?.ownerId === targetId) return true;
+		if (!isMember) return false;
+		try {
+			const permissions = await this.gatewayService.getUserPermissions({guildId, userId: targetId});
+			return (permissions & GUILD_MODERATION_PERMISSIONS) !== 0n;
+		} catch (error) {
+			Logger.debug({error, guildId: guildId.toString()}, 'Could not read target permissions for a guild ban');
+			return false;
 		}
 	}
 

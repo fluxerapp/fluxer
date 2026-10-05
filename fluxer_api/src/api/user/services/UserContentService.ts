@@ -821,6 +821,7 @@ export class UserContentService {
 		requestCache: RequestCache;
 	}): Promise<void> {
 		const data = (await this.buildMessageResponsesForUser(userId, [message]))[0];
+		if (!data) return;
 		await this.gatewayService
 			.dispatchPresence({
 				userId,

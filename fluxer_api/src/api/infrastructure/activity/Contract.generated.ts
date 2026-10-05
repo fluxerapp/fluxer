@@ -4,9 +4,9 @@ export type Id = string;
 export type Flags64 = string;
 export type Channel = "stable" | "canary" | "worker" | "internal" | "import" | "other";
 export type Meta = { ip: string | null, country: string | null, ua: string | null, locale: string | null, channel: Channel, request_id: string | null, };
-export type Kind = "registration" | "email_changed" | "profile_updated" | "account_changed" | "admin_action" | "account_deleted" | "report_filed" | "email_bounced" | "action_outcome" | "login" | "session_started" | "guild_joined" | "dm_opened" | "message_created" | "message_updated" | "friend_request" | "http_errors" | "user_blocked";
-export type Event = { v: number, id: string, at_ms: number, key: string, meta: Meta, } & ({ "kind": "registration", "data": Registration } | { "kind": "email_changed", "data": EmailChanged } | { "kind": "profile_updated", "data": ProfileUpdated } | { "kind": "account_changed", "data": AccountChanged } | { "kind": "admin_action", "data": AdminAction } | { "kind": "account_deleted", "data": AccountDeleted } | { "kind": "report_filed", "data": ReportFiled } | { "kind": "email_bounced", "data": EmailBounced } | { "kind": "action_outcome", "data": ActionOutcome } | { "kind": "login", "data": Login } | { "kind": "session_started", "data": SessionStarted } | { "kind": "guild_joined", "data": GuildJoined } | { "kind": "dm_opened", "data": DmOpened } | { "kind": "message_created", "data": MessageCreated } | { "kind": "message_updated", "data": MessageUpdated } | { "kind": "friend_request", "data": FriendRequest } | { "kind": "http_errors", "data": HttpErrors } | { "kind": "user_blocked", "data": UserBlocked });
-export type Body = { "kind": "registration", "data": Registration } | { "kind": "email_changed", "data": EmailChanged } | { "kind": "profile_updated", "data": ProfileUpdated } | { "kind": "account_changed", "data": AccountChanged } | { "kind": "admin_action", "data": AdminAction } | { "kind": "account_deleted", "data": AccountDeleted } | { "kind": "report_filed", "data": ReportFiled } | { "kind": "email_bounced", "data": EmailBounced } | { "kind": "action_outcome", "data": ActionOutcome } | { "kind": "login", "data": Login } | { "kind": "session_started", "data": SessionStarted } | { "kind": "guild_joined", "data": GuildJoined } | { "kind": "dm_opened", "data": DmOpened } | { "kind": "message_created", "data": MessageCreated } | { "kind": "message_updated", "data": MessageUpdated } | { "kind": "friend_request", "data": FriendRequest } | { "kind": "http_errors", "data": HttpErrors } | { "kind": "user_blocked", "data": UserBlocked };
+export type Kind = "registration" | "email_changed" | "profile_updated" | "account_changed" | "admin_action" | "account_deleted" | "report_filed" | "email_bounced" | "action_outcome" | "login" | "session_started" | "guild_joined" | "dm_opened" | "message_created" | "message_updated" | "friend_request" | "http_errors" | "user_blocked" | "guild_member_banned" | "guild_member_unbanned" | "report_resolved";
+export type Event = { v: number, id: string, at_ms: number, key: string, meta: Meta, } & ({ "kind": "registration", "data": Registration } | { "kind": "email_changed", "data": EmailChanged } | { "kind": "profile_updated", "data": ProfileUpdated } | { "kind": "account_changed", "data": AccountChanged } | { "kind": "admin_action", "data": AdminAction } | { "kind": "account_deleted", "data": AccountDeleted } | { "kind": "report_filed", "data": ReportFiled } | { "kind": "email_bounced", "data": EmailBounced } | { "kind": "action_outcome", "data": ActionOutcome } | { "kind": "login", "data": Login } | { "kind": "session_started", "data": SessionStarted } | { "kind": "guild_joined", "data": GuildJoined } | { "kind": "dm_opened", "data": DmOpened } | { "kind": "message_created", "data": MessageCreated } | { "kind": "message_updated", "data": MessageUpdated } | { "kind": "friend_request", "data": FriendRequest } | { "kind": "http_errors", "data": HttpErrors } | { "kind": "user_blocked", "data": UserBlocked } | { "kind": "guild_member_banned", "data": GuildMemberBanned } | { "kind": "guild_member_unbanned", "data": GuildMemberUnbanned } | { "kind": "report_resolved", "data": ReportResolved });
+export type Body = { "kind": "registration", "data": Registration } | { "kind": "email_changed", "data": EmailChanged } | { "kind": "profile_updated", "data": ProfileUpdated } | { "kind": "account_changed", "data": AccountChanged } | { "kind": "admin_action", "data": AdminAction } | { "kind": "account_deleted", "data": AccountDeleted } | { "kind": "report_filed", "data": ReportFiled } | { "kind": "email_bounced", "data": EmailBounced } | { "kind": "action_outcome", "data": ActionOutcome } | { "kind": "login", "data": Login } | { "kind": "session_started", "data": SessionStarted } | { "kind": "guild_joined", "data": GuildJoined } | { "kind": "dm_opened", "data": DmOpened } | { "kind": "message_created", "data": MessageCreated } | { "kind": "message_updated", "data": MessageUpdated } | { "kind": "friend_request", "data": FriendRequest } | { "kind": "http_errors", "data": HttpErrors } | { "kind": "user_blocked", "data": UserBlocked } | { "kind": "guild_member_banned", "data": GuildMemberBanned } | { "kind": "guild_member_unbanned", "data": GuildMemberUnbanned } | { "kind": "report_resolved", "data": ReportResolved };
 export type Registration = { user_id: Id, method: RegMethod, email: string | null, username: string, username_user_chosen: boolean, global_name: string | null, locale: string | null, timezone: string | null, invite_code: string | null, flags: Flags64, };
 export type RegMethod = "password" | "unclaimed" | "oauth" | "other";
 export type EmailChanged = { user_id: Id, new_email: string, was_unclaimed: boolean, has_ever_purchased: boolean, };
@@ -32,8 +32,14 @@ export type ChannelType = "dm" | "group_dm" | "guild";
 export type FriendRequest = { user_id: Id, target_id: Id, delivered: boolean, };
 export type UserBlocked = { blocker_id: Id, blocked_id: Id, };
 export type HttpErrors = { ip: string, window_ms: number, s401: number, s403: number, s404: number, s429: number, other_4xx: number, auth_failures: number, token_hashes: Array<string>, };
-export type ActionEnvelope = { v: number, id: string, key: string, issued_at_ms: number, expires_at_ms: number, } & ({ "type": "set_account_limit", user_id: Id, on: boolean, } | { "type": "temp_ban_ip", ip: string, until_ms: number, } | { "type": "limit_new_conversations", user_id: Id, on: boolean, until_ms: number, });
-export type Action = { "type": "set_account_limit", user_id: Id, on: boolean, } | { "type": "temp_ban_ip", ip: string, until_ms: number, } | { "type": "limit_new_conversations", user_id: Id, on: boolean, until_ms: number, };
+export type GuildMemberBanned = { guild_id: Id, user_id: Id, moderator_id: Id, by: BanBy, guild_member_count: number, target_moderator: boolean, expires_at_ms: number | null, };
+export type GuildMemberUnbanned = { guild_id: Id, user_id: Id, moderator_id: Id, by: BanBy, };
+export type BanBy = "moderator" | "staff";
+export type ReportResolved = { report_id: Id, reporter_id: Id, category: string, target_type: ReportTarget, reported_user_id: Id | null, outcome: ReportOutcome, resolved_by: ResolvedBy, };
+export type ReportOutcome = "actioned" | "no_violation" | "duplicate" | "auto_resolved" | "unspecified";
+export type ResolvedBy = "staff" | "system";
+export type ActionEnvelope = { v: number, id: string, key: string, issued_at_ms: number, expires_at_ms: number, } & ({ "type": "set_account_limit", user_id: Id, on: boolean, } | { "type": "temp_ban_ip", ip: string, until_ms: number, } | { "type": "limit_new_conversations", user_id: Id, on: boolean, until_ms: number, } | { "type": "hide_recent_messages", user_id: Id, since_ms: number, on: boolean, } | { "type": "hide_profile", user_id: Id, on: boolean, } | { "type": "delete_user_messages", user_id: Id, on: boolean, });
+export type Action = { "type": "set_account_limit", user_id: Id, on: boolean, } | { "type": "temp_ban_ip", ip: string, until_ms: number, } | { "type": "limit_new_conversations", user_id: Id, on: boolean, until_ms: number, } | { "type": "hide_recent_messages", user_id: Id, since_ms: number, on: boolean, } | { "type": "hide_profile", user_id: Id, on: boolean, } | { "type": "delete_user_messages", user_id: Id, on: boolean, };
 export type ActionOutcome = { action_id: string, action_type: string, status: OutcomeStatus, detail: string | null, observed: Observed | null, user_id?: Id, };
 export type OutcomeStatus = "applied" | "noop" | "conflict" | "expired" | "ineligible" | "exempt" | "unsupported" | "failed";
 export type Observed = { flags: Flags64, deleted: boolean, };
@@ -71,6 +77,9 @@ export const EVENT_KINDS: ReadonlyArray<EventKind> = [
 	'friend_request',
 	'http_errors',
 	'user_blocked',
+	'guild_member_banned',
+	'guild_member_unbanned',
+	'report_resolved',
 ];
 export const EVENT_MAJOR: Record<EventKind, number> = {
 	registration: 1,
@@ -91,6 +100,9 @@ export const EVENT_MAJOR: Record<EventKind, number> = {
 	friend_request: 1,
 	http_errors: 1,
 	user_blocked: 1,
+	guild_member_banned: 1,
+	guild_member_unbanned: 1,
+	report_resolved: 1,
 };
 export const EVENT_TTL: Record<EventKind, string> = {
 	registration: 'never',
@@ -111,6 +123,9 @@ export const EVENT_TTL: Record<EventKind, string> = {
 	friend_request: '259200',
 	http_errors: '3600',
 	user_blocked: '259200',
+	guild_member_banned: '3024000',
+	guild_member_unbanned: '3024000',
+	report_resolved: 'never',
 };
 export const EVENT_CLASS: Record<EventKind, 'fact' | 'signal'> = {
 	registration: 'fact',
@@ -131,6 +146,9 @@ export const EVENT_CLASS: Record<EventKind, 'fact' | 'signal'> = {
 	friend_request: 'signal',
 	http_errors: 'signal',
 	user_blocked: 'signal',
+	guild_member_banned: 'fact',
+	guild_member_unbanned: 'fact',
+	report_resolved: 'fact',
 };
 export const effectsConsumer = (p: number): string => `effects-${String(p).padStart(2, '0')}`;
 export function keyToken(key: string): string {

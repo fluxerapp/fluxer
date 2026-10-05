@@ -34,11 +34,12 @@ import type {User} from '@app/api/models/User';
 import type {IARMessageContext, IARSubmission} from '@app/api/report/IReportRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
+import {isHiddenPartial} from '@app/api/user/ProfileVisibility';
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
 import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
-import type {SearchReportsRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import type {SearchReportsRequest, UpdateReportRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
 import {seconds} from 'itty-time';
@@ -55,6 +56,8 @@ interface AdminReportServiceDeps {
 	userChannelService: UserChannelService;
 	ncmecSubmissionService: NcmecSubmissionService;
 }
+
+type StaffReportResolution = NonNullable<UpdateReportRequest['resolution']>;
 
 interface ReportNsfwLookupCache {
 	channelNsfwByChannelId: Map<string, boolean | null>;
@@ -105,10 +108,14 @@ export class AdminReportService {
 		publicComment: string | null,
 		auditLogReason: string | null,
 		notifyReporter: boolean,
+		resolution?: StaffReportResolution,
 	) {
 		const {reportService, auditService} = this.deps;
 		const {users: userRepository, email: emailService} = this.deps.apiContext.services;
-		const resolvedReport = await reportService.resolveReport(reportId, adminUserId, publicComment, auditLogReason);
+		const resolvedReport = await reportService.resolveReport(reportId, adminUserId, publicComment, auditLogReason, {
+			outcome: resolution,
+			resolvedBy: 'staff',
+		});
 		let reporterDmSent = false;
 		let reporterEmailSent = false;
 		const reporter =
@@ -147,6 +154,7 @@ export class AdminReportService {
 				['notify_reporter', notifyReporter ? 'true' : 'false'],
 				['reporter_dm_sent', reporterDmSent ? 'true' : 'false'],
 				['reporter_email_sent', reporterEmailSent ? 'true' : 'false'],
+				...(resolution ? [['resolution', resolution] as [string, string]] : []),
 			]),
 		});
 		return {
@@ -418,7 +426,8 @@ export class AdminReportService {
 
 	private async getMessageResponseAccessForAdmin(channelId: ChannelID): Promise<MessageResponseAccessContext> {
 		const channel = await this.deps.channelRepository.findUnique(channelId);
-		return channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
+		const access = channel ? messageResponseAccessForChannel(channel) : messageResponseAccessForGuild(null);
+		return {...access, includeHidden: true};
 	}
 
 	private async getMutualDmChannelId(report: IARSubmission): Promise<string | null> {
@@ -617,7 +626,11 @@ export class AdminReportService {
 			return null;
 		}
 		try {
-			const user = await this.deps.userCacheService.getUserPartialResponse(userId, requestCache);
+			const cached = await this.deps.userCacheService.getUserPartialResponse(userId, requestCache);
+			const stored = isHiddenPartial(cached) ? await this.deps.apiContext.services.users.findUnique(userId) : null;
+			const user = stored
+				? {username: stored.username, global_name: stored.globalName, discriminator: stored.discriminator.toString()}
+				: cached;
 			const discriminator = user.discriminator?.padStart(4, '0') ?? '0000';
 			return {
 				tag: `${user.username}#${discriminator}`,

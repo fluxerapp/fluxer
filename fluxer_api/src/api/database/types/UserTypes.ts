@@ -75,6 +75,7 @@ export interface UserRow {
 	deletion_audit_log_reason: Nullish<string>;
 	deletion_scheduled_by?: Nullish<UserID>;
 	deletion_scheduled_at?: Nullish<Date>;
+	content_hidden_since?: Nullish<Date>;
 	acls: Nullish<Set<string>>;
 	traits: Nullish<Set<string>>;
 	first_refund_at: Nullish<Date>;
@@ -139,6 +140,7 @@ export const USER_COLUMNS = [
 	'deletion_audit_log_reason',
 	'deletion_scheduled_by',
 	'deletion_scheduled_at',
+	'content_hidden_since',
 	'acls',
 	'traits',
 	'first_refund_at',
@@ -202,6 +204,7 @@ export const EMPTY_USER_ROW: UserRow = {
 	deletion_audit_log_reason: null,
 	deletion_scheduled_by: null,
 	deletion_scheduled_at: null,
+	content_hidden_since: null,
 	acls: null,
 	traits: null,
 	first_refund_at: null,

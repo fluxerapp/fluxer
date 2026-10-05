@@ -25,6 +25,7 @@ export interface MessageResponseAccessContext {
 	sourceGuildId: GuildID | null;
 	messageHistoryCutoff: string | null;
 	canReadMessageHistory: boolean;
+	includeHidden?: boolean;
 }
 
 interface ExtractedMentions {
@@ -105,6 +106,7 @@ export class MessageResponseDataService {
 				? new Date(params.access.messageHistoryCutoff).getTime()
 				: null,
 			can_read_message_history: params.access.canReadMessageHistory,
+			include_hidden: params.access.includeHidden ?? false,
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
 			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
@@ -146,6 +148,7 @@ export class MessageResponseDataService {
 				? new Date(params.access.messageHistoryCutoff).getTime()
 				: null,
 			can_read_message_history: params.access.canReadMessageHistory,
+			include_hidden: params.access.includeHidden ?? false,
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
 			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
@@ -177,6 +180,7 @@ export class MessageResponseDataService {
 				? new Date(params.access.messageHistoryCutoff).getTime()
 				: null,
 			can_read_message_history: params.access.canReadMessageHistory,
+			include_hidden: params.access.includeHidden ?? false,
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
 			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
@@ -245,6 +249,7 @@ export class MessageResponseDataService {
 					? new Date(params.access.messageHistoryCutoff).getTime()
 					: null,
 				can_read_message_history: params.access.canReadMessageHistory,
+				include_hidden: params.access.includeHidden ?? false,
 				media_endpoint: Config.endpoints.media,
 				media_proxy_secret_key: Config.mediaProxy.secretKey,
 				attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],

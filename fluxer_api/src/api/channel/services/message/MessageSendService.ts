@@ -52,7 +52,7 @@ import type {Webhook} from '@app/api/models/Webhook';
 import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
-import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
+import {isContentHidden, isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {
 	ChannelTypes,
@@ -942,6 +942,7 @@ export class MessageSendService {
 			}
 		}
 		const suppressDmRecipientDelivery = dmRecipientId !== null && isDirectDeliverySuppressed(user);
+		const suppressDelivery = suppressDmRecipientDelivery || isContentHidden(user, messageId);
 		const channelHadMessages = channel.lastMessageId !== null;
 		const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({
 			messageId,
@@ -973,7 +974,7 @@ export class MessageSendService {
 			messageId,
 			mentionChannels: mentionData?.mentionChannels,
 		});
-		if (!suppressDmRecipientDelivery) {
+		if (!suppressDelivery) {
 			await this.settlePostCreateWork(messageId, [
 				{
 					step: 'update_dm_recipients',
@@ -1000,7 +1001,7 @@ export class MessageSendService {
 		await this.settlePostCreateWork(messageId, [
 			{
 				step: 'dispatch',
-				promise: suppressDmRecipientDelivery
+				promise: suppressDelivery
 					? this.deps.dispatchService.dispatchMessageCreateToUser({
 							channel,
 							message,
@@ -1031,7 +1032,7 @@ export class MessageSendService {
 			guildOwnerId: guild?.owner_id ? createUserID(BigInt(guild.owner_id)) : null,
 			dmRecipientId,
 			channelHadMessages,
-			delivered: !suppressDmRecipientDelivery,
+			delivered: !suppressDelivery,
 			userRepository: this.deps.userRepository,
 		});
 		void enqueueDeferredEmbeds().catch((error) => {

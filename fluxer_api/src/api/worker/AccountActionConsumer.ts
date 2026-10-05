@@ -14,6 +14,9 @@ import {
 import {Logger} from '@app/api/Logger';
 import {
 	type AccountStateDeps,
+	applyDeleteUserMessages,
+	applyHideProfile,
+	applyHideRecentMessages,
 	applyLimitNewConversations,
 	applySetAccountLimit,
 	applyTempBanIp,
@@ -70,6 +73,12 @@ export function applyAction(deps: AccountActionDeps, env: ActionEnvelope): Promi
 			return applyTempBanIp(deps.state, env);
 		case 'limit_new_conversations':
 			return applyLimitNewConversations(deps.state, env);
+		case 'hide_profile':
+			return applyHideProfile(deps.state, env);
+		case 'hide_recent_messages':
+			return applyHideRecentMessages(deps.state, env);
+		case 'delete_user_messages':
+			return applyDeleteUserMessages(deps.state, env);
 		default:
 			return Promise.resolve(outcomeOf(env as ActionEnvelope, 'unsupported'));
 	}

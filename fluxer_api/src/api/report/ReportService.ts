@@ -27,7 +27,8 @@ import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {DSAReportTicketRow} from '@app/api/database/types/ReportTypes';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
-import type {ReportTarget} from '@app/api/infrastructure/activity/Contract.generated';
+import type {ReportOutcome, ReportTarget, ResolvedBy} from '@app/api/infrastructure/activity/Contract.generated';
+import {emitReportResolved} from '@app/api/infrastructure/activity/ModerationEvents';
 import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
@@ -48,6 +49,7 @@ import type {
 import {ReportStatus, ReportType} from '@app/api/report/IReportRepository';
 import type {IReportSearchService} from '@app/api/search/IReportSearchService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {isUnderEnforcement} from '@app/api/user/ProfileVisibility';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InviteTypes, MessageFlags, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -901,6 +903,7 @@ export class ReportService {
 		adminUserId: UserID,
 		publicComment: string | null,
 		auditLogReason: string | null,
+		resolution: {outcome?: ReportOutcome; resolvedBy?: ResolvedBy} = {},
 	): Promise<IARSubmission> {
 		const report = await this.reportRepository.resolveReport(reportId, adminUserId, publicComment, auditLogReason);
 		if (this.reportSearchService && 'updateReport' in this.reportSearchService) {
@@ -908,7 +911,20 @@ export class ReportService {
 				Logger.error({error, reportId: report.reportId}, 'Failed to update report in search index');
 			});
 		}
+		const outcome = resolution.outcome ?? (await this.observedOutcome(report));
+		await emitReportResolved(report, outcome, resolution.resolvedBy ?? 'staff');
 		return report;
+	}
+
+	private async observedOutcome(report: IARSubmission): Promise<ReportOutcome> {
+		if (!report.reportedUserId) return 'unspecified';
+		try {
+			const reported = await this.userRepository.findUnique(report.reportedUserId);
+			return reported && isUnderEnforcement(reported) ? 'actioned' : 'unspecified';
+		} catch (error) {
+			Logger.warn({error, reportId: report.reportId}, 'Could not read the reported account for a resolved report');
+			return 'unspecified';
+		}
 	}
 
 	private async gatherMessageContext(

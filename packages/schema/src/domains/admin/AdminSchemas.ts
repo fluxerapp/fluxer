@@ -228,10 +228,20 @@ export const ListReportsQuery = z.object({
 
 export type ListReportsQuery = z.infer<typeof ListReportsQuery>;
 
+const ReportResolutionEnum = createNamedStringLiteralUnion(
+	[
+		['actioned', 'actioned', 'The report was valid and action was taken'],
+		['no_violation', 'no_violation', 'The report was reviewed and no violation was found'],
+		['duplicate', 'duplicate', 'The report repeats one that was already handled'],
+	],
+	'How the report was resolved',
+);
+
 export const UpdateReportRequest = z.object({
 	status: z.literal('resolved').describe('The status to move the report to'),
 	public_comment: createStringType(0, 512).optional().describe('Public comment to include with the resolution'),
 	notify_reporter: z.boolean().default(true).describe('Whether to notify the reporter by system DM and email'),
+	resolution: ReportResolutionEnum.optional().describe('How the report was resolved'),
 });
 
 export type UpdateReportRequest = z.infer<typeof UpdateReportRequest>;

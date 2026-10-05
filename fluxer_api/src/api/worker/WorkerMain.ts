@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminMessageDeletionService} from '@app/api/admin/services/AdminMessageDeletionService';
+import {AdminMessageShredService} from '@app/api/admin/services/AdminMessageShredService';
 import {Config} from '@app/api/Config';
 import {createApiContext} from '@app/api/CreateApiContext';
 import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
@@ -282,9 +285,25 @@ export async function startWorkerMain(): Promise<void> {
 		});
 		startSharedListWatch(jsConnectionManager.getJetStreamClient());
 		if (activeWorkerLanes.some((lane) => lane.name === 'lifecycle')) {
+			const apiContext = createApiContext();
+			const auditService = new AdminAuditService(getAdminRepository(), apiContext.services.snowflake);
+			const messagePurge = new AdminMessageDeletionService({
+				channelRepository: dependencies.channelRepository,
+				messageShredService: new AdminMessageShredService({apiContext, auditService}),
+				auditService,
+			});
 			startAccountActionConsumer({
 				js: jsConnectionManager.getJetStreamClient(),
-				state: accountStateDepsFromContext(createApiContext(), getAdminRepository()),
+				state: accountStateDepsFromContext(
+					apiContext,
+					getAdminRepository(),
+					{
+						userCacheService: dependencies.userCacheService,
+						guildRepository: dependencies.guildRepository,
+					},
+					messagePurge,
+					dependencies.channelRepository,
+				),
 			});
 			Logger.info('Account action consumer started');
 		}

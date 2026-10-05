@@ -2,8 +2,12 @@
 
 import type {ApiContext} from '@app/api/ApiContext';
 import type {AdminRepository} from '@app/api/admin/AdminRepository';
-import {createUserID} from '@app/api/BrandedTypes';
+import type {AdminMessageDeletionService} from '@app/api/admin/services/AdminMessageDeletionService';
+import {type ChannelID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
 import {withAccountChangeSource} from '@app/api/infrastructure/activity/ActivityMeta';
 import type {
@@ -21,42 +25,85 @@ import {
 	isNewConversationLimitExempt,
 	setNewConversationLimit,
 } from '@app/api/user/NewConversationLimit';
+import {
+	type PartialUserChangePropagationDeps,
+	propagatePartialUserChange,
+} from '@app/api/user/services/PartialUserChangePropagation';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {getSameIpDecisionKey, isPublicIpAddress, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 
 export type ActionOf<T extends ActionEnvelope['type']> = Extract<ActionEnvelope, {type: T}>;
 
 export interface AccountUpdateDispatch {
 	userUpdated(user: User): Promise<void>;
+	profileChanged(user: User): Promise<void>;
+	contentVisibilityChanged(user: User): Promise<void>;
+	messagesRemoved(channelId: ChannelID, authorId: UserID, messageIds: Array<MessageID>): Promise<void>;
 }
 
 export interface AccountStateDeps {
-	users: Pick<IUserRepository, 'findUnique' | 'compareAndSetFlags'>;
+	users: Pick<IUserRepository, 'findUnique' | 'compareAndSetFlags' | 'patchUpsert'>;
 	dispatch: AccountUpdateDispatch;
 	ipBans: Pick<AdminRepository, 'isIpBanned' | 'banIpTemp'>;
 	cache: Pick<ICacheService, 'publish' | 'get' | 'set' | 'delete'>;
+	messages: Pick<AdminMessageDeletionService, 'deleteAllUserMessages'>;
+	authored: Pick<IChannelRepository, 'listMessagesByAuthor'>;
 	now?: () => number;
 }
 
 const FLAGS_WRITE_ATTEMPTS = 3;
+const AUTHORED_PAGE_SIZE = 200;
 const MIN_TEMP_BAN_SECONDS = 60;
 
-function gatewayDispatch(gateway: Pick<IGatewayService, 'dispatchPresence'>): AccountUpdateDispatch {
+type ProfilePropagation = Omit<PartialUserChangePropagationDeps, 'gatewayService'>;
+
+function gatewayDispatch(
+	gateway: IGatewayService,
+	profile: ProfilePropagation,
+	channels: Pick<IChannelRepository, 'findUnique'>,
+): AccountUpdateDispatch {
 	return {
 		async userUpdated(user) {
 			await gateway.dispatchPresence({userId: user.id, event: 'USER_UPDATE', data: mapUserToPrivateResponse(user)});
 		},
+		async profileChanged(user) {
+			await propagatePartialUserChange({...profile, gatewayService: gateway}, user);
+		},
+		async contentVisibilityChanged(user) {
+			await profile.userCacheService.invalidateUserCache(user.id);
+		},
+		async messagesRemoved(channelId, authorId, messageIds) {
+			const channel = await channels.findUnique(channelId);
+			if (!channel) return;
+			for (const messageId of messageIds) {
+				await dispatchChannelEvent({
+					gatewayService: gateway,
+					channel,
+					event: 'MESSAGE_DELETE',
+					data: {channel_id: channelId.toString(), id: messageId.toString(), author_id: authorId.toString()},
+				});
+			}
+		},
 	};
 }
 
-export function accountStateDepsFromContext(ctx: ApiContext, ipBans: AccountStateDeps['ipBans']): AccountStateDeps {
+export function accountStateDepsFromContext(
+	ctx: ApiContext,
+	ipBans: AccountStateDeps['ipBans'],
+	profile: Omit<ProfilePropagation, 'userRepository'>,
+	messages: AccountStateDeps['messages'],
+	channels: Pick<IChannelRepository, 'findUnique' | 'listMessagesByAuthor'>,
+): AccountStateDeps {
 	return {
 		users: ctx.services.users,
-		dispatch: gatewayDispatch(ctx.services.gateway),
+		dispatch: gatewayDispatch(ctx.services.gateway, {...profile, userRepository: ctx.services.users}, channels),
 		ipBans,
 		cache: ctx.services.cache,
+		messages,
+		authored: channels,
 	};
 }
 
@@ -111,6 +158,95 @@ export async function applySetAccountLimit(
 		}
 		throw new Error('User flags kept changing during apply');
 	});
+}
+
+export async function applyHideProfile(deps: AccountStateDeps, env: ActionOf<'hide_profile'>): Promise<ActionOutcome> {
+	return withAccountChangeSource('action', async () => {
+		const userId = createUserID(BigInt(env.user_id));
+		let user = await deps.users.findUnique(userId);
+		for (let attempt = 0; attempt < FLAGS_WRITE_ATTEMPTS; attempt++) {
+			if (!user) return outcomeOf(env, 'ineligible');
+			if (isIneligible(user)) return outcomeOf(env, 'ineligible', user);
+			if (env.on && isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
+			const hidden = (user.flags & UserFlags.PROFILE_HIDDEN) !== 0n;
+			if (hidden === env.on) return outcomeOf(env, 'noop', user);
+			const target = env.on ? user.flags | UserFlags.PROFILE_HIDDEN : user.flags & ~UserFlags.PROFILE_HIDDEN;
+			const updated = await deps.users.compareAndSetFlags(user, target);
+			if (updated) {
+				await deps.dispatch.userUpdated(updated);
+				await deps.dispatch.profileChanged(updated);
+				return outcomeOf(env, 'applied', updated);
+			}
+			user = await deps.users.findUnique(userId);
+		}
+		throw new Error('User flags kept changing during apply');
+	});
+}
+
+export async function applyHideRecentMessages(
+	deps: AccountStateDeps,
+	env: ActionOf<'hide_recent_messages'>,
+): Promise<ActionOutcome> {
+	return withAccountChangeSource('action', async () => {
+		const user = await deps.users.findUnique(createUserID(BigInt(env.user_id)));
+		if (!user) return outcomeOf(env, 'ineligible');
+		if (isIneligible(user)) return outcomeOf(env, 'ineligible', user);
+		const current = user.contentHiddenSince?.getTime() ?? null;
+		if (!env.on) {
+			if (current === null) return outcomeOf(env, 'noop', user);
+			const shown = await deps.users.patchUpsert(user.id, {content_hidden_since: null}, user.toRow());
+			await deps.dispatch.contentVisibilityChanged(shown);
+			return outcomeOf(env, 'applied', shown);
+		}
+		if (isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
+		const since = current === null ? env.since_ms : Math.min(current, env.since_ms);
+		let hidden = user;
+		if (since !== current) {
+			hidden = await deps.users.patchUpsert(user.id, {content_hidden_since: new Date(since)}, user.toRow());
+			await deps.dispatch.contentVisibilityChanged(hidden);
+		}
+		const removed = await removeAuthoredMessagesSince(deps, user.id, since);
+		return outcomeOf(env, since === current ? 'noop' : 'applied', hidden, `messages=${removed}`);
+	});
+}
+
+async function removeAuthoredMessagesSince(deps: AccountStateDeps, authorId: UserID, sinceMs: number): Promise<number> {
+	let cursor: MessageID | undefined;
+	let removed = 0;
+	while (true) {
+		const refs = await deps.authored.listMessagesByAuthor(authorId, AUTHORED_PAGE_SIZE, cursor);
+		const inWindow = refs.filter(({messageId}) => snowflakeToDate(messageId).getTime() >= sinceMs);
+		const byChannel = new Map<ChannelID, Array<MessageID>>();
+		for (const {channelId, messageId} of inWindow) {
+			const ids = byChannel.get(channelId);
+			if (ids) ids.push(messageId);
+			else byChannel.set(channelId, [messageId]);
+		}
+		for (const [channelId, messageIds] of byChannel) {
+			await deps.dispatch.messagesRemoved(channelId, authorId, messageIds);
+		}
+		removed += inWindow.length;
+		if (inWindow.length < refs.length || refs.length < AUTHORED_PAGE_SIZE) return removed;
+		cursor = refs[refs.length - 1].messageId;
+	}
+}
+
+export async function applyDeleteUserMessages(
+	deps: AccountStateDeps,
+	env: ActionOf<'delete_user_messages'>,
+): Promise<ActionOutcome> {
+	if (!env.on) return outcomeOf(env, 'unsupported', null, 'a message purge cannot be reversed');
+	const user = await deps.users.findUnique(createUserID(BigInt(env.user_id)));
+	if (!user) return outcomeOf(env, 'ineligible');
+	if (user.isBot) return outcomeOf(env, 'ineligible', user);
+	if (isAccountLimitExempt(user)) return outcomeOf(env, 'exempt', user);
+	const purge = await deps.messages.deleteAllUserMessages(
+		{user_id: user.id, dry_run: false},
+		SYSTEM_USER_ID,
+		`Automated action ${env.id}`,
+	);
+	if (purge.message_count === 0) return outcomeOf(env, 'noop', user);
+	return outcomeOf(env, 'applied', user, `messages=${purge.message_count} job=${purge.job_id ?? ''}`);
 }
 
 function parseBanTarget(value: string): ReturnType<typeof parseIpAddress> {

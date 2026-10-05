@@ -19,6 +19,7 @@ import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
+import {isEnforcementDeletionReason} from '@app/api/user/ProfileVisibility';
 import {clearPendingDeletion, reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
@@ -246,7 +247,7 @@ export class AdminUserDeletionService {
 		let knownIps: ReadonlySet<string> = new Set();
 		if (data.reason_code !== DeletionReasons.USER_REQUESTED) {
 			knownIps = await this.banIdentifiersForScheduledDeletion({user, adminUserId, auditLogReason});
-			await this.resolvePendingReportsAgainstUser({user, adminUserId});
+			await this.resolvePendingReportsAgainstUser({user, adminUserId, reasonCode: data.reason_code});
 		}
 		await emitAdminAction(adminUserId, userId, 'schedule_deletion', {reasonCode: data.reason_code, ips: knownIps});
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
@@ -381,8 +382,13 @@ export class AdminUserDeletionService {
 		return knownIps;
 	}
 
-	private async resolvePendingReportsAgainstUser(params: {user: User; adminUserId: UserID}): Promise<void> {
-		const {user, adminUserId} = params;
+	private async resolvePendingReportsAgainstUser(params: {
+		user: User;
+		adminUserId: UserID;
+		reasonCode: number;
+	}): Promise<void> {
+		const {user, adminUserId, reasonCode} = params;
+		const outcome = isEnforcementDeletionReason(reasonCode) ? 'actioned' : 'auto_resolved';
 		const {reportService, auditService} = this.deps;
 		const reportSearchService = getReportSearchService();
 		if (!reportSearchService) {
@@ -423,7 +429,10 @@ export class AdminUserDeletionService {
 		for (const hitId of pendingReportIds) {
 			const reportId = createReportID(BigInt(hitId));
 			try {
-				await reportService.resolveReport(reportId, adminUserId, null, auditLogReason);
+				await reportService.resolveReport(reportId, adminUserId, null, auditLogReason, {
+					outcome,
+					resolvedBy: 'system',
+				});
 				resolvedCount++;
 			} catch (error) {
 				if (error instanceof ReportAlreadyResolvedError) continue;

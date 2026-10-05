@@ -103,6 +103,8 @@ pub enum MessageRequest {
         include_reactions: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
+        #[serde(default)]
+        include_hidden: bool,
     },
     BuildResponse {
         message: Message,
@@ -117,6 +119,8 @@ pub enum MessageRequest {
         include_reactions: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
+        #[serde(default)]
+        include_hidden: bool,
     },
     BuildResponses {
         messages: Vec<Message>,
@@ -129,6 +133,8 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        #[serde(default)]
+        include_hidden: bool,
     },
     ListResponses {
         channel_id: String,
@@ -145,6 +151,8 @@ pub enum MessageRequest {
         #[serde(default)]
         attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
+        #[serde(default)]
+        include_hidden: bool,
     },
     ExtractMentions {
         contents: Vec<String>,

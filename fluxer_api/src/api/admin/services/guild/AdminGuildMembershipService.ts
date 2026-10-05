@@ -78,6 +78,7 @@ export class AdminGuildMembershipService {
 				reason: data.reason ?? undefined,
 				banDurationSeconds: data.ban_duration_seconds ?? undefined,
 				skipGuildAuditLog: true,
+				by: 'staff',
 			},
 			auditLogReason,
 		);

@@ -30759,7 +30759,8 @@
 						"value": "32",
 						"description": "Bot requires manual approval for friend requests"
 					},
-					{"name": "SPAMMER", "value": "64", "description": "User is flagged as a spammer"}
+					{"name": "SPAMMER", "value": "64", "description": "User is flagged as a spammer"},
+					{"name": "PROFILE_HIDDEN", "value": "128", "description": "User profile details are hidden"}
 				]
 			},
 			"RefreshedAttachmentUrl": {

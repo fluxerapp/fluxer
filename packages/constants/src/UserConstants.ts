@@ -57,6 +57,7 @@ export const UserFlags = {
 	FRIENDLY_BOT: 1n << 4n,
 	FRIENDLY_BOT_MANUAL_APPROVAL: 1n << 5n,
 	SPAMMER: 1n << 6n,
+	PROFILE_HIDDEN: 1n << 7n,
 	DELETED: 1n << 34n,
 	SELF_DELETED: 1n << 36n,
 	DISABLED: 1n << 38n,
@@ -79,6 +80,7 @@ export const UserFlagsDescriptions: Record<keyof typeof UserFlags, string> = {
 	FRIENDLY_BOT: 'Bot accepts friend requests from users',
 	FRIENDLY_BOT_MANUAL_APPROVAL: 'Bot requires manual approval for friend requests',
 	SPAMMER: 'User is flagged as a spammer',
+	PROFILE_HIDDEN: 'User profile details are hidden from other users',
 	DELETED: 'User account has been deleted',
 	SELF_DELETED: 'User account was self-deleted',
 	DISABLED: 'User account is disabled',
@@ -153,6 +155,8 @@ export const DELETED_USER_USERNAME = 'DeletedUser';
 export const DELETED_USER_GLOBAL_NAME = 'Deleted User';
 export const DELETED_USER_DISCRIMINATOR = 0;
 export const DELETED_USER_ID = 1n;
+export const HIDDEN_USER_USERNAME = 'HiddenUser';
+export const HIDDEN_USER_DISCRIMINATOR = 0;
 export const PublicUserFlags = {
 	STAFF: Number(UserFlags.STAFF),
 	PARTNER: Number(UserFlags.PARTNER),
@@ -160,6 +164,7 @@ export const PublicUserFlags = {
 	FRIENDLY_BOT: Number(UserFlags.FRIENDLY_BOT),
 	FRIENDLY_BOT_MANUAL_APPROVAL: Number(UserFlags.FRIENDLY_BOT_MANUAL_APPROVAL),
 	SPAMMER: Number(UserFlags.SPAMMER),
+	PROFILE_HIDDEN: Number(UserFlags.PROFILE_HIDDEN),
 } as const;
 export const PublicUserFlagsDescriptions: Record<keyof typeof PublicUserFlags, string> = {
 	STAFF: 'User is a staff member',
@@ -168,6 +173,7 @@ export const PublicUserFlagsDescriptions: Record<keyof typeof PublicUserFlags, s
 	FRIENDLY_BOT: 'Bot accepts friend requests from users',
 	FRIENDLY_BOT_MANUAL_APPROVAL: 'Bot requires manual approval for friend requests',
 	SPAMMER: 'User is flagged as a spammer',
+	PROFILE_HIDDEN: 'User profile details are hidden',
 };
 export const ThemeTypes = {
 	DARK: 'dark',

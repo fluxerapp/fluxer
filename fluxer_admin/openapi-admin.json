@@ -9855,6 +9855,17 @@
 						"default": true,
 						"description": "Whether to notify the reporter by system DM and email",
 						"type": "boolean"
+					},
+					"resolution": {
+						"description": "How the report was resolved",
+						"x-enumNames": ["actioned", "no_violation", "duplicate"],
+						"x-enumDescriptions": [
+							"The report was valid and action was taken",
+							"The report was reviewed and no violation was found",
+							"The report repeats one that was already handled"
+						],
+						"enum": ["actioned", "no_violation", "duplicate"],
+						"type": "string"
 					}
 				},
 				"required": ["status"]
@@ -13235,6 +13246,7 @@
 						"description": "Bot requires manual approval for friend requests"
 					},
 					{"name": "SPAMMER", "value": "64", "description": "User is flagged as a spammer"},
+					{"name": "PROFILE_HIDDEN", "value": "128", "description": "User profile details are hidden from other users"},
 					{"name": "DELETED", "value": "17179869184", "description": "User account has been deleted"},
 					{"name": "SELF_DELETED", "value": "68719476736", "description": "User account was self-deleted"},
 					{"name": "DISABLED", "value": "274877906944", "description": "User account is disabled"},
@@ -14102,7 +14114,8 @@
 						"value": "32",
 						"description": "Bot requires manual approval for friend requests"
 					},
-					{"name": "SPAMMER", "value": "64", "description": "User is flagged as a spammer"}
+					{"name": "SPAMMER", "value": "64", "description": "User is flagged as a spammer"},
+					{"name": "PROFILE_HIDDEN", "value": "128", "description": "User profile details are hidden"}
 				]
 			},
 			"MessageEmbedChildResponse": {

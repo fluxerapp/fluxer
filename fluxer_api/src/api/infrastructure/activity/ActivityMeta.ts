@@ -57,6 +57,15 @@ export function currentAccountChangeSource(): ChangeSource {
 	return sourceContext.getStore() ?? requestContext.getStore()?.source ?? 'other';
 }
 
+export function anonymousActivityMeta(): Meta {
+	const context = requestContext.getStore();
+	return {
+		...workerMeta(),
+		channel: context?.channel ?? processChannel,
+		request_id: context?.requestId ?? null,
+	};
+}
+
 export function workerMeta(): Meta {
 	return {ip: null, country: null, ua: null, locale: null, channel: 'worker', request_id: null};
 }
