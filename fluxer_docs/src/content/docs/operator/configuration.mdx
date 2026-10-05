@@ -928,6 +928,10 @@ Default `push.fluxer.com`. Hostnames, comma separated, of the Fluxer-run push re
 
 Default empty. Hostnames, comma separated, of a push relay this instance runs itself. `push` delivers a browser push endpoint on one of them straight through its own APNs or FCM credentials, with no HTTP hop. Compose forwards it from `.env`.
 
+#### `FLUXER_PUSH_SERVICE_PRIVATE_HOSTS`
+
+Default empty. Hostnames, comma separated, that a push endpoint may use even when they resolve to private, loopback, or other non-public addresses, such as a ntfy server on your own network. `push` refuses every other such endpoint and logs `blocked_address`. Compose forwards it from `.env`.
+
 `push` also runs as a relay under `--mode relay`, which the stack does not use. Only that mode reads `FLUXER_PUSH_RELAY_MAX_CONCURRENT`, default `1024`, `FLUXER_PUSH_RELAY_MAX_BODY_BYTES`, default `2816`, `FLUXER_PUSH_RELAY_TRUSTED_PROXY_HOPS`, default `1`, and `FLUXER_PUSH_RELAY_SOURCE_BUCKET_ENABLED`, default `false`. Compose does not forward them, and [Names the stack has no use for](#names-the-stack-has-no-use-for) lists them.
 
 ## Payments

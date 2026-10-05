@@ -185,6 +185,7 @@ pub struct DeliveryConfig {
     pub apns: Option<ApnsConfig>,
     pub fcm: Option<FcmConfig>,
     pub own_relay_hosts: Vec<String>,
+    pub private_hosts: Vec<String>,
     pub managed_relay_hosts: Vec<String>,
     pub relay_consent_accepted: bool,
 }
@@ -266,7 +267,8 @@ impl DeliveryConfig {
             vapid: vapid_config(&env)?,
             apns: apns_config(&env)?,
             fcm: fcm_config(&env)?,
-            own_relay_hosts: own_relay_hosts(&env),
+            own_relay_hosts: host_list(&env, "FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS"),
+            private_hosts: host_list(&env, "FLUXER_PUSH_SERVICE_PRIVATE_HOSTS"),
             managed_relay_hosts: managed_relay_hosts(&env),
             relay_consent_accepted: parse_bool(
                 "FLUXER_PUSH_SERVICE_RELAY_CONSENT_ACCEPTED",
@@ -277,8 +279,8 @@ impl DeliveryConfig {
     }
 }
 
-fn own_relay_hosts(env: &Env) -> Vec<String> {
-    env.get("FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS")
+fn host_list(env: &Env, key: &str) -> Vec<String> {
+    env.get(key)
         .unwrap_or_default()
         .split(',')
         .map(|host| host.trim().to_ascii_lowercase())

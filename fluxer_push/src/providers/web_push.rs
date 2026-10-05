@@ -87,7 +87,7 @@ struct Record {
 }
 
 fn seal(state: &AppState, sub: &Subscription, envelope: &Value) -> Result<Record, SendOutcome> {
-    if !endpoint_is_allowed(&sub.endpoint) {
+    if !endpoint_is_allowed(&sub.endpoint, &state.cfg.private_hosts) {
         return Err(SendOutcome::permanent("endpoint_rejected"));
     }
     let (Some(p256dh), Some(auth)) = (sub.p256dh_key.as_deref(), sub.auth_key.as_deref()) else {
@@ -223,7 +223,7 @@ fn classify(status: u16) -> SendOutcome {
     }
 }
 
-fn endpoint_is_allowed(endpoint: &str) -> bool {
+fn endpoint_is_allowed(endpoint: &str, private_hosts: &[String]) -> bool {
     let Ok(url) = Url::parse(endpoint) else {
         return false;
     };
@@ -237,7 +237,9 @@ fn endpoint_is_allowed(endpoint: &str) -> bool {
         return false;
     }
     match url.host() {
-        Some(Host::Domain(host)) => is_public_hostname(host),
+        Some(Host::Domain(host)) => {
+            resolver::is_private_host(host, private_hosts) || is_public_hostname(host)
+        }
         Some(Host::Ipv4(ip)) => !resolver::is_blocked(IpAddr::V4(ip)),
         Some(Host::Ipv6(ip)) => !resolver::is_blocked(IpAddr::V6(ip)),
         None => false,

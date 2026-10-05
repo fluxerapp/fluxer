@@ -110,7 +110,7 @@ impl AppState {
             rpc: RpcClient::new(&cfg.rpc, http.clone(), Arc::clone(&metrics)),
             relay_consent,
             sidecar: Arc::new(Sidecar::new(Arc::clone(&metrics))),
-            web_push_http: vendor::web_push_http_client()?,
+            web_push_http: vendor::web_push_http_client(&cfg.private_hosts)?,
             apns_http: vendor::apns_http_client()?,
             tokens: TokenCache::new(),
             draining: watch::Sender::new(false),
