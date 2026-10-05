@@ -10,6 +10,8 @@ import {
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createReportID, createUserID} from '@app/api/BrandedTypes';
+import {sendChannelMessage, setupTestGuildWithMembers} from '@app/api/channel/tests/ChannelTestUtils';
+import {NcmecRepository} from '@app/api/csam/NcmecRepository';
 import {getGatewayService, getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {
 	createUserCacheService,
@@ -97,10 +99,32 @@ async function runBulkJob(
 	return result as unknown as BulkJobResult;
 }
 
-async function reportUser(harness: ApiTestHarness, reporter: TestAccount, targetUserId: string): Promise<string> {
+async function reportUser(
+	harness: ApiTestHarness,
+	reporter: TestAccount,
+	targetUserId: string,
+	category = 'spam_account',
+): Promise<string> {
 	const report = await createBuilder<ReportResponse>(harness, reporter.token)
 		.post('/reports/user')
-		.body({user_id: targetUserId, category: 'spam_account'})
+		.body({user_id: targetUserId, category})
+		.expect(HTTP_STATUS.OK)
+		.execute();
+	await drainSearchTasks();
+	return report.report_id;
+}
+
+async function reportMessage(
+	harness: ApiTestHarness,
+	reporter: TestAccount,
+	author: TestAccount,
+	channelId: string,
+	category: string,
+): Promise<string> {
+	const message = await sendChannelMessage(harness, author.token, channelId, 'Reported content');
+	const report = await createBuilder<ReportResponse>(harness, reporter.token)
+		.post('/reports/message')
+		.body({channel_id: channelId, message_id: message.id, category})
 		.expect(HTTP_STATUS.OK)
 		.execute();
 	await drainSearchTasks();
@@ -222,6 +246,76 @@ describe('bulkScheduleUserDeletion', () => {
 		expect(await new AdminRepository().isEmailBanned(target.email)).toBe(false);
 		const perUserLogs = await listAuditLogs('schedule_deletion');
 		expect(perUserLogs.filter((log) => log.targetId === BigInt(target.userId))).toHaveLength(1);
+	});
+	test('an abuse deletion resolves a spam report against the user', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const reporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const reportId = await reportUser(harness, reporter, target.userId);
+		const result = await runBulkJob([target.userId], admin.userId, DeletionReasons.BAN_EVASION);
+		expect(result.successful_count).toBe(1);
+		expect(await getReportStatus(reportId)).toBe(ReportStatus.RESOLVED);
+	});
+	test('an abuse deletion leaves child safety, underage user and self harm reports open', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const {owner, members, systemChannel} = await setupTestGuildWithMembers(harness, 3);
+		const [target, selfHarmReporter, userReporter] = members as [TestAccount, TestAccount, TestAccount];
+		const childSafetyReportId = await reportMessage(harness, owner, target, systemChannel.id, 'child_safety');
+		const selfHarmReportId = await reportMessage(harness, selfHarmReporter, target, systemChannel.id, 'self_harm');
+		const underageReportId = await reportUser(harness, userReporter, target.userId, 'underage_user');
+		const spamReportId = await reportUser(harness, await createTestAccount(harness), target.userId);
+		const result = await runBulkJob([target.userId], admin.userId, DeletionReasons.SPAM);
+		expect(result.successful_count).toBe(1);
+		expect(await getReportStatus(spamReportId)).toBe(ReportStatus.RESOLVED);
+		expect(await getReportStatus(childSafetyReportId)).toBe(ReportStatus.PENDING);
+		expect(await getReportStatus(selfHarmReportId)).toBe(ReportStatus.PENDING);
+		expect(await getReportStatus(underageReportId)).toBe(ReportStatus.PENDING);
+	});
+	test.each([
+		['OTHER', DeletionReasons.OTHER],
+		['INACTIVITY', DeletionReasons.INACTIVITY],
+		['CHILD_SEXUAL_CONTENT', DeletionReasons.CHILD_SEXUAL_CONTENT],
+		['CHILD_SAFETY_VIOLATION', DeletionReasons.CHILD_SAFETY_VIOLATION],
+	])('a deletion for %s leaves reports open', async (_label, reasonCode) => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const reporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const reportId = await reportUser(harness, reporter, target.userId);
+		const result = await runBulkJob([target.userId], admin.userId, reasonCode);
+		expect(result.successful_count).toBe(1);
+		expect(await getReportStatus(reportId)).toBe(ReportStatus.PENDING);
+		const resolutionLogs = await listAuditLogs('auto_resolve_reports_on_deletion');
+		expect(resolutionLogs.some((log) => log.targetId === BigInt(target.userId))).toBe(false);
+	});
+	test('an abuse deletion leaves reports open for a user with an NCMEC workflow', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const reporter = await createTestAccount(harness);
+		const target = await createTestAccount(harness);
+		const reportId = await reportUser(harness, reporter, target.userId);
+		const now = new Date();
+		await new NcmecRepository().upsertUserWorkflow({
+			user_id: BigInt(target.userId),
+			deleted_at: null,
+			deleted_by_admin_id: null,
+			deletion_private_reason: null,
+			deletion_ncmec_report_id: null,
+			archive_id: null,
+			archive_requested_at: null,
+			archive_requested_by_admin_id: null,
+			archive_audit_log_reason: null,
+			archive_completed_at: null,
+			deletion_job_queued_at: null,
+			previous_report_ids: null,
+			created_at: now,
+			updated_at: now,
+		});
+		const result = await runBulkJob([target.userId], admin.userId, DeletionReasons.SPAM);
+		expect(result.successful_count).toBe(1);
+		expect(await getReportStatus(reportId)).toBe(ReportStatus.PENDING);
 	});
 	test('a payload with notify_user false emails nobody and records it in the summary', async () => {
 		const admin = await createTestAccount(harness);

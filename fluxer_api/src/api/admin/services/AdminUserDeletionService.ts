@@ -9,6 +9,7 @@ import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserU
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {createReportID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import type {NcmecRepository} from '@app/api/csam/NcmecRepository';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {Logger} from '@app/api/Logger';
@@ -45,10 +46,27 @@ interface AdminUserDeletionServiceDeps {
 	billingRepository: BillingRepository;
 	oauth2Tokens: Pick<OAuth2TokenRepository, 'deleteAllAccessTokensForUser' | 'deleteAllRefreshTokensForUser'>;
 	storeEntitlementService: StoreEntitlementService;
+	ncmecRepository: Pick<NcmecRepository, 'getUserWorkflow'>;
 }
 
 const minUserRequestedDeletionDays = 14;
 const minStandardDeletionDays = 60;
+
+const reportResolvingDeletionReasons: ReadonlySet<number> = new Set([
+	DeletionReasons.SPAM,
+	DeletionReasons.CHEATING_OR_EXPLOITATION,
+	DeletionReasons.COORDINATED_RAIDING,
+	DeletionReasons.AUTOMATION_OR_SELFBOT,
+	DeletionReasons.SCAM_OR_SOCIAL_ENGINEERING,
+	DeletionReasons.HARASSMENT_OR_BULLYING,
+	DeletionReasons.BAN_EVASION,
+	DeletionReasons.TOKEN_OR_CREDENTIAL_SCAM,
+	DeletionReasons.HATE_SPEECH_OR_EXTREMIST_CONTENT,
+	DeletionReasons.MALICIOUS_LINKS_OR_MALWARE,
+	DeletionReasons.IMPERSONATION_OR_FAKE_IDENTITY,
+]);
+
+const manuallyResolvedReportCategories: ReadonlySet<string> = new Set(['child_safety', 'underage_user', 'self_harm']);
 
 function describePendingDeletion(user: User, prefix: string): Array<[string, string]> {
 	if (!user.pendingDeletionAt) return [];
@@ -247,6 +265,8 @@ export class AdminUserDeletionService {
 		let knownIps: ReadonlySet<string> = new Set();
 		if (data.reason_code !== DeletionReasons.USER_REQUESTED) {
 			knownIps = await this.banIdentifiersForScheduledDeletion({user, adminUserId, auditLogReason});
+		}
+		if (reportResolvingDeletionReasons.has(data.reason_code)) {
 			await this.resolvePendingReportsAgainstUser({user, adminUserId, reasonCode: data.reason_code});
 		}
 		await emitAdminAction(adminUserId, userId, 'schedule_deletion', {reasonCode: data.reason_code, ips: knownIps});
@@ -389,7 +409,10 @@ export class AdminUserDeletionService {
 	}): Promise<void> {
 		const {user, adminUserId, reasonCode} = params;
 		const outcome = isEnforcementDeletionReason(reasonCode) ? 'actioned' : 'auto_resolved';
-		const {reportService, auditService} = this.deps;
+		const {reportService, auditService, ncmecRepository} = this.deps;
+		if (await ncmecRepository.getUserWorkflow(user.id)) {
+			return;
+		}
 		const reportSearchService = getReportSearchService();
 		if (!reportSearchService) {
 			Logger.warn(
@@ -415,6 +438,7 @@ export class AdminUserDeletionService {
 				);
 				if (hits.length === 0) break;
 				for (const hit of hits) {
+					if (manuallyResolvedReportCategories.has(hit.category)) continue;
 					pendingReportIds.add(hit.id);
 				}
 				offset += hits.length;

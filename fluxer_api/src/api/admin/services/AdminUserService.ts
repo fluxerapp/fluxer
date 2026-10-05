@@ -12,6 +12,7 @@ import {AdminUserSecurityService} from '@app/api/admin/services/AdminUserSecurit
 import {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import {createChannelID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {NcmecRepository} from '@app/api/csam/NcmecRepository';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
@@ -112,6 +113,7 @@ export class AdminUserService {
 			billingRepository: getBillingRepository(),
 			oauth2Tokens: new OAuth2TokenRepository(),
 			storeEntitlementService: deps.storeEntitlementService,
+			ncmecRepository: new NcmecRepository(),
 		});
 		this.contactChangeLogService = contactChangeLog;
 	}
