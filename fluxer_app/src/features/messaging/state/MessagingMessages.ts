@@ -232,7 +232,12 @@ class Messages {
 
 	getLastEditableMessage(channelId: string): Message | undefined {
 		return this.getMessages(channelId).searchFromNewest((message) => {
-			return message.isCurrentUserAuthor() && message.state === MessageStates.SENT && message.isUserMessage();
+			return (
+				message.isCurrentUserAuthor() &&
+				message.state === MessageStates.SENT &&
+				message.isUserMessage() &&
+				!message.messageSnapshots
+			);
 		});
 	}
 
