@@ -32,6 +32,7 @@ const SKIPPABLE_ACTIONS = [
 	AuditLogActionType.WEBHOOK_UPDATE,
 	AuditLogActionType.EMOJI_UPDATE,
 	AuditLogActionType.STICKER_UPDATE,
+	AuditLogActionType.GUILD_EVENT_UPDATE,
 ];
 
 const RECORDED_ACTIONS = ALL_ACTIONS.filter((action) => !SKIPPABLE_ACTIONS.includes(action));
