@@ -87,6 +87,9 @@ guild_event_map() ->
         <<"GUILD_CREATE">> => guild_create,
         <<"GUILD_DELETE">> => guild_delete,
         <<"GUILD_EMOJIS_UPDATE">> => guild_emojis_update,
+        <<"GUILD_EVENT_CREATE">> => guild_event_create,
+        <<"GUILD_EVENT_DELETE">> => guild_event_delete,
+        <<"GUILD_EVENT_UPDATE">> => guild_event_update,
         <<"GUILD_HEALTH_UPDATE">> => guild_health_update,
         <<"GUILD_MEMBER_ADD">> => guild_member_add,
         <<"GUILD_MEMBER_LIST_UPDATE">> => guild_member_list_update,
@@ -144,6 +147,11 @@ normalize_binary_existing_atom_test() ->
 normalize_known_private_event_test() ->
     ?assertEqual(user_guild_settings_update, normalize(<<"USER_GUILD_SETTINGS_UPDATE">>)),
     ?assertEqual(user_note_update, normalize(<<"USER_NOTE_UPDATE">>)).
+
+normalize_guild_event_atoms_test() ->
+    ?assertEqual(guild_event_create, normalize(<<"GUILD_EVENT_CREATE">>)),
+    ?assertEqual(guild_event_update, normalize(<<"GUILD_EVENT_UPDATE">>)),
+    ?assertEqual(guild_event_delete, normalize(<<"GUILD_EVENT_DELETE">>)).
 
 normalize_binary_unknown_test() ->
     Result = normalize(<<"UNKNOWN_EVENT_XYZ_12345">>),

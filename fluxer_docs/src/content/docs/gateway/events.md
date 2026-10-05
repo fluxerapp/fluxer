@@ -414,6 +414,33 @@ A guild left the session's visibility, or became unavailable.
 
 Without `unavailable`, the account is no longer a member, and a client deletes everything it stores for that guild. With `unavailable: true`, the guild is temporarily unreachable. A client keeps the guild as an unavailable entry until a later [Guild Create](#guild-create) sends its full state again.
 
+### <span id="guild-event-create"></span>GUILD_EVENT_CREATE
+
+A community event was created.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | Guild the event belongs to |
+| event | [guild event](/http-api/guild-events/#guild-event-object) object | The created event |
+
+### <span id="guild-event-update"></span>GUILD_EVENT_UPDATE
+
+A community event changed.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | Guild the event belongs to |
+| event | [guild event](/http-api/guild-events/#guild-event-object) object | The event's complete updated representation |
+
+### <span id="guild-event-delete"></span>GUILD_EVENT_DELETE
+
+A community event was deleted.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild_id | snowflake | Guild the event belonged to |
+| event_id | snowflake | The deleted event |
+
 ### <span id="guild-role-create"></span>GUILD_ROLE_CREATE
 
 A role was created in a guild.

@@ -75,6 +75,30 @@ export class GuildEventService {
 		}
 	}
 
+	private async dispatchGuildEventCreate(params: {guildId: GuildID; event: GuildEventResponse}): Promise<void> {
+		await this.gatewayService.dispatchGuild({
+			guildId: params.guildId,
+			event: 'GUILD_EVENT_CREATE',
+			data: {event: params.event},
+		});
+	}
+
+	private async dispatchGuildEventUpdate(params: {guildId: GuildID; event: GuildEventResponse}): Promise<void> {
+		await this.gatewayService.dispatchGuild({
+			guildId: params.guildId,
+			event: 'GUILD_EVENT_UPDATE',
+			data: {event: params.event},
+		});
+	}
+
+	private async dispatchGuildEventDelete(params: {guildId: GuildID; eventId: GuildEventID}): Promise<void> {
+		await this.gatewayService.dispatchGuild({
+			guildId: params.guildId,
+			event: 'GUILD_EVENT_DELETE',
+			data: {event_id: params.eventId.toString()},
+		});
+	}
+
 	private async requireMembership(userId: UserID, guildId: GuildID): Promise<void> {
 		const guild = await this.gatewayService.getGuildData({guildId, userId});
 		if (!guild) throw new MissingAccessError();
@@ -146,6 +170,8 @@ export class GuildEventService {
 			created_at: new Date(),
 			version: 1,
 		});
+		const response = this.map(event);
+		await this.dispatchGuildEventCreate({guildId: params.guildId, event: response});
 		await this.recordAuditLog({
 			userId: params.userId,
 			event,
@@ -154,7 +180,7 @@ export class GuildEventService {
 			next: event,
 			auditLogReason,
 		});
-		return this.map(event);
+		return response;
 	}
 
 	private async ownedEvent(params: {
@@ -224,6 +250,8 @@ export class GuildEventService {
 			},
 			event.toRow(),
 		);
+		const response = this.map(updated);
+		await this.dispatchGuildEventUpdate({guildId: params.guildId, event: response});
 		await this.recordAuditLog({
 			userId: params.userId,
 			event: updated,
@@ -232,7 +260,7 @@ export class GuildEventService {
 			next: updated,
 			auditLogReason,
 		});
-		return this.map(updated);
+		return response;
 	}
 
 	async delete(
@@ -241,6 +269,7 @@ export class GuildEventService {
 	): Promise<void> {
 		const {event} = await this.ownedEvent(params);
 		await this.repository.delete(params.guildId, params.eventId);
+		await this.dispatchGuildEventDelete({guildId: params.guildId, eventId: params.eventId});
 		await this.recordAuditLog({
 			userId: params.userId,
 			event,
