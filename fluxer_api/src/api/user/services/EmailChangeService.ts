@@ -5,6 +5,7 @@ import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
 import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import type {User} from '@app/api/models/User';
+import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
 import type {EmailChangeRepository} from '@app/api/user/repositories/auth/EmailChangeRepository';
 import {
 	assertChangeCooldown,
@@ -300,7 +301,7 @@ export class EmailChangeService {
 	}
 
 	async verifyBouncedNew(user: User, ticket: string, code: string): Promise<User> {
-		const {users} = this.apiContext.services;
+		const {users, worker} = this.apiContext.services;
 		this.ensureBouncedEmailRecoveryAllowed(user);
 		const row = await getActiveChangeTicketForUser(this.repo, ticket, user.id);
 		if (row.require_original || !row.original_proof) {
@@ -314,6 +315,7 @@ export class EmailChangeService {
 			user.toRow(),
 		);
 		await this.deleteToken(emailToken);
+		await enqueueStripeCustomerEmailSync(worker, user, updatedUser);
 		return updatedUser;
 	}
 

@@ -11,6 +11,7 @@ import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlem
 import {getBillingBranding} from '@app/api/stripe/BillingBranding';
 import {getEffectiveBillingConfig, isCurrentCatalogPriceId} from '@app/api/stripe/BillingConfigCache';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {ensureStripeCustomer, isStripeResourceMissingError} from '@app/api/stripe/StripeCustomer';
 import {getCachedStripePriceSummary, type StripePriceSummary} from '@app/api/stripe/StripePriceSummaryCache';
 import {
 	canProvisionPremiumFromSubscriptionStatus,
@@ -42,14 +43,9 @@ import {UnclaimedAccountCannotMakePurchasesError} from '@fluxer/errors/src/domai
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {CheckoutPaymentMethod} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
 
 export const EU_WITHDRAWAL_WAIVER_TEXT_VERSION = '2026-04-23';
-
-function isStripeResourceMissingError(error: unknown): boolean {
-	return typeof error === 'object' && error !== null && 'code' in error && error.code === 'resource_missing';
-}
 
 type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
 type CheckoutSessionMode = CheckoutSessionCreateParams['mode'];
@@ -653,8 +649,6 @@ export class StripeCheckoutService {
 		}
 	}
 
-	private static readonly CUSTOMER_LOCK_TTL_SECONDS = seconds('30 seconds');
-
 	private resolveConfiguredPriceIds(countryCode?: string): ResolvedPriceIds {
 		const recurringCurrencyPreferences = getCurrencyPreferences(countryCode);
 		const giftCurrencyPreferences = getGiftCurrencyPreferences(countryCode);
@@ -888,59 +882,14 @@ export class StripeCheckoutService {
 	}
 
 	private async ensureStripeCustomer(existingUser: User): Promise<User> {
-		const user = await this.clearStaleStripeCustomer(existingUser);
-		if (user.stripeCustomerId) {
-			return user;
-		}
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
 		}
-		const lockKey = `stripe_customer_create_lock:${user.id}`;
-		const lockToken = await this.cacheService.acquireLock(lockKey, StripeCheckoutService.CUSTOMER_LOCK_TTL_SECONDS);
-		if (!lockToken) {
-			const freshUser = await this.userRepository.findUnique(user.id);
-			if (freshUser?.stripeCustomerId) {
-				return freshUser;
-			}
-			throw new StripeError('Failed to acquire customer creation lock');
-		}
-		try {
-			const freshUser = await this.userRepository.findUnique(user.id);
-			if (freshUser?.stripeCustomerId) {
-				return freshUser;
-			}
-			const customer = await this.stripe.customers.create({
-				email: user.email ?? undefined,
-				metadata: {
-					userId: user.id.toString(),
-				},
-			});
-			try {
-				await getBillingRepository().customers.upsertFromStripe(customer, {knownUserId: user.id});
-			} catch (mirrorErr) {
-				Logger.error(
-					{mirrorErr, customerId: customer.id},
-					'Mirror upsert failed after Stripe write; reconciler will heal',
-				);
-			}
-			const updatedUser = await this.userRepository.patchUpsert(
-				user.id,
-				{
-					stripe_customer_id: customer.id,
-				},
-				user.toRow(),
-			);
-			Logger.debug({userId: user.id, customerId: customer.id}, 'Stripe customer created');
-			return updatedUser;
-		} finally {
-			try {
-				const released = await this.cacheService.releaseLock(lockKey, lockToken);
-				if (!released) {
-					Logger.warn({userId: user.id, lockKey}, 'Customer creation lock token no longer matched on release');
-				}
-			} catch (error) {
-				Logger.error({error, userId: user.id, lockKey}, 'Failed to release customer creation lock');
-			}
-		}
+		return ensureStripeCustomer({
+			stripe: this.stripe,
+			user: await this.clearStaleStripeCustomer(existingUser),
+			userRepository: this.userRepository,
+			cacheService: this.cacheService,
+		});
 	}
 }

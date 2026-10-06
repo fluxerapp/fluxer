@@ -49,6 +49,7 @@ const LANE_CONFIG = {
 			'harvestUserData',
 			'batchGuildAuditLogMessageDeletes',
 			'reconcileUserPayments',
+			'syncStripeCustomerEmail',
 			'processAppStoreNotification',
 			'processGooglePlayNotification',
 			'refreshStorePurchase',

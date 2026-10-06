@@ -12,8 +12,9 @@ import {
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 interface EmailChangeStartResponse {
 	ticket: string;
@@ -128,6 +129,9 @@ describe('Email change flow', () => {
 	beforeEach(async () => {
 		await harness.reset();
 		await clearTestEmails(harness);
+	});
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
@@ -341,13 +345,14 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 	});
-	it('applies email changes for users who have ever purchased', async () => {
+	it('applies email changes for users who have ever purchased and syncs their Stripe customer', async () => {
 		const account = await createTestAccount(harness);
 		await createBuilderWithoutAuth(harness)
 			.post(`/test/users/${account.userId}/premium`)
-			.body({has_ever_purchased: true})
+			.body({has_ever_purchased: true, stripe_customer_id: 'cus_email_change_sync'})
 			.expect(200)
 			.execute();
+		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
 		const startResp = await startEmailChange(harness, account, account.password);
 		let originalProof: string;
 		if (startResp.require_original) {
@@ -387,9 +392,11 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 		expect(updated.has_ever_purchased).toBe(true);
+		expect(addJob).toHaveBeenCalledWith('syncStripeCustomerEmail', {userId: account.userId});
 	});
 	it('applies ordinary claimed email changes', async () => {
 		const account = await createTestAccount(harness);
+		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
 		const startResp = await startEmailChange(harness, account, account.password);
 		const emails = await listTestEmails(harness, {recipient: account.email});
 		const originalEmail = findLastTestEmail(emails, 'email_change_original');
@@ -425,6 +432,7 @@ describe('Email change flow', () => {
 			.execute();
 		expect(updated.email).toBe(newEmail);
 		expect(updated.verified).toBe(true);
+		expect(addJob).not.toHaveBeenCalledWith('syncStripeCustomerEmail', expect.anything());
 	});
 	it('requires MFA (not password) for email_token apply when user has TOTP enabled', async () => {
 		const account = await createTestAccount(harness);

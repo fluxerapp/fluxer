@@ -6,6 +6,7 @@ import {mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
 import type {Payment} from '@app/api/models/Payment';
 import type {User} from '@app/api/models/User';
 import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {syncStripeCustomerEmail} from '@app/api/stripe/StripeCustomer';
 import {extractId} from '@app/api/stripe/StripeUtils';
 import type {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
@@ -331,6 +332,11 @@ const reconcileUserPayments: WorkerTaskHandler = async (payload, helpers) => {
 	}
 	if (!user.stripeCustomerId) {
 		return;
+	}
+	try {
+		await syncStripeCustomerEmail(stripe, user);
+	} catch (error) {
+		Logger.warn({userId: userIdStr, error}, 'Failed to sync Stripe customer email during payment reconciliation');
 	}
 	const payments = await paymentRepository.findPaymentsByUserId(userId);
 	let reconciledCount = 0;

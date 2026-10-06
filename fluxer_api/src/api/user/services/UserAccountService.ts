@@ -14,6 +14,7 @@ import {Logger} from '@app/api/Logger';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
+import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
@@ -182,6 +183,7 @@ export class UserAccountService {
 					reason: 'user_requested',
 					actorUserId: user.id,
 				}),
+			() => enqueueStripeCustomerEmailSync(this.apiContext.services.worker, user, updatedUser),
 			async () => {
 				try {
 					await this.profileService.commitAssetChanges(profileResult);

@@ -9,8 +9,9 @@ import {
 	type TestAccount,
 } from '@app/api/auth/tests/AuthTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 interface BouncedEmailRequestNewResponse {
 	ticket: string;
@@ -51,12 +52,21 @@ describe('Bounced email recovery flow', () => {
 		await harness.reset();
 		await clearTestEmails(harness);
 	});
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
 	it('allows bounced users to replace email without original-email verification', async () => {
 		const account = await createTestAccount(harness);
 		await markEmailAsBounced(harness, account);
+		await createBuilderWithoutAuth(harness)
+			.post(`/test/users/${account.userId}/premium`)
+			.body({stripe_customer_id: 'cus_bounced_email_sync'})
+			.expect(200)
+			.execute();
+		const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
 		const initialMe = await createBuilder<UserPrivateResponse>(harness, account.token)
 			.get('/users/@me')
 			.expect(200)
@@ -94,6 +104,7 @@ describe('Bounced email recovery flow', () => {
 		const finalMe = await createBuilder<UserPrivateResponse>(harness, account.token).get('/users/@me').execute();
 		expect(finalMe.email).toBe(replacementEmail);
 		expect(finalMe.email_bounced).toBe(false);
+		expect(addJob).toHaveBeenCalledWith('syncStripeCustomerEmail', {userId: account.userId});
 	});
 	it('rejects bounced-email recovery for accounts that are not marked as bounced', async () => {
 		const account = await createTestAccount(harness);

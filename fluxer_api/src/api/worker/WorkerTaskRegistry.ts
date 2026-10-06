@@ -49,6 +49,7 @@ import syncCrosspostCopies from '@app/api/worker/tasks/SyncCrosspostCopies';
 import syncCrosspostedMessage from '@app/api/worker/tasks/SyncCrosspostedMessage';
 import syncDiscoveryIndex from '@app/api/worker/tasks/SyncDiscoveryIndex';
 import syncFileShaBlocklists from '@app/api/worker/tasks/SyncFileShaBlocklists';
+import syncStripeCustomerEmail from '@app/api/worker/tasks/SyncStripeCustomerEmail';
 import syncUrlBlocklists from '@app/api/worker/tasks/SyncUrlBlocklists';
 import userProcessPendingDeletion from '@app/api/worker/tasks/UserProcessPendingDeletion';
 import userProcessPendingDeletions from '@app/api/worker/tasks/UserProcessPendingDeletions';
@@ -100,6 +101,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	refreshSearchIndex,
 	removeChannelFollowers,
 	sendSystemDm,
+	syncStripeCustomerEmail,
 	syncFileShaBlocklists,
 	syncUrlBlocklists,
 	syncDiscoveryIndex,

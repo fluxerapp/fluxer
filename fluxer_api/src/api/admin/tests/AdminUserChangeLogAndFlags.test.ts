@@ -2,11 +2,12 @@
 
 import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {HTTP_STATUS, TEST_CREDENTIALS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi} from 'vitest';
 
 interface ChangeLogResponse {
 	entries: Array<{
@@ -43,6 +44,9 @@ describe('Admin User Change Log and Flags', () => {
 	});
 	beforeEach(async () => {
 		await harness.reset();
+	});
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 	afterAll(async () => {
 		await harness?.shutdown();
@@ -174,6 +178,37 @@ describe('Admin User Change Log and Flags', () => {
 				.delete(`/admin/users/${target.userId}/mfa`)
 				.expect(HTTP_STATUS.FORBIDDEN)
 				.execute();
+		});
+	});
+	describe('PATCH /admin/users/{user_id}/email', () => {
+		test('queues a Stripe customer email sync for users with a Stripe customer', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
+			const target = await createTestAccount(harness);
+			await createBuilderWithoutAuth(harness)
+				.post(`/test/users/${target.userId}/premium`)
+				.body({stripe_customer_id: 'cus_admin_email_sync'})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
+			await createBuilder(harness, `${admin.token}`)
+				.patch(`/admin/users/${target.userId}/email`)
+				.body({email: `admin-changed-${Date.now()}@example.com`})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(addJob).toHaveBeenCalledWith('syncStripeCustomerEmail', {userId: target.userId});
+		});
+		test('does not queue a Stripe customer email sync for users without a Stripe customer', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.WILDCARD]);
+			const target = await createTestAccount(harness);
+			const addJob = vi.spyOn(NoopWorkerService.prototype, 'addJob');
+			await createBuilder(harness, `${admin.token}`)
+				.patch(`/admin/users/${target.userId}/email`)
+				.body({email: `admin-changed-${Date.now()}@example.com`})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(addJob).not.toHaveBeenCalledWith('syncStripeCustomerEmail', expect.anything());
 		});
 	});
 	describe('PUT /admin/users/{user_id}/email-verification', () => {

@@ -1565,6 +1565,19 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 			const formData = await request.formData();
 			const updateParams = parseFormDataToObject(formData);
 			spies.updatedCustomers.push({id: customerId, params: updateParams});
+			if (config.customerShouldFail) {
+				return HttpResponse.json(
+					{
+						error: {
+							type: 'invalid_request_error',
+							message: 'No such customer',
+							code: 'resource_missing',
+							param: 'id',
+						},
+					},
+					{status: 404},
+				);
+			}
 			const customer = getCustomer(customerId);
 			const invoiceSettingsUpdate =
 				updateParams.invoice_settings && typeof updateParams.invoice_settings === 'object'
@@ -1572,6 +1585,7 @@ export function createStripeApiHandlers(config: StripeApiMockConfig = {}): Strip
 					: null;
 			const updatedCustomer: MockStripeCustomer = {
 				...customer,
+				email: typeof updateParams.email === 'string' ? updateParams.email : customer.email,
 				invoice_settings: invoiceSettingsUpdate
 					? {
 							...customer.invoice_settings,

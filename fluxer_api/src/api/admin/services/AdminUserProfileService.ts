@@ -12,6 +12,7 @@ import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastruct
 import {Logger} from '@app/api/Logger';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
+import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
 import {assertNoDiscriminatorChange, reserveUsername, type UsernameReservation} from '@app/api/user/UniqueUsernames';
 import {USERNAME_MODE_DISCRIMINATOR} from '@app/api/user/UserTag';
 import {TagAlreadyTakenError} from '@fluxer/errors/src/domains/user/TagAlreadyTakenError';
@@ -218,6 +219,7 @@ export class AdminUserProfileService {
 			users: userRepository,
 			cache: cacheService,
 			contactChangeLog: contactChangeLogService,
+			worker: workerService,
 		} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
@@ -240,6 +242,7 @@ export class AdminUserProfileService {
 			reason: 'admin_action',
 			actorUserId: adminUserId,
 		});
+		await enqueueStripeCustomerEmailSync(workerService, user, updatedUser);
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',

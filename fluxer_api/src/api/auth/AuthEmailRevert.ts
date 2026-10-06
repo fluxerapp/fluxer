@@ -6,6 +6,7 @@ import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {createEmailRevertToken} from '@app/api/BrandedTypes';
 import type {User} from '@app/api/models/User';
+import {enqueueStripeCustomerEmailSync} from '@app/api/stripe/StripeCustomer';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -44,7 +45,7 @@ export async function revertEmailChange(
 	user_id: string;
 	token: string;
 }> {
-	const {users, gateway, contactChangeLog, config} = ctx.services;
+	const {users, gateway, contactChangeLog, config, worker} = ctx.services;
 	const {token, password, request} = params;
 	const tokenData = await users.getEmailRevertToken(token);
 	if (!tokenData) {
@@ -101,5 +102,6 @@ export async function revertEmailChange(
 		reason: 'user_requested',
 		actorUserId: user.id,
 	});
+	await enqueueStripeCustomerEmailSync(worker, user, updatedUser);
 	return {user_id: updatedUser.id.toString(), token: authToken};
 }
