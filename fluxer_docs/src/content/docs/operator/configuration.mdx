@@ -2165,13 +2165,15 @@ CORS origins are exactly the app endpoint, the `FLUXER_APP_ORIGIN_ALIASES` origi
 | --- | --- | --- |
 | postgres-data | Every account, message, and configuration row | Yes |
 | seaweedfs-data | Every uploaded file | Yes |
-| valkey-data | Deletion queues and shared cache | Yes |
+| valkey-data | Pending file deletions, other queues and shared cache | Yes |
 | nats-data | Pending and failed background jobs | Yes |
 | edge-data | Issued TLS certificates | Optional, a loss only costs a re-issue |
 | edge-config | The edge's own state | No |
-| meilisearch-data | The search index, rebuildable | No |
+| meilisearch-data | The search index, rebuildable from Postgres | Optional |
 
-Losing `valkey-data` can delay scheduled account and bulk-message deletions while their queues are rebuilt. Pending asset deletions and cache purges can be lost, so do not treat this volume as disposable cache.
+Losing `valkey-data` can delay scheduled account and bulk-message deletions while their queues are rebuilt. Pending asset deletions and cache purges exist only here and are lost with it, so do not treat this volume as disposable cache.
+
+Losing `meilisearch-data` leaves search empty until it is rebuilt. Nothing rebuilds it automatically, because Postgres still records every channel as indexed. Rebuild each index with [`POST /admin/search/indexes/{index_name}/refreshes`](/admin-api/search-indexes/). The `channel_messages` and `guild_members` indexes rebuild one community at a time and need a `guild_id` for each. A backup of the volume avoids those calls on a large instance.
 
 `nats-data` retains pending jobs in `JOBS` for up to 7 days and failed jobs in `JOBS_DLQ` for up to 30 days. A full jobs stream rejects new work. A full dead-letter stream drops its oldest entries, so investigate failures promptly. If dead-letter storage is unavailable, failed jobs remain in `JOBS` only until they expire. Losing this volume loses queued work, which is not automatically recovered from the database.
 
