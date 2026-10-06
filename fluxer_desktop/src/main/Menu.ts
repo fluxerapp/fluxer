@@ -215,7 +215,7 @@ function buildTemplate(): Array<MenuItemConstructorOptions> {
 			{
 				label: t('desktop.appMenu.reportIssue'),
 				click: async () => {
-					await openExternalDeduped('https://github.com/fluxerapp/fluxer/issues');
+					await openExternalDeduped('https://feedback.fluxer.com');
 				},
 			},
 			{type: 'separator'},

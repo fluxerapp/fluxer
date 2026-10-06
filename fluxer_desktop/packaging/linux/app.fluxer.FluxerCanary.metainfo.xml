@@ -47,7 +47,7 @@
             <image type="source" width="1920" height="1670">https://fluxer.app/static/img/screenshots-desktop-1920w.4976d2d1f2238c05.avif</image>
         </screenshot>
     </screenshots>
-    <url type="bugtracker">https://github.com/fluxerapp/fluxer/issues</url>
+    <url type="bugtracker">https://feedback.fluxer.com</url>
     <url type="homepage">https://canary.fluxer.app</url>
     <url type="donation">https://fluxer.app/donate</url>
     <url type="vcs-browser">https://github.com/fluxerapp/fluxer.git</url>
