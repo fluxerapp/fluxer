@@ -11,6 +11,7 @@ import {
 } from '@app/features/notification/utils/MentionFeedFilters';
 import Relationships from '@app/features/relationship/state/Relationships';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
+import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
@@ -179,14 +180,19 @@ class MentionFeed {
 	}
 
 	handleMessageCreate(message: WireMessage): void {
-		if (!messageMentionsCurrentUser(message)) {
+		const channel = Channels.getChannel(message.channel_id);
+		if (!channel) return;
+		const guildId = channel.guildId ?? null;
+		const mentioned = messageMentionsCurrentUser(message, {
+			suppressEveryone: UserGuildSettings.isEveryoneMentionSuppressed(guildId),
+			suppressRoles: UserGuildSettings.isRoleMentionSuppressed(guildId),
+		});
+		if (!mentioned) {
 			return;
 		}
 		if (Relationships.isBlocked(message.author.id)) {
 			return;
 		}
-		const channel = Channels.getChannel(message.channel_id);
-		if (!channel) return;
 		if (!this.isMessageIncludedByFilters(message, channel)) {
 			return;
 		}
