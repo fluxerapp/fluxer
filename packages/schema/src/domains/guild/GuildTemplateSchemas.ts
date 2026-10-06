@@ -61,8 +61,8 @@ export const TemplateChannel = z.object({
 	topic: z
 		.string()
 		.max(TEMPLATE_TOPIC_MAX_LENGTH)
+		.transform(clipTopic)
 		.nullish()
-		.transform((value) => (value == null ? value : clipTopic(value)))
 		.describe('The channel topic, shortened to the Fluxer channel topic limit'),
 	position: Int32Type.describe('The position of the channel'),
 	parent_id: TemplateEntityId.nullish().describe('The template-local ID of the parent category'),
