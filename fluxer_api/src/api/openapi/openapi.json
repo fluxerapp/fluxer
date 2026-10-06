@@ -33075,8 +33075,8 @@
 						"anyOf": [{"type": "string", "maxLength": 100}, {"type": "null"}]
 					},
 					"topic": {
-						"description": "The channel topic",
-						"anyOf": [{"type": "string", "maxLength": 1024}, {"type": "null"}]
+						"description": "The channel topic, shortened to the Fluxer channel topic limit",
+						"anyOf": [{"type": "string", "maxLength": 4096}, {"type": "null"}]
 					},
 					"position": {"description": "The position of the channel", "$ref": "#/components/schemas/Int32Type"},
 					"parent_id": {

@@ -6,7 +6,7 @@ import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHa
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {SystemChannelFlags} from '@fluxer/constants/src/GuildConstants';
-import {VOICE_CHANNEL_USER_LIMIT_MAX} from '@fluxer/constants/src/LimitConstants';
+import {CHANNEL_TOPIC_MAX_LENGTH, VOICE_CHANNEL_USER_LIMIT_MAX} from '@fluxer/constants/src/LimitConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
@@ -215,7 +215,7 @@ describe('Guild Template Import', () => {
 		['a slowmode above the channel maximum', {rate_limit_per_user: 1_000_000_000}],
 		['a fractional position', {position: 0.5}],
 		['a negative position', {position: -3}],
-		['a topic above the channel maximum', {topic: 'x'.repeat(1025)}],
+		['a topic above the template maximum', {topic: 'x'.repeat(4097)}],
 		['a name above the channel maximum', {name: 'x'.repeat(101)}],
 		['a negative user limit', {type: ChannelTypes.GUILD_VOICE, user_limit: -1}],
 		['a voice connection limit above the maximum', {type: ChannelTypes.GUILD_VOICE, voice_connection_limit: 100_000}],
@@ -272,6 +272,26 @@ describe('Guild Template Import', () => {
 		expect(channels.find((channel) => channel.name === 'general')?.rate_limit_per_user).toBe(30);
 		expect(channels.find((channel) => channel.name === 'town-hall')?.user_limit).toBe(VOICE_CHANNEL_USER_LIMIT_MAX);
 		expect(channels.find((channel) => channel.name === 'lounge')?.voice_connection_limit).toBe(100);
+	});
+	test('accepts forum-length topics and shortens them to the channel topic limit', async () => {
+		const account = await createTestAccount(harness);
+		const longTopic = `${'a'.repeat(CHANNEL_TOPIC_MAX_LENGTH - 1)}\u{1F600}${'b'.repeat(300)}`;
+		const guild = await createBuilder<GuildResponse>(harness, account.token)
+			.post('/guilds')
+			.body({
+				name: 'Forum Guild',
+				template: buildMinimalTemplate({
+					channels: [
+						{id: 6001, type: ChannelTypes.GUILD_TEXT, name: 'general', position: 0, topic: longTopic},
+						{id: 6002, type: 15, name: 'projects', position: 1, topic: 'c'.repeat(1356)},
+					],
+				}),
+			})
+			.execute();
+		const channels = await getGuildChannels(harness, account.token, guild.id);
+		const general = channels.find((channel) => channel.name === 'general');
+		expect(general?.topic).toBe('a'.repeat(CHANNEL_TOPIC_MAX_LENGTH - 1));
+		expect(channels.find((channel) => channel.name === 'projects')).toBeUndefined();
 	});
 });
 

@@ -12,6 +12,14 @@ import {ColorType, createStringType, Int32Type} from '@fluxer/schema/src/primiti
 import {z} from 'zod';
 
 const TEMPLATE_NAME_MAX_LENGTH = 100;
+const TEMPLATE_TOPIC_MAX_LENGTH = 4096;
+
+function clipTopic(value: string): string {
+	if (value.length <= CHANNEL_TOPIC_MAX_LENGTH) return value;
+	const last = value.charCodeAt(CHANNEL_TOPIC_MAX_LENGTH - 1);
+	const end = last >= 0xd800 && last <= 0xdbff ? CHANNEL_TOPIC_MAX_LENGTH - 1 : CHANNEL_TOPIC_MAX_LENGTH;
+	return value.slice(0, end);
+}
 
 const TemplateEntityId = z
 	.union([
@@ -50,7 +58,12 @@ export const TemplateChannel = z.object({
 		.nullish()
 		.transform((value) => value ?? '')
 		.describe('The name of the channel'),
-	topic: z.string().max(CHANNEL_TOPIC_MAX_LENGTH).nullish().describe('The channel topic'),
+	topic: z
+		.string()
+		.max(TEMPLATE_TOPIC_MAX_LENGTH)
+		.nullish()
+		.transform((value) => (value == null ? value : clipTopic(value)))
+		.describe('The channel topic, shortened to the Fluxer channel topic limit'),
 	position: Int32Type.describe('The position of the channel'),
 	parent_id: TemplateEntityId.nullish().describe('The template-local ID of the parent category'),
 	bitrate: z.number().int().nonnegative().nullish().describe('The bitrate for voice channels'),
