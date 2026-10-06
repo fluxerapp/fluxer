@@ -3,6 +3,7 @@
 import ChannelPins from '@app/features/channel/state/ChannelPins';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import MessageReferences from '@app/features/messaging/state/MessageReferences';
+import MessageReply from '@app/features/messaging/state/MessageReply';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
@@ -20,6 +21,7 @@ export function handleMessageDelete(data: MessageDeletePayload, _context: Gatewa
 	ChannelPins.handleMessageDelete(data.channel_id, data.id);
 	Messages.handleMessageDelete({channelId: data.channel_id, id: data.id});
 	MessageReferences.handleMessageDelete(data.channel_id, data.id);
+	MessageReply.handleMessageDelete(data.channel_id, data.id);
 	ReadStates.handleMessageDelete({channelId: data.channel_id});
 	MentionFeed.handleMessageDelete(data.id);
 	Notification.handleMessageDelete({channelId: data.channel_id});

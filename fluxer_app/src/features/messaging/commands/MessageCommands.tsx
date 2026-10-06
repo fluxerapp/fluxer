@@ -926,6 +926,7 @@ export async function crosspost(i18n: I18n, channelId: string, messageId: string
 export function deleteLocal(channelId: string, messageId: string): void {
 	logger.debug(`Deleting message ${messageId} locally in channel ${channelId}`);
 	Messages.handleMessageDelete({id: messageId, channelId});
+	MessageReply.handleMessageDelete(channelId, messageId);
 }
 
 export function revealMessage(channelId: string, messageId: string | null): void {

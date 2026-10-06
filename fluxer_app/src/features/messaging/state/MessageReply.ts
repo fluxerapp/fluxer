@@ -56,6 +56,19 @@ class MessageReply {
 		delete this.replyingMessageIds[channelId];
 	}
 
+	handleMessageDelete(channelId: string, messageId: string): void {
+		if (this.replyingMessageIds[channelId]?.messageId === messageId) {
+			delete this.replyingMessageIds[channelId];
+		}
+	}
+
+	handleMessageDeleteBulk(channelId: string, messageIds: Array<string>): void {
+		const current = this.replyingMessageIds[channelId];
+		if (current && messageIds.includes(current.messageId)) {
+			delete this.replyingMessageIds[channelId];
+		}
+	}
+
 	highlightMessage(messageId: string): void {
 		this.highlightMessageId = messageId;
 	}
