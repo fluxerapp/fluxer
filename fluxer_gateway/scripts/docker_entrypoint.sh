@@ -70,6 +70,21 @@ else
 	rm -f "$node_name_file"
 fi
 
+case "${FLUXER_ERLANG_COOKIE_FILE:-}" in
+*[![:space:]]*)
+	case "${FLUXER_ERLANG_COOKIE:-}" in
+	*[![:space:]]*)
+		echo 'FLUXER_ERLANG_COOKIE and FLUXER_ERLANG_COOKIE_FILE are both set, set only one.' >&2
+		exit 1
+		;;
+	esac
+	if ! FLUXER_ERLANG_COOKIE="$(cat -- "$FLUXER_ERLANG_COOKIE_FILE")"; then
+		echo "FLUXER_ERLANG_COOKIE_FILE could not read $FLUXER_ERLANG_COOKIE_FILE." >&2
+		exit 1
+	fi
+	;;
+esac
+
 if [ -z "${FLUXER_ERLANG_COOKIE:-}" ]; then
 	echo 'FLUXER_ERLANG_COOKIE is required.' >&2
 	exit 1

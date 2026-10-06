@@ -24,6 +24,8 @@ pub struct UnfurlShard {
     resolvers: Vec<Box<dyn crate::resolvers::Resolver>>,
     media_proxy: MediaProxyClient,
     self_hosted: bool,
+    youtube_api_key: Option<String>,
+    klipy_api_key: Option<String>,
 }
 
 impl UnfurlShard {
@@ -78,6 +80,10 @@ impl UnfurlShard {
             resolvers,
             media_proxy,
             self_hosted,
+            youtube_api_key: optional_env("FLUXER_YOUTUBE_API_KEY")
+                .or_else(|| optional_env("YOUTUBE_API_KEY")),
+            klipy_api_key: optional_env("FLUXER_KLIPY_API_KEY")
+                .or_else(|| optional_env("KLIPY_API_KEY")),
         }
     }
 
@@ -100,6 +106,8 @@ impl UnfurlShard {
                 internal_http_client(),
             ),
             self_hosted: false,
+            youtube_api_key: None,
+            klipy_api_key: None,
         }
     }
 
@@ -125,8 +133,12 @@ impl UnfurlShard {
             nsfw_mode,
             media_proxy: &self.media_proxy,
             self_hosted: self.self_hosted,
-            youtube_api_key: youtube_api_key.map(str::to_owned),
-            klipy_api_key: klipy_api_key.map(str::to_owned),
+            youtube_api_key: youtube_api_key
+                .map(str::to_owned)
+                .or_else(|| self.youtube_api_key.clone()),
+            klipy_api_key: klipy_api_key
+                .map(str::to_owned)
+                .or_else(|| self.klipy_api_key.clone()),
         };
 
         if let Some(idx) = matched_resolver_idx {

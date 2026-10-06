@@ -13,7 +13,7 @@ use parse::{
     parse_mode_env, parse_policy_mode, parse_storage_backend, parse_u16, parse_u64, parse_usize,
     validate_read_endpoint,
 };
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StorageBackend {
@@ -144,10 +144,6 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn load_from_env() -> anyhow::Result<Self> {
-        Self::load_from_iter(env::vars())
-    }
-
     pub fn load_from_iter<I, K, V>(vars: I) -> anyhow::Result<Self>
     where
         I: IntoIterator<Item = (K, V)>,

@@ -36,6 +36,34 @@ Precedence, highest first:
 
 Use `true` or `false` for booleans, decimal integers for integer settings, and the specified object or array for JSON settings. Defaults and accepted values are listed below. Every service built from this version of the stack files or later reads an empty or blank value the same as an unset one, so an empty value restores the default. Older images do not, which [Match the images to the stack files](/operator/upgrading/#match-the-images-to-the-stack-files) covers.
 
+### Reading a secret from a file
+
+Any setting a Fluxer service reads for its configuration can come from a file instead, such as a Docker secret. Set the variable's name with `_FILE` appended to the file's path, and leave the variable itself empty. The service reads the file at startup and drops one trailing newline. Startup fails, naming both variables, when the variable and its `_FILE` form are both set. It also fails, naming the path, when the file is missing, unreadable or not valid UTF-8. The name to use is the one the service sees, so `POSTGRES_PASSWORD` in `.env` becomes `FLUXER_POSTGRES_PASSWORD_FILE`.
+
+Add the secrets through a local Compose override. `FLUXER_SUDO_MODE_SECRET` is read by `api` and `worker` only:
+
+```yaml
+secrets:
+  sudo_mode_secret:
+    file: ./secrets/sudo_mode_secret
+
+services:
+  api:
+    secrets: [sudo_mode_secret]
+    environment:
+      FLUXER_SUDO_MODE_SECRET: ''
+      FLUXER_SUDO_MODE_SECRET_FILE: /run/secrets/sudo_mode_secret
+  worker:
+    secrets: [sudo_mode_secret]
+    environment:
+      FLUXER_SUDO_MODE_SECRET: ''
+      FLUXER_SUDO_MODE_SECRET_FILE: /run/secrets/sudo_mode_secret
+```
+
+Compose still checks the required names in `.env` before it applies the override, so keep a placeholder value there. Every Fluxer service gets the same shared settings, so a secret several services read, such as `FLUXER_POSTGRES_PASSWORD`, needs the same two entries on each of them: `api`, `worker`, `gateway`, `media-proxy`, `push`, `admin`, and `snowflakes`, `users`, `gifs`, `messages` and `unfurl` with their `-shard` services. Any service left out keeps the placeholder. The secret file must be readable by the user the container runs as.
+
+The bundled backing containers read their own settings. The `postgres` container takes `POSTGRES_PASSWORD: ''` and `POSTGRES_PASSWORD_FILE` in its own `environment`, and on a fresh volume it creates the database with that password. `seaweedfs-init`, `meilisearch` and `livekit` have no `_FILE` form, so a file-based S3, Meilisearch or LiveKit secret still needs its real value in `.env` for them. `FLUXER_ENV`, `LOG_LEVEL`, `FLUXER_DISABLE_RATE_LIMITS` and the `FLUXER_ERLANG_*` settings other than `FLUXER_ERLANG_COOKIE` are read directly, so set them as plain values.
+
 ## Core identity and public address
 
 `FLUXER_DOMAIN` is required. Everything else here is optional.

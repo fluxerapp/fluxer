@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use fluxer_svc::config::optional_env;
 use hmac::{KeyInit, Mac};
 use std::sync::{LazyLock, OnceLock};
 
@@ -46,8 +47,8 @@ pub fn configure(secret: Option<String>, environment: Option<&str>) -> anyhow::R
 
 pub fn configure_from_env() -> anyhow::Result<()> {
     configure(
-        std::env::var(SECRET_ENV).ok(),
-        std::env::var("FLUXER_ENV").ok().as_deref(),
+        optional_env(SECRET_ENV),
+        optional_env("FLUXER_ENV").as_deref(),
     )
 }
 

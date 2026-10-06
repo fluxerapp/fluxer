@@ -272,6 +272,64 @@ public_endpoints_defaults_test() ->
     ?assertEqual(undefined, maps:get(media_proxy_endpoint, Config)),
     ?assertEqual(<<"http://localhost:8088">>, maps:get(static_cdn_endpoint, Config)).
 
+env_value_reads_name_file_test() ->
+    with_env_file(<<"from-file\r\n">>, fun(Path) ->
+        with_envs(
+            [{"FLUXER_GATEWAY_TEST_SECRET", ""}, {"FLUXER_GATEWAY_TEST_SECRET_FILE", Path}],
+            fun() ->
+                ?assertEqual(
+                    "from-file", fluxer_gateway_config:env_value("FLUXER_GATEWAY_TEST_SECRET")
+                )
+            end
+        )
+    end).
+
+env_value_trims_only_one_newline_test() ->
+    with_env_file(<<"line1\nline2\n\n">>, fun(Path) ->
+        with_env("FLUXER_GATEWAY_TEST_SECRET_FILE", Path, fun() ->
+            ?assertEqual(
+                "line1\nline2\n", fluxer_gateway_config:env_value("FLUXER_GATEWAY_TEST_SECRET")
+            )
+        end)
+    end).
+
+env_value_rejects_name_and_name_file_test() ->
+    with_envs(
+        [
+            {"FLUXER_GATEWAY_TEST_SECRET", "direct"},
+            {"FLUXER_GATEWAY_TEST_SECRET_FILE", "/run/secrets/x"}
+        ],
+        fun() ->
+            ?assertError(
+                {ambiguous_env, "FLUXER_GATEWAY_TEST_SECRET",
+                    "FLUXER_GATEWAY_TEST_SECRET_FILE"},
+                fluxer_gateway_config:env_value("FLUXER_GATEWAY_TEST_SECRET")
+            )
+        end
+    ).
+
+env_value_rejects_missing_name_file_test() ->
+    Path = "/nonexistent/fluxer-gateway-test-secret",
+    with_env("FLUXER_GATEWAY_TEST_SECRET_FILE", Path, fun() ->
+        ?assertError(
+            {unreadable_env_file, "FLUXER_GATEWAY_TEST_SECRET_FILE", Path, enoent},
+            fluxer_gateway_config:env_value("FLUXER_GATEWAY_TEST_SECRET")
+        )
+    end).
+
+with_env_file(Contents, Fun) ->
+    Path = filename:join(
+        filename:basedir(user_cache, "fluxer_gateway_tests"),
+        integer_to_list(erlang:unique_integer([positive]))
+    ),
+    ok = filelib:ensure_dir(Path),
+    ok = file:write_file(Path, Contents),
+    try
+        Fun(Path)
+    after
+        file:delete(Path)
+    end.
+
 with_envs([], Fun) ->
     Fun();
 with_envs([{Name, Value} | Rest], Fun) ->

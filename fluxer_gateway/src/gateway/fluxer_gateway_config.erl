@@ -305,9 +305,42 @@ env_string(Name, Default) ->
 
 -spec env_value(string()) -> string() | undefined.
 env_value(Name) ->
+    Value = non_blank_env(Name),
+    FileName = Name ++ "_FILE",
+    case non_blank_env(FileName) of
+        undefined -> Value;
+        Path when Value =:= undefined -> read_env_file(FileName, Path);
+        _ -> erlang:error({ambiguous_env, Name, FileName})
+    end.
+
+-spec non_blank_env(string()) -> string() | undefined.
+non_blank_env(Name) ->
     case os:getenv(Name) of
         false -> undefined;
         Value -> non_blank(Value)
+    end.
+
+-spec read_env_file(string(), string()) -> string() | undefined.
+read_env_file(FileName, Path) ->
+    case file:read_file(Path) of
+        {ok, Contents} -> env_file_value(FileName, Path, strip_newline(Contents));
+        {error, Reason} -> erlang:error({unreadable_env_file, FileName, Path, Reason})
+    end.
+
+-spec env_file_value(string(), string(), binary()) -> string() | undefined.
+env_file_value(FileName, Path, Contents) ->
+    case unicode:characters_to_list(Contents) of
+        Value when is_list(Value) -> non_blank(Value);
+        _ -> erlang:error({invalid_env_file, FileName, Path})
+    end.
+
+-spec strip_newline(binary()) -> binary().
+strip_newline(Contents) ->
+    Size = byte_size(Contents),
+    case Contents of
+        <<Rest:(Size - 2)/binary, "\r\n">> -> Rest;
+        <<Rest:(Size - 1)/binary, "\n">> -> Rest;
+        _ -> Contents
     end.
 
 -spec non_blank(string()) -> string() | undefined.

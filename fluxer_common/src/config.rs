@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::{env, path::Path};
+use std::{env, fs, path::Path};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum GeoipSourceConfig {
@@ -124,7 +124,59 @@ fn percent_decode(value: &str) -> String {
 }
 
 pub fn env_value(name: &str) -> Option<String> {
-    env::var(name).ok().filter(|value| !value.trim().is_empty())
+    resolve_env_value(name, |key| env::var(key).ok()).unwrap_or_else(|error| panic!("{error}"))
+}
+
+pub fn resolve_env_value<F>(name: &str, get: F) -> Result<Option<String>, String>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    let non_blank = |value: Option<String>| value.filter(|value| !value.trim().is_empty());
+    let value = non_blank(get(name));
+    let Some(path) = non_blank(get(&format!("{name}_FILE"))) else {
+        return Ok(value);
+    };
+    if value.is_some() {
+        return Err(format!("{name} and {name}_FILE are both set, set only one"));
+    }
+    let contents = fs::read_to_string(&path)
+        .map_err(|error| format!("{name}_FILE could not read {path} ({error})"))?;
+    let contents = contents
+        .strip_suffix('\n')
+        .map_or(contents.as_str(), |rest| {
+            rest.strip_suffix('\r').unwrap_or(rest)
+        });
+    Ok(non_blank(Some(contents.to_owned())))
+}
+
+pub fn resolve_env_files<I>(vars: I) -> Result<Vec<(String, String)>, String>
+where
+    I: IntoIterator<Item = (String, String)>,
+{
+    let vars: Vec<(String, String)> = vars.into_iter().collect();
+    let get = |key: &str| {
+        vars.iter()
+            .find_map(|(name, value)| (name == key).then(|| value.clone()))
+    };
+    let mut resolved = Vec::new();
+    for (key, _) in &vars {
+        let Some(name) = key
+            .strip_suffix("_FILE")
+            .filter(|name| name.starts_with("FLUXER_"))
+        else {
+            continue;
+        };
+        if let Some(value) = resolve_env_value(name, get)? {
+            resolved.push((name.to_owned(), value));
+        }
+    }
+    let rest: Vec<(String, String)> = vars
+        .iter()
+        .filter(|(key, _)| !resolved.iter().any(|(name, _)| name == key))
+        .cloned()
+        .collect();
+    resolved.extend(rest);
+    Ok(resolved)
 }
 
 pub fn read_env(name: &str, fallback: &str) -> String {
@@ -761,6 +813,106 @@ mod tests {
         let (domain, port) = resolve_public_domain_and_port(reader(&[])).expect("empty resolves");
         assert_eq!("", domain);
         assert_eq!(None, port);
+    }
+
+    fn secret_file(dir: &tempfile::TempDir, name: &str, contents: &str) -> String {
+        let path = dir.path().join(name);
+        fs::write(&path, contents).expect("write secret file");
+        path.to_string_lossy().into_owned()
+    }
+
+    fn pairs_reader(pairs: Vec<(String, String)>) -> impl Fn(&str) -> Option<String> {
+        move |key| {
+            pairs
+                .iter()
+                .find_map(|(name, value)| (name == key).then(|| value.clone()))
+        }
+    }
+
+    #[test]
+    fn env_value_reads_name_file_when_name_is_blank() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = secret_file(&dir, "secret", "from-file\r\n");
+        let unset = pairs_reader(vec![("X_FILE".to_owned(), path.clone())]);
+        let blank = pairs_reader(vec![
+            ("X".to_owned(), " ".to_owned()),
+            ("X_FILE".to_owned(), path),
+        ]);
+        assert_eq!(
+            Ok(Some("from-file".to_owned())),
+            resolve_env_value("X", unset)
+        );
+        assert_eq!(
+            Ok(Some("from-file".to_owned())),
+            resolve_env_value("X", blank)
+        );
+    }
+
+    #[test]
+    fn env_value_trims_only_one_trailing_newline() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let pem = secret_file(&dir, "pem", "-----BEGIN-----\nabc\n-----END-----\n\n");
+        let empty = secret_file(&dir, "empty", "\n");
+        assert_eq!(
+            Ok(Some("-----BEGIN-----\nabc\n-----END-----\n".to_owned())),
+            resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), pem)]))
+        );
+        assert_eq!(
+            Ok(None),
+            resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), empty)]))
+        );
+    }
+
+    #[test]
+    fn env_value_rejects_name_and_name_file_together() {
+        let reader = pairs_reader(vec![
+            ("X".to_owned(), "direct".to_owned()),
+            ("X_FILE".to_owned(), "/run/secrets/x".to_owned()),
+        ]);
+        assert_eq!(
+            Err("X and X_FILE are both set, set only one".to_owned()),
+            resolve_env_value("X", reader)
+        );
+    }
+
+    #[test]
+    fn env_value_names_the_file_when_it_is_missing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("missing").to_string_lossy().into_owned();
+        let error = resolve_env_value("X", pairs_reader(vec![("X_FILE".to_owned(), path.clone())]))
+            .expect_err("missing file fails");
+        assert!(error.starts_with(&format!("X_FILE could not read {path} (")));
+    }
+
+    #[test]
+    fn resolve_env_files_replaces_fluxer_names_with_file_values() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = secret_file(&dir, "secret", "from-file\n");
+        let missing = dir.path().join("missing").to_string_lossy().into_owned();
+        let resolved = resolve_env_files(vec![
+            ("FLUXER_X".to_owned(), String::new()),
+            ("FLUXER_X_FILE".to_owned(), path),
+            ("FLUXER_Y".to_owned(), "plain".to_owned()),
+            ("FLUXER_Y_FILE".to_owned(), String::new()),
+            ("SSL_CERT_FILE".to_owned(), missing),
+        ])
+        .expect("resolves");
+        let values = |key: &str| {
+            resolved
+                .iter()
+                .filter(|(name, _)| name == key)
+                .map(|(_, value)| value.as_str())
+                .collect::<Vec<_>>()
+        };
+        assert_eq!(vec!["from-file"], values("FLUXER_X"));
+        assert_eq!(vec!["plain"], values("FLUXER_Y"));
+        assert!(
+            resolve_env_files(vec![
+                ("FLUXER_X".to_owned(), "direct".to_owned()),
+                ("FLUXER_X_FILE".to_owned(), "/run/secrets/x".to_owned()),
+            ])
+            .is_err()
+        );
     }
 
     #[test]

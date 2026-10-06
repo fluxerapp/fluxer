@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {readFileSync} from 'node:fs';
 import {type ConfigObject, isConfigObject} from '@fluxer/config/src/config_loader/ConfigObject';
 
 type ConfigPathKey = string | number;
@@ -420,9 +421,27 @@ const NAMED_FLUXER_ENV_ALIASES: Record<string, string | undefined> = {
 
 export const NAMED_FLUXER_ENV_NAMES = Object.keys(NAMED_FLUXER_ENV_OVERRIDES);
 
-export function readEnvValue(env: NodeJS.ProcessEnv, name: string): string | undefined {
-	const value = env[name];
+function nonBlank(value: string | undefined): string | undefined {
 	return value === undefined || value.trim().length === 0 ? undefined : value;
+}
+
+export function readEnvValue(env: NodeJS.ProcessEnv, name: string): string | undefined {
+	const value = nonBlank(env[name]);
+	const filePath = nonBlank(env[`${name}_FILE`]);
+	if (filePath === undefined) {
+		return value;
+	}
+	if (value !== undefined) {
+		throw new Error(`${name} and ${name}_FILE are both set, set only one`);
+	}
+	let contents: string;
+	try {
+		contents = new TextDecoder('utf-8', {fatal: true}).decode(readFileSync(filePath));
+	} catch (error) {
+		const reason = error instanceof Error && 'code' in error ? String(error.code) : 'unreadable';
+		throw new Error(`${name}_FILE could not read ${filePath} (${reason})`);
+	}
+	return nonBlank(contents.replace(/\r?\n$/, ''));
 }
 
 export function buildNamedFluxerEnvOverrides(env: NodeJS.ProcessEnv): ConfigObject {
