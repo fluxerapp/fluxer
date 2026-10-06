@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
+import type {NonSharedUint8Array} from '../../type-polyfills/non-shared-typed-arrays.ts';
 import type LocalTrack from './LocalTrack.ts';
 
 const isMediaRecorderAvailable = typeof MediaRecorder !== 'undefined';
@@ -51,11 +52,11 @@ class FallbackRecorder extends EventTarget implements MediaRecorder {
 
 const RecorderBase: typeof MediaRecorder = isMediaRecorderAvailable ? MediaRecorder : FallbackRecorder;
 
-function readLegacyBlobByteArray(data: Blob): Uint8Array | undefined {
+function readLegacyBlobByteArray(data: Blob): NonSharedUint8Array | undefined {
 	if (!('byteArray' in data)) {
 		return undefined;
 	}
-	return data.byteArray instanceof Uint8Array ? data.byteArray : undefined;
+	return data.byteArray instanceof Uint8Array ? (data.byteArray as NonSharedUint8Array) : undefined;
 }
 
 export class LocalTrackRecorder<T extends LocalTrack> extends RecorderBase {
@@ -94,7 +95,7 @@ export class LocalTrackRecorder<T extends LocalTrack> extends RecorderBase {
 			start: (controller) => {
 				streamController = controller;
 				dataListener = async (event: BlobEvent) => {
-					let data: Uint8Array;
+					let data: NonSharedUint8Array;
 
 					if (event.data.arrayBuffer) {
 						const arrayBuffer = await event.data.arrayBuffer();

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID, createMessageID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import {createChannelID, createGuildID, createMessageID, createUserID, type UserID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const MENTION_SETTINGS_FETCH_CONCURRENCY = 16;
 const MentionChunkEntrySchema = z.object({

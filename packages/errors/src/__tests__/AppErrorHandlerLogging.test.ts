@@ -89,6 +89,17 @@ describe('AppErrorHandler logging', () => {
 		expect(details.status).toBe(400);
 	});
 
+	it('logs the matched route pattern instead of the request path', async () => {
+		const app = createApp();
+		app.get('/reset/:token', () => {
+			throw new ServiceUnavailableError({message: 'unavailable'});
+		});
+		const response = await app.request('/reset/abc123');
+		expect(response.status).toBe(503);
+		expect(logCalls.error).toHaveLength(1);
+		expect(logCalls.error[0]![0].path).toBe('/reset/:token');
+	});
+
 	it('still reports unexpected errors as unhandled', async () => {
 		const app = createApp();
 		app.get('/thing', () => {

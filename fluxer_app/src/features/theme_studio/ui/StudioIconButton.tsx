@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import styles from '@app/features/theme_studio/ui/StudioIconButton.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {clsx} from 'clsx';
 import {type ButtonHTMLAttributes, forwardRef} from 'react';
-import styles from './StudioIconButton.module.css';
 
 interface StudioIconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	compact?: boolean;

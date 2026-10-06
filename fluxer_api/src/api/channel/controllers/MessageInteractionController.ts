@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnclaimedAccountCannotAddReactionsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotAddReactionsError';
@@ -20,15 +29,6 @@ import {
 	ReactionUsersListResponse,
 	ReactionUsersPageResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
-import {isPersonalNotesChannel} from '../services/message/MessageHelpers';
 
 export function MessageInteractionController(app: HonoApp) {
 	app.get(
@@ -106,11 +106,13 @@ export function MessageInteractionController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			await ctx.get('channelService').interactions.pinMessage({
 				userId,
 				channelId,
 				messageId,
 				requestCache,
+				auditLogReason,
 			});
 			return ctx.body(null, 204);
 		},
@@ -136,11 +138,13 @@ export function MessageInteractionController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			await ctx.get('channelService').interactions.unpinMessage({
 				userId,
 				channelId,
 				messageId,
 				requestCache,
+				auditLogReason,
 			});
 			return ctx.body(null, 204);
 		},

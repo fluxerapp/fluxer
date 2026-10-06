@@ -11,6 +11,8 @@ import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import styles from '@app/features/theme_studio/sections/ThemeStudioSettingsSection.module.css';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import {StudioButton} from '@app/features/theme_studio/ui/StudioButton';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -30,8 +32,6 @@ import {ArrowCounterClockwiseIcon, ShareNetworkIcon, TrashIcon} from '@phosphor-
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useState} from 'react';
-import {broadcastThemeStudioMessage} from '../state/ThemeStudioBroadcast';
-import {StudioButton} from '../ui/StudioButton';
 
 const SYNC_CUSTOM_CSS_DESCRIPTOR = msg({
 	message: 'Sync custom CSS?',
@@ -274,7 +274,7 @@ export const SettingsSection: React.FC = observer(() => {
 								<ul className={styles.noticeList} data-flx="theme-studio.settings-section.notice-list--linux">
 									<li data-flx="theme-studio.theme-studio-settings-section.settings-section.li">
 										<Trans>
-											Resize, maximize, and window snapping depend on the compositor. Wayland without client-side
+											Resizing, maximizing, and window snapping depend on the compositor. Wayland without client-side
 											decorations may not provide handles. Launch with --ozone-platform=x11 if the window feels stuck.
 										</Trans>
 									</li>

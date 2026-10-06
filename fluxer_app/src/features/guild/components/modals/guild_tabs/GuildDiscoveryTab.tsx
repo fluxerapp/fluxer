@@ -30,7 +30,7 @@ import type {
 	DiscoveryStatusResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
+import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {InfoIcon, WarningIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
@@ -346,8 +346,15 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 								<Trans>Not enough members</Trans>
 							</p>
 							<p className={styles.warningText} data-flx="guild.guild-tabs.guild-discovery-tab.warning-text">
-								<Trans>
-									Your community needs at least {minMemberCount} members before it can be listed in Discovery.
+								<Trans comment="Warning in the community Discovery settings tab when the community is below the minimum size. The plural count is the minimum number of members required to be listed.">
+									Your community needs at least{' '}
+									<Plural
+										value={minMemberCount}
+										one="# member"
+										other="# members"
+										data-flx="guild.guild-tabs.guild-discovery-tab.min-member-count.plural"
+									/>{' '}
+									before it can be listed in Discovery.
 								</Trans>
 							</p>
 						</div>
@@ -621,7 +628,7 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 								disabled={!eligible && canApply}
 								data-flx="guild.guild-tabs.guild-discovery-tab.button.submit"
 							>
-								{hasActiveApplication ? <Trans>Save</Trans> : <Trans>Apply</Trans>}
+								{hasActiveApplication ? <Trans>Save</Trans> : <Trans>Submit application</Trans>}
 							</Button>
 						</div>
 					</div>

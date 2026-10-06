@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import {SERVER_MUTE_ATTRIBUTE} from '@app/api/infrastructure/LiveKitService';
+import {isDMRoom, parseParticipantMetadataWithRaw, parseRoomName} from '@app/api/infrastructure/VoiceRoomContext';
+import {Logger} from '@app/api/Logger';
+import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import type {WebhookEvent} from 'livekit-server-sdk';
-import {WebhookReceiver} from 'livekit-server-sdk';
-import type {ChannelID, GuildID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {VoiceTopology} from '../voice/VoiceTopology';
-import type {IGatewayService} from './IGatewayService';
-import type {ILiveKitService} from './ILiveKitService';
-import type {IVoiceRoomStore} from './IVoiceRoomStore';
-import {isDMRoom, parseParticipantMetadataWithRaw, parseRoomName} from './VoiceRoomContext';
+import {TrackSource, WebhookReceiver} from 'livekit-server-sdk';
 
 interface VoiceWebhookParticipantContext {
 	readonly type: 'dm' | 'guild';
@@ -92,7 +93,7 @@ export class LiveKitWebhookService {
 						roomName: data.event.room?.name ?? null,
 						eventType: data.event.event,
 					},
-					'LiveKit webhook reports dropped events - reconciliation may be needed',
+					'LiveKit webhook reports dropped events',
 				);
 			}
 			await this.processEvent(data);
@@ -185,25 +186,6 @@ export class LiveKitWebhookService {
 				{guildId: context.guildId.toString(), channelId: context.channelId.toString()},
 				'Cleared guild voice room server pinning',
 			);
-			try {
-				const result = await this.gatewayService.disconnectAllVoiceUsersInChannel({
-					guildId: context.guildId,
-					channelId: context.channelId,
-				});
-				Logger.info(
-					{
-						guildId: context.guildId.toString(),
-						channelId: context.channelId.toString(),
-						disconnectedCount: result.disconnectedCount,
-					},
-					'Cleaned up zombie voice connections for finished room',
-				);
-			} catch (error) {
-				Logger.error(
-					{error, guildId: context.guildId.toString(), channelId: context.channelId.toString()},
-					'Failed to clean up voice connections for finished room',
-				);
-			}
 		}
 	}
 
@@ -275,7 +257,7 @@ export class LiveKitWebhookService {
 							error: result.error,
 							participantIdentity: participant.identity,
 						},
-						'LiveKit participant_joined did not match gateway state; leaving participant connected for reconciliation',
+						'LiveKit participant_joined did not match gateway state; leaving participant connected',
 					);
 					return;
 				}
@@ -459,6 +441,45 @@ export class LiveKitWebhookService {
 		}
 	}
 
+	async handleTrackPublished(event: WebhookEvent): Promise<void> {
+		if (event.event !== 'track_published') {
+			return;
+		}
+		const {participant, track} = event;
+		if (!participant?.metadata || track?.source !== TrackSource.MICROPHONE || !track.sid) {
+			return;
+		}
+		if (participant.attributes[SERVER_MUTE_ATTRIBUTE] !== 'true') {
+			return;
+		}
+		const parsed = parseParticipantMetadataWithRaw(participant.metadata);
+		if (!parsed) {
+			Logger.warn({metadata: participant.metadata}, 'Failed to parse participant metadata');
+			return;
+		}
+		const {context, raw} = parsed;
+		if (!raw.region_id || !raw.server_id) {
+			Logger.warn(
+				{participantIdentity: participant.identity, trackSid: track.sid},
+				'Cannot mute published microphone without a region and server',
+			);
+			return;
+		}
+		Logger.debug(
+			{participantIdentity: participant.identity, trackSid: track.sid},
+			'Muting microphone published while server muted',
+		);
+		await this.liveKitService.muteMicrophoneTrack({
+			guildId: context.type === 'guild' ? context.guildId : undefined,
+			channelId: context.channelId,
+			userId: context.userId,
+			connectionId: context.connectionId,
+			regionId: raw.region_id,
+			serverId: raw.server_id,
+			trackSid: track.sid,
+		});
+	}
+
 	async processEvent(data: {event: WebhookEvent; apiKey: string}): Promise<void> {
 		const {event, apiKey} = data;
 		Logger.debug({event: event.event, apiKey}, 'Dispatching LiveKit webhook event');
@@ -472,6 +493,9 @@ export class LiveKitWebhookService {
 				break;
 			case 'room_finished':
 				await this.handleRoomFinished(event, apiKey);
+				break;
+			case 'track_published':
+				await this.handleTrackPublished(event);
 				break;
 			default:
 				Logger.debug({event: event.event}, 'Ignoring LiveKit webhook event');

@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID, VanityURLCode} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
 import {
 	type GuildExplicitContentFilterType,
 	type GuildMFALevelValue,
 	type GuildNSFWLevelValue,
 	GuildSplashCardAlignment,
 	type GuildSplashCardAlignmentValue,
+	GuildVerificationLevel,
 	type GuildVerificationLevelValue,
 	normalizeLegacyNsfwLevel,
 } from '@fluxer/constants/src/GuildConstants';
 import type {GuildDefaultMessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import type {ChannelID, GuildID, UserID, VanityURLCode} from '../BrandedTypes';
-import type {GuildRow} from '../database/types/GuildTypes';
 
 export class Guild {
 	readonly id: GuildID;
@@ -67,7 +68,10 @@ export class Guild {
 		this.embedSplashWidth = row.embed_splash_width ?? null;
 		this.embedSplashHeight = row.embed_splash_height ?? null;
 		this.features = row.features ?? new Set();
-		this.verificationLevel = (row.verification_level ?? 0) as GuildVerificationLevelValue;
+		this.verificationLevel = Math.min(
+			row.verification_level ?? 0,
+			GuildVerificationLevel.HIGH,
+		) as GuildVerificationLevelValue;
 		this.mfaLevel = (row.mfa_level ?? 0) as GuildMFALevelValue;
 		this.nsfwLevel = normalizeLegacyNsfwLevel(row.nsfw_level ?? 0) as GuildNSFWLevelValue;
 		this.nsfw = row.nsfw ?? this.nsfwLevel === 3;

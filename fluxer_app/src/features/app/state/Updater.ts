@@ -6,6 +6,8 @@ import {
 	shouldShowNativeDesktopUpdateDownloadProgress,
 	shouldShowNativeDesktopUpdateInApp,
 } from '@app/features/app/utils/UpdaterPlatformUtils';
+import {WORKER_NAVIGATION_CACHE_PREFIX} from '@app/features/platform/service_worker/WorkerCacheCleanup';
+import {getProtectedCacheStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import type {UpdaterContext, UpdaterDownloadOption, UpdaterEvent} from '@app/features/platform/types/Electron';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getClientInfo} from '@app/features/platform/utils/ClientInfo';
@@ -49,11 +51,34 @@ export const DOWNLOADING_UPDATE_DESCRIPTOR = msg({
 });
 
 const logger = new Logger('Updater');
-const CHECK_INTERVAL_MS = 30 * 60 * 1000;
+const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const MIN_CHECK_INTERVAL_MS = 60 * 1000;
+const MANUAL_DOWNLOAD_REFRESH_TIMEOUT_MS = 5 * 1000;
+const WEB_CHECK_TIMEOUT_MS = 15 * 1000;
+const NATIVE_CHECK_TIMEOUT_MS = 30 * 1000;
 const VERSION_ENDPOINT = '/version.json';
 const CURRENT_BUILD_VERSION = Config.PUBLIC_BUILD_VERSION ?? null;
-const ALLOWED_WEB_UPDATE_HOSTS = new Set(['web.fluxer.app', 'web.canary.fluxer.app']);
+const ALLOWED_WEB_UPDATE_HOSTS = new Set([
+	'web.fluxer.app',
+	'web.canary.fluxer.app',
+	'fluxer.com',
+	'canary.fluxer.com',
+]);
+
+async function dropCachedAppShell(): Promise<void> {
+	const browserCaches = getProtectedCacheStorage();
+	if (!browserCaches) return;
+	try {
+		const cacheNames = await browserCaches.keys();
+		await Promise.all(
+			cacheNames
+				.filter((cacheName) => cacheName.startsWith(WORKER_NAVIGATION_CACHE_PREFIX))
+				.map((cacheName) => browserCaches.delete(cacheName)),
+		);
+	} catch (error) {
+		logger.warn('Failed to drop the cached app shell before reloading', error);
+	}
+}
 
 function normalizeUpdaterContext(context: NativeUpdaterEvent['context']): UpdaterContext {
 	switch (context) {
@@ -132,6 +157,8 @@ class Updater {
 	private backgroundCheckCleanups: Array<() => void> = [];
 	private unsubscribeNativeEvents: (() => void) | null = null;
 	private updateReadyNagbarDismissedVersion: string | null = null;
+	private pendingManualDownloadRefreshes = 0;
+	private checkInProgress = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -168,10 +195,6 @@ class Updater {
 
 	get nativeManualDownloadOptions(): ReadonlyArray<UpdaterDownloadOption> {
 		return this.snapshot.context.nativeManualDownloadOptions;
-	}
-
-	private get checkInProgress(): boolean {
-		return this.snapshot.context.checkInProgress;
 	}
 
 	private get nativeCheckFailed(): boolean {
@@ -288,7 +311,17 @@ class Updater {
 	}
 
 	private handleNativeEvent(event: UpdaterEvent): void {
-		const isUserCheck = event.context === 'user';
+		const isManualDownloadRefreshResult =
+			event.context === 'user' &&
+			this.pendingManualDownloadRefreshes > 0 &&
+			(event.type === 'available' ||
+				event.type === 'not-available' ||
+				event.type === 'error' ||
+				event.type === 'unsupported');
+		if (isManualDownloadRefreshResult) {
+			this.pendingManualDownloadRefreshes -= 1;
+		}
+		const isUserCheck = event.context === 'user' && !isManualDownloadRefreshResult;
 		const isBackgroundOrFocusCheck = event.context === 'background' || event.context === 'focus';
 		const shouldSurfaceNativeDesktopUpdate = this.shouldSurfaceNativeDesktopUpdate();
 		const shouldShowImmediateUserResult = isUserCheck && !this.checkInProgress;
@@ -402,7 +435,6 @@ class Updater {
 			channel: this.channel ?? Config.PUBLIC_RELEASE_CHANNEL,
 			arch: this.desktopArch,
 			version: event.version ?? null,
-			apiEndpoint: Config.PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT,
 			knownOptions: options,
 		});
 	}
@@ -461,6 +493,7 @@ class Updater {
 			return;
 		}
 
+		this.checkInProgress = true;
 		this.transition({type: 'check.started'});
 
 		const checkContext: 'user' | 'background' = userInitiated ? 'user' : 'background';
@@ -471,11 +504,9 @@ class Updater {
 				shouldCheckNative ? this.checkNativeUpdate(checkContext) : Promise.resolve(null),
 				this.checkWebUpdate(),
 			]);
-			this.transition({
-				type: 'web.checked',
-				available: webResult?.available ?? false,
-				version: webResult?.version ?? null,
-			});
+			if (webResult) {
+				this.transition({type: 'web.checked', available: webResult.available, version: webResult.version});
+			}
 			if (userInitiated && (!shouldCheckNative || (!this.isChecking && !this.nativeCheckFailed))) {
 				this.showCurrentUpdateState();
 			}
@@ -486,6 +517,7 @@ class Updater {
 				pushUpdateCheckFailedModal();
 			}
 		} finally {
+			this.checkInProgress = false;
 			this.transition({type: failed ? 'check.failed' : 'check.finished', now: Date.now()});
 		}
 	}
@@ -493,19 +525,24 @@ class Updater {
 	private async checkNativeUpdate(context: 'user' | 'background'): Promise<boolean> {
 		const electronApi = getElectronAPI();
 		if (!electronApi) return false;
+		let timeoutId: number | undefined;
+		const timedOut = new Promise<false>((resolve) => {
+			timeoutId = window.setTimeout(() => resolve(false), NATIVE_CHECK_TIMEOUT_MS);
+		});
 		try {
-			await electronApi.updaterCheck(context);
-			return true;
+			return await Promise.race([electronApi.updaterCheck(context).then(() => true), timedOut]);
 		} catch (error) {
 			logger.debug('Native update check failed silently:', error);
 			return false;
+		} finally {
+			window.clearTimeout(timeoutId);
 		}
 	}
 
 	private async checkWebUpdate(): Promise<{
 		available: boolean;
 		version: string | null;
-	}> {
+	} | null> {
 		if (!ALLOWED_WEB_UPDATE_HOSTS.has(window.location.host)) {
 			return {available: false, version: null};
 		}
@@ -513,24 +550,28 @@ class Updater {
 			const response = await fetch(VERSION_ENDPOINT, {
 				cache: 'no-store',
 				headers: {'Cache-Control': 'no-cache'},
+				signal: AbortSignal.timeout(WEB_CHECK_TIMEOUT_MS),
 			});
 			if (!response.ok) {
 				logger.debug('Version endpoint not available');
-				return {available: false, version: null};
+				return null;
 			}
 			const payload = (await response.json()) as {
 				version?: string;
 				buildVersion?: string;
 			};
 			const version = payload.version ?? payload.buildVersion ?? null;
-			const updateAvailable = Boolean(version && CURRENT_BUILD_VERSION && version !== CURRENT_BUILD_VERSION);
+			if (!version) {
+				return null;
+			}
+			const updateAvailable = Boolean(CURRENT_BUILD_VERSION && version !== CURRENT_BUILD_VERSION);
 			return {
 				available: updateAvailable,
 				version,
 			};
 		} catch (error) {
 			logger.debug('Failed to fetch version info silently:', error);
-			return {available: false, version: null};
+			return null;
 		}
 	}
 
@@ -570,6 +611,7 @@ class Updater {
 		}
 		if (this.updateInfo.web.available) {
 			logger.info('Applying web update, reloading...');
+			await dropCachedAppShell();
 			window.location.reload();
 			return;
 		}
@@ -643,7 +685,7 @@ class Updater {
 				currentVersion: this.currentVersion,
 				version: this.updateInfo.native.version,
 				options: this.nativeManualDownloadOptions,
-				onDownload: (option) => this.downloadManualNativeUpdateOrOpen(option.url, option.suggestedName),
+				onDownload: (option) => this.downloadManualNativeUpdateOption(option),
 			});
 			return;
 		}
@@ -651,7 +693,49 @@ class Updater {
 		pushUpdateAvailableModal(this.updateInfo.native.version, () => this.downloadManualNativeUpdateOrOpen(url));
 	}
 
-	private async downloadManualNativeUpdateOrOpen(url: string, suggestedName?: string): Promise<void> {
+	private async refreshManualNativeDownloadOption(option: UpdaterDownloadOption): Promise<UpdaterDownloadOption> {
+		if (this.checkInProgress) {
+			return option;
+		}
+		this.checkInProgress = true;
+		this.transition({type: 'check.started'});
+		let timeoutId: number | undefined;
+		const timedOut = new Promise<boolean>((resolve) => {
+			timeoutId = window.setTimeout(() => resolve(false), MANUAL_DOWNLOAD_REFRESH_TIMEOUT_MS);
+		});
+		try {
+			this.pendingManualDownloadRefreshes += 1;
+			const checked = await Promise.race([this.checkNativeUpdate('user'), timedOut]);
+			if (!checked) {
+				return option;
+			}
+			return this.nativeManualDownloadOptions.find((candidate) => candidate.format === option.format) ?? option;
+		} finally {
+			window.clearTimeout(timeoutId);
+			this.checkInProgress = false;
+			this.transition({type: 'check.finished', now: Date.now()});
+		}
+	}
+
+	private async downloadManualNativeUpdateOption(option: UpdaterDownloadOption): Promise<void> {
+		if (this.manualNativeDownloadInFlight) {
+			return;
+		}
+		this.transition({type: 'manualDownload.started'});
+		let currentOption = option;
+		try {
+			currentOption = await this.refreshManualNativeDownloadOption(option);
+		} finally {
+			this.transition({type: 'manualDownload.finished'});
+		}
+		await this.downloadManualNativeUpdateOrOpen(currentOption.url, currentOption.suggestedName, currentOption.sha256);
+	}
+
+	private async downloadManualNativeUpdateOrOpen(
+		url: string,
+		suggestedName?: string,
+		sha256?: string | null,
+	): Promise<void> {
 		if (this.manualNativeDownloadInFlight) {
 			return;
 		}
@@ -660,8 +744,14 @@ class Updater {
 			const outcome = await downloadWithNative({
 				url,
 				suggestedName: suggestedName ?? this.getManualUpdateSuggestedName(url),
+				sha256,
 			});
 			if (outcome === 'success' || outcome === 'canceled') {
+				return;
+			}
+			if (outcome === 'checksum-mismatch') {
+				logger.error('Native manual update download did not match its published checksum', {url});
+				pushDesktopUpdateDownloadFailedModal();
 				return;
 			}
 			logger.warn('Native manual update download unavailable; opening update URL externally', {outcome});

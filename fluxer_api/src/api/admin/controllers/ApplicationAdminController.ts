@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
+import {createApplicationID, createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
@@ -12,13 +21,6 @@ import {
 	TransferApplicationOwnershipRequest,
 } from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {createApplicationID, createGuildID, createUserID} from '../../BrandedTypes';
-import {requireAdminACL, requireAnyAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 function requireRequestAdminACL(granted: ReadonlySet<string>, required: string): void {
 	if (!granted.has(required) && !granted.has(AdminACLs.WILDCARD)) {
@@ -50,11 +52,25 @@ export function ApplicationAdminController(app: HonoApp) {
 			}
 			if (guildId != null) {
 				requireRequestAdminACL(ctx.get('adminUserAcls'), AdminACLs.APPLICATION_LOOKUP);
-				return ctx.json(await adminService.applicationService.listGuildApplications(createGuildID(guildId)));
+				const response = await adminService.applicationService.listGuildApplications(createGuildID(guildId));
+				await recordAdminRead(ctx, {
+					targetType: 'guild',
+					targetId: guildId,
+					action: AdminAuditReadActions.LIST_GUILD_APPLICATIONS,
+					metadata: {application_count: response.applications.length},
+				});
+				return ctx.json(response);
 			}
 			if (ownerId != null) {
 				requireRequestAdminACL(ctx.get('adminUserAcls'), AdminACLs.APPLICATION_LIST_BY_OWNER);
-				return ctx.json(await adminService.applicationService.listUserApplications(createUserID(ownerId)));
+				const response = await adminService.applicationService.listUserApplications(createUserID(ownerId));
+				await recordAdminRead(ctx, {
+					targetType: 'user',
+					targetId: ownerId,
+					action: AdminAuditReadActions.LIST_USER_APPLICATIONS,
+					metadata: {application_count: response.applications.length},
+				});
+				return ctx.json(response);
 			}
 			throw InputValidationError.create('owner_id', 'One of owner_id and guild_id is required');
 		},
@@ -76,7 +92,14 @@ export function ApplicationAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const userId = createUserID(ctx.req.valid('param').user_id);
-			return ctx.json(await adminService.applicationService.listUserApplications(userId));
+			const response = await adminService.applicationService.listUserApplications(userId);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_APPLICATIONS,
+				metadata: {application_count: response.applications.length},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -97,7 +120,18 @@ export function ApplicationAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const applicationId = createApplicationID(ctx.req.valid('param').application_id);
-			return ctx.json(await adminService.applicationService.lookupApplication(applicationId));
+			const response = await adminService.applicationService.lookupApplication(applicationId);
+			await recordAdminRead(ctx, {
+				targetType: 'application',
+				targetId: applicationId,
+				action: AdminAuditReadActions.GET_APPLICATION,
+				metadata: {
+					found: response.application !== null,
+					owner_user_id: response.application?.owner_user_id,
+					bot_user_id: response.application?.bot_user_id,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.patch(

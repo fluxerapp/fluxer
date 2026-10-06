@@ -1,17 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import * as AuthEmail from '@app/api/auth/AuthEmail';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
+import {RecoveryKitRepository} from '@app/api/auth/services/RecoveryKitRepository';
+import {createPasswordResetToken, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import {Logger} from '@app/api/Logger';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import {User} from '@app/api/models/User';
+import {clearNewConversationLimit} from '@app/api/user/NewConversationLimit';
+import {PASSWORD_RESET_TOKEN_TTL_SECONDS} from '@app/api/user/repositories/auth/TokenRepository';
+import {mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
+import {resolveAssignedTraits} from '@app/api/user/UserTraits';
+import {getIpAddressReverse, getLocationLabelFromIp} from '@app/api/utils/IpUtils';
+import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {
-	ADMIN_PHONE_TOGGLE_CLEARABLE_FLAGS,
-	ALL_SUSPICIOUS_ACTIVITY_FLAGS,
-	DEFERRABLE_PHONE_FLAGS,
-	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
-	imposePhoneRequirements,
-	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
-	SuspiciousActivityFlags,
-	UserFlags,
-} from '@fluxer/constants/src/UserConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -19,10 +32,8 @@ import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
-	BulkUpdateSuspiciousActivityFlagsRequest,
-	BulkUpdateUserFlagsRequest,
+	AdminPasswordResetLinkResponse,
 	DeleteWebAuthnCredentialRequest,
-	DisableForSuspiciousActivityRequest,
 	DisableMfaRequest,
 	ListWebAuthnCredentialsRequest,
 	ResendVerificationEmailRequest,
@@ -30,38 +41,16 @@ import type {
 	SetUserAclsRequest,
 	SetUserTraitsRequest,
 	TerminateSessionsRequest,
-	UpdateHasVerifiedPhoneRequest,
-	UpdateSuspiciousActivityFlagsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {WebAuthnCredentialListResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthEmail from '../../auth/AuthEmail';
-import * as AuthMfa from '../../auth/AuthMfa';
-import * as AuthSession from '../../auth/AuthSession';
-import * as AuthUtility from '../../auth/AuthUtility';
-import {createPasswordResetToken, createUserID, type UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
-import type {IRiskHistoryRepository} from '../../risk/HistoricalOutcomeRepository';
-import type {HistoricalOutcomeCode} from '../../risk/RiskHistoryTypes';
-import {resolveAssignedTraits} from '../../user/UserTraits';
-import {getIpAddressReverse, getLocationLabelFromIp} from '../../utils/IpUtils';
-import {resolveSessionClientInfo} from '../../utils/SessionClientIdentity';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
-import {BulkCancelledError, type BulkProgressHelpers} from './BulkProgressHelpers';
 
 interface AdminUserSecurityServiceDeps {
 	apiContext: ApiContext;
 	auditService: AdminAuditService;
 	updatePropagator: AdminUserUpdatePropagator;
-	riskHistoryRepository: Pick<IRiskHistoryRepository, 'recordOutcomeForUser'>;
 }
 
 interface FlagAuditMetadataParams {
-	userCount?: number;
 	addFlags: ReadonlyArray<bigint | number | string>;
 	removeFlags: ReadonlyArray<bigint | number | string>;
 	newFlags?: bigint | number | string;
@@ -75,19 +64,11 @@ function joinAuditValues(values: ReadonlyArray<bigint | number | string>): strin
 	return values.map((value) => value.toString()).join(',');
 }
 
-function createFlagAuditMetadata({
-	userCount,
-	addFlags,
-	removeFlags,
-	newFlags,
-}: FlagAuditMetadataParams): Map<string, string> {
+function createFlagAuditMetadata({addFlags, removeFlags, newFlags}: FlagAuditMetadataParams): Map<string, string> {
 	const entries: Array<[string, string]> = [
 		['add_flags', joinAuditValues(addFlags)],
 		['remove_flags', joinAuditValues(removeFlags)],
 	];
-	if (userCount !== undefined) {
-		entries.unshift(['user_count', userCount.toString()]);
-	}
 	if (newFlags !== undefined) {
 		entries.push(['new_flags', newFlags.toString()]);
 	}
@@ -145,19 +126,21 @@ export class AdminUserSecurityService {
 	}) {
 		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
+		let previousFlags = 0n;
+		const updatedUser = await userRepository.updateFlags(userId, (flags) => {
+			previousFlags = flags;
+			return applyBigIntFlagUpdates(flags, data.addFlags, data.removeFlags);
+		});
+		if (!updatedUser) {
 			throw new UnknownUserError();
 		}
-		const newFlags = applyBigIntFlagUpdates(user.flags, data.addFlags, data.removeFlags);
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				flags: newFlags,
-			},
-			user.toRow(),
-		);
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
+		const newFlags = updatedUser.flags;
+		const trusted = (newFlags & UserFlags.LIMIT_EXEMPT) !== 0n && (previousFlags & UserFlags.LIMIT_EXEMPT) === 0n;
+		if (trusted || (previousFlags & ~newFlags) !== 0n) {
+			await clearNewConversationLimit(userId, {cache: cacheService});
+		}
+		const oldUser = new User({...updatedUser.toRow(), flags: previousFlags});
+		await updatePropagator.propagateUserUpdate({userId, oldUser, updatedUser});
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -170,6 +153,7 @@ export class AdminUserSecurityService {
 				newFlags,
 			}),
 		});
+		await emitAdminAction(adminUserId, userId, 'update_flags');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};
@@ -279,6 +263,68 @@ export class AdminUserSecurityService {
 			action: 'send_password_reset',
 			auditLogReason,
 			metadata: new Map([['email', user.email]]),
+		});
+	}
+
+	async createPasswordResetLink(
+		data: SendPasswordResetRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+		acls: ReadonlySet<string>,
+	): Promise<AdminPasswordResetLinkResponse> {
+		const {users: userRepository} = this.deps.apiContext.services;
+		const {apiContext, auditService} = this.deps;
+		const userId = createUserID(data.user_id);
+		const user = await userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		AuthUtility.assertNonBotUser(apiContext, user);
+		assertCallerHoldsTargetAcls(user.acls, acls);
+		const token = createPasswordResetToken(await AuthUtility.generateSecureToken(apiContext));
+		const expiresAt = new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_SECONDS * 1000);
+		await userRepository.deleteAllPasswordResetTokens(userId);
+		await new RecoveryKitRepository().delete(userId);
+		await userRepository.createPasswordResetToken({
+			token_: token,
+			user_id: userId,
+			email: null,
+		});
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: 'create_password_reset_link',
+			auditLogReason,
+			metadata: new Map(),
+		});
+		return {
+			url: `${Config.email.appBaseUrl}/reset#token=${token}`,
+			expires_at: expiresAt.toISOString(),
+		};
+	}
+
+	async revokeRecoveryKit(
+		data: SendPasswordResetRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+		acls: ReadonlySet<string>,
+	): Promise<void> {
+		const {users: userRepository} = this.deps.apiContext.services;
+		const userId = createUserID(data.user_id);
+		const user = await userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		assertCallerHoldsTargetAcls(user.acls, acls);
+		await new RecoveryKitRepository().delete(userId);
+		await this.deps.auditService.createAuditLog({
+			adminUserId,
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: 'revoke_recovery_kit',
+			auditLogReason,
+			metadata: new Map(),
 		});
 	}
 
@@ -407,280 +453,6 @@ export class AdminUserSecurityService {
 		};
 	}
 
-	async updateHasVerifiedPhone(
-		data: UpdateHasVerifiedPhoneRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
-		const userId = createUserID(data.user_id);
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		const phonePatch: Partial<UserRow> = {has_verified_phone: data.has_verified_phone};
-		if (data.has_verified_phone) {
-			const clearedFlags = (user.suspiciousActivityFlags ?? 0) & ~ADMIN_PHONE_TOGGLE_CLEARABLE_FLAGS;
-			if (clearedFlags !== (user.suspiciousActivityFlags ?? 0)) {
-				phonePatch.suspicious_activity_flags = clearedFlags;
-			}
-		}
-		const updatedUser = await userRepository.patchUpsert(userId, phonePatch, user.toRow());
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser});
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(userId),
-			action: 'update_has_verified_phone',
-			auditLogReason,
-			metadata: new Map(
-				phonePatch.suspicious_activity_flags === undefined
-					? [['has_verified_phone', String(data.has_verified_phone)]]
-					: [
-							['has_verified_phone', String(data.has_verified_phone)],
-							['suspicious_activity_flags_before', String(user.suspiciousActivityFlags ?? 0)],
-							['suspicious_activity_flags_after', String(phonePatch.suspicious_activity_flags)],
-						],
-			),
-		});
-		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
-	}
-
-	async updateSuspiciousActivityFlags(
-		data: UpdateSuspiciousActivityFlagsRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
-		const userId = createUserID(data.user_id);
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		const currentFlags = user.suspiciousActivityFlags ?? 0;
-		const keepsDeferral =
-			(currentFlags & DEFERRED_PHONE_ON_COMMUNITY_JOIN) !== 0 &&
-			(data.flags & DEFERRABLE_PHONE_FLAGS) !== 0 &&
-			(data.flags & DEFERRABLE_PHONE_FLAGS) === (currentFlags & DEFERRABLE_PHONE_FLAGS);
-		const keepsPromotion =
-			(currentFlags & PHONE_GATE_PROMOTED_FROM_DEFERRAL) !== 0 &&
-			(data.flags & DEFERRABLE_PHONE_FLAGS) !== 0 &&
-			(data.flags & DEFERRABLE_PHONE_FLAGS) === (currentFlags & DEFERRABLE_PHONE_FLAGS);
-		const newFlags =
-			(keepsDeferral ? data.flags | DEFERRED_PHONE_ON_COMMUNITY_JOIN : data.flags) |
-			(keepsPromotion ? PHONE_GATE_PROMOTED_FROM_DEFERRAL : 0);
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				suspicious_activity_flags: newFlags,
-			},
-			user.toRow(),
-		);
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		if (
-			(currentFlags & ALL_SUSPICIOUS_ACTIVITY_FLAGS) !== (newFlags & ALL_SUSPICIOUS_ACTIVITY_FLAGS) &&
-			(newFlags & ALL_SUSPICIOUS_ACTIVITY_FLAGS) !== 0
-		) {
-			await this.recordRiskOutcomes(userId, ['challenged'], 'admin_update_suspicious_activity_flags');
-		}
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(userId),
-			action: 'update_suspicious_activity_flags',
-			auditLogReason,
-			metadata: new Map([['flags', data.flags.toString()]]),
-		});
-		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
-	}
-
-	async disableForSuspiciousActivity(
-		data: DisableForSuspiciousActivityRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-	) {
-		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
-		const userId = createUserID(data.user_id);
-		const user = await userRepository.findUnique(userId);
-		if (!user) {
-			throw new UnknownUserError();
-		}
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags | UserFlags.DISABLED_SUSPICIOUS_ACTIVITY,
-				suspicious_activity_flags: data.flags,
-				password_hash: null,
-			},
-			user.toRow(),
-		);
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		await this.recordRiskOutcomes(
-			userId,
-			data.flags !== 0 ? ['challenged', 'disabled_suspicious'] : ['disabled_suspicious'],
-			'admin_disable_suspicious_activity',
-		);
-		if (user.email) {
-			await emailService.sendAccountDisabledForSuspiciousActivityEmail(user.email, user.username, null, user.locale);
-		}
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(userId),
-			action: 'disable_suspicious_activity',
-			auditLogReason,
-			metadata: new Map([['flags', data.flags.toString()]]),
-		});
-		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
-	}
-
-	async bulkUpdateUserFlags(
-		data: BulkUpdateUserFlagsRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-		helpers?: BulkProgressHelpers,
-	) {
-		const {auditService} = this.deps;
-		const successful: Array<string> = [];
-		const failed: Array<{
-			id: string;
-			error: string;
-		}> = [];
-		const addFlags = data.add_flags.map((flag) => BigInt(flag));
-		const removeFlags = data.remove_flags.map((flag) => BigInt(flag));
-		const total = data.user_ids.length;
-		await helpers?.reportProgress(0, total, `Updating flags on ${total} users`);
-		let processed = 0;
-		for (const userIdBigInt of data.user_ids) {
-			if (helpers && (await helpers.shouldCancel())) throw new BulkCancelledError();
-			try {
-				const userId = createUserID(userIdBigInt);
-				await this.updateUserFlags({
-					userId,
-					data: {addFlags, removeFlags},
-					adminUserId,
-					auditLogReason: null,
-					acls,
-				});
-				successful.push(userId.toString());
-			} catch (error) {
-				failed.push({
-					id: userIdBigInt.toString(),
-					error: error instanceof Error ? error.message : 'Unknown error',
-				});
-			}
-			processed++;
-			if (helpers && processed % 25 === 0) {
-				await helpers.reportProgress(processed, total, null);
-			}
-		}
-		await helpers?.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(0),
-			action: 'bulk_update_user_flags',
-			auditLogReason,
-			metadata: createFlagAuditMetadata({
-				userCount: data.user_ids.length,
-				addFlags: data.add_flags,
-				removeFlags: data.remove_flags,
-			}),
-		});
-		return {
-			successful,
-			failed,
-		};
-	}
-
-	async bulkUpdateSuspiciousActivityFlags(
-		data: BulkUpdateSuspiciousActivityFlagsRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		helpers?: BulkProgressHelpers,
-	) {
-		const {users: userRepository} = this.deps.apiContext.services;
-		const {auditService, updatePropagator} = this.deps;
-		const successful: Array<string> = [];
-		const failed: Array<{
-			id: string;
-			error: string;
-		}> = [];
-		const addMask = data.add_flags.reduce((mask, flagName) => {
-			const value = SuspiciousActivityFlags[flagName as keyof typeof SuspiciousActivityFlags];
-			return value !== undefined ? mask | value : mask;
-		}, 0);
-		const removeMask = data.remove_flags.reduce((mask, flagName) => {
-			const value = SuspiciousActivityFlags[flagName as keyof typeof SuspiciousActivityFlags];
-			return value !== undefined ? mask | value : mask;
-		}, 0);
-		const total = data.user_ids.length;
-		await helpers?.reportProgress(0, total, `Updating suspicious flags on ${total} users`);
-		let processed = 0;
-		for (const userIdBigInt of data.user_ids) {
-			if (helpers && (await helpers.shouldCancel())) throw new BulkCancelledError();
-			try {
-				const userId = createUserID(userIdBigInt);
-				const user = await userRepository.findUnique(userId);
-				if (!user) {
-					throw new UnknownUserError();
-				}
-				const currentFlags = user.suspiciousActivityFlags ?? 0;
-				const newFlags = imposePhoneRequirements(currentFlags, addMask) & ~removeMask;
-				const updatedUser = await userRepository.patchUpsert(
-					userId,
-					{suspicious_activity_flags: newFlags},
-					user.toRow(),
-				);
-				await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser});
-				if (newFlags !== currentFlags && newFlags !== 0) {
-					await this.recordRiskOutcomes(userId, ['challenged'], 'admin_bulk_update_suspicious_activity_flags');
-				}
-				successful.push(userId.toString());
-			} catch (error) {
-				failed.push({
-					id: userIdBigInt.toString(),
-					error: error instanceof Error ? error.message : 'Unknown error',
-				});
-			}
-			processed++;
-			if (helpers && processed % 25 === 0) {
-				await helpers.reportProgress(processed, total, null);
-			}
-		}
-		await helpers?.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(0),
-			action: 'bulk_update_suspicious_activity_flags',
-			auditLogReason,
-			metadata: createFlagAuditMetadata({
-				userCount: data.user_ids.length,
-				addFlags: data.add_flags,
-				removeFlags: data.remove_flags,
-			}),
-		});
-		return {
-			successful,
-			failed,
-		};
-	}
-
 	async listWebAuthnCredentials(
 		data: ListWebAuthnCredentialsRequest,
 		adminUserId: UserID,
@@ -693,7 +465,7 @@ export class AdminUserSecurityService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const credentials = await userRepository.listWebAuthnCredentials(userId);
+		const credentials = visibleWebAuthnCredentials(await userRepository.listWebAuthnCredentials(userId));
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -702,12 +474,9 @@ export class AdminUserSecurityService {
 			auditLogReason,
 			metadata: new Map([['credential_count', credentials.length.toString()]]),
 		});
-		return credentials.map((cred) => ({
-			id: cred.credentialId,
-			name: cred.name,
-			created_at: cred.createdAt.toISOString(),
-			last_used_at: cred.lastUsedAt?.toISOString() ?? null,
-		}));
+		return credentials.map((cred) =>
+			mapWebAuthnCredentialToResponse(cred, this.deps.apiContext.services.config.auth.passkeys.rpId),
+		);
 	}
 
 	async deleteWebAuthnCredential(
@@ -869,24 +638,12 @@ export class AdminUserSecurityService {
 			}),
 		};
 	}
+}
 
-	private async recordRiskOutcomes(
-		userId: UserID,
-		outcomeCodes: ReadonlyArray<HistoricalOutcomeCode>,
-		source: string,
-	): Promise<void> {
-		if (outcomeCodes.length === 0) {
-			return;
-		}
-		try {
-			await this.deps.riskHistoryRepository.recordOutcomeForUser({
-				userId: userId.toString(),
-				occurredAt: new Date(),
-				source,
-				outcomeCodes,
-			});
-		} catch (error) {
-			Logger.warn({error, userId, source}, 'Failed to persist admin risk history outcome');
-		}
+function assertCallerHoldsTargetAcls(targetAcls: ReadonlySet<string>, callerAcls: ReadonlySet<string>): void {
+	if (callerAcls.has(AdminACLs.WILDCARD)) return;
+	const missing = [...targetAcls].find((acl) => !callerAcls.has(acl));
+	if (missing !== undefined) {
+		throw new MissingACLError(missing);
 	}
 }

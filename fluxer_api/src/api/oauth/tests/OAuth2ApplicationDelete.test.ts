@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createOAuth2Application,
 	createUniqueApplicationName,
 	deleteOAuth2Application,
 	getOAuth2Application,
 	listOAuth2Applications,
-} from './OAuth2TestUtils';
+} from '@app/api/oauth/tests/OAuth2TestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe('OAuth2 Application Delete', () => {
 	let harness: ApiTestHarness;

@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {HarvestStatusResponseSchema} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
-import type {z} from 'zod';
-import type {UserID} from '../BrandedTypes';
-import type {UserHarvestRow} from '../database/types/UserTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserHarvestRow} from '@app/api/database/types/UserTypes';
+import type {HarvestStatus, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 
 export class UserHarvest {
 	userId: UserID;
 	harvestId: bigint;
 	requestedAt: Date;
+	attemptId: string | null;
 	startedAt: Date | null;
 	completedAt: Date | null;
 	failedAt: Date | null;
+	terminalFailedAt: Date | null;
 	storageKey: string | null;
 	fileSize: bigint | null;
 	progressPercent: number;
@@ -23,9 +24,11 @@ export class UserHarvest {
 		this.userId = row.user_id;
 		this.harvestId = row.harvest_id;
 		this.requestedAt = row.requested_at;
+		this.attemptId = row.attempt_id ?? null;
 		this.startedAt = row.started_at ?? null;
 		this.completedAt = row.completed_at ?? null;
 		this.failedAt = row.failed_at ?? null;
+		this.terminalFailedAt = row.terminal_failed_at ?? null;
 		this.storageKey = row.storage_key ?? null;
 		this.fileSize = row.file_size ?? null;
 		this.progressPercent = row.progress_percent;
@@ -39,9 +42,11 @@ export class UserHarvest {
 			user_id: this.userId,
 			harvest_id: this.harvestId,
 			requested_at: this.requestedAt,
+			attempt_id: this.attemptId,
 			started_at: this.startedAt,
 			completed_at: this.completedAt,
 			failed_at: this.failedAt,
+			terminal_failed_at: this.terminalFailedAt,
 			storage_key: this.storageKey,
 			file_size: this.fileSize,
 			progress_percent: this.progressPercent,
@@ -51,20 +56,7 @@ export class UserHarvest {
 		};
 	}
 
-	toResponse(): {
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-		started_at: string | null;
-		completed_at: string | null;
-		failed_at: string | null;
-		file_size: string | null;
-		progress_percent: number;
-		progress_step: string | null;
-		error_message: string | null;
-		download_url_expires_at: string | null;
-		expires_at: string | null;
-	} {
+	toResponse(): HarvestStatusResponse {
 		return {
 			harvest_id: this.harvestId.toString(),
 			status: this.getStatus(),
@@ -81,12 +73,10 @@ export class UserHarvest {
 		};
 	}
 
-	getStatus(): 'pending' | 'processing' | 'completed' | 'failed' {
+	getStatus(): HarvestStatus {
 		if (this.failedAt) return 'failed';
 		if (this.completedAt) return 'completed';
 		if (this.startedAt) return 'processing';
 		return 'pending';
 	}
 }
-
-export type UserHarvestResponse = z.infer<typeof HarvestStatusResponseSchema>;

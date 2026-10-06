@@ -1,16 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {
+	RequireEmailAccountIdentity,
+	RequireUsernameAccountIdentity,
+} from '@app/api/middleware/AccountIdentityMiddleware';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {inputValidationErrorFromZodIssues, Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {ListUserGuildsResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {SearchUsersResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
 	AdminAclListResponse,
+	AdminPasswordResetLinkResponse,
 	AdminUserAclsRequest,
+	AdminUserBanNoteRequest,
 	AdminUserBanRequest,
-	AdminUserBotStatusRequest,
 	AdminUserChangeLogQuery,
 	AdminUserClearFieldsRequest,
+	AdminUserDeletionCancelRequest,
 	AdminUserDeletionScheduleRequest,
 	AdminUserDmChannelListQuery,
 	AdminUserDmChannelListResponse,
@@ -19,15 +35,12 @@ import {
 	AdminUserFlagsUpdateRequest,
 	AdminUserGuildListQuery,
 	AdminUserListQuery,
-	AdminUserPhoneVerificationRequest,
 	AdminUserPremiumFlagsUpdateRequest,
 	AdminUserRelationshipCategoryQuery,
 	AdminUserRelationshipParam,
-	AdminUserSuspiciousActivityFlagsRequest,
-	AdminUserSuspiciousDisableRequest,
-	AdminUserSystemStatusRequest,
 	AdminUsersMeResponse,
 	AdminUserTraitsRequest,
+	AdminUserUnbanRequest,
 	AdminUserUsernameUpdateRequest,
 	AdminUserWebAuthnCredentialParam,
 	ListUserChangeLogResponseSchema,
@@ -41,14 +54,6 @@ import {
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {WebAuthnCredentialListResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {createUserID} from '../../BrandedTypes';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {inputValidationErrorFromZodIssues, Validator} from '../../Validator';
-import {mapUserToAdminResponse} from '../models/UserTypes';
 
 function requireSelectorACL(granted: ReadonlySet<string>, acl: string): void {
 	if (!granted.has(acl) && !granted.has(AdminACLs.WILDCARD)) {
@@ -72,7 +77,14 @@ export function UserAdminController(app: HonoApp) {
 				'Returns every access control permission the admin API recognises. This is the registry admin accounts and admin API keys draw their permissions from. Requires AUTHENTICATE permission.',
 		}),
 		async (ctx) => {
-			return ctx.json({acls: Object.values(AdminACLs)});
+			const acls = Object.values(AdminACLs);
+			await recordAdminRead(ctx, {
+				targetType: 'admin_acl',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_ADMIN_ACLS,
+				metadata: {acl_count: acls.length},
+			});
+			return ctx.json({acls});
 		},
 	);
 	app.get(
@@ -127,25 +139,50 @@ export function UserAdminController(app: HonoApp) {
 					throw inputValidationErrorFromZodIssues(parsed.error.issues);
 				}
 				const {users} = await adminService.userService.lookupService.lookupUser(parsed.data, adminUserAcls);
+				await recordAdminRead(ctx, {
+					targetType: 'user',
+					targetId: 0n,
+					action: AdminAuditReadActions.SEARCH_USERS,
+					metadata: {
+						selector: userIds ? 'user_id' : 'resolve',
+						user_id: userIds?.length === 1 ? userIds[0] : undefined,
+						user_id_count: userIds?.length,
+						result_count: users.length,
+						total: users.length,
+					},
+				});
 				return ctx.json({users, total: users.length});
 			}
-			if (query.email?.trim()) {
+			const selector = query.email?.trim() ? 'email' : query.last_active_ip?.trim() ? 'last_active_ip' : 'search';
+			if (selector === 'email') {
 				requireSelectorACL(adminUserAcls, AdminACLs.USER_VIEW_EMAIL);
-			} else if (query.last_active_ip?.trim()) {
+			} else if (selector === 'last_active_ip') {
 				requireSelectorACL(adminUserAcls, AdminACLs.USER_VIEW_IP);
 			}
-			return ctx.json(
-				await adminService.searchService.searchUsers(
-					{
-						query: query.q,
-						email: query.email,
-						last_active_ip: query.last_active_ip,
-						limit: query.limit,
-						offset: query.offset,
-					},
-					adminUserAcls,
-				),
+			const response = await adminService.searchService.searchUsers(
+				{
+					query: query.q,
+					email: query.email,
+					last_active_ip: query.last_active_ip,
+					limit: query.limit,
+					offset: query.offset,
+				},
+				adminUserAcls,
 			);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: 0n,
+				action: AdminAuditReadActions.SEARCH_USERS,
+				metadata: {
+					selector,
+					has_query: selector === 'search' && query.q?.trim() ? true : undefined,
+					limit: selector === 'email' ? undefined : query.limit,
+					offset: selector === 'email' ? undefined : query.offset,
+					result_count: response.users.length,
+					total: response.total,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -167,7 +204,14 @@ export function UserAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(await adminService.userService.lookupService.lookupUser({user_ids: [userId]}, adminUserAcls));
+			const response = await adminService.userService.lookupService.lookupUser({user_ids: [userId]}, adminUserAcls);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.GET_USER,
+				metadata: {found: response.users.length > 0},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -190,9 +234,23 @@ export function UserAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const {user_id: userId} = ctx.req.valid('param');
 			const query = ctx.req.valid('query');
-			return ctx.json(
-				await adminService.guildServiceAggregate.lookupService.listUserGuilds({user_id: userId, ...query}),
-			);
+			const response = await adminService.guildServiceAggregate.lookupService.listUserGuilds({
+				user_id: userId,
+				...query,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_GUILDS,
+				metadata: {
+					before_guild_id: query.before,
+					after_guild_id: query.after,
+					limit: query.limit,
+					with_counts: query.with_counts,
+					guild_count: response.guilds.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -216,9 +274,29 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			const {type, ...pagination} = ctx.req.valid('query');
 			if (type === 'group_dm') {
-				return ctx.json(await adminService.userService.listUserGroupDmChannels({user_id: userId}));
+				const response = await adminService.userService.listUserGroupDmChannels({user_id: userId});
+				await recordAdminRead(ctx, {
+					targetType: 'user',
+					targetId: userId,
+					action: AdminAuditReadActions.LIST_USER_DM_CHANNELS,
+					metadata: {type, channel_count: response.channels.length},
+				});
+				return ctx.json(response);
 			}
-			return ctx.json(await adminService.userService.listUserDmChannels({user_id: userId, ...pagination}));
+			const response = await adminService.userService.listUserDmChannels({user_id: userId, ...pagination});
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_DM_CHANNELS,
+				metadata: {
+					type,
+					before_channel_id: pagination.before,
+					after_channel_id: pagination.after,
+					limit: pagination.limit,
+					channel_count: response.channels.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -242,7 +320,18 @@ export function UserAdminController(app: HonoApp) {
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
 			const query = ctx.req.valid('query');
-			return ctx.json(await adminService.userService.listUserChangeLog({user_id: userId, ...query}, adminUserAcls));
+			const response = await adminService.userService.listUserChangeLog({user_id: userId, ...query}, adminUserAcls);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_CHANGE_LOG,
+				metadata: {
+					limit: query.limit,
+					has_page_token: query.page_token === undefined ? undefined : true,
+					entry_count: response.entries.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -263,7 +352,19 @@ export function UserAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(await adminService.relationshipService.listRelationships({user_id: userId}));
+			const response = await adminService.relationshipService.listRelationships({user_id: userId});
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_RELATIONSHIPS,
+				metadata: {
+					friend_count: response.friends.length,
+					incoming_request_count: response.incoming_requests.length,
+					outgoing_request_count: response.outgoing_requests.length,
+					blocked_count: response.blocked.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.delete(
@@ -500,70 +601,6 @@ export function UserAdminController(app: HonoApp) {
 			);
 		},
 	);
-	app.put(
-		'/admin/users/:user_id/bot-status',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_UPDATE_BOT_STATUS),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserBotStatusRequest),
-		OpenAPI({
-			operationId: 'set_admin_user_bot_status',
-			summary: 'Set user bot status',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Mark or unmark a user account as a bot. Controls bot badge visibility and API permissions. Creates audit log entry. Requires USER_UPDATE_BOT_STATUS permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.profileService.setUserBotStatus(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
-	app.put(
-		'/admin/users/:user_id/system-status',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_UPDATE_BOT_STATUS),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserSystemStatusRequest),
-		OpenAPI({
-			operationId: 'set_admin_user_system_status',
-			summary: 'Set user system status',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Mark or unmark a user as a system account. System accounts have special permissions for automated operations. Creates audit log entry. Requires USER_UPDATE_BOT_STATUS permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.profileService.setUserSystemStatus(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
 	app.patch(
 		'/admin/users/:user_id/username',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
@@ -600,6 +637,7 @@ export function UserAdminController(app: HonoApp) {
 		'/admin/users/:user_id/email',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		RequireEmailAccountIdentity,
 		Validator('param', UserIdParam),
 		Validator('json', AdminUserEmailUpdateRequest),
 		OpenAPI({
@@ -632,6 +670,7 @@ export function UserAdminController(app: HonoApp) {
 		'/admin/users/:user_id/email-verification',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		RequireEmailAccountIdentity,
 		Validator('param', UserIdParam),
 		OpenAPI({
 			operationId: 'verify_admin_user_email',
@@ -663,6 +702,7 @@ export function UserAdminController(app: HonoApp) {
 		'/admin/users/:user_id/verification-email',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		RequireEmailAccountIdentity,
 		Validator('param', UserIdParam),
 		OpenAPI({
 			operationId: 'resend_admin_user_verification_email',
@@ -691,6 +731,7 @@ export function UserAdminController(app: HonoApp) {
 		'/admin/users/:user_id/password-reset',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_UPDATE_EMAIL),
+		RequireEmailAccountIdentity,
 		Validator('param', UserIdParam),
 		OpenAPI({
 			operationId: 'send_admin_user_password_reset',
@@ -711,6 +752,65 @@ export function UserAdminController(app: HonoApp) {
 			return ctx.body(null, 204);
 		},
 	);
+	app.post(
+		'/admin/users/:user_id/password-reset-link',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_CREATE_PASSWORD_RESET_LINK),
+		RequireUsernameAccountIdentity,
+		Validator('param', UserIdParam),
+		OpenAPI({
+			operationId: 'create_admin_user_password_reset_link',
+			summary: 'Create user password reset link',
+			responseSchema: AdminPasswordResetLinkResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Create a one-time password reset link on an instance where people sign in with a username. Hand the link to the user yourself. It works once and expires after an hour. Deletes the recovery kit of the account. Creates audit log entry. Requires USER_CREATE_PASSWORD_RESET_LINK permission and every ACL the target account holds. Fails with USERNAME_SIGN_IN_ONLY on email instances.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
+			const {user_id: userId} = ctx.req.valid('param');
+			return ctx.json(
+				await adminService.userService.securityService.createPasswordResetLink(
+					{user_id: userId},
+					adminUserId,
+					auditLogReason,
+					ctx.get('adminUserAcls'),
+				),
+			);
+		},
+	);
+	app.delete(
+		'/admin/users/:user_id/recovery-kit',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_DELETE_RECOVERY_KIT),
+		RequireUsernameAccountIdentity,
+		Validator('param', UserIdParam),
+		OpenAPI({
+			operationId: 'revoke_admin_user_recovery_kit',
+			summary: 'Revoke user recovery kit',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Deletes the recovery kit of an account on an instance where people sign in with a username, so its key stops working. Creates audit log entry. Requires USER_DELETE_RECOVERY_KIT permission and every ACL the target account holds. Fails with USERNAME_SIGN_IN_ONLY on email instances.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const {user_id: userId} = ctx.req.valid('param');
+			await adminService.userService.securityService.revokeRecoveryKit(
+				{user_id: userId},
+				ctx.get('adminUserId'),
+				ctx.get('auditLogReason'),
+				ctx.get('adminUserAcls'),
+			);
+			return ctx.body(null, 204);
+		},
+	);
 	app.put(
 		'/admin/users/:user_id/ban',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
@@ -725,7 +825,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Apply temporary ban to user account for specified duration, or permanently with a duration of zero. Prevents login and guild operations. Automatically lifts after expiry. Creates audit log entry. Requires USER_TEMP_BAN permission.',
+				'Apply temporary ban to user account for specified duration, or permanently with a duration of zero. Prevents login and guild operations. Automatically lifts after expiry. Creates audit log entry. Requires USER_TEMP_BAN permission. Emails the user for temporary bans unless notify_user is false. Permanent bans are never emailed.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -748,6 +848,7 @@ export function UserAdminController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_TEMP_BAN),
 		Validator('param', UserIdParam),
+		Validator('json', AdminUserUnbanRequest),
 		OpenAPI({
 			operationId: 'unban_admin_user',
 			summary: 'Unban user',
@@ -756,7 +857,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Immediately remove temporary ban from user account. User can log in and access guilds again. Creates audit log entry. Requires USER_TEMP_BAN permission.',
+				'Immediately remove the ban from the user account. Emails the user only when notify_user is true, the ban was still in force and the account is not closed or pending deletion. The email shows public_reason and never the audit log reason. Creates audit log entry. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -766,12 +867,36 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
 				await adminService.userService.banService.unbanUser(
-					{user_id: userId},
+					{user_id: userId, ...ctx.req.valid('json')},
 					adminUserId,
 					auditLogReason,
 					adminUserAcls,
 				),
 			);
+		},
+	);
+	app.post(
+		'/admin/users/:user_id/ban/notes',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_TEMP_BAN),
+		Validator('param', UserIdParam),
+		Validator('json', AdminUserBanNoteRequest),
+		OpenAPI({
+			operationId: 'annotate_admin_user_ban',
+			summary: 'Add a note to a user ban',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Append a note to the current ban of a user. The note is recorded as the reason of a new annotate_ban audit log entry whose metadata names the ban audit log entry. Earlier entries are never changed. Requires USER_TEMP_BAN permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const {user_id: userId} = ctx.req.valid('param');
+			await adminService.userService.banService.annotateBan({user_id: userId, ...ctx.req.valid('json')}, adminUserId);
+			return ctx.body(null, 204);
 		},
 	);
 	app.put(
@@ -788,7 +913,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. Creates audit log entry. Requires USER_DELETE permission.',
+				'Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission. Emails the user unless notify_user is false. The email depends on reason_code: user requested and inactivity get neutral wording, other codes get enforcement wording with an appeal path.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -811,6 +936,7 @@ export function UserAdminController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_DELETE),
 		Validator('param', UserIdParam),
+		Validator('json', AdminUserDeletionCancelRequest),
 		OpenAPI({
 			operationId: 'cancel_admin_user_deletion',
 			summary: 'Cancel user deletion',
@@ -819,7 +945,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Cancel a scheduled account deletion. User account restoration prevents data loss. Creates audit log entry. Requires USER_DELETE permission.',
+				'Cancel the scheduled account deletion named by expected_pending_deletion_at. Returns 409 when a different deletion is pending and 400 when none is. The user is emailed only when notify_user is true, and the email never includes the audit log reason. Creates audit log entry recording the cancelled deletion. Requires USER_DELETE permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -829,7 +955,7 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
 				await adminService.userService.deletionService.cancelAccountDeletion(
-					{user_id: userId},
+					{user_id: userId, ...ctx.req.valid('json')},
 					adminUserId,
 					auditLogReason,
 					adminUserAcls,
@@ -1002,38 +1128,6 @@ export function UserAdminController(app: HonoApp) {
 			);
 		},
 	);
-	app.put(
-		'/admin/users/:user_id/phone-verification',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_UPDATE_PHONE),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserPhoneVerificationRequest),
-		OpenAPI({
-			operationId: 'update_admin_user_phone_verification',
-			summary: 'Update user phone verification flag',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Set whether a user is treated as having completed phone verification. This is the only supported path for clearing the irreversible user-facing phone verification flag. Requires USER_UPDATE_PHONE permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.securityService.updateHasVerifiedPhone(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
 	app.patch(
 		'/admin/users/:user_id/date-of-birth',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
@@ -1058,70 +1152,6 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
 				await adminService.userService.profileService.changeDob(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
-	app.put(
-		'/admin/users/:user_id/suspicious-activity-flags',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_UPDATE_SUSPICIOUS_ACTIVITY),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserSuspiciousActivityFlagsRequest),
-		OpenAPI({
-			operationId: 'update_admin_user_suspicious_activity_flags',
-			summary: 'Update suspicious activity flags',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Flag user as suspicious for account abuse, fraud, or policy violations. Enables enforcement actions and rate limiting. Creates audit log entry. Requires USER_UPDATE_SUSPICIOUS_ACTIVITY permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.securityService.updateSuspiciousActivityFlags(
-					{user_id: userId, ...ctx.req.valid('json')},
-					adminUserId,
-					auditLogReason,
-					adminUserAcls,
-				),
-			);
-		},
-	);
-	app.put(
-		'/admin/users/:user_id/suspicious-activity-disablement',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.USER_DISABLE_SUSPICIOUS),
-		Validator('param', UserIdParam),
-		Validator('json', AdminUserSuspiciousDisableRequest),
-		OpenAPI({
-			operationId: 'disable_admin_user_suspicious',
-			summary: 'Disable user for suspicious activity',
-			responseSchema: UserMutationResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-			description:
-				'Disable user account due to suspicious activity or abuse. Account is locked pending review. User cannot access services. Creates audit log entry. Requires USER_DISABLE_SUSPICIOUS permission.',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			const adminUserId = ctx.get('adminUserId');
-			const auditLogReason = ctx.get('auditLogReason');
-			const adminUserAcls = ctx.get('adminUserAcls');
-			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(
-				await adminService.userService.securityService.disableForSuspiciousActivity(
 					{user_id: userId, ...ctx.req.valid('json')},
 					adminUserId,
 					auditLogReason,

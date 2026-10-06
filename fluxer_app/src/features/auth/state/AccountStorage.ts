@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDomainMigrationStorageKey} from '@app/features/app/domain_migration/DomainMigrationCore';
 import {
 	normalizeAppPublicConfig,
 	normalizeInstanceRegistration,
@@ -69,7 +70,7 @@ const MANAGED_KEY_PREFIXES: ReadonlyArray<string> = ['mobx', 'mobx-persist', 'pe
 const MANAGED_KEY_PREFIX_PATTERN = new RegExp(`^(?:${MANAGED_KEY_PREFIXES.join('|')})`);
 
 function isManagedKey(key: string): boolean {
-	if (!key) {
+	if (!key || isDomainMigrationStorageKey(key)) {
 		return false;
 	}
 	return MANAGED_KEY_EXACT.has(key) || MANAGED_KEY_PREFIX_PATTERN.test(key);
@@ -196,6 +197,9 @@ class AccountStorage {
 		}
 		const keysToRemove = collectManagedKeys(browserLocalStorage).filter((key) => snapshot[key] === undefined);
 		for (const [key, value] of Object.entries(snapshot)) {
+			if (isDomainMigrationStorageKey(key)) {
+				continue;
+			}
 			try {
 				browserLocalStorage.setItem(key, value);
 			} catch (err) {
@@ -263,9 +267,6 @@ class AccountStorage {
 			gifProvider: instance.gifProvider,
 			gifProviderDisplayName: instance.gifProviderDisplayName,
 			gifAttributionRequired: instance.gifAttributionRequired,
-			captchaProvider: instance.captchaProvider,
-			hcaptchaSiteKey: instance.hcaptchaSiteKey,
-			turnstileSiteKey: instance.turnstileSiteKey,
 			apiCodeVersion: instance.apiCodeVersion,
 			features: {...instance.features},
 			sso: instance.sso,
@@ -449,6 +450,13 @@ class AccountStorage {
 		}
 	}
 
+	async importAccounts(records: ReadonlyArray<StoredAccount>): Promise<void> {
+		await this.ensureDb();
+		for (const record of records) {
+			await this.putRecord(this.sanitizeRecord(record));
+		}
+	}
+
 	async deleteAccount(userId: string): Promise<void> {
 		await this.ensureDb();
 		if (!userId) {
@@ -493,14 +501,30 @@ class AccountStorage {
 		}
 	}
 
-	async updateAccountValidity(userId: string, isValid: boolean): Promise<void> {
+	async refreshAccountCredentials(userId: string, token: string, userData?: UserData): Promise<void> {
+		await this.ensureDb();
+		if (!userId || !token) {
+			return;
+		}
+		try {
+			const record = await this.getRecord(userId);
+			if (!record) {
+				return;
+			}
+			await this.putRecord({...record, token, userData: userData ?? record.userData, isValid: true});
+		} catch (err) {
+			logger.error(`Failed to refresh credentials for account ${userId}`, err);
+		}
+	}
+
+	async updateAccountValidity(userId: string, isValid: boolean, expectedToken?: string): Promise<void> {
 		await this.ensureDb();
 		if (!userId) {
 			return;
 		}
 		try {
 			const record = await this.getRecord(userId);
-			if (!record) {
+			if (!record || (expectedToken !== undefined && record.token !== expectedToken)) {
 				return;
 			}
 			await this.putRecord({...record, isValid});

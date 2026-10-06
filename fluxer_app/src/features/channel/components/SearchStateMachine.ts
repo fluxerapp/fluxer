@@ -2,7 +2,7 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface SearchMachineStateIdle {
 	status: 'idle';
@@ -132,7 +132,7 @@ export const searchStateMachine = setup({
 export type SearchMachineSnapshot = SnapshotFrom<typeof searchStateMachine>;
 
 export function createSearchMachineSnapshot(): SearchMachineSnapshot {
-	return getInitialSnapshot(searchStateMachine);
+	return initialTransition(searchStateMachine)[0];
 }
 
 export function transitionSearchMachineSnapshot(

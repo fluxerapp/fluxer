@@ -132,15 +132,6 @@ const FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR = msg({
 	message: 'Force show voice connection',
 	comment: 'Developer option label for always showing the voice connection status bar.',
 });
-const SHOW_PROFILE_TIMEZONE_SETTINGS_DESCRIPTOR = msg({
-	message: 'Show profile timezone settings',
-	comment: 'Developer option label for exposing the staff-only profile timezone section in profile settings.',
-});
-const SHOW_PROFILE_TIMEZONE_SETTINGS_DESC_DESCRIPTOR = msg({
-	message: 'Expose the staff-only timezone section in profile settings.',
-	comment:
-		'Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.',
-});
 const NO_OP_IN_APP_REPORTS_DESCRIPTOR = msg({
 	message: 'No-op in-app reports',
 	comment:
@@ -254,11 +245,6 @@ export const getToggleGroups = (): Array<ToggleGroup> => [
 				key: 'forceShowVoiceConnection',
 				label: FORCE_SHOW_VOICE_CONNECTION_DESCRIPTOR,
 				description: ALWAYS_DISPLAY_THE_VOICE_CONNECTION_STATUS_BAR_IN_DESCRIPTOR,
-			},
-			{
-				key: 'showProfileTimezoneSettings',
-				label: SHOW_PROFILE_TIMEZONE_SETTINGS_DESCRIPTOR,
-				description: SHOW_PROFILE_TIMEZONE_SETTINGS_DESC_DESCRIPTOR,
 			},
 			{
 				key: 'noOpInAppReports',

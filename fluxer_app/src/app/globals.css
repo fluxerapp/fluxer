@@ -132,12 +132,9 @@ var {
 	--composer-action-gap: 0.25rem;
 	--composer-surface-color: var(--background-secondary-lighter);
 	--composer-status-line-height: 1.125rem;
+	--composer-status-row-height: 1.5rem;
 	--composer-status-safe-gap: 0.5rem;
-	--composer-status-safe-area: calc(
-		var(--composer-status-line-height) +
-		var(--composer-status-safe-gap) +
-		var(--composer-status-safe-gap)
-	);
+	--composer-status-safe-area: calc(var(--composer-status-row-height) + var(--composer-status-safe-gap));
 	--guild-list-item-box-size: 3rem;
 	--guild-list-item-gap: 0.375rem;
 	--guild-list-item-target-size: calc(var(--guild-list-item-box-size) + var(--guild-list-item-gap));
@@ -173,7 +170,7 @@ var {
 	--textarea-min-height: var(--footer-box-height);
 	--textarea-padding-y: var(--footer-box-padding-y);
 	--composer-box-inset: max(0rem, calc((var(--input-container-min-height) - var(--textarea-min-height)) / 2));
-	--messages-bottom-clearance: var(--composer-status-safe-area);
+	--messages-bottom-clearance: var(--composer-status-row-height);
 	--composer-box-inset-inline: min(
 		var(--footer-box-inset),
 		var(--chat-horizontal-padding, var(--chat-horizontal-padding-default))
@@ -633,6 +630,7 @@ img::before {
 
 .emoji:not(img) {
 	font-size: var(--emoji-size-emoji);
+	font-variant-emoji: emoji;
 	line-height: 1;
 	width: 1em;
 	height: 1em;
@@ -643,6 +641,11 @@ img::before {
 	width: 1em;
 	height: 1em;
 	min-height: 1em;
+}
+
+[data-emoji-interactive='true'] {
+	display: inline-block;
+	cursor: pointer;
 }
 
 @media (prefers-contrast: more) {

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {seconds} from 'itty-time';
 import {jwtVerify, SignJWT} from 'jose';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
 
 class SudoModeService {
 	private readonly secret: Uint8Array;

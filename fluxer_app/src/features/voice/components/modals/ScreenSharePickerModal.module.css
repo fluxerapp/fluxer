@@ -7,7 +7,6 @@
 	--picker-source-card-bg: #000;
 	--picker-source-card-border: rgb(255 255 255 / 0.14);
 	--picker-source-card-border-hover: rgb(255 255 255 / 0.26);
-	--picker-source-card-text: rgb(244 246 248 / 0.94);
 	--picker-source-card-muted: rgb(244 246 248 / 0.72);
 
 	box-sizing: border-box;
@@ -104,7 +103,7 @@
 	border: 0;
 	border-radius: 0;
 	background: transparent;
-	color: var(--picker-source-card-text);
+	color: var(--text-primary);
 	text-align: left;
 	cursor: pointer;
 }
@@ -258,7 +257,7 @@
 	font-size: 0.9375rem;
 	font-weight: 600;
 	line-height: 1.3;
-	color: var(--picker-source-card-text);
+	color: var(--text-primary);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

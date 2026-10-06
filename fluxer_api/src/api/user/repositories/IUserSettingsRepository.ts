@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {ExactRow} from '../../database/types/DatabaseRowTypes';
-import type {UserGuildSettingsRow, UserSettingsRow} from '../../database/types/UserTypes';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserSettings} from '../../models/UserSettings';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {ExactRow} from '@app/api/database/types/DatabaseRowTypes';
+import type {UserGuildSettingsRow, UserSettingsRow} from '@app/api/database/types/UserTypes';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
 
 export interface IUserSettingsRepository {
 	findSettings(userId: UserID): Promise<UserSettings | null>;

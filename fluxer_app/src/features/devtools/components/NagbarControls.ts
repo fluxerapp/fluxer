@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ACCOUNT_LIMITED_DESCRIPTOR} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
 import type {Nagbar, NagbarToggleKey} from '@app/features/ui/state/Nagbar';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -23,6 +24,11 @@ const SCHEDULED_MAINTENANCE_NAGBAR_DESCRIPTOR = msg({
 	message: 'Scheduled maintenance nagbar',
 	comment:
 		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.',
+});
+const SERVICE_INCIDENT_NAGBAR_DESCRIPTOR = msg({
+	message: 'Service incident nagbar',
+	comment:
+		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.',
 });
 const UNCLAIMED_ACCOUNT_NAGBAR_DESCRIPTOR = msg({
 	message: 'Unclaimed account nagbar',
@@ -67,6 +73,11 @@ const VOICE_SESSION_RESTORE_NAGBAR_DESCRIPTOR = msg({
 const INVITES_DISABLED_NAGBAR_DESCRIPTOR = msg({
 	message: 'Invites disabled nagbar',
 	comment: 'Developer control label for the invites-disabled banner.',
+});
+const DOMAIN_MOVED_NAGBAR_DESCRIPTOR = msg({
+	message: 'Domain moved nagbar',
+	comment:
+		'Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.',
 });
 const GUILD_MFA_REQUIREMENT_NAGBAR_DESCRIPTOR = msg({
 	message: 'Community MFA requirement nagbar',
@@ -153,6 +164,22 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceEmailVerification && !state.forceHideEmailVerification,
 		forceShowDisabled: (state) => state.forceEmailVerification,
 		forceHideDisabled: (state) => state.forceHideEmailVerification,
+	},
+	{
+		key: 'forceAccountLimited',
+		label: ACCOUNT_LIMITED_DESCRIPTOR,
+		forceKey: 'forceAccountLimited',
+		forceHideKey: 'forceHideAccountLimited',
+		resetKeys: ['forceAccountLimited'],
+		status: (state) =>
+			state.forceAccountLimited
+				? FORCE_ENABLED
+				: state.forceHideAccountLimited
+					? FORCE_DISABLED
+					: USING_ACTUAL_ACCOUNT_STATE,
+		useActualDisabled: (state) => !state.forceAccountLimited && !state.forceHideAccountLimited,
+		forceShowDisabled: (state) => state.forceAccountLimited,
+		forceHideDisabled: (state) => state.forceHideAccountLimited,
 	},
 	{
 		key: 'forceDesktopNotification',
@@ -345,6 +372,22 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		forceHideDisabled: (state) => state.forceHideScheduledMaintenance,
 	},
 	{
+		key: 'forceIncident',
+		label: SERVICE_INCIDENT_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceConnectionNotice',
+		forceHideKey: 'forceHideConnectionNotice',
+		resetKeys: ['forceConnectionNotice'],
+		status: (state) =>
+			state.forceConnectionNotice
+				? FORCE_ENABLED
+				: state.forceHideConnectionNotice
+					? FORCE_DISABLED
+					: USING_ACTUAL_STATE,
+		useActualDisabled: (state) => !state.forceConnectionNotice && !state.forceHideConnectionNotice,
+		forceShowDisabled: (state) => state.forceConnectionNotice,
+		forceHideDisabled: (state) => state.forceHideConnectionNotice,
+	},
+	{
 		key: 'forceVoiceSessionRestore',
 		label: VOICE_SESSION_RESTORE_NAGBAR_DESCRIPTOR,
 		forceKey: 'forceVoiceSessionRestore',
@@ -387,5 +430,17 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceGuildMfaRequirement && !state.forceHideGuildMfaRequirement,
 		forceShowDisabled: (state) => state.forceGuildMfaRequirement,
 		forceHideDisabled: (state) => state.forceHideGuildMfaRequirement,
+	},
+	{
+		key: 'forceDomainMoved',
+		label: DOMAIN_MOVED_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceDomainMoved',
+		forceHideKey: 'forceHideDomainMoved',
+		resetKeys: ['forceDomainMoved'],
+		status: (state) =>
+			state.forceDomainMoved ? FORCE_ENABLED : state.forceHideDomainMoved ? FORCE_DISABLED : USING_ACTUAL_STATE,
+		useActualDisabled: (state) => !state.forceDomainMoved && !state.forceHideDomainMoved,
+		forceShowDisabled: (state) => state.forceDomainMoved,
+		forceHideDisabled: (state) => state.forceHideDomainMoved,
 	},
 ];

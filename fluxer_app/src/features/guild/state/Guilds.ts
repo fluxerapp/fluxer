@@ -70,6 +70,7 @@ class Guilds {
 		}
 		this.guilds[guild.id] = new Guild({
 			...guild,
+			joined_at: guild.joined_at ?? existingGuild.joinedAt ?? undefined,
 			roles: existingGuild.roles,
 		});
 	}

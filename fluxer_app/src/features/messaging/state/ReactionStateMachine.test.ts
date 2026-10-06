@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
-import {describe, expect, it} from 'vitest';
 import {
 	applyAdd,
 	applyRemove,
@@ -21,7 +19,9 @@ import {
 	transitionReactionMap,
 	transitionReactionSnapshot,
 	untrackReactor,
-} from './ReactionStateMachine';
+} from '@app/features/messaging/state/ReactionStateMachine';
+import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
+import {describe, expect, it} from 'vitest';
 
 const ME = 'me-user-id';
 const ALICE = 'alice-id';

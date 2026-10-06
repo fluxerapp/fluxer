@@ -6,7 +6,7 @@ use fluxer_app_proxy::{
     csp::CompiledCspPolicy,
     discovery_cache::DiscoveryCache,
     geoip,
-    routes::build_router,
+    routes::{build_router, present_local_asset_prefixes},
     state::{
         AppProxyBudgets, AppState, MAX_SPA_INDEX_BYTES, build_http_client, read_bounded_text_file,
     },
@@ -17,9 +17,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
-        .with(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
-        )
+        .with(fluxer_common::config::env_filter("info"))
         .with(tracing_subscriber::fmt::layer())
         .init();
 
@@ -69,6 +67,11 @@ fn main() -> anyhow::Result<()> {
             None
         };
 
+        let local_asset_prefixes = config
+            .index_upstream_url
+            .is_none()
+            .then(|| present_local_asset_prefixes(&config.static_dir));
+
         let state = AppState {
             config,
             csp,
@@ -76,6 +79,7 @@ fn main() -> anyhow::Result<()> {
             discovery_cache,
             geoip,
             index_html,
+            local_asset_prefixes,
             budgets: AppProxyBudgets::default(),
         };
 

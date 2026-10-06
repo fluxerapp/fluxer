@@ -2,7 +2,7 @@
 
 import {randomInt} from 'node:crypto';
 import * as fs from 'node:fs';
-import {resolveAssetPath} from '../utils/AssetPaths';
+import {resolveAssetPath} from '@app/api/utils/AssetPaths';
 
 let tails: Array<string> | undefined;
 let scales: Array<string> | undefined;

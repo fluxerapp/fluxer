@@ -6,13 +6,13 @@ description: Provider-backed GIF search, featured and trending listings, search 
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A GIF is one animated media item held by the deployment's active GIF provider. Fluxer stores none of them, so every route on this page reads the provider live and returns provider URLs beside signed [Media Proxy](/media-proxy/overview/) URLs.
+A GIF is an animated media item from the instance's active provider. Results include provider URLs and [Media Proxy](/media-proxy/overview/) URLs.
 
 Every route requires a session credential. A bot token and an OAuth2 bearer credential are both refused with 403 `ACCESS_DENIED`. [Save meme from URL](/http-api/memes/#save-meme-from-url) saves a result into the account's own collection.
 
 ## Provider availability
 
-`klipy` is the only provider name a deployment binds. [Get instance discovery](/http-api/instance/#get-instance-discovery) publishes it as the [GIF provider](/http-api/instance/#gif-provider-object) object. An instance that has bound no provider key refuses every route on this page with 403 `FEATURE_TEMPORARILY_DISABLED`. That same key drives `gif_enabled` in [service availability](/http-api/instance/#service-availability-object), a flag an operator can also set by hand, so a client that reads `gif_enabled` as true can still receive the 403.
+`klipy` is the only provider name a deployment binds. [Get instance discovery](/http-api/instance/#get-instance-discovery) publishes it as the [GIF provider](/http-api/instance/#gif-provider-object) object. An instance that has bound no provider key refuses every route on this page with 403 `FEATURE_TEMPORARILY_DISABLED`. `gif_enabled` in [service availability](/http-api/instance/#service-availability-object) reports whether that key is bound, unless an operator has set the flag by hand. A client that reads `gif_enabled` as true can therefore still receive the 403.
 
 A provider outage, a request past its deadline, and an unreadable provider payload all return 503 `SERVICE_UNAVAILABLE`. The deadline is 12 seconds everywhere except [Register a GIF share](#register-a-gif-share), which uses 3 seconds. An operator can change both.
 
@@ -32,20 +32,11 @@ Every response under `/gifs`, `/tenor`, and `/klipy` has these headers, includin
 | X-Fluxer-GIF-Provider-Display-Name<sup>1</sup> | string | The provider name a client displays |
 | X-Fluxer-GIF-Provider-Attribution-Required<sup>1</sup> | string | The literal `true` or `false`, stating whether a client shows the provider attribution mark |
 
-<sup>1</sup> All three are absent together while the instance has bound no provider key, which is the same condition that answers 403 `FEATURE_TEMPORARILY_DISABLED`
+<sup>1</sup> All are absent together while the instance has bound no provider key, which is the same condition that answers 403 `FEATURE_TEMPORARILY_DISABLED`
 
 ## Result freshness
 
-Fluxer caches one answer for each combination of operation, locale, country, and query. Past the refresh bound a request still receives the stored answer, and past the discard bound it waits for a fresh answer.
-
-| Answer | Refresh bound | Discard bound |
-| --- | --- | --- |
-| Search results | 30 seconds | 5 minutes |
-| Search suggestions | 1 minute | 10 minutes |
-| Featured GIFs and trending GIFs | 5 minutes | 30 minutes |
-| Featured categories | 24 hours | 48 hours |
-
-A deployment can configure a further cache in front of those bounds. Neither cache is keyed by the caller, so two accounts sending the same query in the same country receive the same answer. No route on this page invalidates a cached answer.
+Fluxer caches results, so a result can lag behind the provider. Repeating a request does not force a refresh.
 
 ## GIF object
 
@@ -71,7 +62,7 @@ A GIF object is one media item the active provider owns. Every URL in it resolve
 
 <sup>2</sup> Copied from the `webm` entry of `media` when the provider returned one, and from the first entry it returned otherwise
 
-<sup>3</sup> Empty when no format the provider returned could be proxied. No key is guaranteed, so a client walks a priority list
+<sup>3</sup> Empty when no format the provider returned could be proxied. No key is guaranteed, so a client checks the format names it prefers in order and uses the first one present
 
 <sup>4</sup> The active provider emits none, so the field is absent from every GIF these routes return. [Resolve GIF URLs](/http-api/memes/#resolve-gif-urls) is the operation that produces one
 
@@ -126,7 +117,7 @@ To open the category, a client sends `name` as the `q` of [Search GIFs](#search-
 
 ## Deprecated vendor paths
 
-Two vendor-named prefixes serve the same handlers as `/gifs`. Each answers exactly as its successor does and has the same [provider headers](#provider-headers).
+The vendor-named prefixes serve the same handlers as `/gifs`. Each answers exactly as its successor does and has the same [provider headers](#provider-headers).
 
 | Method | Deprecated path | Successor |
 | --- | --- | --- |
@@ -142,7 +133,7 @@ Two vendor-named prefixes serve the same handlers as `/gifs`. Each answers exact
 | POST | `/v1/klipy/register-share` | [Register a GIF share](#register-a-gif-share) |
 
 :::caution[The vendor prefixes spell trending differently]
-Trending is `/trending` under `/gifs` and `/trending-gifs` under both vendor prefixes. The other paths keep the same last segment on all three prefixes.
+Trending is `/trending` under `/gifs` and `/trending-gifs` under both vendor prefixes. The other paths keep the same last segment on all prefixes.
 :::
 
 A response from a deprecated path has these further headers.
@@ -179,7 +170,6 @@ Fluxer does not stem, expand, or spell-correct the term. A term that matches not
 | 200 | array[[GIF](#gif-object) object] | Results were returned, possibly as an empty array |
 | 400 | [error response](/http-api/#error-response) | `q` is absent, empty, or longer than 256 characters, or `locale` is outside the registry, each returning `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
@@ -219,7 +209,6 @@ Fluxer resolves the category list against the country `US` for every request, wh
 | 200 | response body | Featured GIFs and categories were returned |
 | 400 | [error response](/http-api/#error-response) | `locale` is outside the registry and the request returns `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
@@ -248,11 +237,10 @@ Returns at most 50 trending [GIF objects](#gif-object) for the resolved locale a
 | 200 | array[[GIF](#gif-object) object] | Trending GIFs were returned, possibly as an empty array |
 | 400 | [error response](/http-api/#error-response) | `locale` is outside the registry and the request returns `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
-Trending and featured read the same provider listing, trending for 50 results and featured for one. The two are cached separately, so the single GIF in a [featured](#get-featured-gifs) response can be older than the first entry here.
+The [featured](#get-featured-gifs) GIF is not guaranteed to match the first trending result.
 
 ### Rate limit
 
@@ -271,7 +259,7 @@ Returns search-term suggestions for a partial query, as an array of strings.
 | q | string | The partial search term (1-256 characters) |
 | locale? | string | A [supported locale](/topics/locales/#supported-locales), default `en-US` |
 
-This route sends no country to the provider. Its answers are keyed by locale and query alone, and do not vary with the requesting address.
+Suggestions depend on the locale and query, not the requesting address.
 
 ### Response
 
@@ -280,7 +268,6 @@ This route sends no country to the provider. Its answers are keyed by locale and
 | 200 | array[string] | Suggestions were returned, possibly as an empty array |
 | 400 | [error response](/http-api/#error-response) | `q` is absent, empty, or longer than 256 characters, or `locale` is outside the registry, each returning `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider failed, the request outlived its deadline, or the `gifs` service answered with a payload the API could not read, each returning `SERVICE_UNAVAILABLE` |
 
@@ -317,7 +304,6 @@ The deadline on this route is 3 seconds.
 | 204 | empty | The provider accepted the registration |
 | 400 | [error response](/http-api/#error-response) | `id` is absent, empty, or longer than 300 characters, `q` is longer than 256 characters, or `locale` is outside the registry, each returning `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The instance has bound no provider key and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 503 | [error response](/http-api/#error-response) | The provider rejected the registration, the `gifs` service did not answer within the deadline, or it answered with something other than an acknowledgement, each returning `SERVICE_UNAVAILABLE` |
 
@@ -325,7 +311,7 @@ The deadline on this route is 3 seconds.
 
 The registration reaches the provider and changes no Fluxer state, so it emits no Gateway Dispatch and does not add the GIF to the account's [memes](/http-api/memes/).
 
-Fluxer neither caches nor deduplicates the call, so registering the same `id` twice reaches the provider twice.
+Each request registers a separate share, including repeated requests for the same `id`.
 
 ### Rate limit
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ILogger} from '@app/api/ILogger';
+import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Hono} from 'hono';
 import {describe, expect, it} from 'vitest';
-import type {ILogger} from '../../ILogger';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {TrustedClientIpHeaderMiddleware} from '../TrustedClientIpHeaderMiddleware';
 
 class MockLogger implements ILogger {
 	trace(_msgOrObject: string | object, _msg?: string): void {}

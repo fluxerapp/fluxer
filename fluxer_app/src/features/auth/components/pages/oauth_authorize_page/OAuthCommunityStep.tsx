@@ -33,7 +33,7 @@ const NO_COMMUNITIES_WITH_MANAGE_PERMISSION_DESCRIPTOR = msg({
 		'OAuth bot invite empty state shown when the user has no communities or group DMs where they can invite a bot.',
 });
 const NO_COMMUNITIES_WITH_REQUESTED_PERMISSIONS_DESCRIPTOR = msg({
-	message: 'No communities where you can grant the requested permissions or group DMs are available.',
+	message: 'No group DMs or communities where you can grant the requested permissions are available.',
 	comment:
 		'OAuth bot invite empty state shown when no communities can both invite the bot and grant the requested bot permissions and no group DMs are available.',
 });

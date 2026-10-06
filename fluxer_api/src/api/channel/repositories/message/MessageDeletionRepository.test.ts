@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createMessageID, createUserID, type MessageID} from '@app/api/BrandedTypes';
+import {MessageDataRepository} from '@app/api/channel/repositories/message/MessageDataRepository';
+import {MessageDeletionRepository} from '@app/api/channel/repositories/message/MessageDeletionRepository';
+import {setCassandraQueryExecutorForTesting, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {KvQueryMeta} from '@app/api/database/CassandraTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import {Messages} from '@app/api/Tables';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createChannelID, createMessageID, createUserID, type MessageID} from '../../../BrandedTypes';
-import {setCassandraQueryExecutorForTesting, upsertOne} from '../../../database/CassandraQueryExecution';
-import type {KvQueryMeta} from '../../../database/CassandraTypes';
-import type {MessageRow} from '../../../database/types/MessageTypes';
-import {Messages} from '../../../Tables';
-import {InMemoryCassandraQueryExecutor} from '../../../test/InMemoryCassandraQueryExecutor';
-import {MessageDataRepository} from './MessageDataRepository';
-import {MessageDeletionRepository} from './MessageDeletionRepository';
 
 class BatchRecordingCassandraQueryExecutor extends InMemoryCassandraQueryExecutor {
 	readonly batchedQueries: Array<string> = [];

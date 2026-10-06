@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	VOICE_CHANNEL_BITRATE_DEFAULT,
+	VOICE_CHANNEL_BITRATE_MAX_128_KBPS,
+	VOICE_CHANNEL_BITRATE_MAX_256_KBPS,
+	VOICE_CHANNEL_BITRATE_MAX_384_KBPS,
+	VOICE_CHANNEL_BITRATE_MAX_STANDARD,
+	VOICE_CHANNEL_BITRATE_MIN,
+} from '@fluxer/constants/src/LimitConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 
 export const GuildVerificationLevel = {
@@ -7,16 +15,16 @@ export const GuildVerificationLevel = {
 	LOW: 1,
 	MEDIUM: 2,
 	HIGH: 3,
-	VERY_HIGH: 4,
 } as const;
 
 export type GuildVerificationLevelValue = ValueOf<typeof GuildVerificationLevel>;
 
 export function getEffectiveGuildVerificationLevel(verificationLevel: number, isDiscoverable: boolean): number {
+	const level = Math.min(verificationLevel, GuildVerificationLevel.HIGH);
 	if (!isDiscoverable) {
-		return verificationLevel;
+		return level;
 	}
-	return Math.max(verificationLevel, GuildVerificationLevel.LOW);
+	return Math.max(level, GuildVerificationLevel.LOW);
 }
 
 export const GuildMFALevel = {
@@ -97,9 +105,14 @@ export const CONTENT_WARNING_TEXT_MAX_LENGTH = 200;
 export const GuildFeatures = {
 	ANIMATED_ICON: 'ANIMATED_ICON',
 	ANIMATED_BANNER: 'ANIMATED_BANNER',
+	AUDIO_BITRATE_128_KBPS: 'AUDIO_BITRATE_128_KBPS',
+	AUDIO_BITRATE_256_KBPS: 'AUDIO_BITRATE_256_KBPS',
+	AUDIO_BITRATE_384_KBPS: 'AUDIO_BITRATE_384_KBPS',
 	BANNER: 'BANNER',
 	CLONE_EMOJI_DISABLED: 'CLONE_EMOJI_DISABLED',
+	CLONE_EMOJI_ENABLED: 'CLONE_EMOJI_ENABLED',
 	CLONE_STICKER_DISABLED: 'CLONE_STICKER_DISABLED',
+	CLONE_STICKER_ENABLED: 'CLONE_STICKER_ENABLED',
 	DETACHED_BANNER: 'DETACHED_BANNER',
 	INVITE_SPLASH: 'INVITE_SPLASH',
 	INVITES_DISABLED: 'INVITES_DISABLED',
@@ -123,9 +136,41 @@ export const GuildFeatures = {
 	VISIONARY: 'VISIONARY',
 	LARGE_GUILD_OVERRIDE: 'LARGE_GUILD_OVERRIDE',
 	VERY_LARGE_GUILD: 'VERY_LARGE_GUILD',
+	ANNOUNCEMENT_CHANNELS_DISABLED: 'ANNOUNCEMENT_CHANNELS_DISABLED',
 } as const;
 
 export type GuildFeature = ValueOf<typeof GuildFeatures>;
+
+export function getMaxVoiceChannelBitrate(features: Iterable<string> | null | undefined): number {
+	if (features == null) {
+		return VOICE_CHANNEL_BITRATE_MAX_STANDARD;
+	}
+	let maximum = VOICE_CHANNEL_BITRATE_MAX_STANDARD;
+	for (const feature of features) {
+		if (feature === GuildFeatures.AUDIO_BITRATE_384_KBPS) {
+			maximum = Math.max(maximum, VOICE_CHANNEL_BITRATE_MAX_384_KBPS);
+		} else if (feature === GuildFeatures.AUDIO_BITRATE_256_KBPS) {
+			maximum = Math.max(maximum, VOICE_CHANNEL_BITRATE_MAX_256_KBPS);
+		} else if (feature === GuildFeatures.AUDIO_BITRATE_128_KBPS) {
+			maximum = Math.max(maximum, VOICE_CHANNEL_BITRATE_MAX_128_KBPS);
+		}
+	}
+	return maximum;
+}
+
+export function clampVoiceChannelBitrate(bitrate: number, features: Iterable<string> | null | undefined): number {
+	return Math.min(Math.max(bitrate, VOICE_CHANNEL_BITRATE_MIN), getMaxVoiceChannelBitrate(features));
+}
+
+export function resolveVoiceChannelBitrate(
+	bitrate: number | null | undefined,
+	features: Iterable<string> | null | undefined,
+): number {
+	if (typeof bitrate !== 'number' || !Number.isFinite(bitrate) || bitrate <= 0) {
+		return VOICE_CHANNEL_BITRATE_DEFAULT;
+	}
+	return clampVoiceChannelBitrate(Math.round(bitrate), features);
+}
 
 export const JoinSourceTypes = {
 	CREATOR: 0,

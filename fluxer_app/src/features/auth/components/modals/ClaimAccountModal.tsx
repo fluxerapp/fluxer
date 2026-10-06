@@ -3,10 +3,12 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {EXAMPLE_PERSONAL_EMAIL} from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	CLAIM_ACCOUNT_DESCRIPTOR,
 	EMAIL_DESCRIPTOR,
 	PASSWORD_DESCRIPTOR,
+	USERNAME_DESCRIPTOR,
 	VERIFICATION_CODE_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {HttpError} from '@app/features/platform/types/EndpointError';
@@ -18,7 +20,9 @@ import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import ModalState from '@app/features/ui/state/Modal';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
+import {createRecoveryKitWithPasswordAndOpen} from '@app/features/user/commands/RecoveryKitCommands';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
+import Users from '@app/features/user/state/Users';
 import * as FormUtils from '@app/lib/forms';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -42,6 +46,14 @@ const CLAIM_YOUR_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Claim your account',
 	comment: 'Short label in the authentication claim account modal. Keep the tone plain and specific.',
 });
+const CONFIRM_PASSWORD_DESCRIPTOR = msg({
+	message: 'Confirm password',
+	comment: 'Label for the password confirmation field in the claim account modal.',
+});
+const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
+	message: 'Passwords do not match',
+	comment: 'Claim account modal error when the password and its confirmation differ.',
+});
 
 interface FormInputs {
 	email: string;
@@ -52,7 +64,118 @@ interface FormInputs {
 type Stage = 'collect' | 'verify';
 
 const STAGE_ORDER: ReadonlyArray<Stage> = ['collect', 'verify'];
-export const ClaimAccountModal = observer(() => {
+const CLAIM_ACCOUNT_MODAL_KEY = 'claim-account-modal';
+
+interface UsernameClaimInputs {
+	username: string;
+	newPassword: string;
+	confirmPassword: string;
+}
+
+const USERNAME_CLAIM_PATH_MAP = {new_password: 'newPassword'} as const;
+
+const UsernameClaimAccountModal = observer(() => {
+	const {i18n} = useLingui();
+	const form = useForm<UsernameClaimInputs>({
+		defaultValues: {username: Users.currentUser?.username ?? '', newPassword: '', confirmPassword: ''},
+	});
+	const handleClaim = async (data: UsernameClaimInputs) => {
+		if (data.newPassword !== data.confirmPassword) {
+			form.setError('confirmPassword', {type: 'validate', message: i18n._(PASSWORDS_DO_NOT_MATCH_DESCRIPTOR)});
+			return;
+		}
+		const updated = await UserCommands.update({username: data.username.trim(), new_password: data.newPassword});
+		ModalCommands.popWithKey(CLAIM_ACCOUNT_MODAL_KEY);
+		ToastCommands.createToast({type: 'success', children: i18n._(ACCOUNT_CLAIMED_SUCCESSFULLY_DESCRIPTOR)});
+		void createRecoveryKitWithPasswordAndOpen({
+			userId: updated.id,
+			password: data.newPassword,
+			username: updated.username,
+			discriminator: updated.discriminator,
+		});
+	};
+	const {handleSubmit, isSubmitting} = useFormSubmit({
+		form,
+		onSubmit: handleClaim,
+		defaultErrorField: 'username',
+		pathMap: USERNAME_CLAIM_PATH_MAP,
+	});
+	return (
+		<Modal.Root size="small" centered data-flx="auth.claim-account-modal.username.modal-root">
+			<Modal.Header
+				title={i18n._(CLAIM_YOUR_ACCOUNT_DESCRIPTOR)}
+				data-flx="auth.claim-account-modal.username.modal-header"
+			/>
+			<Form form={form} onSubmit={handleSubmit} data-flx="auth.claim-account-modal.username.form.submit">
+				<Modal.Content data-flx="auth.claim-account-modal.username.modal-content">
+					<Modal.ContentLayout data-flx="auth.claim-account-modal.username.modal-content-layout">
+						<Modal.Description data-flx="auth.claim-account-modal.username.modal-description">
+							<Trans>
+								Claim your account by choosing a username and password. You sign in with them, so pick ones you will
+								remember.
+							</Trans>
+						</Modal.Description>
+						<Modal.InputGroup data-flx="auth.claim-account-modal.username.modal-input-group">
+							<Input
+								data-flx="auth.claim-account-modal.username.input.username"
+								{...form.register('username')}
+								autoCapitalize="none"
+								autoComplete="username"
+								autoCorrect="off"
+								autoFocus={true}
+								error={form.formState.errors.username?.message}
+								label={i18n._(USERNAME_DESCRIPTOR)}
+								maxLength={32}
+								minLength={1}
+								required={true}
+								spellCheck={false}
+							/>
+							<Input
+								data-flx="auth.claim-account-modal.username.input.password"
+								{...form.register('newPassword')}
+								autoComplete="new-password"
+								error={form.formState.errors.newPassword?.message}
+								label={i18n._(PASSWORD_DESCRIPTOR)}
+								maxLength={128}
+								minLength={8}
+								placeholder={'•'.repeat(32)}
+								required={true}
+								type="password"
+							/>
+							<Input
+								data-flx="auth.claim-account-modal.username.input.confirm-password"
+								{...form.register('confirmPassword')}
+								autoComplete="new-password"
+								error={form.formState.errors.confirmPassword?.message}
+								label={i18n._(CONFIRM_PASSWORD_DESCRIPTOR)}
+								maxLength={128}
+								minLength={8}
+								placeholder={'•'.repeat(32)}
+								required={true}
+								type="password"
+							/>
+						</Modal.InputGroup>
+					</Modal.ContentLayout>
+				</Modal.Content>
+				<Modal.Footer data-flx="auth.claim-account-modal.username.footer">
+					<Button
+						onClick={ModalCommands.pop}
+						variant="secondary"
+						type="button"
+						data-flx="auth.claim-account-modal.username.button.pop"
+					>
+						<Trans>Cancel</Trans>
+					</Button>
+					<Button type="submit" submitting={isSubmitting} data-flx="auth.claim-account-modal.username.button.submit">
+						{i18n._(CLAIM_ACCOUNT_DESCRIPTOR)}
+					</Button>
+				</Modal.Footer>
+			</Form>
+		</Modal.Root>
+	);
+});
+
+const EmailClaimAccountModal = observer(() => {
 	const {i18n} = useLingui();
 	const form = useForm<FormInputs>({
 		defaultValues: {email: '', newPassword: '', verificationCode: ''},
@@ -265,7 +388,13 @@ export const ClaimAccountModal = observer(() => {
 		</Modal.Root>
 	);
 });
-const CLAIM_ACCOUNT_MODAL_KEY = 'claim-account-modal';
+export const ClaimAccountModal = observer(() =>
+	RuntimeConfig.usesUsernameSignIn ? (
+		<UsernameClaimAccountModal data-flx="auth.claim-account-modal.username-claim-account-modal" />
+	) : (
+		<EmailClaimAccountModal data-flx="auth.claim-account-modal.email-claim-account-modal" />
+	),
+);
 
 let hasShownClaimAccountModalThisSession = false;
 

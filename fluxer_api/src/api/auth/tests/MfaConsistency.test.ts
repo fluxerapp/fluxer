@@ -1,20 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {createTestAccount, createTotpSecret, generateTotpCode, type TestAccount} from './AuthTestUtils';
+import {
+	createTestAccount,
+	createTotpSecret,
+	generateTotpCode,
+	type TestAccount,
+} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createAuthenticationResponse,
 	createRegistrationResponse,
 	createWebAuthnDevice,
+	setWebAuthnTwoFactor,
 	type WebAuthnAuthenticationOptions,
 	type WebAuthnDevice,
 	type WebAuthnRegistrationOptions,
-} from './WebAuthnTestUtils';
+} from '@app/api/auth/tests/WebAuthnTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface BackupCodesResponse {
 	backup_codes: Array<{
@@ -32,6 +38,7 @@ interface LoginMfaResponse {
 interface SudoMfaMethodsResponse {
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes: boolean;
 	has_mfa: boolean;
 }
 
@@ -41,6 +48,7 @@ interface SudoModeRequiredResponse {
 	methods?: {
 		totp?: boolean;
 		webauthn?: boolean;
+		backup_codes?: boolean;
 	};
 }
 
@@ -68,6 +76,7 @@ async function loginWithTotp(harness: ApiTestHarness, account: TestAccount, secr
 async function setupWebAuthnOnlyUser(
 	harness: ApiTestHarness,
 	account: TestAccount,
+	twoFactorEnabled: boolean,
 ): Promise<{
 	account: TestAccount;
 	device: WebAuthnDevice;
@@ -119,6 +128,12 @@ async function setupWebAuthnOnlyUser(
 		})
 		.expect(204)
 		.execute();
+	if (twoFactorEnabled) {
+		await setWebAuthnTwoFactor(harness, updatedAccount.token, true, {
+			mfa_method: 'totp',
+			mfa_code: backupCodes.backup_codes[5]!.code,
+		});
+	}
 	await createBuilder(harness, updatedAccount.token)
 		.post('/users/@me/mfa/totp/disable')
 		.body({
@@ -157,9 +172,9 @@ describe('MFA Consistency Tests', () => {
 		await harness?.shutdown();
 	});
 	describe('WebAuthn sudo verification flow', () => {
-		test('WebAuthn user can complete sudo verification with passkey', async () => {
+		test('WebAuthn user with two-factor on can complete sudo verification with passkey', async () => {
 			const account = await createTestAccount(harness);
-			const {account: webauthnAccount, device} = await setupWebAuthnOnlyUser(harness, account);
+			const {account: webauthnAccount, device} = await setupWebAuthnOnlyUser(harness, account, true);
 			const sudoOptions = await createBuilder<WebAuthnAuthenticationOptions>(harness, webauthnAccount.token)
 				.post('/users/@me/sudo/webauthn/authentication-options')
 				.body(null)
@@ -175,9 +190,27 @@ describe('MFA Consistency Tests', () => {
 				.expect(204)
 				.execute();
 		});
-		test('WebAuthn-only user cannot use password for sudo verification', async () => {
+		test('WebAuthn user with two-factor off can complete sudo verification with passkey', async () => {
 			const account = await createTestAccount(harness);
-			const {account: webauthnAccount} = await setupWebAuthnOnlyUser(harness, account);
+			const {account: webauthnAccount, device} = await setupWebAuthnOnlyUser(harness, account, false);
+			const sudoOptions = await createBuilder<WebAuthnAuthenticationOptions>(harness, webauthnAccount.token)
+				.post('/users/@me/sudo/webauthn/authentication-options')
+				.body(null)
+				.execute();
+			const sudoAssertion = createAuthenticationResponse(device, sudoOptions);
+			await createBuilder(harness, webauthnAccount.token)
+				.post('/users/@me/disable')
+				.body({
+					mfa_method: 'webauthn',
+					webauthn_response: sudoAssertion,
+					webauthn_challenge: sudoOptions.challenge,
+				})
+				.expect(204)
+				.execute();
+		});
+		test('WebAuthn-only user with two-factor on cannot use password for sudo verification', async () => {
+			const account = await createTestAccount(harness);
+			const {account: webauthnAccount} = await setupWebAuthnOnlyUser(harness, account, true);
 			const errorResp = await createBuilder<{
 				code: string;
 			}>(harness, webauthnAccount.token)
@@ -188,6 +221,17 @@ describe('MFA Consistency Tests', () => {
 				.expect(403)
 				.execute();
 			expect(errorResp.code).toBe('SUDO_MODE_REQUIRED');
+		});
+		test('WebAuthn-only user with two-factor off can use password for sudo verification', async () => {
+			const account = await createTestAccount(harness);
+			const {account: webauthnAccount} = await setupWebAuthnOnlyUser(harness, account, false);
+			await createBuilder(harness, webauthnAccount.token)
+				.post('/users/@me/disable')
+				.body({
+					password: account.password,
+				})
+				.expect(204)
+				.execute();
 		});
 	});
 	describe('Password-only sudo flow for non-MFA users', () => {
@@ -318,14 +362,37 @@ describe('MFA Consistency Tests', () => {
 			const methods = await createBuilder<SudoMfaMethodsResponse>(harness, account.token)
 				.get('/users/@me/sudo/mfa-methods')
 				.execute();
-			expect(methods).toEqual({totp: false, webauthn: false, has_mfa: false});
+			expect(methods).toEqual({totp: false, webauthn: false, backup_codes: false, has_mfa: false});
 			const errorResp = await createBuilder<SudoModeRequiredResponse>(harness, account.token)
 				.post('/users/@me/disable')
 				.body({})
 				.expect(403, 'SUDO_MODE_REQUIRED')
 				.execute();
 			expect(errorResp.has_mfa).toBe(methods.has_mfa);
-			expect(errorResp.methods).toEqual({totp: methods.totp, webauthn: methods.webauthn});
+			expect(errorResp.methods).toEqual({
+				totp: methods.totp,
+				webauthn: methods.webauthn,
+				backup_codes: methods.backup_codes,
+			});
+		});
+		test('mfa-methods reports webauthn for a passkey user with two-factor off', async () => {
+			const account = await createTestAccount(harness);
+			const {account: webauthnAccount} = await setupWebAuthnOnlyUser(harness, account, false);
+			const methods = await createBuilder<SudoMfaMethodsResponse>(harness, webauthnAccount.token)
+				.get('/users/@me/sudo/mfa-methods')
+				.execute();
+			expect(methods).toEqual({totp: false, webauthn: true, backup_codes: false, has_mfa: true});
+			const errorResp = await createBuilder<SudoModeRequiredResponse>(harness, webauthnAccount.token)
+				.post('/users/@me/disable')
+				.body({})
+				.expect(403, 'SUDO_MODE_REQUIRED')
+				.execute();
+			expect(errorResp.has_mfa).toBe(methods.has_mfa);
+			expect(errorResp.methods).toEqual({
+				totp: methods.totp,
+				webauthn: methods.webauthn,
+				backup_codes: methods.backup_codes,
+			});
 		});
 		test('mfa-methods agrees with the SUDO_MODE_REQUIRED body for an enrolled TOTP user', async () => {
 			const account = await createTestAccount(harness);
@@ -342,14 +409,18 @@ describe('MFA Consistency Tests', () => {
 			const methods = await createBuilder<SudoMfaMethodsResponse>(harness, loggedIn.token)
 				.get('/users/@me/sudo/mfa-methods')
 				.execute();
-			expect(methods).toEqual({totp: true, webauthn: false, has_mfa: true});
+			expect(methods).toEqual({totp: true, webauthn: false, backup_codes: true, has_mfa: true});
 			const errorResp = await createBuilder<SudoModeRequiredResponse>(harness, loggedIn.token)
 				.post('/users/@me/disable')
 				.body({})
 				.expect(403, 'SUDO_MODE_REQUIRED')
 				.execute();
 			expect(errorResp.has_mfa).toBe(methods.has_mfa);
-			expect(errorResp.methods).toEqual({totp: methods.totp, webauthn: methods.webauthn});
+			expect(errorResp.methods).toEqual({
+				totp: methods.totp,
+				webauthn: methods.webauthn,
+				backup_codes: methods.backup_codes,
+			});
 		});
 	});
 	describe('MFA requirement propagates to sensitive operations', () => {
@@ -444,9 +515,9 @@ describe('MFA Consistency Tests', () => {
 			await createBuilder(harness, loggedIn.token)
 				.post('/users/@me/mfa/totp/disable')
 				.body({
-					code: backupCodes.backup_codes[0]!.code,
+					code: 'invalid-code',
 				})
-				.expect(403)
+				.expect(400, 'INVALID_FORM_BODY')
 				.execute();
 			await createBuilder(harness, loggedIn.token)
 				.post('/users/@me/mfa/totp/disable')

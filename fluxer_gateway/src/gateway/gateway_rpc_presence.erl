@@ -30,8 +30,16 @@ handle_dispatch(#{<<"user_id">> := UserIdBin, <<"event">> := Event, <<"data">> :
     case dispatch_to_owner(UserId, EventAtom, Data) of
         ok -> true;
         {error, not_found} -> handle_offline_dispatch(EventAtom, UserId, Data);
+        {error, unavailable} -> handle_unreachable_dispatch(EventAtom, UserId, Data);
         _ -> gateway_rpc_error:raise(<<"presence_dispatch_error">>)
     end.
+
+-spec handle_unreachable_dispatch(atom(), integer(), map()) -> no_return().
+handle_unreachable_dispatch(message_create, UserId, Data) ->
+    _ = handle_offline_dispatch(message_create, UserId, Data),
+    gateway_rpc_error:raise(<<"presence_dispatch_error">>);
+handle_unreachable_dispatch(_EventAtom, _UserId, _Data) ->
+    gateway_rpc_error:raise(<<"presence_dispatch_error">>).
 
 -spec dispatch_event_atom_or_error(term()) -> atom().
 dispatch_event_atom_or_error(Event) when is_binary(Event) ->

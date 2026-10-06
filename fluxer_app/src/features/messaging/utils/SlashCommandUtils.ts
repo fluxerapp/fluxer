@@ -4,8 +4,8 @@ import type {Command} from '@app/features/devtools/hooks/useCommands';
 
 const MENTION_REGEX = /(^|\s)@(\S*)$/;
 const CHANNEL_REGEX = /(^|\s)#(\S*)$/;
-const EMOJI_REGEX = /(^|\s):([a-z0-9_+-]{2,})$/i;
-const EMOJI_REACTION_REGEX = /^\s*\+:([a-z0-9_+-]*):?$/i;
+const EMOJI_REGEX = /(^|\s):([a-z0-9_+~-]{2,})$/i;
+const EMOJI_REACTION_REGEX = /^\s*\+:([a-z0-9_+~-]*):?$/i;
 const COMMAND_REGEX = /(^\s*)\/(\S*)$/;
 const MEME_SEARCH_REGEX = /(^\s*)\/saved\s*(.*)$/;
 const GIF_SEARCH_REGEX = /(^\s*)\/(gif|klipy)\s*(.*)$/;
@@ -27,6 +27,10 @@ export interface AutocompleteTrigger {
 		| 'commandArg';
 	match: RegExpMatchArray;
 	matchedText: string;
+}
+
+export function isEmojiReactionShorthand(value: string): boolean {
+	return EMOJI_REACTION_REGEX.test(value);
 }
 
 export function detectAutocompleteTrigger(textUpToCursor: string): AutocompleteTrigger | null {

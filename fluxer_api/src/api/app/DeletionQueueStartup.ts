@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ILogger} from '../ILogger';
-import type {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
+import type {ILogger} from '@app/api/ILogger';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 
 export async function ensureDeletionQueueState(
 	deletionQueue: KVAccountDeletionQueueService,

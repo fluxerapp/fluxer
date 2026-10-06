@@ -352,7 +352,7 @@ mod tests {
         for byte in &dst[..8] {
             assert_eq!(*byte, 16);
         }
-        for chunk in dst[8..].chunks_exact(2) {
+        for chunk in dst[8..].as_chunks::<2>().0 {
             assert_eq!(chunk[0], 128);
             assert_eq!(chunk[1], 128);
         }
@@ -372,7 +372,7 @@ mod tests {
         for byte in &dst[..8] {
             assert!(*byte >= 230 && *byte <= 240, "luma out of range: {byte}");
         }
-        for chunk in dst[8..].chunks_exact(2) {
+        for chunk in dst[8..].as_chunks::<2>().0 {
             assert!(
                 chunk[0] >= 124 && chunk[0] <= 132,
                 "U out of range: {}",

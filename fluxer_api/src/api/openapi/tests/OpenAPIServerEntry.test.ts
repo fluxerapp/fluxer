@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {buildOpenAPISpecBody, OpenAPIController} from '@app/api/openapi/OpenAPIController';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Hono} from 'hono';
 import {describe, expect, it} from 'vitest';
-import {Config} from '../../Config';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {buildOpenAPISpecBody, OpenAPIController} from '../OpenAPIController';
 
 interface ServerEntry {
 	url: string;

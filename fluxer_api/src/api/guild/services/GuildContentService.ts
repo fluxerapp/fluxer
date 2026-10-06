@@ -1,5 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {EmojiID, GuildID, StickerID, UserID} from '@app/api/BrandedTypes';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {ContentHelpers} from '@app/api/guild/services/content/ContentHelpers';
+import {EmojiService} from '@app/api/guild/services/content/EmojiService';
+import {ExpressionAssetPurger} from '@app/api/guild/services/content/ExpressionAssetPurger';
+import {StickerService} from '@app/api/guild/services/content/StickerService';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
 import type {
 	GuildEmojiResponse,
 	GuildEmojiWithUserResponse,
@@ -7,21 +22,6 @@ import type {
 	GuildStickerWithUserResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {EmojiID, GuildID, StickerID, UserID} from '../../BrandedTypes';
-import type {AvatarService} from '../../infrastructure/AvatarService';
-import type {IAssetDeletionQueue} from '../../infrastructure/IAssetDeletionQueue';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {User} from '../../models/User';
-import type {GuildAuditLogService} from '../GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
-import {ContentHelpers} from './content/ContentHelpers';
-import {EmojiService} from './content/EmojiService';
-import {ExpressionAssetPurger} from './content/ExpressionAssetPurger';
-import {StickerService} from './content/StickerService';
 
 export class GuildContentService {
 	private readonly contentHelpers: ContentHelpers;

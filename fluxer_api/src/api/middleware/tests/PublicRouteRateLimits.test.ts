@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {BlueskyOAuthController} from '@app/api/bluesky/BlueskyOAuthController';
+import type {IBlueskyOAuthService} from '@app/api/bluesky/IBlueskyOAuthService';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {ConnectionRateLimitConfigs} from '@app/api/rate_limit_configs/ConnectionRateLimitConfig';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {
 	BucketConfig,
@@ -10,11 +15,6 @@ import type {
 } from '@pkgs/rate_limit/src/IRateLimitService';
 import {Hono} from 'hono';
 import {describe, expect, test} from 'vitest';
-import {BlueskyOAuthController} from '../../bluesky/BlueskyOAuthController';
-import type {IBlueskyOAuthService} from '../../bluesky/IBlueskyOAuthService';
-import {ConnectionRateLimitConfigs} from '../../rate_limit_configs/ConnectionRateLimitConfig';
-import type {HonoApp, HonoEnv} from '../../types/HonoEnv';
-import {RateLimitMiddleware} from '../RateLimitMiddleware';
 
 const CLIENT_IP = '203.0.113.10';
 const HTTP_TOO_MANY_REQUESTS = 429;

@@ -1,5 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {DMPermissionValidator} from '@app/api/channel/services/DMPermissionValidator';
+import {buildBroadcastMessageData} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {incrementDmMentionCounts} from '@app/api/channel/services/message/ReadStateHelpers';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {CallData, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {assertMayStartConversation} from '@app/api/user/NewConversationLimit';
+import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import {AUTOMATIC_VOICE_REGION_ID, ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {IncomingCallFlags, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -9,21 +26,6 @@ import {NoActiveCallError} from '@fluxer/errors/src/domains/channel/NoActiveCall
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import {type ChannelID, createMessageID, type MessageID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {CallData, IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IVoiceRoomStore} from '../../infrastructure/IVoiceRoomStore';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {ReadStateService} from '../../read_state/ReadStateService';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {VoiceAccessContext, VoiceAvailabilityService} from '../../voice/VoiceAvailabilityService';
-import {mapChannelToResponse} from '../ChannelMappers';
-import type {IChannelRepository} from '../IChannelRepository';
-import {DMPermissionValidator} from './DMPermissionValidator';
-import {buildBroadcastMessageData} from './message/MessageGatewayDispatch';
-import {incrementDmMentionCounts} from './message/ReadStateHelpers';
 
 export class CallService {
 	private dmPermissionValidator: DMPermissionValidator;
@@ -167,6 +169,16 @@ export class CallService {
 			const dmRecipientIds = recipientIds.filter((id) => id !== userId);
 			if (dmRecipientIds.length === 1) {
 				await this.dmPermissionValidator.validate({senderId: userId, recipientId: dmRecipientIds[0]});
+				const caller = await this.userRepository.findUnique(userId);
+				if (caller) {
+					await assertMayStartConversation({
+						user: caller,
+						targetId: dmRecipientIds[0]!,
+						users: this.userRepository,
+						messages: this.channelRepository,
+						channel,
+					});
+				}
 			}
 		}
 		const existingCall = await this.gatewayService.getCall(channelId);
@@ -209,14 +221,26 @@ export class CallService {
 			has_reaction: false,
 			version: 1,
 		});
+		const author = await this.userRepository.findUnique(userId);
 		const call = await this.gatewayService.createCall(
 			channelId,
 			messageId.toString(),
 			selectedRegion,
 			ringing.map((id) => id.toString()),
 			allRecipients.map((id) => id.toString()),
+			author
+				? {
+						id: userId.toString(),
+						name: this.resolveCallerName({
+							channel,
+							userId,
+							globalName: author.globalName,
+							username: author.username,
+						}),
+						avatar: author.avatarHash,
+					}
+				: undefined,
 		);
-		const author = await this.userRepository.findUnique(userId);
 		await incrementDmMentionCounts({
 			readStateService: this.readStateService,
 			userRepository: this.userRepository,
@@ -231,7 +255,7 @@ export class CallService {
 				channelId,
 				messageId,
 				mentionCount: 0,
-				silent: true,
+				implicit: {unreadThrough: channel.lastMessageId},
 				emitGateway: false,
 			});
 		}
@@ -324,6 +348,16 @@ export class CallService {
 			const dmRecipientIds = Array.from(channel.recipientIds).filter((id) => id !== userId);
 			if (dmRecipientIds.length === 1) {
 				await this.dmPermissionValidator.validate({senderId: userId, recipientId: dmRecipientIds[0]});
+				const caller = await this.userRepository.findUnique(userId);
+				if (caller) {
+					await assertMayStartConversation({
+						user: caller,
+						targetId: dmRecipientIds[0]!,
+						users: this.userRepository,
+						messages: this.channelRepository,
+						channel,
+					});
+				}
 			}
 		}
 		const callerRequestedNoRing = recipients !== undefined && recipients.length === 0;
@@ -391,11 +425,43 @@ export class CallService {
 				longitude,
 			});
 		} else {
+			const caller = await this.userCacheService.getUserPartialResponse(userId, requestCache);
 			await this.gatewayService.ringCallRecipients(
 				channelId,
 				recipientsToRing.map((id) => id.toString()),
+				{
+					id: userId.toString(),
+					name: this.resolveCallerName({
+						channel,
+						userId,
+						globalName: caller.global_name,
+						username: caller.username,
+					}),
+					avatar: caller.avatar,
+				},
 			);
 		}
+	}
+
+	private resolveCallerName({
+		channel,
+		userId,
+		globalName,
+		username,
+	}: {
+		channel: Channel;
+		userId: UserID;
+		globalName: string | null;
+		username: string;
+	}): string {
+		const nickname = channel.nicknames.get(userId.toString());
+		if (nickname) {
+			return nickname;
+		}
+		if (globalName) {
+			return globalName;
+		}
+		return username;
 	}
 
 	async stopRingingCallRecipients({

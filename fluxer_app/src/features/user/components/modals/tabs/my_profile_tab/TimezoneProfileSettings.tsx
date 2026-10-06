@@ -17,7 +17,7 @@ import {useCallback, useMemo, useState} from 'react';
 
 const TIMEZONE_IDENTIFIER_EXAMPLE = 'America/New_York';
 const TIMEZONE_DESCRIPTOR = msg({
-	message: 'Timezone',
+	message: 'Time zone',
 	comment: 'Field label in profile settings for choosing the timezone used to show local time on the profile.',
 });
 const PROFILE_LOCAL_TIME_DESCRIPTOR = msg({
@@ -26,7 +26,7 @@ const PROFILE_LOCAL_TIME_DESCRIPTOR = msg({
 });
 const PROFILE_LOCAL_TIME_SUMMARY_DESCRIPTOR = msg({
 	message:
-		'Set your timezone once so {productName} can keep your UTC offset current when daylight saving time changes. Other people can only see your UTC offset, not your exact timezone identifier.',
+		'Set your time zone once so {productName} can keep your UTC offset current when daylight saving time changes. Other people can only see your UTC offset, not your exact time zone identifier.',
 	comment:
 		'Description in profile settings for the button that opens timezone settings. productName is the app name. A timezone identifier means values like America/New_York; only the UTC offset can be visible to others.',
 });
@@ -35,7 +35,7 @@ const EDIT_PROFILE_LOCAL_TIME_DESCRIPTOR = msg({
 	comment: 'Button label in profile settings. Opens the profile local time modal.',
 });
 const SEARCH_TIMEZONES_DESCRIPTOR = msg({
-	message: 'Search timezones',
+	message: 'Search time zones',
 	comment: 'Placeholder in the profile timezone picker.',
 });
 const NOT_SET_DESCRIPTOR = msg({
@@ -43,12 +43,12 @@ const NOT_SET_DESCRIPTOR = msg({
 	comment: 'Option in the profile timezone picker. Means no timezone has been selected.',
 });
 const TIMEZONE_HELP_DESCRIPTOR = msg({
-	message: 'Choose the timezone {productName} uses to calculate your UTC offset for profile local time.',
+	message: 'Choose the time zone {productName} uses to calculate your UTC offset for profile local time.',
 	comment: 'Helper text under the profile timezone picker. productName is the app name.',
 });
 const TIMEZONE_PRIVACY_NOTE_DESCRIPTOR = msg({
 	message:
-		'Other people can only see your current UTC offset when you choose to share profile local time. They do not see your exact timezone identifier, such as {timezoneIdentifierExample}. {productName} stores that identifier only so the offset can update automatically when daylight saving time changes.',
+		'Other people can only see your current UTC offset when you choose to share profile local time. They do not see your exact time zone identifier, such as {timezoneIdentifierExample}. {productName} stores that identifier only so the offset can update automatically when daylight saving time changes.',
 	comment:
 		'Privacy note in profile timezone settings. Preserve {timezoneIdentifierExample}; it is inserted by code as an IANA timezone identifier example. productName is the app name. Users should understand that only the UTC offset is shown to other people.',
 });
@@ -57,7 +57,7 @@ const EVERYONE_DESCRIPTOR = msg({
 	comment: 'Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.',
 });
 const EVERYONE_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Allow anyone who can view your full profile to see your profile local time',
+	message: 'Allow anyone who can view your full profile to see your local time',
 	comment: 'Profile timezone privacy option description for the Everyone switch.',
 });
 const FRIENDS_DESCRIPTOR = msg({
@@ -65,11 +65,11 @@ const FRIENDS_DESCRIPTOR = msg({
 	comment: 'Profile timezone privacy option label. Allows friends to see local time.',
 });
 const FRIENDS_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Allow your friends to see your profile local time',
+	message: 'Allow your friends to see your local time',
 	comment: 'Profile timezone privacy option description for the Friends switch.',
 });
 const COMMUNITY_MEMBERS_DESCRIPTION_DESCRIPTOR = msg({
-	message: "Allow members from communities you're in to see your profile local time",
+	message: "Allow members from communities you're in to see your local time",
 	comment: 'Profile timezone privacy option description for the Community members switch.',
 });
 

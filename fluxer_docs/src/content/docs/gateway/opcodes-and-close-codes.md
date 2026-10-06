@@ -52,13 +52,13 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 
 <sup>1</sup> [Resumed](/gateway/events/#resumed) has the session's current sequence without advancing it, and a replayed Dispatch keeps the sequence it was first sent with
 
-<sup>2</sup> The advertised interval is 41,250 ms, so the threshold is 37,125 ms and the acknowledgement deadline is 45,000 ms. Both are tested on a 13,750 ms timer and acted on at the first tick at or after them
+<sup>2</sup> Answer a server heartbeat request immediately, in addition to the regular schedule
 
 <sup>3</sup> A client that sends Opcode 5 or 12 gets the same close as a client that sent an undefined opcode
 
 <sup>4</sup> Resume is accepted whether or not a session is already attached to the connection
 
-<sup>5</sup> Opcode 7 precedes the close when the Gateway node is draining, when the session is fenced for a cluster handoff, and when a Resume from a new socket displaces this one
+<sup>5</sup> Opcode 7 precedes the close when the Gateway node is draining, when the node transfers the session to another Gateway node, and when a Resume from a new socket displaces this one
 
 <sup>6</sup> After the frame, a socket whose session ended is unauthenticated. After a failed Resume, a socket that already held a session still holds it
 
@@ -80,7 +80,7 @@ A client SHOULD log an unknown opcode and ignore the frame, and MUST NOT close o
 
 | Code | Name | Meaning |
 | --- | --- | --- |
-| 4000 | Unknown error | The Gateway drained the connection, or a session operation could not be completed |
+| 4000 | Unknown error | Drain, an unclassified session creation error, or a Resume whose retained session could not be reached |
 | 4001 | Unknown opcode | The opcode is undefined, is a server opcode, or the payload has no `d` |
 | 4002 | Decode error | The payload size, compression stream, encoding, or command fields are invalid |
 | 4003 | Not authenticated | An authenticated command arrived before Identify or Resume attached a session |
@@ -95,7 +95,7 @@ A client SHOULD log an unknown opcode and ignore the frame, and MUST NOT close o
 
 <sup>1</sup> `shard_count` is an integer from 1 to 16384, and `shard_id` is a non-negative integer below `shard_count`
 
-<sup>2</sup> The count is taken after the shard filter, so a bot clears it by identifying with a `shard_count` large enough to divide its guilds
+<sup>2</sup> The count is taken after the shard filter, so a bot clears it by identifying with a `shard_count` large enough that no shard owns more than 2,500 guilds
 
 Code 4006 is unassigned, and no code above 4012 is defined. [Event filtering](/gateway/event-filtering/) describes how a client bounds the events its session receives.
 
@@ -120,9 +120,7 @@ Code 4006 is unassigned, and no code above 4012 is defined. [Event filtering](/g
 
 <sup>2</sup> A Resume that fails token verification leaves the named session in place for the rest of its retention window, so a later Resume with the owning token still recovers it. An Identify that fails token verification leaves nothing to recover
 
-A session fenced for a cluster handoff stops on this node once its state has been copied to the node taking it over. Fluxer holds that copy for 120,000 ms and sweeps it on a 10,000 ms timer. The next Resume consumes it.
-
-`Resumable` describes only whether an already established session can still be recovered with [Resume](/gateway/commands/#resume). The 60,000 ms retention window and the bounded replay buffer described in [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) apply unchanged.
+`Resumable` describes only whether an already established session can still be recovered with [Resume](/gateway/commands/#resume). The 60,000 ms retention window and the bounded replay buffer described in [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) still limit whether a Resume succeeds and what it replays.
 
 :::caution[Reconnecting unchanged reproduces `4004`, `4010`, and `4012`]
 A client changes the token, the shard pair, or the version before it reconnects.
@@ -134,7 +132,7 @@ Close `4007` follows one rule for [Heartbeat](/gateway/commands/#heartbeat) and 
 
 Heartbeat tests the value's type alone, and only once a session is attached. Before Identify or Resume attaches one, the Gateway accepts every `d` and answers with Opcode 11. With a session attached, the Gateway accepts a `d` that is `null` or any integer, and every other value closes with `4007`. A sequence below the acknowledged sequence leaves that bound unchanged, and any other integer sets it and trims the replay buffer. A heartbeat that arrives in the short window between the session process ending and the socket noticing also closes with `4007`.
 
-Resume tests two bounds and its `seq` must clear both.
+Resume tests the bounds below and its `seq` must clear both.
 
 - The current sequence. A `seq` above the last sequence the session dispatched closes with `4007`.
 - The acknowledged sequence. A `seq` below the last acknowledged sequence closes with `4007`. A heartbeat with a higher sequence moves this bound.
@@ -147,30 +145,30 @@ The Gateway sends an exact reason string with every application close.
 
 | Reason | Code | Cause |
 | --- | --- | --- |
-| Invalid API version | 4012 | The `v` connection parameter is absent or is not `1` |
-| Too many connections | 4008 | The source IP already holds 256 concurrent Gateway connections |
-| Encode failed | 4002 | Hello could not be encoded<sup>1</sup> |
-| Compression failed: zstd-stream | 4002 | Hello could not be compressed on a connection that negotiated zstd<sup>1</sup> |
-| Payload too large | 4002 | An inbound message exceeded 4,096 bytes on the wire, or exceeded 4,096 bytes after decompression |
-| Decompression failed | 4002 | An inbound compressed message could not be decompressed |
-| Decode failed | 4002 | The payload is not valid JSON, or decodes to something other than an object |
-| Invalid payload | 4002 | The decoded object has no `op` |
-| Rate limited | 4008 | The connection, source IP, or user client payload budget was exceeded |
-| Unknown opcode | 4001 | The opcode is undefined, is a server opcode, or the payload has no `d` |
-| Not authenticated | 4003 | An authenticated command arrived before a session was attached |
-| Already authenticated | 4005 | Identify arrived while a session was attached, or with no `d` |
-| Invalid identify payload | 4002 | Identify is missing `token` or `properties`, or a field has the wrong type |
-| Invalid shard | 4010 | The Identify `shard` value is not a valid `[shard_id, shard_count]` pair |
-| Sharding required | 4011 | More than 2,500 guilds resolve to one bot session after the shard filter |
-| Too many sessions | 4008 | The user already holds 100 live Gateway sessions<sup>2</sup> |
-| Invalid token | 4004 | The Identify token is invalid, or the Resume token does not own the named session |
-| Failed to start session | 4000 | Session creation returned a failure the Gateway does not classify<sup>3</sup> |
-| Invalid resume payload | 4002 | Resume is not an object, or `token` or `session_id` is missing or is not a string, or `seq` is missing or is not an integer |
-| Invalid sequence | 4007 | Heartbeat or Resume supplied a sequence outside the bounds stated in [Invalid sequence](#invalid-sequence) |
-| Invalid presence payload | 4002 | Presence Update is not an object, has no `status`, or has a `status` string that is not a known value |
-| Session unavailable | 4000 | The retained session could not be reached while Resume was in progress |
-| Session drain requested; reconnect to continue | 4000 | Opcode `7` was sent immediately before the close<sup>4</sup> |
-| Heartbeat timeout | 4009 | No new heartbeat acknowledgement was accepted within 45,000 ms of the preceding acknowledgement |
+| `Invalid API version` | 4012 | The `v` connection parameter is absent or is not `1` |
+| `Too many connections` | 4008 | The source IP already holds 256 concurrent Gateway connections |
+| `Encode failed` | 4002 | Hello could not be encoded<sup>1</sup> |
+| `Compression failed: zstd-stream` | 4002 | Hello could not be compressed on a connection that negotiated zstd<sup>1</sup> |
+| `Payload too large` | 4002 | An inbound message exceeded 4,096 bytes on the wire, or exceeded 4,096 bytes after decompression |
+| `Decompression failed` | 4002 | An inbound compressed message could not be decompressed |
+| `Decode failed` | 4002 | The payload is not valid JSON, or decodes to something other than an object |
+| `Invalid payload` | 4002 | The decoded object has no `op` |
+| `Rate limited` | 4008 | The connection, source IP, or user client payload budget was exceeded |
+| `Unknown opcode` | 4001 | The opcode is undefined, is a server opcode, or the payload has no `d` |
+| `Not authenticated` | 4003 | An authenticated command arrived before a session was attached |
+| `Already authenticated` | 4005 | Identify arrived while a session was attached, or with no `d` |
+| `Invalid identify payload` | 4002 | Identify is missing `token` or `properties`, or a field has the wrong type |
+| `Invalid shard` | 4010 | The Identify `shard` value is not a valid `[shard_id, shard_count]` pair |
+| `Sharding required` | 4011 | More than 2,500 guilds resolve to one bot session after the shard filter |
+| `Too many sessions` | 4008 | The user already holds 100 live Gateway sessions<sup>2</sup> |
+| `Invalid token` | 4004 | The Identify token is invalid, or the Resume token does not own the named session |
+| `Failed to start session` | 4000 | Session creation returned a failure the Gateway does not classify<sup>3</sup> |
+| `Invalid resume payload` | 4002 | Resume is not an object, or `token` or `session_id` is missing or is not a string, or `seq` is missing or is not an integer |
+| `Invalid sequence` | 4007 | Heartbeat or Resume supplied a sequence outside the bounds stated in [Invalid sequence](#invalid-sequence) |
+| `Invalid presence payload` | 4002 | Presence Update is not an object, has no `status`, or has a `status` string that is not a known value |
+| `Session unavailable` | 4000 | The retained session could not be reached while Resume was in progress |
+| `Session drain requested; reconnect to continue` | 4000 | Opcode `7` was sent immediately before the close<sup>4</sup> |
+| `Heartbeat timeout` | 4009 | No new heartbeat acknowledgement was accepted within 45,000 ms of the preceding acknowledgement |
 
 <sup>1</sup> Both reasons are produced only while the Hello frame is being written. A later outbound frame that cannot be encoded or compressed is dropped and the connection stays open
 
@@ -178,7 +176,7 @@ The Gateway sends an exact reason string with every application close.
 
 <sup>3</sup> The Gateway holds the Identify and retries it silently after a classified transient failure, so the connection stays open. That covers a paused rollout, a draining node, an ineligible account, an Identify rate limit, a saturated start budget, and a failed session RPC
 
-<sup>4</sup> The Gateway node is draining, the session is being fenced for a cluster handoff, or a Resume from a new socket displaced this one
+<sup>4</sup> The Gateway node is draining, the node is transferring the session to another Gateway node, or a Resume from a new socket displaced this one
 
 Reason strings are stable wire values. A client branches on the code and MAY record the reason for diagnosis.
 

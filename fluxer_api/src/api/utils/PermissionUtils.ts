@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
 
 interface PermissionsDiff {
 	added: Array<string>;
@@ -50,4 +50,15 @@ export async function hasPermission(
 	},
 ): Promise<boolean> {
 	return await gatewayService.checkPermission(params);
+}
+
+export function overwriteGrantedBits(
+	before: {allow: bigint; deny: bigint} | null | undefined,
+	after: {allow: bigint; deny: bigint} | null | undefined,
+): bigint {
+	const beforeAllow = before?.allow ?? 0n;
+	const beforeDeny = before?.deny ?? 0n;
+	const afterAllow = after?.allow ?? 0n;
+	const afterDeny = after?.deny ?? 0n;
+	return (afterAllow & ~beforeAllow) | (beforeDeny & ~afterDeny);
 }

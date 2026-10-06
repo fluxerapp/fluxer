@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	isFluxerNativeUserAgent,
 	parseReportedClientOs,
 	resolveSessionClientInfo,
 	type SessionClientInfo,
-} from '../SessionClientIdentity';
+} from '@app/api/utils/SessionClientIdentity';
+import {describe, expect, it} from 'vitest';
 
 const ELECTRON_MAC_UA =
 	'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) FluxerStable/2026.614.83512 Chrome/126.0.0.0 Electron/31.0.0 Safari/537.36';
@@ -66,7 +66,7 @@ describe('resolveSessionClientInfo', () => {
 		});
 	});
 
-	it('treats a narrow Linux window as a desktop because the product token cannot carry form factor', () => {
+	it('treats a narrow Linux window as a desktop because the product token cannot include form factor', () => {
 		expect(resolve('Fluxer Linux/1.4.2 (stable)', 'linux')).toEqual({
 			platform: 'Fluxer Lite Linux',
 			os: 'Linux',

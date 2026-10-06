@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createChannelID, createMessageID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {ChannelRepository} from '../../channel/ChannelRepository';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {
 	deleteMessage,
 	ensureSessionStarted,
 	markChannelAsIndexed,
 	sendMessage,
-} from '../../message/tests/MessageTestUtils';
-import {getMessageSearchService} from '../../SearchFactory';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, TEST_TIMEOUTS, wait} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/message/tests/MessageTestUtils';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_TIMEOUTS, wait} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface MessageSearchResult {
 	messages: Array<{

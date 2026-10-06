@@ -40,6 +40,11 @@ import type {ComposerInsertPayload} from '@app/features/lexical/composer/compose
 import {normalizeSlotAutocompleteQuery as normalizeSlotQuery} from '@app/features/lexical/composer/SlashSlotAutocompleteQuery';
 import type {SlashOptionalContext, SlashSlotAutocompleteContext} from '@app/features/lexical/composer/slashSlots';
 import {
+	areSpecialMentionsAllowed,
+	createSpecialMentionPayload,
+	hasOpenCodeFence,
+} from '@app/features/lexical/composer/specialMentions';
+import {
 	type GifAutocompleteSearchState,
 	selectAutocompleteGifResults,
 	useAutocompleteGifSearch,
@@ -52,6 +57,7 @@ import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {SearchContext} from '@app/features/member/state/MemberSearch';
 import * as HighlightCommands from '@app/features/messaging/commands/HighlightCommands';
+import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {
@@ -72,6 +78,10 @@ import {
 } from '@app/features/messaging/utils/AutocompleteOptionBuilders';
 import {isAutocompleteTriggerAllowed, type TriggerType} from '@app/features/messaging/utils/AutocompleteTriggerPolicy';
 import {toReactionEmoji} from '@app/features/messaging/utils/MessageReactionUtils';
+import {
+	getReactionShortcodeName,
+	getReactionShorthandTargetId,
+} from '@app/features/messaging/utils/ReactionShorthandUtils';
 import {
 	type AutocompleteTrigger,
 	detectAutocompleteTrigger,
@@ -256,10 +266,7 @@ export function useLexicalAutocomplete({
 		? `${autocompleteTrigger.type}:${autocompleteTrigger.match.index == null ? -1 : autocompleteTrigger.match.index}:${autocompleteTrigger.match[0]}:${autocompleteTrigger.matchedText}`
 		: '';
 	const autocompleteQuery = useMemo(() => getAutocompleteQuery(autocompleteTrigger), [autocompleteTrigger]);
-	const hasOpenCodeBlock = useMemo(() => {
-		const match = textUpToCursor.match(/```/g);
-		return match != null && match.length > 0 && match.length % 2 !== 0;
-	}, [textUpToCursor]);
+	const hasOpenCodeBlock = useMemo(() => hasOpenCodeFence(textUpToCursor), [textUpToCursor]);
 
 	const memberSearchRank = useMemo(() => buildMemberSearchRank(memberSearchResults), [memberSearchResults]);
 	const slotMemberSearchRank = useMemo(() => buildMemberSearchRank(slotMemberSearchResults), [slotMemberSearchResults]);
@@ -291,6 +298,12 @@ export function useLexicalAutocomplete({
 
 	const canMentionEveryone =
 		allowSpecialMentions !== false && channel != null && Permission.can(Permissions.MENTION_EVERYONE, channel);
+	const specialMentionsAllowed = areSpecialMentionsAllowed(
+		channel,
+		allowSpecialMentions,
+		allowedTriggers,
+		canMentionEveryone,
+	);
 	const canUseCommand = useCallback(
 		(command: Command) => {
 			if (command.type === 'simple') {
@@ -373,7 +386,7 @@ export function useLexicalAutocomplete({
 						.map((id) => Users.getUser(id))
 						.filter((user): user is User => user != null);
 					const userOptions = filterDMUsers(users, parsedQuery);
-					options = channel.isPersonalNotes() ? userOptions : [...userOptions, ...SPECIAL_MENTIONS];
+					options = specialMentionsAllowed ? [...userOptions, ...SPECIAL_MENTIONS] : userOptions;
 				} else {
 					const recentSpeakers =
 						matchedText.length === 0 ? buildRecentSpeakerOptions(channel, MENTION_RESULT_LIMIT) : [];
@@ -399,7 +412,7 @@ export function useLexicalAutocomplete({
 							kind: 'role' as const,
 							role,
 						}));
-					const specialMentions = canMentionEveryone
+					const specialMentions = specialMentionsAllowed
 						? SPECIAL_MENTIONS.filter((mention) => {
 								if (queryForMatching.length === 0) {
 									return true;
@@ -538,6 +551,7 @@ export function useLexicalAutocomplete({
 		memberSearchRank,
 		memberSearchResults,
 		permissionVersion,
+		specialMentionsAllowed,
 	]);
 
 	useEffect(() => {
@@ -695,14 +709,20 @@ export function useLexicalAutocomplete({
 			const caret = currentTextUpToCursor.length;
 			const matchStart = getComposerAutocompleteReplacementStart(currentTextUpToCursor, trigger.type, trigger.match);
 			if (trigger.type === 'emojiReaction' && isEmoji(option)) {
-				if (channel != null) {
-					const messages = Messages.getMessages(channel.id).toArray();
-					const mostRecent = messages[messages.length - 1];
-					if (mostRecent != null) {
-						ReactionCommands.addReaction(i18n, channel.id, mostRecent.id, toReactionEmoji(option.emoji));
-					}
+				const targetId = channel == null ? null : getReactionShorthandTargetId(channel.id);
+				if (channel != null && targetId !== null) {
+					ReactionCommands.addReaction(i18n, channel.id, targetId, toReactionEmoji(option.emoji));
+					MessageCommands.stopReply(channel.id);
+					handle.clear();
+					return;
 				}
-				handle.clear();
+				applyComposerReplacement(
+					handle,
+					{start: matchStart, end: caret},
+					{kind: 'text', text: `+:${getReactionShortcodeName(option.emoji)}:`},
+					{trailing: true},
+					{maxWireLength: maxActualLength, onExceedMaxLength},
+				);
 				return;
 			}
 			if (isCommand(option)) {
@@ -751,6 +771,7 @@ export function useLexicalAutocomplete({
 		handleSelect,
 		autocompleteQuery: resolvedAutocompleteQuery,
 		isSlotMenu,
+		specialMentionsAllowed,
 	};
 }
 
@@ -960,7 +981,7 @@ function optionToPayload(option: AutocompleteOption, channel: Channel | null): C
 		};
 	}
 	if (isSpecialMention(option)) {
-		return {kind: 'mention', mentionType: 'special', id: option.kind, display: option.kind, wire: option.kind};
+		return createSpecialMentionPayload(option.kind);
 	}
 	if (isChannel(option)) {
 		return {

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {BannedFileShaRow} from '@app/api/database/types/AdminArchiveTypes';
+
 export const BANNED_URLS_REFRESH_CHANNEL = 'banned_urls_refresh';
 export const BANNED_URL_DOMAINS_REFRESH_CHANNEL = 'banned_url_domains_refresh';
 export const BANNED_FILE_SHAS_REFRESH_CHANNEL = 'banned_file_shas_refresh';
@@ -23,3 +25,7 @@ export const ContentBlocklistCategory = {
 	GIFCT: 'gifct',
 	STOP_NCII: 'stop_ncii',
 } as const;
+
+export function isBlocklistFeedFileSha(row: Pick<BannedFileShaRow, 'category' | 'added_by'>): boolean {
+	return row.added_by == null && row.category === ContentBlocklistCategory.MALWARE_BAZAAR;
+}

@@ -1,5 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthEmail from '@app/api/auth/AuthEmail';
+import * as AuthEmailRevert from '@app/api/auth/AuthEmailRevert';
+import * as AuthLogin from '@app/api/auth/AuthLogin';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthRecoveryKit from '@app/api/auth/AuthRecoveryKit';
+import * as AuthRegistration from '@app/api/auth/AuthRegistration';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {getTokenIdHash} from '@app/api/auth/AuthUtility';
+import type {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffService';
+import type {SsoService} from '@app/api/auth/services/SsoService';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
+import {
+	classifyWebPushOrigin,
+	encodePushSessionIdHash,
+	recordPushSessionPredecessor,
+} from '@app/api/user/services/WebPushOriginReplacement';
+import {isUsernameTaken} from '@app/api/user/UniqueUsernames';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
+import {generateUsernameSuggestions} from '@app/api/utils/UsernameSuggestionUtils';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
@@ -20,35 +48,19 @@ import type {
 	LoginRequest,
 	LogoutAuthSessionsRequest,
 	MfaTicketRequest,
+	RecoverAccountRequest,
+	RecoverAccountResponse,
 	RegisterRequest,
 	ResetPasswordRequest,
 	SsoCompleteRequest,
 	SsoStartRequest,
+	UsernameAvailabilityResponse,
 	UsernameSuggestionsResponse,
 	VerifyEmailRequest,
 	WebAuthnAuthenticateRequest,
 	WebAuthnMfaRequest,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {ApiContext} from '../ApiContext';
-import {createUserID, type UserID} from '../BrandedTypes';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
-import type {User} from '../models/User';
-import {mapUserToPartialResponse} from '../user/UserMappers';
-import {lookupGeoip} from '../utils/IpUtils';
-import {parseJsonRecord} from '../utils/JsonBoundaryUtils';
-import {resolveSessionClientInfo} from '../utils/SessionClientIdentity';
-import {generateUsernameSuggestions} from '../utils/UsernameSuggestionUtils';
-import * as AuthEmail from './AuthEmail';
-import * as AuthEmailRevert from './AuthEmailRevert';
-import * as AuthLogin from './AuthLogin';
-import * as AuthMfa from './AuthMfa';
-import * as AuthPassword from './AuthPassword';
-import * as AuthRegistration from './AuthRegistration';
-import * as AuthSession from './AuthSession';
-import type {DesktopHandoffService} from './services/DesktopHandoffService';
-import type {SsoService} from './services/SsoService';
 
 interface AuthRegisterRequest {
 	data: RegisterRequest;
@@ -60,6 +72,7 @@ interface AuthLoginRequest {
 	data: LoginRequest;
 	request: Request;
 	requestCache: RequestCache;
+	captchaVerified?: boolean;
 }
 
 interface AuthForgotPasswordRequest {
@@ -69,6 +82,11 @@ interface AuthForgotPasswordRequest {
 
 interface AuthResetPasswordRequest {
 	data: ResetPasswordRequest;
+	request: Request;
+}
+
+interface AuthRecoverAccountRequest {
+	data: RecoverAccountRequest;
 	request: Request;
 }
 
@@ -91,6 +109,7 @@ interface AuthHandoffCompleteRequest {
 	data: HandoffCompleteRequest;
 	clientIp: string;
 	authToken?: string;
+	approverOrigin?: string | null;
 }
 
 interface AuthAuthorizeIpRequest {
@@ -160,8 +179,10 @@ export class AuthRequestService {
 		});
 	}
 
-	completeSso(data: SsoCompleteRequest, request: Request) {
-		return this.toSsoCompleteResponse(this.ssoService.completeLogin({code: data.code, state: data.state, request}));
+	completeSso(data: SsoCompleteRequest, request: Request, requestCache: RequestCache) {
+		return this.toSsoCompleteResponse(
+			this.ssoService.completeLogin({code: data.code, state: data.state, request, requestCache}),
+		);
 	}
 
 	async register({data, request, requestCache}: AuthRegisterRequest): Promise<AuthRegisterResponse> {
@@ -176,8 +197,13 @@ export class AuthRequestService {
 		return await this.toAuthLoginResponse(result);
 	}
 
-	async login({data, request, requestCache: _requestCache}: AuthLoginRequest): Promise<AuthLoginResponse> {
-		const result = await AuthLogin.login(this.apiContext, this.loginDependencies, {data, request});
+	async login({
+		data,
+		request,
+		requestCache: _requestCache,
+		captchaVerified,
+	}: AuthLoginRequest): Promise<AuthLoginResponse> {
+		const result = await AuthLogin.login(this.apiContext, this.loginDependencies, {data, request, captchaVerified});
 		return await this.toAuthLoginResponse(result);
 	}
 
@@ -219,6 +245,15 @@ export class AuthRequestService {
 		return await this.toAuthLoginResponse(result);
 	}
 
+	async recoverAccount({data, request}: AuthRecoverAccountRequest): Promise<RecoverAccountResponse> {
+		const {result, recoveryKey, createdAt} = await AuthRecoveryKit.recoverAccount(this.apiContext, {data, request});
+		return {
+			...(await this.toAuthLoginResponse(result)),
+			recovery_key: recoveryKey,
+			recovery_kit_created_at: createdAt.toISOString(),
+		};
+	}
+
 	async revertEmailChange({data, request}: AuthRevertEmailChangeRequest): Promise<AuthLoginResponse> {
 		const result = await AuthEmailRevert.revertEmailChange(this.apiContext, {
 			token: data.token,
@@ -228,8 +263,8 @@ export class AuthRequestService {
 		return await this.toAuthLoginResponse(result);
 	}
 
-	getAuthSessions(userId: UserID): Promise<AuthSessionsResponse> {
-		return AuthSession.getAuthSessions(this.apiContext, userId);
+	getAuthSessions(userId: UserID, currentSessionIdHash?: Uint8Array): Promise<AuthSessionsResponse> {
+		return AuthSession.getAuthSessions(this.apiContext, userId, currentSessionIdHash);
 	}
 
 	async logoutAuthSessions({user, data}: AuthLogoutAuthSessionsRequest): Promise<void> {
@@ -272,21 +307,18 @@ export class AuthRequestService {
 		return {completed: false};
 	}
 
-	async getWebAuthnAuthenticationOptions() {
-		return AuthMfa.generateWebAuthnAuthenticationOptionsDiscoverable(this.apiContext);
+	async getWebAuthnAuthenticationOptions(origin: string | undefined) {
+		return AuthMfa.generateWebAuthnAuthenticationOptionsDiscoverable(this.apiContext, origin);
 	}
 
 	async authenticateWebAuthnDiscoverable({data, request}: AuthWebAuthnAuthenticateRequest) {
 		const user = await AuthMfa.verifyWebAuthnAuthenticationDiscoverable(this.apiContext, data.response, data.challenge);
-		const [token] = await AuthSession.createAuthSession(this.apiContext, {
-			user,
-			origin: AuthSession.resolveSessionOrigin(this.apiContext, request),
-		});
+		const [token] = await AuthLogin.createLoginSession(this.apiContext, user, request);
 		return {token, user_id: user.id.toString(), user: mapUserToPartialResponse(user)};
 	}
 
-	async getWebAuthnMfaOptions({ticket}: MfaTicketRequest) {
-		return AuthMfa.generateWebAuthnAuthenticationOptionsForMfa(this.apiContext, ticket);
+	async getWebAuthnMfaOptions({ticket}: MfaTicketRequest, origin: string | undefined) {
+		return AuthMfa.generateWebAuthnAuthenticationOptionsForMfa(this.apiContext, ticket, origin);
 	}
 
 	async loginMfaWebAuthn({data, request}: AuthWebAuthnMfaRequest): Promise<AuthTokenWithUserIdResponse> {
@@ -303,9 +335,16 @@ export class AuthRequestService {
 		return {suggestions: generateUsernameSuggestions(globalName)};
 	}
 
+	async getUsernameAvailability(username: string): Promise<UsernameAvailabilityResponse> {
+		return {available: !(await isUsernameTaken(this.apiContext.services.users, username))};
+	}
+
 	async initiateHandoff({request}: AuthHandoffInitiateRequest): Promise<HandoffInitiateResponse> {
 		const origin = AuthSession.resolveSessionOrigin(this.apiContext, request);
-		const result = await this.desktopHandoffService.initiateHandoff({origin});
+		const result = await this.desktopHandoffService.initiateHandoff({
+			origin,
+			initiatorOrigin: request.headers.get('origin'),
+		});
 		return {
 			code: result.code,
 			expires_at: result.expiresAt.toISOString(),
@@ -340,21 +379,53 @@ export class AuthRequestService {
 		};
 	}
 
-	async completeHandoff({data, clientIp, authToken}: AuthHandoffCompleteRequest): Promise<void> {
+	async completeHandoff({data, clientIp, authToken, approverOrigin}: AuthHandoffCompleteRequest): Promise<void> {
 		const sessionToken = data.token ?? authToken;
 		if (!sessionToken) {
 			throw new UnauthorizedError();
 		}
-		await this.desktopHandoffService.completeHandoff(
+		let createdToken: string | null = null;
+		const {initiatorOrigin} = await this.desktopHandoffService.completeHandoff(
 			data.code,
-			(origin) =>
-				AuthSession.createAdditionalAuthSessionFromToken(this.apiContext, {
+			async (origin) => {
+				const created = await AuthSession.createAdditionalAuthSessionFromToken(this.apiContext, {
 					token: sessionToken,
 					expectedUserId: data.user_id,
 					origin,
-				}),
+				});
+				createdToken = created.token;
+				return created;
+			},
 			clientIp,
 		);
+		if (createdToken !== null) {
+			await this.recordPushSessionPredecessor(createdToken, sessionToken, initiatorOrigin, approverOrigin);
+		}
+	}
+
+	private async recordPushSessionPredecessor(
+		createdToken: string,
+		approverToken: string,
+		initiatorOrigin: string | null,
+		approverOrigin: string | null | undefined,
+	): Promise<void> {
+		const {config, kv} = this.apiContext.services;
+		const {selfHosted} = config.instance;
+		if (
+			classifyWebPushOrigin(initiatorOrigin, selfHosted) !== 'target' ||
+			classifyWebPushOrigin(approverOrigin, selfHosted) !== 'legacy'
+		) {
+			return;
+		}
+		try {
+			await recordPushSessionPredecessor(
+				kv,
+				encodePushSessionIdHash(getTokenIdHash(this.apiContext, createdToken)),
+				encodePushSessionIdHash(getTokenIdHash(this.apiContext, approverToken)),
+			);
+		} catch (error) {
+			Logger.warn({error}, 'Failed to record the push session predecessor');
+		}
 	}
 
 	async getHandoffStatus({code, clientIp, pollSecret}: AuthHandoffStatusRequest): Promise<HandoffStatusResponse> {
@@ -417,6 +488,7 @@ export class AuthRequestService {
 			...result,
 			totp: allowedMethods.has('totp'),
 			webauthn: allowedMethods.has('webauthn'),
+			backup_codes: allowedMethods.has('backup_codes'),
 		};
 	}
 }

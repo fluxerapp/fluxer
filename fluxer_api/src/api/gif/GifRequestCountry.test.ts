@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveGifRequestCountry} from '@app/api/gif/GifRequestCountry';
 import type {GeoipResult} from '@pkgs/geoip/src/GeoipLookup';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {resolveGifRequestCountry} from './GifRequestCountry';
 
 const {lookupGeoipMock} = vi.hoisted(() => ({
 	lookupGeoipMock: vi.fn(),
 }));
 
-vi.mock('../utils/IpUtils', () => ({
+vi.mock('@app/api/utils/IpUtils', () => ({
 	lookupGeoip: lookupGeoipMock,
 }));
 

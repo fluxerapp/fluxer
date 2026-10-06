@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {GeolocationResponse} from '@fluxer/schema/src/domains/geolocation/GeolocationSchemas';
 import {resolveClientGeoip} from '@pkgs/geoip/src/ResolveClientGeoip';
 import type {Hono} from 'hono';
-import {Config} from '../Config';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoEnv} from '../types/HonoEnv';
 
 export function GeolocationController(app: Hono<HonoEnv>): void {
 	app.get(

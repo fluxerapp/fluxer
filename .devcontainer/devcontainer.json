@@ -14,7 +14,7 @@
 		"DOCKER_HOST": "unix:///var/run/docker.sock"
 	},
 	"runServices": ["workspace", "postgres", "valkey", "nats", "livekit", "meilisearch", "mailpit"],
-	"forwardPorts": [3000, 8088, 8080, 8771, 8082, 8773, 3010, 3020, 8333],
+	"forwardPorts": [3000, 8088, 8080, 8771, 8082, 8773, 3020, 8333],
 	"portsAttributes": {
 		"8088": {
 			"label": "Fluxer dev proxy",
@@ -38,7 +38,11 @@
 	"customizations": {
 		"vscode": {
 			"settings": {
-				"editor.defaultFormatter": "biomejs.biome"
+				"editor.defaultFormatter": "biomejs.biome",
+				"erlang.includePaths": ["."],
+				"search.exclude": {
+					"**/_build/default/lib/fluxer_gateway": true
+				}
 			},
 			"extensions": [
 				"biomejs.biome",

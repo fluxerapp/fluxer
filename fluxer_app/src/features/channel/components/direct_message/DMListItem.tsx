@@ -40,12 +40,12 @@ import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomShee
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
-import {formatShortRelativeTime} from '@fluxer/date_utils/src/DateDuration';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -234,7 +234,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		transition: {duration: 0},
 	};
 	const relativeTime = channel.lastMessageId
-		? formatShortRelativeTime(extractTimestamp(channel.lastMessageId), '1m')
+		? formatShortRelativeTime(i18n, extractTimestamp(channel.lastMessageId), '1m')
 		: null;
 	const shouldShowMessagePreviewSetting = (() => {
 		if (Accessibility.dmMessagePreviewMode === DMMessagePreviewMode.ALL) {
@@ -273,6 +273,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 								channelId: channel.id,
 								messageId: lastMessage.id,
 								disableAnimatedEmoji: true,
+								disableInteractions: true,
 								mentionChannels: lastMessage.mentionChannels,
 							}}
 							data-flx="channel.direct-message.dm-list-item.get-message-preview.safe-markdown"

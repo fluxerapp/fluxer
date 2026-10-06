@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Readable} from 'node:stream';
+import {Config} from '@app/api/Config';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {ArchiveEntryWriter} from '@app/api/worker/utils/ArchiveFile';
 import {S3ServiceException} from '@aws-sdk/client-s3';
-import type archiver from 'archiver';
-import {Config} from '../../Config';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
 
 let _cdnBucket: string | null = null;
 
@@ -74,7 +74,7 @@ export async function streamCdnAssetIfExists(
 }
 
 interface AppendAssetToArchiveParams {
-	archive: archiver.Archiver;
+	archive: ArchiveEntryWriter;
 	storageService: IStorageService;
 	storageKey: string;
 	archiveName: string;
@@ -95,5 +95,5 @@ export async function appendAssetToArchive({
 		Logger.warn({subjectId, storageKey}, `Skipping missing ${label}`);
 		return;
 	}
-	archive.append(buffer, {name: archiveName});
+	await archive.append(buffer, {name: archiveName});
 }

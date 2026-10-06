@@ -12,7 +12,7 @@ The route is user-only. A bot token and an OAuth2 bearer credential are both rej
 
 ## Theme identifier
 
-A theme identifier is 16 lowercase hexadecimal characters matching `^[a-f0-9]{16}$`. Fluxer draws eight cryptographically random bytes for each request and renders them as hex, so storing identical CSS twice produces two independent themes under two independent identifiers.
+A theme identifier is 16 lowercase hexadecimal characters matching `^[a-f0-9]{16}$`. Submitting identical CSS twice creates two independent themes.
 
 ### Example
 
@@ -37,7 +37,7 @@ The UTF-8 encoding of a submitted document cannot exceed 8388608 bytes, and the 
 
 <sup>3</sup> Measured in characters of the submitted string
 
-An account holds no theme quota. The route bucket is the only bound on how many themes an account creates, and no route here checks an [instance limit key](/http-api/instance/#limit-keys).
+An account holds no theme quota. The `theme:share:create` rate limit bucket is the only bound on how many themes an account creates, and no route here checks an [instance limit key](/http-api/instance/#limit-keys).
 
 ## Content screening
 
@@ -86,14 +86,13 @@ The object has the identifier and nothing else.
 | 201 | response body | Document was stored |
 | 400 | [error response](/http-api/#error-response) | The encoded document exceeds the size ceiling and the request returns `FILE_SIZE_TOO_LARGE` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The document is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
 
 ### Side effects
 
-Fluxer stores the UTF-8 encoding of the submitted document with the content type `text/css; charset=utf-8`. The identifier addresses the document by the time the caller receives it.
+Fluxer stores the UTF-8 encoding of the submitted document with the content type `text/css; charset=utf-8`. Fluxer finishes storing the document before it returns the identifier.
 
-Nothing Fluxer stores links a theme to the account that created it. The [Media Proxy](/media-proxy/overview/) serves the stored document from `/themes/{id}.css`.
+The [Media Proxy](/media-proxy/overview/) serves the document from `/themes/{id}.css`.
 
 :::danger[Theme CSS is public and permanent]
 The identifier is the only thing guarding a stored document, and the read route is unauthenticated. The HTTP API replaces or deletes no stored theme. A caller MUST NOT put a credential, a token, or any other secret in a submitted document.

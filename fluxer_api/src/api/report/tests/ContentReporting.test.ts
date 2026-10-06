@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {
 	clearTestEmails,
 	createTestAccount,
@@ -13,8 +8,8 @@ import {
 	listTestEmails,
 	setUserACLs,
 	type TestAccount,
-} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
 import {
 	acceptInvite,
 	createChannel,
@@ -26,13 +21,18 @@ import {
 	getChannel,
 	sendChannelMessage,
 	setupTestGuildWithMembers,
-} from '../../channel/tests/ChannelTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {ReadStateRepository} from '../../read_state/ReadStateRepository';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, TEST_IDS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {ReportRepository} from '../ReportRepository';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
+import {ReportRepository} from '@app/api/report/ReportRepository';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface ReportResponse {
 	report_id: string;

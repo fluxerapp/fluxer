@@ -1,30 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
+import type {LiveKitService} from '@app/api/infrastructure/LiveKitService';
+import type {PinnedRoomServer, VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
+import {Logger} from '@app/api/Logger';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import type {VoiceRegionAvailability, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import {
+	resolveVoiceRegionPreference,
+	selectClosestPseudoRegionServer,
+	selectVoiceRegionId,
+} from '@app/api/voice/VoiceRegionSelection';
+import {generateConnectionId} from '@app/api/words/Words';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UnclaimedAccountCannotJoinOneOnOneVoiceCallsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotJoinOneOnOneVoiceCallsError';
 import {UnclaimedAccountCannotJoinVoiceChannelsError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotJoinVoiceChannelsError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
-import {AccountSuspiciousActivityError} from '@fluxer/errors/src/domains/user/AccountSuspiciousActivityError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {ListParticipantsResult} from '../infrastructure/ILiveKitService';
-import type {LiveKitService} from '../infrastructure/LiveKitService';
-import type {PinnedRoomServer, VoiceRoomStore} from '../infrastructure/VoiceRoomStore';
-import {Logger} from '../Logger';
-import type {IUserRepository} from '../user/IUserRepository';
-import {getEffectiveSuspiciousFlags} from '../user/UserHelpers';
-import {generateConnectionId} from '../words/Words';
-import type {VoiceAccessContext, VoiceAvailabilityService} from './VoiceAvailabilityService';
-import type {VoiceRegionAvailability, VoiceServerRecord} from './VoiceModel';
-import {
-	resolveVoiceRegionPreference,
-	selectClosestPseudoRegionServer,
-	selectVoiceRegionId,
-} from './VoiceRegionSelection';
 
 interface GetVoiceTokenParams {
 	guildId?: GuildID;
@@ -84,10 +82,6 @@ export class VoiceService {
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
-		}
-		const effectiveSuspiciousFlags = getEffectiveSuspiciousFlags(user);
-		if (effectiveSuspiciousFlags !== 0) {
-			throw new AccountSuspiciousActivityError(effectiveSuspiciousFlags);
 		}
 		const channel = await this.channelRepository.findUnique(channelId);
 		if (!channel) {
@@ -161,6 +155,7 @@ export class VoiceService {
 			const pseudoRegionServer = selectClosestPseudoRegionServer({
 				mode: regionPreference.mode,
 				accessibleServers,
+				connectionCounts: this.voiceAvailabilityService.getServerConnectionCounts(),
 				latitude: params.latitude,
 				longitude: params.longitude,
 				selectionKey,

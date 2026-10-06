@@ -7,6 +7,7 @@ import {Slider} from '@app/features/ui/components/Slider';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import styles from '@app/features/voice/components/media_player/MediaVerticalVolumeControl.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -18,10 +19,12 @@ import {createPortal} from 'react-dom';
 
 const UNMUTE_DESCRIPTOR = msg({
 	message: 'Unmute',
+	context: 'playback-control-action',
 	comment: 'Mute toggle button label in the media player volume control (currently muted).',
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'playback-control-action',
 	comment: 'Mute toggle button label in the media player volume control (currently unmuted).',
 });
 const VOLUME_CONTROL_DESCRIPTOR = msg({
@@ -273,7 +276,7 @@ export function MediaVerticalVolumeControl({
 						value={sliderValue}
 						orientation="vertical"
 						ariaLabel={i18n._(VOLUME_DESCRIPTOR)}
-						ariaValueText={`${volumePercent}%`}
+						ariaValueText={formatRoundedPercentage(i18n.locale, volumePercent)}
 						onValueChange={handleSliderValueChange}
 						onPointerInteractionChange={handleSliderInteractionChange}
 						stopEventPropagation

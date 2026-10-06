@@ -551,3 +551,53 @@ engine_roles_for_test_member(UserId) when UserId rem 5 =:= 0 ->
     [20];
 engine_roles_for_test_member(_UserId) ->
     [].
+
+version_bumps_on_every_mutation_test() ->
+    Ref = guild_member_list_engine:new(),
+    try
+        V0 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:bulk_load(Ref, [{1, <<"a">>, [], true}], []),
+        V1 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:add_member(Ref, 2, <<"b">>, [], false),
+        V2 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:update_member(Ref, 2, <<"c">>, [], false),
+        V3 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:set_online(Ref, 2, true),
+        V4 = guild_member_list_engine:version(Ref),
+        changed = guild_member_list_engine:set_hoisted_roles(Ref, [7]),
+        V5 = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:remove_member(Ref, 1),
+        V6 = guild_member_list_engine:version(Ref),
+        Versions = [V0, V1, V2, V3, V4, V5, V6],
+        ?assertEqual(Versions, lists:usort(Versions)),
+        ?assertEqual(7, length(lists:usort(Versions)))
+    after
+        guild_member_list_engine:destroy(Ref)
+    end.
+
+version_is_stable_for_noop_mutations_test() ->
+    Ref = guild_member_list_engine:new(),
+    try
+        ok = guild_member_list_engine:add_member(Ref, 1, <<"a">>, [], true),
+        V = guild_member_list_engine:version(Ref),
+        ok = guild_member_list_engine:set_online(Ref, 1, true),
+        ok = guild_member_list_engine:set_online(Ref, 99, false),
+        ok = guild_member_list_engine:remove_member(Ref, 99),
+        unchanged = guild_member_list_engine:set_hoisted_roles(Ref, []),
+        _ = guild_member_list_engine:get_items(Ref, 0, 10),
+        ?assertEqual(V, guild_member_list_engine:version(Ref))
+    after
+        guild_member_list_engine:destroy(Ref)
+    end.
+
+version_survives_tables_without_a_version_row_test() ->
+    Ref = guild_member_list_engine:new(),
+    try
+        true = ets:delete(Ref, version),
+        ?assertEqual(undefined, guild_member_list_engine:version(Ref)),
+        ok = guild_member_list_engine:add_member(Ref, 1, <<"a">>, [], true),
+        ?assertEqual(1, guild_member_list_engine:version(Ref))
+    after
+        guild_member_list_engine:destroy(Ref)
+    end,
+    ?assertEqual(undefined, guild_member_list_engine:version(Ref)).

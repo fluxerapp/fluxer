@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminArchive} from '@app/api/admin/models/AdminArchiveModel';
+import {AdminArchiveRepository} from '@app/api/admin/repositories/AdminArchiveRepository';
+import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestGuild} from '@app/api/emoji/tests/EmojiTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import {createTestGuild} from '../../emoji/tests/EmojiTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import type {AdminArchive} from '../models/AdminArchiveModel';
-import {AdminArchiveRepository} from '../repositories/AdminArchiveRepository';
 
 interface ArchiveResponse {
 	archive_id: string;
@@ -28,11 +28,13 @@ async function triggerGuildArchive(
 	adminToken: string,
 	guildId: string,
 ): Promise<ArchiveResponse> {
-	return await createBuilder<ArchiveResponse>(harness, `${adminToken}`)
+	const archive = await createBuilder<ArchiveResponse>(harness, `${adminToken}`)
 		.post(`/admin/guilds/${guildId}/archives`)
 		.body({})
 		.expect(HTTP_STATUS.OK)
 		.execute();
+	await new AdminArchiveRepository().markAsStarted(await loadArchive(guildId, archive.archive_id));
+	return archive;
 }
 
 async function loadArchive(guildId: string, archiveId: string): Promise<AdminArchive> {

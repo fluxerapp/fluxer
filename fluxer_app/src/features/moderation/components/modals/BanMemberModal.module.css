@@ -7,9 +7,13 @@
 }
 
 .video {
+	display: block;
 	width: 100%;
 	max-width: 25rem;
+	height: auto;
+	aspect-ratio: 2 / 1;
 	margin-bottom: 1rem;
+	object-fit: cover;
 }
 
 .sectionTitle {

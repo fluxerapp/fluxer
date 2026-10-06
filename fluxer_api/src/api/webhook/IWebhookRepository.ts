@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {Webhook} from '../models/Webhook';
+import type {Webhook} from '@app/api/models/Webhook';
 
 export abstract class IWebhookRepository {
 	abstract findUnique(webhookId: bigint): Promise<Webhook | null>;
@@ -16,6 +16,8 @@ export abstract class IWebhookRepository {
 		creatorId: bigint | null;
 		name: string;
 		avatarHash: string | null;
+		sourceGuildId?: bigint | null;
+		sourceChannelId?: bigint | null;
 	}): Promise<Webhook>;
 
 	abstract update(
@@ -40,4 +42,13 @@ export abstract class IWebhookRepository {
 	abstract countByGuild(guildId: bigint): Promise<number>;
 
 	abstract countByChannel(channelId: bigint): Promise<number>;
+
+	abstract findManyByIds(webhookIds: Array<bigint>): Promise<Array<Webhook>>;
+
+	abstract listIdsBySourceChannel(
+		sourceChannelId: bigint,
+		options: {afterWebhookId?: bigint; limit: number},
+	): Promise<Array<{webhookId: bigint; guildId: bigint}>>;
+
+	abstract countBySourceChannel(sourceChannelId: bigint): Promise<{channelCount: number; guildCount: number}>;
 }

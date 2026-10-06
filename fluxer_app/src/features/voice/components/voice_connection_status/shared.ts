@@ -2,13 +2,12 @@
 
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import type {VoiceNoiseSuppressionBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import type {VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 export const logger = new Logger('VoiceConnectionStatus');
-
-export type NoiseSuppressionMethod = 'enhanced' | 'standard' | 'none';
 
 export const AUDIO_PROCESSING_DIRECT_INPUT_RAW_DESCRIPTOR = msg({
 	message: 'Audio processing (direct input, raw)',
@@ -187,25 +186,24 @@ export function formatMilliseconds(milliseconds: number, locale: string): string
 	return formatUnit(locale, normalizedMilliseconds, 'millisecond', 'ms', 0);
 }
 
+const ENHANCED_NOISE_SUPPRESSION_BACKENDS: ReadonlySet<VoiceNoiseSuppressionBackend> = new Set([
+	'deep_filter',
+	'gtcrn',
+	'rnnoise',
+]);
+
 export function getAudioProcessingTooltip(
 	i18n: I18n,
 	mode: VoiceProcessingMode,
-	browserNs: boolean,
-	deepFilter: boolean,
+	backend: VoiceNoiseSuppressionBackend,
 ): string {
 	if (mode === 'studio') return i18n._(AUDIO_PROCESSING_DIRECT_INPUT_RAW_DESCRIPTOR);
 	if (mode === 'voice') return i18n._(AUDIO_PROCESSING_FOCUSED_VOICE_DESCRIPTOR);
-	if (deepFilter) return i18n._(AUDIO_PROCESSING_CUSTOM_ENHANCED_DESCRIPTOR);
-	if (browserNs) return i18n._(AUDIO_PROCESSING_CUSTOM_DESCRIPTOR);
-	return i18n._(AUDIO_PROCESSING_CUSTOM_NO_SUPPRESSION_DESCRIPTOR);
+	if (ENHANCED_NOISE_SUPPRESSION_BACKENDS.has(backend)) return i18n._(AUDIO_PROCESSING_CUSTOM_ENHANCED_DESCRIPTOR);
+	if (backend === 'none') return i18n._(AUDIO_PROCESSING_CUSTOM_NO_SUPPRESSION_DESCRIPTOR);
+	return i18n._(AUDIO_PROCESSING_CUSTOM_DESCRIPTOR);
 }
 
-export function isAudioProcessingActive(mode: VoiceProcessingMode, browserNs: boolean, deepFilter: boolean): boolean {
-	return mode === 'voice' || (mode === 'custom' && (browserNs || deepFilter));
-}
-
-export function resolveNoiseSuppressionMethod(deepFilter: boolean, browserNs: boolean): NoiseSuppressionMethod {
-	if (deepFilter) return 'enhanced';
-	if (browserNs) return 'standard';
-	return 'none';
+export function isAudioProcessingActive(mode: VoiceProcessingMode, backend: VoiceNoiseSuppressionBackend): boolean {
+	return mode === 'voice' || (mode === 'custom' && backend !== 'none');
 }

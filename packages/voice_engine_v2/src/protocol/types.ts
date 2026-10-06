@@ -179,8 +179,6 @@ export interface VoiceEngineV2MicrophoneOptions {
 	echoCancellation?: boolean;
 	noiseSuppression?: boolean;
 	autoGainControl?: boolean;
-	deepFilter?: boolean;
-	deepFilterNoiseReductionLevel?: number;
 	maxBitrateBps?: number;
 }
 
@@ -460,6 +458,7 @@ export interface VoiceEngineV2OutboundStats {
 	configuredFps?: number;
 	targetFps?: number;
 	effectiveFps?: number;
+	sourceFps?: number;
 	framesProduced?: number;
 	framesAccepted?: number;
 	framesDropped?: number;
@@ -528,7 +527,6 @@ export interface VoiceEngineV2PerTrackStats {
 	maxPushLatencyMs?: number;
 	adaptiveSendTier?: string;
 	adaptiveSendReason?: string;
-	sourceFrames?: number;
 	framesEncoded?: number;
 	framesDecoded?: number;
 	framesDropped?: number;

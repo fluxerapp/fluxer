@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {getUserActivityBuffer} from '../../middleware/ServiceSingletons';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface AclListResponse {
 	acls: Array<string>;
@@ -20,6 +20,8 @@ interface UserListResponse {
 	}>;
 	total: number;
 }
+
+const SYNTHETIC_USER_IDS = ['0', '1'];
 
 async function setLastActiveIp(harness: ApiTestHarness, token: string, ip: string): Promise<void> {
 	await createBuilder(harness, `${token}`)
@@ -169,6 +171,36 @@ describe('Admin user directory', () => {
 				.execute();
 			expect(result.users.map((user) => user.id)).toEqual([target.userId]);
 			expect(result.users[0]?.email).toBeNull();
+		});
+		test.each(SYNTHETIC_USER_IDS)('omits the synthetic account %s from the resolve selector', async (userId) => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
+			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
+				.get(`/admin/users?resolve=${userId}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(result.users).toEqual([]);
+			expect(result.total).toBe(0);
+		});
+		test.each(SYNTHETIC_USER_IDS)('omits the synthetic account %s from the q selector', async (userId) => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
+			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
+				.get(`/admin/users?q=${userId}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(result.users.map((user) => user.id)).not.toContain(userId);
+		});
+	});
+	describe('GET /admin/users/:user_id', () => {
+		test.each(SYNTHETIC_USER_IDS)('reports no user for the synthetic account %s', async (userId) => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, [AdminACLs.AUTHENTICATE, AdminACLs.USER_LOOKUP]);
+			const result = await createBuilder<UserListResponse>(harness, `${admin.token}`)
+				.get(`/admin/users/${userId}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(result.users).toEqual([]);
 		});
 	});
 });

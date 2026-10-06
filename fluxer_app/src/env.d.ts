@@ -2,10 +2,7 @@
 
 import MediaEngineFacade from '@app/features/voice/engine/MediaEngineFacade';
 import type {ElectronAPI} from '@app/features/platform/types/Electron';
-import type {
-	GeolocationResponse,
-	InstanceDiscoveryResponse,
-} from '@fluxer/instance_bootstrap/src/Types';
+import type {InstanceDiscoveryResponse} from '@fluxer/instance_bootstrap/src/Types';
 import {Buffer} from 'buffer';
 
 type MediaEngineInstance = typeof MediaEngineFacade;
@@ -31,7 +28,6 @@ interface FluxerBootstrapGlobal {
 		bootstrapApiPublicEndpoint?: string;
 	};
 	instance: InstanceDiscoveryResponse;
-	geoip: GeolocationResponse;
 }
 
 declare global {

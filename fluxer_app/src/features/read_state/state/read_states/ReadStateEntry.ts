@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Channels from '@app/features/channel/state/Channels';
+import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {resolveReadStateEntryStatus} from '@app/features/read_state/state/read_states/ReadStateEntryStatusMachine';
 import {resolveReadStateMention} from '@app/features/read_state/state/read_states/ReadStateMentionMachine';
-import {compareMessageIds, normalizeCount, snowflakeTimestamp} from '@app/features/read_state/state/read_states/shared';
+import {
+	compareMessageIds,
+	normalizeCount,
+	parseTimestamp,
+	snowflakeTimestamp,
+} from '@app/features/read_state/state/read_states/shared';
 import Relationships from '@app/features/relationship/state/Relationships';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
@@ -17,7 +23,6 @@ export class ReadStateEntry {
 	readonly channelId: string;
 	storedGuildId: string | null = null;
 	messagesLoaded = false;
-	readStateKnown = false;
 	private storedLastMessageId: string | null = null;
 	private storedLastMessageTimestamp = 0;
 	private storedAckMessageId: string | null = null;
@@ -118,10 +123,28 @@ export class ReadStateEntry {
 	}
 
 	get ackTimestamp(): number {
-		if (Number.isNaN(this.storedAckMessageTimestamp)) {
-			return 0;
+		if (this.storedAckMessageTimestamp !== 0 && !Number.isNaN(this.storedAckMessageTimestamp)) {
+			return this.storedAckMessageTimestamp;
 		}
-		return this.storedAckMessageTimestamp;
+		return this.ackFloorTimestamp;
+	}
+
+	private get ackFloorTimestamp(): number {
+		const guildId = this.guildId;
+		if (guildId != null) {
+			const joinedAt = parseTimestamp(Guilds.getGuild(guildId)?.joinedAt);
+			if (joinedAt !== 0) {
+				return joinedAt;
+			}
+		}
+		return snowflakeTimestamp(this.channelId);
+	}
+
+	isNewerThanAck(messageId: string): boolean {
+		if (this.storedAckMessageId != null) {
+			return compareMessageIds(messageId, this.storedAckMessageId) > 0;
+		}
+		return snowflakeTimestamp(messageId) > this.ackTimestamp;
 	}
 
 	get isPrivate(): boolean {
@@ -137,9 +160,10 @@ export class ReadStateEntry {
 		return resolveReadStateEntryStatus({
 			supportsUnreadTracking: this.supportsUnreadTracking(),
 			hasBlockedDirectMessageRecipient: this.hasBlockedDirectMessageRecipient(),
-			readStateKnown: this.readStateKnown,
 			lastMessageId: this.storedLastMessageId,
 			ackMessageId: this.storedAckMessageId,
+			ackTimestamp: this.ackTimestamp,
+			lastMessageTimestamp: this.storedLastMessageTimestamp,
 			mentionCount: this.mentionCount,
 		});
 	}
@@ -207,11 +231,11 @@ export class ReadStateEntry {
 		} = {},
 	): void {
 		const previousUnreadCount = this.storedUnreadCount;
-		if (ackMessageId !== undefined) {
+		const previousOldestUnreadMessageId = this.storedOldestUnreadMessageId;
+		if (ackMessageId != null) {
 			this.ackMessageId = ackMessageId;
-			this.readStateKnown = true;
 		} else {
-			this.ackMessageId = this.storedAckMessageId;
+			this.ackMessageId = this.storedAckMessageId ?? this.guessAckMessageId();
 		}
 		this.oldestUnreadMessageId = null;
 		this.estimated = false;
@@ -246,7 +270,7 @@ export class ReadStateEntry {
 			} else if (this.storedOldestUnreadMessageId == null) {
 				this.storedOldestUnreadMessageId = message.id;
 			}
-			if (compareMessageIds(message.id, this.storedAckMessageId) > 0) {
+			if (this.isNewerThanAck(message.id)) {
 				loadedUnreadCount++;
 				if (recomputeMentions && !Relationships.isBlocked(message.author.id)) {
 					const mentions = message.mentions;
@@ -280,7 +304,37 @@ export class ReadStateEntry {
 		} else {
 			this.unreadCount = loadedUnreadCount;
 		}
-		this.oldestUnreadMessageId = this.storedOldestUnreadMessageId ?? oldestUnread;
+		const resolvedOldestUnread = this.storedOldestUnreadMessageId ?? oldestUnread;
+		this.oldestUnreadMessageId =
+			resolvedOldestUnread ?? (this.estimated && this.unreadCount > 0 ? previousOldestUnreadMessageId : null);
+	}
+
+	private guessAckMessageId(): string | null {
+		if (!this.isPrivate) {
+			return null;
+		}
+		const messages = Messages.getMessages(this.channelId);
+		if (!messages.hasNewestMessages()) {
+			return null;
+		}
+		if (!this.hasMentions()) {
+			return this.storedLastMessageId;
+		}
+		const currentUserId = Users.getCurrentUser()?.id;
+		const candidates: Array<{id: string; authorId: string}> = [];
+		messages.forEachBuffered((message) => {
+			candidates.push({id: message.id, authorId: message.author.id});
+		});
+		let remaining = this.mentionCount;
+		for (let index = candidates.length - 1; index >= 0; index--) {
+			const candidate = candidates[index];
+			if (remaining > 0 && candidate.authorId !== currentUserId) {
+				remaining--;
+			} else if (remaining === 0) {
+				return candidate.id;
+			}
+		}
+		return null;
 	}
 
 	shouldMentionFor(message: MessageModel | WireMessage, userId: string, isPrivate: boolean): boolean {

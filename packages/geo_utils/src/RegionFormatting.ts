@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {normalizeRegionCode} from '@fluxer/geo_utils/src/RegionCodeValidation';
-import {resolveRegionDisplayName, resolveRegionDisplayNames} from '@fluxer/geo_utils/src/RegionDisplayNameResolver';
+import {resolveRegionDisplayName} from '@fluxer/geo_utils/src/RegionDisplayNameResolver';
 
 interface RegionDisplayNameOptions {
 	locale?: string;
@@ -30,15 +30,4 @@ function applyRegionCodeFallback(
 export function getRegionDisplayName(regionCode: string, options?: RegionDisplayNameOptions): string | undefined {
 	const displayName = resolveRegionDisplayName(regionCode, options?.locale);
 	return applyRegionCodeFallback(regionCode, displayName, options);
-}
-
-export function getRegionDisplayNames(
-	regionCodes: ReadonlyArray<string>,
-	options?: RegionDisplayNameOptions,
-): Array<string | undefined> {
-	const displayNames = resolveRegionDisplayNames(regionCodes, options?.locale);
-	return displayNames.map((displayName, index) => {
-		const regionCode = regionCodes[index] ?? '';
-		return applyRegionCodeFallback(regionCode, displayName, options);
-	});
 }

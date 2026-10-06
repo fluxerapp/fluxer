@@ -15,6 +15,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import type {MenuGroupType, MenuSheetItem} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
@@ -171,7 +172,7 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				onChange: (value: number) => {
 					VoiceSettingsCommands.update({inputVolume: value});
 				},
-				onFormat: (value: number) => `${Math.round(value)}%`,
+				onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 				factoryDefaultValue: 100,
 			},
 			{
@@ -182,7 +183,7 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				onChange: (value: number) => {
 					VoiceSettingsCommands.update({outputVolume: value});
 				},
-				onFormat: (value: number) => `${Math.round(value)}%`,
+				onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 				factoryDefaultValue: 100,
 			},
 		];

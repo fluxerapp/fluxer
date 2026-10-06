@@ -100,6 +100,8 @@ ensure_core_tables() ->
         {guild_unavailability_cache, RO},
         {guild_circuit_breaker, RW},
         {guild_permission_cache, RO},
+        {guild_read_model, RO},
+        {guild_health_status, RO},
         {voice_update_queue, RW},
         {voice_update_rate_limit, RW}
     ]).

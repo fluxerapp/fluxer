@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {SudoVerificationBody} from '@app/api/auth/services/SudoVerificationService';
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createApplicationID, type UserID} from '@app/api/BrandedTypes';
+import {UsernameNotAvailableError} from '@app/api/infrastructure/DiscriminatorService';
+import type {Application} from '@app/api/models/Application';
+import type {User} from '@app/api/models/User';
+import type {ApplicationService} from '@app/api/oauth/ApplicationService';
+import {ApplicationNotOwnedError} from '@app/api/oauth/ApplicationService';
+import {mapApplicationToResponse, mapBotProfileToResponse} from '@app/api/oauth/OAuth2Mappers';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import {MAX_APPLICATIONS_PER_USER} from '@fluxer/constants/src/LimitConstants';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {BotUserNotFoundError} from '@fluxer/errors/src/domains/oauth/BotUserNotFoundError';
@@ -13,17 +24,6 @@ import type {
 	BotProfileUpdateRequest,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
 import type {Context} from 'hono';
-import type {ApiContext} from '../ApiContext';
-import type {SudoVerificationBody} from '../auth/services/SudoVerificationService';
-import {requireSudoMode} from '../auth/services/SudoVerificationService';
-import {createApplicationID, type UserID} from '../BrandedTypes';
-import {UsernameNotAvailableError} from '../infrastructure/DiscriminatorService';
-import type {Application} from '../models/Application';
-import type {User} from '../models/User';
-import type {ApplicationService} from './ApplicationService';
-import {ApplicationNotOwnedError} from './ApplicationService';
-import {mapApplicationToResponse, mapBotProfileToResponse} from './OAuth2Mappers';
-import type {IApplicationRepository} from './repositories/IApplicationRepository';
 
 export class OAuth2ApplicationsRequestService {
 	constructor(
@@ -157,14 +157,7 @@ export class OAuth2ApplicationsRequestService {
 		body: BotProfileUpdateRequest,
 	): Promise<BotProfileResponse> {
 		try {
-			const result = await this.applicationService.updateBotProfile(userId, createApplicationID(applicationId), {
-				username: body.username,
-				discriminator: body.discriminator,
-				avatar: body.avatar,
-				banner: body.banner,
-				bio: body.bio,
-				botFlags: body.bot_flags,
-			});
+			const result = await this.applicationService.updateBotProfile(userId, createApplicationID(applicationId), body);
 			return mapBotProfileToResponse(result.user);
 		} catch (err) {
 			if (err instanceof ApplicationNotOwnedError) {

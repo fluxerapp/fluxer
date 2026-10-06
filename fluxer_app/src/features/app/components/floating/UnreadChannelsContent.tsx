@@ -221,8 +221,15 @@ function buildPreviewFetchPlan(channel: Channel, cacheKey: string): PreviewFetch
 	}
 	const ackMessageId = ReadStates.ackMessageId(channel.id);
 	if (!ackMessageId) {
-		previewCache.set(channel.id, {cacheKey, data: buildEmptyPreview(channel)});
-		return null;
+		return {
+			channel,
+			cacheKey,
+			oldestUnreadMessageId: null,
+			request: {
+				channel_id: channel.id,
+				limit: UNREAD_PREVIEW_MESSAGE_LIMIT,
+			},
+		};
 	}
 	return {
 		channel,

@@ -127,9 +127,11 @@ export const SUPPORTED_MIME_TYPES = [
 ] as const;
 const MAX_CUSTOM_SOUND_BYTES = 2 * 1024 * 1024;
 
-export function isValidAudioFile(file: File): {valid: boolean; error?: string} {
+export type CustomSoundValidationReason = 'too_large' | 'unsupported_type';
+
+export function isValidAudioFile(file: File): {valid: boolean; reason?: CustomSoundValidationReason} {
 	if (file.size > MAX_CUSTOM_SOUND_BYTES) {
-		return {valid: false, error: 'File size must be 2MB or less'};
+		return {valid: false, reason: 'too_large'};
 	}
 	const fileExtension = `.${file.name.split('.').pop()?.toLowerCase()}`;
 	const isValidExtension = SUPPORTED_AUDIO_FORMATS.some((ext) => ext === fileExtension);
@@ -137,7 +139,7 @@ export function isValidAudioFile(file: File): {valid: boolean; error?: string} {
 	if (!isValidExtension && !isValidMimeType) {
 		return {
 			valid: false,
-			error: 'Invalid file type.',
+			reason: 'unsupported_type',
 		};
 	}
 	return {valid: true};

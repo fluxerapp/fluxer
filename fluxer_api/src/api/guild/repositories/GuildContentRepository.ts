@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EmojiID, GuildID, StickerID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {buildPatchFromData, executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
+import type {EmojiID, GuildID, StickerID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import {
 	GUILD_EMOJI_COLUMNS,
 	GUILD_STICKER_COLUMNS,
 	type GuildEmojiRow,
 	type GuildStickerRow,
-} from '../../database/types/GuildTypes';
-import {GuildEmoji} from '../../models/GuildEmoji';
-import {GuildSticker} from '../../models/GuildSticker';
-import {GuildEmojis, GuildEmojisByEmojiId, GuildStickers, GuildStickersByStickerId} from '../../Tables';
-import {IGuildContentRepository} from './IGuildContentRepository';
+} from '@app/api/database/types/GuildTypes';
+import {IGuildContentRepository} from '@app/api/guild/repositories/IGuildContentRepository';
+import {GuildEmoji} from '@app/api/models/GuildEmoji';
+import {GuildSticker} from '@app/api/models/GuildSticker';
+import {GuildEmojis, GuildEmojisByEmojiId, GuildStickers, GuildStickersByStickerId} from '@app/api/Tables';
 
 const FETCH_GUILD_EMOJIS_BY_GUILD_ID_QUERY = GuildEmojis.selectCql({
 	where: GuildEmojis.where.eq('guild_id'),

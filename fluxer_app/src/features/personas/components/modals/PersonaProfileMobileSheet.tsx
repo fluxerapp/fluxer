@@ -12,7 +12,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {GifIndicator} from '@app/features/channel/components/embeds/media/GifIndicator';
 import Channels from '@app/features/channel/state/Channels';
-import {EmojiInfoBottomSheet} from '@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet';
+import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
 import {
 	BLOCKED_USER_DM_WARNING_DESCRIPTOR,
 	OPEN_DM_DESCRIPTOR,
@@ -833,11 +833,12 @@ const PersonaProfileMobileSheetContent: React.FC<PersonaProfileMobileSheetConten
 					// guildMember={guildMember}
 					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.user-profile-actions-sheet"
 				/> */}
-				<EmojiInfoBottomSheet
+				<ExpressionInfoBottomSheet
+					kind="emoji"
 					isOpen={emojiInfoOpen}
 					onClose={() => setEmojiInfoOpen(false)}
 					emoji={selectedEmoji}
-					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.emoji-info-bottom-sheet"
+					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.expression-info-bottom-sheet"
 				/>
 			</>
 		);

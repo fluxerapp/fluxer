@@ -2,7 +2,7 @@
 
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import {makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef} from 'mobx';
 
 export type MediaViewerItem = Readonly<{
 	src: string;
@@ -42,9 +42,9 @@ class MediaViewer {
 		makeAutoObservable(
 			this,
 			{
-				items: observable.ref,
-				message: observable.ref,
-				sourceChannel: observable.ref,
+				items: observableRef,
+				message: observableRef,
+				sourceChannel: observableRef,
 			},
 			{autoBind: true},
 		);

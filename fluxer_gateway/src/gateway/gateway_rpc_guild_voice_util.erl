@@ -6,7 +6,6 @@
 
 -export([
     handle_move_member_result/4,
-    handle_repair_result/1,
     normalize_voice_rpc_error/1,
     parse_voice_update/1,
     process_voice_update/1
@@ -57,18 +56,6 @@ send_voice_server_updates_for_move(GuildId, ChannelId, VoiceSessionData, Pid) ->
 cleanup_virtual_access_on_disconnect(DisconnectedUserId, Pid) ->
     spawn(fun() -> guild_voice:cleanup_virtual_access_on_disconnect(DisconnectedUserId, Pid) end),
     ok.
-
--spec handle_repair_result(term()) -> map().
-handle_repair_result(#{success := true, repaired := Repaired}) ->
-    #{<<"success">> => true, <<"repaired">> => Repaired};
-handle_repair_result(#{success := true}) ->
-    #{<<"success">> => true};
-handle_repair_result(#{success := false, error := Error}) ->
-    #{<<"success">> => false, <<"error">> => normalize_voice_rpc_error(Error)};
-handle_repair_result(#{error := Error}) ->
-    gateway_rpc_error:raise(normalize_voice_rpc_error(Error));
-handle_repair_result(_) ->
-    #{<<"success">> => false, <<"error">> => <<"repair_voice_state_error">>}.
 
 -spec voice_session_data([term()]) -> [map()].
 voice_session_data(SessionData) ->

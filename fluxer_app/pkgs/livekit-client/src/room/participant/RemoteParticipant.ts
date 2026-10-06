@@ -1,9 +1,20 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
-import type {ParticipantInfo, SubscriptionError, UpdateSubscription, UpdateTrackSettings} from '@livekit/protocol';
+import type {
+	ClientInfo_Capability,
+	ParticipantInfo,
+	SubscriptionError,
+	UpdateSubscription,
+	UpdateTrackSettings,
+} from '@livekit/protocol';
 import {EventEmitter} from 'events';
 import type {SignalClient} from '../../api/SignalClient.ts';
+import {DeferrableMap} from '../../utils/deferrable-map.ts';
+import {CLIENT_PROTOCOL_DEFAULT} from '../../version.ts';
+import type IncomingDataTrackManager from '../data-track/incoming/IncomingDataTrackManager.ts';
+import RemoteDataTrack from '../data-track/RemoteDataTrack.ts';
+import {DataTrackInfo} from '../data-track/types.ts';
 import {ParticipantEvent, TrackEvent} from '../events.ts';
 import type {AudioOutputOptions} from '../track/options.ts';
 import RemoteAudioTrack from '../track/RemoteAudioTrack.ts';
@@ -21,12 +32,15 @@ import Participant, {ParticipantKind} from './Participant.ts';
 
 export default class RemoteParticipant extends Participant {
 	override audioTrackPublications: Map<string, RemoteTrackPublication>;
-
 	override videoTrackPublications: Map<string, RemoteTrackPublication>;
-
 	override trackPublications: Map<string, RemoteTrackPublication>;
+	dataTracks: DeferrableMap<RemoteDataTrack['info']['name'], RemoteDataTrack>;
 
 	signalClient: SignalClient;
+
+	clientProtocol: number;
+
+	capabilities: Array<ClientInfo_Capability>;
 
 	private volumeMap: Map<Track.Source, number>;
 
@@ -36,6 +50,7 @@ export default class RemoteParticipant extends Participant {
 		signalClient: SignalClient,
 		pi: ParticipantInfo,
 		loggerOptions: LoggerOptions,
+		manager: IncomingDataTrackManager,
 	): RemoteParticipant {
 		return new RemoteParticipant(
 			signalClient,
@@ -46,13 +61,19 @@ export default class RemoteParticipant extends Participant {
 			pi.attributes,
 			loggerOptions,
 			pi.kind,
+			pi.dataTracks.map((dti) => {
+				const info = DataTrackInfo.from(dti);
+				return new RemoteDataTrack(info, manager, {publisherIdentity: pi.identity});
+			}),
+			pi.clientProtocol,
+			pi.capabilities,
 		);
 	}
 
 	protected override get logContext() {
 		return {
 			...super.logContext,
-			rpID: this.sid,
+			remoteParticipantID: this.sid,
 			remoteParticipant: this.identity,
 		};
 	}
@@ -66,13 +87,23 @@ export default class RemoteParticipant extends Participant {
 		attributes?: Record<string, string>,
 		loggerOptions?: LoggerOptions,
 		kind: ParticipantKind = ParticipantKind.STANDARD,
+		remoteDataTracks: Array<RemoteDataTrack> = [],
+		clientProtocol: number = CLIENT_PROTOCOL_DEFAULT,
+		capabilities: Array<ClientInfo_Capability> = [],
 	) {
 		super(sid, identity || '', name, metadata, attributes, loggerOptions, kind);
 		this.signalClient = signalClient;
 		this.trackPublications = new Map();
 		this.audioTrackPublications = new Map();
 		this.videoTrackPublications = new Map();
+		this.dataTracks = new DeferrableMap(
+			remoteDataTracks.map((remoteDataTrack) => {
+				return [remoteDataTrack.info.name, remoteDataTrack];
+			}),
+		);
 		this.volumeMap = new Map();
+		this.clientProtocol = clientProtocol;
+		this.capabilities = capabilities;
 	}
 
 	override addTrackPublication(publication: RemoteTrackPublication) {
@@ -313,7 +344,16 @@ export default class RemoteParticipant extends Participant {
 		});
 		await Promise.all(promises);
 	}
-
+	addRemoteDataTrack(remoteDataTrack: RemoteDataTrack) {
+		this.dataTracks.set(remoteDataTrack.info.name, remoteDataTrack);
+	}
+	removeRemoteDataTrack(remoteDataTrackSid: RemoteDataTrack['info']['sid']) {
+		for (const [name, dataTrack] of this.dataTracks.entries()) {
+			if (remoteDataTrackSid === dataTrack.info.sid) {
+				this.dataTracks.delete(name);
+			}
+		}
+	}
 	override emit<E extends keyof ParticipantEventCallbacks>(event: E, ...args: ParticipantEventArguments<E>): boolean {
 		this.log.trace('participant event', {...this.logContext, event, args});
 		return EventEmitter.prototype.emit.call(this, event, ...args);

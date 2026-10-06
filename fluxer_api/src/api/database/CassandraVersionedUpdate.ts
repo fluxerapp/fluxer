@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {upsertOne} from './CassandraQueryExecution';
-import type {ColumnName, DbOp, PatchObject, RowValue, Table} from './CassandraTypes';
-import {Db, nextVersion} from './CassandraTypes';
+import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {ColumnName, DbOp, PatchObject, RowValue, Table} from '@app/api/database/CassandraTypes';
+import {Db, nextVersion} from '@app/api/database/CassandraTypes';
 
 export async function executeVersionedUpdate<
 	Row extends {

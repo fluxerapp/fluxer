@@ -1,27 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ILogger} from '@app/api/ILogger';
+import {ActivityContextMiddleware} from '@app/api/infrastructure/activity/ActivityMeta';
+import {AuditLogMiddleware} from '@app/api/middleware/AuditLogMiddleware';
+import {ConcurrencyLimitMiddleware} from '@app/api/middleware/ConcurrencyLimitMiddleware';
+import ContentFilterMiddleware from '@app/api/middleware/ContentFilterMiddleware';
+import {GuildAvailabilityMiddleware} from '@app/api/middleware/GuildAvailabilityMiddleware';
+import {IpBanMiddleware} from '@app/api/middleware/IpBanMiddleware';
+import {LocaleMiddleware} from '@app/api/middleware/LocaleMiddleware';
+import {RequestCacheMiddleware} from '@app/api/middleware/RequestCacheMiddleware';
+import {RequestErrorTelemetry} from '@app/api/middleware/RequestErrorTelemetry';
+import {RequireClientIpMiddleware} from '@app/api/middleware/RequireClientIpMiddleware';
+import {ServiceMiddleware} from '@app/api/middleware/ServiceMiddleware';
+import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
+import {UserMiddleware} from '@app/api/middleware/UserMiddleware';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {InvalidApiOriginError} from '@fluxer/errors/src/domains/core/InvalidApiOriginError';
 import {cors} from '@fluxer/hono/src/middleware/Cors';
 import {applyMiddlewareStack} from '@fluxer/hono/src/middleware/MiddlewareStack';
 import {createInfoRequestLogger, requestLogger} from '@fluxer/hono/src/middleware/RequestLogger';
 import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
-import type {ILogger} from '../ILogger';
-import {ClientErrorAbuseSignalMiddleware} from '../middleware/AbusiveIpAutoBanner';
-import {AuditLogMiddleware} from '../middleware/AuditLogMiddleware';
-import {ConcurrencyLimitMiddleware} from '../middleware/ConcurrencyLimitMiddleware';
-import ContentFilterMiddleware from '../middleware/ContentFilterMiddleware';
-import {GuildAvailabilityMiddleware} from '../middleware/GuildAvailabilityMiddleware';
-import {IpBanMiddleware} from '../middleware/IpBanMiddleware';
-import {LocaleMiddleware} from '../middleware/LocaleMiddleware';
-import {RequestCacheMiddleware} from '../middleware/RequestCacheMiddleware';
-import {RequireClientIpMiddleware} from '../middleware/RequireClientIpMiddleware';
-import {ServiceMiddleware} from '../middleware/ServiceMiddleware';
-import {TorExitMiddleware} from '../middleware/TorExitMiddleware';
-import {TrustedClientIpHeaderMiddleware} from '../middleware/TrustedClientIpHeaderMiddleware';
-import {UserMiddleware} from '../middleware/UserMiddleware';
-import type {HonoApp} from '../types/HonoEnv';
-import { PersonaMiddleware } from '../middleware/PersonaMiddleware';
+import { PersonaMiddleware } from '@app/api/middleware/PersonaMiddleware';
 
 interface MiddlewarePipelineOptions {
 	logger: ILogger;
@@ -53,7 +53,18 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 	);
 	applyMiddlewareStack(routes, {
 		requestId: {},
-		cors: {origins: corsOrigins, exposedHeaders: [HttpHeaders.X_FLUXER_VERSION]},
+		cors: {
+			origins: corsOrigins,
+			allowedHeaders: [
+				HttpHeaders.CONTENT_TYPE,
+				HttpHeaders.AUTHORIZATION,
+				'X-Requested-With',
+				'Accept-Language',
+				HttpHeaders.X_REQUEST_ID,
+				HttpHeaders.IF_NONE_MATCH,
+			],
+			exposedHeaders: [HttpHeaders.X_FLUXER_VERSION, HttpHeaders.ETAG],
+		},
 		skipLogger: true,
 		skipErrorHandler: true,
 	});
@@ -66,7 +77,7 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 			skip: ['/_health'],
 		}),
 	);
-	routes.use(ClientErrorAbuseSignalMiddleware);
+	routes.use(RequestErrorTelemetry);
 	routes.use(RequestCacheMiddleware);
 	if (nodeEnv === 'production') {
 		routes.use('*', async (ctx, next) => {
@@ -90,9 +101,9 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 			}),
 		);
 	}
-	routes.use(TorExitMiddleware);
 	routes.use(AuditLogMiddleware);
 	routes.use(RequireClientIpMiddleware());
+	routes.use(ActivityContextMiddleware);
 	routes.use(ServiceMiddleware);
 	routes.use(UserMiddleware);
 	routes.use(ContentFilterMiddleware);

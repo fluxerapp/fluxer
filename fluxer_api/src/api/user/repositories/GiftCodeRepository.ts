@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {Db, type DbOp} from '../../database/CassandraTypes';
-import type {GiftCodeRow} from '../../database/types/PaymentTypes';
-import {GiftCode, mapGiftCodeDurationToMonths, mapGiftDurationMonthsToFields} from '../../models/GiftCode';
-import {GiftCodes, GiftCodesByCreator, GiftCodesByPaymentIntent, GiftCodesByRedeemer} from '../../Tables';
+import type {UserID} from '@app/api/BrandedTypes';
+import {
+	BatchBuilder,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import type {GiftCodeRow} from '@app/api/database/types/PaymentTypes';
+import {GiftCode, mapGiftCodeDurationToMonths, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
+import {GiftCodes, GiftCodesByCreator, GiftCodesByPaymentIntent, GiftCodesByRedeemer} from '@app/api/Tables';
 
 const FETCH_GIFT_CODES_BY_CREATOR_QUERY = GiftCodesByCreator.selectCql({
 	where: GiftCodesByCreator.where.eq('created_by_user_id'),
@@ -48,6 +54,7 @@ function normaliseGiftCodeRowForWrite(data: GiftCodeRow): GiftCodeRow {
 		duration_quantity: durationQuantity,
 		duration_months: durationMonths,
 		revoked_at: data.revoked_at ?? null,
+		premium_reversed_seconds: data.premium_reversed_seconds ?? null,
 	};
 }
 
@@ -174,6 +181,30 @@ export class GiftCodeRepository {
 
 	async revokeGiftCode(code: string): Promise<void> {
 		await upsertOne(GiftCodes.patchByPk({code}, {revoked_at: Db.set(new Date())}));
+	}
+
+	async unrevokeGiftCode(code: string): Promise<void> {
+		await upsertOne(GiftCodes.patchByPk({code}, {revoked_at: Db.set(null)}));
+	}
+
+	async markGiftPremiumReversed(gift: GiftCode, seconds: number): Promise<boolean> {
+		return executeConditional(
+			GiftCodes.conditionalPatchByPk(
+				{code: gift.code},
+				{premium_reversed_seconds: Db.set(seconds)},
+				{created_by_user_id: gift.createdByUserId, premium_reversed_seconds: null},
+			),
+		);
+	}
+
+	async clearGiftPremiumReversed(code: string, seconds: number): Promise<boolean> {
+		return executeConditional(
+			GiftCodes.conditionalPatchByPk(
+				{code},
+				{premium_reversed_seconds: Db.set(null)},
+				{premium_reversed_seconds: seconds},
+			),
+		);
 	}
 
 	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {

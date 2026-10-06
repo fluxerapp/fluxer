@@ -30,6 +30,7 @@ get_local_node_id() ->
 -spec get_local_node_stats() -> map().
 get_local_node_stats() ->
     SessionCount = get_manager_count(session_manager),
+    ResumeCount = gateway_cluster_metrics:resumes_total(),
     GuildCount = get_manager_count(guild_manager),
     PresenceCount = get_manager_count(presence_manager),
     CallCount = get_manager_count(call_manager),
@@ -41,6 +42,9 @@ get_local_node_stats() ->
         <<"node_id">> => node_id(node()),
         <<"status">> => <<"healthy">>,
         <<"sessions">> => SessionCount,
+        <<"session_resumes_total">> => ResumeCount,
+        <<"websocket_dispatches_total">> => gateway_cluster_metrics:dispatches_total(),
+        <<"websocket_dispatch_drops_total">> => gateway_cluster_metrics:dispatch_drops_total(),
         <<"guilds">> => GuildCount,
         <<"presences">> => PresenceCount,
         <<"calls">> => CallCount,
@@ -180,6 +184,13 @@ aggregate_node_stats(NodeStats) ->
     #{
         <<"status">> => aggregate_status(SortedNodes),
         <<"sessions">> => sum_stat(SortedNodes, <<"sessions">>),
+        <<"session_resumes_total">> => sum_stat(SortedNodes, <<"session_resumes_total">>),
+        <<"websocket_dispatches_total">> => sum_stat(
+            SortedNodes, <<"websocket_dispatches_total">>
+        ),
+        <<"websocket_dispatch_drops_total">> => sum_stat(
+            SortedNodes, <<"websocket_dispatch_drops_total">>
+        ),
         <<"guilds">> => sum_stat(SortedNodes, <<"guilds">>),
         <<"presences">> => sum_stat(SortedNodes, <<"presences">>),
         <<"calls">> => sum_stat(SortedNodes, <<"calls">>),
@@ -266,6 +277,9 @@ unavailable_node_stats(TargetNode) ->
         <<"node_id">> => node_id(TargetNode),
         <<"status">> => <<"unavailable">>,
         <<"sessions">> => null,
+        <<"session_resumes_total">> => null,
+        <<"websocket_dispatches_total">> => null,
+        <<"websocket_dispatch_drops_total">> => null,
         <<"guilds">> => null,
         <<"presences">> => null,
         <<"calls">> => null,
@@ -315,6 +329,9 @@ aggregate_node_stats_sums_cluster_totals_test() ->
         <<"node_id">> => <<"gateway_a@127.0.0.1">>,
         <<"status">> => <<"healthy">>,
         <<"sessions">> => 10,
+        <<"session_resumes_total">> => 1,
+        <<"websocket_dispatches_total">> => 7,
+        <<"websocket_dispatch_drops_total">> => 7,
         <<"guilds">> => 20,
         <<"presences">> => 30,
         <<"calls">> => 40,
@@ -327,6 +344,9 @@ aggregate_node_stats_sums_cluster_totals_test() ->
         <<"node_id">> => <<"gateway_b@127.0.0.1">>,
         <<"status">> => <<"healthy">>,
         <<"sessions">> => 3,
+        <<"session_resumes_total">> => 1,
+        <<"websocket_dispatches_total">> => 7,
+        <<"websocket_dispatch_drops_total">> => 7,
         <<"guilds">> => 4,
         <<"presences">> => 5,
         <<"calls">> => 6,
@@ -336,7 +356,10 @@ aggregate_node_stats_sums_cluster_totals_test() ->
         <<"uptime_seconds">> => 90
     },
     A = aggregate_node_stats([N1, N2]),
+    ?assertEqual(14, maps:get(<<"websocket_dispatches_total">>, A)),
+    ?assertEqual(14, maps:get(<<"websocket_dispatch_drops_total">>, A)),
     ?assertEqual(13, maps:get(<<"sessions">>, A)),
+    ?assertEqual(2, maps:get(<<"session_resumes_total">>, A)),
     ?assertEqual(24, maps:get(<<"guilds">>, A)),
     ?assertEqual(35, maps:get(<<"presences">>, A)),
     ?assertEqual(46, maps:get(<<"calls">>, A)),

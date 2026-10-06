@@ -2,27 +2,23 @@
 
 import assert from 'node:assert/strict';
 import {
-	applyScreenShareContentHint as applyScreenShareMotionContentHint,
-	enforceScreenShareSenderParameters as enforceScreenShareSenderParametersForSender,
-	getPreferredScreenShareCodec,
+	applyScreenShareContentHint,
+	enforceScreenShareSenderParameters,
+	getScreenShareBackupSenders,
 	logger,
-	type SimulcastTrackInfoLike,
+	resolveActiveScreenShareTarget,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {prepareHighFidelityScreenShareAudioTrack} from '@app/features/voice/utils/AudioPublishOptions';
-import {
-	resolveScreenShareContentHintForContext,
-	type ScreenShareContentSource,
-} from '@app/features/voice/utils/CodecCapabilityDetector';
+import type {ScreenShareContentSource} from '@app/features/voice/utils/CodecCapabilityDetector';
 import {
 	type LocalAudioTrack,
 	type LocalParticipant,
 	type LocalVideoTrack,
-	type Room,
-	RoomEvent,
+	ParticipantEvent,
+	type Track as SdkTrack,
 	Track,
 	TrackEvent,
-	type TrackPublishOptions,
 	type VideoCodec,
 } from 'livekit-client';
 
@@ -38,7 +34,6 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 	private readonly host: VoiceEngineV2AppScreenShareTrackPlumbingHost;
 	private keepAliveElement: HTMLVideoElement | null = null;
 	private keepAliveTrack: LocalVideoTrack | null = null;
-	private keyFrameRequestDisposer: (() => void) | null = null;
 	private senderParameterDisposer: (() => void) | null = null;
 
 	constructor(host: VoiceEngineV2AppScreenShareTrackPlumbingHost) {
@@ -123,29 +118,15 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 		preferredTrack?: LocalVideoTrack,
 	): void {
 		const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
-		const track = preferredTrack ?? publication?.videoTrack;
+		const track = (preferredTrack ?? publication?.videoTrack) as LocalVideoTrack | undefined;
 		if (!track) {
 			return;
 		}
-		this.applyContentHintToMediaTrack(track.mediaStreamTrack, contentSource);
-	}
-
-	applyContentHintToMediaTrack(
-		mediaStreamTrack: MediaStreamTrack | undefined,
-		contentSource: ScreenShareContentSource = this.host.getActiveContentSource(),
-	): void {
-		if (!mediaStreamTrack) return;
-		const hint = resolveScreenShareContentHintForContext(
-			VoiceSettings.getScreenShareContentHintOverride(),
-			getPreferredScreenShareCodec(),
-			contentSource,
-			VoiceSettings.getStreamingMode(),
-		);
-		if (!hint) {
-			mediaStreamTrack.contentHint = '';
-			return;
+		const {contentHint} = resolveActiveScreenShareTarget(contentSource);
+		applyScreenShareContentHint(track.mediaStreamTrack, contentHint);
+		for (const backup of getScreenShareBackupSenders(track)) {
+			applyScreenShareContentHint(backup.sender.track ?? undefined, contentHint);
 		}
-		applyScreenShareMotionContentHint(mediaStreamTrack, hint);
 	}
 
 	applyAudioContentHint(participant: LocalParticipant): void {
@@ -156,39 +137,51 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 		prepareHighFidelityScreenShareAudioTrack(track);
 	}
 
-	async enforceSenderParameters(participant: LocalParticipant, publishOptions?: TrackPublishOptions): Promise<void> {
-		const publication = participant.getTrackPublication(Track.Source.ScreenShare);
-		const track = publication?.videoTrack as LocalVideoTrack | undefined;
-		await this.enforceTrackSenderParameters(track, publishOptions);
-		this.bindSenderParameterReapply(participant, publishOptions, track);
+	async enforceSenderParameters(
+		participant: LocalParticipant,
+		publishedCodec: VideoCodec | undefined,
+		preferredTrack?: LocalVideoTrack,
+	): Promise<boolean> {
+		const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
+		const track = preferredTrack ?? (publication?.videoTrack as LocalVideoTrack | undefined);
+		if (!track) {
+			logger.warn('No screen share track found for sender parameter enforcement');
+			return false;
+		}
+		const applied = await this.enforceTrackSenderParameters(track, publishedCodec);
+		this.bindSenderParameterReapply(participant, track, publishedCodec);
+		return applied;
 	}
 
-	async enforceTrackSenderParameters(
-		track: LocalVideoTrack | undefined,
-		publishOptions?: TrackPublishOptions,
+	async enforceTrackSenderParameters(track: LocalVideoTrack, publishedCodec: VideoCodec | undefined): Promise<boolean> {
+		const target = ActiveScreenShareSource.getTarget();
+		if (target === null) return false;
+		let applied = track.sender
+			? (await enforceScreenShareSenderParameters(track.sender, target, {publishedCodec})).applied
+			: false;
+		for (const backup of getScreenShareBackupSenders(track)) {
+			const codecOverride = isVideoCodecValue(backup.codec) ? backup.codec : undefined;
+			const backupApplied = await enforceScreenShareSenderParameters(backup.sender, target, {
+				codecOverride,
+				publishedCodec,
+			});
+			applied = applied && backupApplied.applied;
+		}
+		return applied;
+	}
+
+	private async enforceBackupSenderParameters(
+		sender: RTCRtpSender,
+		codecOverride: VideoCodec | undefined,
+		publishedCodec: VideoCodec | undefined,
 	): Promise<void> {
-		let applied = await enforceScreenShareSenderParametersForSender(track?.sender, publishOptions);
-		const simulcastCodecs = (
-			track as
-				| (LocalVideoTrack & {
-						simulcastCodecs?: Map<unknown, SimulcastTrackInfoLike>;
-				  })
-				| undefined
-		)?.simulcastCodecs;
-		if (simulcastCodecs?.size) {
-			for (const [codec, simulcastTrackInfo] of simulcastCodecs) {
-				const codecOverride = isVideoCodecValue(codec) ? codec : undefined;
-				const backupApplied = await enforceScreenShareSenderParametersForSender(
-					simulcastTrackInfo.sender,
-					publishOptions,
-					codecOverride,
-				);
-				applied = applied || backupApplied;
-			}
-		}
-		if (!applied) {
-			logger.warn('No sender found for screen share sender parameter enforcement');
-		}
+		applyScreenShareContentHint(
+			sender.track ?? undefined,
+			resolveActiveScreenShareTarget(this.host.getActiveContentSource()).contentHint,
+		);
+		const target = ActiveScreenShareSource.getTarget();
+		if (target === null) return;
+		await enforceScreenShareSenderParameters(sender, target, {codecOverride, publishedCodec});
 	}
 
 	cleanupSenderParameterReapply(): void {
@@ -198,48 +191,26 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 
 	bindSenderParameterReapply(
 		participant: LocalParticipant,
-		publishOptions?: TrackPublishOptions,
-		preferredTrack?: LocalVideoTrack,
+		track: LocalVideoTrack,
+		publishedCodec: VideoCodec | undefined,
 	): void {
 		this.cleanupSenderParameterReapply();
-		const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
-		const track = preferredTrack ?? (publication?.videoTrack as LocalVideoTrack | undefined);
-		if (!track) return;
 		const reapply = (): void => {
-			void this.enforceTrackSenderParameters(track, publishOptions).catch((error) => {
+			void this.enforceTrackSenderParameters(track, publishedCodec).catch((error) => {
 				logger.warn('Failed to reapply screen share sender parameters after track restart', {error});
 			});
 		};
-		track.on(TrackEvent.Restarted, reapply);
-		this.senderParameterDisposer = () => {
-			track.off(TrackEvent.Restarted, reapply);
-		};
-	}
-
-	cleanupKeyFrameRequests(): void {
-		this.keyFrameRequestDisposer?.();
-		this.keyFrameRequestDisposer = null;
-	}
-
-	bindKeyFrameRequests(room: Room | null, participant: LocalParticipant, preferredTrack?: LocalVideoTrack): void {
-		this.cleanupKeyFrameRequests();
-		if (!room || VoiceSettings.getStreamingMode() !== 'screenshare') return;
-		const requestKeyFrame = (): void => {
-			const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
-			const track = preferredTrack ?? (publication?.videoTrack as LocalVideoTrack | undefined);
-			const sender = track?.sender as
-				| (RTCRtpSender & {
-						generateKeyFrame?: () => Promise<void>;
-				  })
-				| undefined;
-			if (typeof sender?.generateKeyFrame !== 'function') return;
-			void sender.generateKeyFrame().catch((error) => {
-				logger.debug('Failed to generate screen-share keyframe on participant join', {error});
+		const onLocalSenderCreated = (sender: RTCRtpSender, senderTrack: SdkTrack, codec?: VideoCodec): void => {
+			if (senderTrack !== track || sender === track.sender) return;
+			void this.enforceBackupSenderParameters(sender, codec, publishedCodec).catch((error) => {
+				logger.warn('Failed to apply screen share sender parameters to a backup sender', {error, codec});
 			});
 		};
-		room.on(RoomEvent.ParticipantConnected, requestKeyFrame);
-		this.keyFrameRequestDisposer = () => {
-			room.off(RoomEvent.ParticipantConnected, requestKeyFrame);
+		track.on(TrackEvent.Restarted, reapply);
+		participant.on(ParticipantEvent.LocalSenderCreated, onLocalSenderCreated);
+		this.senderParameterDisposer = () => {
+			track.off(TrackEvent.Restarted, reapply);
+			participant.off(ParticipantEvent.LocalSenderCreated, onLocalSenderCreated);
 		};
 	}
 }

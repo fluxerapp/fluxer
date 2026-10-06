@@ -25,7 +25,7 @@ function mapResponse(body: ExpressionMetadataResponse): ExpressionMetadata {
 	};
 }
 
-type ExpressionKind = 'emoji' | 'sticker';
+export type ExpressionKind = 'emoji' | 'sticker';
 
 function metadataEndpoint(kind: ExpressionKind, id: string): string {
 	return kind === 'emoji' ? Endpoints.EMOJI_METADATA(id) : Endpoints.STICKER_METADATA(id);

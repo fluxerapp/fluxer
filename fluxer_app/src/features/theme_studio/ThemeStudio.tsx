@@ -5,6 +5,25 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
+import {AssetsSection} from '@app/features/theme_studio/sections/AssetsSection';
+import {LibrarySection} from '@app/features/theme_studio/sections/LibrarySection';
+import {QuickCssSection} from '@app/features/theme_studio/sections/QuickCssSection';
+import {SettingsSection} from '@app/features/theme_studio/sections/ThemeStudioSettingsSection';
+import {TokensSection} from '@app/features/theme_studio/sections/TokensSection';
+import {
+	broadcastThemeStudioMessage,
+	useThemeStudioBroadcast,
+} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
+import styles from '@app/features/theme_studio/ThemeStudio.module.css';
+import {StudioSidebar, StudioSidebarFooterText, StudioSidebarItem} from '@app/features/theme_studio/ui/StudioSidebar';
+import {StudioToolbar} from '@app/features/theme_studio/ui/StudioToolbar';
+import {
+	getThemeStudioBaseTheme,
+	getThemeStudioFallbackDefaultVariables,
+	pinThemeStudioDefaultVariables,
+	type ThemeStudioBaseTheme,
+} from '@app/features/theme_studio/utils/ThemeStudioPinnedVariables';
 import {extractThemeVariableOverrides} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeUtils';
 import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
@@ -21,22 +40,6 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import type {ReactNode} from 'react';
 import {useCallback, useEffect, useMemo, useRef} from 'react';
-import {AssetsSection} from './sections/AssetsSection';
-import {LibrarySection} from './sections/LibrarySection';
-import {QuickCssSection} from './sections/QuickCssSection';
-import {SettingsSection} from './sections/ThemeStudioSettingsSection';
-import {TokensSection} from './sections/TokensSection';
-import {broadcastThemeStudioMessage, useThemeStudioBroadcast} from './state/ThemeStudioBroadcast';
-import ThemeStudioState from './state/ThemeStudioState';
-import styles from './ThemeStudio.module.css';
-import {StudioSidebar, StudioSidebarFooterText, StudioSidebarItem} from './ui/StudioSidebar';
-import {StudioToolbar} from './ui/StudioToolbar';
-import {
-	getThemeStudioBaseTheme,
-	getThemeStudioFallbackDefaultVariables,
-	pinThemeStudioDefaultVariables,
-	type ThemeStudioBaseTheme,
-} from './utils/ThemeStudioPinnedVariables';
 
 const LIBRARY_DESCRIPTOR = msg({
 	message: 'Library',

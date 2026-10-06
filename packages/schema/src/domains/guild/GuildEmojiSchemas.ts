@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_GUILD_STICKER_TAGS} from '@fluxer/constants/src/LimitConstants';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
@@ -14,11 +15,7 @@ export const GuildEmojiResponse = z.object({
 
 export type GuildEmojiResponse = z.infer<typeof GuildEmojiResponse>;
 
-export const GuildEmojiWithUserResponse = z.object({
-	id: SnowflakeStringType.describe('The unique identifier for this emoji'),
-	name: z.string().describe('The name of the emoji'),
-	animated: z.boolean().describe('Whether this emoji is animated'),
-	nsfw: z.boolean().describe('Deprecated; always false. Retained for compatibility with older clients'),
+export const GuildEmojiWithUserResponse = GuildEmojiResponse.extend({
 	user: z.lazy(() => UserPartialResponse).describe('The user who uploaded this emoji'),
 });
 
@@ -35,13 +32,7 @@ export const GuildStickerResponse = z.object({
 
 export type GuildStickerResponse = z.infer<typeof GuildStickerResponse>;
 
-export const GuildStickerWithUserResponse = z.object({
-	id: SnowflakeStringType.describe('The unique identifier for this sticker'),
-	name: z.string().describe('The name of the sticker'),
-	description: z.string().describe('The description of the sticker'),
-	tags: z.array(z.string()).max(MAX_GUILD_STICKER_TAGS).describe('Autocomplete/suggestion tags for the sticker'),
-	animated: z.boolean().describe('Whether this sticker is animated'),
-	nsfw: z.boolean().describe('Deprecated; always false. Retained for compatibility with older clients'),
+export const GuildStickerWithUserResponse = GuildStickerResponse.extend({
 	user: z.lazy(() => UserPartialResponse).describe('The user who uploaded this sticker'),
 });
 
@@ -80,6 +71,26 @@ export const GuildEmojiWithUserListResponse = z.array(GuildEmojiWithUserResponse
 export type GuildEmojiWithUserListResponse = z.infer<typeof GuildEmojiWithUserListResponse>;
 
 export const GuildStickerWithUserListResponse = z.array(GuildStickerWithUserResponse);
+
+export const GUILD_EXPRESSION_SOURCE_BADGE_FEATURES = [
+	GuildFeatures.VERIFIED,
+	GuildFeatures.PARTNERED,
+	GuildFeatures.DISCOVERABLE,
+] as const;
+
+export const GuildExpressionSourceGuildResponse = z
+	.object({
+		id: SnowflakeStringType.describe('The ID of the source guild'),
+		name: z.string().describe('The name of the source guild'),
+		icon: z.string().nullable().describe('The hash of the source guild icon'),
+		features: z
+			.array(z.enum(GUILD_EXPRESSION_SOURCE_BADGE_FEATURES))
+			.describe('The badge feature flags of the source guild, limited to VERIFIED, PARTNERED, and DISCOVERABLE'),
+	})
+	.describe('Public presentation of the source guild of an expression');
+
+export type GuildExpressionSourceGuildResponse = z.infer<typeof GuildExpressionSourceGuildResponse>;
+
 export const GuildEmojiMetadataResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this emoji'),
 	guild_id: SnowflakeStringType.describe('The guild this emoji belongs to'),

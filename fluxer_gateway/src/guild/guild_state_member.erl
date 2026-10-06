@@ -115,7 +115,7 @@ cleanup_removed_member_sessions(State) ->
         end,
         Sessions
     ),
-    State#{sessions => FilteredSessions}.
+    drop_removed_session_refs(Sessions, FilteredSessions, State#{sessions => FilteredSessions}).
 
 -spec cleanup_removed_member_sessions(user_id() | undefined, guild_state()) -> guild_state().
 cleanup_removed_member_sessions(UserId, State) when is_integer(UserId), UserId > 0 ->
@@ -126,18 +126,31 @@ cleanup_removed_member_sessions(UserId, State) when is_integer(UserId), UserId >
         end,
         Sessions
     ),
-    State#{sessions => FilteredSessions};
+    drop_removed_session_refs(Sessions, FilteredSessions, State#{sessions => FilteredSessions});
 cleanup_removed_member_sessions(_UserId, State) ->
     cleanup_removed_member_sessions(State).
 
+-spec drop_removed_session_refs(map(), map(), guild_state()) -> guild_state().
+drop_removed_session_refs(Sessions, FilteredSessions, State) ->
+    maps:fold(
+        fun(SessionId, Session, Acc) ->
+            case maps:is_key(SessionId, FilteredSessions) of
+                true ->
+                    Acc;
+                false ->
+                    guild_sessions_connect:remove_session_ref(
+                        maps:get(mref, Session, undefined), Acc
+                    )
+            end
+        end,
+        State,
+        Sessions
+    ).
+
 -spec maybe_disconnect_removed_member(user_id() | undefined, guild_state()) -> guild_state().
 maybe_disconnect_removed_member(UserId, State) when is_integer(UserId), UserId > 0 ->
-    {reply, _Result, NewState} =
-        guild_voice_disconnect:disconnect_voice_user(
-            #{user_id => UserId, connection_id => null},
-            State
-        ),
-    NewState;
+    ok = guild_voice_lifecycle:cast_disconnect_voice_user(UserId, State),
+    State;
 maybe_disconnect_removed_member(_, State) ->
     State.
 
@@ -235,6 +248,27 @@ cleanup_removed_member_sessions_for_user_removes_only_that_user_test() ->
     Result = cleanup_removed_member_sessions(2, State),
     #{} = NewSessions = maps:get(sessions, Result),
     ?assertEqual([<<"s1">>, <<"s3">>], lists:sort(maps:keys(NewSessions))).
+
+cleanup_removed_member_sessions_drops_removed_session_refs_test() ->
+    R1 = make_ref(),
+    R2 = make_ref(),
+    R3 = make_ref(),
+    Sessions = #{
+        <<"s1">> => #{user_id => 1, mref => R1},
+        <<"s2">> => #{user_id => 2, mref => R2},
+        <<"s3">> => #{user_id => 2, mref => R3}
+    },
+    Refs = #{R1 => <<"s1">>, R2 => <<"s2">>, R3 => <<"s3">>},
+    Data = #{<<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}}},
+    State = #{data => Data, sessions => Sessions, guild_session_refs => Refs},
+    ?assertEqual(
+        #{R1 => <<"s1">>},
+        maps:get(guild_session_refs, cleanup_removed_member_sessions(2, State))
+    ),
+    ?assertEqual(
+        #{R1 => <<"s1">>},
+        maps:get(guild_session_refs, cleanup_removed_member_sessions(State))
+    ).
 
 sync_member_updates_loaded_channel_engines_test() ->
     GuildId = 100,

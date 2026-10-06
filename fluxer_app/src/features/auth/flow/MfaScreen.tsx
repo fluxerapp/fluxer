@@ -35,6 +35,14 @@ const TRY_SECURITY_KEY_INSTEAD_DESCRIPTOR = msg({
 	message: 'Try security key / passkey instead',
 	comment: 'Secondary MFA action that switches from code entry to passkey or security-key authentication.',
 });
+const BACKUP_CODE_DESCRIPTOR = msg({
+	message: 'Backup code',
+	comment: 'Label and placeholder for the MFA login field when the only code the account can use is a backup code.',
+});
+const MFA_BACKUP_CODE_INSTRUCTIONS_DESCRIPTOR = msg({
+	message: "Enter one of your backup codes if you can't use your passkey.",
+	comment: 'MFA code entry instructions shown when the account uses passkeys as its second factor.',
+});
 
 interface MfaScreenProps {
 	challenge: MfaChallenge;
@@ -47,13 +55,15 @@ const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps)
 	const {i18n} = useLingui();
 	const {form, isLoading, fieldErrors, handleWebAuthn, isWebAuthnLoading, supports} = useMfaController({
 		ticket: challenge.ticket,
-		methods: {totp: challenge.totp, webauthn: challenge.webauthn},
+		methods: {totp: challenge.totp, webauthn: challenge.webauthn, backupCodes: challenge.backupCodes},
 		inviteCode,
 		onLoginSuccess: onSuccess,
 	});
 	useAuthCardPresentation({showLogoSide: false, variant: 'compact'});
-	const showCodeForm = supports.totp;
+	const showCodeForm = supports.totp || supports.backupCodes;
 	const showWebAuthn = supports.webauthn;
+	const backupCodeOnly = !supports.totp;
+	const isCodePrimary = supports.totp || !showWebAuthn;
 	return (
 		<div className={styles.container} data-flx="auth.flow.mfa-screen.container--2">
 			<h1 className={styles.title} data-flx="auth.flow.mfa-screen.title">
@@ -61,7 +71,9 @@ const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps)
 			</h1>
 			{showCodeForm && (
 				<p className={styles.description} data-flx="auth.flow.mfa-screen.description">
-					{i18n._(MFA_CODE_INSTRUCTIONS_DESCRIPTOR, {digitCount: MFA_CODE_DIGIT_COUNT})}
+					{backupCodeOnly
+						? i18n._(MFA_BACKUP_CODE_INSTRUCTIONS_DESCRIPTOR)
+						: i18n._(MFA_CODE_INSTRUCTIONS_DESCRIPTOR, {digitCount: MFA_CODE_DIGIT_COUNT})}
 				</p>
 			)}
 			{showCodeForm && (
@@ -82,11 +94,11 @@ const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps)
 						enterKeyHint="done"
 						inputMode="text"
 						spellCheck={false}
-						autoFocus
-						data-step-focus="true"
+						autoFocus={isCodePrimary}
+						data-step-focus={isCodePrimary ? 'true' : undefined}
 						required
-						placeholder={i18n._(AUTHENTICATION_CODE_PLACEHOLDER_DESCRIPTOR)}
-						label={i18n._(CODE_DESCRIPTOR)}
+						placeholder={i18n._(backupCodeOnly ? BACKUP_CODE_DESCRIPTOR : AUTHENTICATION_CODE_PLACEHOLDER_DESCRIPTOR)}
+						label={i18n._(backupCodeOnly ? BACKUP_CODE_DESCRIPTOR : CODE_DESCRIPTOR)}
 						value={form.getValue('code')}
 						onChange={(value) => form.setValue('code', value)}
 						error={form.getError('code') || fieldErrors?.get('code') || fieldErrors?.get('ticket')}
@@ -107,14 +119,14 @@ const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps)
 					<Button
 						type="button"
 						fitContainer
-						variant={showCodeForm ? 'secondary' : 'primary'}
+						variant={isCodePrimary ? 'secondary' : 'primary'}
 						onClick={handleWebAuthn}
 						disabled={isWebAuthnLoading}
-						autoFocus={!showCodeForm}
-						data-step-focus={showCodeForm ? undefined : 'true'}
+						autoFocus={!isCodePrimary}
+						data-step-focus={isCodePrimary ? undefined : 'true'}
 						data-flx="auth.flow.mfa-screen.button.web-authn"
 					>
-						{i18n._(showCodeForm ? TRY_SECURITY_KEY_INSTEAD_DESCRIPTOR : SECURITY_KEY_OR_PASSKEY_DESCRIPTOR)}
+						{i18n._(isCodePrimary ? TRY_SECURITY_KEY_INSTEAD_DESCRIPTOR : SECURITY_KEY_OR_PASSKEY_DESCRIPTOR)}
 					</Button>
 				</div>
 			)}

@@ -1,0 +1,8 @@
+{{- range $name, $w := .Values.workers }}
+{{- if not (kindIs "invalid" $w) }}
+{{- $ctx := dict "root" $ "name" $name "w" $w "component" "worker" "command" (list "node" "dist/WorkerEntrypoint.js") "probes" (dict) }}
+{{ include "fluxer-api.deployment" $ctx }}
+{{ include "fluxer-api.hpa" $ctx }}
+{{ include "fluxer-api.pdb" $ctx }}
+{{- end }}
+{{- end }}

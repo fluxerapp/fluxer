@@ -66,7 +66,7 @@ export const MessageUploadProgress = observer(({attachment, message}: MessageUpl
 	const progress = resolveProgress();
 	const failed = hasFailedUploads();
 	const fileName = attachment.filename;
-	const fileSize = formatFileSize(attachment.size);
+	const fileSize = formatFileSize(i18n.locale, attachment.size);
 	const isIndeterminate = progress === null;
 	const progressValue = progress ?? 0;
 	const containerStyles: React.CSSProperties = isMobile

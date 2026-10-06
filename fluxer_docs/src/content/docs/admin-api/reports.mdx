@@ -32,7 +32,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | --- | --- | --- |
 | report_id | snowflake | The ID of the report |
 | reporter_id<sup>1</sup> | ?snowflake | The account that filed the report |
-| reporter_tag<sup>1</sup> <sup>2</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
+| reporter_tag<sup>1</sup> <sup>2</sup> <sup>10</sup> | ?string | The reporter username and four-digit discriminator joined by `#` |
 | reporter_username<sup>1</sup> <sup>2</sup> | ?string | The username of the reporter |
 | reporter_global_name<sup>1</sup> <sup>2</sup> | ?string | The display name of the reporter, or null when unset |
 | reporter_discriminator<sup>1</sup> <sup>2</sup> | ?string | The zero-padded four-digit reporter discriminator |
@@ -45,7 +45,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 | category | ?string | The category the reporter filed the report under |
 | additional_info | ?string | The free-text detail the reporter supplied |
 | reported_user_id | ?snowflake | The reported account, or null for a guild report |
-| reported_user_tag<sup>2</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
+| reported_user_tag<sup>2</sup> <sup>10</sup> | ?string | The reported username and four-digit discriminator joined by `#` |
 | reported_user_username<sup>2</sup> | ?string | The username of the reported account |
 | reported_user_global_name<sup>2</sup> | ?string | The display name of the reported account, or null when unset |
 | reported_user_discriminator<sup>2</sup> | ?string | The zero-padded four-digit reported account discriminator |
@@ -90,6 +90,8 @@ A report is written once, when the reporter files it. [Update report](#update-re
 
 <sup>9</sup> Null while the report is PENDING and set when it moves to RESOLVED
 
+<sup>10</sup> On an instance with the `none` tag style the tag of an account that is not a bot is the bare username, with no `#0000`
+
 ### Example
 
 ```json
@@ -132,7 +134,7 @@ A report is written once, when the reporter files it. [Update report](#update-re
 
 ## Admin report detail object
 
-The detail object extends the [Admin report object](#admin-report-object) with the evidence too large to return in a list page. [Get report](#get-report) emits these three members, and [List reports](#list-reports) omits them.
+The detail object extends the [Admin report object](#admin-report-object) with the evidence too large to return in a list page. [Get report](#get-report) emits these members, and [List reports](#list-reports) omits them.
 
 ### Structure
 
@@ -154,7 +156,7 @@ Fluxer skips an entry when neither the capture nor the report records its channe
 
 ## Report message context object
 
-A context entry is one message copied into the report when the report was filed. A later edit or deletion of the message does not update it. Fluxer copies its attachments into a separate evidence bucket, so they survive deletion of the original.
+A context entry preserves a message as it was when the report was filed. Later edits or deletions do not change it, and attachment evidence survives deletion of the original.
 
 A message report captures the reported message together with at most 25 messages before it and at most 25 after it, for at most 51 entries. A message whose author account Fluxer could not read at capture time is absent from the report.
 
@@ -216,7 +218,7 @@ A message report captures the reported message together with at most 25 messages
 | ncmec_report_id | ?string | The NCMEC report ID, or null when the attachment was never submitted |
 | ncmec_failure_reason | ?string | The failure detail, or null unless `ncmec_status` is failed |
 
-<sup>9</sup> A presigned URL against the report evidence bucket, valid for five minutes, so a saved response body stops resolving attachments while the evidence copy is retained
+<sup>9</sup> The URL expires after five minutes. Fetch the report again for fresh attachment links
 
 <sup>10</sup> An in-flight submission is stored as `submitting`, a value the registry below does not list
 
@@ -254,11 +256,11 @@ A report resolution is the reduced view [Update report](#update-report) returns.
 
 ## List reports
 
-<RouteHeader method="GET" path="/v1/admin/reports" />
+<RouteHeader method="GET" path="/v1/admin/reports" auditReason />
 
 Returns a page of [Admin report](#admin-report-object) objects without message context. Requires `report:view`.
 
-The operation has two branches. Supplying `q`, `report_type`, `category`, `reporter_id`, `reported_user_id`, `reported_guild_id`, `reported_channel_id`, `guild_context_id`, or `resolved_by_admin_id` searches the report index and returns `total`, `offset`, and `limit` beside the page. Supplying none of them lists by status alone and returns only `reports`.
+The operation has these branches. Supplying `q`, `report_type`, `category`, `reporter_id`, `reported_user_id`, `reported_guild_id`, `reported_channel_id`, `guild_context_id`, or `resolved_by_admin_id` searches the report index and returns `total`, `offset`, and `limit` beside the page. Supplying none of them lists by status alone and returns only `reports`.
 
 The status-only branch defaults to PENDING, so a request with no query string returns pending reports only. The search branch applies no status filter when `status` is omitted. `sort_by` and `sort_order` reach the search branch only. The status-only branch always orders by `reported_at` descending.
 
@@ -285,7 +287,7 @@ An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on
 
 <sup>1</sup> Matched against `category`, `additional_info`, `reported_guild_name`, and `reported_channel_name` only. Omitting it matches every report satisfying the remaining filters
 
-<sup>2</sup> The route accepts it, and it alone selects the search branch. It narrows nothing
+<sup>2</sup> The route accepts it, and supplying it with no other filter still selects the search branch. The search ignores its value and returns matching reports from every channel
 
 <sup>3</sup> `created_at` orders by the time encoded in the report ID, and `reported_at` by the submission time stored on the report
 
@@ -313,13 +315,17 @@ An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on
 | 200 | response body | Report page was returned |
 | 403 | [error response](/admin-api/#error-response) | No search backend is configured for the instance and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `search_reports`, target type `report`, and target ID `0` on both branches. The metadata keys are `limit`, `offset`, `result_count` for the reports in this page, and `total`. The search branch adds `sort_by` and `sort_order`. A supplied `q` adds `has_query` with the value `true`, and the query text is not recorded. The supplied filters add `status`, `report_type`, `reported_user_id`, `reported_guild_id`, and `reported_channel_id` under their own names, `reporter_id` as `reporter_user_id`, `guild_context_id` as `context_guild_id`, and `resolved_by_admin_id` as `resolved_by_admin_user_id`. `category` is not recorded. A 403 records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get report
 
-<RouteHeader method="GET" path="/v1/admin/reports/{report_id}" />
+<RouteHeader method="GET" path="/v1/admin/reports/{report_id}" auditReason />
 
 Returns one [Admin report detail](#admin-report-detail-object) object, which adds the captured message context and the live state of those messages. Requires `report:view`.
 
@@ -337,6 +343,10 @@ The operation answers even when the report search index is unavailable. Reporter
 | --- | --- | --- |
 | 200 | [Admin report detail](#admin-report-detail-object) object | Report was returned |
 | 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_report`, target type `report`, the report ID as target ID, and metadata keys `report_type` and `status` with the integer values of the report. The attachment download URLs are not recorded. A 404 records nothing.
 
 ### Rate limit
 
@@ -362,11 +372,13 @@ Resolves one report and returns a [report resolution](#report-resolution-object)
 | --- | --- | --- |
 | status | resolved | The status to move the report to |
 | public_comment?<sup>1</sup> | string | The comment shown to the reporter (0-512 characters) |
+| notify_reporter? | boolean | Whether to notify the reporter by system DM and email (default true) |
+| resolution? | string | How the report was resolved: `actioned`, `no_violation` or `duplicate` |
 
 <sup>1</sup> Stored as null when it is omitted or empty, and shown to the reporter in the resolution notice otherwise
 
 :::caution[Resolution is terminal]
-Resolving a report notifies the reporter. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
+Resolving a report notifies the reporter unless `notify_reporter` is false. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
 :::
 
 ### Response
@@ -381,9 +393,9 @@ Resolving a report notifies the reporter. A resolved report never returns to PEN
 
 The report moves to RESOLVED and records `resolved_at`, `resolved_by_admin_id`, and the public comment.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id` and `report_type`.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id`, `report_type`, `notify_reporter`, `reporter_dm_sent`, and `reporter_email_sent`, plus `resolution` when the request sets it.
 
-Fluxer notifies the reporter when the report has a reporter account that still exists. The reporter receives a system direct message, and an email when the account has an address. An anonymous Digital Services Act notice has no reporter account and is resolved with no notification.
+Unless `notify_reporter` is false, Fluxer notifies the reporter when the report has a reporter account that still exists. The reporter receives a system direct message, and an email when the account has an address. An anonymous Digital Services Act notice has no reporter account and is resolved with no notification.
 
 A reporter who does not already have the system channel open receives [Channel Create](/gateway/events/#channel-create), and every session of the reporter receives [Message Create](/gateway/events/#message-create). Fluxer logs a delivery failure, and the request still succeeds.
 

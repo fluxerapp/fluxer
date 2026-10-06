@@ -60,9 +60,13 @@ A completed deletion returns the username `DeletedUser`, the discriminator `0000
 A system account never receives the deleted representation. An account only scheduled for deletion keeps its ordinary representation throughout the grace period.
 :::
 
+:::note[An instance without tags]
+On an instance whose `tag_style` [feature](/http-api/instance/#instance-features-object) is `none`, the username is unique on its own, whatever the [account identity mode](/http-api/instance/#account-identity-modes). Every account that is not a bot has the discriminator `0000` there, and apps show the bare username without `#0000`. Bot accounts keep their random discriminators and show them. Elsewhere `0000` keeps its usual meaning.
+:::
+
 ## Public user flags
 
-`flags` holds the publicly visible subset of the account's stored flags. `STAFF` is also absent from an account with the staff-hidden flag.
+`flags` holds the publicly visible subset of the account's stored flags. `STAFF` is also removed from `flags` while the account has the stored `STAFF_HIDDEN` flag.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -79,7 +83,7 @@ The account-wide preference applied when another account replies to one of this 
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | NO_PREFERENCE | Respect the sender's intent on each reply, with no warning when the mention is toggled |
+| 0 | NO_PREFERENCE | The sender chooses whether each reply mentions this account, with no warning when the mention is toggled |
 | 1 | PREFER_MENTION | Replies mention this account by default, and the sender is warned when they disable the mention |
 | 2 | PREFER_NO_MENTION | Replies omit the mention by default, and the sender is warned when they enable it |
 
@@ -108,26 +112,26 @@ The private representation of the current account, returned by [Get current user
 | traits<sup>3</sup> <sup>4</sup> | array[string] | The account traits, in sorted order |
 | email<sup>5</sup> | ?string | The account email address, or null when none exists |
 | email_bounced?<sup>3</sup> | boolean | Whether the mail provider marked the current email as bounced |
-| phone<sup>6</sup> | ?string | Always null |
-| has_verified_phone | boolean | Whether phone verification is complete |
+| has_verified_phone | boolean | Deprecated. Always false |
 | bio | ?string | The profile biography, or null when none is set |
 | pronouns | ?string | The profile pronouns, or null when none are set |
 | accent_color | ?integer | The profile accent colour as packed 24-bit RGB, or null when none is set |
-| timezone?<sup>7</sup> | ?string | The IANA timezone identifier stored for the account, or null when none is set |
-| timezone_privacy_flags?<sup>7</sup> | integer | [Profile field privacy flags](#profile-field-privacy-flags) applied to the profile timezone |
-| banner<sup>8</sup> | ?string | The image hash of the profile banner, or null when none is set or the entitlement is missing |
+| timezone?<sup>6</sup> | ?string | The IANA timezone identifier stored for the account, or null when none is set |
+| timezone_privacy_flags?<sup>6</sup> | integer | [Profile field privacy flags](#profile-field-privacy-flags) applied to the profile timezone |
+| banner<sup>7</sup> | ?string | The image hash of the profile banner, or null when none is set or the entitlement is missing |
 | banner_color | ?integer | The packed 24-bit RGB colour derived from the stored banner, or null |
-| mfa_enabled<sup>3</sup> <sup>9</sup> | boolean | Whether any authenticator is configured |
-| authenticator_types?<sup>3</sup> <sup>9</sup> | array[integer] | [Authenticator types](#authenticator-types) configured for the account |
+| mfa_enabled<sup>3</sup> <sup>8</sup> | boolean | Whether any authenticator is configured |
+| authenticator_types?<sup>3</sup> <sup>8</sup> | array[integer] | [Authenticator types](#authenticator-types) configured for the account |
 | verified<sup>5</sup> | boolean | Whether the account email is verified |
-| premium_type<sup>10</sup> | ?integer | [Premium type](#premium-types) |
-| premium_since<sup>3</sup> <sup>10</sup> | ?ISO8601 timestamp | The time premium was first activated, or null |
-| premium_until<sup>3</sup> <sup>11</sup> | ?ISO8601 timestamp | The end of current premium access, or null when no premium period is stored |
+| account_limited? | boolean | Whether the account is [limited](#account-limitation) |
+| premium_type<sup>9</sup> | ?integer | [Premium type](#premium-types) |
+| premium_since<sup>3</sup> <sup>9</sup> | ?ISO8601 timestamp | The time premium was first activated, or null |
+| premium_until<sup>3</sup> <sup>10</sup> | ?ISO8601 timestamp | The end of current premium access, or null when no premium period is stored |
 | premium_will_cancel<sup>3</sup> | boolean | Whether subscription premium will cancel at the billing boundary |
 | premium_billing_cycle<sup>3</sup> | ?string | The premium billing cycle, or null |
 | premium_lifetime_sequence<sup>3</sup> | ?integer | The lifetime premium sequence, or null |
-| premium_grace_ends_at<sup>12</sup> | ?ISO8601 timestamp | The end of the post-cancellation grace interval, or null when the account is not in grace |
-| premium_discriminator<sup>13</sup> | boolean | Whether the current discriminator was selected under a premium entitlement |
+| premium_grace_ends_at<sup>11</sup> | ?ISO8601 timestamp | The end of grace access after premium_until passes, or null when no grace is recorded |
+| premium_discriminator<sup>12</sup> | boolean | Whether the current discriminator was selected under a premium entitlement |
 | premium_badge_hidden<sup>3</sup> | boolean | Whether the premium badge is hidden from the public profile |
 | premium_badge_masked<sup>3</sup> | boolean | Whether a lifetime badge is presented as an ordinary subscription badge |
 | premium_badge_timestamp_hidden<sup>3</sup> | boolean | Whether the premium activation time is hidden from the public profile |
@@ -135,15 +139,14 @@ The private representation of the current account, returned by [Get current user
 | premium_purchase_disabled<sup>3</sup> | boolean | Whether premium purchasing is disabled for the account |
 | premium_enabled_override<sup>3</sup> | boolean | Whether an administrative override grants premium entitlements |
 | premium_perks_disabled<sup>3</sup> | boolean | Whether premium entitlements are suspended for the account |
-| force_inbound_phone_verification?<sup>14</sup> | boolean | The debugging switch that forces the inbound phone verification flow |
 | password_last_changed_at<sup>3</sup> | ?ISO8601 timestamp | The time of the most recent password change, or null |
-| last_voice_activity_sharing_change_at<sup>15</sup> | ?ISO8601 timestamp | The time of the most recent bulk voice activity sharing change, or null |
-| required_actions<sup>3</sup> <sup>16</sup> | array[string] | The ordered [required actions](#required-actions) the account must complete before unrestricted use |
-| nsfw_allowed<sup>3</sup> <sup>17</sup> | boolean | Whether the account can access age-restricted content |
-| has_dismissed_premium_onboarding<sup>3</sup> <sup>18</sup> | boolean | Whether premium onboarding was dismissed |
+| last_voice_activity_sharing_change_at<sup>13</sup> | ?ISO8601 timestamp | The time of the most recent bulk voice activity sharing change, or null |
+| required_actions<sup>3</sup> | array[string] | Deprecated. Always empty |
+| nsfw_allowed<sup>3</sup> <sup>14</sup> | boolean | Whether the account can access age-restricted content |
+| has_dismissed_premium_onboarding<sup>3</sup> <sup>15</sup> | boolean | Whether premium onboarding was dismissed |
 | has_ever_purchased<sup>3</sup> | boolean | Whether the account has completed a purchase |
-| has_unread_gift_inventory<sup>3</sup> <sup>19</sup> | boolean | Whether the gift inventory has unread items |
-| unread_gift_inventory_count<sup>3</sup> <sup>19</sup> | integer | The number of unread gift inventory items |
+| has_unread_gift_inventory<sup>3</sup> <sup>16</sup> | boolean | Whether the gift inventory has unread items |
+| unread_gift_inventory_count<sup>3</sup> <sup>16</sup> | integer | The number of unread gift inventory items |
 | pending_bulk_message_deletion<sup>3</sup> | ?[pending bulk message deletion](#pending-bulk-message-deletion-object) object | The message deletion the account scheduled for itself, or null when none is pending |
 | age_verified_adult? | boolean | Whether adult age verification is complete, omitted when false |
 | terms_agreed_at | ?ISO8601 timestamp | The time of the most recent terms acceptance, or null |
@@ -159,45 +162,31 @@ The private representation of the current account, returned by [Get current user
 
 <sup>5</sup> For an OAuth2 bearer credential without the `email` [scope](/http-api/oauth2/#oauth2-scopes), `email` is `null`
 
-<sup>6</sup> The account record stores no phone number. The field is retained so an older client keeps parsing the response
+<sup>6</sup> This server version writes the pair for every account
 
-<sup>7</sup> The pair is present only while the account has the staff flag, and it is absent for every other account
+<sup>7</sup> The banner hash is not returned at all while the account lacks the animated banner entitlement, which every profile banner requires
 
-<sup>8</sup> The banner hash is not returned at all while the account lacks the animated banner entitlement, which every profile banner requires
+<sup>8</sup> `mfa_enabled` is true exactly when at least one authenticator is configured. An account with no authenticator reports `authenticator_types` as an empty array, and only a bearer read drops the field
 
-<sup>9</sup> `mfa_enabled` is true exactly when at least one authenticator is configured. An account with no authenticator omits `authenticator_types`
+<sup>9</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not active
 
-<sup>10</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not active
+<sup>10</sup> `premium_until` is the later of the subscription end and any stacked gift extension. Fluxer reports it even when premium entitlements are no longer active
 
-<sup>11</sup> `premium_until` is the later of the subscription end and any stacked gift extension. Fluxer reports it even when premium entitlements are no longer active
+<sup>11</sup> After `premium_until` passes, premium entitlements stay active until this time. While the value is null, they stay active for 3 days after `premium_until`
 
-<sup>12</sup> While the value is set, premium entitlements remain active until it passes, and it replaces the default grace interval that otherwise follows `premium_until`
+<sup>12</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and after that premium access ends, Fluxer replaces the discriminator with a newly generated one the next time the account starts a Gateway session. An instance with the `none` tag style skips the replacement and keeps `0000`
 
-<sup>13</sup> The flag is set when the account changes its username or discriminator while holding non-lifetime premium, and it marks the discriminator for reselection when that premium access ends
+<sup>13</sup> The value drives the 24-hour cooldown on changing the default voice activity sharing state
 
-<sup>14</sup> The field is declared but never populated, so it is absent from every response
+<sup>14</sup> A bot account is always permitted, and a user account is permitted only when its recorded date of birth places it at 18 years or older
 
-<sup>15</sup> The value drives the 24-hour cooldown on changing the default voice activity sharing state
+<sup>15</sup> The value is false while premium entitlements are not active, even when a dismissal was recorded earlier
 
-<sup>16</sup> The array is empty when the account has no stored suspicious activity flag, when it has no email address, or when its contact is exempt from required actions
-
-<sup>17</sup> A bot account is always permitted, and a user account is permitted only when its recorded date of birth places it at 18 years or older
-
-<sup>18</sup> The value is false while premium entitlements are not active, even when a dismissal was recorded earlier
-
-<sup>19</sup> Both values derive from the difference between the stored gift inventory sequence and the sequence the account has acknowledged, and they report `false` and `0` when no gift has ever been recorded
+<sup>16</sup> Reports whether unread gifts exist and how many. An account with no gifts reports `false` and `0`
 
 :::note[A bearer read returns zero values]
 `acls`, `traits`, and `required_actions` become empty arrays. `email_bounced` and `authenticator_types` are dropped. Every field marked <sup>3</sup> above that is a boolean becomes `false`, every timestamp or nullable field becomes `null`, and `unread_gift_inventory_count` becomes `0`.
 :::
-
-:::caution[An outstanding required action blocks ordinary routes]
-While `required_actions` is non-empty, the ordinary login requirement returns 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. The error body's `data` member has `suspicious_activity_flags`, rebuilt from the surviving list.
-:::
-
-Recovery routes stay open to a restricted account. They are [Get current user](/http-api/users/current-user/#get-current-user), [Modify current user](/http-api/users/current-user/#modify-current-user), [Get current user settings](/http-api/users/settings/#get-current-user-settings), every [email change](/http-api/users/email-and-password/) and [phone verification](/http-api/users/phone-verification/) route, [Resend email verification](/http-api/authentication/#resend-email-verification), session listing and termination, and the OAuth2 routes.
-
-A requirement disappears from the list as soon as it is met. An Admin operation applies no suspicious activity gate.
 
 ## Pending bulk message deletion object
 
@@ -222,6 +211,8 @@ A scheduled deletion of every message the account has sent. The field is this ob
 
 The value `1` is unassigned. Any stored authenticator value outside this registry is excluded from `authenticator_types`.
 
+`WEBAUTHN` is present only while the account chose passkeys as a second factor through [Set WebAuthn two-factor authentication](/http-api/users/mfa/#set-webauthn-two-factor-authentication). Registering a credential does not add it, so an account can hold passkeys without the type.
+
 ## Premium types
 
 | Value | Name | Description |
@@ -230,23 +221,21 @@ The value `1` is unassigned. Any stored authenticator value outside this registr
 | 1 | SUBSCRIPTION | Active premium subscription |
 | 2 | LIFETIME | Lifetime premium subscription |
 
-## Required actions
+## Account limitation
 
-Each entry is an exact string in the `required_actions` array of the [user object](#user-object), ordered by the registry order below. Fluxer removes a requirement the account already satisfies, and removes a requirement implied by a stricter retained one.
+An account is limited while its [user object](#user-object) reports `account_limited` as true. A limited account can still read, join voice, change its own settings, and manage its sessions. The operations below return 403 [`ACCOUNT_LIMITED`](/http-api/errors/), and the error message tells the user to check their email.
 
-| Value | Description |
-| --- | --- |
-| REQUIRE_VERIFIED_EMAIL | The account needs a verified email address |
-| REQUIRE_REVERIFIED_EMAIL | The account needs to verify its email address again |
-| REQUIRE_VERIFIED_PHONE | The account needs a verified phone number |
-| REQUIRE_REVERIFIED_PHONE | The account needs to verify its phone number again |
-| REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE | The account needs either a verified email address or a verified phone number |
-| REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE | The account needs to verify its email address again or hold a verified phone number |
-| REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE | The account needs a verified email address or needs to verify its phone number again |
-| REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE | The account needs to verify either its email address or its phone number again |
-| REQUIRE_INBOUND_PHONE_VERIFICATION<sup>1</sup> | The account needs to complete phone verification by sending an SMS to the instance's inbound number |
-
-<sup>1</sup> The entry appears only while a phone requirement is also outstanding. A stored inbound requirement with no other phone clause produces an ordinary verified phone requirement
+- [Create message](/http-api/messages/#create-message) and [Modify message](/http-api/messages/#modify-message) in any channel except the account's personal notes
+- [Crosspost message](/http-api/messages/#crosspost-message)
+- [Add own reaction](/http-api/messages/#add-own-reaction)
+- [Create webhook](/http-api/webhooks/#create-webhook)
+- [Accept invite](/http-api/invites/#accept-invite) and [Join discovery guild](/http-api/discovery/#join-discovery-guild), unless the account is already a member
+- [Create guild](/http-api/guilds/#create-guild)
+- Creating a group direct message through [Create private channel](/http-api/users/private-channels/#create-private-channel), and [Add group direct message recipient](/http-api/channels/#add-group-direct-message-recipient)
+- Changing a profile field through [Modify current user](/http-api/users/current-user/#modify-current-user) or [Modify current guild member](/http-api/guild-members/#modify-current-guild-member)
+- Setting a custom status through [Modify current user settings](/http-api/users/settings/#modify-current-user-settings) or a [presence update](/gateway/commands/#presence-update)
+- [Initiate connection](/http-api/connections/#initiate-connection), [Verify and create connection](/http-api/connections/#verify-and-create-connection), and [Start Bluesky authorisation](/http-api/connections/#start-bluesky-authorisation)
+- [Upload entrance sound](/http-api/entrance-sounds/#upload-entrance-sound) and [Set entrance sound selection](/http-api/entrance-sounds/#set-entrance-sound-selection)
 
 ## Profile field privacy flags
 
@@ -262,7 +251,7 @@ A field whose flags value is `0` is visible to nobody, including on the owner's 
 
 The complete account-wide settings record, with one field per setting. `synced_preferences` holds a base64-encoded Protobuf snapshot defined by the [user settings Protobuf reference](/http-api/users/settings-protobuf/). Fluxer stores that snapshot for clients and never interprets it.
 
-Update semantics belong to the [user settings update object](/http-api/users/settings/#user-settings-update-object). Both settings operations return this object, and so do [Ready](/gateway/events/#ready-object) and [User Settings Update](/gateway/events/#user-settings-update). Every field below is always present.
+The [user settings update object](/http-api/users/settings/#user-settings-update-object) lists the fields an update accepts and what each supplied or omitted field does to the stored value. Both settings operations return this object, and so do [Ready](/gateway/events/#ready-object) and [User Settings Update](/gateway/events/#user-settings-update). Every field below is always present.
 
 ### Structure
 
@@ -316,7 +305,7 @@ Update semantics belong to the [user settings update object](/http-api/users/set
 
 <sup>5</sup> Duplicate identifiers are removed and the array is returned in ascending identifier order
 
-<sup>6</sup> The message is `fluxer.user.preferences.v1.SyncedPreferences`. The empty string means nothing has been synced yet. The decoded message cannot exceed 262144 bytes, the 256 KiB ceiling
+<sup>6</sup> The message is `fluxer.user.preferences.v1.SyncedPreferences`. The empty string means nothing has been synced yet. The decoded message cannot exceed 524288 bytes, the 512 KiB ceiling
 
 <sup>7</sup> The field is read-only here and is changed by [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing)
 
@@ -521,7 +510,7 @@ A guild member profile is the per-guild profile customisation of the target acco
 
 <sup>1</sup> The value is forced to `null` when profile privacy restricts the viewer
 
-<sup>2</sup> The value is `null` while the member's premium-dependent guild customisation is sanitised. An animated banner hash has the `a_` prefix
+<sup>2</sup> Fluxer sets the value to `null` when the account no longer has premium and the membership has a guild avatar, banner, biography, or accent colour. It stays `null` until the account joins the guild again. An animated banner hash has the `a_` prefix
 
 ## Mutual guild object
 
@@ -557,13 +546,13 @@ The profile read returned by [Get user profile](#get-user-profile) for one targe
 
 <sup>1</sup> The pair requires the `guild_id` query parameter and requires both the caller and the target to be members of that guild
 
-<sup>2</sup> All three are omitted while the profile is restricted or the target hides the premium badge, `premium_since` is also omitted while the target hides the activation time, and `premium_lifetime_sequence` while it hides the sequence
+<sup>2</sup> All three are omitted while the profile is restricted or the target hides the premium badge. `premium_since` is also omitted while the target hides the activation time. `premium_lifetime_sequence` is also omitted while the target hides the sequence
 
-<sup>3</sup> The collection is omitted unless its query parameter is true, and always when the target is the caller
+<sup>3</sup> Each array is omitted unless its query parameter, `with_mutual_friends` or `with_mutual_guilds`, is true. Both are always omitted when the target is the caller
 
 <sup>4</sup> The array is empty when the profile is restricted. It otherwise holds only verified connections whose [profile field privacy flags](#profile-field-privacy-flags) admit the caller
 
-<sup>5</sup> The value is null unless the profile is unrestricted, the target has the staff flag, the target has stored a timezone, and its [profile field privacy flags](#profile-field-privacy-flags) admit the caller
+<sup>5</sup> The value is null unless the profile is unrestricted, the target has stored a timezone, and its [profile field privacy flags](#profile-field-privacy-flags) admit the caller
 
 <sup>6</sup> The field is present only on a restricted read
 
@@ -627,7 +616,7 @@ Returns a [full user profile](#full-user-profile-object) object for one target a
 <sup>2</sup> The value is trimmed and read as true only for the exact strings `true`, `True`, and `1`. Every other value, including absence, is false
 
 :::note[Profile privacy is a field filter]
-A read that passes the access check can still be restricted. A restricted read nulls `bio` and `pronouns` in both profile objects, empties `connected_accounts`, nulls `timezone_offset`, and sets `profile_limited` to true. It also removes the three premium fields from the body.
+A read that passes the access check can still be restricted. A restricted read nulls `bio` and `pronouns` in both profile objects, empties `connected_accounts`, nulls `timezone_offset`, and sets `profile_limited` to true. It also removes the premium fields from the body.
 :::
 
 ### Response
@@ -640,7 +629,7 @@ A read that passes the access check can still be restricted. A restricted read n
 
 ### Side effects
 
-When the target's premium period and grace interval have both elapsed, this read clears the stored premium state on the target account before returning it. The cleared fields are the premium type, activation time, end time, gift extension, cancellation flag, billing cycle, and grace end. That write emits no Gateway Dispatch. The background sweep that performs the same clearing emits [User Update](/gateway/events/#user-update). The profile is still returned when the clearing write fails.
+When the target's premium access and its grace period have both ended, reading the profile clears the target's stored premium subscription fields. That change emits no Gateway Dispatch and does not prevent the profile from being returned.
 
 ### Rate limit
 
@@ -663,7 +652,9 @@ Reports whether a username and discriminator pair is unavailable.
 
 <sup>2</sup> The value is parsed as a decimal integer before the lookup, so `7`, `07`, and `0007` describe the same tag
 
-Fluxer reports `false` for the caller's own current tag without a lookup. That comparison reads the username case-insensitively and the discriminator as an integer.
+The caller's current tag returns `false`. The username comparison is case-insensitive and the discriminator is compared as an integer.
+
+When the caller is not a bot on an instance with the `none` tag style, the discriminator is ignored. There `taken` reports whether another account that is not a bot holds the username in any letter case. An account waiting to be deleted still holds its username.
 
 A reserved username fails validation with `USERNAME_RESERVED_VALUE` or `USERNAME_CANNOT_CONTAIN_RESERVED_TERMS`, and no `taken` value comes back for it.
 
@@ -673,7 +664,7 @@ A reserved username fails validation with `USERNAME_RESERVED_VALUE` or `USERNAME
 | --- | --- | --- |
 | taken | boolean | Whether the normalised tag is unavailable |
 
-:::caution[`true` also comes from two transient conditions]
+:::caution[`true` also comes from transient conditions]
 A tag claimed by a registration still in progress reads as taken for up to 30 seconds. A lookup that waits more than 10 seconds on a busy username also reads as taken.
 :::
 

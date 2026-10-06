@@ -41,14 +41,16 @@ function useHeightToggleButtonConfig(heightToggle: CompactVoiceCallHeightToggle 
 		}
 		return i18n._(SHOW_CHAT_DESCRIPTOR);
 	}, [heightToggle, heightToggleUnreadCount, i18n.locale, isChatHidden]);
-	return {heightToggleUnreadCount, accessibleLabel, isChatHidden};
+	const unreadBadgeLabel = heightToggleUnreadCount > 9 ? `${i18n.number(9)}+` : i18n.number(heightToggleUnreadCount);
+	return {heightToggleUnreadCount, unreadBadgeLabel, accessibleLabel, isChatHidden};
 }
 
 export const CompactCallHeightToggleButton: React.FC<{
 	heightToggle?: CompactVoiceCallHeightToggle;
 	callViewId: string;
 }> = ({heightToggle, callViewId}) => {
-	const {heightToggleUnreadCount, accessibleLabel, isChatHidden} = useHeightToggleButtonConfig(heightToggle);
+	const {heightToggleUnreadCount, unreadBadgeLabel, accessibleLabel, isChatHidden} =
+		useHeightToggleButtonConfig(heightToggle);
 	if (!heightToggle) return null;
 	return (
 		<div
@@ -95,7 +97,7 @@ export const CompactCallHeightToggleButton: React.FC<{
 						aria-hidden="true"
 						data-flx="voice.compact-voice-call-view.compact-call-height-toggle-button.height-toggle-unread-badge"
 					>
-						{heightToggleUnreadCount > 9 ? '9+' : heightToggleUnreadCount}
+						{unreadBadgeLabel}
 					</div>
 				)}
 			</div>

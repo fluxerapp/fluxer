@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Channels from '@app/features/channel/state/Channels';
 import type {MessageSearchParams} from '@app/features/search/utils/SearchUtils';
 import Users from '@app/features/user/state/Users';
@@ -81,6 +82,7 @@ const KNOWN_KEYS = new Set([
 	'scope',
 ]);
 const USER_TAG_RE = /^([A-Za-z0-9_]+)#(\d{4})$/;
+const BARE_USERNAME_RE = /^[A-Za-z0-9_]+$/;
 const normalizeSpaces = (s: string) => s.replace(/\s+/g, ' ').trim();
 
 type HasFilter = NonNullable<MessageSearchParams['has']>[number];
@@ -351,7 +353,8 @@ const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
 		return getCurrentUserId();
 	}
 	if (hints?.usersByTag?.[trimmedTag]) return hints.usersByTag[trimmedTag];
-	if (!USER_TAG_RE.test(trimmedTag)) return null;
+	const isBareUsername = RuntimeConfig.usesUniqueUsernames && BARE_USERNAME_RE.test(trimmedTag);
+	if (!USER_TAG_RE.test(trimmedTag) && !isBareUsername) return null;
 	const user = Users.getUserByTag(trimmedTag);
 	return user?.id ?? null;
 };

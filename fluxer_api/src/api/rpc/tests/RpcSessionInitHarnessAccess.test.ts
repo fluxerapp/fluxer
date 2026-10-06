@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 const HARNESS_TOKEN = 'rpc-session-init-harness-token';
 const TEST_AUTH_HEADER = 'x-test-token';
@@ -51,7 +51,7 @@ describe('POST /test/rpc-session-init harness access', () => {
 			.execute();
 	});
 
-	test('rejects a session init carrying the wrong harness token', async () => {
+	test('rejects a session init with the wrong harness token', async () => {
 		const account = await createTestAccount(harness);
 		Config.dev.testHarnessToken = HARNESS_TOKEN;
 		await createBuilder(harness, '')
@@ -62,7 +62,7 @@ describe('POST /test/rpc-session-init harness access', () => {
 			.execute();
 	});
 
-	test('accepts a session init carrying the harness token', async () => {
+	test('accepts a session init with the harness token', async () => {
 		const account = await createTestAccount(harness);
 		Config.dev.testHarnessToken = HARNESS_TOKEN;
 		const response = await createBuilder<RpcSessionResponse>(harness, '')

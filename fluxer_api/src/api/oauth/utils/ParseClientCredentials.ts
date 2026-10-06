@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
 import {InvalidRequestError} from '@fluxer/errors/src/domains/core/InvalidRequestError';
 import {z} from 'zod';
-import {Logger} from '../../Logger';
 
 const BasicAuthScheme = z
 	.string()

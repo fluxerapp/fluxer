@@ -40,7 +40,6 @@ import {useRoleHierarchy} from '@app/features/permissions/hooks/useRoleHierarchy
 import Permission from '@app/features/permissions/state/Permission';
 import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import * as RelationshipCommands from '@app/features/relationship/commands/RelationshipCommands';
 import Relationships from '@app/features/relationship/state/Relationships';
 import * as RelationshipActionUtils from '@app/features/relationship/utils/RelationshipActionUtils';
 import {
@@ -87,6 +86,7 @@ import {useState} from 'react';
 
 const MESSAGE_DESCRIPTOR = msg({
 	message: 'Message',
+	context: 'message-action',
 	comment:
 		'Member actions sheet menu item. Sends a direct message to the target user. Standalone verb used as a menu label.',
 });
@@ -203,7 +203,7 @@ export const GuildMemberActionsSheet: FC<GuildMemberActionsSheetProps> = observe
 			);
 		};
 		const handleSendFriendRequest = () => {
-			RelationshipCommands.sendFriendRequest(user.id);
+			void RelationshipActionUtils.sendFriendRequest(i18n, user.id);
 			onClose();
 		};
 		const handleAcceptFriendRequest = () => {

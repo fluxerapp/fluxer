@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../../Config';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {signHarvestDownloadToken} from './HarvestDownloadToken';
+import {Config} from '@app/api/Config';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {signHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
 
 const HARVEST_DOWNLOAD_PATH = '/harvest-downloads';
 

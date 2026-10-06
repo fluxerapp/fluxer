@@ -2,10 +2,10 @@
 
 import fs from 'node:fs';
 import {PassThrough, Readable} from 'node:stream';
+import {Config} from '@app/api/Config';
+import {StorageObjectListingOverflowError} from '@app/api/infrastructure/IStorageService';
+import {StorageService} from '@app/api/infrastructure/StorageService';
 import {describe, expect, it} from 'vitest';
-import {Config} from '../Config';
-import {StorageObjectListingOverflowError} from './IStorageService';
-import {StorageService} from './StorageService';
 
 interface CopyObjectTestParams {
 	sourceBucket: string;

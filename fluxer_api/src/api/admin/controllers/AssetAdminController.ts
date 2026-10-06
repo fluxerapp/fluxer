@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID} from '@app/api/BrandedTypes';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {AdminRateLimitConfigs} from '@app/api/rate_limit_configs/AdminRateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {PurgeGuildAssetsRequest, PurgeGuildAssetsResponseSchema} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {createGuildID} from '../../BrandedTypes';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {AdminRateLimitConfigs} from '../../rate_limit_configs/AdminRateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function AssetAdminController(app: HonoApp) {
 	app.delete(

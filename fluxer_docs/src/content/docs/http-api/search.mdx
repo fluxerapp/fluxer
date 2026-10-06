@@ -10,7 +10,7 @@ Message search matches indexed messages against a text query and a filter set. O
 
 Fluxer resolves the requested scope to the set of channels the caller may search, then runs the query over that set. A private channel search covers the authenticated account alone, and the set holds a guild channel only while the caller can read its history.
 
-An instance backs message search with either Elasticsearch or Meilisearch. Term matching and typo tolerance belong to whichever it runs, so an instance can differ in how forgiving a match is. Filter matching is exact in every case.
+Term matching and typo tolerance depend on the instance's search backend, Elasticsearch or Meilisearch. Filter matching is exact.
 
 ## Message search result object
 
@@ -31,13 +31,13 @@ The body a completed search returns, holding one page of matching messages.
 
 <sup>2</sup> Contains one entry for each distinct channel represented in `messages`, and never contains a channel with no returned message
 
-<sup>3</sup> Counted over the whole resolved scope. A single channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/) reports the number returned
+<sup>3</sup> Counted over the whole resolved scope. In a single channel context without [READ_MESSAGE_HISTORY](/http-api/permissions/), `total` is the number of messages in `messages`
 
-<sup>4</sup> Present only when the backend produced a cursor. A single channel context, a reconciled offset page, and a Meilisearch instance each return none
+<sup>4</sup> Present only when the backend produced a cursor. A single channel context, a Meilisearch instance, and a page Fluxer rebuilt after it found deleted messages in the backend results each return none
 
 [Search messages](#search-messages) never honours a supplied cursor, so page through a result set with `page` alone.
 
-The operation drops a hit whose message no longer exists. On an offset page the operation re-walks the result set so that `total` and the returned page both count only live messages. A request that supplied a `cursor` skips that reconciliation and only removes the stale hits, so the page can be shorter than `hits_per_page` while further pages exist.
+Deleted messages are omitted. When using `page`, the total counts only existing messages. Supplying a `cursor` can leave shorter pages even when more results exist.
 
 ### Example
 
@@ -53,7 +53,7 @@ The operation drops a hit whose message no longer exists. On an offset page the 
 
 ## Search indexing object
 
-The other 200 body. Fluxer returns it when a channel the search needs has never been indexed, or when that index predates the instance forced reindex point.
+The other 200 body. Fluxer returns it when a channel the search needs has never been indexed, or when that channel was last indexed before 2026-05-23 17:30:00 UTC, a fixed date built into Fluxer.
 
 ### Structure
 
@@ -61,7 +61,7 @@ The other 200 body. Fluxer returns it when a channel the search needs has never 
 | --- | --- | --- |
 | indexing | boolean | Whether an index the search needed is not queryable yet, always true on this body |
 
-Tell the two bodies apart by the presence of `indexing`, which the result object never has. The request queues the missing indexing work, and a later identical request returns ordinary results once that work completes.
+Tell the bodies apart by the presence of `indexing`, which the result object never has. The request queues the missing indexing work, and a later identical request returns ordinary results once that work completes.
 
 ### Example
 
@@ -135,7 +135,7 @@ A bot uses `current`. Supplying any other value with a bot token returns 400 `IN
 
 <sup>2</sup> An audio preview is indexed as `audio`. Use the `sound` [content type](#search-content-types) to find uploaded audio attachments
 
-The four values above are the only ones this filter accepts, so a rich, link, gifv, or bluesky embed cannot be selected or excluded by embed type.
+The values above are the only ones this filter accepts, so a rich, link, gifv, or bluesky embed cannot be selected or excluded by embed type.
 
 ## Search sort fields
 
@@ -174,7 +174,7 @@ Every scope that can include a guild channel calls the main Gateway. A Gateway c
 
 ### JSON body
 
-Every field is optional, though the default `current` scope requires a context. An omitted filter is not applied.
+Every field is optional, though the default `current` scope requires `context_guild_id` or `context_channel_id`. An omitted filter is not applied.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -250,15 +250,11 @@ A `current` guild context rejects a requested channel outside that guild with 40
 
 Fluxer compares `attachment_extension` without lowercasing it, so an uppercase value never matches. `include_nsfw` gates which channels a resolved scope keeps.
 
-:::caution[One stale hit re-reads the whole result set]
-The operation walks the set from the first page to skip stale hits, so a deep offset page costs proportionally more and returns no cursor.
-:::
-
 :::caution[Elasticsearch has a 10000 document result window]
 A plain text query pages past it. A page beyond that window fails with 500 `INTERNAL_SERVER_ERROR` when `contents` or `exact_phrases` is supplied.
 :::
 
-The two backends read `min_id` and `max_id` differently. An Elasticsearch instance compares the message ID. A Meilisearch instance compares the whole creation second the bound encodes, so a message created in the same second as the bound is excluded there. An Elasticsearch instance requires at least one `contents` entry to match and replaces `content` with that group. A Meilisearch instance joins the group, `content`, and the quoted phrases into one query string, and requires no entry in particular. Supplying `exact_phrases` without `contents` narrows `content` to the message text alone on Elasticsearch.
+The backends read `min_id` and `max_id` differently. An Elasticsearch instance compares the message ID. A Meilisearch instance compares the whole creation second the bound encodes, so a message created in the same second as the bound is excluded there. An Elasticsearch instance requires at least one `contents` entry to match and replaces `content` with that group. A Meilisearch instance joins the group, `content`, and the quoted phrases into one query string, and requires no entry in particular. Supplying `exact_phrases` without `contents` narrows `content` to the message text alone on Elasticsearch.
 
 The `current` scope requires one of `context_guild_id` and `context_channel_id`. Supplying neither returns 400 with the field code [CONTEXT_CHANNEL_OR_GUILD_ID_REQUIRED](/http-api/errors/) on the path `context`.
 
@@ -281,7 +277,6 @@ Content moderation scans every string in the body whose field name does not end 
 | 200 | [message search result](#message-search-result-object) object \| [search indexing](#search-indexing-object) object | Search completed, or an index it needed is not queryable yet |
 | 400 | [error response](/http-api/#error-response) | A bot supplied a scope other than `current`, the `current` scope has no context, or a requested channel does not belong to the context guild, each returning `INVALID_FORM_BODY` |
 | 403 | [error response](/http-api/#error-response) | Caller presents an OAuth2 bearer credential, or the guild of the context channel cannot be resolved while a stored guild record still exists, each returning `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | A body string is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
 | 403 | [error response](/http-api/#error-response) | No search backend is configured for the instance and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | A requested channel is outside the resolved scope, the caller is not a member of the context guild, or the caller cannot view the context channel, each returning `MISSING_PERMISSIONS` |

@@ -32,11 +32,11 @@ const TIME_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TWELVE_HOUR_DESCRIPTOR = msg({
-	message: 'Twelve hour',
+	message: 'Twelve-hour',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TWENTY_FOUR_HOUR_DESCRIPTOR = msg({
-	message: 'Twenty four hour',
+	message: 'Twenty-four-hour',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MORNING_TIME_DESCRIPTOR = msg({
@@ -76,7 +76,7 @@ const SPELLCHECK_DESCRIPTOR = msg({
 	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
 });
 const SPELL_CHECK_DESCRIPTOR = msg({
-	message: 'Spell check',
+	message: 'Spellcheck',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const SPELLING_DESCRIPTOR = msg({

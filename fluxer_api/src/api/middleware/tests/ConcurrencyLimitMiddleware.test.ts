@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ConcurrencyLimitMiddleware} from '@app/api/middleware/ConcurrencyLimitMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {Logger} from '@fluxer/logger/src/Logger';
 import {Hono} from 'hono';
 import {describe, expect, test, vi} from 'vitest';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {ConcurrencyLimitMiddleware} from '../ConcurrencyLimitMiddleware';
 
 interface Deferred {
 	promise: Promise<void>;

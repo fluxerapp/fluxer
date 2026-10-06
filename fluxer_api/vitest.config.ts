@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {availableParallelism} from 'node:os';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import {configDefaults, defineConfig} from 'vitest/config';
 
 function parseParallelInteger(value: string | undefined, fallback: number): number {
@@ -24,13 +23,15 @@ const configuredMaxWorkers = parseParallelInteger(process.env.API_TEST_MAX_WORKE
 const configuredMaxConcurrency = parseParallelInteger(process.env.API_TEST_MAX_CONCURRENCY, configuredMaxWorkers);
 
 const MODULE_REGISTRY_TEST_FILES = [
+	'src/api/channel/tests/MessageCrosspostFanout.test.ts',
 	'src/api/gif/GifRequestCountry.test.ts',
-	'src/api/risk/__tests__/AccountPolicyService.test.ts',
+	'src/api/stripe/tests/StripeCheckoutCountryEnforcement.test.ts',
+	'src/api/stripe/tests/StripeNordicCurrencies.test.ts',
+	'src/api/worker/tests/CrosspostTasks.test.ts',
 ];
 
 const INSTANCE_POLICY_TEST_FILES = [
 	'src/api/admin/tests/InstanceConfigPendingRegistrationApproval.test.ts',
-	'src/api/auth/tests/DeferredPhoneGate.test.ts',
 	'src/api/instance/tests/SingleCommunityService.test.ts',
 ];
 
@@ -77,7 +78,7 @@ export default defineConfig({
 		},
 		projects: [
 			{
-				plugins: [tsconfigPaths()],
+				resolve: {tsconfigPaths: true},
 				test: {
 					...sharedTestConfig,
 					name: 'api',
@@ -87,7 +88,7 @@ export default defineConfig({
 				},
 			},
 			{
-				plugins: [tsconfigPaths()],
+				resolve: {tsconfigPaths: true},
 				test: {
 					...sharedTestConfig,
 					name: 'api-module-registry',
@@ -97,7 +98,7 @@ export default defineConfig({
 				},
 			},
 			{
-				plugins: [tsconfigPaths()],
+				resolve: {tsconfigPaths: true},
 				test: {
 					...sharedTestConfig,
 					name: 'api-instance-policy',

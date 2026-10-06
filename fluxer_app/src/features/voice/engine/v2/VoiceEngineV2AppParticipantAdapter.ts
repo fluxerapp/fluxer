@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
 import {asVoiceConnectionQuality, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {assertNonNullObject, assertString} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import type {
 	VoiceEngineV2Controller,
 	VoiceEngineV2Event,
@@ -12,7 +13,6 @@ import type {
 } from '@fluxer/voice_engine_v2';
 import type {Participant, Room, TrackPublication} from 'livekit-client';
 import {Track} from 'livekit-client';
-import {assertNonNullObject, assertString} from './VoiceEngineV2AppAdapterAssertions';
 
 const MAX_DISCARDED_CONNECTION_IDS = 4096;
 

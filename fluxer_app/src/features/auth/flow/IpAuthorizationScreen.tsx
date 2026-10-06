@@ -4,6 +4,7 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import styles from '@app/features/auth/flow/IpAuthorizationScreen.module.css';
 import type {IpAuthorizationChallenge, LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -143,7 +144,9 @@ const IpAuthorizationScreen = ({challenge, onAuthorized, onBack}: IpAuthorizatio
 					>
 						{resendUsed ? <Trans>Resent</Trans> : <Trans>Resend email</Trans>}
 						<flx-i18n data-flx="auth.flow.ip-authorization-screen.flx-i18n">
-							{resendIn > 0 ? ` (${resendIn}s)` : ''}
+							{resendIn > 0
+								? ` (${getCachedNumberFormat(i18n.locale, {style: 'unit', unit: 'second', unitDisplay: 'narrow', maximumFractionDigits: 0}).format(resendIn)})`
+								: ''}
 						</flx-i18n>
 					</Button>
 				)}

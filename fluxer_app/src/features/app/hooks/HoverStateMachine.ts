@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type HoverStateValue = 'idle' | 'hovering';
 
@@ -32,7 +32,7 @@ export const hoverStateMachine = setup({
 export type HoverStateSnapshot = SnapshotFrom<typeof hoverStateMachine>;
 
 export function createHoverStateSnapshot(): HoverStateSnapshot {
-	return getInitialSnapshot(hoverStateMachine);
+	return initialTransition(hoverStateMachine)[0];
 }
 
 export function transitionHoverStateSnapshot(snapshot: HoverStateSnapshot, event: HoverStateEvent): HoverStateSnapshot {

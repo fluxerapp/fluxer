@@ -5,7 +5,7 @@ import {createServer, type IncomingMessage, type Server, type ServerResponse} fr
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import send from 'send';
-import {type AstroServerShutdown, AstroServerTermination} from './AstroServerTermination';
+import {type AstroServerShutdown, AstroServerTermination} from '@/server/AstroServerTermination';
 import {
 	CanonicalNetworkProtocol,
 	getNodeErrorCode,
@@ -16,8 +16,8 @@ import {
 	MIMEType,
 	NodeErrorCode,
 	OUTBOUND_USER_AGENT,
-} from './HTTPConstants';
-import {siteSecurityHeaders} from './SecurityHeaders';
+} from '@/server/HTTPConstants';
+import {siteSecurityHeaders} from '@/server/SecurityHeaders';
 
 const HEALTH_PATH = '/_health';
 const HEALTH_RESPONSE_BODY = JSON.stringify({status: 'ok'});

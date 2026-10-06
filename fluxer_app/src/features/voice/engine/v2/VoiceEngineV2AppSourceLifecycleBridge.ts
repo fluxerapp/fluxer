@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {createVoiceEngineV2AppDiagnosticsAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
 import type {NativeScreenCaptureLifecycleMessage} from '@app/types/electron.d';
 import {
 	type DiagnosticsPort,
@@ -13,7 +14,6 @@ import {
 	type VoiceEngineV2Event,
 	type VoiceEngineV2SourceLifecycleTransitionedEvent,
 } from '@fluxer/voice_engine_v2';
-import {createVoiceEngineV2AppDiagnosticsAdapter} from './VoiceEngineV2AppDiagnosticsAdapter';
 
 const VALID_LIFECYCLE_KINDS: ReadonlySet<NativeScreenCaptureLifecycleMessage['kind']> = new Set([
 	'error',

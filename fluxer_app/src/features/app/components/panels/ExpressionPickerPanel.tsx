@@ -51,21 +51,21 @@ export const ExpressionPickerPanel = observer(
 			const allCategories = [
 				{
 					type: 'gifs' as const,
-					label: i18n._(i18n._(GIFS_DESCRIPTOR)),
+					label: i18n._(GIFS_DESCRIPTOR),
 					renderComponent: ({onClose: close}: {onClose?: () => void}) => (
 						<GifPicker onClose={close} data-flx="app.expression-picker-panel.render-component.gif-picker" />
 					),
 				},
 				{
 					type: 'memes' as const,
-					label: i18n._(i18n._(MEDIA_DESCRIPTOR)),
+					label: i18n._(MEDIA_DESCRIPTOR),
 					renderComponent: ({onClose: close}: {onClose?: () => void}) => (
 						<MemesPicker onClose={close} data-flx="app.expression-picker-panel.render-component.memes-picker" />
 					),
 				},
 				{
 					type: 'stickers' as const,
-					label: i18n._(i18n._(STICKERS_DESCRIPTOR)),
+					label: i18n._(STICKERS_DESCRIPTOR),
 					renderComponent: ({channelId: chanId, onClose: close}: {channelId?: string; onClose?: () => void}) => {
 						const handleStickerSelect = (_sticker: unknown, shiftKey?: boolean) => {
 							if (chanId) {
@@ -85,7 +85,7 @@ export const ExpressionPickerPanel = observer(
 				},
 				{
 					type: 'emojis' as const,
-					label: i18n._(i18n._(EMOJIS_DESCRIPTOR)),
+					label: i18n._(EMOJIS_DESCRIPTOR),
 					renderComponent: ({
 						channelId: chanId,
 						onSelect,

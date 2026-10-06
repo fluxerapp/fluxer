@@ -11,7 +11,7 @@ import {useLingui} from '@lingui/react/macro';
 import {type FC, useCallback} from 'react';
 
 const HIDE_EXPIRY_FOOTNOTES_DESCRIPTOR = msg({
-	message: 'Hide expiry footnotes',
+	message: 'Hide expiration footnotes',
 	comment: 'Short label in the shared app expiry footnote context menu.',
 });
 const VIEW_HELP_ARTICLE_DESCRIPTOR = msg({

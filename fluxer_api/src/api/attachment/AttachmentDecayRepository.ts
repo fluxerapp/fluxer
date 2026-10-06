@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, MessageID} from '../BrandedTypes';
+import type {AttachmentID, ChannelID, MessageID} from '@app/api/BrandedTypes';
 import {
 	BatchBuilder,
 	deleteOneOrMany,
 	fetchMany,
 	fetchManyInChunks,
 	fetchOne,
-} from '../database/CassandraQueryExecution';
-import {AttachmentDecayByExpiry, AttachmentDecayById} from '../Tables';
-import type {AttachmentDecayRow} from '../types/AttachmentDecayTypes';
+} from '@app/api/database/CassandraQueryExecution';
+import {AttachmentDecayByExpiry, AttachmentDecayById} from '@app/api/Tables';
+import type {AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
 
 interface AttachmentDecayExpiryRow {
 	expiry_bucket: number;

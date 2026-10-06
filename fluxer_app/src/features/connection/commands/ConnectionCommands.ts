@@ -10,6 +10,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as FailureInspect from '@app/features/platform/utils/ResponseInspection';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UserProfileCommands from '@app/features/user/commands/UserProfileCommands';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import type {ConnectionType} from '@fluxer/constants/src/ConnectionConstants';
 import type {
 	ConnectionListResponse,
@@ -28,7 +29,7 @@ const FAILED_TO_INITIATE_CONNECTION_DESCRIPTOR = msg({
 	comment: 'Toast error shown when creating a new account connection fails.',
 });
 const FAILED_TO_START_AUTHORISATION_DESCRIPTOR = msg({
-	message: "Couldn't start {blueskyProviderName} authorisation",
+	message: "Couldn't start {blueskyProviderName} authorization",
 	comment:
 		'Toast error shown when starting the OAuth flow for a connection provider fails. Preserve {blueskyProviderName}; it is inserted by code and must appear verbatim in the translation.',
 });
@@ -86,6 +87,7 @@ function successToast(i18n: I18n, message: MessageDescriptor): void {
 }
 
 function showErrorModal(i18n: I18n, error: unknown, fallbackMessage: MessageDescriptor): void {
+	if (handleAccountLimitedError(error)) return;
 	const errorMessage = FailureInspect.failureMessage(error);
 	showGenericErrorModal({
 		title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),

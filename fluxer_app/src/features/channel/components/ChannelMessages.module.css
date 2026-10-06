@@ -14,6 +14,8 @@
 }
 
 .scrollerContainer {
+	--scroller-track-block-end-inset: var(--composer-status-safe-area, 0px);
+	--messages-bottom-fade-fill: var(--composer-surface-color, var(--background-secondary-lighter));
 	position: absolute;
 	inset: 0;
 	display: flex;
@@ -22,6 +24,34 @@
 	min-width: 0;
 	height: 100%;
 	width: 100%;
+}
+
+.bottomFade {
+	position: absolute;
+	inset-block-end: 0;
+	inset-inline: 0 1rem;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.bottomFadeStatusAtBottom {
+	height: 1rem;
+	background: linear-gradient(
+		to bottom,
+		transparent,
+		var(--messages-bottom-fade-fill) var(--composer-status-safe-gap),
+		var(--messages-bottom-fade-fill) 100%
+	);
+}
+
+.bottomFadeStatusScrolled {
+	height: 5rem;
+	background: linear-gradient(
+		to bottom,
+		transparent,
+		var(--messages-bottom-fade-fill) calc(4rem + var(--composer-status-safe-gap)),
+		var(--messages-bottom-fade-fill) 100%
+	);
 }
 
 .scrollerContent {

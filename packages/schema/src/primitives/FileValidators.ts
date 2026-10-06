@@ -10,8 +10,8 @@ import {z} from 'zod';
 
 const WHITESPACE_REGEX = /\s+/g;
 const NON_FILENAME_CHARS_REGEX = /[^\p{L}\p{N}\p{M}_.-]/gu;
-const FILENAME_SAFE_REGEX = /^[\p{L}\p{N}\p{M}_.-]+$/u;
 const WINDOWS_RESERVED_NAMES = /^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\.|$)/i;
+const BASE64_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 export function isValidBase64(value: string): boolean {
 	if (value.length % 4 !== 0) {
@@ -39,20 +39,11 @@ export function isValidBase64(value: string): boolean {
 			return false;
 		}
 	}
-	for (let i = boundary; i < value.length; i++) {
-		if (value.charCodeAt(i) !== 61) {
-			return false;
-		}
+	if (padding === 0) {
+		return true;
 	}
-	try {
-		const decoded = Buffer.from(value, 'base64');
-		if (decoded.length === 0) {
-			return value === '';
-		}
-		return decoded.toString('base64') === value;
-	} catch {
-		return false;
-	}
+	const finalValue = BASE64_ALPHABET.indexOf(value.charAt(boundary - 1));
+	return padding === 1 ? finalValue % 4 === 0 : finalValue % 16 === 0;
 }
 
 export function normalizeFilename(value: string): string {
@@ -60,9 +51,6 @@ export function normalizeFilename(value: string): string {
 	normalized = normalized.replaceAll(String.fromCharCode(0), '');
 	normalized = normalized.replace(/[/\\]/g, '_');
 	normalized = normalized.replace(/\.{2,}/g, '.');
-	while (normalized.includes('..')) {
-		normalized = normalized.replace(/\.\./g, '_');
-	}
 	normalized = normalized.replace(/[<>:"|?*]/g, '');
 	if (WINDOWS_RESERVED_NAMES.test(normalized)) {
 		normalized = `_${normalized}`;
@@ -70,7 +58,6 @@ export function normalizeFilename(value: string): string {
 	normalized = normalized.replace(WHITESPACE_REGEX, '_');
 	normalized = normalized.replace(NON_FILENAME_CHARS_REGEX, '');
 	normalized = normalized.replace(/\.\./g, '_');
-	normalized = normalized.replace(/[/\\]/g, '_');
 	if (!normalized || /^[._]+$/.test(normalized)) {
 		normalized = 'unnamed';
 	}
@@ -84,8 +71,7 @@ export const FilenameType = withStringLengthRangeValidation(
 	ValidationErrorCodes.FILENAME_LENGTH_INVALID,
 )
 	.transform(normalizeFilename)
-	.refine((value) => value.length >= 1, ValidationErrorCodes.FILENAME_EMPTY_AFTER_NORMALIZATION)
-	.refine((value) => FILENAME_SAFE_REGEX.test(value), ValidationErrorCodes.FILENAME_INVALID_CHARACTERS);
+	.pipe(z.string());
 
 export function base64LengthForBytes(maxBytes: number): number {
 	return 4 * Math.ceil(maxBytes / 3);
@@ -95,10 +81,12 @@ export function createBase64StringType(minLength = 1, maxLength = 256) {
 	return withOpenApiType(
 		z
 			.string()
-			.superRefine((value, ctx) => {
+			.overwrite((value) => {
 				const normalized = normalizeString(value);
 				const commaIndex = normalized.indexOf(',');
-				const base64 = commaIndex !== -1 ? normalized.slice(commaIndex + 1) : normalized;
+				return commaIndex !== -1 ? normalized.slice(commaIndex + 1) : normalized;
+			})
+			.superRefine((base64, ctx) => {
 				if (base64.length < minLength || base64.length > maxLength) {
 					ctx.addIssue({
 						code: 'custom',
@@ -114,11 +102,6 @@ export function createBase64StringType(minLength = 1, maxLength = 256) {
 					});
 					return z.NEVER;
 				}
-			})
-			.transform((value) => {
-				const normalized = normalizeString(value);
-				const commaIndex = normalized.indexOf(',');
-				return commaIndex !== -1 ? normalized.slice(commaIndex + 1) : normalized;
 			}),
 		'Base64ImageType',
 	);

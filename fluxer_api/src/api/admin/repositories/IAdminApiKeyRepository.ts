@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import type {AdminApiKey} from '../../models/AdminApiKey';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {AdminApiKey} from '@app/api/models/AdminApiKey';
 
 export interface CreateAdminApiKeyData {
 	name: string;

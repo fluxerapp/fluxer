@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import {getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import type {ChannelID, UserID} from '../../BrandedTypes';
-import {mapChannelToResponse} from '../../channel/ChannelMappers';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../models/Channel';
-import {getCachedUserPartialResponses} from '../UserCacheHelpers';
-import type {UserChannelService} from './UserChannelService';
 
 interface UserChannelListParams {
 	userId: UserID;

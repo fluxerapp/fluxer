@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {
+	MESSAGE_BUILD_BATCH_MAX_BYTES,
+	MessageResponseDataService,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import {Message} from '@app/api/models/Message';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import type {NatsConnection} from 'nats';
 import {describe, expect, it} from 'vitest';
-import {createChannelID, createGuildID, createMessageID, createUserID} from '../../../BrandedTypes';
-import {Message} from '../../../models/Message';
-import {MESSAGE_BUILD_BATCH_MAX_BYTES, MessageResponseDataService} from './MessageResponseDataService';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();

@@ -19,6 +19,10 @@ const SECURE_YOUR_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Secure your account',
 	comment: 'Short label in the authentication email revert page. Keep the tone plain and specific.',
 });
+const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
+	message: 'Passwords do not match',
+	comment: 'Short label in the authentication email revert page. Keep the tone plain and specific.',
+});
 const NEW_PASSWORD_DESCRIPTOR = msg({
 	message: 'New password',
 	comment: 'Short label in the authentication email revert page. Keep the tone plain and specific.',
@@ -44,7 +48,7 @@ const EmailRevertPage = observer(function EmailRevertPage() {
 				return;
 			}
 			if (values.password !== values.confirmPassword) {
-				form.setError('confirmPassword', 'Passwords do not match');
+				form.setError('confirmPassword', i18n._(PASSWORDS_DO_NOT_MATCH_DESCRIPTOR));
 				return;
 			}
 			const response = await AuthenticationCommands.revertEmailChange(token, values.password);
@@ -69,8 +73,8 @@ const EmailRevertPage = observer(function EmailRevertPage() {
 			</h1>
 			<p className={styles.description} data-flx="auth.email-revert-page.description">
 				<Trans>
-					We'll restore your previous email, sign out old sessions, remove phone numbers, disable MFA, and secure your
-					account with a new password.
+					We'll restore your previous email, sign out old sessions, disable MFA, and secure your account with a new
+					password.
 				</Trans>
 			</p>
 			<form className={styles.form} onSubmit={form.handleSubmit} data-flx="auth.email-revert-page.form.submit">

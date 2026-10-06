@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {getGatewayService} from '../../middleware/ServiceRegistry';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, TEST_TIMEOUTS, wait} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {ChannelDataRepository} from '../repositories/ChannelDataRepository';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
+import {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
 import {
 	createDmChannel,
 	createFriendship,
 	createPermissionOverwrite,
 	setupTestGuildWithMembers,
-} from './ChannelTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {getGatewayService} from '@app/api/middleware/ServiceRegistry';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_TIMEOUTS, wait} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 describe('Message send permissions', () => {
 	let harness: ApiTestHarness;

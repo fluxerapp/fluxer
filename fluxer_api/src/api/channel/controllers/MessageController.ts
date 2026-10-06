@@ -1,5 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createAttachmentID, createChannelID, createMessageID, createPersonaID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
+import {parseMultipartMessageData} from '@app/api/channel/services/message/MessageRequestParser';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
+import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
+import {Validator} from '@app/api/Validator';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
@@ -16,6 +31,7 @@ import {
 	PresignedAttachmentUploadRequest,
 	PresignedAttachmentUploadResponse,
 } from '@fluxer/schema/src/domains/message/AttachmentUploadSchemas';
+import {CrosspostSourceResponse} from '@fluxer/schema/src/domains/message/CrosspostSourceSchemas';
 import {
 	BulkDeleteMessagesRequest,
 	BulkMessageFetchRequest,
@@ -26,23 +42,10 @@ import {
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {
 	BulkMessageFetchResponse,
+	MessageListResponse,
+	MessagePurgeResponse,
 	MessageResponseSchema,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {z} from 'zod';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {createAttachmentID, createChannelID, createMessageID, createPersonaID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {parseJsonPreservingLargeIntegers} from '../../utils/LosslessJsonParser';
-import {Validator} from '../../Validator';
-import type {MessageRequest, MessageUpdateRequest} from '../MessageTypes';
-import {normalizeMessageRequestPayload} from '../services/message/MessageRequestCompatibility';
-import {parseMultipartMessageData} from '../services/message/MessageRequestParser';
 
 export function MessageController(app: HonoApp) {
 	app.get(
@@ -54,7 +57,7 @@ export function MessageController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_messages',
 			summary: 'List messages in a channel',
-			responseSchema: z.array(MessageResponseSchema),
+			responseSchema: MessageListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],
@@ -333,13 +336,10 @@ export function MessageController(app: HonoApp) {
 			statusCode: 204,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],
-			description:
-				'Clears all read state and acknowledgement records for a channel, marking all messages as unread. Returns 204 No Content on success.',
+			deprecated: true,
+			description: 'Deprecated. Has no effect on the read state. Returns 204 No Content.',
 		}),
 		async (ctx) => {
-			const userId = ctx.get('user').id;
-			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			await ctx.get('readStateService').deleteReadState({userId, channelId});
 			return ctx.body(null, 204);
 		},
 	);
@@ -364,7 +364,10 @@ export function MessageController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
-			await ctx.get('channelService').messages.deletion.deleteMessage({userId, channelId, messageId, requestCache});
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx
+				.get('channelService')
+				.messages.deletion.deleteMessage({userId, channelId, messageId, requestCache, auditLogReason});
 			return ctx.body(null, 204);
 		},
 	);
@@ -420,7 +423,10 @@ export function MessageController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const messageIds = ctx.req.valid('json').message_ids.map(createMessageID);
-			await ctx.get('channelService').messages.deletion.bulkDeleteMessages({userId, channelId, messageIds});
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx
+				.get('channelService')
+				.messages.deletion.bulkDeleteMessages({userId, channelId, messageIds, auditLogReason});
 			return ctx.body(null, 204);
 		},
 	);
@@ -432,7 +438,7 @@ export function MessageController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'purge_personal_notes_messages',
 			summary: 'Purge all messages in personal notes',
-			responseSchema: z.object({deleted_count: z.number().int().nonnegative()}),
+			responseSchema: MessagePurgeResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],
@@ -501,6 +507,61 @@ export function MessageController(app: HonoApp) {
 			const personaId = personaIdParam ? createPersonaID(BigInt(personaIdParam)) : undefined ;
 			await ctx.get('channelService').interactions.startTyping({userId, channelId, personaId});
 			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/channels/:channel_id/messages/:message_id/crosspost',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_CROSSPOST),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		OpenAPI({
+			operationId: 'crosspost_message',
+			summary: 'Publish a message to following channels',
+			responseSchema: MessageResponseSchema,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Channels', 'Messages'],
+			description:
+				'Publishes a message in an announcement channel to every channel that follows it. The author needs Send Messages. Anyone else needs Send Messages and Manage Messages. Only default messages that are not replies, forwards or copies can be published, and each message can be published once. Copies are delivered asynchronously. Publishing is limited per channel (10 in a row, then one every 6 minutes) and per community (30 in a row, then one every 2 minutes). Returns the updated message with the CROSSPOSTED flag set.',
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			assertAccountNotLimited(ctx.get('user'));
+			return ctx.json(
+				await ctx.get('messageRequestService').crosspostMessage({
+					userId: ctx.get('user').id,
+					channelId: createChannelID(channel_id),
+					messageId: createMessageID(message_id),
+					requestCache: ctx.get('requestCache'),
+				}),
+			);
+		},
+	);
+	app.get(
+		'/channels/:channel_id/messages/:message_id/crosspost-source',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_CROSSPOST_SOURCE),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		OpenAPI({
+			operationId: 'get_message_crosspost_source',
+			summary: 'Get the source community of a published message copy',
+			responseSchema: CrosspostSourceResponse,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Channels', 'Messages'],
+			description:
+				'Returns the public profile of the community a message copy was published from. Works on copies delivered to a following channel and on the system message posted when a channel starts following. Needs the same access as fetching the message. The response holds the community name, icon, banner, badge features, approximate counts and whether it can be joined through discovery.',
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			return ctx.json(
+				await ctx.get('messageRequestService').getCrosspostSource({
+					userId: ctx.get('user').id,
+					channelId: createChannelID(channel_id),
+					messageId: createMessageID(message_id),
+					requestCache: ctx.get('requestCache'),
+				}),
+			);
 		},
 	);
 	app.post(

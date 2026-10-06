@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getKvMeta, registerKvMeta} from '@app/api/database/CassandraMetaRegistry';
+import type {KvQueryMeta, KvTableSpec} from '@app/api/database/CassandraTypes';
 import {describe, expect, it} from 'vitest';
-import {getKvMeta, registerKvMeta} from './CassandraMetaRegistry';
-import type {KvQueryMeta, KvTableSpec} from './CassandraTypes';
 
 const MetaRegistryTestRows: KvTableSpec = {
 	name: 'meta_registry_test_rows',

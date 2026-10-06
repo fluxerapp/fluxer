@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageAttachment, MessageEmbed, MessageStickerItem} from './MessageTypes';
+import type {MessageAttachment, MessageEmbed, MessageStickerItem} from '@app/api/database/types/MessageTypes';
 
 type MentionCollection = ReadonlyArray<bigint> | Set<bigint> | null | undefined;
 

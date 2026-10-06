@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {getMessages} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {createWebhook, deleteWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {getMessages} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createWebhook, deleteWebhook} from './WebhookTestUtils';
 
 function createInstatusPage() {
 	return {
@@ -96,7 +96,7 @@ describe('Webhook Instatus integration', () => {
 			expect(await countWebhookMessages(harness, owner.token, channelId, webhook.id)).toBe(1);
 			await deleteWebhook(harness, webhook.id, owner.token);
 		});
-		it('processes a callback carrying no identifier every time', async () => {
+		it('processes a callback with no identifier every time', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'Instatus Unidentified Guild');
 			const channelId = guild.system_channel_id!;

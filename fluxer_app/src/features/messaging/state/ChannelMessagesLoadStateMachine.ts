@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {compare as compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ChannelMessagesLoadInput {
 	isBefore: boolean;
@@ -124,7 +123,7 @@ export const channelMessagesLoadMachine = setup({
 export type ChannelMessagesLoadSnapshot = SnapshotFrom<typeof channelMessagesLoadMachine>;
 
 export function createChannelMessagesLoadSnapshot(input: ChannelMessagesLoadInput): ChannelMessagesLoadSnapshot {
-	return getInitialSnapshot(channelMessagesLoadMachine, input);
+	return initialTransition(channelMessagesLoadMachine, input)[0];
 }
 
 export function transitionChannelMessagesLoadSnapshot(
@@ -247,7 +246,7 @@ export const channelMessagesWindowMachine = setup({
 export type ChannelMessagesWindowSnapshot = SnapshotFrom<typeof channelMessagesWindowMachine>;
 
 export function createChannelMessagesWindowSnapshot(input: ChannelMessagesWindowInput): ChannelMessagesWindowSnapshot {
-	return getInitialSnapshot(channelMessagesWindowMachine, input);
+	return initialTransition(channelMessagesWindowMachine, input)[0];
 }
 
 export function transitionChannelMessagesWindowSnapshot(
@@ -282,25 +281,6 @@ export function selectChannelMessagesSpacerHeight(status: ChannelMessagesWindowS
 	return status.olderPageAvailable || status.newerPageAvailable ? fillerHeight : 0;
 }
 
-export interface ChannelMessagesTailInput {
-	status: ChannelMessagesWindowStatus;
-	loading: boolean;
-	newestLoadedMessageId: string | null;
-	knownLatestMessageId: string | null;
-}
-
-export function selectChannelMessagesTailGapId(input: ChannelMessagesTailInput): string | null {
-	if (input.status.phase !== 'stream' || input.status.retryVisible || input.status.newerPageAvailable) return null;
-	if (input.newestLoadedMessageId == null || input.knownLatestMessageId == null) return null;
-	if (compareSnowflakes(input.knownLatestMessageId, input.newestLoadedMessageId) <= 0) return null;
-	return input.newestLoadedMessageId;
-}
-
-export function selectChannelMessagesTailProbeId(input: ChannelMessagesTailInput): string | null {
-	if (input.loading) return null;
-	return selectChannelMessagesTailGapId(input);
-}
-
 export function selectChannelMessagesLoadRestoresTrust(input: {
 	mode: ChannelMessagesLoadMode;
 	isAfter: boolean;
@@ -308,28 +288,6 @@ export function selectChannelMessagesLoadRestoresTrust(input: {
 }): boolean {
 	if (input.mode === 'replace') return true;
 	return input.isAfter && !input.hasMoreAfter;
-}
-
-export interface ChannelMessagesTailProbeResultInput {
-	probeGeneration: number;
-	currentGeneration: number;
-	probeJumpTicket: number;
-	currentJumpTicket: number;
-	ready: boolean;
-	hasMoreAfter: boolean;
-	anchorMessageId: string | null;
-	newestLoadedMessageId: string | null;
-}
-
-export type ChannelMessagesTailProbeOutcome = 'apply' | 'release' | 'discard';
-
-export function selectChannelMessagesTailProbeOutcome(
-	input: ChannelMessagesTailProbeResultInput,
-): ChannelMessagesTailProbeOutcome {
-	if (input.currentGeneration !== input.probeGeneration) return 'discard';
-	if (input.currentJumpTicket !== input.probeJumpTicket) return 'discard';
-	if (!input.ready || input.hasMoreAfter || input.newestLoadedMessageId !== input.anchorMessageId) return 'release';
-	return 'apply';
 }
 
 export function selectChannelMessagesWindowBar(status: ChannelMessagesWindowStatus): ChannelMessagesWindowBar {

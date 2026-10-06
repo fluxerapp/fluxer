@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {BaseChannelAuthService, type ChannelAuthOptions} from '@app/api/channel/services/BaseChannelAuthService';
+import type {User} from '@app/api/models/User';
+import {checkGuildVerificationWithResponse} from '@app/api/utils/GuildVerificationUtils';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {User} from '../../../models/User';
-import {checkGuildVerificationWithResponse} from '../../../utils/GuildVerificationUtils';
-import {BaseChannelAuthService, type ChannelAuthOptions} from '../BaseChannelAuthService';
 
 export class MessageChannelAuthService extends BaseChannelAuthService {
 	protected readonly options: ChannelAuthOptions = {

@@ -271,7 +271,7 @@ export const ChannelSourcePreview = observer(function ChannelSourcePreview({
 			return {subtext: guild.name, subtextTone: 'muted' as SubtextTone};
 		}
 		return {subtext: null, subtextTone: 'muted' as SubtextTone};
-	}, [category?.name, channel, guild, isGroupDm, i18n]);
+	}, [category?.name, channel, guild, isGroupDm, i18n.locale]);
 	const nameContent = (
 		<span className={styles.nameText} data-flx="channel.channel-source-preview.name-text">
 			{displayName}

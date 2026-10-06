@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ReadStateMentionInput {
 	authorBlocked: boolean;
@@ -98,7 +98,7 @@ export const readStateMentionMachine = setup({
 export type ReadStateMentionSnapshot = SnapshotFrom<typeof readStateMentionMachine>;
 
 export function createReadStateMentionSnapshot(input: ReadStateMentionInput): ReadStateMentionSnapshot {
-	return getInitialSnapshot(readStateMentionMachine, input);
+	return initialTransition(readStateMentionMachine, input)[0];
 }
 
 export function transitionReadStateMentionSnapshot(

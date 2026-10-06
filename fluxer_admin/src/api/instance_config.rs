@@ -2,13 +2,28 @@
 
 use super::client::{AdminApiClient, ApiResult};
 use super::types::{
-    CreateRegistrationUrlRequest, CreateRegistrationUrlResponse, InstanceConfigResponse,
-    InstanceConfigUpdateRequest, InstanceEmailSmtpTestRequest, InstanceEmailSmtpTestResponse,
+    AccountIdentitySettings, CreateRegistrationUrlRequest, CreateRegistrationUrlResponse,
+    InstanceAccountIdentityDiscovery, InstanceConfigResponse, InstanceConfigUpdateRequest,
+    InstanceEmailSmtpTestRequest, InstanceEmailSmtpTestResponse, InstancePremiumDiscovery,
 };
 
 impl AdminApiClient {
     pub async fn get_instance_config(&self) -> ApiResult<InstanceConfigResponse> {
         self.get("/admin/instance/config", None).await
+    }
+
+    pub async fn get_instance_premium_discovery(&self) -> ApiResult<InstancePremiumDiscovery> {
+        self.get("/.well-known/fluxer", None).await
+    }
+
+    pub async fn get_instance_account_identity(&self) -> ApiResult<AccountIdentitySettings> {
+        let discovery: InstanceAccountIdentityDiscovery =
+            self.get("/.well-known/fluxer", None).await?;
+        let mode = discovery.features.account_identity;
+        Ok(AccountIdentitySettings {
+            mode,
+            tag_style: discovery.features.tag_style,
+        })
     }
 
     pub async fn update_instance_config(

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::{FakeObject, FakeS3, fake_s3, store};
+use super::{FakeObject, FakeS3, connection_dropping_front, fake_s3, store};
 use crate::{
     byte_budget::ByteBudget,
     range::ByteRange,
@@ -8,7 +8,7 @@ use crate::{
     storage::{ObjectReadRequest, ObjectStreamRequest, StorageError},
 };
 use http::{Method, StatusCode, header};
-use std::time::Duration;
+use std::{sync::atomic::Ordering, time::Duration};
 
 const LAST_MODIFIED: &str = "Wed, 21 Oct 2015 07:28:00 GMT";
 
@@ -342,6 +342,48 @@ async fn stream_s3_surfaces_an_upstream_416_instead_of_a_storage_error() {
     assert_eq!(StatusCode::RANGE_NOT_SATISFIABLE, object.status);
     assert_eq!(None, object.byte_range);
     assert_eq!(Some(0), object.content_length);
+}
+
+#[tokio::test]
+async fn a_read_on_a_dropped_connection_is_retried_on_a_new_one() {
+    let fake = fake_s3().await;
+    fake.put_object("cdn/a/b.txt", stored_object());
+    let (endpoint, accepted) = connection_dropping_front(fake.endpoint(), 1).await;
+    let tmp = tempfile::tempdir().unwrap();
+    let mut cfg = fake.config(tmp.path());
+    cfg.storage.s3_endpoint = endpoint;
+    let store = store(cfg);
+
+    let object = store.read_object("cdn", "a/b.txt").await.unwrap();
+
+    assert_eq!(b"hello world", &object.data[..]);
+    assert_eq!(2, accepted.load(Ordering::SeqCst));
+    assert_eq!(1, fake_gets(&fake, "/cdn/a/b.txt"));
+}
+
+#[tokio::test]
+async fn a_read_that_keeps_losing_its_connection_reports_the_cause() {
+    let fake = fake_s3().await;
+    fake.put_object("cdn/a/b.txt", stored_object());
+    let (endpoint, accepted) = connection_dropping_front(fake.endpoint(), usize::MAX).await;
+    let tmp = tempfile::tempdir().unwrap();
+    let mut cfg = fake.config(tmp.path());
+    cfg.storage.s3_endpoint = endpoint;
+    let store = store(cfg);
+
+    let error = store
+        .head_object("cdn", "a/b.txt")
+        .await
+        .expect_err("every connection to the origin is dropped");
+
+    assert!(
+        error
+            .to_string()
+            .contains("connection closed before message completed"),
+        "{error}"
+    );
+    assert_eq!(3, accepted.load(Ordering::SeqCst));
+    assert!(fake.requests().is_empty());
 }
 
 fn fake_gets(fake: &FakeS3, path: &str) -> usize {

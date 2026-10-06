@@ -96,7 +96,7 @@ export function createMockProfile(
 		timezone_offset:
 			options?.previewTimezoneOffset !== undefined
 				? options.previewTimezoneOffset
-				: user.isStaff() && (user.timezonePrivacyFlags ?? ProfileFieldPrivacyFlags.EVERYONE) !== 0
+				: (user.timezonePrivacyFlags ?? ProfileFieldPrivacyFlags.EVERYONE) !== 0
 					? getCurrentTimeZoneOffsetMinutes(user.timezone)
 					: null,
 		premium_type: visiblePremiumData.premiumType ?? undefined,

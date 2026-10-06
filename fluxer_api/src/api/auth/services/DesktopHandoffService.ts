@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import type {SessionOrigin} from '@app/api/auth/AuthSession';
 import {HandoffCodeExpiredError} from '@fluxer/errors/src/domains/auth/HandoffCodeExpiredError';
 import {InvalidHandoffCodeError} from '@fluxer/errors/src/domains/auth/InvalidHandoffCodeError';
 import {
@@ -10,8 +12,6 @@ import {
 	parseDesktopHandoffCode,
 } from '@fluxer/schema/src/domains/auth/DesktopHandoffCode';
 import {ms, seconds} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import type {SessionOrigin} from '../AuthSession';
 
 const HANDOFF_CODE_PREFIX = 'desktop-handoff-v2:';
 const HANDOFF_TOKEN_PREFIX = 'desktop-handoff-token:';
@@ -25,6 +25,7 @@ const POLL_SECRET_BYTES = 32;
 interface HandoffData {
 	createdAt: number;
 	origin: SessionOrigin;
+	initiatorOrigin?: string | null;
 	infoLookupCount: number;
 	pollSecretHash: string;
 }
@@ -84,7 +85,7 @@ function pollSecretMatches(presented: string | undefined, storedHash: string | u
 export class DesktopHandoffService {
 	constructor(private readonly apiContext: ApiContext) {}
 
-	async initiateHandoff(args: {origin: SessionOrigin}): Promise<{
+	async initiateHandoff(args: {origin: SessionOrigin; initiatorOrigin?: string | null}): Promise<{
 		code: string;
 		expiresAt: Date;
 		pollSecret: string;
@@ -95,6 +96,7 @@ export class DesktopHandoffService {
 		const handoffData: HandoffData = {
 			createdAt: Date.now(),
 			origin: args.origin,
+			initiatorOrigin: args.initiatorOrigin ?? null,
 			infoLookupCount: 0,
 			pollSecretHash: hashPollSecret(pollSecret),
 		};
@@ -108,7 +110,7 @@ export class DesktopHandoffService {
 		code: string,
 		createTokenData: (origin: SessionOrigin) => Promise<{token: string; userId: string}>,
 		approverIp: string,
-	): Promise<void> {
+	): Promise<{initiatorOrigin: string | null}> {
 		const {cache} = this.apiContext.services;
 		const normalizedCode = requireNormalizedHandoffCode(code);
 		await this.checkAttemptLimit(approverIp);
@@ -138,6 +140,7 @@ export class DesktopHandoffService {
 		await cache.set(`${HANDOFF_TOKEN_PREFIX}${normalizedCode}`, tokenData, remainingSeconds);
 		await cache.delete(`${HANDOFF_CODE_PREFIX}${normalizedCode}`);
 		await cache.delete(`${HANDOFF_APPROVER_PREFIX}${normalizedCode}`);
+		return {initiatorOrigin: handoffData.initiatorOrigin ?? null};
 	}
 
 	async getHandoffInfo(

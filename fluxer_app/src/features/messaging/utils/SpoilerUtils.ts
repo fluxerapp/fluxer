@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import Permission from '@app/features/permissions/state/Permission';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -49,7 +50,7 @@ export function canonicalizeMediaUrl(url: string | null | undefined): string | n
 		if (youtubeId) {
 			return `youtube:${youtubeId}`;
 		}
-		return parsed.href.replace(/\/$/, '');
+		return stripAttachmentSignature(parsed.href).replace(/\/$/, '');
 	} catch {
 		return null;
 	}

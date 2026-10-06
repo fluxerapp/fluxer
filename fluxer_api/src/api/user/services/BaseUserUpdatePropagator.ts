@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {User} from '../../models/User';
-import {invalidateUserCache, updateUserCache} from '../UserCacheHelpers';
-import {mapUserToPrivateResponse} from '../UserMappers';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {User} from '@app/api/models/User';
+import {invalidateUserCache, updateUserCache} from '@app/api/user/UserCacheHelpers';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 
 interface BaseUserUpdatePropagatorDeps {
 	userCacheService: UserCacheService;

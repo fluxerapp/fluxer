@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
 import type {ConnectionResponse} from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
-import type {UserConnectionRow} from '../database/types/ConnectionTypes';
 
 export function mapConnectionToResponse(row: UserConnectionRow): ConnectionResponse {
 	return {

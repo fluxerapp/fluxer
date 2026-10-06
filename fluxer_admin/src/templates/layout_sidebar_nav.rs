@@ -114,16 +114,6 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                 ]
             ),
             item!(
-                "Suspicious Email Domains",
-                "/suspicious-email-domains",
-                "suspicious-email-domains",
-                [
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_CHECK,
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_ADD,
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_REMOVE,
-                ]
-            ),
-            item!(
                 "Phrase Bans",
                 "/phrase-bans",
                 "phrase-bans",
@@ -254,13 +244,35 @@ pub const NAV_SECTIONS: &[NavSection] = &[
         ],
     },
     NavSection {
-        title: "Hosted Features",
+        title: "Premium",
         items: &[item!(
             "Gift Codes",
             "/gift-codes",
             "gift-codes",
-            [acl::GIFT_CODES_GENERATE],
-            hosted
+            [acl::GIFT_CODES_GENERATE]
         )],
     },
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bulk_actions_nav_covers_every_acl_the_page_renders_a_section_for() {
+        let item = NAV_SECTIONS
+            .iter()
+            .flat_map(|section| section.items)
+            .find(|item| item.active_key == "bulk-actions")
+            .expect("bulk actions nav item");
+        for required in [
+            acl::BULK_UPDATE_USER_FLAGS,
+            acl::BULK_UPDATE_GUILD_FEATURES,
+            acl::BULK_ADD_GUILD_MEMBERS,
+            acl::BULK_DELETE_USERS,
+            acl::BULK_DELETE_USER_MESSAGES,
+        ] {
+            assert!(item.required_acls.contains(&required), "{required}");
+        }
+    }
+}

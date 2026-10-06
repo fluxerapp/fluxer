@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import FormField from '@app/features/auth/flow/AuthFormField';
-import {EMAIL_DESCRIPTOR, PASSWORD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	EMAIL_DESCRIPTOR,
+	PASSWORD_DESCRIPTOR,
+	USERNAME_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -10,7 +14,7 @@ import {useId} from 'react';
 type FieldErrors = ReadonlyMap<string, string> | null | undefined;
 
 export interface AuthFormControllerLike {
-	handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+	handleSubmit: (event: React.SubmitEvent<HTMLFormElement>) => void;
 	getValue: (name: string) => string;
 	setValue: (name: string, value: string) => void;
 	getError: (name: string) => string | null | undefined;
@@ -31,6 +35,7 @@ interface Props {
 	links?: React.ReactNode;
 	linksWrapperClassName?: string;
 	disableSubmit?: boolean;
+	identifierField?: 'email' | 'login';
 }
 
 export default function AuthLoginEmailPasswordForm({
@@ -43,6 +48,7 @@ export default function AuthLoginEmailPasswordForm({
 	links,
 	linksWrapperClassName,
 	disableSubmit,
+	identifierField = 'email',
 }: Props) {
 	const {i18n} = useLingui();
 	const emailId = useId();
@@ -59,8 +65,8 @@ export default function AuthLoginEmailPasswordForm({
 		>
 			<FormField
 				id={emailId}
-				name="email"
-				type="email"
+				name={identifierField}
+				type={identifierField === 'email' ? 'email' : 'text'}
 				autoComplete="username"
 				autoCapitalize="none"
 				autoCorrect="off"
@@ -68,10 +74,10 @@ export default function AuthLoginEmailPasswordForm({
 				spellCheck={false}
 				data-step-focus="true"
 				required
-				label={i18n._(EMAIL_DESCRIPTOR)}
-				value={form.getValue('email')}
-				onChange={(value) => form.setValue('email', value)}
-				error={form.getError('email') || fieldErrors?.get('email')}
+				label={i18n._(identifierField === 'email' ? EMAIL_DESCRIPTOR : USERNAME_DESCRIPTOR)}
+				value={form.getValue(identifierField)}
+				onChange={(value) => form.setValue(identifierField, value)}
+				error={form.getError(identifierField) || fieldErrors?.get(identifierField)}
 				data-flx="auth.flow.auth-login-core.auth-login-email-password-form.form-field.set-value.email"
 			/>
 			<FormField

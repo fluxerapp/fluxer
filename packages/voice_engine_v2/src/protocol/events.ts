@@ -1,25 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {SourceFault, SourceLifecycleState} from '../source_isolation/SourceLifecycleState';
-import type {VoiceEngineV2CommandType} from './commands';
-
-export type VoiceEngineV2SourceLifecycleTransitionKind = SourceLifecycleState['kind'];
-
-export interface VoiceEngineV2SourceLifecycleTransitionedEvent {
-	type: 'sourceLifecycle.transitioned';
-	sourceId: string;
-	kind: VoiceEngineV2SourceLifecycleTransitionKind;
-	since: bigint;
-	attempts: number;
-	fault: SourceFault | null;
-	atMs: number;
-}
-
-export interface VoiceEngineV2SourceLifecycleRemovedEvent {
-	type: 'sourceLifecycle.removed';
-	sourceId: string;
-}
-
+import type {VoiceEngineV2CommandType} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {
 	VoiceEngineV2AudioControlsPatch,
 	VoiceEngineV2CameraEncodingOptions,
@@ -63,7 +44,28 @@ import type {
 	VoiceEngineV2Track,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from './types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {
+	SourceFault,
+	SourceLifecycleState,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
+
+export type VoiceEngineV2SourceLifecycleTransitionKind = SourceLifecycleState['kind'];
+
+export interface VoiceEngineV2SourceLifecycleTransitionedEvent {
+	type: 'sourceLifecycle.transitioned';
+	sourceId: string;
+	kind: VoiceEngineV2SourceLifecycleTransitionKind;
+	since: bigint;
+	attempts: number;
+	fault: SourceFault | null;
+	atMs: number;
+}
+
+export interface VoiceEngineV2SourceLifecycleRemovedEvent {
+	type: 'sourceLifecycle.removed';
+	sourceId: string;
+}
 
 export type VoiceEngineV2Event =
 	| {type: 'implementation.prewarmRequested'}

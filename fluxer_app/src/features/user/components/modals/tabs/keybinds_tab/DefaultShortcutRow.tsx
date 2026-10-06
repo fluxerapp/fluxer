@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import GlobalShortcuts from '@app/features/input/state/GlobalShortcuts';
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
+import {isBuiltinDisableMarker} from '@app/features/input/state/KeybindResolution';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {
 	EditSimpleIcon,
@@ -14,6 +16,7 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {getCustomKeybindActionLabel} from '@app/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions';
 import {DefaultShortcutChipList} from '@app/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutChipList';
+import {SystemShortcutRowHint} from '@app/features/user/components/modals/tabs/keybinds_tab/SystemShortcutRowHint';
 import {
 	chipsForDefaultEntry,
 	getRowActions,
@@ -46,6 +49,11 @@ const RESET_TO_BUILT_IN_2_DESCRIPTOR = msg({
 	comment:
 		'Button or menu action label in the keybinds tab. Keep it concise. Preserve {label}; it is inserted by code.',
 });
+const RE_ENABLE_BUILT_IN_SHORTCUT_DESCRIPTOR = msg({
+	message: 'Re-enable built-in shortcut',
+	comment:
+		'Button or menu action label in the keybinds tab. Turns a disabled built-in shortcut back on. Keep it concise.',
+});
 const SET_CUSTOM_SHORTCUT_FOR_DESCRIPTOR = msg({
 	message: 'Set custom shortcut for "{label}"',
 	comment: 'Label in the keybinds tab. Preserve {label}; it is inserted by code.',
@@ -58,29 +66,50 @@ const GLOBAL_SHORTCUT_DESCRIPTOR = msg({
 	message: 'Global shortcut',
 	comment: 'Toggle in the keybinds tab. When on, the shortcut works even when Fluxer is not focused. Keep it concise.',
 });
-export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActions: ReadonlySet<KeybindCommand>}> = ({
-	row,
-	overriddenActions,
-}) => {
+export const DefaultShortcutRow: React.FC<{
+	row: ShortcutRowModel;
+	overriddenActions: ReadonlySet<KeybindCommand>;
+	disabledActions: ReadonlySet<KeybindCommand>;
+}> = ({row, overriddenActions, disabledActions}) => {
 	const {i18n} = useLingui();
 	const actions = getRowActions(row);
 	const openRowMenu = useCallback(
 		(event: React.MouseEvent<HTMLButtonElement>) => {
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => {
-				const perAction = actions.map((action) => {
-					const customBindings = Keybind.getCustomKeybinds().filter((entry) => entry.action === action.action);
-					const hasEnabledCustomBinding = customBindings.some((entry) => entry.enabled);
-					return {
-						action,
-						label: getCustomKeybindActionLabel(i18n, action.action, action.label),
-						customBindings,
-						hasEnabledCustomBinding,
-					};
-				});
-				const allHaveCustom = perAction.every((p) => p.customBindings.length > 0);
-				const noneHaveCustom = perAction.every((p) => p.customBindings.length === 0);
+				const perAction = actions.map((action) => ({
+					action,
+					label: getCustomKeybindActionLabel(i18n, action.action, action.label),
+					hasCustomBinding: Keybind.getCustomKeybinds().some(
+						(entry) => entry.action === action.action && !isBuiltinDisableMarker(entry),
+					),
+					builtinDisabled: Keybind.isBuiltinDisabled(action.action),
+				}));
+				const noneHaveCustom = perAction.every((p) => !p.hasCustomBinding);
+				const anyBuiltinDisabled = perAction.some((p) => p.builtinDisabled);
+				const allBuiltinDisabled = perAction.every((p) => p.builtinDisabled);
 				const globalAction =
-					actions.length === 1 && Keybind.isActionGlobalCapable(actions[0].action) ? actions[0].action : null;
+					actions.length === 1 &&
+					!anyBuiltinDisabled &&
+					!GlobalShortcuts.isPortalBackend &&
+					Keybind.isActionGlobalCapable(actions[0].action)
+						? actions[0].action
+						: null;
+				const reEnableGroup = anyBuiltinDisabled ? (
+					<MenuGroup data-flx="user.keybinds-tab.open-row-menu.re-enable-menu-group">
+						<MenuItem
+							icon={<RetryIcon size={16} data-flx="user.keybinds-tab.open-row-menu.retry-icon--3" />}
+							onClick={() => {
+								onClose();
+								for (const {action} of perAction) {
+									Keybind.enableBuiltinForAction(action.action);
+								}
+							}}
+							data-flx="user.keybinds-tab.open-row-menu.menu-item.re-enable-built-in"
+						>
+							{i18n._(RE_ENABLE_BUILT_IN_SHORTCUT_DESCRIPTOR)}
+						</MenuItem>
+					</MenuGroup>
+				) : null;
 				const globalGroup = globalAction ? (
 					<MenuGroup data-flx="user.keybinds-tab.open-row-menu.global-menu-group">
 						<CheckboxItem
@@ -109,57 +138,56 @@ export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActi
 								>
 									{i18n._(SET_CUSTOM_SHORTCUT_DESCRIPTOR)}
 								</MenuItem>
-								<MenuItem
-									icon={<HideIcon size={16} data-flx="user.keybinds-tab.open-row-menu.hide-icon--2" />}
-									onClick={() => {
-										onClose();
-										for (const {action} of perAction) {
-											Keybind.addCustomKeybindForAction(action.action);
-										}
-									}}
-									data-flx="user.keybinds-tab.open-row-menu.menu-item.close--4"
-								>
-									{i18n._(DISABLE_BUILT_IN_SHORTCUT_DESCRIPTOR)}
-								</MenuItem>
-							</MenuGroup>
-						);
-					}
-					if (allHaveCustom && perAction.length === 1) {
-						const {action, hasEnabledCustomBinding} = perAction[0];
-						return (
-							<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group--3">
-								{hasEnabledCustomBinding ? (
+								{allBuiltinDisabled ? null : (
 									<MenuItem
-										icon={<RetryIcon size={16} data-flx="user.keybinds-tab.open-row-menu.retry-icon" />}
-										danger
+										icon={<HideIcon size={16} data-flx="user.keybinds-tab.open-row-menu.hide-icon--2" />}
 										onClick={() => {
 											onClose();
-											Keybind.removeCustomKeybindsForAction(action.action);
+											for (const {action} of perAction) {
+												Keybind.disableBuiltinForAction(action.action);
+											}
 										}}
-										data-flx="user.keybinds-tab.open-row-menu.menu-item.close--5"
+										data-flx="user.keybinds-tab.open-row-menu.menu-item.close--4"
 									>
-										{i18n._(RESET_TO_BUILT_IN_DESCRIPTOR)}
-									</MenuItem>
-								) : (
-									<MenuItem
-										icon={<EditSimpleIcon size={16} data-flx="user.keybinds-tab.open-row-menu.edit-simple-icon--3" />}
-										onClick={() => {
-											onClose();
-											Keybind.addCustomKeybindForAction(action.action);
-										}}
-										data-flx="user.keybinds-tab.open-row-menu.menu-item.close--6"
-									>
-										{i18n._(ADD_ANOTHER_CUSTOM_SHORTCUT_DESCRIPTOR)}
+										{i18n._(DISABLE_BUILT_IN_SHORTCUT_DESCRIPTOR)}
 									</MenuItem>
 								)}
 							</MenuGroup>
 						);
 					}
+					if (perAction.length === 1) {
+						const {action} = perAction[0];
+						return (
+							<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group--3">
+								<MenuItem
+									icon={<RetryIcon size={16} data-flx="user.keybinds-tab.open-row-menu.retry-icon" />}
+									danger
+									onClick={() => {
+										onClose();
+										Keybind.removeCustomKeybindsForAction(action.action);
+									}}
+									data-flx="user.keybinds-tab.open-row-menu.menu-item.close--5"
+								>
+									{i18n._(RESET_TO_BUILT_IN_DESCRIPTOR)}
+								</MenuItem>
+								<MenuItem
+									icon={<EditSimpleIcon size={16} data-flx="user.keybinds-tab.open-row-menu.edit-simple-icon--3" />}
+									onClick={() => {
+										onClose();
+										Keybind.addCustomKeybindForAction(action.action);
+									}}
+									data-flx="user.keybinds-tab.open-row-menu.menu-item.close--6"
+								>
+									{i18n._(ADD_ANOTHER_CUSTOM_SHORTCUT_DESCRIPTOR)}
+								</MenuItem>
+							</MenuGroup>
+						);
+					}
 					return (
 						<>
-							{perAction.map(({action, label, customBindings, hasEnabledCustomBinding}) => (
+							{perAction.map(({action, label, hasCustomBinding}) => (
 								<MenuGroup key={action.action} data-flx="user.keybinds-tab.open-row-menu.menu-group--4">
-									{customBindings.length > 0 && hasEnabledCustomBinding ? (
+									{hasCustomBinding ? (
 										<MenuItem
 											icon={<RetryIcon size={16} data-flx="user.keybinds-tab.open-row-menu.retry-icon--2" />}
 											danger
@@ -191,6 +219,7 @@ export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActi
 				return (
 					<>
 						{globalGroup}
+						{reEnableGroup}
 						{renderBody()}
 					</>
 				);
@@ -211,13 +240,15 @@ export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActi
 						data-flx="user.keybinds-tab.default-shortcut-row.default-chips-merged"
 					>
 						<DefaultShortcutChipList
-							chips={chipsForDefaultEntry(a)}
+							chips={chipsForDefaultEntry(i18n, a)}
 							overridden={overriddenActions.has(a.action)}
+							disabled={disabledActions.has(a.action)}
 							data-flx="user.keybinds-tab.default-shortcut-row.default-shortcut-chip-list"
 						/>
 						<DefaultShortcutChipList
-							chips={chipsForDefaultEntry(b)}
+							chips={chipsForDefaultEntry(i18n, b)}
 							overridden={overriddenActions.has(b.action)}
+							disabled={disabledActions.has(b.action)}
 							data-flx="user.keybinds-tab.default-shortcut-row.default-shortcut-chip-list--2"
 						/>
 					</div>
@@ -242,14 +273,19 @@ export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActi
 		<div className={styles.defaultRow} data-flx="user.keybinds-tab.default-shortcut-row.default-row--2">
 			<div className={styles.defaultLabel} data-flx="user.keybinds-tab.default-shortcut-row.default-label--2">
 				{entry.label}
+				<SystemShortcutRowHint
+					action={entry.action}
+					data-flx="user.keybinds-tab.default-shortcut-row.system-shortcut-row-hint"
+				/>
 			</div>
 			<div
 				className={styles.defaultRowActions}
 				data-flx="user.keybinds-tab.default-shortcut-row.default-row-actions--2"
 			>
 				<DefaultShortcutChipList
-					chips={chipsForDefaultEntry(entry)}
+					chips={chipsForDefaultEntry(i18n, entry)}
 					overridden={overriddenActions.has(entry.action)}
+					disabled={disabledActions.has(entry.action)}
 					data-flx="user.keybinds-tab.default-shortcut-row.default-shortcut-chip-list--3"
 				/>
 				<button

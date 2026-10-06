@@ -20,23 +20,21 @@ An OAuth2 protocol failure raised by the [OAuth2 resource](/http-api/oauth2/) an
 
 ## Supplementary members
 
-The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply.
+The error code determines which supplementary members a failure has, and most codes have none. A client reads only the members documented for the code it matched. `errors` is the list of field violations. `retry_after` is the delay before another attempt is admitted. `global` is `true` on a global rate limit denial and `false` on a route one. `required_scope` is the OAuth2 scope the request is missing. `has_mfa` and `methods` are the [sudo mode](/http-api/users/mfa/#sudo-mode) proofs an account can supply. `captcha_provider` and `altcha_challenge` are the challenge described in [CAPTCHA handling](/topics/captcha/).
 
 `GLOBAL_IP_BANNED` and `GLOBAL_IP_TEMPORARILY_BANNED` have their own members:
 
 - `ip_address` is the normalised client address.
 - `appeal_email` is the address an appeal is sent to.
-- `appeals_supported` is `true` only for the permanent ban.
-- `ban_kind` is `permanent` or `temporary_24h`.
+- `appeals_supported` is `true` for both kinds of ban.
+- `ban_kind` is `permanent` or `temporary_24h`. `temporary_24h` covers every ban that records an expiry, whatever its length.
 - `expires_at` is an ISO 8601 timestamp when the ban records an expiry, and `null` otherwise, including on every permanent ban.
 
 ## Validation failure codes
 
 Fluxer answers a field-level failure with 400 and a top-level `errors` array. Each element identifies one failed input field. The [validation error object](/http-api/#validation-error-object) documents the element shape.
 
-A boundary schema validates one of four request targets: the JSON body, the form body, the query string, and the path parameters. A failure on any of them returns the top-level code `INVALID_FORM_BODY`, and each element has a `code` drawn from the [validation error code registry](#validation-error-code-registry) together with a localised `message`.
-
-An operation can also report against a named field without the boundary schema. That failure returns `INVALID_FORM_BODY` as well. Its element has an enumerated `code` and localised `message` when the failure declares a registry code. Otherwise it has a fixed English `message` written at the failure site and no `code`. Every element `code` a client observes is a registry value.
+Invalid JSON bodies, form bodies, query strings and path parameters return `INVALID_FORM_BODY`. Each entry in `errors` identifies a field and its message. An entry can also include a stable `code` from the [validation error code registry](#validation-error-code-registry). Entries without a code have an English message.
 
 [Modify current user settings](/http-api/users/settings/#modify-current-user-settings) is the one operation that answers such a failure with the top-level code `VALIDATION_ERROR` instead of `INVALID_FORM_BODY`. Its trusted domain, age restriction, and synced preferences decisions each report one element with a registry `code` and a fixed English `message`.
 
@@ -62,7 +60,7 @@ The `path` of an element is the dot-joined position of the failed value, so a ne
 An empty or whitespace-only body becomes `{}`, so the response reports the fields the schema then finds missing. A body that does not parse as JSON returns 400 `INVALID_FORM_BODY` with one element at path `body` and code `INVALID_FORMAT`.
 :::
 
-Fluxer normalises empty values on all four targets before validation runs. An empty string becomes `null` wherever it appears, including inside an array element. A nested object becomes `null` when it holds no members. It also becomes `null` when every one of its members is `null` after Fluxer has applied the same rule to each of them. The top-level object itself is never replaced, so a request that sends nothing still reaches the schema as an object and fails on the fields the schema requires.
+Fluxer normalises empty values on all targets before validation runs. An empty string becomes `null` wherever it appears, including inside an array element. A nested object becomes `null` when it holds no members. It also becomes `null` when every one of its members is `null` after Fluxer has applied the same rule to each of them. The top-level object itself is never replaced, so a request that sends nothing still reaches the schema as an object and fails on the fields the schema requires.
 
 :::caution[An enumerated validation failure answers 400 alone]
 A validation failure whose elements have enumerated codes answers 400 with its elements in `errors`. Its top-level code is `INVALID_FORM_BODY` everywhere except [Modify current user settings](/http-api/users/settings/#modify-current-user-settings). Any other status, retry guidance, or response header from the original failure is dropped.
@@ -70,7 +68,7 @@ A validation failure whose elements have enumerated codes answers 400 with its e
 
 ### Default schema failure codes
 
-A boundary schema constraint can name its own [validation code](#validation-error-code-registry). When it names none, Fluxer maps the failure to one of the codes below by the kind of constraint that failed.
+A constraint in a route's request schema can name its own [validation code](#validation-error-code-registry). When it names none, Fluxer maps the failure to one of the codes below by the kind of constraint that failed.
 
 | Constraint | Code | Description |
 | --- | --- | --- |
@@ -112,14 +110,10 @@ Fluxer answers an unrecognised failure with 500 `INTERNAL_SERVER_ERROR` and a ge
 
 ## Client errors as an abuse signal
 
-Every `4xx` response to a request that resolved no authenticated user contributes a weighted abuse signal keyed by the client IP identity. A 429 weighs 3, a 401 weighs 0.75, a 403 weighs 0.5, and every other 4xx weighs 0.25. Fluxer records a signal only when the client address is public and not exempt. An IPv4 client is keyed by its exact address and an IPv6 client by its `/64`. One request records at most one client error signal. A denial produced by an existing IP ban records no signal.
-
-Fluxer records a second signal of weight 1 for a credential that fails to resolve. A request that presents an unrecognised token and is answered 401 contributes both. That signal also records a hash of the credential presented, and Fluxer tracks the number of distinct hashes seen for one IP identity beside the score.
-
-The score and the credential hashes accumulate inside a fixed window, and the window restarts once it elapses. Two triggers fire an automatic ban. The credential trigger fires the first time the count of distinct rejected credentials reaches its threshold. The score trigger fires only after the score has crossed its threshold in three separate windows, which is the default. Both thresholds depend on the address classification, which is datacentre, anonymising, mobile, or residential. An unclassified address takes the residential thresholds. Fluxer never bans a mobile address automatically.
+Repeated invalid requests or credentials can trigger a temporary IP ban. Stop using a rejected credential. Change a rejected request before sending it again, and after a 429 wait `retry_after` before the next attempt.
 
 :::caution[An automatic ban answers every request for 24 hours]
-The window length, both thresholds, and the number of windows the score trigger requires are instance configuration. A tripped ban lasts 24 hours by default. While it holds, Fluxer answers every request from that identity with 403 and the code `GLOBAL_IP_TEMPORARILY_BANNED`.
+A temporary ban lasts 24 hours by default. Requests from the banned address return 403 `GLOBAL_IP_TEMPORARILY_BANNED`. Use `expires_at` from the response when available.
 :::
 
 ## API error code registry
@@ -138,6 +132,14 @@ Several source messages append a further recovery sentence with a template value
 
 You don't have access to this resource or feature
 
+### `ACCOUNT_IDENTITY_LOCKED`
+
+The sign-in method is already set and can't be changed
+
+### `ACCOUNT_LIMITED`
+
+Messaging is paused on your account
+
 ### `ACCOUNT_SUSPENDED_PERMANENTLY`
 
 This account has been permanently suspended
@@ -145,10 +147,6 @@ This account has been permanently suspended
 ### `ACCOUNT_SUSPENDED_TEMPORARILY`
 
 This account has been temporarily suspended
-
-### `ACCOUNT_SUSPICIOUS_ACTIVITY`
-
-Your account is locked due to suspicious activity
 
 ### `ACCOUNT_TOO_NEW_FOR_GUILD`
 
@@ -170,6 +168,10 @@ You've already completed age verification
 
 You're already friends with this user
 
+### `ANNOUNCEMENT_CHANNEL_REQUIRED`
+
+This action is only available in announcement channels
+
 ### `APPLICATION_NOT_OWNED`
 
 You don't own this application
@@ -186,17 +188,9 @@ Bad request
 
 We couldn't resolve that Bluesky handle
 
-### `BLUESKY_OAUTH_CALLBACK_FAILED`
-
-We couldn't complete the Bluesky connection
-
 ### `BLUESKY_OAUTH_NOT_ENABLED`
 
 Bluesky connections are not enabled on this instance
-
-### `BLUESKY_OAUTH_STATE_INVALID`
-
-The authorization request has expired or is invalid
 
 ### `BOTS_CANNOT_CREATE_GUILDS`
 
@@ -300,7 +294,23 @@ Community ownership can't be transferred to a bot
 
 ### `CAPTCHA_REQUIRED`
 
-Captcha is required
+Verification required. Try again
+
+### `CHANNEL_ALREADY_FOLLOWED`
+
+This channel already receives updates from that announcement channel
+
+### `CHANNEL_HAS_FOLLOWED_CHANNELS`
+
+Remove the followed channels posting here before converting it to an announcement channel
+
+### `CHANNEL_TYPE_CONVERSION_NOT_SUPPORTED`
+
+Only text and announcement channels can be converted into each other
+
+### `NEW_CONVERSATIONS_LIMITED`
+
+You can't start new conversations right now. Please try again later
 
 ### `COMMUNICATION_DISABLED`
 
@@ -398,6 +408,10 @@ Magic link has already been used
 
 Email service is temporarily unavailable
 
+### `EMAIL_UNAVAILABLE_ON_INSTANCE`
+
+This instance doesn't use email
+
 ### `EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
@@ -417,6 +431,14 @@ This feature is temporarily disabled
 ### `FILE_SIZE_TOO_LARGE`
 
 File size is too large
+
+### `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED`
+
+Updates from a channel with a content warning can only go to a channel with a content warning or an age restriction
+
+### `FOLLOW_TARGET_NOT_AGE_RESTRICTED`
+
+Updates from an age-restricted channel can only go to an age-restricted channel
 
 ### `FORBIDDEN`
 
@@ -448,7 +470,7 @@ Your IP address {ipAddress} has been permanently blocked from the Fluxer API by 
 
 ### `GLOBAL_IP_TEMPORARILY_BANNED`
 
-Your IP address {ipAddress} has been temporarily blocked from the Fluxer API for 24 hours because of abusive or unusual access patterns
+Your IP address {ipAddress} has been temporarily blocked from the Fluxer API
 
 ### `GONE`
 
@@ -462,13 +484,13 @@ One or more selected users can't be added to this group DM
 
 Email verification is required for this action
 
+### `GUILD_CREATION_PERMISSION_REQUIRED`
+
+You don't have permission to create communities on this instance
+
 ### `GUILD_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
-
-### `GUILD_PHONE_VERIFICATION_REQUIRED`
-
-You need to add a phone number to send messages in this community
 
 ### `GUILD_TEMPLATE_INVALID`
 
@@ -520,7 +542,7 @@ Invalid bot flag
 
 ### `INVALID_CAPTCHA`
 
-Invalid captcha
+Verification failed. Try again
 
 ### `INVALID_CHANNEL_TYPE`
 
@@ -546,6 +568,10 @@ Invalid DSA verification code
 
 Invalid flags format
 
+### `INVALID_FOLLOW_TARGET_CHANNEL`
+
+Followed channels can only post into text channels
+
 ### `INVALID_FORM_BODY`
 
 Invalid form body
@@ -554,6 +580,14 @@ Invalid form body
 
 Invalid handoff code
 
+### `INVALID_ORIGIN_HANDOFF_NONCE`
+
+This sign-in transfer doesn't match the one you started
+
+### `INVALID_PASSKEY_BRIDGE_NONCE`
+
+This passkey request could not be confirmed
+
 ### `INVALID_PERMISSIONS_INTEGER`
 
 Permissions must be a valid integer
@@ -561,14 +595,6 @@ Permissions must be a valid integer
 ### `INVALID_PERMISSIONS_NEGATIVE`
 
 Permissions must be non-negative
-
-### `INVALID_PHONE_NUMBER`
-
-Invalid phone number
-
-### `INVALID_PHONE_VERIFICATION_CODE`
-
-Invalid phone verification code
 
 ### `INVALID_REQUEST`
 
@@ -581,10 +607,6 @@ Invalid stream key format
 ### `INVALID_STREAM_THUMBNAIL_PAYLOAD`
 
 Invalid stream thumbnail payload
-
-### `INVALID_SUSPICIOUS_FLAGS_FORMAT`
-
-Invalid suspicious flags format
 
 ### `INVALID_SYSTEM_FLAG`
 
@@ -706,6 +728,18 @@ You've reached the maximum of {count, plural, one {# webhook} other {# webhooks}
 
 Media metadata error
 
+### `MESSAGE_ALREADY_CROSSPOSTED`
+
+This message has already been published
+
+### `MESSAGE_CROSSPOST_RATE_LIMITED`
+
+This channel has reached its publishing limit
+
+### `MESSAGE_NOT_CROSSPOSTABLE`
+
+This message cannot be published
+
 ### `METHOD_NOT_ALLOWED`
 
 Method not allowed
@@ -786,50 +820,6 @@ NSFW content is age restricted
 
 Passkey authentication failed
 
-### `PHONE_ADD_NOT_ELIGIBLE`
-
-You are not eligible to add a phone number to your account
-
-### `PHONE_ALREADY_USED`
-
-Phone number is already in use
-
-### `PHONE_COUNTRY_NOT_SUPPORTED`
-
-We don't send verification texts to this country. Use a mobile number from another country, or email support@fluxer.app and a person will review your account
-
-### `PHONE_GATE_ESCAPE_UNAVAILABLE`
-
-This account cannot postpone the phone verification check
-
-### `PHONE_INBOUND_VERIFICATION_REQUIRED`
-
-This number is verified by texting us instead of us texting you. Start phone verification again to get the code and the number to text
-
-### `PHONE_LOOKUP_UNAVAILABLE`
-
-Our phone number check is down right now, so we stopped before sending your code. This is on us, not your number. Wait a few minutes and try the same number again
-
-### `PHONE_NUMBER_NOT_IN_SERVICE`
-
-Your carrier says this number isn't in service. Check the number and try again, or email support@fluxer.app if it's correct
-
-### `PHONE_NUMBER_NOT_MOBILE`
-
-This isn't a mobile number, so it can't receive our text. Use a mobile number, or email support@fluxer.app if you think that's wrong
-
-### `PHONE_RATE_LIMIT_EXCEEDED`
-
-Phone rate limit exceeded
-
-### `PHONE_VERIFICATION_NEEDS_REVIEW`
-
-We couldn't verify this number automatically. Email support@fluxer.app and a person will review your account
-
-### `PHONE_VERIFICATION_REQUIRED`
-
-Phone verification is required
-
 ### `PREMIUM_PURCHASE_BLOCKED`
 
 No active subscription
@@ -845,6 +835,10 @@ We couldn't process the request
 ### `PROFILE_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action
+
+### `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`
+
+This published message has reached its editing limit
 
 ### `PURCHASE_EMAIL_VERIFICATION_REQUIRED`
 
@@ -918,13 +912,29 @@ You cannot leave the community for this instance
 
 Slowmode rate limited
 
-### `SMS_VERIFICATION_UNAVAILABLE`
-
-Service unavailable
-
 ### `SSO_REQUIRED`
 
 Invalid request
+
+### `STORE_BILLING_UNAVAILABLE`
+
+In-app purchases are unavailable right now
+
+### `STORE_NOTIFICATION_UNAUTHORIZED`
+
+The notification signature is invalid
+
+### `STORE_PURCHASE_INVALID`
+
+This purchase could not be verified
+
+### `STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT`
+
+This purchase is linked to a different account
+
+### `STORE_PURCHASE_SANDBOX_NOT_ENTITLED`
+
+Test purchases cannot be applied to this account
 
 ### `STREAM_KEY_CHANNEL_MISMATCH`
 
@@ -1114,6 +1124,18 @@ Member wasn't found in this community
 
 Message wasn't found
 
+### `UNKNOWN_ORIGIN_HANDOFF`
+
+This sign-in transfer has expired or was already used
+
+### `UNKNOWN_PASSKEY_BRIDGE`
+
+This passkey request has expired
+
+### `UNKNOWN_PASSKEY_MIGRATION`
+
+There is no passkey to update right now
+
 ### `UNKNOWN_REPORT`
 
 Unknown report
@@ -1126,9 +1148,9 @@ Role wasn't found
 
 Unknown sticker
 
-### `UNKNOWN_SUSPICIOUS_FLAG`
+### `UNKNOWN_STORE_PURCHASE`
 
-Unknown suspicious flag
+Unknown store purchase
 
 ### `UNKNOWN_USER`
 
@@ -1161,6 +1183,10 @@ We couldn't update the resource
 ### `USERNAME_NOT_AVAILABLE`
 
 This username is not available
+
+### `USERNAME_SIGN_IN_ONLY`
+
+This is only available on instances where people sign in with a username
 
 ### `USER_BANNED_FROM_GUILD`
 
@@ -1359,10 +1385,6 @@ Channel must be a DM or a group DM
 
 Channel must be a voice channel
 
-### `CHANNEL_NAME_EMPTY_AFTER_NORMALIZATION`
-
-Channel name can't be empty after normalization
-
 ### `CHANNEL_NOT_FOUND`
 
 Channel not found
@@ -1409,7 +1431,11 @@ Discoverable communities must have a verification level of at least Low
 
 ### `DISCRIMINATOR_INVALID_FORMAT`
 
-Discriminator must be {min}–{max} digits
+`Discriminator must be {min}–{max} digits`
+
+### `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE`
+
+This instance doesn't use tags. Your username is unique on its own
 
 ### `DISCRIMINATOR_OUT_OF_RANGE`
 
@@ -1515,14 +1541,6 @@ Favorite meme name is required
 
 Favorite meme wasn't found
 
-### `FILENAME_EMPTY_AFTER_NORMALIZATION`
-
-Filename can't be empty after normalization
-
-### `FILENAME_INVALID_CHARACTERS`
-
-Filename contains invalid characters
-
 ### `FILENAME_LENGTH_INVALID`
 
 Filename must be between {min} and {max} characters
@@ -1574,6 +1592,10 @@ Community ID is required for channel message and member search indexes
 ### `IMAGE_SIZE_EXCEEDS_LIMIT`
 
 Image size exceeds {maxSize} bytes
+
+### `INSTANCE_ADDRESS_REQUIRED`
+
+This server uses usernames. Enter the username you want followed by @{host}
 
 ### `INTEGER_OUT_OF_INT64_RANGE`
 
@@ -1643,6 +1665,10 @@ Must be a valid ISO timestamp
 
 Invalid JSON in `payload_json`
 
+### `INVALID_LOGIN_OR_PASSWORD`
+
+Invalid username or password
+
 ### `INVALID_MESSAGE_DATA`
 
 Invalid message data
@@ -1694,6 +1720,10 @@ Invalid email or password
 ### `INVALID_PROOF_TOKEN`
 
 Invalid proof token
+
+### `INVALID_RECOVERY_KEY`
+
+Invalid username or recovery key
 
 ### `INVALID_ROLE_ID`
 
@@ -1875,10 +1905,6 @@ String length must be between {min} and {max} characters
 
 Password isn't set
 
-### `PHONE_NUMBER_INVALID_FORMAT`
-
-Phone number must be in E.164 format (for example, +1234567890)
-
 ### `PRECEDING_CHANNEL_MUST_SHARE_PARENT`
 
 Preceding channel must share the same parent as the moved channel
@@ -1963,6 +1989,10 @@ System channel must be a text channel
 
 This tag is already taken
 
+### `TAG_STYLE_REQUIRES_EMAIL_SIGN_IN`
+
+Tags are only available when people sign in with email
+
 ### `THIS_VANITY_URL_IS_ALREADY_TAKEN`
 
 This vanity URL is already taken
@@ -2019,6 +2049,10 @@ URL must be between {min} and {max} characters
 
 URL must resolve to a publicly routable address
 
+### `USERNAME_ALREADY_TAKEN`
+
+This username is already taken
+
 ### `USERNAME_CANNOT_CONTAIN_RESERVED_TERMS`
 
 Username can't contain "fluxer" or "system message"
@@ -2046,10 +2080,6 @@ This user doesn't have an email address
 ### `USER_IS_NOT_BANNED`
 
 This user isn't banned
-
-### `USER_MUST_BE_A_BOT_TO_BE_MARKED_AS_A_SYSTEM_USER`
-
-User must be a bot to be marked as a system user
 
 ### `USER_NOT_IN_CHANNEL`
 
@@ -2142,10 +2172,6 @@ Webhook name must be between {min} and {max} characters
 
 ## Localisation
 
-An error `message` is rendered in one resolved locale. Fluxer uses the configured locale of the authenticated account when the request is authenticated and the account has one. Otherwise it negotiates the request `Accept-Language` value against the canonical [supported locale registry](/topics/locales/#supported-locales). [Locales](/topics/locales/#negotiation) defines the resolution algorithm, including weights, language subtag reduction, and the `en-US` result.
+Messages use the account's locale or the request's `Accept-Language` header, with an English fallback. Early rejections such as IP bans can use the header rather than the account locale. See [Locales](/topics/locales/).
 
-A failure raised before the request locale is resolved, such as an IP ban denial, cannot see the account locale and negotiates `Accept-Language` on its own. That negotiation reads the header entries in order, ignores quality weights, and falls back to `en-US`.
-
-Fluxer localises the `message` of a validation element that has a `code` the same way. A validation element with no `code` has the fixed English string written at the failure site. The `code` field is never localised, either in the envelope or in a validation element.
-
-A code whose catalogue entry is missing for the resolved locale falls back to its English source template. Where no template is registered at all, the `message` falls back to the one the failure supplied, or to the code itself.
+The `code` field is never translated. Validation entries without a code have an English message.

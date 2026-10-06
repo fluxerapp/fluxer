@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageID, UserID} from '../../../BrandedTypes';
-import {Logger} from '../../../Logger';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
+import type {MessageID, UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import {Logger} from '@app/api/Logger';
 
 export class MessageAnonymizationService {
 	constructor(private channelRepository: IChannelRepositoryAggregate) {}

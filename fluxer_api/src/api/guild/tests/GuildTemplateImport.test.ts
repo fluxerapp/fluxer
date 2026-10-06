@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {getGuildChannels, getRoles} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {SystemChannelFlags} from '@fluxer/constants/src/GuildConstants';
+import {VOICE_CHANNEL_USER_LIMIT_MAX} from '@fluxer/constants/src/LimitConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {getGuildChannels, getRoles} from './GuildTestUtils';
 
 describe('Guild Template Import', () => {
 	let harness: ApiTestHarness;
@@ -103,7 +104,7 @@ describe('Guild Template Import', () => {
 				},
 			})
 			.execute();
-		expect(guild.verification_level).toBe(4);
+		expect(guild.verification_level).toBe(3);
 		expect(guild.default_message_notifications).toBe(1);
 		expect(guild.explicit_content_filter).toBe(2);
 		expect(guild.system_channel_flags).toBe(SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS);
@@ -140,7 +141,7 @@ describe('Guild Template Import', () => {
 						},
 						{
 							id: '4102',
-							type: 5,
+							type: ChannelTypes.GUILD_ANNOUNCEMENT,
 							name: 'announcements',
 							parent_id: '4101',
 							position: 1,
@@ -170,7 +171,7 @@ describe('Guild Template Import', () => {
 		const mediaChannel = channels.find((channel) => channel.name === 'media-feed');
 		expect(categoryChannel).toBeDefined();
 		expect(announcementsChannel).toBeDefined();
-		expect(announcementsChannel?.type).toBe(ChannelTypes.GUILD_TEXT);
+		expect(announcementsChannel?.type).toBe(ChannelTypes.GUILD_ANNOUNCEMENT);
 		expect(announcementsChannel?.parent_id).toBe(categoryChannel?.id ?? null);
 		expect(stageChannel).toBeDefined();
 		expect(stageChannel?.type).toBe(ChannelTypes.GUILD_VOICE);
@@ -209,6 +210,84 @@ describe('Guild Template Import', () => {
 		expect(roles.some((role) => role.name === '')).toBe(true);
 		expect(channels.some((channel) => channel.name === '')).toBe(true);
 	});
+	test.each([
+		['a negative slowmode', {rate_limit_per_user: -1}],
+		['a slowmode above the channel maximum', {rate_limit_per_user: 1_000_000_000}],
+		['a fractional position', {position: 0.5}],
+		['a negative position', {position: -3}],
+		['a topic above the channel maximum', {topic: 'x'.repeat(1025)}],
+		['a name above the channel maximum', {name: 'x'.repeat(101)}],
+		['a negative user limit', {type: ChannelTypes.GUILD_VOICE, user_limit: -1}],
+		['a voice connection limit above the maximum', {type: ChannelTypes.GUILD_VOICE, voice_connection_limit: 100_000}],
+		['a negative voice connection limit', {type: ChannelTypes.GUILD_VOICE, voice_connection_limit: -5}],
+	])('rejects a template channel with %s', async (_label, overrides) => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token)
+			.post('/guilds')
+			.body({
+				name: 'Bounded Guild',
+				template: buildMinimalTemplate({
+					channels: [{id: 6001, type: ChannelTypes.GUILD_TEXT, name: 'general', position: 0, ...overrides}],
+				}),
+			})
+			.expect(400, 'INVALID_FORM_BODY')
+			.execute();
+	});
+	test.each([
+		['a negative colour', {color: -1}],
+		['a colour above 0xffffff', {color: 0x1000000}],
+		['a name above the role maximum', {name: 'x'.repeat(101)}],
+	])('rejects a template role with %s', async (_label, overrides) => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token)
+			.post('/guilds')
+			.body({
+				name: 'Bounded Guild',
+				template: buildMinimalTemplate({
+					roles: [
+						{id: 0, name: '@everyone', permissions: DEFAULT_EVERYONE_PERMISSIONS},
+						{id: 6100, name: 'Role', permissions: '0', ...overrides},
+					],
+				}),
+			})
+			.expect(400, 'INVALID_FORM_BODY')
+			.execute();
+	});
+	test('clamps imported voice user limits to the channel maximum and keeps channels readable', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createBuilder<GuildResponse>(harness, account.token)
+			.post('/guilds')
+			.body({
+				name: 'Stage Guild',
+				template: buildMinimalTemplate({
+					channels: [
+						{id: 6001, type: ChannelTypes.GUILD_TEXT, name: 'general', position: 0, rate_limit_per_user: 30},
+						{id: 6002, type: 13, name: 'town-hall', position: 1, user_limit: 10_000},
+						{id: 6003, type: ChannelTypes.GUILD_VOICE, name: 'lounge', position: 2, voice_connection_limit: 100},
+					],
+				}),
+			})
+			.execute();
+		const channels = await getGuildChannels(harness, account.token, guild.id);
+		expect(channels.find((channel) => channel.name === 'general')?.rate_limit_per_user).toBe(30);
+		expect(channels.find((channel) => channel.name === 'town-hall')?.user_limit).toBe(VOICE_CHANNEL_USER_LIMIT_MAX);
+		expect(channels.find((channel) => channel.name === 'lounge')?.voice_connection_limit).toBe(100);
+	});
 });
 
 const DEFAULT_EVERYONE_PERMISSIONS = Permissions.VIEW_CHANNEL.toString();
+
+function buildMinimalTemplate(overrides: {channels?: Array<object>; roles?: Array<object>}) {
+	return {
+		name: 'Template Source',
+		description: null,
+		verification_level: 0,
+		default_message_notifications: 0,
+		explicit_content_filter: 0,
+		system_channel_id: 6001,
+		afk_timeout: 300,
+		system_channel_flags: 0,
+		roles: overrides.roles ?? [{id: 0, name: '@everyone', permissions: DEFAULT_EVERYONE_PERMISSIONS}],
+		channels: overrides.channels ?? [{id: 6001, type: ChannelTypes.GUILD_TEXT, name: 'general', position: 0}],
+	};
+}

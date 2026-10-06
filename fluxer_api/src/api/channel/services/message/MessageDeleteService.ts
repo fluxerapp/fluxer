@@ -1,5 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createMessageID, createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {CrosspostPropagation} from '@app/api/channel/services/message/CrosspostPropagation';
+import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
+import {isOperationDisabled, purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {Webhook} from '@app/api/models/Webhook';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
@@ -12,22 +29,6 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
-import type {ChannelID, GuildID, MessageID, UserID} from '../../../BrandedTypes';
-import {createMessageID, createUserID} from '../../../BrandedTypes';
-import type {GuildAuditLogService} from '../../../guild/GuildAuditLogService';
-import type {IPurgeQueue} from '../../../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {IStorageService} from '../../../infrastructure/IStorageService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {Webhook} from '../../../models/Webhook';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {MessageChannelAuthService} from './MessageChannelAuthService';
-import type {MessageDispatchService} from './MessageDispatchService';
-import {isOperationDisabled, purgeMessageAttachments} from './MessageHelpers';
-import type {MessageSearchService} from './MessageSearchService';
-import type {MessageValidationService} from './MessageValidationService';
 
 interface MessageDeleteServiceDeps {
 	channelRepository: IChannelRepositoryAggregate;
@@ -39,6 +40,7 @@ interface MessageDeleteServiceDeps {
 	searchService: MessageSearchService;
 	gatewayService: IGatewayService;
 	guildAuditLogService: GuildAuditLogService;
+	crosspostPropagation: CrosspostPropagation;
 }
 
 export class MessageDeleteService {
@@ -53,12 +55,14 @@ export class MessageDeleteService {
 		channelId,
 		messageId,
 		skipGuildAuditLog,
+		auditLogReason,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		messageId: MessageID;
 		requestCache: RequestCache;
 		skipGuildAuditLog?: boolean;
+		auditLogReason?: string | null;
 	}): Promise<void> {
 		const {channel, guild, hasPermission} = await this.deps.channelAuthService.getChannelAuthenticated({
 			userId,
@@ -82,6 +86,11 @@ export class MessageDeleteService {
 			message.pinnedTimestamp || undefined,
 		);
 		await this.deps.dispatchService.dispatchMessageDelete({channel, messageId, message});
+		await this.deps.crosspostPropagation.enqueueCrosspostSourceRemoval({
+			messages: [message],
+			mode: 'source_deleted',
+			channel,
+		});
 		if (message.pinnedTimestamp) {
 			await this.deps.dispatchService.dispatchEvent({
 				channel,
@@ -97,7 +106,7 @@ export class MessageDeleteService {
 				.createBuilder(channel.guildId, userId)
 				.withAction(AuditLogActionType.MESSAGE_DELETE, message.id.toString())
 				.withMetadata({channel_id: channel.id.toString()})
-				.withReason(null)
+				.withReason(auditLogReason ?? null)
 				.commit();
 		}
 		await this.deps.searchService.deleteMessageIndex(messageId);
@@ -113,7 +122,7 @@ export class MessageDeleteService {
 	}): Promise<void> {
 		const channelId = webhook.channelId!;
 		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		if (!channel || !channel.guildId) {
+		if (!channel?.guildId) {
 			throw new CannotExecuteOnDmError();
 		}
 		const message = await this.deps.channelRepository.messages.getMessage(channelId, messageId);
@@ -132,6 +141,11 @@ export class MessageDeleteService {
 			message.pinnedTimestamp || undefined,
 		);
 		await this.deps.dispatchService.dispatchMessageDelete({channel, messageId, message});
+		await this.deps.crosspostPropagation.enqueueCrosspostSourceRemoval({
+			messages: [message],
+			mode: 'source_deleted',
+			channel,
+		});
 		if (message.pinnedTimestamp) {
 			await this.deps.dispatchService.dispatchEvent({
 				channel,
@@ -149,10 +163,12 @@ export class MessageDeleteService {
 		userId,
 		channelId,
 		messageIds,
+		auditLogReason,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		messageIds: Array<MessageID>;
+		auditLogReason?: string | null;
 	}): Promise<void> {
 		if (messageIds.length === 0) {
 			throw InputValidationError.fromCode('message_ids', ValidationErrorCodes.MESSAGE_IDS_CANNOT_BE_EMPTY);
@@ -178,6 +194,11 @@ export class MessageDeleteService {
 		);
 		await this.deps.channelRepository.messages.bulkDeleteMessages(channelId, messageIds);
 		await this.deps.dispatchService.dispatchMessageDeleteBulk({channel, messageIds});
+		await this.deps.crosspostPropagation.enqueueCrosspostSourceRemoval({
+			messages: existingMessages,
+			mode: 'source_deleted',
+			channel,
+		});
 		if (channel.guildId && existingMessages.length > 0) {
 			await this.guildAuditLogService
 				.createBuilder(channel.guildId, userId)
@@ -186,7 +207,7 @@ export class MessageDeleteService {
 					channel_id: channel.id.toString(),
 					count: existingMessages.length.toString(),
 				})
-				.withReason(null)
+				.withReason(auditLogReason ?? null)
 				.commit();
 		}
 		await this.deps.searchService.deleteMessagesIndex(messageIds);
@@ -256,6 +277,11 @@ export class MessageDeleteService {
 						);
 						await this.deps.channelRepository.messages.bulkDeleteMessages(channel.id, messageIds);
 						await this.deps.dispatchService.dispatchMessageDeleteBulk({channel, messageIds});
+						await this.deps.crosspostPropagation.enqueueCrosspostSourceRemoval({
+							messages: userMessages,
+							mode: 'source_deleted',
+							channel,
+						});
 						await this.deps.searchService.deleteMessagesIndex(messageIds);
 					}
 					if (inWindow.length < messages.length || messages.length < batchSize) break;

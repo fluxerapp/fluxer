@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {JobByIdRow} from '@app/api/database/types/JobLedgerTypes';
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
 import type {JobLedgerEntry, ListJobsRequest} from '@fluxer/schema/src/domains/admin/JobsSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {JobByIdRow} from '../database/types/JobLedgerTypes';
-import type {IJobLedgerRepository} from './IJobLedgerRepository';
 
 export class JobAdminService {
 	constructor(

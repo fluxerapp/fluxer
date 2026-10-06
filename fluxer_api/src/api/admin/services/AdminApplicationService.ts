@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {type ApplicationID, createApplicationID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {Application} from '@app/api/models/Application';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownApplicationError} from '@fluxer/errors/src/domains/oauth/UnknownApplicationError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -9,12 +15,6 @@ import type {
 	LookupApplicationResponse,
 	TransferApplicationOwnershipRequest,
 } from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {type ApplicationID, createApplicationID, createUserID, type GuildID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {Application} from '../../models/Application';
-import type {IApplicationRepository} from '../../oauth/repositories/IApplicationRepository';
-import type {AdminAuditService} from './AdminAuditService';
 
 interface AdminApplicationServiceDeps {
 	apiContext: ApiContext;

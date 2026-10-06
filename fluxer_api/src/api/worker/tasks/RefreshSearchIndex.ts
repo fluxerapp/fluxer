@@ -1,16 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {seconds} from 'itty-time';
-import {z} from 'zod';
-import type {GuildID, ReportID, UserID} from '../../BrandedTypes';
-import {createGuildID} from '../../BrandedTypes';
-import {GuildDiscoveryRepository} from '../../guild/repositories/GuildDiscoveryRepository';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
+import type {GuildID, ReportID, UserID} from '@app/api/BrandedTypes';
+import {createGuildID} from '@app/api/BrandedTypes';
+import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
 import {
 	getAuditLogSearchService,
 	getGuildMemberSearchService,
@@ -18,11 +12,17 @@ import {
 	getMessageSearchService,
 	getReportSearchService,
 	getUserSearchService,
-} from '../../SearchFactory';
-import type {IGuildMemberSearchService} from '../../search/IGuildMemberSearchService';
-import type {IMessageSearchService} from '../../search/IMessageSearchService';
-import {deleteChannelMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/SearchFactory';
+import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
+import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
+import {seconds} from 'itty-time';
+import {z} from 'zod';
 
 const INDEX_TYPES = [
 	'guilds',
@@ -87,7 +87,7 @@ async function reportInProgress(
 
 interface PaginateAndIndexOptions<TCursor, TItem> {
 	fetchPage: (cursor: TCursor | undefined) => Promise<Array<TItem>>;
-	indexBatch: (items: Array<TItem>) => Promise<void>;
+	indexBatch: (items: Array<TItem>) => Promise<number>;
 	getCursor: (item: TItem) => TCursor;
 	label: string;
 	kvClient: IKVProvider;
@@ -102,11 +102,13 @@ async function paginateAndIndex<TCursor, TItem>(options: PaginateAndIndexOptions
 	while (hasMore) {
 		const items = await options.fetchPage(cursor);
 		if (items.length > 0) {
-			await options.indexBatch(items);
-			indexedCount += items.length;
+			const batchCount = await options.indexBatch(items);
+			indexedCount += batchCount;
 			cursor = options.getCursor(items[items.length - 1]!);
-			await reportInProgress(options.kvClient, options.progressKey, options.indexType, indexedCount);
-			Logger.debug({count: items.length, total: indexedCount}, `Indexed ${options.label} batch`);
+			if (batchCount > 0) {
+				await reportInProgress(options.kvClient, options.progressKey, options.indexType, indexedCount);
+				Logger.debug({count: batchCount, total: indexedCount}, `Indexed ${options.label} batch`);
+			}
 		}
 		hasMore = items.length === BATCH_SIZE;
 	}
@@ -127,7 +129,10 @@ const refreshGuilds: IndexHandler = async (_payload, _helpers, kvClient, progres
 	await searchService.deleteAllDocuments();
 	return paginateAndIndex({
 		fetchPage: (cursor?: GuildID) => guildRepository.listAllGuildsPaginated(BATCH_SIZE, cursor),
-		indexBatch: (guilds) => searchService.indexGuilds(guilds),
+		indexBatch: async (guilds) => {
+			await searchService.indexGuilds(guilds);
+			return guilds.length;
+		},
 		getCursor: (guild) => guild.id,
 		label: 'guild',
 		kvClient,
@@ -141,21 +146,16 @@ const refreshUsers: IndexHandler = async (_payload, _helpers, kvClient, progress
 	await searchService.deleteAllDocuments();
 	let pageState: string | null = null;
 	let indexedCount = 0;
-	while (true) {
+	do {
 		const page = await userRepository.scanAllUsersPage(BATCH_SIZE, pageState);
+		pageState = page.pageState;
 		const users = page.users;
-		if (users.length === 0) {
-			break;
-		}
+		if (users.length === 0) continue;
 		await searchService.indexUsers(users);
 		indexedCount += users.length;
 		await reportInProgress(kvClient, progressKey, 'users', indexedCount);
 		Logger.debug({count: users.length, total: indexedCount}, 'Indexed user batch');
-		pageState = page.pageState;
-		if (!pageState) {
-			break;
-		}
-	}
+	} while (pageState);
 	Logger.debug({count: indexedCount}, 'Refreshed user search index');
 	return indexedCount;
 };
@@ -165,7 +165,10 @@ const refreshReports: IndexHandler = async (_payload, _helpers, kvClient, progre
 	await searchService.deleteAllDocuments();
 	return paginateAndIndex({
 		fetchPage: (cursor?: ReportID) => reportRepository.listAllReportsPaginated(BATCH_SIZE, cursor),
-		indexBatch: (reports) => searchService.indexReports(reports),
+		indexBatch: async (reports) => {
+			await searchService.indexReports(reports);
+			return reports.length;
+		},
 		getCursor: (report) => report.reportId,
 		label: 'report',
 		kvClient,
@@ -179,7 +182,10 @@ const refreshAuditLogs: IndexHandler = async (_payload, _helpers, kvClient, prog
 	await searchService.deleteAllDocuments();
 	return paginateAndIndex({
 		fetchPage: (cursor?: bigint) => adminRepository.listAllAuditLogsPaginated(BATCH_SIZE, cursor),
-		indexBatch: (logs) => searchService.indexAuditLogs(logs),
+		indexBatch: async (logs) => {
+			await searchService.indexAuditLogs(logs);
+			return logs.length;
+		},
 		getCursor: (log) => log.logId,
 		label: 'audit log',
 		kvClient,
@@ -227,20 +233,21 @@ const refreshGuildMembers: IndexHandler = async (payload, _helpers, kvClient, pr
 	const searchService = requireSearchService<IGuildMemberSearchService>(getGuildMemberSearchService());
 	await searchService.deleteGuildMembers(guildId);
 	const indexedCount = await paginateAndIndex({
-		fetchPage: async (cursor?: UserID) => {
-			const members = await guildRepository.listMembersPaginated(guildId, BATCH_SIZE, cursor);
+		fetchPage: (cursor?: UserID) => guildRepository.listMembersPaginated(guildId, BATCH_SIZE, cursor),
+		indexBatch: async (members) => {
 			const uniqueUserIds = Array.from(new Set(members.map((m) => m.userId)));
 			const users = await userRepository.listUsers(uniqueUserIds);
 			const userMap = new Map<UserID, User>(users.map((u) => [u.id, u]));
-			return members
-				.map((member) => {
-					const user = userMap.get(member.userId);
-					return user ? {member, user} : null;
-				})
-				.filter((item): item is NonNullable<typeof item> => item != null);
+			const membersWithUsers = members.flatMap((member) => {
+				const user = userMap.get(member.userId);
+				return user ? [{member, user}] : [];
+			});
+			if (membersWithUsers.length > 0) {
+				await searchService.indexMembers(membersWithUsers);
+			}
+			return membersWithUsers.length;
 		},
-		indexBatch: (membersWithUsers) => searchService.indexMembers(membersWithUsers),
-		getCursor: (item) => item.member.userId,
+		getCursor: (member) => member.userId,
 		label: 'guild member',
 		kvClient,
 		progressKey,

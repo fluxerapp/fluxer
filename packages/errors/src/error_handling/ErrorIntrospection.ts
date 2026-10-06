@@ -6,6 +6,24 @@ import {HTTPException} from 'hono/http-exception';
 
 const apiErrorCodeSet = new Set<string>(Object.values(APIErrorCodes));
 
+const HTTP_STATUS_TO_ERROR_CODE: Partial<Record<number, string>> = {
+	400: APIErrorCodes.BAD_REQUEST,
+	403: APIErrorCodes.FORBIDDEN,
+	404: APIErrorCodes.NOT_FOUND,
+	405: APIErrorCodes.METHOD_NOT_ALLOWED,
+	409: APIErrorCodes.CONFLICT,
+	410: APIErrorCodes.GONE,
+	500: APIErrorCodes.INTERNAL_SERVER_ERROR,
+	501: APIErrorCodes.NOT_IMPLEMENTED,
+	502: APIErrorCodes.BAD_GATEWAY,
+	503: APIErrorCodes.SERVICE_UNAVAILABLE,
+	504: APIErrorCodes.GATEWAY_TIMEOUT,
+};
+
+export function getApiErrorCodeForStatus(status: number): string {
+	return HTTP_STATUS_TO_ERROR_CODE[status] ?? APIErrorCodes.GENERAL_ERROR;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null;
 }
@@ -24,11 +42,6 @@ export function getErrorRecord(err: unknown): Record<string, unknown> | null {
 export function resolveApiErrorCode(err: unknown): string | null {
 	if (err instanceof FluxerError) {
 		return err.code;
-	}
-	if (err instanceof HTTPException && 'code' in err && typeof err.code === 'string') {
-		if (isApiErrorCode(err.code)) {
-			return err.code;
-		}
 	}
 	const record = getErrorRecord(err);
 	if (!record) {
@@ -55,29 +68,14 @@ export function resolveErrorStatus(err: unknown): number | null {
 }
 
 export function resolveErrorData(err: unknown): Record<string, unknown> | undefined {
-	if (err instanceof HTTPException && 'data' in err && isRecord(err.data)) {
-		return err.data;
-	}
 	const record = getErrorRecord(err);
 	if (!record) {
 		return undefined;
 	}
-	if (isRecord(record.data)) {
-		return record.data;
-	}
-	return undefined;
+	return isRecord(record.data) ? record.data : undefined;
 }
 
 export function resolveErrorHeaders(err: unknown): Record<string, string> | undefined {
-	if (err instanceof HTTPException && 'headers' in err && isRecord(err.headers)) {
-		const headers: Record<string, string> = {};
-		for (const [key, value] of Object.entries(err.headers)) {
-			if (typeof value === 'string') {
-				headers[key] = value;
-			}
-		}
-		return Object.keys(headers).length > 0 ? headers : undefined;
-	}
 	const record = getErrorRecord(err);
 	if (!record || !isRecord(record.headers)) {
 		return undefined;
@@ -92,9 +90,6 @@ export function resolveErrorHeaders(err: unknown): Record<string, string> | unde
 }
 
 export function resolveMessageVariables(err: unknown): Record<string, unknown> | undefined {
-	if (err instanceof HTTPException && 'messageVariables' in err && isRecord(err.messageVariables)) {
-		return err.messageVariables;
-	}
 	const record = getErrorRecord(err);
 	if (!record) {
 		return undefined;

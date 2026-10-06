@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const APP_SHELL_CACHE_KEY = '/app-shell';
-const APP_SHELL_SEED_PATH = '/';
+const APP_SHELL_SEED_PATH = '/app';
+const APP_SHELL_MARKER_HEADER = 'x-fluxer-app-shell';
 
 export interface PrecacheEntry {
 	readonly url: string;
@@ -20,6 +21,10 @@ export interface AppShellRuntime {
 
 export function isCacheableResponse(response: Response): boolean {
 	return response.ok || response.type === 'opaque';
+}
+
+export function isAppShellResponse(response: Response): boolean {
+	return response.ok && response.headers.get(APP_SHELL_MARKER_HEADER) === '1';
 }
 
 export function isPrecacheableAssetUrl(url: string): boolean {
@@ -54,7 +59,7 @@ async function readAppShell(runtime: AppShellRuntime): Promise<Response | undefi
 }
 
 async function storeAppShell(runtime: AppShellRuntime, response: Response): Promise<void> {
-	if (!runtime.caches || !isCacheableResponse(response)) {
+	if (!runtime.caches || !isAppShellResponse(response)) {
 		return;
 	}
 	try {

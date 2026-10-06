@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import fixtureJson from '@fluxer/voice_engine_v2/fixtures/basic_session.json';
+import cameraInPlaceUpdateFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/camera_in_place_update.json';
+import codecRepublishFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/codec_republish.json';
+import nativeFrameSinkFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/native_frame_sink.json';
+import nativeZeroCopyScreenFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/native_zero_copy_screen.json';
+import screenAudioInclusionToggleFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/screen_audio_inclusion_toggle.json';
+import screenAudioRoutingFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/screen_audio_routing.json';
+import screenShareStartUpdateStopFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/screen_share_start_update_stop.json';
+import externallyEstablishedFixtureJson from '@fluxer/voice_engine_v2/fixtures/externally_established_session.json';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
+import {
+	availableVoiceEngineV2Capabilities,
+	createVoiceEngineV2InitialSnapshot,
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command, VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol';
 import {describe, expect, it} from 'vitest';
-import fixtureJson from '../../fixtures/basic_session.json';
-import cameraInPlaceUpdateFixtureJson from '../../fixtures/event_logs/camera_in_place_update.json';
-import codecRepublishFixtureJson from '../../fixtures/event_logs/codec_republish.json';
-import nativeFrameSinkFixtureJson from '../../fixtures/event_logs/native_frame_sink.json';
-import nativeZeroCopyScreenFixtureJson from '../../fixtures/event_logs/native_zero_copy_screen.json';
-import screenAudioInclusionToggleFixtureJson from '../../fixtures/event_logs/screen_audio_inclusion_toggle.json';
-import screenAudioRoutingFixtureJson from '../../fixtures/event_logs/screen_audio_routing.json';
-import screenShareStartUpdateStopFixtureJson from '../../fixtures/event_logs/screen_share_start_update_stop.json';
-import externallyEstablishedFixtureJson from '../../fixtures/externally_established_session.json';
-import type {VoiceEngineV2Command, VoiceEngineV2Event} from '../protocol';
-import {transitionVoiceEngineV2} from './reducer';
-import {availableVoiceEngineV2Capabilities, createVoiceEngineV2InitialSnapshot} from './state';
 
 interface VoiceEngineV2FixtureExpected {
 	nextOperationId: number;

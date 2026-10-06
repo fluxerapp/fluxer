@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {View} from '@app/features/channel/components/pickers/gif/GifPickerTypes';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 declare const gifPickerRequestIdBrand: unique symbol;
 
@@ -576,7 +576,7 @@ export const gifPickerStateMachine = setup({
 });
 
 export function createGifPickerSnapshot(): GifPickerMachineSnapshot {
-	return getInitialSnapshot(gifPickerStateMachine);
+	return initialTransition(gifPickerStateMachine)[0];
 }
 
 export function transitionGifPickerSnapshot(

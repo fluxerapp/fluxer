@@ -5,6 +5,7 @@ import Updater, {
 	DOWNLOADING_UPDATE_DESCRIPTOR as DOWNLOADING_UPDATE_STATUS_DESCRIPTOR,
 } from '@app/features/app/state/Updater';
 import styles from '@app/features/channel/components/ChannelHeader.module.css';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Platform} from '@app/features/platform/types/Platform';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -84,16 +85,20 @@ const CLICK_TO_RELOAD_AND_UPDATE_2_DESCRIPTOR = msg({
 		'Tooltip on the channel header updater icon prompting a web reload to apply an update of unknown version. productName is the app name.',
 });
 
-function formatBytes(bytes: number): string {
-	if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
-	const units = ['B', 'KB', 'MB', 'GB'];
-	let value = bytes;
+function formatBytes(locale: string, bytes: number): string {
+	const units = ['byte', 'kilobyte', 'megabyte', 'gigabyte'] as const;
+	let value = Number.isFinite(bytes) && bytes > 0 ? bytes : 0;
 	let unitIndex = 0;
 	while (value >= 1024 && unitIndex < units.length - 1) {
 		value /= 1024;
 		unitIndex++;
 	}
-	return `${value.toFixed(value >= 100 || unitIndex === 0 ? 0 : 1)} ${units[unitIndex]}`;
+	return getCachedNumberFormat(locale, {
+		style: 'unit',
+		unit: units[unitIndex],
+		unitDisplay: 'narrow',
+		maximumFractionDigits: value >= 100 || unitIndex === 0 ? 0 : 1,
+	}).format(value);
 }
 
 function resolveUpdaterVisibility(): {
@@ -129,13 +134,13 @@ export const UpdaterIcon = observer(() => {
 				return i18n._(DOWNLOADING_UPDATE_STATUS_DESCRIPTOR);
 			}
 			const progress = store.downloadProgress;
-			const percent = progress ? Math.round(progress.percent) : 0;
+			const percent = getCachedNumberFormat(i18n.locale).format(progress ? Math.round(progress.percent) : 0);
 			if (progress && progress.total > 0 && progress.bytesPerSecond > 0) {
 				return i18n._(DOWNLOADING_UPDATE_AT_S_DESCRIPTOR, {
 					percent,
-					formatBytes: formatBytes(progress.transferred),
-					formatBytes2: formatBytes(progress.total),
-					formatBytes3: formatBytes(progress.bytesPerSecond),
+					formatBytes: formatBytes(i18n.locale, progress.transferred),
+					formatBytes2: formatBytes(i18n.locale, progress.total),
+					formatBytes3: formatBytes(i18n.locale, progress.bytesPerSecond),
 				});
 			}
 			return version
@@ -148,10 +153,10 @@ export const UpdaterIcon = observer(() => {
 			}
 			const size = store.updateInfo.native.downloadSize;
 			if (version && size && size > 0) {
-				return i18n._(CLICK_TO_DOWNLOAD_UPDATE_DESCRIPTOR, {version, formatBytes: formatBytes(size)});
+				return i18n._(CLICK_TO_DOWNLOAD_UPDATE_DESCRIPTOR, {version, formatBytes: formatBytes(i18n.locale, size)});
 			}
 			if (size && size > 0) {
-				return i18n._(CLICK_TO_DOWNLOAD_UPDATE_2_DESCRIPTOR, {formatBytes: formatBytes(size)});
+				return i18n._(CLICK_TO_DOWNLOAD_UPDATE_2_DESCRIPTOR, {formatBytes: formatBytes(i18n.locale, size)});
 			}
 			return version
 				? i18n._(CLICK_TO_DOWNLOAD_UPDATE_3_DESCRIPTOR, {version})
@@ -189,7 +194,9 @@ export const UpdaterIcon = observer(() => {
 	const Icon = hasActionableWebUpdate ? ArrowClockwiseIcon : DownloadSimpleIcon;
 	const percentLabel =
 		isDownloading && store.nativeDownloadProgressSupported
-			? `${Math.round(store.downloadProgress?.percent ?? 0)}%`
+			? getCachedNumberFormat(i18n.locale, {style: 'percent', maximumFractionDigits: 0}).format(
+					(store.downloadProgress?.percent ?? 0) / 100,
+				)
 			: null;
 	return (
 		<Tooltip text={tooltip} position="bottom" data-flx="channel.channel-header-components.updater-icon.tooltip">

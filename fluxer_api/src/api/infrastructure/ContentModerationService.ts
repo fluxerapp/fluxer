@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {Logger} from '@app/api/Logger';
+import {fileShaCache} from '@app/api/middleware/FileShaCache';
+import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
-import {Logger} from '../Logger';
-import {fileShaCache} from '../middleware/FileShaCache';
-import {phraseBlocklistCache} from '../middleware/PhraseBlocklistCache';
-import {urlBlocklistCache} from '../middleware/UrlBlocklistCache';
-import {extractUrlCandidates} from '../utils/UrlNormalizer';
 
 export interface ModerationContext {
 	userId: bigint | null;
@@ -40,16 +39,12 @@ class ContentModerationService {
 			);
 			throw new ContentBlockedError();
 		}
-		const urls = extractUrlCandidates(text);
-		if (urls.length === 0) return;
-		for (const url of urls) {
-			if (urlBlocklistCache.isUrlOrDomainBanned(url)) {
-				Logger.warn(
-					{surface: ctx.surface, userId: ctx.userId?.toString(), guildId: ctx.guildId?.toString()},
-					'content_moderation.block url match in text',
-				);
-				throw new ContentBlockedError();
-			}
+		if (urlBlocklistCache.containsBannedLink(text)) {
+			Logger.warn(
+				{surface: ctx.surface, userId: ctx.userId?.toString(), guildId: ctx.guildId?.toString()},
+				'content_moderation.block url match in text',
+			);
+			throw new ContentBlockedError();
 		}
 	}
 

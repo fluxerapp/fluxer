@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EmojiID, GuildID, StickerID} from '../../BrandedTypes';
-import type {GuildEmojiRow, GuildStickerRow} from '../../database/types/GuildTypes';
-import type {GuildEmoji} from '../../models/GuildEmoji';
-import type {GuildSticker} from '../../models/GuildSticker';
+import type {EmojiID, GuildID, StickerID} from '@app/api/BrandedTypes';
+import type {GuildEmojiRow, GuildStickerRow} from '@app/api/database/types/GuildTypes';
+import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {GuildSticker} from '@app/api/models/GuildSticker';
 
 export abstract class IGuildContentRepository {
 	abstract getEmoji(emojiId: EmojiID, guildId: GuildID): Promise<GuildEmoji | null>;

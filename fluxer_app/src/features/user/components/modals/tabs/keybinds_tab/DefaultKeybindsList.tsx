@@ -5,6 +5,7 @@ import Keybind, {
 	type KeybindConfig,
 	type KeybindSection,
 } from '@app/features/input/state/InputKeybind';
+import {isActiveCustomKeybind, isBuiltinDisableMarker} from '@app/features/input/state/KeybindResolution';
 import styles from '@app/features/user/components/modals/tabs/KeybindsTab.module.css';
 import {DefaultShortcutRow} from '@app/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow';
 import {
@@ -52,13 +53,13 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 	const {i18n} = useLingui();
 	const defaults = Keybind.getDefaults();
 	const customKeybinds = Keybind.getCustomKeybinds();
-	const overriddenActions = useMemo(() => {
-		const set = new Set<KeybindCommand>();
-		for (const entry of customKeybinds) {
-			if (entry.action) set.add(entry.action);
-		}
-		return set;
-	}, [customKeybinds]);
+	const overriddenActions = new Set<KeybindCommand>();
+	const disabledActions = new Set<KeybindCommand>();
+	for (const entry of customKeybinds) {
+		if (!entry.action) continue;
+		if (isActiveCustomKeybind(entry)) overriddenActions.add(entry.action);
+		else if (isBuiltinDisableMarker(entry)) disabledActions.add(entry.action);
+	}
 	const normalized = normalizeQuery(searchQuery);
 	const sectionLabels: Record<KeybindSection, string> = {
 		defaults: i18n._(DEFAULT_SHORTCUTS_DESCRIPTOR),
@@ -81,11 +82,11 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 		};
 		for (const entry of defaults) {
 			if (entry.hideFromDefaults) continue;
-			if (!entryMatchesQuery(entry, normalized)) continue;
+			if (!entryMatchesQuery(i18n, entry, normalized)) continue;
 			map[entry.section].push(entry);
 		}
 		return map;
-	}, [defaults, normalized]);
+	}, [defaults, normalized, i18n, i18n.locale]);
 	const hasAny = DEFAULT_KEYBIND_SECTIONS.some((sectionId) => sections[sectionId].length > 0);
 	if (!hasAny && normalized) {
 		return (
@@ -124,6 +125,7 @@ export const DefaultKeybindsList: React.FC<{searchQuery: string}> = observer(({s
 									key={Array.isArray(row) ? `${row[0].action}-${row[1].action}-${idx}` : `${row.action}-${idx}`}
 									row={row}
 									overriddenActions={overriddenActions}
+									disabledActions={disabledActions}
 									data-flx="user.keybinds-tab.default-keybinds-list.default-shortcut-row"
 								/>
 							))}

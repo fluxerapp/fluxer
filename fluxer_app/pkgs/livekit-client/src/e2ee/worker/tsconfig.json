@@ -1,6 +1,17 @@
 {
 	"extends": "../../../tsconfig.json",
 	"compilerOptions": {
-		"lib": ["DOM", "DOM.Iterable", "ES2017", "ES2018.Promise", "WebWorker", "ES2021.WeakRef", "DOM.AsyncIterable"]
+		"lib": [
+			"DOM",
+			"DOM.Iterable",
+			"ES2017",
+			"ES2018.Promise",
+			"WebWorker",
+			"ES2021.WeakRef",
+			"DOM.AsyncIterable",
+			"ES2020.BigInt",
+			"ES2018.AsyncIterable",
+			"ES2018.AsyncGenerator"
+		]
 	}
 }

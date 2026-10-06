@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {NatsConnection} from 'nats';
+import type {NatsConnection} from '@nats-io/transport-node';
 
 export interface INatsConnectionManager {
 	connect(): Promise<void>;

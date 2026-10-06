@@ -1,18 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {fetchMany} from '@app/api/database/CassandraQueryExecution';
+import type {RelationshipRow} from '@app/api/database/types/UserTypes';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {RelationshipsByTarget} from '@app/api/Tables';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {createFriendship} from '@app/api/user/tests/RelationshipTestUtils';
+import {
+	deleteAccount,
+	setPendingDeletionAt,
+	triggerDeletionWorker,
+	waitForDeletionCompletion,
+} from '@app/api/user/tests/UserTestUtils';
 import type {GuildBanResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {fetchMany} from '../../database/CassandraQueryExecution';
-import type {RelationshipRow} from '../../database/types/UserTypes';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {RelationshipsByTarget} from '../../Tables';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createFriendship} from './RelationshipTestUtils';
-import {deleteAccount, setPendingDeletionAt, triggerDeletionWorker, waitForDeletionCompletion} from './UserTestUtils';
 
 describe('Account Delete Permanent', () => {
 	let harness: ApiTestHarness;

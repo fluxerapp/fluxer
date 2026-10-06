@@ -83,7 +83,7 @@ export function createZSetMembersFromScorePairs(scoreMembers: Array<number | str
 			throw createInvalidArgumentError('zadd member must be a string');
 		}
 		members.push({
-			score: parseFiniteNumber(rawScore, 'zadd score'),
+			score: parseNumberArgument(rawScore, 'zadd score'),
 			value: rawMember,
 		});
 	}
@@ -134,14 +134,6 @@ function parseNumberArgument(value: string | number | undefined, label: string):
 		}
 	}
 	throw createInvalidArgumentError(`${label} must be a finite number`);
-}
-
-function parseFiniteNumber(value: string | number, label: string): number {
-	const parsed = parseNumberArgument(value, label);
-	if (!Number.isFinite(parsed)) {
-		throw createInvalidArgumentError(`${label} must be finite`);
-	}
-	return parsed;
 }
 
 function parseNonNegativeInteger(value: string | number | undefined, label: string): number {

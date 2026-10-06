@@ -15,17 +15,17 @@ const JUMP_TO_FIRST_UNREAD_MESSAGE_DESCRIPTOR = msg({
 	comment: 'Label in the channel and chat new messages bar.',
 });
 const NEW_SINCE_DESCRIPTOR = msg({
-	message: '{unreadCount}+ new since {shortTime}',
+	message: '{unreadCount, number}+ new since {shortTime}',
 	comment:
-		'Label in the channel and chat new messages bar. Preserve {unreadCount}, {shortTime}; they are inserted by code.',
+		'Label in the channel and chat new messages bar, shown when the unread count is a lower bound. Preserve {unreadCount}, {shortTime}; they are inserted by code. unreadCount is the estimated number of unread messages, shortTime is the time of the oldest unread message.',
 });
 const NEW_MESSAGES_SINCE_DESCRIPTOR = msg({
-	message: '{unreadCount}+ new messages since {compactTime}',
+	message: '{unreadCount, number}+ new messages since {compactTime}',
 	comment:
-		'Label in the channel and chat new messages bar. Preserve {unreadCount}, {compactTime}; they are inserted by code.',
+		'Label in the channel and chat new messages bar, shown when the unread count is a lower bound. Preserve {unreadCount}, {compactTime}; they are inserted by code. unreadCount is the estimated number of unread messages, compactTime is the date and time of the oldest unread message.',
 });
 const NEW_SINCE_2_DESCRIPTOR = msg({
-	message: '{unreadCount} new since {shortTime}',
+	message: '{unreadCount, plural, one {# new} other {# new}} since {shortTime}',
 	comment:
 		'Label in the channel and chat new messages bar. Preserve {unreadCount}, {shortTime}; they are inserted by code.',
 });

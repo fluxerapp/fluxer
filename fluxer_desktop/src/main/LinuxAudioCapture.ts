@@ -10,21 +10,20 @@ import type {
 	VirtmicRoutingGraphResult,
 	VirtmicUnavailableReason,
 } from '@electron/common/Types';
+import {buildFluxerAudioExcludePatterns, isFluxerAudioNode} from '@electron/main/FluxerAudioIdentity';
 import {getLinuxPortalsMode, getNativeAudioMode} from '@electron/main/LaunchOptions';
-import {app, ipcMain} from 'electron';
-import {buildFluxerAudioExcludePatterns, isFluxerAudioNode} from './FluxerAudioIdentity';
 import {
 	isDBusObjectPathSegment,
-	isWaylandSessionEnv,
-	isX11SessionEnv,
 	isX11WindowToken,
 	parseWindowSourceToken,
-} from './LinuxAudioCaptureHelpers';
+} from '@electron/main/LinuxAudioCaptureHelpers';
+import {isWaylandSession, isX11Session} from '@electron/main/LinuxSession';
 import {
 	isValidVirtmicLinkOptions,
 	isValidVirtmicNodeList,
 	isValidVirtmicSystemLinkOptions,
-} from './NativeAudioValidation';
+} from '@electron/main/NativeAudioValidation';
+import {app, ipcMain} from 'electron';
 
 const logger = createChildLogger('LinuxAudioCapture');
 const requireModule = createRequire(import.meta.url);
@@ -331,14 +330,6 @@ function startVirtmicSystem(exclude: unknown, options: unknown = {}): boolean {
 		logger.warn('AudioBridge.apply(system) threw', error);
 		return false;
 	}
-}
-
-function isX11Session(): boolean {
-	return isX11SessionEnv(process.env);
-}
-
-function isWaylandSession(): boolean {
-	return isWaylandSessionEnv(process.env);
 }
 
 async function resolveWindowPidViaX11(xid: string): Promise<number | null> {

@@ -9,6 +9,8 @@ import type {Guild} from '@app/features/guild/models/Guild';
 import {
 	CHANGE_NICKNAME_DESCRIPTOR,
 	CHANNEL_REMOVED_FROM_FAVORITES_DESCRIPTOR,
+	COPY_LINK_DESCRIPTOR,
+	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
 	OPEN_LINK_DESCRIPTOR,
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 	UNCATEGORIZED_DESCRIPTOR,
@@ -19,6 +21,7 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import Permission from '@app/features/permissions/state/Permission';
 import {
 	ChangeNicknameIcon,
+	CopyLinkIcon,
 	DeleteIcon,
 	OpenInCommunityIcon,
 	RemoveFromFavoritesIcon,
@@ -38,6 +41,7 @@ import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -48,11 +52,11 @@ import type React from 'react';
 
 const OPEN_IN_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Open in community',
-	comment: 'Action that opens the selected user profile inside the current community.',
+	comment: 'Favorites menu action that opens the favorited channel in the community it belongs to.',
 });
 const MOVE_TO_DESCRIPTOR = msg({
 	message: 'Move to',
-	comment: 'Submenu label that moves the selected message to another channel.',
+	comment: 'Favorites menu submenu label that moves the favorited channel into another favorites category.',
 });
 
 interface FavoritesChannelContextMenuProps {
@@ -102,6 +106,12 @@ export const FavoritesChannelContextMenu: React.FC<FavoritesChannelContextMenuPr
 			NavigationCommands.selectChannel(channel.guildId, channel.id);
 			onClose();
 			focusChannelTextareaAfterNavigation(channel.id);
+		};
+		const handleCopyLinkChannelUrl = async () => {
+			if (!channel?.url) return;
+			await TextCopyCommands.copy(i18n, channel.url, true);
+			ToastCommands.createToast({type: 'success', children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR)});
+			onClose();
 		};
 		const handleDeleteMyMessages = () => {
 			if (!channel) return;
@@ -166,6 +176,15 @@ export const FavoritesChannelContextMenu: React.FC<FavoritesChannelContextMenuPr
 							{channel.type === ChannelTypes.GUILD_LINK
 								? i18n._(OPEN_LINK_DESCRIPTOR)
 								: i18n._(OPEN_IN_COMMUNITY_DESCRIPTOR)}
+						</MenuItem>
+					)}
+					{channel.type === ChannelTypes.GUILD_LINK && channel.url && (
+						<MenuItem
+							icon={<CopyLinkIcon data-flx="ui.action-menu.favorites-channel-context-menu.copy-link-icon" />}
+							onClick={handleCopyLinkChannelUrl}
+							data-flx="ui.action-menu.favorites-channel-context-menu.menu-item.copy-link"
+						>
+							{i18n._(COPY_LINK_DESCRIPTOR)}
 						</MenuItem>
 					)}
 					{(favoriteChannel.parentId !== null ||

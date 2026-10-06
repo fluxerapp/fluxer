@@ -5,7 +5,7 @@ import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 const AUTO_DETECT_LANGUAGE_DESCRIPTOR = msg({
-	message: 'Auto detect language',
+	message: 'Auto-detect language',
 	comment: 'Short label in the attachment preview utils helper. Keep it concise.',
 });
 const PLAIN_TEXT_DESCRIPTOR = msg({

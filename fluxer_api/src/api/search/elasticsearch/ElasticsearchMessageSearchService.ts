@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {Message} from '@app/api/models/Message';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import {
+	convertMessagesToSearchableMessages,
+	convertToSearchableMessage,
+} from '@app/api/search/message/MessageSearchSerializer';
+import {SearchAdapterServiceBase} from '@app/api/search/SearchAdapterServiceBase';
 import type {SearchResult as SchemaSearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {MessageSearchFilters, SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {
 	ElasticsearchMessageAdapter,
 	type ElasticsearchMessageAdapterOptions,
 } from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchMessageAdapter';
-import type {ChannelID, GuildID, MessageID, UserID} from '../../BrandedTypes';
-import type {Message} from '../../models/Message';
-import type {IMessageSearchService} from '../IMessageSearchService';
-import {convertMessagesToSearchableMessages, convertToSearchableMessage} from '../message/MessageSearchSerializer';
-import {SearchAdapterServiceBase} from '../SearchAdapterServiceBase';
 
 const DEFAULT_HITS_PER_PAGE = 25;
 

@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
+import {
+	coalesceVoiceEngineV2EventSequence,
+	VOICE_ENGINE_V2_COALESCED_TRACKS_CAP,
+} from '@fluxer/voice_engine_v2/src/runtime/frameCoalescing';
+import {VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
+import {FakeVoiceEngineV2Driver, VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing';
 import {describe, expect, it} from 'vitest';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import {FakeVoiceEngineV2Driver, VoiceEngineV2TestImplementation} from '../testing';
-import {createVoiceEngineV2MemoryEventLogSpillSink} from './eventLogRing';
-import {coalesceVoiceEngineV2EventSequence, VOICE_ENGINE_V2_COALESCED_TRACKS_CAP} from './frameCoalescing';
-import {VoiceEngineV2Runtime} from './VoiceEngineV2Runtime';
 
 function makeRuntime(options?: {eventLogCap?: number}): VoiceEngineV2Runtime {
 	const driver = new FakeVoiceEngineV2Driver();

@@ -15,7 +15,7 @@ import {UserSettingsModal} from '@app/features/user/components/modals/UserSettin
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
 
-const QUICK_SWITCHER_MODAL_KEY = 'nav_quick_switcher';
+const QUICK_SWITCHER_OVERLAY_ID = 'nav_quick_switcher';
 
 export function hide(): void {
 	QuickSwitcher.hide();
@@ -124,5 +124,5 @@ export async function switchTo(result: QuickSwitcherExecutableResult): Promise<v
 }
 
 export function getModalKey(): string {
-	return QUICK_SWITCHER_MODAL_KEY;
+	return QUICK_SWITCHER_OVERLAY_ID;
 }

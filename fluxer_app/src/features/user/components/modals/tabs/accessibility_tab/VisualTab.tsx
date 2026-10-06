@@ -16,6 +16,7 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import {useCallback} from 'react';
 
 const ALL_MESSAGES_DESCRIPTOR = msg({
 	message: 'All messages',
@@ -68,6 +69,10 @@ const dmMessagePreviewOptions = (i18n: I18n): ReadonlyArray<RadioOption<DMMessag
 ];
 export const VisualTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
+	const formatPercentage = useCallback(
+		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		[i18n, i18n.locale],
+	);
 	const saturationFactor = Accessibility.saturationFactor;
 	const alwaysUnderlineLinks = Accessibility.alwaysUnderlineLinks;
 	const dimStrikethroughText = Accessibility.dimStrikethroughText;
@@ -110,8 +115,8 @@ export const VisualTabContent: React.FC = observer(() => {
 					step={1}
 					markers={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
 					stickToMarkers={false}
-					onMarkerRender={formatRoundedPercentage}
-					onValueRender={formatRoundedPercentage}
+					onMarkerRender={formatPercentage}
+					onValueRender={formatPercentage}
 					onValueChange={(value) => AccessibilityCommands.update({saturationFactor: value / 100})}
 					data-flx="user.accessibility-tab.visual-tab.visual-tab-content.slider"
 				/>

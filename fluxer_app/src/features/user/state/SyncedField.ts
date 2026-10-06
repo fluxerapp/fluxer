@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {DEFAULT_SYNCED_FIELD_MAX_ENCODED_BYTES, decideOversizePush} from '@app/features/user/state/SyncedFieldBudget';
 import {verifyRoundtripStability} from '@app/features/user/state/SyncedFieldRoundtrip';
 import {
 	createSyncedFieldMachineSnapshot,
@@ -13,7 +14,7 @@ import {
 import type {SyncedPreferences, SyncedPreferencesField} from '@app/features/user/state/SyncedPreferencesEngine';
 import {create, equals, type Message, type MessageInitShape, toBinary} from '@bufbuild/protobuf';
 import type {GenMessage} from '@bufbuild/protobuf/codegenv2';
-import {comparer, reaction, runInAction} from 'mobx';
+import {compareShallow, reaction, runInAction} from 'mobx';
 
 export {verifyRoundtripStability};
 
@@ -59,6 +60,7 @@ export async function makeSyncedField<
 	}
 	const isEnabled = (): boolean => config.enabled?.() ?? true;
 	let machine = createSyncedFieldMachineSnapshot();
+	let lastPreparedBytes: number | null = null;
 	let ownerUserId: string | null = null;
 	let observedUserId: string | null = null;
 	const suspend = (reason: SyncedFieldFailureReason, message: string, error?: unknown): void => {
@@ -130,12 +132,19 @@ export async function makeSyncedField<
 				return;
 			}
 			const encodedBytes = toBinary(schema, candidate).length;
-			if (encodedBytes > maxEncodedBytes) {
+			const decision = decideOversizePush({encodedBytes, maxEncodedBytes, lastPreparedBytes});
+			lastPreparedBytes = encodedBytes;
+			if (decision === 'drop') {
 				logger.error(
 					`${tag}: payload of ${encodedBytes} bytes exceeds per-field budget of ${maxEncodedBytes}; push dropped.`,
 				);
 				transitionOnly({type: 'sync.localAlreadySynced'});
 				return;
+			}
+			if (decision === 'push-shrinks') {
+				logger.warn(
+					`${tag}: payload of ${encodedBytes} bytes is over the per-field budget of ${maxEncodedBytes} but smaller than the previous candidate. Pushing so removals persist.`,
+				);
 			}
 			const stability = verifyRoundtripStability<T, M>({
 				schema,
@@ -204,7 +213,7 @@ export async function makeSyncedField<
 		processCommands();
 	}
 	await Promise.resolve();
-	const maxEncodedBytes = config.maxEncodedBytes ?? 65_536;
+	const maxEncodedBytes = config.maxEncodedBytes ?? DEFAULT_SYNCED_FIELD_MAX_ENCODED_BYTES;
 	const UserSettings = (await import('@app/features/user/state/UserSettings')).default;
 	const SessionManager = (await import('@app/features/platform/state/AuthSession')).default;
 	const applyDefaultsForUserChange = (userId: string): void => {
@@ -242,7 +251,7 @@ export async function makeSyncedField<
 					snapshot,
 				});
 			},
-			{fireImmediately: true, equals: comparer.shallow},
+			{fireImmediately: true, equals: compareShallow},
 		);
 		reaction(
 			() => (isEnabled() ? buildMessageOrSuspend('failed to build the local snapshot for observation') : null),

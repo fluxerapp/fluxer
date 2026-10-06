@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {extractClientIp, MissingClientIpError, resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
 import type {Context} from 'hono';
-import {Config} from '../Config';
-import type {HonoEnv} from '../types/HonoEnv';
 
 export interface ClientIpResolution {
 	trustClientIpHeader: boolean;

@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
+import type {NonSharedUint8Array} from '../../type-polyfills/non-shared-typed-arrays.ts';
+
 const kH264NaluTypeMask = 0x1f;
 const kH264SliceClearBytes = 2;
 const kH265SliceClearBytes = 3;
@@ -99,7 +101,7 @@ export interface NALUProcessingResult {
 	requiresNALUProcessing: boolean;
 }
 
-function detectCodecFromNALUs(data: Uint8Array, naluIndices: Array<number>): DetectedCodec {
+function detectCodecFromNALUs(data: NonSharedUint8Array, naluIndices: Array<number>): DetectedCodec {
 	for (const naluIndex of naluIndices) {
 		if (isH264SliceNALU(parseH264NALUType(data[naluIndex]))) return 'h264';
 		if (isH265SliceNALU(parseH265NALUType(data[naluIndex]))) return 'h265';
@@ -108,7 +110,7 @@ function detectCodecFromNALUs(data: Uint8Array, naluIndices: Array<number>): Det
 }
 
 function findSliceNALUUnencryptedBytes(
-	data: Uint8Array,
+	data: NonSharedUint8Array,
 	naluIndices: Array<number>,
 	codec: 'h264' | 'h265',
 ): number | null {
@@ -128,7 +130,7 @@ function findSliceNALUUnencryptedBytes(
 	return null;
 }
 
-function findNALUIndices(stream: Uint8Array): Array<number> {
+function findNALUIndices(stream: NonSharedUint8Array): Array<number> {
 	const result: Array<number> = [];
 	let start = 0,
 		pos = 0,
@@ -178,7 +180,10 @@ function findNALUIndices(stream: Uint8Array): Array<number> {
 	return result;
 }
 
-export function processNALUsForEncryption(data: Uint8Array, knownCodec?: 'h264' | 'h265'): NALUProcessingResult {
+export function processNALUsForEncryption(
+	data: NonSharedUint8Array,
+	knownCodec?: 'h264' | 'h265',
+): NALUProcessingResult {
 	const naluIndices = findNALUIndices(data);
 	const detectedCodec = knownCodec ?? detectCodecFromNALUs(data, naluIndices);
 

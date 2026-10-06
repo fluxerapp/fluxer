@@ -3,7 +3,7 @@
 -module(guild_subscription_mutual_channels).
 -typing([eqwalizer]).
 
--export([filter_member_ids/3]).
+-export([filter_member_ids/3, filter_session_member_ids/2, filter_session_member_ids/3]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -12,7 +12,9 @@
 -type guild_state() :: map().
 -type user_id() :: integer().
 -type memo() :: #{exceptions := sets:set(user_id()), cache := #{term() => boolean()}}.
--export_type([guild_state/0, user_id/0]).
+-type view_cache() :: #{term() => [integer()]}.
+-type view_memo() :: #{exceptions => sets:set(user_id()), views => view_cache()}.
+-export_type([guild_state/0, user_id/0, view_memo/0]).
 
 -spec filter_member_ids(user_id(), [user_id()], guild_state()) -> [user_id()].
 filter_member_ids(_SessionUserId, [], _State) ->
@@ -27,6 +29,101 @@ filter_member_ids(SessionUserId, MemberIds, State) ->
         MemberIds
     ),
     lists:reverse(Kept).
+
+-spec filter_session_member_ids([{term(), user_id(), [term()]}], guild_state()) ->
+    #{term() => [user_id()]}.
+filter_session_member_ids(Requests, State) ->
+    {Results, _Memo} = filter_session_member_ids(Requests, #{}, State),
+    Results.
+
+-spec filter_session_member_ids([{term(), user_id(), [term()]}], view_memo(), guild_state()) ->
+    {#{term() => [user_id()]}, view_memo()}.
+filter_session_member_ids([], Memo, _State) ->
+    {#{}, Memo};
+filter_session_member_ids(Requests, Memo, State) ->
+    Exceptions =
+        case Memo of
+            #{exceptions := Cached} -> Cached;
+            _ -> exceptions(State)
+        end,
+    Views = maps:get(views, Memo, #{}),
+    Sessions = maps:get(sessions, State, #{}),
+    {Results, Cache} = lists:foldl(
+        fun({SessionId, SessionUserId, MemberIds}, {Acc, Cache}) ->
+            SessionMap = request_session_map(SessionId, SessionUserId, Sessions, State),
+            {Kept, Cache1} = keep_session_members(
+                MemberIds, SessionUserId, SessionMap, Exceptions, State, Cache
+            ),
+            {Acc#{SessionId => Kept}, Cache1}
+        end,
+        {#{}, Views},
+        Requests
+    ),
+    {Results, #{exceptions => Exceptions, views => role_views(Cache)}}.
+
+-spec role_views(view_cache()) -> view_cache().
+role_views(Cache) ->
+    maps:filter(fun(Key, _Channels) -> is_role_key(Key) end, Cache).
+
+-spec is_role_key(term()) -> boolean().
+is_role_key({roles, _RawRoles}) -> true;
+is_role_key(_Key) -> false.
+
+-spec request_session_map(term(), user_id(), map(), guild_state()) -> map().
+request_session_map(SessionId, SessionUserId, Sessions, State) ->
+    case maps:get(SessionId, Sessions, undefined) of
+        #{user_id := SessionUserId, viewable_channels := Map} = SessionData when is_map(Map) ->
+            case maps:get(pending_connect, SessionData, false) of
+                true -> session_channel_map(SessionUserId, State);
+                _ -> Map
+            end;
+        _ ->
+            session_channel_map(SessionUserId, State)
+    end.
+
+-spec keep_session_members(
+    [term()], user_id(), map(), sets:set(user_id()), guild_state(), #{term() => [integer()]}
+) -> {[user_id()], #{term() => [integer()]}}.
+keep_session_members(MemberIds, SessionUserId, SessionMap, Exceptions, State, Cache) ->
+    {Kept, _Seen, Cache1} = lists:foldl(
+        fun
+            (MemberId, Acc) when MemberId =:= SessionUserId; not is_integer(MemberId) ->
+                Acc;
+            (MemberId, {KeptAcc, Seen, CacheAcc}) ->
+                {Key, CacheAcc1} = member_channel_key(MemberId, Exceptions, State, CacheAcc),
+                case maps:find(Key, Seen) of
+                    {ok, true} ->
+                        {[MemberId | KeptAcc], Seen, CacheAcc1};
+                    {ok, false} ->
+                        {KeptAcc, Seen, CacheAcc1};
+                    error ->
+                        Shared = has_shared_channel(maps:get(Key, CacheAcc1), SessionMap),
+                        {kept_if(Shared, MemberId, KeptAcc), Seen#{Key => Shared}, CacheAcc1}
+                end
+        end,
+        {[], #{}, Cache},
+        MemberIds
+    ),
+    {lists:reverse(Kept), Cache1}.
+
+-spec kept_if(boolean(), user_id(), [user_id()]) -> [user_id()].
+kept_if(true, MemberId, Kept) -> [MemberId | Kept];
+kept_if(false, _MemberId, Kept) -> Kept.
+
+-spec member_channel_key(user_id(), sets:set(user_id()), guild_state(), #{term() => [integer()]}) ->
+    {term(), #{term() => [integer()]}}.
+member_channel_key(MemberId, Exceptions, State, Cache) ->
+    Key =
+        case memo_key(MemberId, Exceptions, State) of
+            bypass -> {user, MemberId};
+            {ok, RawRoles} -> {roles, RawRoles}
+        end,
+    case maps:is_key(Key, Cache) of
+        true ->
+            {Key, Cache};
+        false ->
+            {Key, Cache#{Key => guild_visibility:get_user_viewable_channels(MemberId, State)}}
+    end.
 
 -spec session_channel_map(user_id(), guild_state()) -> map().
 session_channel_map(SessionUserId, State) ->
@@ -158,8 +255,7 @@ overwrite_target_id(_Overwrite, Acc) ->
 
 -spec has_mutual_channel(user_id(), map(), guild_state()) -> boolean().
 has_mutual_channel(MemberId, SessionMap, State) ->
-    MemberChannels = guild_visibility:get_user_viewable_channels(MemberId, State),
-    has_shared_channel(MemberChannels, SessionMap).
+    guild_visibility_channels:shares_viewable_channel(MemberId, SessionMap, State).
 
 -spec has_shared_channel([integer()], map()) -> boolean().
 has_shared_channel(MemberChannels, SessionMap) ->
@@ -196,7 +292,7 @@ test_channel(ChannelId, Overwrites) ->
     }.
 
 %% Session user 10 and members 20 and 21 reach channel 500 through the viewer role.
-%% Members 30, 31, 99 and 4242 all carry the same roles term and reach only channel
+%% Members 30, 31, 99 and 4242 all have the same roles term and reach only channel
 %% 600 by role, but 99 holds virtual access to 500 and 4242 is a user-overwrite
 %% target on 500, so both must still come out true. Member 7 owns the guild.
 test_state() ->
@@ -222,8 +318,6 @@ test_state() ->
         }
     }.
 
-%% filter_member_ids/3 as it read before the memo: every candidate materialises its
-%% own complete viewable channel list.
 reference_filter_member_ids(SessionUserId, MemberIds, State) ->
     SessionMap = session_channel_map(SessionUserId, State),
     lists:filtermap(
@@ -236,7 +330,8 @@ reference_keep(MemberId, SessionUserId, _SessionMap, _State) when
 ->
     false;
 reference_keep(MemberId, _SessionUserId, SessionMap, State) ->
-    case has_mutual_channel(MemberId, SessionMap, State) of
+    MemberChannels = guild_visibility:get_user_viewable_channels(MemberId, State),
+    case has_shared_channel(MemberChannels, SessionMap) of
         true -> {true, MemberId};
         false -> false
     end.
@@ -283,5 +378,24 @@ non_member_candidate_is_dropped_test() ->
     State = test_state(),
     ?assertEqual([], filter_member_ids(10, [777], State)),
     ?assertEqual([], reference_filter_member_ids(10, [777], State)).
+
+filter_session_member_ids_matches_filter_member_ids_test() ->
+    State = test_state(),
+    Ids = candidate_ids(),
+    Viewers = [10, 30, 7, 99],
+    Requests = [{Viewer, Viewer, Ids} || Viewer <- Viewers],
+    ?assertEqual(
+        maps:from_list([{Viewer, filter_member_ids(Viewer, Ids, State)} || Viewer <- Viewers]),
+        filter_session_member_ids(Requests, State)
+    ).
+
+filter_session_member_ids_reads_the_session_viewable_map_test() ->
+    State = (test_state())#{
+        sessions => #{<<"s10">> => #{user_id => 10, viewable_channels => #{600 => true}}}
+    },
+    ?assertEqual(
+        #{<<"s10">> => [30, 31, 7, 99, 4242]},
+        filter_session_member_ids([{<<"s10">>, 10, [20, 30, 31, 7, 99, 4242]}], State)
+    ).
 
 -endif.

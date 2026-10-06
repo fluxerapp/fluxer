@@ -486,6 +486,26 @@ export class MockKVProvider implements IKVProvider {
 		return this.listStore.get(key)?.length ?? 0;
 	}
 
+	async lrange(key: string, start: number, stop: number): Promise<Array<string>> {
+		this.evictIfExpired(key);
+		const list = this.listStore.get(key) ?? [];
+		const from = start < 0 ? Math.max(list.length + start, 0) : start;
+		const to = stop < 0 ? list.length + stop : Math.min(stop, list.length - 1);
+		return from > to ? [] : list.slice(from, to + 1);
+	}
+
+	async ltrim(key: string, start: number, stop: number): Promise<void> {
+		this.evictIfExpired(key);
+		const list = this.listStore.get(key);
+		if (!list) return;
+		const kept = await this.lrange(key, start, stop);
+		if (kept.length === 0) {
+			this.listStore.delete(key);
+			return;
+		}
+		list.splice(0, list.length, ...kept);
+	}
+
 	async hset(key: string, field: string, value: string): Promise<number> {
 		this.hsetSpy(key, field, value);
 		this.evictIfExpired(key);
@@ -704,7 +724,7 @@ export class MockKVProvider implements IKVProvider {
 		refillRate: number,
 		refillIntervalMs: number,
 	): Promise<{
-		urls: Array<string>;
+		entries: Array<string>;
 		tokensConsumed: number;
 	}> {
 		this.dequeuePurgeBatchSpy(queueKey, bucketKey, maxItems, maxTokens, refillRate, refillIntervalMs);
@@ -734,13 +754,13 @@ export class MockKVProvider implements IKVProvider {
 		if (toPop <= 0) {
 			this.stringStore.set(bucketKey, JSON.stringify({tokens, lastRefill}));
 			this.expiries.set(bucketKey, now + 3600 * 1000);
-			return {urls: [], tokensConsumed: 0};
+			return {entries: [], tokensConsumed: 0};
 		}
-		const urls = await this.spop(queueKey, toPop);
-		tokens -= urls.length;
+		const entries = await this.spop(queueKey, toPop);
+		tokens -= entries.length;
 		this.stringStore.set(bucketKey, JSON.stringify({tokens, lastRefill}));
 		this.expiries.set(bucketKey, now + 3600 * 1000);
-		return {urls, tokensConsumed: urls.length};
+		return {entries, tokensConsumed: entries.length};
 	}
 
 	async evalScript(

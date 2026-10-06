@@ -1,12 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+	VoiceEngineV2CommandResult,
+	VoiceEngineV2Implementation,
+} from '@fluxer/voice_engine_v2/src/implementations';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol';
+import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
+import {VoiceEngineV2Controller} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Controller';
+import {VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
+import {
+	FakeVoiceEngineV2Driver,
+	VoiceEngineV2TestImplementation,
+	waitForRuntime,
+} from '@fluxer/voice_engine_v2/src/testing';
 import {describe, expect, it} from 'vitest';
-import type {VoiceEngineV2CommandResult, VoiceEngineV2Implementation} from '../implementations';
-import type {VoiceEngineV2Command} from '../protocol';
-import {FakeVoiceEngineV2Driver, VoiceEngineV2TestImplementation, waitForRuntime} from '../testing';
-import {createVoiceEngineV2MemoryEventLogSpillSink} from './eventLogRing';
-import {VoiceEngineV2Controller} from './VoiceEngineV2Controller';
-import {VoiceEngineV2Runtime} from './VoiceEngineV2Runtime';
 
 interface DeferredCommand {
 	command: VoiceEngineV2Command;

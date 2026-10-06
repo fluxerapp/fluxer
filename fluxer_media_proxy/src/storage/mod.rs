@@ -159,9 +159,9 @@ pub enum StorageError {
     S3(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
-    #[error(transparent)]
+    #[error("{}", error_with_causes(.0))]
     Http(#[from] reqwest::Error),
-    #[error(transparent)]
+    #[error("{}", error_with_causes(.0))]
     HttpMiddleware(#[from] reqwest_middleware::Error),
     #[error(transparent)]
     Sign(#[from] aws_sigv4::Error),
@@ -272,6 +272,17 @@ fn record_storage_outcome<T>(metrics: &StorageMetrics, result: &Result<T, Storag
         Err(StorageError::NotFound) => metrics.record_miss(),
         Err(_) => metrics.record_error(),
     }
+}
+
+fn error_with_causes(error: &(dyn std::error::Error + 'static)) -> String {
+    let mut message = error.to_string();
+    let mut cause = error.source();
+    while let Some(error) = cause {
+        message.push_str(": ");
+        message.push_str(&error.to_string());
+        cause = error.source();
+    }
+    message
 }
 
 fn map_not_found(err: std::io::Error) -> StorageError {

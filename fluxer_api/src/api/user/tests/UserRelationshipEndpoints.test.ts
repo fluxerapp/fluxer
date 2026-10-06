@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	acceptFriendRequest,
 	assertRelationshipId,
@@ -13,8 +11,10 @@ import {
 	listRelationships,
 	removeRelationship,
 	sendFriendRequest,
-} from './RelationshipTestUtils';
-import {updateUserSettings} from './UserTestUtils';
+} from '@app/api/user/tests/RelationshipTestUtils';
+import {updateUserSettings} from '@app/api/user/tests/UserTestUtils';
+import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {beforeEach, describe, expect, test} from 'vitest';
 
 async function setUserFlags(harness: ApiTestHarness, userId: string, flags: bigint): Promise<void> {
 	await createBuilder(harness, '')

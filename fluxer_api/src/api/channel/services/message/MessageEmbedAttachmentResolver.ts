@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, ChannelID} from '@app/api/BrandedTypes';
+import type {AttachmentRequestData} from '@app/api/channel/AttachmentDTOs';
+import type {RichEmbedMediaWithMetadata} from '@app/api/channel/EmbedTypes';
+import {
+	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
+	getContentType,
+	makeAttachmentCdnUrl,
+} from '@app/api/channel/services/message/MessageHelpers';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
-import type {AttachmentID, ChannelID} from '../../../BrandedTypes';
-import type {AttachmentRequestData} from '../../AttachmentDTOs';
-import type {RichEmbedMediaWithMetadata} from '../../EmbedTypes';
-import {makeAttachmentCdnUrl} from './MessageHelpers';
 
 interface ProcessedAttachment {
 	attachment_id: AttachmentID;
@@ -26,7 +30,10 @@ interface RichEmbedRequestWithMetadata extends Omit<RichEmbedRequest, 'image' | 
 	thumbnail?: RichEmbedMediaWithMetadata | null;
 }
 
-const SUPPORTED_IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'webp', 'gif']);
+function isEmbeddableMediaType(contentType: string): boolean {
+	const normalized = contentType.toLowerCase();
+	return normalized.startsWith('image/') || normalized.startsWith('video/');
+}
 
 export class MessageEmbedAttachmentResolver {
 	validateAttachmentReferences(params: {
@@ -69,8 +76,7 @@ export class MessageEmbedAttachmentResolver {
 					{filename},
 				);
 			}
-			const extension = filename.split('.').pop()?.toLowerCase();
-			if (!extension || !SUPPORTED_IMAGE_EXTENSIONS.has(extension)) {
+			if (!isEmbeddableMediaType(getContentType(filename))) {
 				throw InputValidationError.fromCode(
 					`embeds[${embedIndex}].${field}`,
 					ValidationErrorCodes.ATTACHMENT_MUST_BE_IMAGE,
@@ -137,8 +143,7 @@ export class MessageEmbedAttachmentResolver {
 			if (!attachmentData) {
 				throw InputValidationError.fromCode(field, ValidationErrorCodes.REFERENCED_ATTACHMENT_NOT_FOUND, {filename});
 			}
-			const extension = filename.split('.').pop()?.toLowerCase();
-			if (!extension || !SUPPORTED_IMAGE_EXTENSIONS.has(extension)) {
+			if (!isEmbeddableMediaType(attachmentData.metadata.content_type)) {
 				throw InputValidationError.fromCode(field, ValidationErrorCodes.ATTACHMENT_MUST_BE_IMAGE, {filename});
 			}
 			return attachmentData;
@@ -157,7 +162,7 @@ export class MessageEmbedAttachmentResolver {
 						content_type: metadata.content_type,
 						content_hash: metadata.content_hash,
 						placeholder: metadata.placeholder,
-						flags: metadata.flags,
+						flags: metadata.flags | EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
 						duration: metadata.duration,
 						nsfw: metadata.nsfw,
 					},
@@ -175,7 +180,7 @@ export class MessageEmbedAttachmentResolver {
 						content_type: metadata.content_type,
 						content_hash: metadata.content_hash,
 						placeholder: metadata.placeholder,
-						flags: metadata.flags,
+						flags: metadata.flags | EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
 						duration: metadata.duration,
 						nsfw: metadata.nsfw,
 					},

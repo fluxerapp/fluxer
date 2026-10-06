@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::types::{ApiUserPartial, PersonaPartial, User, UserPartial, UserRequest, UserResponse};
+use crate::types::{ApiUserPartial, PersonaPartial, User, UserPartial, UserRequest, UserResponse, now_ms};
 #[cfg(feature = "scylla")]
 use chrono::{DateTime, NaiveDate, Utc};
+use fluxer_common::user_flags::AccountStanding;
 use fluxer_svc::shard::ShardService;
-use fluxer_svc::transport::NatsTransport;
 use fluxer_svc::{postgres, postgres::KeyPart};
 use futures::stream::{self, StreamExt};
 use moka::future::Cache;
@@ -17,8 +17,12 @@ use scylla::statement::prepared::PreparedStatement;
 #[cfg(feature = "scylla")]
 use scylla::value::MaybeEmpty;
 use serde::Deserialize;
+use std::collections::{HashMap, hash_map::DefaultHasher};
+use std::fmt::Write;
 use std::future::Future;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 #[cfg(feature = "scylla")]
@@ -40,7 +44,7 @@ const FULL_USER_COLUMNS: &str = "\
     premium_will_cancel, premium_onboarding_dismissed_at, \
     has_ever_purchased, stripe_subscription_id, stripe_customer_id, \
     gift_inventory_server_seq, gift_inventory_client_seq, \
-    suspicious_activity_flags, terms_agreed_at, privacy_agreed_at, \
+    terms_agreed_at, privacy_agreed_at, \
     last_active_at, last_active_ip, \
     temp_banned_until, pending_deletion_at, \
     pending_bulk_message_deletion_at, \
@@ -48,22 +52,25 @@ const FULL_USER_COLUMNS: &str = "\
     pending_bulk_message_deletion_message_count, \
     password_last_changed_at, acls, \
     deletion_reason_code, deletion_public_reason, deletion_audit_log_reason, \
-    first_refund_at, version, has_verified_phone, \
+    first_refund_at, version, \
     premium_grace_ends_at, mention_flags, \
     last_voice_activity_sharing_change_at, \
-    timezone, timezone_privacy_flags";
+    timezone, timezone_privacy_flags, content_hidden_since";
 #[cfg(feature = "scylla")]
 const PARTIAL_USER_COLUMNS: &str = "\
     user_id, username, discriminator, global_name, \
     avatar_hash, bot, system, flags, \
     banner_hash, banner_color, accent_color, avatar_color, \
-    mention_flags";
+    mention_flags, temp_banned_until, pending_deletion_at, deletion_reason_code, \
+    content_hidden_since";
 #[cfg(feature = "scylla")]
 const PARTIAL_PERSONA_COLUMNS: &str = "\
     persona_id, owner_id, internal_name, display_name, \
 		avatar_hash, banner_hash, pronouns, accent_color";
 const USER_BATCH_SIZE: usize = 128;
 const USER_BATCH_CONCURRENCY: usize = 8;
+const USER_CACHE_MIN_GENERATION_STRIPES: usize = 4096;
+const USER_CACHE_MAX_GENERATION_STRIPES: usize = 1 << 20;
 const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: i32 = 0;
@@ -73,13 +80,20 @@ const DELETED_PERSONA_GLOBAL_NAME: &str = "Deleted Persona";
 pub struct UsersShard {
     storage: UsersStorage,
     caches: UserCaches,
-    transport: NatsTransport,
 }
 
 struct UserCaches {
-    full: Cache<i64, Option<User>>,
-    partial: Cache<i64, Option<UserPartial>>,
-		persona: Cache<i64, Option<PersonaPartial>>
+    full: Cache<UserCacheKey, Option<User>>,
+    partial: Cache<UserCacheKey, Option<UserPartial>>,
+		persona: Cache<i64, Option<PersonaPartial>>,
+    generations: Box<[AtomicU64]>,
+    generation_bumps: AtomicU64,
+}
+
+#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+struct UserCacheKey {
+    user_id: i64,
+    generation: u64,
 }
 
 #[derive(Clone)]
@@ -142,7 +156,6 @@ struct FullUserDbRow {
     stripe_customer_id: Option<String>,
     gift_inventory_server_seq: Option<i32>,
     gift_inventory_client_seq: Option<i32>,
-    suspicious_activity_flags: Option<i32>,
     terms_agreed_at: OptionalTimestamp,
     privacy_agreed_at: OptionalTimestamp,
     last_active_at: OptionalTimestamp,
@@ -159,16 +172,15 @@ struct FullUserDbRow {
     deletion_audit_log_reason: Option<String>,
     first_refund_at: OptionalTimestamp,
     version: Option<i32>,
-    has_verified_phone: Option<bool>,
     premium_grace_ends_at: OptionalTimestamp,
     mention_flags: Option<i32>,
     last_voice_activity_sharing_change_at: OptionalTimestamp,
     timezone: Option<String>,
     timezone_privacy_flags: Option<i32>,
+    content_hidden_since: OptionalTimestamp,
 }
 
-#[cfg(feature = "scylla")]
-#[derive(Debug, DeserializeRow)]
+#[derive(Debug, Deserialize)]
 struct PartialUserDbRow {
     user_id: i64,
     username: String,
@@ -183,10 +195,19 @@ struct PartialUserDbRow {
     accent_color: Option<i32>,
     avatar_color: Option<i32>,
     mention_flags: Option<i32>,
+    #[serde(default)]
+    temp_banned_until: Option<i64>,
+    #[serde(default)]
+    pending_deletion_at: Option<i64>,
+    #[serde(default)]
+    deletion_reason_code: Option<i32>,
+    #[serde(default)]
+    content_hidden_since: Option<i64>,
 }
 
-#[derive(Debug, Deserialize)]
-struct PartialUserKvRow {
+#[cfg(feature = "scylla")]
+#[derive(Debug, DeserializeRow)]
+struct PartialUserScyllaRow {
     user_id: i64,
     username: String,
     discriminator: i32,
@@ -200,6 +221,35 @@ struct PartialUserKvRow {
     accent_color: Option<i32>,
     avatar_color: Option<i32>,
     mention_flags: Option<i32>,
+    temp_banned_until: OptionalTimestamp,
+    pending_deletion_at: OptionalTimestamp,
+    deletion_reason_code: Option<i32>,
+    content_hidden_since: OptionalTimestamp,
+}
+
+#[cfg(feature = "scylla")]
+impl From<PartialUserScyllaRow> for PartialUserDbRow {
+    fn from(row: PartialUserScyllaRow) -> Self {
+        Self {
+            user_id: row.user_id,
+            username: row.username,
+            discriminator: row.discriminator,
+            global_name: row.global_name,
+            avatar_hash: row.avatar_hash,
+            bot: row.bot,
+            system: row.system,
+            flags: row.flags,
+            banner_hash: row.banner_hash,
+            banner_color: row.banner_color,
+            accent_color: row.accent_color,
+            avatar_color: row.avatar_color,
+            mention_flags: row.mention_flags,
+            temp_banned_until: optional_timestamp_millis(row.temp_banned_until),
+            pending_deletion_at: optional_timestamp_millis(row.pending_deletion_at),
+            deletion_reason_code: row.deletion_reason_code,
+            content_hidden_since: optional_timestamp_millis(row.content_hidden_since),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -239,7 +289,6 @@ struct FullUserKvRow {
     stripe_customer_id: Option<String>,
     gift_inventory_server_seq: Option<i32>,
     gift_inventory_client_seq: Option<i32>,
-    suspicious_activity_flags: Option<i32>,
     terms_agreed_at: Option<i64>,
     privacy_agreed_at: Option<i64>,
     last_active_at: Option<i64>,
@@ -256,12 +305,22 @@ struct FullUserKvRow {
     deletion_audit_log_reason: Option<String>,
     first_refund_at: Option<i64>,
     version: Option<i32>,
-    has_verified_phone: Option<bool>,
     premium_grace_ends_at: Option<i64>,
     mention_flags: Option<i32>,
     last_voice_activity_sharing_change_at: Option<i64>,
     timezone: Option<String>,
     timezone_privacy_flags: Option<i32>,
+    content_hidden_since: Option<i64>,
+}
+
+fn generation_stripes(max_entries: u64) -> usize {
+    usize::try_from(max_entries)
+        .unwrap_or(USER_CACHE_MAX_GENERATION_STRIPES)
+        .clamp(
+            USER_CACHE_MIN_GENERATION_STRIPES,
+            USER_CACHE_MAX_GENERATION_STRIPES,
+        )
+        .next_power_of_two()
 }
 
 impl UserCaches {
@@ -279,6 +338,23 @@ impl UserCaches {
                 .max_capacity(max_entries)
                 .time_to_live(ttl)
                 .build(),
+            generations: (0..generation_stripes(max_entries))
+                .map(|_| AtomicU64::new(0))
+                .collect(),
+            generation_bumps: AtomicU64::new(0),
+        }
+    }
+
+    fn generation(&self, user_id: i64) -> &AtomicU64 {
+        let mut hasher = DefaultHasher::new();
+        user_id.hash(&mut hasher);
+        &self.generations[hasher.finish() as usize % self.generations.len()]
+    }
+
+    fn key(&self, user_id: i64) -> UserCacheKey {
+        UserCacheKey {
+            user_id,
+            generation: self.generation(user_id).load(Ordering::SeqCst),
         }
     }
 
@@ -286,13 +362,14 @@ impl UserCaches {
     where
         F: Future<Output = anyhow::Result<Option<User>>>,
     {
+        let key = self.key(user_id);
         let user = self
             .full
-            .try_get_with(user_id, fetch)
+            .try_get_with(key, fetch)
             .await
             .map_err(|e: Arc<anyhow::Error>| anyhow::anyhow!("{e}"))?;
         self.partial
-            .insert(user_id, user.as_ref().map(User::to_partial))
+            .insert(key, user.as_ref().map(User::to_partial))
             .await;
         Ok(user)
     }
@@ -306,7 +383,7 @@ impl UserCaches {
         F: Future<Output = anyhow::Result<Option<UserPartial>>>,
     {
         self.partial
-            .try_get_with(user_id, fetch)
+            .try_get_with(self.key(user_id), fetch)
             .await
             .map_err(|e: Arc<anyhow::Error>| anyhow::anyhow!("{e}"))
     }
@@ -326,37 +403,41 @@ impl UserCaches {
     }
 
     async fn get_partial(&self, user_id: i64) -> Option<Option<UserPartial>> {
-        self.partial.get(&user_id).await
+        self.partial.get(&self.key(user_id)).await
     }
 
-    async fn insert_partial(&self, user_id: i64, partial: Option<UserPartial>) {
-        self.partial.insert(user_id, partial).await;
+    async fn insert_partial(&self, key: UserCacheKey, partial: Option<UserPartial>) {
+        self.partial.insert(key, partial).await;
     }
 
     async fn invalidate(&self, user_id: i64) {
-        self.full.invalidate(&user_id).await;
-        self.partial.invalidate(&user_id).await;
+        let generation = self
+            .generation(user_id)
+            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |current| {
+                current.checked_add(1)
+            })
+            .expect("user cache generation exhausted");
+        self.generation_bumps.fetch_add(1, Ordering::Relaxed);
+        let key = UserCacheKey {
+            user_id,
+            generation,
+        };
+        self.full.invalidate(&key).await;
+        self.partial.invalidate(&key).await;
     }
 }
 
 impl UsersShard {
-    pub fn new_postgres(
-        kv: postgres::KvClient,
-        transport: NatsTransport,
-        max_entries: u64,
-        ttl: Duration,
-    ) -> anyhow::Result<Self> {
-        Ok(Self {
+    pub fn new_postgres(kv: postgres::KvClient, max_entries: u64, ttl: Duration) -> Self {
+        Self {
             storage: UsersStorage::Postgres(PostgresUsersStorage { kv }),
             caches: UserCaches::new(max_entries, ttl),
-            transport,
-        })
+        }
     }
 
     #[cfg(feature = "scylla")]
     pub async fn new_scylla(
         db: Arc<Session>,
-        transport: NatsTransport,
         max_entries: u64,
         ttl: Duration,
     ) -> anyhow::Result<Self> {
@@ -396,7 +477,6 @@ impl UsersShard {
 								stmt_partial_persona_batch
             })),
             caches: UserCaches::new(max_entries, ttl),
-            transport,
         })
     }
 
@@ -404,12 +484,8 @@ impl UsersShard {
         if user_id == FLUXER_SYSTEM_USER_ID {
             return Ok(Some(fluxer_system_user()));
         }
-        let storage = self.storage.clone();
         self.caches
-            .get_or_fetch_full(
-                user_id,
-                async move { storage.fetch_full_user(user_id).await },
-            )
+            .get_or_fetch_full(user_id, self.storage.fetch_full_user(user_id))
             .await
     }
 
@@ -417,12 +493,8 @@ impl UsersShard {
         if user_id == FLUXER_SYSTEM_USER_ID {
             return Ok(Some(fluxer_system_user().to_partial()));
         }
-        let storage = self.storage.clone();
         self.caches
-            .get_or_fetch_partial(
-                user_id,
-                async move { storage.fetch_partial_user(user_id).await },
-            )
+            .get_or_fetch_partial(user_id, self.storage.fetch_partial_user(user_id))
             .await
     }
 
@@ -446,8 +518,7 @@ impl UsersShard {
 						}
     }
 
-    async fn get_partial_users(&self, user_ids: Vec<i64>) -> anyhow::Result<Vec<UserPartial>> {
-        let mut user_ids = user_ids;
+    async fn get_partial_users(&self, mut user_ids: Vec<i64>) -> anyhow::Result<Vec<UserPartial>> {
         user_ids.sort_unstable();
         user_ids.dedup();
         let mut partials = Vec::new();
@@ -509,43 +580,40 @@ impl UsersShard {
     }
 
     async fn fetch_partial_batch(&self, user_ids: Vec<i64>) -> anyhow::Result<Vec<UserPartial>> {
-        let mut partials = Vec::new();
-        let user_ids = user_ids
-            .into_iter()
-            .filter(|user_id| {
-                if *user_id == FLUXER_SYSTEM_USER_ID {
-                    partials.push(fluxer_system_user().to_partial());
-                    false
-                } else {
-                    true
-                }
-            })
-            .collect::<Vec<_>>();
-        if user_ids.is_empty() {
-            return Ok(partials);
-        }
+        let mut cache_keys = user_ids
+            .iter()
+            .map(|&user_id| (user_id, self.caches.key(user_id)))
+            .collect::<HashMap<_, _>>();
         let fetched_partials = match self.storage.fetch_partial_batch(user_ids.clone()).await {
-            Ok(partials) => partials,
-            Err(_) => {
-                partials.extend(self.fetch_partial_batch_individually(user_ids).await?);
-                return Ok(partials);
+            Ok(fetched) => fetched,
+            Err(err) => {
+                tracing::warn!(
+                    error = %err,
+                    user_count = user_ids.len(),
+                    "user partial batch read failed, retrying per user"
+                );
+                return self.fetch_partial_batch_individually(user_ids).await;
             }
         };
-        let found_ids = fetched_partials
-            .iter()
-            .map(|partial| partial.user_id)
-            .collect::<std::collections::HashSet<_>>();
-        for partial in &fetched_partials {
-            self.caches
-                .insert_partial(partial.user_id, Some(partial.clone()))
-                .await;
+        let mut unexpected = 0usize;
+        let mut partials = Vec::with_capacity(fetched_partials.len());
+        for partial in fetched_partials {
+            let Some(key) = cache_keys.remove(&partial.user_id) else {
+                unexpected += 1;
+                continue;
+            };
+            self.caches.insert_partial(key, Some(partial.clone())).await;
+            partials.push(partial);
         }
-        for user_id in user_ids {
-            if !found_ids.contains(&user_id) {
-                self.caches.insert_partial(user_id, None).await;
-            }
+        if unexpected > 0 {
+            tracing::warn!(
+                unexpected,
+                "user batch returned duplicate or unrequested users"
+            );
         }
-        partials.extend(fetched_partials);
+        for key in cache_keys.into_values() {
+            self.caches.insert_partial(key, None).await;
+        }
         Ok(partials)
     }
 
@@ -657,7 +725,9 @@ impl ScyllaUsersStorage {
             .execute_unpaged(&self.stmt_partial, (user_id,))
             .await?;
         let rows = result.into_rows_result()?;
-        let partial = rows.maybe_first_row::<PartialUserDbRow>()?.map(Into::into);
+        let partial = rows
+            .maybe_first_row::<PartialUserScyllaRow>()?
+            .map(|row| UserPartial::from(PartialUserDbRow::from(row)));
         Ok(partial)
     }
 
@@ -667,9 +737,13 @@ impl ScyllaUsersStorage {
             .execute_unpaged(&self.stmt_partial_batch, (user_ids,))
             .await?;
         let rows = result.into_rows_result()?;
-        let rows: Vec<PartialUserDbRow> =
-            rows.rows::<PartialUserDbRow>()?.collect::<Result<_, _>>()?;
-        Ok(rows.into_iter().map(UserPartial::from).collect::<Vec<_>>())
+        let rows: Vec<PartialUserScyllaRow> = rows
+            .rows::<PartialUserScyllaRow>()?
+            .collect::<Result<_, _>>()?;
+        Ok(rows
+            .into_iter()
+            .map(|row| UserPartial::from(PartialUserDbRow::from(row)))
+            .collect::<Vec<_>>())
     }
 
 		async fn fetch_partial_persona(&self, user_id: i64) -> anyhow::Result<Option<UserPartial>> {
@@ -691,7 +765,7 @@ fn decode_postgres_user(row: serde_json::Value) -> anyhow::Result<User> {
 
 fn decode_postgres_user_partial(row: serde_json::Value) -> anyhow::Result<UserPartial> {
     let row = postgres::decode_row_dates_as_millis(row)?;
-    let row: PartialUserKvRow = serde_json::from_value(row)?;
+    let row: PartialUserDbRow = serde_json::from_value(row)?;
     Ok(row.into())
 }
 
@@ -738,7 +812,6 @@ fn fluxer_system_user() -> User {
         stripe_customer_id: None,
         gift_inventory_server_seq: None,
         gift_inventory_client_seq: None,
-        suspicious_activity_flags: None,
         terms_agreed_at: None,
         privacy_agreed_at: None,
         last_active_at: None,
@@ -755,12 +828,12 @@ fn fluxer_system_user() -> User {
         deletion_audit_log_reason: None,
         first_refund_at: None,
         version: 1,
-        has_verified_phone: None,
         premium_grace_ends_at: None,
         mention_flags: None,
         last_voice_activity_sharing_change_at: None,
         timezone: None,
         timezone_privacy_flags: None,
+        content_hidden_since: None,
     }
 }
 
@@ -784,34 +857,49 @@ impl ShardService for UsersShard {
         "users"
     }
 
+    fn render_prometheus_metrics(&self, output: &mut String) {
+        let _ = writeln!(
+            output,
+            "# TYPE fluxer_users_shard_cache_generation_bumps_total counter"
+        );
+        let _ = writeln!(
+            output,
+            "fluxer_users_shard_cache_generation_bumps_total {}",
+            self.caches.generation_bumps.load(Ordering::Relaxed)
+        );
+        let _ = writeln!(
+            output,
+            "# TYPE fluxer_users_shard_cache_generation_stripes gauge"
+        );
+        let _ = writeln!(
+            output,
+            "fluxer_users_shard_cache_generation_stripes {}",
+            self.caches.generations.len()
+        );
+    }
+
     async fn handle(&self, request: UserRequest) -> anyhow::Result<UserResponse> {
         match request {
-            UserRequest::GetById { user_id } => match self.get_full_user(user_id).await? {
-                Some(user) => Ok(UserResponse::Found(user)),
-                None => Ok(UserResponse::NotFound),
-            },
-            UserRequest::GetPartialById { user_id } => {
-                match self.get_partial_user(user_id).await? {
-                    Some(partial) => Ok(UserResponse::FoundPartial(partial)),
-                    None => Ok(UserResponse::NotFound),
-                }
-            }
+            UserRequest::GetById { user_id } => Ok(self
+                .get_full_user(user_id)
+                .await?
+                .map_or(UserResponse::NotFound, UserResponse::Found)),
+            UserRequest::GetPartialById { user_id } => Ok(self
+                .get_partial_user(user_id)
+                .await?
+                .map_or(UserResponse::NotFound, UserResponse::FoundPartial)),
             UserRequest::GetPartialsByIds { user_ids } => Ok(UserResponse::FoundPartials(
                 self.get_partial_users(user_ids).await?,
             )),
-            UserRequest::GetApiPartialById { user_id } => {
-                match self.get_api_partial_user(user_id).await? {
-                    Some(partial) => Ok(UserResponse::FoundApiPartial(partial)),
-                    None => Ok(UserResponse::NotFound),
-                }
-            }
+            UserRequest::GetApiPartialById { user_id } => Ok(self
+                .get_api_partial_user(user_id)
+                .await?
+                .map_or(UserResponse::NotFound, UserResponse::FoundApiPartial)),
             UserRequest::GetApiPartialsByIds { user_ids } => Ok(UserResponse::FoundApiPartials(
                 self.get_api_partial_users(user_ids).await?,
             )),
             UserRequest::Invalidate { user_id } => {
                 self.caches.invalidate(user_id).await;
-                let subject = format!("svc.users.invalidate.{user_id}");
-                self.transport.publish(&subject, &[]).await?;
                 Ok(UserResponse::Invalidated)
             }
 						UserRequest::GetPersonaPartialById { persona_id } => {
@@ -851,9 +939,14 @@ fn optional_date_string(value: OptionalDate) -> Option<String> {
     })
 }
 
-#[cfg(feature = "scylla")]
 impl From<PartialUserDbRow> for UserPartial {
     fn from(row: PartialUserDbRow) -> Self {
+        let standing = AccountStanding {
+            flags: row.flags.unwrap_or_default(),
+            temp_banned_until_ms: row.temp_banned_until,
+            pending_deletion_at_ms: row.pending_deletion_at,
+            deletion_reason_code: row.deletion_reason_code,
+        };
         Self {
             user_id: row.user_id,
             username: row.username,
@@ -868,27 +961,9 @@ impl From<PartialUserDbRow> for UserPartial {
             accent_color: row.accent_color,
             avatar_color: row.avatar_color,
             mention_flags: row.mention_flags,
+            content_hidden_since: row.content_hidden_since,
         }
-    }
-}
-
-impl From<PartialUserKvRow> for UserPartial {
-    fn from(row: PartialUserKvRow) -> Self {
-        Self {
-            user_id: row.user_id,
-            username: row.username,
-            discriminator: row.discriminator,
-            global_name: row.global_name,
-            avatar_hash: row.avatar_hash,
-            bot: row.bot,
-            system: row.system,
-            flags: row.flags,
-            banner_hash: row.banner_hash,
-            banner_color: row.banner_color,
-            accent_color: row.accent_color,
-            avatar_color: row.avatar_color,
-            mention_flags: row.mention_flags,
-        }
+        .visible_to_others(&standing, now_ms())
     }
 }
 
@@ -941,7 +1016,6 @@ impl From<FullUserDbRow> for User {
             stripe_customer_id: row.stripe_customer_id,
             gift_inventory_server_seq: row.gift_inventory_server_seq,
             gift_inventory_client_seq: row.gift_inventory_client_seq,
-            suspicious_activity_flags: row.suspicious_activity_flags,
             terms_agreed_at: optional_timestamp_millis(row.terms_agreed_at),
             privacy_agreed_at: optional_timestamp_millis(row.privacy_agreed_at),
             last_active_at: optional_timestamp_millis(row.last_active_at),
@@ -965,7 +1039,6 @@ impl From<FullUserDbRow> for User {
             deletion_audit_log_reason: row.deletion_audit_log_reason,
             first_refund_at: optional_timestamp_millis(row.first_refund_at),
             version: row.version.unwrap_or_default(),
-            has_verified_phone: row.has_verified_phone,
             premium_grace_ends_at: optional_timestamp_millis(row.premium_grace_ends_at),
             mention_flags: row.mention_flags,
             last_voice_activity_sharing_change_at: optional_timestamp_millis(
@@ -973,6 +1046,7 @@ impl From<FullUserDbRow> for User {
             ),
             timezone: row.timezone,
             timezone_privacy_flags: row.timezone_privacy_flags,
+            content_hidden_since: optional_timestamp_millis(row.content_hidden_since),
         }
     }
 }
@@ -1015,7 +1089,6 @@ impl From<FullUserKvRow> for User {
             stripe_customer_id: row.stripe_customer_id,
             gift_inventory_server_seq: row.gift_inventory_server_seq,
             gift_inventory_client_seq: row.gift_inventory_client_seq,
-            suspicious_activity_flags: row.suspicious_activity_flags,
             terms_agreed_at: row.terms_agreed_at,
             privacy_agreed_at: row.privacy_agreed_at,
             last_active_at: row.last_active_at,
@@ -1034,12 +1107,12 @@ impl From<FullUserKvRow> for User {
             deletion_audit_log_reason: row.deletion_audit_log_reason,
             first_refund_at: row.first_refund_at,
             version: row.version.unwrap_or_default(),
-            has_verified_phone: row.has_verified_phone,
             premium_grace_ends_at: row.premium_grace_ends_at,
             mention_flags: row.mention_flags,
             last_voice_activity_sharing_change_at: row.last_voice_activity_sharing_change_at,
             timezone: row.timezone,
             timezone_privacy_flags: row.timezone_privacy_flags,
+            content_hidden_since: row.content_hidden_since,
         }
     }
 }
@@ -1084,7 +1157,7 @@ mod tests {
             caches.get_partial(42).await.unwrap().unwrap().username,
             "Ada"
         );
-        assert!(caches.full.get(&42).await.is_none());
+        assert!(caches.full.get(&caches.key(42)).await.is_none());
     }
 
     #[tokio::test]
@@ -1118,7 +1191,14 @@ mod tests {
 
         assert_eq!(fetched.email.as_deref(), Some("ada@example.com"));
         assert_eq!(
-            caches.full.get(&42).await.unwrap().unwrap().bio.as_deref(),
+            caches
+                .full
+                .get(&caches.key(42))
+                .await
+                .unwrap()
+                .unwrap()
+                .bio
+                .as_deref(),
             Some("analytical engine enjoyer")
         );
         let cached_partial = caches.get_partial(42).await.unwrap().unwrap();
@@ -1136,7 +1216,7 @@ mod tests {
             .unwrap();
 
         assert!(fetched.is_none());
-        assert!(matches!(caches.full.get(&42).await, Some(None)));
+        assert!(matches!(caches.full.get(&caches.key(42)).await, Some(None)));
         assert!(matches!(caches.get_partial(42).await, Some(None)));
     }
 
@@ -1147,12 +1227,12 @@ mod tests {
             .get_or_fetch_full(42, async { Ok(Some(test_user(42))) })
             .await
             .unwrap();
-        assert!(caches.full.get(&42).await.is_some());
+        assert!(caches.full.get(&caches.key(42)).await.is_some());
         assert!(caches.get_partial(42).await.is_some());
 
         caches.invalidate(42).await;
 
-        assert!(caches.full.get(&42).await.is_none());
+        assert!(caches.full.get(&caches.key(42)).await.is_none());
         assert!(caches.get_partial(42).await.is_none());
     }
 
@@ -1169,6 +1249,27 @@ mod tests {
         assert!(caches.get_partial(42).await.is_none());
     }
 
+    #[tokio::test]
+    async fn invalidation_counts_generation_bumps() {
+        let caches = caches();
+        assert_eq!(caches.generation_bumps.load(Ordering::Relaxed), 0);
+
+        caches.invalidate(42).await;
+        caches.invalidate(43).await;
+
+        assert_eq!(caches.generation_bumps.load(Ordering::Relaxed), 2);
+    }
+
+    #[test]
+    fn generation_stripes_follow_the_configured_capacity() {
+        assert_eq!(generation_stripes(16), USER_CACHE_MIN_GENERATION_STRIPES);
+        assert_eq!(generation_stripes(100_000), 131_072);
+        assert_eq!(
+            generation_stripes(u64::MAX),
+            USER_CACHE_MAX_GENERATION_STRIPES
+        );
+    }
+
     #[cfg(feature = "scylla")]
     #[test]
     fn partial_columns_match_the_user_partial_fields_exactly() {
@@ -1178,13 +1279,20 @@ mod tests {
             .split(',')
             .map(str::trim)
             .collect::<BTreeSet<_>>();
-        let partial = serde_json::to_value(test_user(42).to_partial()).unwrap();
-        let fields = partial
+        let mut user = test_user(42);
+        user.content_hidden_since = Some(1);
+        let partial = serde_json::to_value(user.to_partial()).unwrap();
+        let mut fields = partial
             .as_object()
             .unwrap()
             .keys()
             .map(String::as_str)
             .collect::<BTreeSet<_>>();
+        fields.extend([
+            "temp_banned_until",
+            "pending_deletion_at",
+            "deletion_reason_code",
+        ]);
         let full_columns = FULL_USER_COLUMNS
             .split(',')
             .map(str::trim)
@@ -1236,5 +1344,171 @@ mod tests {
         assert_eq!(user.date_of_birth.as_deref(), Some("1815-12-10"));
         assert_eq!(user.premium_since, Some(1_781_526_896_789));
         assert_eq!(user.version, 3);
+    }
+
+    const SPAMMER: i64 = 1 << 6;
+    const DISABLED: i64 = 1 << 38;
+    const PROFILE_HIDDEN: i64 = 1 << 7;
+
+    fn styled(user_id: i64, flags: i64) -> User {
+        let mut user = test_user(user_id);
+        user.flags = Some(flags);
+        user.banner_hash = Some("banner_hash".to_owned());
+        user.banner_color = Some(3);
+        user.accent_color = Some(5);
+        user.avatar_color = Some(9);
+        user
+    }
+
+    fn assert_hidden(partial: &UserPartial) {
+        let expected = crate::pseudonym::pseudonym(partial.user_id);
+        assert_eq!(partial.username, expected.username);
+        assert_eq!(partial.discriminator, expected.discriminator);
+        assert_ne!(partial.username, "Ada");
+        assert_eq!(partial.global_name, None);
+        assert_eq!(partial.avatar_hash, None);
+        assert_eq!(partial.avatar_color, None);
+        assert_eq!(partial.banner_hash, None);
+        assert_eq!(partial.banner_color, None);
+        assert_eq!(partial.accent_color, None);
+        let api = partial.to_api_partial();
+        assert_eq!(api.username, expected.username);
+        assert_eq!(api.discriminator, format!("{:04}", expected.discriminator));
+        assert_eq!(api.flags & PROFILE_HIDDEN as i32, 0);
+    }
+
+    #[test]
+    fn a_masked_partial_matches_the_shared_development_vector() {
+        let api = styled(1_174_109_840_998_400_001, SPAMMER)
+            .to_partial()
+            .to_api_partial();
+        assert_eq!(
+            (api.username.as_str(), api.discriminator.as_str()),
+            ("MambaEgret", "6542")
+        );
+        assert_eq!(api.flags & PROFILE_HIDDEN as i32, 0);
+        assert_eq!(api.global_name, None);
+        assert_eq!(api.avatar, None);
+    }
+
+    #[test]
+    fn a_masked_partial_is_stable_across_reads() {
+        let first = styled(53, PROFILE_HIDDEN).to_partial();
+        let second = styled(53, PROFILE_HIDDEN).to_partial();
+        assert_eq!(
+            (first.username, first.discriminator),
+            (second.username, second.discriminator)
+        );
+    }
+
+    #[test]
+    fn hidden_and_enforced_accounts_get_a_neutral_partial_and_keep_their_stored_profile() {
+        let now = now_ms();
+        let mut banned = styled(43, DISABLED);
+        banned.temp_banned_until = Some(now + 60_000);
+        let mut deleting = styled(44, 0);
+        deleting.pending_deletion_at = Some(now + 60_000);
+        deleting.deletion_reason_code = Some(20);
+        for user in [
+            styled(41, PROFILE_HIDDEN),
+            styled(42, SPAMMER),
+            banned,
+            deleting,
+        ] {
+            assert_hidden(&user.to_partial());
+            assert_eq!(user.username, "Ada");
+            assert_eq!(user.avatar_hash.as_deref(), Some("avatar_hash"));
+        }
+    }
+
+    #[test]
+    fn lifted_bans_self_disables_and_normal_accounts_keep_their_partial() {
+        let now = now_ms();
+        let mut expired = styled(45, DISABLED);
+        expired.temp_banned_until = Some(now - 60_000);
+        let mut self_deleting = styled(46, 0);
+        self_deleting.pending_deletion_at = Some(now + 60_000);
+        self_deleting.deletion_reason_code = Some(1);
+        for user in [styled(47, 0), styled(48, DISABLED), expired, self_deleting] {
+            let partial = user.to_partial();
+            assert_eq!(partial.username, "Ada", "{}", user.user_id);
+            assert_eq!(partial.global_name.as_deref(), Some("Ada Lovelace"));
+            assert_eq!(partial.banner_hash.as_deref(), Some("banner_hash"));
+            assert_eq!(partial.discriminator, 7);
+            assert_eq!(partial.flags.unwrap_or_default() & PROFILE_HIDDEN, 0);
+        }
+    }
+
+    #[test]
+    fn postgres_partial_rows_apply_the_mask_from_ban_state() {
+        let until = |ms: i64| {
+            let at = chrono::DateTime::from_timestamp_millis(ms).unwrap();
+            json!({"__fluxer_type": "date", "value": at.to_rfc3339_opts(chrono::SecondsFormat::Millis, true)})
+        };
+        let row = |ms: i64| {
+            json!({
+                "user_id": {"__fluxer_type": "bigint", "value": "42"},
+                "username": "ada",
+                "discriminator": 7,
+                "global_name": "Ada",
+                "avatar_hash": "avatar_hash",
+                "flags": {"__fluxer_type": "bigint", "value": DISABLED.to_string()},
+                "temp_banned_until": until(ms),
+            })
+        };
+        let now = now_ms();
+        assert_hidden(&decode_postgres_user_partial(row(now + 60_000)).unwrap());
+        let lifted = decode_postgres_user_partial(row(now - 60_000)).unwrap();
+        assert_eq!(lifted.username, "ada");
+        assert_eq!(lifted.avatar_hash.as_deref(), Some("avatar_hash"));
+    }
+
+    #[test]
+    fn the_message_hide_window_reaches_the_partial_independently_of_the_profile_mask() {
+        let since = 1_790_000_000_000;
+        let mut hidden = styled(49, 0);
+        hidden.content_hidden_since = Some(since);
+        let partial = hidden.to_partial();
+        assert_eq!(partial.content_hidden_since, Some(since));
+        assert_eq!(partial.username, "Ada");
+        let mut masked = styled(50, PROFILE_HIDDEN);
+        masked.content_hidden_since = Some(since);
+        let partial = masked.to_partial();
+        assert_hidden(&partial);
+        assert_eq!(partial.content_hidden_since, Some(since));
+        assert_eq!(
+            styled(51, PROFILE_HIDDEN).to_partial().content_hidden_since,
+            None
+        );
+        let wire = serde_json::to_value(styled(52, 0).to_partial()).unwrap();
+        assert!(wire.get("content_hidden_since").is_none());
+        assert!(
+            serde_json::to_value(hidden.to_partial().to_api_partial())
+                .unwrap()
+                .get("content_hidden_since")
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn postgres_partial_rows_read_the_message_hide_window() {
+        let since = 1_790_000_000_000_i64;
+        let at = chrono::DateTime::from_timestamp_millis(since).unwrap();
+        let row = json!({
+            "user_id": {"__fluxer_type": "bigint", "value": "42"},
+            "username": "ada",
+            "discriminator": 7,
+            "content_hidden_since": {"__fluxer_type": "date", "value": at.to_rfc3339_opts(chrono::SecondsFormat::Millis, true)},
+        });
+        let partial = decode_postgres_user_partial(row).unwrap();
+        assert_eq!(partial.content_hidden_since, Some(since));
+        assert_eq!(partial.username, "ada");
+        let cleared = decode_postgres_user_partial(json!({
+            "user_id": {"__fluxer_type": "bigint", "value": "42"},
+            "username": "ada",
+            "discriminator": 7,
+        }))
+        .unwrap();
+        assert_eq!(cleared.content_hidden_since, None);
     }
 }

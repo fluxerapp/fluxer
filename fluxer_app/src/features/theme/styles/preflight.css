@@ -39,6 +39,7 @@ html,
 	font-family: var(--font-sans);
 	font-feature-settings: normal;
 	font-variation-settings: normal;
+	font-variant-emoji: unicode;
 	-webkit-tap-highlight-color: transparent;
 }
 

@@ -49,7 +49,7 @@ const MEDIA_DISPLAY_DESCRIPTOR = msg({
 	comment: 'Short label in the display tab. Keep it concise.',
 });
 const WHEN_POSTED_AS_LINKS_TO_CHAT_DESCRIPTOR = msg({
-	message: 'When posted as links to chat',
+	message: 'When posted as links in chat',
 	comment: 'Label in the display tab.',
 });
 const WHEN_UPLOADED_DIRECTLY_TO_DESCRIPTOR = msg({

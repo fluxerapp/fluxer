@@ -20,11 +20,15 @@ const HarvestStatusEnum = withOpenApiType(
 	),
 	'HarvestStatus',
 );
+export type HarvestStatus = z.infer<typeof HarvestStatusEnum>;
+
 export const HarvestCreationResponseSchema = z.object({
 	harvest_id: SnowflakeStringType.describe('Unique identifier for the harvest request'),
 	status: HarvestStatusEnum,
 	created_at: z.string().describe('ISO 8601 timestamp when the harvest request was created'),
 });
+export type HarvestCreationResponse = z.infer<typeof HarvestCreationResponseSchema>;
+
 export const HarvestStatusResponseSchema = HarvestCreationResponseSchema.extend({
 	started_at: z.string().nullable().describe('ISO 8601 timestamp when the harvest started, or null if pending'),
 	completed_at: z.string().nullable().describe('ISO 8601 timestamp when the harvest completed, or null otherwise'),
@@ -54,3 +58,5 @@ export const HarvestDownloadUrlResponse = z.object({
 });
 
 export type HarvestDownloadUrlResponse = z.infer<typeof HarvestDownloadUrlResponse>;
+
+export const HarvestArchiveResponse = z.file().describe('The ZIP archive containing the requested user data');

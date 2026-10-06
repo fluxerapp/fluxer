@@ -7,16 +7,11 @@ pub enum CgEventType {
     LeftMouseUp = 2,
     RightMouseDown = 3,
     RightMouseUp = 4,
-    MouseMoved = 5,
-    LeftMouseDragged = 6,
-    RightMouseDragged = 7,
     KeyDown = 10,
     KeyUp = 11,
     FlagsChanged = 12,
-    ScrollWheel = 22,
     OtherMouseDown = 25,
     OtherMouseUp = 26,
-    OtherMouseDragged = 27,
 }
 
 impl CgEventType {
@@ -26,16 +21,11 @@ impl CgEventType {
             2 => Self::LeftMouseUp,
             3 => Self::RightMouseDown,
             4 => Self::RightMouseUp,
-            5 => Self::MouseMoved,
-            6 => Self::LeftMouseDragged,
-            7 => Self::RightMouseDragged,
             10 => Self::KeyDown,
             11 => Self::KeyUp,
             12 => Self::FlagsChanged,
-            22 => Self::ScrollWheel,
             25 => Self::OtherMouseDown,
             26 => Self::OtherMouseUp,
-            27 => Self::OtherMouseDragged,
             _ => return None,
         })
     }
@@ -117,13 +107,15 @@ mod tests {
         assert!(is_down(CgEventType::LeftMouseDown));
         assert!(!is_down(CgEventType::LeftMouseUp));
         assert!(is_down(CgEventType::OtherMouseDown));
-        assert!(!is_down(CgEventType::MouseMoved));
+        assert!(!is_down(CgEventType::KeyDown));
     }
 
     #[test]
     fn from_u32_maps_known_event_types() {
         assert_eq!(Some(CgEventType::LeftMouseDown), CgEventType::from_u32(1));
-        assert_eq!(Some(CgEventType::ScrollWheel), CgEventType::from_u32(22));
+        assert_eq!(Some(CgEventType::OtherMouseUp), CgEventType::from_u32(26));
+        assert_eq!(None, CgEventType::from_u32(5));
+        assert_eq!(None, CgEventType::from_u32(22));
         assert_eq!(None, CgEventType::from_u32(999));
     }
 }

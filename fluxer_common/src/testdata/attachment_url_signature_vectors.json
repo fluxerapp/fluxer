@@ -1,0 +1,793 @@
+{
+	"version": 3,
+	"ttl_secs": 86400,
+	"bucket_secs": 43200,
+	"fluxer_epoch_ms": 1420070400000,
+	"secrets_base64": ["AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=", "ICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj8="],
+	"sign": [
+		{
+			"name": "first issue at the snowflake second",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "cat.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"anchor": 1788420273,
+			"now": 1788420273,
+			"ex": "6a9a7231",
+			"is": "6a9920b1",
+			"hm": "2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"uc": "",
+			"signature_input": "fluxer-attachment-url-v1\n6a9a7231\n6a9920b1\n\nattachments/1544725486800732163/1544971349200470016/cat.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27"
+		},
+		{
+			"name": "first issue with a slash inside the filename",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "a/b.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/a/b.gif",
+			"anchor": 1788420273,
+			"now": 1788420273,
+			"ex": "6a9a7231",
+			"is": "6a9920b1",
+			"hm": "5d594e9ce78bc3c82e735dd29bcfdf7cee9ebb4391304b1df90d454207feb258",
+			"uc": "",
+			"signature_input": "fluxer-attachment-url-v1\n6a9a7231\n6a9920b1\n\nattachments/1544725486800732163/1544971349200470016/a/b.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/a/b.gif",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/a/b.gif?ex=6a9a7231&is=6a9920b1&hm=5d594e9ce78bc3c82e735dd29bcfdf7cee9ebb4391304b1df90d454207feb258"
+		},
+		{
+			"name": "first issue with a unicode filename",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "café.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/café.gif",
+			"anchor": 1788420273,
+			"now": 1788420273,
+			"ex": "6a9a7231",
+			"is": "6a9920b1",
+			"hm": "37efc4faf535ba29ecf6580cb47a88d80b14cd6319e29931c06ddffa761abd9c",
+			"uc": "",
+			"signature_input": "fluxer-attachment-url-v1\n6a9a7231\n6a9920b1\n\nattachments/1544725486800732163/1544971349200470016/café.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/café.gif",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/café.gif?ex=6a9a7231&is=6a9920b1&hm=37efc4faf535ba29ecf6580cb47a88d80b14cd6319e29931c06ddffa761abd9c"
+		},
+		{
+			"name": "second bucket",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "cat.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"anchor": 1788420273,
+			"now": 1788463473,
+			"ex": "6a9b1af1",
+			"is": "6a99c971",
+			"hm": "d5f9d09526e0be7825b32ee9522927e0786d3fcb576e566ed93d642b6fc05bf5",
+			"uc": "",
+			"signature_input": "fluxer-attachment-url-v1\n6a9b1af1\n6a99c971\n\nattachments/1544725486800732163/1544971349200470016/cat.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=6a9b1af1&is=6a99c971&hm=d5f9d09526e0be7825b32ee9522927e0786d3fcb576e566ed93d642b6fc05bf5"
+		},
+		{
+			"name": "far future issue stays on the bucket grid",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "cat.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"anchor": 1788420273,
+			"now": 1792740280,
+			"ex": "6adc5d31",
+			"is": "6adb0bb1",
+			"hm": "efbfba51976929974135d10c7760fc1dfa1a2e21bfd8e005493fb568a4a532b1",
+			"uc": "",
+			"signature_input": "fluxer-attachment-url-v1\n6adc5d31\n6adb0bb1\n\nattachments/1544725486800732163/1544971349200470016/cat.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=6adc5d31&is=6adb0bb1&hm=efbfba51976929974135d10c7760fc1dfa1a2e21bfd8e005493fb568a4a532b1"
+		},
+		{
+			"name": "transform parameters and a fragment follow the signature",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "cat.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"anchor": 1788420273,
+			"now": 1788420273,
+			"ex": "6a9a7231",
+			"is": "6a9920b1",
+			"hm": "2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"uc": "",
+			"signature_input": "fluxer-attachment-url-v1\n6a9a7231\n6a9920b1\n\nattachments/1544725486800732163/1544971349200470016/cat.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64&height=64#top",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&width=64&height=64#top"
+		},
+		{
+			"name": "data package at the snowflake second",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "cat.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"anchor": 1788420273,
+			"now": 1788420273,
+			"ex": "0",
+			"is": "6a9920b1",
+			"hm": "0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a",
+			"uc": "dp",
+			"signature_input": "fluxer-attachment-url-v1\n00000000\n6a9920b1\ndp\nattachments/1544725486800732163/1544971349200470016/cat.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp"
+		},
+		{
+			"name": "data package with a unicode filename",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "café.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/café.gif",
+			"anchor": 1788420273,
+			"now": 1788420273,
+			"ex": "0",
+			"is": "6a9920b1",
+			"hm": "89e63377486a58781d1f168c80a438e99a1c87f71f8bb5a7401f2512770286c2",
+			"uc": "dp",
+			"signature_input": "fluxer-attachment-url-v1\n00000000\n6a9920b1\ndp\nattachments/1544725486800732163/1544971349200470016/café.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/café.gif",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/café.gif?ex=0&is=6a9920b1&hm=89e63377486a58781d1f168c80a438e99a1c87f71f8bb5a7401f2512770286c2&uc=dp"
+		},
+		{
+			"name": "data package issued in a later bucket",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "cat.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"anchor": 1788420273,
+			"now": 1792740280,
+			"ex": "0",
+			"is": "6adb0bb1",
+			"hm": "34bdd1bc2fdb906efa5ff6bb2db8be256318be7457b60dfa593ee0507eec0881",
+			"uc": "dp",
+			"signature_input": "fluxer-attachment-url-v1\n00000000\n6adb0bb1\ndp\nattachments/1544725486800732163/1544971349200470016/cat.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=0&is=6adb0bb1&hm=34bdd1bc2fdb906efa5ff6bb2db8be256318be7457b60dfa593ee0507eec0881&uc=dp"
+		},
+		{
+			"name": "data package keeps transform parameters after uc",
+			"channel_id": "1544725486800732163",
+			"attachment_id": "1544971349200470016",
+			"filename": "cat.gif",
+			"storage_key": "attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"anchor": 1788420273,
+			"now": 1788420273,
+			"ex": "0",
+			"is": "6a9920b1",
+			"hm": "0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a",
+			"uc": "dp",
+			"signature_input": "fluxer-attachment-url-v1\n00000000\n6a9920b1\ndp\nattachments/1544725486800732163/1544971349200470016/cat.gif",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64#top",
+			"signed": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp&width=64#top"
+		}
+	],
+	"strip": [
+		{
+			"name": "a signed url strips back to its canonical form",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif"
+		},
+		{
+			"name": "a trailing separator on a signed url is tolerated",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif"
+		},
+		{
+			"name": "transform parameters survive the strip",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&width=64&height=64",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64&height=64"
+		},
+		{
+			"name": "a signature after other parameters is still removed",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64&ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64"
+		},
+		{
+			"name": "empty pairs are dropped",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?&=&ex=6a9a7231&&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif"
+		},
+		{
+			"name": "an unsigned url is unchanged",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64"
+		},
+		{
+			"name": "a fragment survives the strip",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27#top",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif#top"
+		},
+		{
+			"name": "a percent escaped signature name is removed too",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?%65x=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&width=64",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64"
+		},
+		{
+			"name": "a data package url strips back to its canonical form",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif"
+		},
+		{
+			"name": "transform parameters survive a data package strip",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp&width=64#top",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64#top"
+		},
+		{
+			"name": "uc is removed whatever its value",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?uc=zz&width=64&uc",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64"
+		},
+		{
+			"name": "a percent escaped uc name is removed too",
+			"url": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&%75c=dp&width=64",
+			"stripped": "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif?width=64"
+		}
+	],
+	"verify": [
+		{
+			"name": "the emitted form verifies",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "valid one second before expiry",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788506672,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "expired at the expiry second",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788506673,
+			"verifier_secret_indices": [0],
+			"verdict": "expired"
+		},
+		{
+			"name": "expired long after the window",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788549873,
+			"verifier_secret_indices": [0],
+			"verdict": "expired"
+		},
+		{
+			"name": "a trailing separator is tolerated",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a doubled separator between the fields is tolerated",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "empty pairs are tolerated",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "&=&ex=6a9a7231&&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&&",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "the signature may follow other parameters",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "width=64&ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "transform parameters are not signed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&width=64&format=webp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "no query at all is missing",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": null,
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "missing"
+		},
+		{
+			"name": "an empty query is missing",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "missing"
+		},
+		{
+			"name": "only transform parameters is missing",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "width=64",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "missing"
+		},
+		{
+			"name": "a partial set is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a repeated signature is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a percent escaped duplicate name is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "%65x=6a9a7231&ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "an uppercase signature is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2F82FAFD058D10847AFFCCC91735BC5B95753F4081F4DA68AE054C221D674F27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a percent escaped value is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=%82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a seven digit window field is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "issued after expiry is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9920b1&is=6a9a7231&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a path whose bytes are not utf-8 is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/caf%C3%28.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a signature over another object mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=37efc4faf535ba29ecf6580cb47a88d80b14cd6319e29931c06ddffa761abd9c",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a signature from another key mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [1],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "an altered expiry mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7232&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "the rotation key verifies its own signature",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=f1963bb94826bb42d68224ea35c317a07fd3cfd7853cd5346ca85ec47611d04d",
+			"now": 1788420273,
+			"verifier_secret_indices": [1],
+			"verdict": "valid"
+		},
+		{
+			"name": "a signature from the second key mismatches when only the first is held",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=f1963bb94826bb42d68224ea35c317a07fd3cfd7853cd5346ca85ec47611d04d",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a signature from the second key verifies while both are held",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=f1963bb94826bb42d68224ea35c317a07fd3cfd7853cd5346ca85ec47611d04d",
+			"now": 1788420273,
+			"verifier_secret_indices": [0, 1],
+			"verdict": "valid"
+		},
+		{
+			"name": "a signature from the first key verifies whatever order the keys are held in",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [1, 0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a percent encoded unicode filename verifies",
+			"path": "/attachments/1544725486800732163/1544971349200470016/caf%C3%A9.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=37efc4faf535ba29ecf6580cb47a88d80b14cd6319e29931c06ddffa761abd9c",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a raw unicode filename verifies",
+			"path": "/attachments/1544725486800732163/1544971349200470016/café.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=37efc4faf535ba29ecf6580cb47a88d80b14cd6319e29931c06ddffa761abd9c",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a leading double slash names the same object",
+			"path": "//attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "an encoded slash names the decoded key",
+			"path": "/attachments/1544725486800732163/1544971349200470016/a%2Fb.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=5d594e9ce78bc3c82e735dd29bcfdf7cee9ebb4391304b1df90d454207feb258",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "the decoded key is what is signed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/a/b.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=5d594e9ce78bc3c82e735dd29bcfdf7cee9ebb4391304b1df90d454207feb258",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a plus is not a space in the key",
+			"path": "/attachments/1544725486800732163/1544971349200470016/a+b.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=5d594e9ce78bc3c82e735dd29bcfdf7cee9ebb4391304b1df90d454207feb258",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "the emitted data package form verifies",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a data package verifies long after an ordinary url would expire",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"now": 4102444800,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a data package tolerates a trailing separator",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp&",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a doubled separator between the data package fields is tolerated",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a data package tolerates its fields in any position",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "uc=dp&width=64&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&is=6a9920b1&ex=0",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "transform parameters after a data package are not signed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp&width=64&format=webp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a percent escaped uc name counts as uc",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&%75c=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a data package with a percent encoded unicode filename verifies",
+			"path": "/attachments/1544725486800732163/1544971349200470016/caf%C3%A9.gif",
+			"query": "ex=0&is=6a9920b1&hm=89e63377486a58781d1f168c80a438e99a1c87f71f8bb5a7401f2512770286c2&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a data package from the second key verifies while both are held",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0a442f8c3a83e6075764ada1d3b833fa9c1977354861c12e55ba04502af77cdf&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0, 1],
+			"verdict": "valid"
+		},
+		{
+			"name": "a data package from a key removed from rotation mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0a442f8c3a83e6075764ada1d3b833fa9c1977354861c12e55ba04502af77cdf&uc=dp",
+			"now": 4102444800,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a data package from another key mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [1],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a data package over another object mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=89e63377486a58781d1f168c80a438e99a1c87f71f8bb5a7401f2512770286c2&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "an altered issued field on a data package mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b2&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "an ordinary signature relabelled as a data package mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a data package signature relabelled as an ordinary url mismatches",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a data package with uc removed is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a tampered uc value is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dq",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "an uppercase uc value is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=DP",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "an empty uc value is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a percent escaped uc value is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=%64p",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a zero padded expiry with uc is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=00000000&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "uc on an ordinary url is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "uc alone is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "uc among transform parameters is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "width=64&uc=dp&format=webp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a data package without its signature is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a repeated uc is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a percent escaped repeated uc is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp&%75c=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a repeated zero expiry is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&ex=0&is=6a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a seven digit data package issued field is malformed",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=0&is=a9920b1&hm=0f888cfdbf17060cead41b6e9a05b172c8c24bf95c133624be14b34b4c69af5a&uc=dp",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "malformed"
+		},
+		{
+			"name": "a leading triple slash names the same object",
+			"path": "///attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "percent encoded slashes in the prefix name the same object",
+			"path": "/attachments%2F1544725486800732163%2F1544971349200470016%2Fcat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "valid"
+		},
+		{
+			"name": "a dot segment after the prefix is part of the key",
+			"path": "/attachments/./1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a percent encoded dot segment after the prefix is part of the key",
+			"path": "/attachments/%2E/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a dot segment between the id components is part of the key",
+			"path": "/attachments/1544725486800732163/./1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a doubled slash inside the path is part of the key",
+			"path": "/attachments/1544725486800732163//1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a parent segment before the prefix is part of the key",
+			"path": "/x/../attachments/1544725486800732163/1544971349200470016/cat.gif",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		},
+		{
+			"name": "a trailing dot segment is part of the key",
+			"path": "/attachments/1544725486800732163/1544971349200470016/cat.gif/.",
+			"query": "ex=6a9a7231&is=6a9920b1&hm=2f82fafd058d10847affccc91735bc5b95753f4081f4da68ae054c221d674f27",
+			"now": 1788420273,
+			"verifier_secret_indices": [0],
+			"verdict": "mismatch"
+		}
+	]
+}

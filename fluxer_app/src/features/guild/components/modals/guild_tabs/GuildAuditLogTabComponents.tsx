@@ -20,16 +20,6 @@ const CLICK_TO_COPY_ID_DESCRIPTOR = msg({
 	comment: 'Label in the guild audit log tab.components.',
 });
 
-interface UserTagParts {
-	name: string;
-	discriminator: string | null;
-}
-
-const splitTag = (tag: string): UserTagParts => {
-	const idx = tag.lastIndexOf('#');
-	if (idx <= 0) return {name: tag, discriminator: null};
-	return {name: tag.slice(0, idx), discriminator: tag.slice(idx + 1)};
-};
 export const ColorDot: React.FC<{color: string; className?: string}> = ({color, className}) => (
 	<span
 		className={clsx(styles.colorHook, className)}
@@ -53,45 +43,6 @@ export const InlineCode: React.FC<{children: React.ReactNode; className?: string
 	);
 	return title ? (
 		<Tooltip text={title} data-flx="guild.guild-tabs.guild-audit-log-tab-components.inline-code.tooltip">
-			{content}
-		</Tooltip>
-	) : (
-		content
-	);
-};
-export const UserHook: React.FC<{user: User; className?: string}> = ({user, className}) => {
-	const parts = splitTag(user.tag);
-	return (
-		<span
-			className={clsx(styles.userHook, className)}
-			data-flx="guild.guild-tabs.guild-audit-log-tab-components.user-hook.user-hook"
-		>
-			<span className={styles.userName} data-flx="guild.guild-tabs.guild-audit-log-tab-components.user-hook.user-name">
-				{user.displayName ?? parts.name}
-			</span>
-			{parts.discriminator ? (
-				<span className={styles.discrim} data-flx="guild.guild-tabs.guild-audit-log-tab-components.user-hook.discrim">
-					#{parts.discriminator}
-				</span>
-			) : null}
-		</span>
-	);
-};
-export const TargetHook: React.FC<{label: string; className?: string; title?: string}> = ({
-	label,
-	className,
-	title,
-}) => {
-	const content = (
-		<strong
-			className={clsx(styles.targetHook, className)}
-			data-flx="guild.guild-tabs.guild-audit-log-tab-components.target-hook.target-hook"
-		>
-			{label}
-		</strong>
-	);
-	return title ? (
-		<Tooltip text={title} data-flx="guild.guild-tabs.guild-audit-log-tab-components.target-hook.tooltip">
 			{content}
 		</Tooltip>
 	) : (

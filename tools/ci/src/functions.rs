@@ -2,8 +2,9 @@
 
 use anyhow::{Context, Result};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::fs;
-use std::io;
+use std::io::{self, Read};
 use std::path::Path;
 
 pub(crate) fn remove_file_if_exists(path: &Path) -> Result<()> {
@@ -30,6 +31,19 @@ pub(crate) fn write_json_pretty<T: Serialize + ?Sized>(path: &Path, value: &T) -
     let mut bytes = serde_json::to_vec_pretty(value)?;
     bytes.push(b'\n');
     fs::write(path, bytes).with_context(|| format!("Failed to write {}", path.display()))
+}
+
+pub(crate) fn sha256_reader(mut reader: impl Read) -> io::Result<String> {
+    let mut hasher = Sha256::new();
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        let read = reader.read(&mut buffer)?;
+        if read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..read]);
+    }
+    Ok(hex::encode(hasher.finalize()))
 }
 
 #[cfg(test)]

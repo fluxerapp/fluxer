@@ -2,11 +2,12 @@
 
 import {Routes} from '@app/app/Routes';
 import type {UserData} from '@app/features/auth/state/AccountStorage';
+import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
 import * as PushSubscriptionService from '@app/features/platform/push/PushSubscriptionService';
-import SessionManager, {type Account, SessionExpiredError} from '@app/features/platform/state/AuthSession';
+import SessionManager, {type Account} from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {isInstalledPwa} from '@app/features/ui/utils/PwaUtils';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
@@ -15,6 +16,8 @@ import {computed, makeAutoObservable} from 'mobx';
 const logger = new Logger('AccountManager');
 
 class AccountManager {
+	transitioning = false;
+
 	constructor() {
 		makeAutoObservable(
 			this,
@@ -82,14 +85,25 @@ class AccountManager {
 		token: string;
 		userId: string;
 	}> {
-		await SessionManager.initialize();
-		const account = SessionManager.requireAccountOnCurrentInstance(userId);
-		const ok = await SessionManager.validateToken(account.token);
-		if (!ok) {
-			SessionManager.markAccountInvalid(userId);
-			throw new SessionExpiredError();
-		}
+		const account = await SessionManager.requireUsableAccount(userId);
 		return {token: account.token, userId};
+	}
+
+	async refreshStoredAccount(userId: string, token: string, userData?: UserData): Promise<void> {
+		await SessionManager.refreshStoredAccount(userId, token, userData);
+	}
+
+	private setTransitioning(value: boolean): void {
+		this.transitioning = value;
+	}
+
+	private async runTransition(run: () => Promise<void>): Promise<void> {
+		this.setTransitioning(true);
+		try {
+			await run();
+		} finally {
+			this.setTransitioning(false);
+		}
 	}
 
 	private async leaveActiveVoiceChannel(context: 'account switch' | 'logout'): Promise<void> {
@@ -108,11 +122,14 @@ class AccountManager {
 		if (!SessionManager.canSwitchAccount()) {
 			throw new Error(`Cannot switch from state: ${SessionManager.state}`);
 		}
+		await SessionManager.requireUsableAccount(userId);
 		if (this.shouldManagePushSubscriptions()) {
 			await PushSubscriptionService.unregisterAllPushSubscriptions();
 		}
-		await this.leaveActiveVoiceChannel('account switch');
-		await SessionManager.switchAccount(userId);
+		await this.runTransition(async () => {
+			await this.leaveActiveVoiceChannel('account switch');
+			await SessionManager.switchAccount(userId);
+		});
 		GatewayConnection.startSession(SessionManager.token ?? undefined);
 		if (redirectPath !== null) {
 			RouterUtils.replaceWith(redirectPath);
@@ -135,8 +152,10 @@ class AccountManager {
 		if (SessionManager.userId && SessionManager.userId !== userId) {
 			SessionManager.prepareForAccountTransition('account-switch');
 		}
-		await this.leaveActiveVoiceChannel('account switch');
-		await SessionManager.login(token, userId, userData);
+		await this.runTransition(async () => {
+			await this.leaveActiveVoiceChannel('account switch');
+			await SessionManager.login(token, userId, userData);
+		});
 		GatewayConnection.startSession(token);
 		if (redirectPath !== null) {
 			RouterUtils.replaceWith(redirectPath);
@@ -159,8 +178,11 @@ class AccountManager {
 	}
 
 	async logout(): Promise<void> {
-		await this.leaveActiveVoiceChannel('logout');
-		await SessionManager.logout();
+		await this.runTransition(async () => {
+			await this.leaveActiveVoiceChannel('logout');
+			await SessionManager.logout();
+		});
+		ExperimentAssignments.reset();
 		RouterUtils.replaceWith('/login');
 	}
 }

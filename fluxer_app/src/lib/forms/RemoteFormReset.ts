@@ -3,7 +3,7 @@
 import isEqual from 'lodash/isEqual';
 import {useCallback, useLayoutEffect, useRef} from 'react';
 import type {FieldValues, UseFormReturn} from 'react-hook-form';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type RemoteFormIdentityKey = string | number | boolean | null | undefined;
 
@@ -109,7 +109,7 @@ export type RemoteFormResetMachineSnapshot = SnapshotFrom<typeof remoteFormReset
 export type RemoteFormResetMachineStateValue = 'unhydrated' | 'hydrated';
 
 export function createRemoteFormResetMachineSnapshot(): RemoteFormResetMachineSnapshot {
-	return getInitialSnapshot(remoteFormResetStateMachine);
+	return initialTransition(remoteFormResetStateMachine)[0];
 }
 
 export function transitionRemoteFormResetSnapshot(

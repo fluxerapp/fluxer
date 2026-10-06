@@ -3,7 +3,7 @@
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {BACKGROUND_MEDIA_MAX_SIZE_LABEL, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {BACKGROUND_MEDIA_MAX_SIZE_BYTES, PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -18,6 +18,7 @@ import {
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {NearViewportSurfaceContext, useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
@@ -52,6 +53,8 @@ import {
 } from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+
+const MAX_BACKGROUND_SIZE_DESCRIPTOR = msg({message: 'Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}.'});
 
 const BACKGROUND_DESCRIPTOR = msg({
 	message: 'Background',
@@ -138,12 +141,14 @@ const UPLOAD_CUSTOM_BACKGROUND_DESCRIPTOR = msg({
 	comment: 'Button or menu action label in the background image gallery modal. Keep it concise.',
 });
 const CUSTOM_BACKGROUND_DESCRIPTOR = msg({
-	message: '{backgroundCount} / {maxBackgroundImages} custom background',
+	message:
+		'{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {custom background} other {custom backgrounds}}',
 	comment:
 		'Label in the background image gallery modal. Preserve {backgroundCount}, {maxBackgroundImages}; they are inserted by code.',
 });
 const CUSTOM_BACKGROUNDS_DESCRIPTOR = msg({
-	message: '{backgroundCount} / {maxBackgroundImages} custom backgrounds',
+	message:
+		'{backgroundCount} / {maxBackgroundImages} {backgroundCount, plural, one {custom background} other {custom backgrounds}}',
 	comment:
 		'Label in the background image gallery modal. Preserve {backgroundCount}, {maxBackgroundImages}; they are inserted by code.',
 });
@@ -513,7 +518,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 						title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
 						message: () =>
 							i18n._(BACKGROUND_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-								backgroundMediaMaxSizeLabel: BACKGROUND_MEDIA_MAX_SIZE_LABEL,
+								backgroundMediaMaxSizeLabel: formatFileSize(i18n.locale, BACKGROUND_MEDIA_MAX_SIZE_BYTES),
 							}),
 						dataFlx: 'theme.background-image-gallery-modal.file-too-large-error-modal',
 					});
@@ -977,7 +982,9 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 								: i18n._(CUSTOM_BACKGROUNDS_DESCRIPTOR, {backgroundCount, maxBackgroundImages})}
 						</div>
 						<div className={styles.infoText} data-flx="theme.background-image-gallery-modal.info-text">
-							<Trans>Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}.</Trans>
+							{i18n._(MAX_BACKGROUND_SIZE_DESCRIPTOR, {
+								BACKGROUND_MEDIA_MAX_SIZE_LABEL: formatFileSize(i18n.locale, BACKGROUND_MEDIA_MAX_SIZE_BYTES),
+							})}
 						</div>
 						{maxBackgroundImages === 1 && shouldShowPremiumFeatures() && (
 							<div className={styles.premiumUpsell} data-flx="theme.background-image-gallery-modal.premium-upsell">

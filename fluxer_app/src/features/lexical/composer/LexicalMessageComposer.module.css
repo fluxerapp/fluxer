@@ -54,6 +54,37 @@
 	opacity: 0.45;
 }
 
+.blockquoteLine {
+	position: relative;
+	display: inline-block;
+	box-sizing: border-box;
+	width: 100%;
+	min-height: var(--composer-line-height, var(--textarea-line-height, 1.375rem));
+	vertical-align: top;
+	padding-inline-start: 1rem;
+	color: var(--text-chat-muted);
+}
+
+.blockquoteLine::before {
+	content: '';
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	width: 0.25rem;
+	border-radius: 0.25rem;
+	background-color: var(--interactive-muted);
+}
+
+.marker.blockquoteMarker {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-end: calc(100% - 1rem);
+	white-space: pre;
+	color: transparent;
+	opacity: 1;
+	pointer-events: none;
+}
+
 .bold {
 	font-weight: 700;
 }

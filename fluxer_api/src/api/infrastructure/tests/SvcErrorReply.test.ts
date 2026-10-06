@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {svcErrorReplyReason, throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {describe, expect, it} from 'vitest';
-import {svcErrorReplyReason, throwForSvcErrorReply} from '../SvcErrorReply';
 
 describe('SvcErrorReply', () => {
 	it('recognises the shard overload reply', () => {

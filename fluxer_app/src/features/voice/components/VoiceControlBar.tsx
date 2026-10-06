@@ -3,7 +3,7 @@
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {MORE_OPTIONS_DESCRIPTOR, TURN_OFF_CAMERA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Keybind from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
@@ -253,8 +253,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 		serverDeaf: voiceState?.deaf,
 	});
 	const effectiveMuted = effectiveAudioState.effectiveMute || muteReason !== null || isMuted || isPermissionMuted;
-	const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
-	const pushToTalkHint = formatKeyCombo(pushToTalkCombo);
+	const pushToTalkHoldLabel = getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_HOLD_HINT_DESCRIPTOR);
 	const displayShareEnvironment = resolveDisplayShareEnvironment(isDesktop(), NativePermission.isLinuxWaylandDesktop);
 	const disconnectLabel = i18n._(VOICE_DISCONNECT_DESCRIPTOR);
 	const renderInputSettingsMenu = useCallback(
@@ -582,14 +581,14 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 				case 'permissionMuted':
 					return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
 				case 'pushToTalkHoldHint':
-					return i18n._(PUSH_TO_TALK_HOLD_HINT_DESCRIPTOR, {pushToTalkHint});
+					return pushToTalkHoldLabel;
 				case 'unmute':
 					return i18n._(UNMUTE_DESCRIPTOR);
 				default:
 					return i18n._(MUTE_DESCRIPTOR);
 			}
 		},
-		[i18n, pushToTalkHint],
+		[i18n, pushToTalkHoldLabel],
 	);
 	const getDeafenTooltipLabel = useCallback(
 		(label: VoiceControlBarDeafenLabel) => {

@@ -2,8 +2,137 @@
 
 use super::*;
 use crate::test_fixtures::{
-    adversarial_media_bytes, animated_gif_fixture, apng_header, minimal_gif,
+    ADVERSARIAL_TEXT_INPUTS, adversarial_media_bytes, animated_gif_fixture, apng_header,
+    minimal_gif,
 };
+
+const WHATWG_JAVASCRIPT_ESSENCES: [&str; 16] = [
+    "application/ecmascript",
+    "application/javascript",
+    "application/x-ecmascript",
+    "application/x-javascript",
+    "text/ecmascript",
+    "text/javascript",
+    "text/javascript1.0",
+    "text/javascript1.1",
+    "text/javascript1.2",
+    "text/javascript1.3",
+    "text/javascript1.4",
+    "text/javascript1.5",
+    "text/jscript",
+    "text/livescript",
+    "text/x-ecmascript",
+    "text/x-javascript",
+];
+
+#[test]
+fn javascript_content_type_matches_every_whatwg_essence() {
+    for essence in WHATWG_JAVASCRIPT_ESSENCES {
+        assert!(is_javascript_content_type(essence), "{essence}");
+        assert!(
+            is_javascript_content_type(&essence.to_ascii_uppercase()),
+            "{essence} upper case"
+        );
+    }
+}
+
+#[test]
+fn javascript_content_type_ignores_case_whitespace_and_parameters() {
+    for content_type in [
+        "TEXT/JavaScript",
+        " \ttext/javascript ; charset=utf-8",
+        "text/javascript;goal=module",
+    ] {
+        assert!(is_javascript_content_type(content_type), "{content_type:?}");
+    }
+}
+
+#[test]
+fn javascript_content_type_checks_every_comma_separated_member() {
+    assert!(is_javascript_content_type("image/png, text/javascript"));
+    assert!(is_javascript_content_type("text/javascript, image/png"));
+    assert!(!is_javascript_content_type(
+        "video/mp4; codecs=\"avc1.42E01E, mp4a.40.2\""
+    ));
+}
+
+#[test]
+fn javascript_content_type_ends_the_essence_where_browsers_do() {
+    for content_type in [
+        "text/javascript x",
+        "text/javascript\tx",
+        "text/javascript(x)",
+        "TEXT/JAVASCRIPT (x)",
+        " text/javascript ;charset=x",
+        "\ttext/javascript\t;goal=module",
+        "application/x-javascript(",
+        "text/jscript x;charset=utf-8",
+    ] {
+        assert!(is_javascript_content_type(content_type), "{content_type:?}");
+    }
+}
+
+#[test]
+fn javascript_content_type_checks_a_comma_member_that_has_junk() {
+    for content_type in [
+        "video/mp4, text/javascript x",
+        "video/mp4,text/javascript(x)",
+        "image/png, \ttext/javascript\tx",
+        "text/plain; a=\",\", text/javascript x",
+        "text/javascript x, video/mp4",
+    ] {
+        assert!(is_javascript_content_type(content_type), "{content_type:?}");
+    }
+}
+
+#[test]
+fn javascript_content_type_leaves_every_other_type_alone() {
+    for content_type in [
+        "text/css; charset=utf-8",
+        "text/css",
+        "application/wasm",
+        "text/html",
+        "application/xhtml+xml",
+        "image/svg+xml",
+        "image/png",
+        "video/mp2t",
+        "video/mp4",
+        "application/json",
+        "text/plain",
+        "application/octet-stream",
+        "text/javascript1.6",
+        "text/javascriptx",
+        "text/javascriptx (x)",
+        "text/javascript1.6 x",
+        "xtext/javascript",
+        "x text/javascript",
+        "text /javascript",
+        "text/java script",
+        "text/javascript\"x",
+        "video/mp4, image/png x",
+        "",
+        "   ",
+        ",",
+    ] {
+        assert!(
+            !is_javascript_content_type(content_type),
+            "{content_type:?}"
+        );
+    }
+}
+
+#[test]
+fn the_inert_content_type_is_not_javascript() {
+    assert_eq!("text/plain; charset=utf-8", INERT_CONTENT_TYPE);
+    assert!(!is_javascript_content_type(INERT_CONTENT_TYPE));
+}
+
+#[test]
+fn javascript_content_type_never_panics_on_adversarial_text() {
+    for text in ADVERSARIAL_TEXT_INPUTS {
+        assert!(!is_javascript_content_type(text), "{text:?}");
+    }
+}
 
 fn vp8x_webp(flags: u8, width_minus_one: u32, height_minus_one: u32) -> Vec<u8> {
     let mut webp = vec![0_u8; 30];

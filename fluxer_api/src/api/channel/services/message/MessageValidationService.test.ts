@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import {createDefaultLimitConfig} from '@app/api/constants/LimitConfig';
+import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
+import {User} from '@app/api/models/User';
 import {MAX_MESSAGE_LENGTH_NON_PREMIUM, MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {CannotSendEmptyMessageError} from '@fluxer/errors/src/domains/channel/CannotSendEmptyMessageError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {describe, expect, it} from 'vitest';
-import {createUserID} from '../../../BrandedTypes';
-import {createDefaultLimitConfig} from '../../../constants/LimitConfig';
-import {EMPTY_USER_ROW} from '../../../database/types/UserTypes';
-import {User} from '../../../models/User';
-import {MessageValidationService} from './MessageValidationService';
 
 function createValidationService(): MessageValidationService {
 	return new MessageValidationService(

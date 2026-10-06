@@ -9,6 +9,8 @@ const OFFICIAL_THEME_URL_BASES = Object.freeze([
 	'https://canary.fluxer.app/theme',
 	'https://web.fluxer.app/theme',
 	'https://web.canary.fluxer.app/theme',
+	'https://fluxer.com/theme',
+	'https://canary.fluxer.com/theme',
 ]);
 const appendThemePath = (endpoint: string | null | undefined): string | null => {
 	if (!endpoint) return null;

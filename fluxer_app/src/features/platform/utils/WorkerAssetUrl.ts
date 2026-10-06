@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const ASSETS_PATH_SEGMENT = 'assets';
-const OFFICIAL_WORKER_ASSET_HOSTS = new Set(['web.fluxer.app', 'web.canary.fluxer.app']);
+const OFFICIAL_WORKER_ASSET_HOSTS = new Set([
+	'web.fluxer.app',
+	'web.canary.fluxer.app',
+	'fluxer.com',
+	'canary.fluxer.com',
+]);
 const WORKER_ASSET_VERSION_QUERY_PARAM = 'v';
 
 function getProxiedAssetPath(pathname: string): string | null {

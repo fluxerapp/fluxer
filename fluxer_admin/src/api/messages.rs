@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
@@ -43,7 +43,8 @@ impl AdminApiClient {
             attachment_id: snowflake(attachment_id),
             channel_id: snowflake(channel_id),
             confirmed_viewed: true,
-            filename: filename.to_owned(),
+            filename: generated_types::ReportAttachmentToNcmecRequestFilename::try_from(filename)
+                .map_err(|e| ApiError::Parse(e.to_string()))?,
             message_id: snowflake(message_id),
             reporter_full_name:
                 generated_types::ReportAttachmentToNcmecRequestReporterFullName::try_from(
@@ -119,7 +120,7 @@ impl AdminApiClient {
     ) -> ApiResult<MessageShredStatusResponse> {
         let response = self
             .generated()
-            .get_admin_message_shred(job_id)
+            .get_admin_message_shred(&snowflake(job_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -133,13 +134,15 @@ impl AdminApiClient {
         context_limit: u32,
     ) -> ApiResult<LookupMessageResponse> {
         let context_limit = context_limit.to_string();
+        let filename = generated_types::SearchAdminMessagesFilename::try_from(filename)
+            .map_err(|e| ApiError::Parse(e.to_string()))?;
         let response = self
             .generated()
             .search_admin_messages(
                 Some(&snowflake(attachment_id)),
                 &snowflake(channel_id),
                 Some(context_limit.as_str()),
-                Some(filename),
+                Some(&filename),
                 None,
                 None,
                 None,
@@ -194,8 +197,4 @@ impl AdminApiClient {
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
     }
-}
-
-fn snowflake(value: &str) -> generated_types::SnowflakeType {
-    generated_types::SnowflakeType::from(value.to_owned())
 }

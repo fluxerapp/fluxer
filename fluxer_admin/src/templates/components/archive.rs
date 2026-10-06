@@ -41,17 +41,14 @@ pub fn archives_tab(
     }
 }
 
-fn status_text(archive: &Archive) -> String {
+fn status_text(archive: &Archive) -> &str {
     if archive.failed_at.is_some() {
-        return "Failed".to_owned();
+        return "Failed";
     }
     if archive.completed_at.is_some() {
-        return "Completed".to_owned();
+        return "Completed";
     }
-    archive
-        .progress_step
-        .clone()
-        .unwrap_or_else(|| "In Progress".to_owned())
+    archive.progress_step.as_deref().unwrap_or("In Progress")
 }
 
 fn archives_table(base: &str, archives: &[Archive]) -> Markup {

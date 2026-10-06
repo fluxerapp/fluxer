@@ -7,6 +7,7 @@
 
 -export([
     bulk_get_inner/1,
+    bulk_get_map_inner/1,
     get_from_cluster/1,
     get_local_fast/1,
     local_bulk_presence_map/1,
@@ -30,11 +31,55 @@
 
 -spec bulk_get_inner([integer()]) -> [map()].
 bulk_get_inner(UserIds) ->
-    UniqueUserIds = normalize_user_ids(UserIds),
-    PrimaryPresenceMap = fetch_primary_presences(UniqueUserIds),
-    MissingUserIds = [U || U <- UniqueUserIds, not maps:is_key(U, PrimaryPresenceMap)],
-    FallbackPresenceMap = fetch_fallback_presences(MissingUserIds),
-    presence_values(maps:merge(PrimaryPresenceMap, FallbackPresenceMap)).
+    presence_values(bulk_get_map_inner(UserIds)).
+
+-spec bulk_get_map_inner([integer()]) -> #{integer() => map()}.
+bulk_get_map_inner(UserIds) ->
+    {Local, Remote} = lists:partition(
+        fun({OwnerNode, _OwnerUserIds}) -> OwnerNode =:= node() end,
+        group_user_ids_by_owner(UserIds)
+    ),
+    LocalMap = lists:foldl(
+        fun({_OwnerNode, OwnerUserIds}, AccMap) ->
+            maps:merge(AccMap, local_bulk_presence_map(OwnerUserIds))
+        end,
+        #{},
+        Local
+    ),
+    Servers = [
+        {{presence_cache, OwnerNode}, OwnerUserIds}
+     || {OwnerNode, OwnerUserIds} <- Remote
+    ],
+    maps:merge(LocalMap, fetch_remote_groups(Servers)).
+
+-spec fetch_remote_groups([{gen_server:server_ref(), [integer()]}]) -> #{integer() => map()}.
+fetch_remote_groups([]) ->
+    #{};
+fetch_remote_groups(Groups) ->
+    Deadline = erlang:monotonic_time(millisecond) + ?REMOTE_CALL_TIMEOUT_MS,
+    Requests = [
+        {Server, Ids, gen_server:send_request(Server, {bulk_get_local_map, Ids})}
+     || {Server, Ids} <- Groups
+    ],
+    lists:foldl(
+        fun({Server, Ids, ReqId}, AccMap) ->
+            maps:merge(AccMap, remote_group_reply(Server, Ids, ReqId, Deadline))
+        end,
+        #{},
+        Requests
+    ).
+
+-spec remote_group_reply(
+    gen_server:server_ref(), [integer()], gen_server:request_id(), integer()
+) ->
+    #{integer() => map()}.
+remote_group_reply(Server, Ids, ReqId, Deadline) ->
+    case gen_server:receive_response(ReqId, {abs, Deadline}) of
+        {reply, Reply} when is_map(Reply) ->
+            sanitize_presence_map(Reply);
+        _ ->
+            map_from_presence_list(safe_server_call(Server, {bulk_get_local, Ids}, []))
+    end.
 
 -spec get_from_cluster(integer()) -> {ok, map()} | not_found.
 get_from_cluster(UserId) ->
@@ -95,7 +140,15 @@ safe_remote_call(TargetNode, Request, Fallback) ->
 safe_remote_call(TargetNode, Request, Fallback, Timeout) when
     is_integer(Timeout), Timeout > 0
 ->
-    try gen_server:call({presence_cache, TargetNode}, Request, Timeout) of
+    safe_server_call({presence_cache, TargetNode}, Request, Fallback, Timeout).
+
+-spec safe_server_call(gen_server:server_ref(), term(), term()) -> term().
+safe_server_call(Server, Request, Fallback) ->
+    safe_server_call(Server, Request, Fallback, ?REMOTE_CALL_TIMEOUT_MS).
+
+-spec safe_server_call(gen_server:server_ref(), term(), term(), pos_integer()) -> term().
+safe_server_call(Server, Request, Fallback, Timeout) ->
+    try gen_server:call(Server, Request, Timeout) of
         Reply -> Reply
     catch
         error:_ -> Fallback;
@@ -194,44 +247,6 @@ presence_values(PresenceMap) ->
     UserIds = lists:sort(maps:keys(PresenceMap)),
     [maps:get(UserId, PresenceMap) || UserId <- UserIds].
 
--spec fetch_primary_presences([integer()]) -> #{integer() => map()}.
-fetch_primary_presences(UniqueUserIds) ->
-    OwnerGroups = group_user_ids_by_owner(UniqueUserIds),
-    lists:foldl(
-        fun({OwnerNode, OwnerUserIds}, AccMap) ->
-            maps:merge(AccMap, fetch_from_node(OwnerNode, OwnerUserIds))
-        end,
-        #{},
-        OwnerGroups
-    ).
-
--spec fetch_from_node(node(), [integer()]) -> #{integer() => map()}.
-fetch_from_node(OwnerNode, UserIds) ->
-    case OwnerNode =:= node() of
-        true -> local_bulk_presence_map(UserIds);
-        false -> fetch_remote_bulk_presence_map(OwnerNode, UserIds)
-    end.
-
--spec fetch_fallback_presences([integer()]) -> #{integer() => map()}.
-fetch_fallback_presences([]) ->
-    #{};
-fetch_fallback_presences(MissingUserIds) ->
-    OwnerGroups = group_user_ids_by_owner(MissingUserIds),
-    lists:foldl(
-        fun({OwnerNode, OwnerUserIds}, AccMap) ->
-            maps:merge(AccMap, fetch_fallback_from_node(OwnerNode, OwnerUserIds))
-        end,
-        #{},
-        OwnerGroups
-    ).
-
--spec fetch_fallback_from_node(node(), [integer()]) -> #{integer() => map()}.
-fetch_fallback_from_node(OwnerNode, UserIds) ->
-    case OwnerNode =:= node() of
-        true -> local_bulk_presence_map(UserIds);
-        false -> fetch_remote_bulk_presence_map(OwnerNode, UserIds)
-    end.
-
 -spec fetch_from_owner_nodes(integer(), [node()]) -> {ok, map()} | not_found.
 fetch_from_owner_nodes(_UserId, []) ->
     not_found;
@@ -320,6 +335,63 @@ group_user_ids_by_owner_matches_single_owner_resolution_test() ->
         ?assertEqual(lists:sort(UserIds), lists:sort([UserId || {_Owner, UserId} <- Flattened]))
     after
         restore_persistent_term(Key, Previous)
+    end.
+
+remote_groups_are_fetched_in_parallel_test() ->
+    Test = self(),
+    First = spawn(fun() ->
+        fake_presence_server(Test, #{1 => #{<<"status">> => <<"online">>}})
+    end),
+    Second = spawn(fun() ->
+        fake_presence_server(Test, #{2 => #{<<"status">> => <<"idle">>}})
+    end),
+    Legacy = spawn(fun() -> fake_presence_server(Test, legacy) end),
+    Fetcher = spawn(fun() ->
+        Test ! {fetched, fetch_remote_groups([{First, [1]}, {Second, [2]}, {Legacy, [3]}])}
+    end),
+    Received = [receive_request() || _ <- [First, Second, Legacy]],
+    Expected = [
+        {First, {bulk_get_local_map, [1]}},
+        {Second, {bulk_get_local_map, [2]}},
+        {Legacy, {bulk_get_local_map, [3]}}
+    ],
+    ?assertEqual(lists:sort(Expected), lists:sort(Received)),
+    [Server ! go || Server <- [First, Second, Legacy]],
+    ?assertMatch({Legacy, {bulk_get_local, [3]}}, receive_request()),
+    Legacy ! go,
+    Fetched =
+        receive
+            {fetched, Map} -> Map
+        after 5000 -> timeout
+        end,
+    ?assertEqual(
+        #{
+            1 => #{<<"status">> => <<"online">>},
+            2 => #{<<"status">> => <<"idle">>},
+            3 => #{<<"user">> => #{<<"id">> => 3}}
+        },
+        Fetched
+    ),
+    [exit(Pid, kill) || Pid <- [First, Second, Legacy, Fetcher]].
+
+fake_presence_server(Test, Reply) ->
+    receive
+        {'$gen_call', From, Request} ->
+            Test ! {request, self(), Request},
+            receive
+                go -> gen_server:reply(From, fake_reply(Reply, Request))
+            end,
+            fake_presence_server(Test, Reply)
+    end.
+
+fake_reply(legacy, {bulk_get_local_map, _Ids}) -> unknown_request;
+fake_reply(legacy, {bulk_get_local, Ids}) -> [#{<<"user">> => #{<<"id">> => Id}} || Id <- Ids];
+fake_reply(Map, _Request) -> Map.
+
+receive_request() ->
+    receive
+        {request, Server, Request} -> {Server, Request}
+    after 900 -> no_request
     end.
 
 restore_persistent_term(Key, undefined) ->

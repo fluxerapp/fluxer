@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {GuildRow} from '../../database/types/GuildTypes';
-import type {Guild} from '../../models/Guild';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import type {Guild} from '@app/api/models/Guild';
 
 export abstract class IGuildDataRepository {
 	abstract findUnique(guildId: GuildID): Promise<Guild | null>;

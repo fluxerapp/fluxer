@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_trailer_frame_carries_no_payload_towards_the_declared_length() {
+    async fn a_trailer_frame_adds_no_payload_towards_the_declared_length() {
         let dir = tempfile::tempdir().unwrap();
         let short = spool_to_temp(
             body_with_trailers(&[b"hello".as_slice()]),

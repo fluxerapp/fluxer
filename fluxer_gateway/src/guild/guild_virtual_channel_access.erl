@@ -5,8 +5,11 @@
 
 -export([
     add_virtual_access/3,
+    add_view_only_access/3,
     remove_virtual_access/3,
     has_virtual_access/3,
+    has_voice_access/3,
+    is_view_only/3,
     get_virtual_channels_for_user/2,
     get_users_with_virtual_access/2,
     dispatch_channel_visibility_change/4,
@@ -33,9 +36,33 @@ add_virtual_access(UserId, ChannelId, State) ->
     VirtualAccess = maps:get(virtual_channel_access, State, #{}),
     UserChannels = maps:get(UserId, VirtualAccess, sets:new()),
     Updated = sets:add_element(ChannelId, UserChannels),
-    State1 = State#{virtual_channel_access => VirtualAccess#{UserId => Updated}},
+    State1 = clear_view_only(
+        UserId, ChannelId, State#{virtual_channel_access => VirtualAccess#{UserId => Updated}}
+    ),
     State2 = update_user_session_view_cache(UserId, ChannelId, add, State1),
-    mark_pending_join(UserId, ChannelId, State2).
+    mark_pending_join(
+        UserId, ChannelId, guild_member_list_engine_inputs:mark_stale(ChannelId, State2)
+    ).
+
+-spec clear_view_only(user_id(), channel_id(), guild_state()) -> guild_state().
+clear_view_only(UserId, ChannelId, State) ->
+    case is_view_only(UserId, ChannelId, State) of
+        false ->
+            State;
+        true ->
+            ViewOnly = maps:get(virtual_channel_access_view_only, State),
+            State#{
+                virtual_channel_access_view_only =>
+                    clear_from_user_set(UserId, ChannelId, ViewOnly)
+            }
+    end.
+
+-spec add_view_only_access(user_id(), channel_id(), guild_state()) -> guild_state().
+add_view_only_access(UserId, ChannelId, State) ->
+    State1 = add_virtual_access(UserId, ChannelId, State),
+    ViewOnly = maps:get(virtual_channel_access_view_only, State1, #{}),
+    UserViewOnly = sets:add_element(ChannelId, maps:get(UserId, ViewOnly, sets:new())),
+    State1#{virtual_channel_access_view_only => ViewOnly#{UserId => UserViewOnly}}.
 
 -spec remove_virtual_access(user_id(), channel_id(), guild_state()) -> guild_state().
 remove_virtual_access(UserId, ChannelId, State) ->
@@ -49,8 +76,9 @@ remove_virtual_access(UserId, ChannelId, State) ->
 
 -spec remove_channel_from_user(user_id(), channel_id(), sets:set(), guild_state()) ->
     guild_state().
-remove_channel_from_user(UserId, ChannelId, UserChannels, State) ->
+remove_channel_from_user(UserId, ChannelId, UserChannels, State0) ->
     Updated = sets:del_element(ChannelId, UserChannels),
+    State = guild_member_list_engine_inputs:mark_stale(ChannelId, State0),
     case sets:size(Updated) of
         0 -> remove_all_user_virtual_access(UserId, State);
         _ -> update_user_virtual_access(UserId, ChannelId, Updated, State)
@@ -62,13 +90,22 @@ remove_all_user_virtual_access(UserId, State) ->
     VCP = maps:get(virtual_channel_access_pending, State, #{}),
     VCPr = maps:get(virtual_channel_access_preserve, State, #{}),
     VCM = maps:get(virtual_channel_access_move_pending, State, #{}),
-    State1 = State#{
+    State0 = State#{
         virtual_channel_access => maps:remove(UserId, VCA),
         virtual_channel_access_pending => maps:remove(UserId, VCP),
         virtual_channel_access_preserve => maps:remove(UserId, VCPr),
         virtual_channel_access_move_pending => maps:remove(UserId, VCM)
     },
-    clear_user_session_view_cache(UserId, State1).
+    clear_user_session_view_cache(UserId, remove_user_view_only(UserId, State0)).
+
+-spec remove_user_view_only(user_id(), guild_state()) -> guild_state().
+remove_user_view_only(UserId, State) ->
+    case maps:find(virtual_channel_access_view_only, State) of
+        {ok, ViewOnly} ->
+            State#{virtual_channel_access_view_only => maps:remove(UserId, ViewOnly)};
+        error ->
+            State
+    end.
 
 -spec update_user_virtual_access(user_id(), channel_id(), sets:set(), guild_state()) ->
     guild_state().
@@ -77,12 +114,12 @@ update_user_virtual_access(UserId, ChannelId, UpdatedChans, State) ->
     VCP = maps:get(virtual_channel_access_pending, State, #{}),
     VCPr = maps:get(virtual_channel_access_preserve, State, #{}),
     VCM = maps:get(virtual_channel_access_move_pending, State, #{}),
-    State1 = State#{
+    State1 = clear_view_only(UserId, ChannelId, State#{
         virtual_channel_access => VCA#{UserId => UpdatedChans},
         virtual_channel_access_pending => del_from_user_set(UserId, ChannelId, VCP),
         virtual_channel_access_preserve => del_from_user_set(UserId, ChannelId, VCPr),
         virtual_channel_access_move_pending => del_from_user_set(UserId, ChannelId, VCM)
-    },
+    }),
     update_user_session_view_cache(UserId, ChannelId, remove, State1).
 
 -spec del_from_user_set(user_id(), channel_id(), map()) -> map().
@@ -102,6 +139,15 @@ clear_from_user_set(UserId, ChannelId, Map) ->
 -spec has_virtual_access(user_id(), channel_id(), guild_state()) -> boolean().
 has_virtual_access(UserId, ChannelId, State) ->
     user_channel_check(UserId, ChannelId, virtual_channel_access, State).
+
+-spec has_voice_access(user_id(), channel_id(), guild_state()) -> boolean().
+has_voice_access(UserId, ChannelId, State) ->
+    has_virtual_access(UserId, ChannelId, State) andalso
+        not is_view_only(UserId, ChannelId, State).
+
+-spec is_view_only(user_id(), channel_id(), guild_state()) -> boolean().
+is_view_only(UserId, ChannelId, State) ->
+    user_channel_check(UserId, ChannelId, virtual_channel_access_view_only, State).
 
 -spec get_virtual_channels_for_user(user_id(), guild_state()) -> [channel_id()].
 get_virtual_channels_for_user(UserId, State) ->

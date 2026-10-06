@@ -28,6 +28,31 @@ const OPT_IN_TO_EXPERIMENTAL_UNREAD_BADGE_CONTROLS_DESCRIPTOR = msg({
 	comment: 'Settings search entry description. One-line summary of what the setting controls.',
 });
 
+const EMOJI_AND_STICKER_CLONING_SHORTCUTS_DESCRIPTOR = msg({
+	message: 'Emoji and sticker cloning shortcuts',
+	comment: 'Settings search entry label for opting into the emoji and sticker cloning shortcuts.',
+});
+const CLONE_EMOJI_DESCRIPTOR = msg({
+	message: 'Clone emoji',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const CLONE_STICKER_DESCRIPTOR = msg({
+	message: 'Clone sticker',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const COPY_EMOJI_DESCRIPTOR = msg({
+	message: 'Copy emoji',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const COPY_STICKER_DESCRIPTOR = msg({
+	message: 'Copy sticker',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const SHOW_A_ONE_CLICK_SHORTCUT_FOR_COPYING_EXPRESSIONS_DESCRIPTOR = msg({
+	message: 'Show a one-click shortcut for copying custom emojis and stickers from communities that allow it',
+	comment: 'Settings search entry description. One-line summary of what the setting controls.',
+});
+
 export const advancedSettingsIndex: Array<SearchableSettingDescriptor> = [
 	{
 		id: 'advanced-unread-badge-customization',
@@ -43,6 +68,23 @@ export const advancedSettingsIndex: Array<SearchableSettingDescriptor> = [
 		audience: 'advanced',
 		tags: ['notifications'],
 		addedAt: '2026-06-04T00:00:00.000Z',
+		badges: ['experimental'],
+	},
+	{
+		id: 'advanced-expression-clone-shortcuts',
+		tabType: 'advanced_settings',
+		label: EMOJI_AND_STICKER_CLONING_SHORTCUTS_DESCRIPTOR,
+		keywords: [
+			CLONE_EMOJI_DESCRIPTOR,
+			CLONE_STICKER_DESCRIPTOR,
+			COPY_EMOJI_DESCRIPTOR,
+			COPY_STICKER_DESCRIPTOR,
+			EXPERIMENTAL_DESCRIPTOR,
+		],
+		description: SHOW_A_ONE_CLICK_SHORTCUT_FOR_COPYING_EXPRESSIONS_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['chat'],
+		addedAt: '2026-09-11T00:00:00.000Z',
 		badges: ['experimental'],
 	},
 ];

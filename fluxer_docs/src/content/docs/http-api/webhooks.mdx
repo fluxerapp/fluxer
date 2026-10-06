@@ -6,9 +6,9 @@ description: Webhook objects, management, token-authenticated execution, and the
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A webhook posts messages into one guild channel under a name and avatar of its own.
+A webhook posts messages into one guild channel under a name and avatar of its own. An incoming webhook posts what its token holder sends, and a channel follower webhook posts the messages [published](/http-api/messages/#crosspost-message) in an announcement channel the channel follows.
 
-Management routes take a user session token or a bot token. Every other webhook operation uses the webhook ID and secret token in its own path as the complete credential and ignores the `Authorization` header.
+Management routes take a user session token or a bot token. Every other webhook operation uses the webhook ID and secret token in its own path as the complete credential. A sent `Authorization` header grants no access there, and Fluxer still resolves it, as [Rate limit keying](#rate-limit-keying) describes..
 
 The [Messages resource](/http-api/messages/) defines the message, rich embed input, and message reference input objects.
 
@@ -18,29 +18,29 @@ A management operation requires [MANAGE_WEBHOOKS](/http-api/permissions/) at gui
 
 Fluxer resolves the guild before every management operation. A guild that does not exist returns 404 `UNKNOWN_GUILD`. A caller who is not a current member of an existing guild returns 403 `MISSING_PERMISSIONS`.
 
-[List guild webhooks](#list-guild-webhooks), [List channel webhooks](#list-channel-webhooks), and [Create webhook](#create-webhook) name a guild or a channel in their paths, so the availability gate applies. A guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) refuses an authenticated request with 403 `MISSING_ACCESS` before the operation runs. [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag. The three remaining management routes name only a webhook ID and are not gated.
+[List guild webhooks](#list-guild-webhooks), [List channel webhooks](#list-channel-webhooks), and [Create webhook](#create-webhook) name a guild or a channel in their paths, so the availability gate applies. A guild with [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features) refuses an authenticated request with 403 `MISSING_ACCESS` before the operation runs. [UNAVAILABLE_FOR_EVERYONE_BUT_STAFF](/http-api/guilds/#guild-features) does the same for an account without the instance staff flag. The remaining management routes name only a webhook ID and are not gated.
 
-Fluxer scans a submitted webhook `name` against the instance phrase and URL blocklists, and a match returns 403 `CONTENT_BLOCKED`. The same lists scan the resolved content and embed text of a created or edited message, and a match returns the same code. The `avatar` member is exempt from that scan, and Fluxer checks its decoded bytes against the banned asset hash list when it stores them.
+Fluxer scans a submitted webhook `name` against the instance phrase and URL blocklists, and a match returns 403 `CONTENT_BLOCKED`. The same lists scan the resolved content, embed text, and embed link URLs of a created or edited message, and a match returns the same code. The `avatar` member is exempt from that scan, and Fluxer checks its decoded bytes against the banned asset hash list when it stores them.
 
 ## Rate limit keying
 
 Every route bucket on this page is keyed on the caller identity as well as on the path parameter in its bucket name. The caller identity is the authenticated account when a request resolves one and the client IP address otherwise, so a token-authenticated operation is bounded per address.
 
-Fluxer resolves an `Authorization` credential on a token-authenticated operation for this keying alone. [Rate limits](/topics/rate-limits/) defines the keying in full.
+When a request to a token-authenticated operation sends an `Authorization` header, Fluxer reads that credential only to choose the rate limit key. [Rate limits](/topics/rate-limits/) defines the keying in full.
 
 The [global HTTP limit](/topics/rate-limits/) applies to every management route. [Get webhook with token](#get-webhook-with-token), [Update webhook with token](#update-webhook-with-token), and [Delete webhook with token](#delete-webhook-with-token) consume it under the caller identity. Every other route on this page is exempt and is bounded only by its own route bucket.
 
 ## Origin refusal
 
-Fluxer refuses a call from the official web client on [Execute webhook](#execute-webhook), [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message), and [Delete webhook message](#delete-webhook-message). A request whose `Origin` header is exactly `https://web.fluxer.app` or `https://web.canary.fluxer.app` returns 403 `INVALID_API_ORIGIN`.
+Fluxer refuses a call from a first-party web client on [Execute webhook](#execute-webhook), [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message), and [Delete webhook message](#delete-webhook-message). A request whose `Origin` header is exactly `https://web.fluxer.app`, `https://web.canary.fluxer.app`, or one of the instance's own web app origins returns 403 `INVALID_API_ORIGIN`. Those are the origin of `FLUXER_APP_ENDPOINT` and every `FLUXER_APP_ORIGIN_ALIASES` entry.
 
 A request that sends no `Origin`, or any other `Origin` value, passes the check. It runs after the route rate limit and before path validation.
 
-Both token paths also have a second CORS policy that answers every origin, which the [cross-origin request contract](/http-api/#cross-origin-requests) states in full.
+`/v1/webhooks/{webhook_id}/{token}` and `/v1/webhooks/{webhook_id}/{token}/messages/{message_id}` also have a second CORS policy that allows every origin, which the [cross-origin request contract](/http-api/#cross-origin-requests) states in full.
 
 ## Webhook object
 
-A webhook belongs to exactly one guild and posts into exactly one guild text or voice channel of that guild. Fluxer generates its execution token once at creation and never rotates it, so the pair of ID and token is a bearer credential for the lifetime of the webhook.
+A webhook belongs to exactly one guild and posts into exactly one guild text, voice, or announcement channel of that guild. Fluxer generates the execution token of an incoming webhook once at creation and never rotates it, so the pair of ID and token is a bearer credential for the lifetime of the webhook. A channel follower webhook has no usable token.
 
 ### Structure
 
@@ -51,12 +51,17 @@ A webhook belongs to exactly one guild and posts into exactly one guild text or 
 | channel_id | snowflake | The ID of the channel the webhook sends messages to |
 | name | string | The name the webhook posts under (1-80 characters) |
 | avatar | ?string | The avatar hash the webhook posts under, or null when no avatar is set |
-| token<sup>1</sup> | string | The secret token that authorises execution of this webhook |
+| type | integer | The [webhook type](#webhook-types) |
+| token?<sup>1</sup> | string | The secret token that authorises execution of this webhook |
 | user<sup>2</sup> | [partial user](/http-api/users/#partial-user-object) object | The account that created the webhook |
+| source_guild?<sup>3</sup> | [webhook source guild](#webhook-source-guild-object) object | The guild of the followed announcement channel |
+| source_channel?<sup>3</sup> | [webhook source channel](#webhook-source-channel-object) object | The followed announcement channel |
 
-<sup>1</sup> 64 characters drawn from the 62-character alphanumeric alphabet. No operation rotates or reissues it
+<sup>1</sup> 64 characters drawn from the 62-character alphanumeric alphabet. No operation rotates or reissues it. Absent on a channel follower webhook
 
 <sup>2</sup> Absent from the [token webhook object](#token-webhook-object). The value is the deleted user partial when the creating account no longer exists
+
+<sup>3</sup> Present only on a channel follower webhook, and only while the account that created it can view the announcement channel
 
 ### Example
 
@@ -77,9 +82,47 @@ A webhook belongs to exactly one guild and posts into exactly one guild text or 
 }
 ```
 
+## Webhook types
+
+| Value | Name | Description |
+| --- | --- | --- |
+| 1 | INCOMING | Webhook that posts the messages its token holder sends |
+| 2 | CHANNEL_FOLLOWER<sup>1</sup> | Webhook that posts copies of the messages published in a followed announcement channel |
+
+<sup>1</sup> Created by [Follow announcement channel](/http-api/channels/#follow-announcement-channel), never by [Create webhook](#create-webhook)
+
+The `avatar` of a channel follower webhook is a copy of the source guild icon at the time of the follow, or null when the source guild had none. It never changes after that. Copies it delivers use the source guild icon at the time of delivery as their author avatar, stored under the webhook ID, and a null avatar when the source guild has no icon.
+
+A channel follower webhook is managed through [Get webhook](#get-webhook), [Update webhook](#update-webhook), and [Delete webhook](#delete-webhook) with the same permissions as an incoming webhook, and both list routes return it. Every [token route](#token-routes) returns 404 `UNKNOWN_WEBHOOK` for it, so nothing can post through it except Fluxer.
+
+While the account that created a channel follower webhook cannot view the announcement channel, the webhook has no `source_guild` or `source_channel` and no new copies arrive through it. That covers a creator who left or was removed from the source guild, and one who lost `VIEW_CHANNEL` there. Delivery resumes for messages published after access returns. Deleting the webhook and following the channel again from an account that can view it also restores delivery.
+
+## Webhook source guild object
+
+The guild that owns the announcement channel a channel follower webhook follows.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild that owns the followed announcement channel |
+| name | string | The name of that guild |
+| icon? | ?string | The icon hash of that guild, or null when it has none |
+
+## Webhook source channel object
+
+The announcement channel a channel follower webhook follows.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the followed announcement channel |
+| name | string | The name of that channel |
+
 ## Token webhook object
 
-Token-authenticated operations return this object. It has every field of the [webhook object](#webhook-object) except `user`.
+Token-authenticated operations return this object. It has every field of the [webhook object](#webhook-object) except `user`, `source_guild`, and `source_channel`, and its `token` is always present.
 
 ### Structure
 
@@ -90,15 +133,16 @@ Token-authenticated operations return this object. It has every field of the [we
 | channel_id | snowflake | The ID of the channel the webhook sends messages to |
 | name | string | The name the webhook posts under (1-80 characters) |
 | avatar | ?string | The avatar hash the webhook posts under, or null when no avatar is set |
+| type | integer | The [webhook type](#webhook-types), always `1` here |
 | token | string | The secret token that authorises execution of this webhook |
 
 :::danger[The token is returned in full]
-Every operation returning a [webhook object](#webhook-object) or a token webhook object includes the complete execution token, so its response body grants full execution and management authority over each webhook it names.
+Every operation returning a [webhook object](#webhook-object) of an incoming webhook or a token webhook object includes the complete execution token, so its response body grants full execution and management authority over each webhook it names.
 :::
 
 ## Webhook message body
 
-[Execute webhook](#execute-webhook) accepts this JSON body. Every field may be omitted, and `{}` is a valid body that fails later as an empty message.
+[Execute webhook](#execute-webhook) accepts this JSON body. Every field may be omitted, and `{}` passes schema validation and then returns 400 `CANNOT_SEND_EMPTY_MESSAGE`.
 
 ### Structure
 
@@ -110,18 +154,18 @@ Every operation returning a [webhook object](#webhook-object) or a token webhook
 | message_reference?<sup>4</sup> | ?[message reference input](/http-api/messages/#message-reference-input-object) object | Reply or forward reference, or null |
 | allowed_mentions?<sup>5</sup> | ?[allowed mentions](/http-api/messages/#allowed-mentions-object) object | Mention parsing policy, or null |
 | flags? | integer | [Message flags](/http-api/messages/#message-flags), where omission is treated as zero and every bit outside the sendable mask is cleared |
-| favorite_meme_id? | ?snowflake | Favorite meme to attach |
+| favorite_meme_id? | ?snowflake | Favourite meme to attach |
 | sticker_ids? | ?array[snowflake] | At most 3 sticker IDs |
 | tts?<sup>6</sup> | boolean | Text-to-speech request |
 | nonce?<sup>7</sup> | string \| integer | Client-generated message identifier (1-32 characters). A non-negative safe integer becomes its decimal string |
 | username?<sup>8</sup> | ?string | Per-message webhook name override (1-80 characters), or null |
 | avatar_url?<sup>8</sup> | ?string | Absolute `http` or `https` per-message webhook avatar URL override of at most 2,048 characters, or null |
 
-<sup>1</sup> A webhook author always resolves an effective [max_message_length](/http-api/instance/#limit-keys) of at least 4000 characters, and a higher configured value for the guild raises it further. Exceeding it returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`
+<sup>1</sup> Webhook message content is limited to the resolved [max_message_length](/http-api/instance/#limit-keys) value for the guild or 4000 characters, whichever is larger. Exceeding it returns 400 `INVALID_FORM_BODY` with the validation code `CONTENT_EXCEEDS_MAX_LENGTH`
 
 <sup>2</sup> Bounded by the resolved [max_embeds_per_message](/http-api/instance/#limit-keys) value for the guild, defaulting to 10. Exceeding it returns 400 `INVALID_FORM_BODY` with `TOO_MANY_EMBEDS`
 
-<sup>3</sup> A JSON body attaches no file. A multipart body uses the ordinary message attachment contract
+<sup>3</sup> A JSON body attaches no file. A multipart body attaches files as described in [Execute webhook](#execute-webhook)
 
 <sup>4</sup> A forward reference requires both `channel_id` and `message_id`, and it must not accompany content, embeds, or attachments. See [message references](#message-references)
 
@@ -136,8 +180,6 @@ Every operation returning a [webhook object](#webhook-object) or a token webhook
 When `embeds` is absent, Fluxer rewrites the singular key `embed` to a one-element `embeds` array, and an `embed` of null becomes an empty array. When both are present, `embed` is dropped.
 
 A multipart body accepts both [pre-uploaded attachments](/http-api/messages/#pre-uploaded-attachment-object) and [direct multipart attachment metadata](/http-api/messages/#direct-multipart-attachment-metadata-object).
-
-Fluxer fetches an `avatar_url` through the media boundary.
 
 ## Webhook attachment input object
 
@@ -258,7 +300,7 @@ These objects define the body [Execute Slack webhook](#execute-slack-webhook) ac
 | value? | string | Field value, mapped to the embed field value |
 | short? | boolean | Whether the embed field is rendered inline (default false) |
 
-:::caution[Converted embeds skip the rich embed schema]
+:::caution[Slack embed fields have no individual length limits]
 No per-embed title, description, footer, or field maximum applies to a Slack value.
 :::
 
@@ -297,7 +339,7 @@ These objects define the body [Execute GitHub webhook](#execute-github-webhook) 
 | review? | ?[GitHub review](#github-review-object) object | Pull request review data, or null |
 | sender | [GitHub user](#github-user-object) object | Event sender |
 
-<sup>1</sup> The value gates rendering for most event types, and the exact accepted action for each type is stated in [GitHub event types](#github-event-types)
+<sup>1</sup> An event type that lists one or more required actions in [GitHub event types](#github-event-types) renders a message only when `action` is one of those values
 
 <sup>2</sup> A pull request uses the same representation as an issue, so only the fields listed in the [GitHub issue structure](#github-issue-object) are consumed
 
@@ -524,7 +566,7 @@ The value of the `X-GitHub-Event` request header selects the rendering. An event
 
 <sup>4</sup> A forced push requires `head_commit` and compare, and renders a compare link as its whole description
 
-<sup>5</sup> A conclusion of `skipped` on the relevant suite suppresses the message
+<sup>5</sup> A `check_suite` event whose check suite has the conclusion `skipped` produces no message. A `check_run` event produces no message when its parent check suite has the conclusion `skipped`
 
 An ordinary push requires compare and at least one commit, and renders one line for each commit. The line set is not capped by count, and the description built from them is truncated to the ordinary 350-character ceiling.
 
@@ -644,7 +686,7 @@ A backfilled incident or maintenance item appends `Backfilled` to the footer tex
 
 <sup>3</sup> A true value appends `Backfilled` to the embed footer, separated from the page footer text by a vertical bar. When the page supplies no footer text, `Backfilled` is the whole footer
 
-<sup>4</sup> The embed timestamp is the latest update's `created_at`, then `updated_at`, then `created_at`, and the first value the runtime can parse as a date wins
+<sup>4</sup> The embed timestamp is the first of these values that parses as a date: the `created_at` of the latest update, then this object's `updated_at`, then this object's `created_at`
 
 ### Instatus maintenance update object
 
@@ -741,7 +783,6 @@ Returns an array of [webhook objects](#webhook-object) in a guild. The caller mu
 | 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
 | 400<sup>2</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>3</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403<sup>3</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403<sup>3</sup> | [error response](/http-api/#error-response) | The guild is unavailable |
 | 403<sup>3</sup> | [error response](/http-api/#error-response) | The caller is not a member of the guild or lacks `MANAGE_WEBHOOKS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
@@ -750,7 +791,7 @@ Returns an array of [webhook objects](#webhook-object) in a guild. The caller mu
 
 <sup>2</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
 
-<sup>3</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_ACCESS` for an unavailable guild, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+<sup>3</sup> `MISSING_ACCESS` for an unavailable guild, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
 
 A webhook is returned only when the caller also holds both `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` in that webhook's own channel. A webhook with no channel target is never returned.
 
@@ -762,13 +803,13 @@ A webhook is returned only when the caller also holds both `VIEW_CHANNEL` and `M
 
 <RouteHeader method="GET" path="/v1/channels/{channel_id}/webhooks" bot />
 
-Returns an array of [webhook objects](#webhook-object) in a guild text or voice channel. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel.
+Returns an array of [webhook objects](#webhook-object) in a guild text, voice, or announcement channel. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel.
 
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channel_id | snowflake | The ID of the guild text or voice channel whose webhooks are returned |
+| channel_id | snowflake | The ID of the guild text, voice, or announcement channel whose webhooks are returned |
 
 ### Response
 
@@ -778,17 +819,16 @@ Returns an array of [webhook objects](#webhook-object) in a guild text or voice 
 | 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The guild is unavailable |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the channel's guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller lacks channel access or `MANAGE_WEBHOOKS` |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The channel is age restricted and the account is not age verified |
-| 404 | [error response](/http-api/#error-response) | Channel does not exist or is not a guild text or voice channel, each returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is not a guild text, voice, or announcement channel, each returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | Its guild does not resolve, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
 
-<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_ACCESS` for an unavailable guild, `NSFW_CONTENT_AGE_RESTRICTED` for an unverified account in an age restricted channel, `MISSING_PERMISSIONS` for a membership, channel access, or permission failure, and `ACCESS_DENIED` otherwise
+<sup>2</sup> `MISSING_ACCESS` for an unavailable guild, `NSFW_CONTENT_AGE_RESTRICTED` for an unverified account in an age restricted channel, `MISSING_PERMISSIONS` for a membership, channel access, or permission failure, and `ACCESS_DENIED` otherwise
 
 ### Rate limit
 
@@ -798,11 +838,9 @@ Returns an array of [webhook objects](#webhook-object) in a guild text or voice 
 
 <RouteHeader method="POST" path="/v1/channels/{channel_id}/webhooks" bot auditReason />
 
-Creates a webhook in a guild text or voice channel and returns the new [webhook object](#webhook-object) with its execution token. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel. The operation accepts an audit reason.
+Creates a webhook in a guild text, voice, or announcement channel and returns the new [webhook object](#webhook-object) with its execution token. The caller must be able to view the channel and hold the [MANAGE_WEBHOOKS](/http-api/permissions/) permission at guild level and in the channel. The operation accepts an audit reason.
 
 Creation emits a [Webhooks Update](/gateway/events/#webhooks-update).
-
-Fluxer checks the request in a fixed order: the content filter, the rate limit, the credential, the body schema, channel access and `MANAGE_WEBHOOKS`, the guild allowance, the channel allowance, and the name scan. The avatar itself is checked last.
 
 The guild allowance is the resolved [max_webhooks_per_guild](/http-api/instance/#limit-keys) value for the guild, defaulting to 1000. The channel allowance is the resolved [max_webhooks_per_channel](/http-api/instance/#limit-keys) value, defaulting to 15.
 
@@ -810,7 +848,7 @@ The guild allowance is the resolved [max_webhooks_per_guild](/http-api/instance/
 
 | Field | Type | Description |
 | --- | --- | --- |
-| channel_id | snowflake | The ID of the guild text or voice channel the webhook is created in |
+| channel_id | snowflake | The ID of the guild text, voice, or announcement channel the webhook is created in |
 
 ### JSON body
 
@@ -832,19 +870,19 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 | 400<sup>2</sup> | [error response](/http-api/#error-response) | The guild or channel webhook allowance is already reached |
 | 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403 | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action |
+| 403 | [error response](/http-api/#error-response) | The account is limited |
 | 403 | [error response](/http-api/#error-response) | The guild is unavailable |
 | 403 | [error response](/http-api/#error-response) | The caller is not a member of the channel's guild |
 | 403 | [error response](/http-api/#error-response) | The caller lacks channel access or `MANAGE_WEBHOOKS` |
 | 403 | [error response](/http-api/#error-response) | The channel is age restricted and the account is not age verified |
 | 403 | [error response](/http-api/#error-response) | The name is blocked |
 | 403 | [error response](/http-api/#error-response) | The avatar hash is banned |
-| 404 | [error response](/http-api/#error-response) | Channel does not exist or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | Its guild does not resolve, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> An avatar failure names the `avatar` path with `BASE64_LENGTH_INVALID`, `INVALID_BASE64_FORMAT`, `IMAGE_SIZE_EXCEEDS_LIMIT`, or `INVALID_IMAGE_FORMAT`
 
-<sup>2</sup> The reached allowance is in a top-level member named after its limit key
+<sup>2</sup> The error response has a top-level `max_webhooks_per_guild` or `max_webhooks_per_channel` field whose value is the allowance that was reached
 
 | Condition | Error |
 | --- | --- |
@@ -852,7 +890,7 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 | Caller holds the permission but has no enrolled authenticator | 400 `TWO_FACTOR_REQUIRED` |
 | Schema or image failure | 400 `INVALID_FORM_BODY` |
 | Name is blocked, or the avatar hash is banned | 403 `CONTENT_BLOCKED` |
-| Account has an outstanding required action | 403 `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| Account is limited | 403 `ACCOUNT_LIMITED` |
 | Guild is unavailable | 403 `MISSING_ACCESS` |
 | Unverified account in an age restricted channel | 403 `NSFW_CONTENT_AGE_RESTRICTED` |
 | Membership, channel access, or permission failure | 403 `MISSING_PERMISSIONS` |
@@ -860,7 +898,7 @@ The decoded bytes must be at most the resolved [avatar_max_size](/http-api/insta
 
 ### Side effects
 
-A successful call consumes one guild and channel webhook slot, generates a 64-character execution token, and stores the optional avatar. It records a `WEBHOOK_CREATE` guild audit entry naming the created webhook, with the target channel in its metadata and the supplied reason. A failure to write that entry does not fail the request, and the webhook still exists.
+A successful call consumes one guild and channel webhook slot, generates a 64-character execution token, and stores the optional avatar. It records a `WEBHOOK_CREATE` guild audit entry naming the created webhook, with the target channel and the [webhook type](#webhook-types) in its metadata and the supplied reason. A failure to write that entry does not fail the request, and the webhook still exists.
 
 Guild sessions that can view the channel receive [Webhooks Update](/gateway/events/#webhooks-update) with the guild and channel IDs. A failed creation leaves no webhook and consumes no slot.
 
@@ -888,13 +926,12 @@ Returns a [webhook object](#webhook-object). The caller must be a member of the 
 | 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild or lacks `MANAGE_WEBHOOKS` in the webhook's channel |
 | 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK`, or its guild does not resolve, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
 
-<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+<sup>2</sup> `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
 
 ### Rate limit
 
@@ -910,6 +947,8 @@ Updates a webhook and returns the modified [webhook object](#webhook-object). Em
 
 - The caller is a member of the webhook's guild and holds [MANAGE_WEBHOOKS](/http-api/permissions/) at guild level and in the webhook's current channel.
 - Moving the webhook also requires channel access and that permission in the destination channel, which must belong to the same guild.
+- A channel follower webhook accepts only `name` and `channel_id`. Any `avatar` member, null included, returns 400 `INVALID_FORM_BODY` with an `INVALID_FORMAT` error at `avatar`, and nothing is updated.
+- A channel follower webhook moves only into a guild text channel that does not already follow the same announcement channel, and the destination must meet the same age restriction and content warning rules as [Follow announcement channel](/http-api/channels/#follow-announcement-channel).
 - The operation accepts an audit reason.
 
 ### Path parameters
@@ -924,17 +963,13 @@ Updates a webhook and returns the modified [webhook object](#webhook-object). Em
 | --- | --- | --- |
 | name? | string | Replacement webhook name (1-80 characters) |
 | avatar?<sup>1</sup> | ?base64 string | Base64-encoded replacement avatar, or null to remove the current avatar |
-| channel_id?<sup>2</sup> | snowflake | Destination guild text or voice channel in the same guild |
+| channel_id?<sup>2</sup> | snowflake | Destination guild text, voice, or announcement channel in the same guild |
 
-<sup>1</sup> An omitted avatar leaves the stored hash unchanged, and an explicit null clears it. The same encoding, size, and format rules as [create webhook](#create-webhook) apply
+<sup>1</sup> An omitted avatar leaves the stored hash unchanged, and an explicit null clears it. The same encoding, size, and format rules as [create webhook](#create-webhook) apply. A channel follower webhook rejects the member, null included
 
 <sup>2</sup> A destination equal to the current channel is a no-op, and any other destination is subject to the destination channel's own [max_webhooks_per_channel](/http-api/instance/#limit-keys) allowance
 
-:::caution[A move notifies the source channel only]
-One Dispatch is emitted, naming the webhook's channel as it stood before the update. Sessions watching the destination channel receive nothing, so a client tracking a channel's webhook set refreshes it itself.
-:::
-
-The returned webhook object has the destination channel.
+The returned webhook object has the destination channel. Copies a channel follower webhook delivered before a move stay in the previous channel.
 
 ### Response
 
@@ -943,16 +978,16 @@ The returned webhook object has the destination channel.
 | 200 | [webhook](#webhook-object) object | Webhook was updated |
 | 400 | [error response](/http-api/#error-response) | Body or avatar is invalid |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The destination channel already holds its maximum webhooks |
+| 400<sup>3</sup> | [error response](/http-api/#error-response) | A channel follower webhook cannot move into the destination channel |
 | 400 | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403 | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403 | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild |
 | 403 | [error response](/http-api/#error-response) | The caller lacks `MANAGE_WEBHOOKS` in the current or destination channel |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The destination channel is age restricted and the account is not age verified |
 | 403 | [error response](/http-api/#error-response) | The name is blocked |
 | 403 | [error response](/http-api/#error-response) | The avatar hash is banned |
 | 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The destination channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The destination channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The destination channel belongs to another guild, returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The webhook's guild does not resolve, returning `UNKNOWN_GUILD` |
 
@@ -960,22 +995,26 @@ The returned webhook object has the destination channel.
 
 <sup>2</sup> The age restriction applies to the destination channel
 
+<sup>3</sup> `INVALID_FOLLOW_TARGET_CHANNEL`, `CHANNEL_ALREADY_FOLLOWED`, `FOLLOW_TARGET_NOT_AGE_RESTRICTED`, or `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED`
+
 | Condition | Error |
 | --- | --- |
 | Destination channel already holds its maximum webhooks | 400 `MAX_WEBHOOKS_PER_CHANNEL` |
+| Follower webhook destination is not a guild text channel | 400 `INVALID_FOLLOW_TARGET_CHANNEL` |
+| Destination already follows the same announcement channel | 400 `CHANNEL_ALREADY_FOLLOWED` |
+| Destination fails the age restriction or content warning rule | 400 `FOLLOW_TARGET_NOT_AGE_RESTRICTED` or `FOLLOW_TARGET_CONTENT_WARNING_REQUIRED` |
 | Caller holds the permission but has no enrolled authenticator | 400 `TWO_FACTOR_REQUIRED` |
-| Schema or image failure | 400 `INVALID_FORM_BODY` |
+| Schema or image failure, or an avatar on a channel follower webhook | 400 `INVALID_FORM_BODY` |
 | Name is blocked, or the avatar hash is banned | 403 `CONTENT_BLOCKED` |
-| Account has an outstanding required action | 403 `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | Unverified account in an age restricted destination channel | 403 `NSFW_CONTENT_AGE_RESTRICTED` |
 | Membership, channel access, or permission failure | 403 `MISSING_PERMISSIONS` |
 | Any other credential refusal | 403 `ACCESS_DENIED` |
 
 ### Side effects
 
-An update replaces the supplied fields, uploading a new avatar when one is supplied and clearing the stored hash when avatar is null. It records a `WEBHOOK_UPDATE` guild audit entry containing the previous and next webhook snapshots, the webhook's channel in its metadata, and the supplied audit reason.
+An update replaces the supplied fields, uploading a new avatar when one is supplied and clearing the stored hash when avatar is null. It records a `WEBHOOK_UPDATE` guild audit entry containing the previous and next webhook snapshots, the webhook's channel and type in its metadata, and the supplied audit reason.
 
-It emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild ID and the webhook's previous channel ID to guild sessions that can view that channel.
+It emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild ID and the webhook's previous channel ID to guild sessions that can view that channel. A move emits a second Webhooks Update for the destination channel.
 
 ### Rate limit
 
@@ -987,7 +1026,7 @@ It emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild ID a
 
 Permanently deletes a webhook and returns 204 with an empty body on success. The caller must be a member of the webhook's guild with [MANAGE_WEBHOOKS](/http-api/permissions/) at guild level and in the webhook's channel. The operation accepts an audit reason.
 
-Deletion emits a [Webhooks Update](/gateway/events/#webhooks-update).
+Deletion emits a [Webhooks Update](/gateway/events/#webhooks-update). Deleting a channel follower webhook unfollows the announcement channel, and the copies it already delivered stay in the channel.
 
 ### Path parameters
 
@@ -1007,17 +1046,16 @@ No operation restores the webhook or reissues its token. Messages it already cre
 | 400 | [error response](/http-api/#error-response) | Path parameter is not a valid snowflake |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The caller holds `MANAGE_WEBHOOKS` with no enrolled authenticator in an elevated-MFA guild |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | Credential is a bearer token |
-| 403<sup>2</sup> | [error response](/http-api/#error-response) | The account has an outstanding required action |
 | 403<sup>2</sup> | [error response](/http-api/#error-response) | The caller is not a member of the webhook's guild or lacks `MANAGE_WEBHOOKS` in the webhook's channel |
 | 404 | [error response](/http-api/#error-response) | Webhook does not exist, returning `UNKNOWN_WEBHOOK`, or its guild does not resolve, returning `UNKNOWN_GUILD` |
 
 <sup>1</sup> The missing-authenticator code is `TWO_FACTOR_REQUIRED`, returned only after Fluxer confirms the permission itself
 
-<sup>2</sup> `ACCOUNT_SUSPICIOUS_ACTIVITY` for an outstanding required action, `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
+<sup>2</sup> `MISSING_PERMISSIONS` for a membership or permission failure, and `ACCESS_DENIED` otherwise
 
 ### Side effects
 
-The operation removes the webhook, frees its guild and channel webhook slot, and records a `WEBHOOK_DELETE` guild audit entry with the deleted webhook, its channel in the entry metadata, and the supplied reason. It emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild and channel IDs to guild sessions that can view the channel.
+The operation removes the webhook, frees its guild and channel webhook slot, and records a `WEBHOOK_DELETE` guild audit entry with the deleted webhook, its channel and type in the entry metadata, and the supplied reason. It emits [Webhooks Update](/gateway/events/#webhooks-update) with the guild and channel IDs to guild sessions that can view the channel.
 
 ### Rate limit
 
@@ -1025,7 +1063,7 @@ The operation removes the webhook, frees its guild and channel webhook slot, and
 
 ## Token routes
 
-The ten routes below take the matching webhook ID and token in their paths as the complete credential. The `Authorization` header is neither required nor read on any of them.
+The routes below take the matching webhook ID and token in their paths as the complete credential. Each returns 404 `UNKNOWN_WEBHOOK` for a [channel follower webhook](#webhook-types). None of them requires the `Authorization` header, and a header sent to one grants no access. Fluxer still resolves it, as [Rate limit keying](#rate-limit-keying) describes.
 
 ## Get webhook with token
 
@@ -1139,7 +1177,7 @@ The operation removes the webhook, frees its guild and channel webhook slot, and
 
 Creates a webhook-authored [message](/http-api/messages/#message-object) in the webhook's channel. When `wait` is true the created message is returned, and otherwise the operation returns 204 with an empty body.
 
-The route refuses a call from the official web client. See [origin refusal](#origin-refusal). A successful execution emits a [Message Create](/gateway/events/#message-create) Gateway Dispatch whether or not wait is true.
+The route refuses a call from a first-party web client. See [origin refusal](#origin-refusal). A successful execution emits a [Message Create](/gateway/events/#message-create) Gateway Dispatch whether or not wait is true.
 
 ### Path parameters
 
@@ -1191,10 +1229,10 @@ An attachment metadata entry whose `id` matches a supplied file index supplies t
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The resolved payload has no content, embed, or attachment |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The content exceeds the effective maximum length |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The embed or attachment count exceeds its effective ceiling |
-| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The resolved content or embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The referenced message does not exist in the webhook's channel, returning `UNKNOWN_MESSAGE` |
 
 <sup>1</sup> `CANNOT_SEND_EMPTY_MESSAGE` is returned as the 400 error code itself. Every other code below, including `CONTENT_EXCEEDS_MAX_LENGTH`, sits inside an `INVALID_FORM_BODY` body
@@ -1227,7 +1265,7 @@ The operation updates channel state and search results and emits [Message Create
 
 Returns a [message](/http-api/messages/#message-object) that the webhook authored.
 
-The route refuses a call from the official web client. See [origin refusal](#origin-refusal).
+The route refuses a call from a first-party web client. See [origin refusal](#origin-refusal).
 
 ### Path parameters
 
@@ -1244,7 +1282,7 @@ The route refuses a call from the official web client. See [origin refusal](#ori
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [message](/http-api/messages/#message-object) object | Webhook message was returned |
-| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
 | 404 | [error response](/http-api/#error-response) | The webhook has no channel target, returning `UNKNOWN_CHANNEL` |
@@ -1260,7 +1298,7 @@ The route refuses a call from the official web client. See [origin refusal](#ori
 
 Updates a message that the webhook authored and returns the modified [message](/http-api/messages/#message-object).
 
-The route refuses a call from the official web client. See [origin refusal](#origin-refusal). A successful edit emits a [Message Update](/gateway/events/#message-update).
+The route refuses a call from a first-party web client. See [origin refusal](#origin-refusal). A successful edit emits a [Message Update](/gateway/events/#message-update).
 
 ### Path parameters
 
@@ -1288,7 +1326,7 @@ Any other type returns 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and a forward, which 
 | 400 | [error response](/http-api/#error-response) | The content or embed count exceeds its effective ceiling |
 | 400 | [error response](/http-api/#error-response) | The target message is not an editable type |
 | 400 | [error response](/http-api/#error-response) | The webhook's stored channel no longer resolves to a guild channel |
-| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The replacement content or embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
@@ -1306,7 +1344,7 @@ Any other type returns 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and a forward, which 
 
 ### Side effects
 
-The operation replaces the supplied fields, and a content change marks the message edited. An edit does not re-extract mentions, so the stored mention lists are kept and `allowed_mentions` is accepted and ignored. Supplying embeds replaces the complete embed collection and rechecks every attachment reference the embeds make. It emits [Message Update](/gateway/events/#message-update) to sessions that can read the channel.
+The operation replaces the supplied fields, and a content change marks the message edited. Existing mentions stay unchanged and `allowed_mentions` is ignored. Supplying embeds replaces the complete collection. An embed image or thumbnail URL of the form `attachment://{filename}` returns 400 `INVALID_FORM_BODY` unless `{filename}` names an attachment already on the message with a supported image file extension. Sessions that can read the channel receive [Message Update](/gateway/events/#message-update).
 
 ### Rate limit
 
@@ -1318,7 +1356,7 @@ The operation replaces the supplied fields, and a content change marks the messa
 
 Deletes a message that the webhook authored and returns 204 with an empty body on success.
 
-The route refuses a call from the official web client. See [origin refusal](#origin-refusal). Deletion emits a [Message Delete](/gateway/events/#message-delete).
+The route refuses a call from a first-party web client. See [origin refusal](#origin-refusal). Deletion emits a [Message Delete](/gateway/events/#message-delete).
 
 ### Path parameters
 
@@ -1335,7 +1373,7 @@ The route refuses a call from the official web client. See [origin refusal](#ori
 | 204 | empty | Webhook message was deleted |
 | 400 | [error response](/http-api/#error-response) | Path parameters are invalid |
 | 400 | [error response](/http-api/#error-response) | The webhook's stored channel no longer resolves to a guild channel, returning `CANNOT_EXECUTE_ON_DM` |
-| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
 | 404 | [error response](/http-api/#error-response) | The message does not exist in the webhook's channel, returning `UNKNOWN_MESSAGE` |
@@ -1391,7 +1429,7 @@ A callback that renders nothing, and one whose message creation fails, both leav
 | 204 | empty | Callback was accepted, was not renderable, or repeated a delivery within the deduplication window |
 | 403 | [error response](/http-api/#error-response) | Rendered embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
 
 ### Side effects
 
@@ -1407,7 +1445,7 @@ An unrecognised event type, a recognised type whose required fields or action ar
 
 <RouteHeader method="POST" path="/v1/webhooks/{webhook_id}/{token}/slack" />
 
-Accepts a Slack-compatible callback, converts it to the Fluxer message contract, and creates one webhook-authored message.
+Accepts a Slack-compatible callback, converts it to Fluxer message content and embeds, and creates one webhook-authored message.
 
 A successful callback emits a [Message Create](/gateway/events/#message-create).
 
@@ -1433,7 +1471,7 @@ The body is a [Slack callback](#slack-callback-object) object.
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The converted embed count exceeds its effective ceiling |
 | 403 | [error response](/http-api/#error-response) | Converted content or embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
 
 <sup>1</sup> The [error code](/http-api/errors/) is `CANNOT_SEND_EMPTY_MESSAGE` for a conversion that yields nothing, `CONTENT_EXCEEDS_MAX_LENGTH` for content that is too long, and `INVALID_FORM_BODY` with the validation code `TOO_MANY_EMBEDS` for the embed ceiling
 
@@ -1445,9 +1483,9 @@ The success body is the literal string `ok` under the `text/html` content type, 
 
 Conversion creates one webhook-authored message with the converted content and embeds, and emits [Message Create](/gateway/events/#message-create) to sessions that can read the channel.
 
-A supplied username replaces the author name on that message. A supplied `icon_url` that parses as an absolute URL is fetched through the media boundary and stored as the message avatar. The stored webhook name and avatar do not change. When the URL cannot be fetched, the callback still succeeds and the message has no avatar override.
+A supplied username replaces the author name on that message. A supplied `icon_url` that parses as an absolute URL is fetched through the Media Proxy and stored as the message avatar. The stored webhook name and avatar do not change. When the URL cannot be fetched, the callback still succeeds and the message has no avatar override.
 
-The webhook execution default applies, and every mention in the converted content is suppressed. The callback has no nonce, so a repeated callback creates a second message.
+Fluxer suppresses every mention in the converted content, as [Execute webhook](#execute-webhook) does when `allowed_mentions` is omitted. The callback has no nonce, so a repeated callback creates a second message.
 
 ### Rate limit
 
@@ -1473,7 +1511,7 @@ A rendered callback emits a [Message Create](/gateway/events/#message-create).
 The body is an [Instatus callback](#instatus-callback-object) object. A body the schema rejects returns 400 `INVALID_FORM_BODY`.
 
 :::note[Deduplication is per webhook and callback]
-Only the first callback for a webhook and a given incident update, maintenance update, or component update is processed within a 24-hour window. A repeated callback is acknowledged and creates no second message. Fluxer processes every callback that has no such identifier.
+Only the first callback for a webhook and a given incident update, maintenance update, or component update is processed within a 24-hour window. A repeated callback is acknowledged and creates no second message. Fluxer processes every callback whose incident or maintenance item has no `id`, whose component update has no `component_id` or `created_at`, or that has no incident, maintenance item, or component update.
 :::
 
 A callback that renders nothing, and one whose message creation fails, both leave the identifier free for a later retry.
@@ -1485,7 +1523,7 @@ A callback that renders nothing, and one whose message creation fails, both leav
 | 204 | empty | Callback was accepted, was not renderable, or repeated a callback within the deduplication window |
 | 403 | [error response](/http-api/#error-response) | Rendered embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
-| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text, voice, or announcement channel, returning `UNKNOWN_CHANNEL` |
 
 ### Side effects
 
@@ -1496,4 +1534,3 @@ Mention parsing is disabled for the created message, so no mention in a provider
 ### Rate limit
 
 200 requests per minute for each caller identity and webhook ID, on the `webhook:instatus::webhook_id` bucket, which is exempt from the global limit.
-

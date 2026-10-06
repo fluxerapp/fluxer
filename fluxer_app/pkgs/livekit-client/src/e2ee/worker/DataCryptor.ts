@@ -1,7 +1,9 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
+import {getErrorDescription} from '../../api/utils.ts';
 import {workerLogger} from '../../logger.ts';
+import type {NonSharedUint8Array} from '../../type-polyfills/non-shared-typed-arrays.ts';
 import {ENCRYPTION_ALGORITHM} from '../constants.ts';
 import {CryptorError, CryptorErrorReason} from '../errors.ts';
 import type {DecodeRatchetOptions, KeySet, RatchetResult} from '../types.ts';
@@ -20,15 +22,16 @@ export class DataCryptor {
 		ivView.setUint32(4, timestamp);
 		ivView.setUint32(8, timestamp - (DataCryptor.sendCount % 0xffff));
 		DataCryptor.sendCount++;
+
 		return iv;
 	}
 
 	static async encrypt(
-		data: Uint8Array,
+		data: NonSharedUint8Array,
 		keys: ParticipantKeyHandler,
 	): Promise<{
-		payload: Uint8Array;
-		iv: Uint8Array;
+		payload: NonSharedUint8Array;
+		iv: NonSharedUint8Array;
 		keyIndex: number;
 	}> {
 		const iv = DataCryptor.makeIV(performance.now());
@@ -36,6 +39,7 @@ export class DataCryptor {
 		if (!keySet) {
 			throw new Error('No key set found');
 		}
+
 		const cipherText = await crypto.subtle.encrypt(
 			{
 				name: ENCRYPTION_ALGORITHM,
@@ -44,6 +48,7 @@ export class DataCryptor {
 			keySet.encryptionKey,
 			new Uint8Array(data),
 		);
+
 		return {
 			payload: new Uint8Array(cipherText),
 			iv: new Uint8Array(iv),
@@ -52,19 +57,20 @@ export class DataCryptor {
 	}
 
 	static async decrypt(
-		data: Uint8Array,
-		iv: Uint8Array,
+		data: NonSharedUint8Array,
+		iv: NonSharedUint8Array,
 		keys: ParticipantKeyHandler,
 		keyIndex: number = 0,
 		initialMaterial?: KeySet,
 		ratchetOpts: DecodeRatchetOptions = {ratchetCount: 0},
 	): Promise<{
-		payload: Uint8Array;
+		payload: NonSharedUint8Array;
 	}> {
 		const keySet = await keys.getKeySet(keyIndex);
 		if (!keySet) {
 			throw new Error('No key set found');
 		}
+
 		try {
 			const plainText = await crypto.subtle.decrypt(
 				{
@@ -85,16 +91,20 @@ export class DataCryptor {
 							keys.keyProviderOptions.ratchetWindowSize
 						}, for data packet`,
 					);
+
 					let ratchetedKeySet: KeySet | undefined;
 					let ratchetResult: RatchetResult | undefined;
 					if ((initialMaterial ?? keySet) === keys.getKeySet(keyIndex)) {
 						ratchetResult = await keys.ratchetKey(keyIndex, false);
-						ratchetedKeySet = await deriveKeys(ratchetResult.cryptoKey, keys.keyProviderOptions.ratchetSalt);
+
+						ratchetedKeySet = await deriveKeys(ratchetResult.cryptoKey, keys.keyProviderOptions);
 					}
+
 					const decryptedData = await DataCryptor.decrypt(data, iv, keys, keyIndex, initialMaterial, {
 						ratchetCount: ratchetOpts.ratchetCount + 1,
 						encryptionKey: ratchetedKeySet?.encryptionKey,
 					});
+
 					if (decryptedData && ratchetedKeySet) {
 						if ((initialMaterial ?? keySet) === keys.getKeySet(keyIndex)) {
 							keys.setKeySet(ratchetedKeySet, keyIndex, ratchetResult);
@@ -112,7 +122,7 @@ export class DataCryptor {
 				}
 			} else {
 				throw new CryptorError(
-					`DataCryptor: Decryption failed: ${error instanceof Error ? error.message : String(error)}`,
+					`DataCryptor: Decryption failed: ${getErrorDescription(error, 'decryption')}`,
 					CryptorErrorReason.InvalidKey,
 					keys.participantIdentity,
 				);

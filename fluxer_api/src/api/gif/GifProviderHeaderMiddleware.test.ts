@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GifProviderHeaderMiddleware} from '@app/api/gif/GifProviderHeaderMiddleware';
+import {GifService} from '@app/api/gif/GifService';
+import type {IGifProvider} from '@app/api/gif/IGifProvider';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {
 	GIF_PROVIDER_ATTRIBUTION_HEADER,
 	GIF_PROVIDER_DISPLAY_NAME_HEADER,
@@ -7,10 +11,6 @@ import {
 } from '@fluxer/schema/src/domains/gif/GifSchemas';
 import {Hono} from 'hono';
 import {describe, expect, it} from 'vitest';
-import type {HonoEnv} from '../types/HonoEnv';
-import {GifProviderHeaderMiddleware} from './GifProviderHeaderMiddleware';
-import {GifService} from './GifService';
-import type {IGifProvider} from './IGifProvider';
 
 function createProvider(): IGifProvider {
 	return {

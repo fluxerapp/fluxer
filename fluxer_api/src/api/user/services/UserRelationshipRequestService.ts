@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import type {UserRelationshipService} from '@app/api/user/services/UserRelationshipService';
+import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
+import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {
 	BulkIgnoreFriendRequestsRequest,
@@ -12,14 +20,6 @@ import type {
 	BulkIgnoreFriendRequestsResponse,
 	RelationshipResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {UserID} from '../../BrandedTypes';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Relationship} from '../../models/Relationship';
-import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '../UserCacheHelpers';
-import {mapRelationshipToResponse} from '../UserMappers';
-import type {UserChannelService} from './UserChannelService';
-import type {UserRelationshipService} from './UserRelationshipService';
 
 interface RelationshipListParams {
 	userId: UserID;

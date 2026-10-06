@@ -1,0 +1,14 @@
+services:
+  seaweedfs:
+    profiles: [bundled-object-store]
+  seaweedfs-init:
+    profiles: [bundled-object-store]
+  api:
+    depends_on:
+      seaweedfs-init: !reset null
+  worker:
+    depends_on:
+      seaweedfs-init: !reset null
+  media-proxy:
+    depends_on:
+      seaweedfs-init: !reset null

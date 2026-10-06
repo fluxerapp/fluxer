@@ -19,7 +19,6 @@ use std::{
     path::Path,
     time::{Duration, SystemTime},
 };
-use time::OffsetDateTime;
 
 const DEFAULT_COUNTRY_CODE: &str = "US";
 const GEOIP_CACHE_TTL: Duration = Duration::from_secs(10 * 60);
@@ -182,19 +181,14 @@ fn prepare_geoip_database(
         GeoipSourceConfig::Filesystem { maxmind_db_path } => Ok(maxmind_db_path.clone()),
         GeoipSourceConfig::S3 {
             maxmind_db_path,
-            maxmind_asn_db_path,
             s3_bucket,
             s3_key,
-            s3_asn_key,
         } => {
             let s3 = s3_config.ok_or_else(|| {
                 anyhow::anyhow!("GeoIP is configured for S3 mode, but S3 configuration is missing")
             })?;
             require_s3_config(s3)?;
             download_s3_object(s3, s3_bucket, s3_key, Path::new(maxmind_db_path))?;
-            if let (Some(asn_key), Some(asn_path)) = (s3_asn_key, maxmind_asn_db_path) {
-                download_s3_object(s3, s3_bucket, asn_key, Path::new(asn_path))?;
-            }
             tracing::info!(
                 maxmind_db_path,
                 s3_bucket,
@@ -242,7 +236,6 @@ fn download_s3_object(
         );
     };
     fs::create_dir_all(parent)?;
-    let temp_path = temporary_download_path(destination);
     let request = signed_s3_get_request(config, bucket, key)?;
     let mut response = reqwest::blocking::Client::new()
         .get(request.url)
@@ -253,27 +246,12 @@ fn download_s3_object(
         })?;
     if !response.status().is_success() {
         let status = response.status();
-        let _ = fs::remove_file(&temp_path);
         anyhow::bail!("failed to download GeoIP database from s3://{bucket}/{key}: HTTP {status}");
     }
-    {
-        let mut file = File::create(&temp_path)?;
-        io::copy(&mut response, &mut file)?;
-    }
-    fs::rename(&temp_path, destination).inspect_err(|_err| {
-        let _ = fs::remove_file(&temp_path);
-    })?;
+    let mut file = tempfile::Builder::new().make_in(parent, |path| File::create_new(path))?;
+    io::copy(&mut response, &mut file)?;
+    file.persist(destination).map_err(|err| err.error)?;
     Ok(())
-}
-
-fn temporary_download_path(destination: &Path) -> std::path::PathBuf {
-    let pid = std::process::id();
-    let now = OffsetDateTime::now_utc().unix_timestamp_nanos();
-    let file_name = destination
-        .file_name()
-        .and_then(|value| value.to_str())
-        .unwrap_or("geoip.mmdb");
-    destination.with_file_name(format!("{file_name}.tmp-{pid}-{now}"))
 }
 
 struct SignedS3Request {

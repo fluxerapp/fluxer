@@ -12,7 +12,8 @@ import {
 	TABLE_MAX_COLUMNS,
 	TABLE_MAX_IDENT_CHARS,
 	TABLE_WIDE_TIER_PX,
-} from '../src/table/DocsTableMetrics.ts';
+} from '@/table/DocsTableMetrics.ts';
+import {splitTableRow} from './DocsSource.ts';
 
 export {
 	columnWidthPercents,
@@ -53,34 +54,9 @@ export interface DocsTable {
 	readonly nonParallelReason: string;
 }
 
-function splitRow(line: string): Array<string> {
-	const cells: Array<string> = [];
-	let current = '';
-	const body = line.trim().replace(/^\|/u, '').replace(/\|$/u, '');
-	for (let index = 0; index < body.length; index += 1) {
-		const character = body[index];
-		if (character === '\\' && index + 1 < body.length) {
-			current += body[index + 1];
-			index += 1;
-			continue;
-		}
-		if (character === '|') {
-			cells.push(current);
-			current = '';
-			continue;
-		}
-		current += character;
-	}
-	cells.push(current);
-	return cells.map((cell) => cell.trim());
-}
-
-function isDelimiter(line: string): boolean {
-	const trimmed = line.trim();
-	if (!trimmed.startsWith('|')) {
-		return false;
-	}
-	return /^\|[\s:|-]+\|?$/u.test(trimmed) && trimmed.includes('-');
+function isDelimiter(line: string, columns: number): boolean {
+	const cells = splitTableRow(line);
+	return cells.length === columns && cells.every((cell) => /^:?-+:?$/u.test(cell));
 }
 
 function stripInline(text: string): string {
@@ -95,7 +71,8 @@ function stripInline(text: string): string {
 		.replace(/&nbsp;/gu, ' ')
 		.replace(/&lt;/gu, '<')
 		.replace(/&gt;/gu, '>')
-		.replace(/&amp;/gu, '&');
+		.replace(/&amp;/gu, '&')
+		.replace(/\\([!-/:-@[-`{-~])/gu, '$1');
 }
 
 function pieces(cell: string): Array<Piece> {
@@ -107,7 +84,10 @@ function pieces(cell: string): Array<Piece> {
 		if (match.index > last) {
 			out.push({text: stripInline(cell.slice(last, match.index)), code: false});
 		}
-		out.push({text: match[1], code: true});
+		out.push({
+			text: match[1].replace(/\\([\\|])/gu, (escaped, character: string) => (character === '|' ? character : escaped)),
+			code: true,
+		});
 		last = pattern.lastIndex;
 		match = pattern.exec(cell);
 	}
@@ -127,7 +107,7 @@ function cellKind(cell: string): string {
 	if (parts.length === 0) {
 		return 'empty';
 	}
-	if (parts.every((piece) => piece.code)) {
+	if (parts.every((piece) => piece.code || /^[\s,]+$/u.test(piece.text))) {
 		return 'code';
 	}
 	if (parts.every((piece) => !piece.code)) {
@@ -151,16 +131,20 @@ export function extractTables(source: string): Array<DocsTable> {
 			index += 1;
 			continue;
 		}
-		if (!lines[index].trim().startsWith('|') || index + 1 >= lines.length || !isDelimiter(lines[index + 1])) {
+		if (!lines[index].trim().startsWith('|') || index + 1 >= lines.length) {
 			index += 1;
 			continue;
 		}
-		const header = splitRow(lines[index]);
+		const header = splitTableRow(lines[index]);
+		if (header.length === 0 || !isDelimiter(lines[index + 1], header.length)) {
+			index += 1;
+			continue;
+		}
 		const start = index;
 		index += 2;
 		const body: Array<Array<string>> = [];
 		while (index < lines.length && lines[index].trim().startsWith('|')) {
-			body.push(splitRow(lines[index]));
+			body.push(splitTableRow(lines[index]));
 			index += 1;
 		}
 		const columns = header.length;

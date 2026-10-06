@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {IKVPipeline} from '@pkgs/kv_client/src/IKVProvider';
+import {createInvalidResponseError} from '@pkgs/kv_client/src/KVClientError';
 import {createStringEntriesFromPairs} from '@pkgs/kv_client/src/KVCommandArguments';
 import type {ChainableCommander} from 'ioredis';
 
 type PipelineExecResult = [Error | null, unknown];
+type PipelineCommandReply = [Error] | PipelineExecResult;
 
 interface KVPipelineOptions {
 	createCommander: () => ChainableCommander;
@@ -88,25 +90,27 @@ export class KVPipeline implements IKVPipeline {
 	async exec(): Promise<Array<PipelineExecResult>> {
 		const command = `${this.mode}.exec`;
 		try {
-			const rawResults = (await this.commander.exec()) as Array<PipelineExecResult> | null;
+			const commander = this.commander;
+			const expectedResults = commander.length - (this.mode === 'multi' ? 1 : 0);
 			this.commander = this.createCommander();
-			if (rawResults === null) {
-				return [];
+			const rawResults = await commander.exec();
+			if (!Array.isArray(rawResults) || rawResults.length !== expectedResults) {
+				throw createInvalidResponseError(command, `${expectedResults} command results`);
 			}
-			return rawResults.map((result: PipelineExecResult) => {
-				const [error, value] = result;
-				return [error ? normalizePipelineError(error) : null, value] as PipelineExecResult;
+			return Array.from(rawResults, (result: unknown): PipelineExecResult => {
+				if (!isPipelineCommandReply(result)) {
+					throw createInvalidResponseError(command, 'an error/value pair for every command');
+				}
+				return [result[0], result[1]];
 			});
 		} catch (error) {
-			this.commander = this.createCommander();
 			throw this.normalizeError(command, error);
 		}
 	}
 }
 
-function normalizePipelineError(error: unknown): Error {
-	if (error instanceof Error) {
-		return error;
-	}
-	return new Error(String(error));
+function isPipelineCommandReply(value: unknown): value is PipelineCommandReply {
+	if (!Array.isArray(value)) return false;
+	if (value[0] instanceof Error) return value.length === 1 || value.length === 2;
+	return value.length === 2 && value[0] === null && value[1] !== undefined;
 }

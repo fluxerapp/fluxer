@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {instanceCollectsDateOfBirth} from '../instance/DateOfBirthCollectionCache';
+import {instanceCollectsDateOfBirth} from '@app/api/instance/DateOfBirthCollectionCache';
 
 export function calculateAge(
 	dateOfBirth:

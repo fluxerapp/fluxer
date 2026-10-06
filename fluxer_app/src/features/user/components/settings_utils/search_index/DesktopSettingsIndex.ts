@@ -120,7 +120,7 @@ const TITLE_BAR_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TITLEBAR_DESCRIPTOR = msg({
-	message: 'Titlebar',
+	message: 'Title bar',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const NATIVE_TITLE_BAR_DESCRIPTOR = msg({
@@ -188,12 +188,20 @@ const MINIMIZE_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MINIMISE_DESCRIPTOR = msg({
-	message: 'Minimise',
+	message: 'Minimize',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const HIDE_WINDOW_DESCRIPTOR = msg({
 	message: 'Hide window',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const START_MINIMIZED_DESCRIPTOR = msg({
+	message: 'Start minimized',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+const START_IN_THE_TRAY_WHEN_LAUNCHED_AT_LOGIN_DESCRIPTOR = msg({
+	message: 'Start in the tray instead of opening the window when launched at login',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const HIDE_THE_WINDOW_WHEN_MINIMIZED_AND_REOPEN_FROM_DESCRIPTOR = msg({
 	message: 'Hide the window when minimized and reopen from the tray',
@@ -243,6 +251,24 @@ export const desktopSettingsIndex: Array<SearchableSettingDescriptor> = [
 			BOOT_DESCRIPTOR,
 		],
 		description: {...RUN_AUTOMATICALLY_WHEN_YOUR_COMPUTER_STARTS_DESCRIPTOR, values: {productName: PRODUCT_NAME}},
+		audience: 'primary',
+		tags: ['desktop'],
+		isVisible: isDesktop,
+	},
+	{
+		id: 'advanced-start-minimized',
+		tabType: 'desktop_settings',
+		label: START_MINIMIZED_DESCRIPTOR,
+		keywords: [
+			START_MINIMIZED_DESCRIPTOR,
+			MINIMIZE_DESCRIPTOR,
+			STARTUP_DESCRIPTOR,
+			LAUNCH_AT_LOGIN_2_DESCRIPTOR,
+			TRAY_DESCRIPTOR,
+			HIDE_WINDOW_DESCRIPTOR,
+			BACKGROUND_DESCRIPTOR,
+		],
+		description: START_IN_THE_TRAY_WHEN_LAUNCHED_AT_LOGIN_DESCRIPTOR,
 		audience: 'primary',
 		tags: ['desktop'],
 		isVisible: isDesktop,

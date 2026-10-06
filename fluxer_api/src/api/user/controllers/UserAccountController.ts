@@ -1,6 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {deleteRecoveryKit} from '@app/api/auth/AuthRecoveryKit';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {
+	RequireEmailAccountIdentity,
+	RequireUsernameAccountIdentity,
+} from '@app/api/middleware/AccountIdentityMiddleware';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {LocalAuthMiddleware} from '@app/api/middleware/LocalAuthMiddleware';
+import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {classifyWebPushOrigin} from '@app/api/user/services/WebPushOriginReplacement';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {isSsoUserWithoutPassword} from '@app/api/user/UserHelpers';
+import {
+	mapUserGuildSettingsToResponse,
+	mapUserSettingsToResponse,
+	mapUserToPrivateResponse,
+} from '@app/api/user/UserMappers';
+import {Validator} from '@app/api/Validator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
@@ -32,7 +60,9 @@ import {
 	UnregisterMobileDeviceRequest,
 	UserGuildSettingsUpdateRequest,
 	UserNoteUpdateRequest,
+	UserPasswordUpdateRequest,
 	UserProfileQueryRequest,
+	UserSettingsUpdateRequest,
 	UserTagCheckQueryRequest,
 	UserUpdateWithVerificationRequest,
 	VoiceActivitySharingUpdateRequest,
@@ -46,7 +76,6 @@ import {
 	PasswordChangeCompleteResponse,
 	PasswordChangeStartResponse,
 	PasswordChangeVerifyResponse,
-	PhoneGateEscapePreviewResponse,
 	PreloadMessagesResponse,
 	PushSubscribeResponse,
 	PushSubscriptionsListResponse,
@@ -55,34 +84,21 @@ import {
 	UserNoteResponse,
 	UserNotesRecordResponse,
 	UserPartialResponse,
+	UserPasswordUpdateResponse,
 	UserPrivateResponse,
 	UserProfileFullResponse,
 	UserSettingsResponse,
 	UserTagCheckResponse,
+	UserUpdateResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {uint8ArrayToBase64} from 'uint8array-extras';
-import * as AuthSession from '../../auth/AuthSession';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '../../middleware/AuthMiddleware';
-import {requireOAuth2ScopeForBearer} from '../../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
-import type {UserUpdateWithVerificationRequestData} from '../services/UserAccountRequestService';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
-import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse, mapUserToPrivateResponse} from '../UserMappers';
-import {UserSettingsUpdateRequest} from '../UserModel';
 
 export function UserAccountController(app: HonoApp) {
 	app.get(
 		'/users/@me',
 		RateLimitMiddleware(RateLimitConfigs.USER_SETTINGS_GET),
 		requireOAuth2ScopeForBearer('identify'),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		OpenAPI({
 			operationId: 'get_current_user',
 			summary: 'Get current user profile',
@@ -91,7 +107,7 @@ export function UserAccountController(app: HonoApp) {
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				"Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as phone, MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.",
+				"Retrieves the current authenticated user's profile information, including account details and settings. OAuth2 bearer tokens require identify scope, and email is returned only when the email scope is also present. Bearer tokens receive a reduced response: sensitive fields such as MFA status, authenticator types, ACLs, traits, premium billing details, and password metadata are omitted. Session and bot tokens return the full user object with all private fields.",
 		}),
 		async (ctx) => {
 			const userAccountRequestService = ctx.get('userAccountRequestService');
@@ -99,7 +115,6 @@ export function UserAccountController(app: HonoApp) {
 				userAccountRequestService.getCurrentUserResponse({
 					authTokenType: ctx.get('authTokenType'),
 					oauthBearerScopes: ctx.get('oauthBearerScopes'),
-					allowSuspicious: true,
 					user: ctx.get('user'),
 				}),
 			);
@@ -108,24 +123,24 @@ export function UserAccountController(app: HonoApp) {
 	app.patch(
 		'/users/@me',
 		RateLimitMiddleware(RateLimitConfigs.USER_UPDATE_SELF),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		SudoModeMiddleware,
 		Validator('json', UserUpdateWithVerificationRequest),
 		OpenAPI({
 			operationId: 'update_current_user',
 			summary: 'Update current user profile',
-			responseSchema: UserPrivateResponse,
+			responseSchema: UserUpdateResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				"Updates the authenticated user's profile information such as username, avatar, and bio. Requires sudo mode verification for security-sensitive changes. Only default users can modify their own profile.",
+				"Updates the authenticated user's profile information such as username, avatar, and bio. Requires sudo mode verification for security-sensitive changes. Only default users can modify their own profile. A password change invalidates all existing sessions and returns the replacement session token.",
 		}),
 		async (ctx) => {
 			const userAccountRequestService = ctx.get('userAccountRequestService');
 			const user = ctx.get('user');
-			const rawBody: UserUpdateWithVerificationRequestData = ctx.req.valid('json');
+			const rawBody: UserUpdateWithVerificationRequest = ctx.req.valid('json');
 			return ctx.json(
 				await userAccountRequestService.updateCurrentUser({
 					ctx,
@@ -139,8 +154,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/start',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_START),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmptyBodyRequest),
 		OpenAPI({
 			operationId: 'start_email_change',
@@ -161,8 +177,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/resend-original',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_RESEND_ORIGINAL),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmailChangeTicketRequest),
 		OpenAPI({
 			operationId: 'resend_original_email_confirmation',
@@ -184,8 +201,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/verify-original',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_VERIFY_ORIGINAL),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmailChangeVerifyOriginalRequest),
 		OpenAPI({
 			operationId: 'verify_original_email_address',
@@ -207,8 +225,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/request-new',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_REQUEST_NEW),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmailChangeRequestNewRequest),
 		OpenAPI({
 			operationId: 'request_new_email_address',
@@ -232,8 +251,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/resend-new',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_RESEND_NEW),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmailChangeTicketRequest),
 		OpenAPI({
 			operationId: 'resend_new_email_confirmation',
@@ -255,8 +275,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/verify-new',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_VERIFY_NEW),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmailChangeVerifyNewRequest),
 		OpenAPI({
 			operationId: 'verify_new_email_address',
@@ -280,8 +301,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/apply',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_APPLY),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		SudoModeMiddleware,
 		Validator('json', EmailChangeApplyRequest),
 		OpenAPI({
@@ -311,8 +333,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/bounced/request-new',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_BOUNCED_REQUEST_NEW),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmailChangeBouncedRequestNewRequest),
 		OpenAPI({
 			operationId: 'request_bounced_email_replacement',
@@ -334,8 +357,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/bounced/resend-new',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_BOUNCED_RESEND_NEW),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmailChangeTicketRequest),
 		OpenAPI({
 			operationId: 'resend_bounced_email_replacement_code',
@@ -357,8 +381,9 @@ export function UserAccountController(app: HonoApp) {
 	app.post(
 		'/users/@me/email-change/bounced/verify-new',
 		RateLimitMiddleware(RateLimitConfigs.USER_EMAIL_CHANGE_BOUNCED_VERIFY_NEW),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmailChangeBouncedVerifyNewRequest),
 		OpenAPI({
 			operationId: 'verify_bounced_email_replacement',
@@ -368,7 +393,7 @@ export function UserAccountController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Completes bounced-email recovery by verifying the replacement email code, updating the account email, and clearing email-related suspicious-activity requirements.',
+				'Completes bounced-email recovery by verifying the replacement email code, and updating the account email.',
 		}),
 		async (ctx) => {
 			const user = ctx.get('user');
@@ -389,6 +414,7 @@ export function UserAccountController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_PASSWORD_CHANGE_START),
 		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', EmptyBodyRequest),
 		OpenAPI({
 			operationId: 'start_password_change',
@@ -411,6 +437,7 @@ export function UserAccountController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_PASSWORD_CHANGE_RESEND),
 		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', PasswordChangeTicketRequest),
 		OpenAPI({
 			operationId: 'resend_password_change_code',
@@ -434,6 +461,7 @@ export function UserAccountController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_PASSWORD_CHANGE_VERIFY),
 		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', PasswordChangeVerifyRequest),
 		OpenAPI({
 			operationId: 'verify_password_change_code',
@@ -457,6 +485,7 @@ export function UserAccountController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_PASSWORD_CHANGE_COMPLETE),
 		LoginRequired,
 		DefaultUserOnly,
+		RequireEmailAccountIdentity,
 		Validator('json', PasswordChangeCompleteRequest),
 		OpenAPI({
 			operationId: 'complete_password_change',
@@ -478,6 +507,46 @@ export function UserAccountController(app: HonoApp) {
 			const replacement = await AuthSession.replaceCurrentAuthSession(apiContext, {
 				user,
 				currentAuthSession: authSession,
+				request: ctx.req.raw,
+			});
+			return ctx.json({
+				token: replacement.token,
+				auth_session_id_hash: replacement.newAuthSessionIdHash,
+			});
+		},
+	);
+	app.post(
+		'/users/@me/password',
+		RateLimitMiddleware(RateLimitConfigs.USER_PASSWORD_UPDATE),
+		LocalAuthMiddleware,
+		LoginRequired,
+		DefaultUserOnly,
+		RequireUsernameAccountIdentity,
+		SudoModeMiddleware,
+		Validator('json', UserPasswordUpdateRequest),
+		OpenAPI({
+			operationId: 'update_current_user_password',
+			summary: 'Change password',
+			responseSchema: UserPasswordUpdateResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Changes the password on instances where people sign in with a username. Requires sudo mode verification. Ends every other session, deletes the recovery kit and returns a token for a new session that replaces the current one. Fails with USERNAME_SIGN_IN_ONLY on email instances.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			if (isSsoUserWithoutPassword(user)) {
+				throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_NOT_SET);
+			}
+			await requireSudoMode(ctx, user, body, {issueSudoToken: false});
+			const updatedUser = await ctx.get('passwordChangeService').setPassword(user, body.new_password);
+			await ctx.get('userRepository').deleteAllPasswordResetTokens(user.id);
+			await deleteRecoveryKit(user.id);
+			const replacement = await AuthSession.replaceCurrentAuthSession(ctx.get('apiContext'), {
+				user: updatedUser,
+				currentAuthSession: ctx.get('authSession'),
 				request: ctx.req.raw,
 			});
 			return ctx.json({
@@ -510,7 +579,7 @@ export function UserAccountController(app: HonoApp) {
 			}
 			const taken = await ctx
 				.get('userService')
-				.accountService.lookupService.checkUsernameDiscriminatorAvailability({username, discriminator});
+				.accountService.lookupService.checkUsernameDiscriminatorAvailability({username, discriminator, currentUser});
 			return ctx.json({taken});
 		},
 	);
@@ -580,7 +649,7 @@ export function UserAccountController(app: HonoApp) {
 	app.get(
 		'/users/@me/settings',
 		RateLimitMiddleware(RateLimitConfigs.USER_SETTINGS_GET),
-		LoginRequiredAllowSuspicious,
+		LoginRequired,
 		DefaultUserOnly,
 		OpenAPI({
 			operationId: 'get_current_user_settings',
@@ -851,7 +920,7 @@ export function UserAccountController(app: HonoApp) {
 				'Registers a new push notification subscription for the current user. Takes push endpoint and encryption keys from a Web Push API subscription. Returns subscription ID for future reference.',
 		}),
 		async (ctx) => {
-			const {endpoint, keys, user_agent} = ctx.req.valid('json');
+			const {endpoint, keys, user_agent, installed_app} = ctx.req.valid('json');
 			const authSession = ctx.get('authSession');
 			const subscription = await ctx.get('userService').contentService.registerPushSubscription({
 				userId: ctx.get('user').id,
@@ -859,6 +928,8 @@ export function UserAccountController(app: HonoApp) {
 				endpoint,
 				keys,
 				userAgent: user_agent,
+				originKind: classifyWebPushOrigin(ctx.req.header('origin'), Config.instance.selfHosted),
+				installedApp: installed_app,
 			});
 			return ctx.json({subscription_id: subscription.subscriptionId});
 		},
@@ -880,7 +951,7 @@ export function UserAccountController(app: HonoApp) {
 				'Replaces an existing push subscription whose endpoint has been rotated by the browser (pushsubscriptionchange). Deletes the row keyed by the old endpoint and inserts a new one for the new endpoint.',
 		}),
 		async (ctx) => {
-			const {old_endpoint, endpoint, keys, user_agent} = ctx.req.valid('json');
+			const {old_endpoint, endpoint, keys, user_agent, installed_app} = ctx.req.valid('json');
 			const authSession = ctx.get('authSession');
 			const subscription = await ctx.get('userService').contentService.rotatePushSubscription({
 				userId: ctx.get('user').id,
@@ -889,6 +960,8 @@ export function UserAccountController(app: HonoApp) {
 				endpoint,
 				keys,
 				userAgent: user_agent,
+				originKind: classifyWebPushOrigin(ctx.req.header('origin'), Config.instance.selfHosted),
+				installedApp: installed_app,
 			});
 			return ctx.json({subscription_id: subscription.subscriptionId});
 		},
@@ -954,7 +1027,7 @@ export function UserAccountController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Registers a mobile push device token for APNs, Firebase Cloud Messaging, or UnifiedPush. UnifiedPush registrations include the endpoint URL plus Web Push encryption keys.',
+				'Registers a mobile push device for APNs, Firebase Cloud Messaging, or UnifiedPush. A Web Push registration sends the endpoint URL with encryption_key and auth_secret. A raw registration sends the platform push token with no keys.',
 		}),
 		async (ctx) => {
 			const authSession = ctx.get('authSession');
@@ -1175,55 +1248,6 @@ export function UserAccountController(app: HonoApp) {
 			return ctx.body(null, 202);
 		},
 	);
-	app.get(
-		'/users/@me/required-actions/phone-gate-escape',
-		RateLimitMiddleware(RateLimitConfigs.USER_PHONE_GATE_ESCAPE_PREVIEW),
-		LoginRequiredAllowSuspicious,
-		DefaultUserOnly,
-		OpenAPI({
-			operationId: 'get_phone_gate_escape',
-			summary: 'Preview setting the deferred phone check aside',
-			responseSchema: PhoneGateEscapePreviewResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description:
-				'Reports whether this account can set a deferred phone verification requirement aside, and which communities would be left if it did. Returns available false with empty lists for any account outside that state.',
-		}),
-		async (ctx) => {
-			const {available, guilds, ownedGuilds} = await ctx
-				.get('userService')
-				.accountService.lifecycleService.previewPhoneGateEscape(ctx.get('user').id);
-			return ctx.json({
-				available,
-				guilds: guilds.map((guild) => ({id: guild.id.toString(), name: guild.name})),
-				owned_guilds: ownedGuilds.map((guild) => ({id: guild.id.toString(), name: guild.name})),
-			});
-		},
-	);
-	app.post(
-		'/users/@me/required-actions/phone-gate-escape',
-		RateLimitMiddleware(RateLimitConfigs.USER_PHONE_GATE_ESCAPE),
-		LoginRequiredAllowSuspicious,
-		DefaultUserOnly,
-		Validator('json', EmptyBodyRequest),
-		OpenAPI({
-			operationId: 'execute_phone_gate_escape',
-			summary: 'Set the deferred phone check aside',
-			responseSchema: UserPrivateResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Users'],
-			description:
-				'Leaves the communities that trigger the deferred phone verification check and restores the deferral, so the account works normally again. Communities the user owns are kept, and a run that hits the per-call community limit leaves what it can and can be repeated. Returns the updated private user object.',
-		}),
-		async (ctx) => {
-			const {user} = await ctx
-				.get('userService')
-				.accountService.lifecycleService.executePhoneGateEscape(ctx.get('user').id);
-			return ctx.json(mapUserToPrivateResponse(user));
-		},
-	);
 	app.post(
 		'/users/@me/terms-acceptance',
 		RateLimitMiddleware(RateLimitConfigs.USER_UPDATE_SELF),
@@ -1271,6 +1295,7 @@ export function UserAccountController(app: HonoApp) {
 			if (!(user.flags & UserFlags.STAFF)) {
 				throw new MissingAccessError();
 			}
+			await ctx.get('storeEntitlementService').unbindAllForUser(user.id);
 			await ctx.get('userService').accountService.resetCurrentUserPremiumState(user);
 			return ctx.body(null, 204);
 		},

@@ -22,6 +22,7 @@ import {useContextMenuTrigger} from '@app/features/ui/hooks/useContextMenuTrigge
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon, ProhibitIcon} from '@phosphor-icons/react';
@@ -56,7 +57,8 @@ const GuildBansTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const {isOpen: isMenuOpen, withTracking} = useContextMenuTrigger();
 	const isMobile = MobileLayout.enabled;
 	const getRawTag = useCallback(
-		(ban: GuildBan) => ban.user.tag ?? `${ban.user.username}#${(ban.user.discriminator ?? '').padStart(4, '0')}`,
+		(ban: GuildBan) =>
+			ban.user.tag ?? formatUserTag({...ban.user, discriminator: (ban.user.discriminator ?? '').padStart(4, '0')}),
 		[],
 	);
 	const formatTag = useCallback((ban: GuildBan) => NicknameUtils.formatTagForStreamerMode(getRawTag(ban)), [getRawTag]);

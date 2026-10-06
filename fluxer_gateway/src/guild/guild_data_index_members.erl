@@ -147,6 +147,7 @@ put_member(Member, Data) when is_map(Member), is_map(Data) ->
             Data1 = Data#{
                 <<"members">> => NewMemberMap,
                 members_normalized => NewMemberMap,
+                member_list_revision => make_ref(),
                 <<"member_role_index">> => RoleIndex2
             },
             invalidate_sorted_member_ids(Data1)
@@ -160,6 +161,7 @@ put_member_map(MemberMap, Data) when is_map(MemberMap), is_map(Data) ->
     Data#{
         <<"members">> => NormalizedMemberMap,
         members_normalized => NormalizedMemberMap,
+        member_list_revision => make_ref(),
         members_sorted_ids => lists:sort(maps:keys(NormalizedMemberMap)),
         <<"member_role_index">> => build_member_role_index(NormalizedMemberMap)
     };
@@ -184,6 +186,7 @@ remove_member(UserId, Data) when is_integer(UserId), is_map(Data) ->
     Data1 = Data#{
         <<"members">> => RemovedMap,
         members_normalized => RemovedMap,
+        member_list_revision => make_ref(),
         <<"member_role_index">> => RoleIndex1
     },
     invalidate_sorted_member_ids(Data1);

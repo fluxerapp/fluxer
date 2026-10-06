@@ -14,9 +14,9 @@ export interface LoginSuccessPayload {
 
 export interface MfaChallenge {
 	ticket: string;
-	sms?: boolean;
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
 }
 
 export interface IpAuthorizationChallenge {
@@ -31,7 +31,7 @@ export type LoginResult =
 	| {type: 'ip_authorization'; challenge: IpAuthorizationChallenge}
 	| {type: 'suspended'; banViewToken: string};
 
-function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenResponse): LoginSuccessPayload {
+export function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenResponse): LoginSuccessPayload {
 	const userData = AuthenticationCommands.authResponseUserToUserData(response.user);
 	return {
 		token: response.token,
@@ -40,20 +40,13 @@ function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenRespons
 	};
 }
 
-export async function loginWithPassword({
-	email,
-	password,
-	inviteCode,
-}: {
-	email: string;
-	password: string;
-	inviteCode?: string;
-}): Promise<LoginResult> {
-	const response = await AuthenticationCommands.login({
-		email,
-		password,
-		inviteCode,
-	});
+export async function loginWithPassword(
+	params: AuthenticationCommands.LoginIdentifier & {
+		password: string;
+		inviteCode?: string;
+	},
+): Promise<LoginResult> {
+	const response = await AuthenticationCommands.login(params);
 	if (AuthenticationCommands.isIpAuthorizationRequiredResponse(response)) {
 		return {
 			type: 'ip_authorization',
@@ -75,9 +68,9 @@ export async function loginWithPassword({
 			type: 'mfa',
 			challenge: {
 				ticket: response.ticket,
-				sms: (response as {sms?: boolean}).sms ?? false,
 				totp: response.totp,
 				webauthn: response.webauthn,
+				backupCodes: response.backup_codes ?? false,
 			},
 		};
 	}
@@ -264,10 +257,43 @@ export async function resetPassword(token: string, password: string): Promise<Pa
 		type: 'mfa',
 		challenge: {
 			ticket: response.ticket,
-			sms: (response as {sms?: boolean}).sms ?? false,
 			totp: response.totp,
 			webauthn: response.webauthn,
+			backupCodes: response.backup_codes ?? false,
 		},
+	};
+}
+
+export interface IssuedRecoveryKit {
+	recoveryKey: string;
+	createdAt: string;
+}
+
+export type AccountRecoveryResult = PasswordResetResult & {kit: IssuedRecoveryKit};
+
+export async function recoverAccount({
+	login,
+	recoveryKey,
+	password,
+}: {
+	login: string;
+	recoveryKey: string;
+	password: string;
+}): Promise<AccountRecoveryResult> {
+	const response = await AuthenticationCommands.recoverAccount({login, recoveryKey, password});
+	const kit = {recoveryKey: response.recovery_key, createdAt: response.recovery_kit_created_at};
+	if ('token' in response) {
+		return {type: 'success', payload: toLoginSuccessPayload(response), kit};
+	}
+	return {
+		type: 'mfa',
+		challenge: {
+			ticket: response.ticket,
+			totp: response.totp,
+			webauthn: response.webauthn,
+			backupCodes: response.backup_codes ?? false,
+		},
+		kit,
 	};
 }
 

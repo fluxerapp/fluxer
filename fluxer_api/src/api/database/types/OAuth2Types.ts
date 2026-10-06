@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../../BrandedTypes';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
 
 export interface ApplicationRow {
 	application_id: ApplicationID;

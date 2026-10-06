@@ -61,7 +61,7 @@ fn serialize_asset_kind(route: TransformRoute, kind: Option<AssetKind>) -> &'sta
         (
             TransformRoute::Attachment | TransformRoute::External | TransformRoute::Stored,
             Some(_),
-        ) => panic!("a non-asset transform cache key cannot carry an asset kind"),
+        ) => panic!("a non-asset transform cache key cannot have an asset kind"),
     }
 }
 

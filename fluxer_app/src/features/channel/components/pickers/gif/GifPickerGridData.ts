@@ -2,11 +2,13 @@
 
 import {
 	type FavoriteGifEntry,
+	inferFormatContentType,
 	pickBestPreviewFormat,
 } from '@app/features/channel/components/pickers/gif/FavoriteGifTypes';
 import type {GifPickerGridItemData} from '@app/features/channel/components/pickers/gif/GifPickerTypes';
 import type {Gif, GifFeatured} from '@app/features/expressions/commands/GifCommands';
 import * as GifSlugUtils from '@app/features/expressions/utils/GifSlugUtils';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 
 const CATEGORY_TILE_WIDTH = 200;
 const CATEGORY_TILE_HEIGHT = 96;
@@ -31,6 +33,10 @@ export interface BuildGifPickerGridDataInput {
 	featuredFavoritePreviewSeed: number;
 	favoriteTitle: string;
 	trendingTitle: string;
+}
+
+function freshStoredUrl(url: string): string {
+	return AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true});
 }
 
 export function buildSkeletonGifPickerItems(count: number): Array<GifPickerGridItemData> {
@@ -67,11 +73,12 @@ function buildFavoriteGifItems(
 	for (let index = favoriteGifs.length - 1; index >= 0; index -= 1) {
 		const entry = favoriteGifs[index];
 		const best = pickBestPreviewFormat(entry.media);
-		const fallbackSrc = GifSlugUtils.isUsableMediaSource(entry.proxy_url) ? entry.proxy_url : '';
-		const previewSrc = best?.format.src ?? fallbackSrc;
-		const previewProxySrc = best?.format.proxy_src ?? fallbackSrc;
+		const fallbackSrc = GifSlugUtils.isUsableMediaSource(entry.proxy_url) ? freshStoredUrl(entry.proxy_url) : '';
+		const previewSrc = best ? freshStoredUrl(best.format.src) : fallbackSrc;
+		const previewProxySrc = best ? freshStoredUrl(best.format.proxy_src) : fallbackSrc;
 		const previewWidth = best?.format.width ?? entry.width;
 		const previewHeight = best?.format.height ?? entry.height;
+		const previewContentType = best ? inferFormatContentType(best.key) : entry.content_type;
 		items.push({
 			type: 'gif',
 			key: entry.url,
@@ -86,6 +93,7 @@ function buildFavoriteGifItems(
 				width: previewWidth > 0 ? previewWidth : DEFAULT_GIF_SIZE,
 				height: previewHeight > 0 ? previewHeight : DEFAULT_GIF_SIZE,
 				media: entry.media,
+				contentType: previewContentType,
 				favoriteGifLookup: {url: entry.url},
 			},
 		});
@@ -102,21 +110,28 @@ function buildFeaturedItems(input: BuildGifPickerGridDataInput): Array<GifPicker
 	const favoriteGifPreviewEntry =
 		favoriteGifPreviewIndex >= 0 ? input.favoriteGifs[favoriteGifPreviewIndex] : undefined;
 	const favoriteGifPreview = pickBestPreviewFormat(favoriteGifPreviewEntry?.media);
-	const favoriteMemePreview =
-		gifvMemes.length > 0
-			? (gifvMemes[Math.floor(input.featuredFavoritePreviewSeed * gifvMemes.length)]?.url ?? '')
-			: '';
-	const favoriteTilePreview =
-		input.useSavedMediaForGifFavorites && input.favoriteGifs.length === 0
-			? favoriteMemePreview
-			: favoriteGifPreview?.format.src || favoriteGifPreviewEntry?.proxy_url || favoriteGifPreviewEntry?.url || '';
-	const favoriteTileProxyPreview =
-		input.useSavedMediaForGifFavorites && input.favoriteGifs.length === 0
-			? favoriteTilePreview
-			: favoriteGifPreview?.format.proxy_src ||
-				favoriteGifPreviewEntry?.proxy_url ||
-				favoriteGifPreviewEntry?.url ||
-				'';
+	const favoriteMemeCandidate =
+		gifvMemes.length > 0 ? (gifvMemes[Math.floor(input.featuredFavoritePreviewSeed * gifvMemes.length)] ?? null) : null;
+	const favoriteMemePreview = favoriteMemeCandidate ? freshStoredUrl(favoriteMemeCandidate.url) : '';
+	const usesFavoriteMemePreview = input.useSavedMediaForGifFavorites && input.favoriteGifs.length === 0;
+	const favoriteTilePreview = usesFavoriteMemePreview
+		? favoriteMemePreview
+		: freshStoredUrl(
+				favoriteGifPreview?.format.src || favoriteGifPreviewEntry?.proxy_url || favoriteGifPreviewEntry?.url || '',
+			);
+	const favoriteTileProxyPreview = usesFavoriteMemePreview
+		? favoriteTilePreview
+		: freshStoredUrl(
+				favoriteGifPreview?.format.proxy_src ||
+					favoriteGifPreviewEntry?.proxy_url ||
+					favoriteGifPreviewEntry?.url ||
+					'',
+			);
+	const favoriteTileContentType = (() => {
+		if (usesFavoriteMemePreview) return favoriteMemeCandidate?.contentType ?? '';
+		if (favoriteGifPreview) return inferFormatContentType(favoriteGifPreview.key);
+		return favoriteGifPreviewEntry?.proxy_url ? favoriteGifPreviewEntry.content_type : '';
+	})();
 	const favoritesTile: Array<GifPickerGridItemData> =
 		(input.includeFavoritesTile ?? true)
 			? [
@@ -128,6 +143,7 @@ function buildFeaturedItems(input: BuildGifPickerGridDataInput): Array<GifPicker
 						title: input.favoriteTitle,
 						previewUrl: favoriteTilePreview,
 						previewProxySrc: favoriteTileProxyPreview,
+						previewContentType: favoriteTileContentType,
 						width: CATEGORY_TILE_WIDTH,
 						height: CATEGORY_TILE_HEIGHT,
 					},

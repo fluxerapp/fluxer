@@ -88,7 +88,9 @@ fn a_bt709_thumbnail_keeps_the_source_shadow_luminance() {
         .expect("bt709 shadow video should thumbnail");
     let (_, _, pixels) = decode_rgba(&thumb.bytes);
     let luma: Vec<f64> = pixels
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .map(|p| 0.2126 * f64::from(p[0]) + 0.7152 * f64::from(p[1]) + 0.0722 * f64::from(p[2]))
         .collect();
     let mean = luma.iter().sum::<f64>() / luma.len() as f64;

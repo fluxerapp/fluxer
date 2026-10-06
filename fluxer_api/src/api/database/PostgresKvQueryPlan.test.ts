@@ -2,17 +2,17 @@
 
 import cassandra from 'cassandra-driver';
 import {describe, expect, it} from 'vitest';
-import '../Tables';
-import {getTableMetadata} from './CassandraMetaRegistry';
-import {defineTable} from './CassandraTableDsl';
-import type {CassandraParams, PreparedQuery} from './CassandraTypes';
+import '@app/api/Tables';
+import {getTableMetadata} from '@app/api/database/CassandraMetaRegistry';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
+import type {CassandraParams, PreparedQuery} from '@app/api/database/CassandraTypes';
 import {
 	buildCandidatePlan,
 	type CandidatePlan,
 	keyFromColumns,
 	matchesWhere,
 	POSTGRES_KV_MIGRATION_TABLE,
-} from './PostgresKvQueryExecutor';
+} from '@app/api/database/PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 

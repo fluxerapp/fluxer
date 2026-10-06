@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, EmojiID, MessageID, UserID} from '../../BrandedTypes';
-import type {Message} from '../../models/Message';
-import type {MessageReaction} from '../../models/MessageReaction';
+import type {ChannelID, EmojiID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {Message} from '@app/api/models/Message';
+import type {MessageReaction} from '@app/api/models/MessageReaction';
 
 export abstract class IMessageInteractionRepository {
 	abstract listChannelPins(channelId: ChannelID, beforePinnedTimestamp: Date, limit?: number): Promise<Array<Message>>;

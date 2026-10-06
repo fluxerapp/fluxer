@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createOAuth2Application, createUniqueApplicationName} from '@app/api/oauth/tests/OAuth2TestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {CAPTCHA_TEST_HEADER, issueSolvedCaptchaToken, useCheapCaptcha} from '@app/api/test/CaptchaTestUtils';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createOAuth2Application, createUniqueApplicationName} from './OAuth2TestUtils';
 
 interface ValidationErrorResponse {
 	errors?: Array<{
@@ -16,19 +16,6 @@ interface ValidationErrorResponse {
 		code: string;
 		message: string;
 	}>;
-}
-
-async function withCaptchaEnabled<T>(run: () => Promise<T>): Promise<T> {
-	const previousEnabled = Config.captcha.enabled;
-	const previousTestModeEnabled = Config.dev.testModeEnabled;
-	Config.captcha.enabled = true;
-	Config.dev.testModeEnabled = true;
-	try {
-		return await run();
-	} finally {
-		Config.captcha.enabled = previousEnabled;
-		Config.dev.testModeEnabled = previousTestModeEnabled;
-	}
 }
 
 describe('OAuth2 Application Create', () => {
@@ -94,24 +81,24 @@ describe('OAuth2 Application Create', () => {
 	});
 	test('requires captcha when creating a bot application', async () => {
 		const account = await createTestAccount(harness);
-		await withCaptchaEnabled(async () =>
-			createBuilder(harness, account.token)
-				.post('/oauth2/applications')
-				.body({name: createUniqueApplicationName()})
-				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CAPTCHA_REQUIRED)
-				.execute(),
-		);
+		await useCheapCaptcha();
+		await createBuilder(harness, account.token)
+			.post('/oauth2/applications')
+			.header(CAPTCHA_TEST_HEADER, 'true')
+			.body({name: createUniqueApplicationName()})
+			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.CAPTCHA_REQUIRED)
+			.execute();
 	});
 	test('creates a bot application with a valid captcha token', async () => {
 		const account = await createTestAccount(harness);
-		await withCaptchaEnabled(async () =>
-			createBuilder(harness, account.token)
-				.post('/oauth2/applications')
-				.header('x-captcha-token', 'test-captcha-token')
-				.body({name: createUniqueApplicationName()})
-				.expect(HTTP_STATUS.OK)
-				.execute(),
-		);
+		await useCheapCaptcha();
+		await createBuilder(harness, account.token)
+			.post('/oauth2/applications')
+			.header(CAPTCHA_TEST_HEADER, 'true')
+			.header('x-captcha-token', await issueSolvedCaptchaToken(harness))
+			.body({name: createUniqueApplicationName()})
+			.expect(HTTP_STATUS.OK)
+			.execute();
 	});
 	test('rejects missing name', async () => {
 		const account = await createTestAccount(harness);

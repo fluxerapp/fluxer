@@ -74,9 +74,10 @@ impl RouterService for MessagesRouter {
                 include_reactions,
                 nonce,
                 tts,
+                include_hidden,
                 ..
             } => Some(format!(
-                "api-get:{channel_id}:{message_id}:{viewer_user_id}:{source_guild_id:?}:{message_history_cutoff_ms:?}:{can_read_message_history}:{media_endpoint}:{include_reactions:?}:{nonce:?}:{tts:?}"
+                "api-get:{channel_id}:{message_id}:{viewer_user_id}:{source_guild_id:?}:{message_history_cutoff_ms:?}:{can_read_message_history}:{media_endpoint}:{include_reactions:?}:{nonce:?}:{tts:?}:{include_hidden}"
             )),
             MessageRequest::BuildResponse { .. } => None,
             MessageRequest::BuildResponses { .. } => None,
@@ -92,9 +93,10 @@ impl RouterService for MessagesRouter {
                 can_read_message_history,
                 media_endpoint,
                 include_reactions,
+                include_hidden,
                 ..
             } => Some(format!(
-                "api-list:{channel_id}:{viewer_user_id}:{limit}:{before_id:?}:{after_id:?}:{around_id:?}:{source_guild_id:?}:{message_history_cutoff_ms:?}:{can_read_message_history}:{media_endpoint}:{include_reactions:?}"
+                "api-list:{channel_id}:{viewer_user_id}:{limit}:{before_id:?}:{after_id:?}:{around_id:?}:{source_guild_id:?}:{message_history_cutoff_ms:?}:{can_read_message_history}:{media_endpoint}:{include_reactions:?}:{include_hidden}"
             )),
             MessageRequest::ExtractMentions { .. } => None,
         }

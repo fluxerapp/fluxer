@@ -13,10 +13,18 @@ import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerFiel
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
+import {WarningAlert} from '@app/features/ui/warning_alert/WarningAlert';
 import {ThemeSelector} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent';
 import {LanguageSelector} from '@app/features/user/components/modals/tabs/LanguageTab';
 import * as LocaleUtils from '@app/features/user/utils/LocaleUtils';
+import {
+	type AccountIdentityMode,
+	AccountIdentityModes,
+	type TagStyle,
+	TagStyles,
+} from '@fluxer/constants/src/AccountIdentityConstants';
 import type {ThemeType} from '@fluxer/constants/src/UserConstants';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -26,6 +34,8 @@ import {AnimatePresence, motion, type Transition, useReducedMotion} from 'framer
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+
+const PUSH_RELAY_NOTICE_URL = 'https://fluxer.com/push-relay';
 
 export type RegistrationMode = 'open' | 'approval' | 'closed';
 export type PremiumMode = 'mirror' | 'everyone';
@@ -64,6 +74,93 @@ const THEME_TITLE_DESCRIPTOR = msg({
 const THEME_BODY_DESCRIPTOR = msg({
 	message: 'Pick the appearance this administrator account should start with.',
 	comment: 'Setup wizard body for choosing the initial account theme.',
+});
+const SIGN_IN_METHOD_TITLE_DESCRIPTOR = msg({
+	message: 'Choose how people sign in',
+	comment: 'Setup wizard title for choosing whether accounts use usernames or email addresses to sign in.',
+});
+const SIGN_IN_METHOD_BODY_DESCRIPTOR = msg({
+	message: 'You cannot change this once the first account exists.',
+	comment: 'Setup wizard body for the sign-in method step.',
+});
+const SIGN_IN_METHOD_USERNAME_NAME_DESCRIPTOR = msg({
+	message: 'Usernames (recommended)',
+	comment: 'Setup wizard option where people sign in with a username and password and no email is collected.',
+});
+const SIGN_IN_METHOD_USERNAME_DESC_DESCRIPTOR = msg({
+	message:
+		'People sign in with a username and password. No email address is collected. Each person can save a recovery kit in case they forget their password.',
+	comment: 'Description for the username sign-in option in the setup wizard.',
+});
+const SIGN_IN_METHOD_USERNAME_MOBILE_NOTICE_DESCRIPTOR = msg({
+	message: 'Username sign-in is still rolling out to the mobile apps. Full support on every platform is coming soon.',
+	comment: 'Warning shown in the setup wizard when the username sign-in option is selected. Keep it short and plain.',
+});
+const SIGN_IN_METHOD_EMAIL_NAME_DESCRIPTOR = msg({
+	message: 'Email',
+	comment: 'Setup wizard option where people sign in with an email address and password.',
+});
+const SIGN_IN_METHOD_EMAIL_DESC_DESCRIPTOR = msg({
+	message:
+		'People sign in with an email address and password. Password resets and verification need email delivery, which you can set up later.',
+	comment: 'Description for the email sign-in option in the setup wizard.',
+});
+const SIGN_IN_METHOD_USERNAME_SUMMARY_DESCRIPTOR = msg({
+	message: 'Usernames',
+	comment: 'Summary value on the setup wizard finish step when people sign in with a username.',
+});
+const TAG_STYLE_NONE_SUMMARY_DESCRIPTOR = msg({
+	message: 'No tags',
+	comment: 'Setup wizard finish summary value when usernames are unique and shown without a tag.',
+});
+const TAG_STYLE_RANDOM_SUMMARY_DESCRIPTOR = msg({
+	message: 'Random tags',
+	comment: 'Setup wizard finish summary value when every username gets a random four digit tag.',
+});
+const TAG_STYLE_TITLE_DESCRIPTOR = msg({
+	message: 'Username tags',
+	comment: 'Heading above the choice of how usernames are tagged in the setup wizard.',
+});
+const TAG_STYLE_NONE_NAME_DESCRIPTOR = msg({
+	message: 'No tags (recommended)',
+	comment: 'Setup wizard option where every username is unique and shown without a tag.',
+});
+const TAG_STYLE_NONE_EMAIL_DESC_DESCRIPTOR = msg({
+	message: 'Each name belongs to one person and shows on its own, like alex.',
+	comment: 'Description for the no tags option when people sign in with email. Keep the example name alex.',
+});
+const TAG_STYLE_RANDOM_NAME_DESCRIPTOR = msg({
+	message: 'Random tags',
+	comment: 'Setup wizard option where every username gets a random four digit tag.',
+});
+const TAG_STYLE_RANDOM_EMAIL_DESC_DESCRIPTOR = msg({
+	message: 'Names get a random tag, like alex#4821, so several people can share a name.',
+	comment: 'Description for the random tags option when people sign in with email. Keep alex#4821.',
+});
+const ADMIN_RECOVERY_KIT_TITLE_DESCRIPTOR = msg({
+	message: 'Save your recovery kit',
+	comment: 'Setup wizard title asking the administrator to create an account recovery kit.',
+});
+const ADMIN_RECOVERY_KIT_BODY_DESCRIPTOR = msg({
+	message:
+		'Your account has no email address. If you forget your password, a recovery kit is the only way back in. Create one now and keep it somewhere safe.',
+	comment: 'Setup wizard body explaining why the administrator needs a recovery kit.',
+});
+const ADMIN_RECOVERY_KIT_CREATE_DESCRIPTOR = msg({
+	message: 'Create recovery kit',
+	comment: 'Button in the setup wizard that creates a recovery kit for the administrator account.',
+});
+const ADMIN_RECOVERY_KIT_RECREATE_DESCRIPTOR = msg({
+	message: 'Create a new kit',
+	comment: 'Button in the setup wizard that replaces the administrator recovery kit with a new one.',
+});
+const ADMIN_RECOVERY_KIT_SAVED_DESCRIPTOR = msg({
+	message: 'Your recovery kit is ready. You can continue.',
+	comment: 'Status shown in the setup wizard once the administrator has a recovery kit.',
+});
+const ADMIN_RECOVERY_KIT_MISSING_DESCRIPTOR = msg({
+	message: 'Create a recovery kit to continue.',
+	comment: 'Status shown in the setup wizard while the administrator has no recovery kit.',
 });
 export const CREATE_ADMIN_ACCOUNT_DESCRIPTOR = msg({
 	message: 'Create administrator account',
@@ -153,6 +250,7 @@ const REGISTRATION_BODY_DESCRIPTOR = msg({
 });
 const REGISTRATION_OPEN_NAME_DESCRIPTOR = msg({
 	message: 'Open',
+	context: 'registration-policy',
 	comment: 'Registration mode option allowing anyone to register.',
 });
 const REGISTRATION_OPEN_DESC_DESCRIPTOR = msg({
@@ -214,7 +312,7 @@ const DISABLE_DM_DESC_DESCRIPTOR = msg({
 });
 
 const MEDIA_EXPIRY_TITLE_DESCRIPTOR = msg({
-	message: 'Attachment expiry',
+	message: 'Attachment expiration',
 	comment: 'Setup wizard media expiry step title.',
 });
 const MEDIA_EXPIRY_BODY_DESCRIPTOR = msg({
@@ -222,11 +320,11 @@ const MEDIA_EXPIRY_BODY_DESCRIPTOR = msg({
 	comment: 'Setup wizard media expiry step body.',
 });
 const MEDIA_EXPIRY_ENABLE_LABEL_DESCRIPTOR = msg({
-	message: 'Enable attachment expiry',
+	message: 'Enable attachment expiration',
 	comment: 'Label for enabling attachment expiry during setup.',
 });
 const MEDIA_EXPIRY_ENABLE_DESC_DESCRIPTOR = msg({
-	message: 'Disabled attachments remain available until manually removed.',
+	message: 'When attachment expiration is disabled, attachments remain available until manually removed.',
 	comment: 'Description for the attachment expiry setup switch.',
 });
 const MEDIA_MIN_SIZE_LABEL_DESCRIPTOR = msg({
@@ -250,7 +348,7 @@ const MEDIA_MAX_LIFETIME_LABEL_DESCRIPTOR = msg({
 	comment: 'Label for attachment decay maximum lifetime.',
 });
 const MEDIA_CURVE_LABEL_DESCRIPTOR = msg({
-	message: 'Expiry curve',
+	message: 'Expiration curve',
 	comment: 'Label for attachment decay curve.',
 });
 const MEDIA_RENEW_THRESHOLD_LABEL_DESCRIPTOR = msg({
@@ -260,6 +358,29 @@ const MEDIA_RENEW_THRESHOLD_LABEL_DESCRIPTOR = msg({
 const MEDIA_RENEW_WINDOW_LABEL_DESCRIPTOR = msg({
 	message: 'Renew window (days)',
 	comment: 'Label for attachment decay renewal window.',
+});
+
+const PUSH_RELAY_TITLE_DESCRIPTOR = msg({
+	message: 'Mobile push notifications',
+	comment: 'Setup wizard push relay consent step title.',
+});
+const PUSH_RELAY_BODY_DESCRIPTOR = msg({
+	message:
+		"The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement.",
+	comment: 'Setup wizard push relay consent step body.',
+});
+const PUSH_RELAY_ACCEPT_LABEL_DESCRIPTOR = msg({
+	message: 'Accept the push relay supplemental privacy notice',
+	comment: 'Label for the push relay consent switch during setup.',
+});
+const PUSH_RELAY_ACCEPT_DESC_DESCRIPTOR = msg({
+	message:
+		'Leaving this off keeps the relay unused and drops notifications to the official mobile apps. You can accept it later in the admin panel.',
+	comment: 'Description for the push relay consent switch during setup.',
+});
+const PUSH_RELAY_NOTICE_LINK_DESCRIPTOR = msg({
+	message: 'Read the supplemental privacy notice',
+	comment: 'Link to the push relay supplemental privacy notice shown during setup.',
 });
 
 const SERVICES_TITLE_DESCRIPTOR = msg({
@@ -312,7 +433,8 @@ const PREMIUM_MIRROR_NAME_DESCRIPTOR = msg({
 	comment: 'Premium model option that mirrors free and premium tiers.',
 });
 const PREMIUM_MIRROR_DESC_DESCRIPTOR = msg({
-	message: 'Keep Free and Premium tiers. You can customize the tiers later.',
+	message:
+		'Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel.',
 	comment: 'Description for the mirror premium model.',
 });
 const PREMIUM_EVERYONE_NAME_DESCRIPTOR = msg({
@@ -349,12 +471,28 @@ const SUMMARY_DIRECT_MESSAGES_DESCRIPTOR = msg({
 	comment: 'Summary row label for the direct messages choice in the setup wizard.',
 });
 const SUMMARY_ATTACHMENT_EXPIRY_DESCRIPTOR = msg({
-	message: 'Attachment expiry',
+	message: 'Attachment expiration',
 	comment: 'Summary row label for the attachment expiry choice in the setup wizard.',
+});
+const SUMMARY_PUSH_RELAY_DESCRIPTOR = msg({
+	message: 'Push relay notice',
+	comment: 'Summary row label for the push relay consent on the setup wizard finish step.',
 });
 const SUMMARY_PREMIUM_DESCRIPTOR = msg({
 	message: 'Premium model',
 	comment: 'Summary row label for the premium model in the setup wizard.',
+});
+const SUMMARY_SIGN_IN_METHOD_DESCRIPTOR = msg({
+	message: 'Sign-in method',
+	comment: 'Summary row label for how people sign in, on the setup wizard finish step.',
+});
+const SUMMARY_ACCEPTED_DESCRIPTOR = msg({
+	message: 'Accepted',
+	comment: 'Summary value when the operator accepted the push relay notice.',
+});
+const SUMMARY_NOT_ACCEPTED_DESCRIPTOR = msg({
+	message: 'Not accepted',
+	comment: 'Summary value when the operator left the push relay notice unaccepted.',
 });
 const SUMMARY_ON_DESCRIPTOR = msg({
 	message: 'Enabled',
@@ -556,6 +694,95 @@ export const ThemeStep = observer(
 	},
 );
 
+export const SignInMethodStep = observer(
+	({
+		mode,
+		tagStyle,
+		disabled,
+		error,
+		onChange,
+		onTagStyleChange,
+	}: {
+		mode: AccountIdentityMode;
+		tagStyle: TagStyle;
+		disabled: boolean;
+		error: string | null;
+		onChange: (mode: AccountIdentityMode) => void;
+		onTagStyleChange: (tagStyle: TagStyle) => void;
+	}) => {
+		const {i18n} = useLingui();
+		const options: ReadonlyArray<RadioOption<AccountIdentityMode>> = [
+			{
+				value: AccountIdentityModes.USERNAME,
+				name: i18n._(SIGN_IN_METHOD_USERNAME_NAME_DESCRIPTOR),
+				desc: i18n._(SIGN_IN_METHOD_USERNAME_DESC_DESCRIPTOR),
+			},
+			{
+				value: AccountIdentityModes.EMAIL,
+				name: i18n._(SIGN_IN_METHOD_EMAIL_NAME_DESCRIPTOR),
+				desc: i18n._(SIGN_IN_METHOD_EMAIL_DESC_DESCRIPTOR),
+			},
+		];
+		const usernameSignIn = mode === AccountIdentityModes.USERNAME;
+		const tagStyleOptions: ReadonlyArray<RadioOption<TagStyle>> = [
+			{
+				value: TagStyles.NONE,
+				name: i18n._(TAG_STYLE_NONE_NAME_DESCRIPTOR),
+				desc: i18n._(TAG_STYLE_NONE_EMAIL_DESC_DESCRIPTOR),
+			},
+			{
+				value: TagStyles.RANDOM,
+				name: i18n._(TAG_STYLE_RANDOM_NAME_DESCRIPTOR),
+				desc: i18n._(TAG_STYLE_RANDOM_EMAIL_DESC_DESCRIPTOR),
+			},
+		];
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.sign-in-method-step">
+				<StepHeader
+					title={i18n._(SIGN_IN_METHOD_TITLE_DESCRIPTOR)}
+					body={i18n._(SIGN_IN_METHOD_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.sign-in-method-step.step-header"
+				/>
+				<RadioGroup
+					options={options}
+					value={mode}
+					onChange={onChange}
+					disabled={disabled}
+					aria-label={i18n._(SIGN_IN_METHOD_TITLE_DESCRIPTOR)}
+					data-flx="app.self-hosted-setup-wizard-gate.sign-in-method-radio-group"
+				/>
+				{usernameSignIn && (
+					<WarningAlert data-flx="app.self-hosted-setup-wizard-gate.username-mobile-notice">
+						{i18n._(SIGN_IN_METHOD_USERNAME_MOBILE_NOTICE_DESCRIPTOR)}
+					</WarningAlert>
+				)}
+				{!usernameSignIn && (
+					<div className={styles.usernameStyle} data-flx="app.self-hosted-setup-wizard-gate.username-style">
+						<h3 className={styles.usernameStyleTitle}>{i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}</h3>
+						<RadioGroup
+							options={tagStyleOptions}
+							value={tagStyle}
+							onChange={onTagStyleChange}
+							disabled={disabled}
+							aria-label={i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}
+							data-flx="app.self-hosted-setup-wizard-gate.username-style-radio-group"
+						/>
+					</div>
+				)}
+				{error && (
+					<p
+						className={styles.submitError}
+						role="alert"
+						data-flx="app.self-hosted-setup-wizard-gate.sign-in-method-error"
+					>
+						{error}
+					</p>
+				)}
+			</section>
+		);
+	},
+);
+
 export const AdminIntroStep = observer(() => {
 	const {i18n} = useLingui();
 	return (
@@ -569,20 +796,22 @@ export const AdminIntroStep = observer(() => {
 	);
 });
 
-export const AdminAccountStep = observer(({theme}: {theme: ThemeType}) => {
+export const AdminAccountStep = observer(({theme, usernameSignIn}: {theme: ThemeType; usernameSignIn: boolean}) => {
 	const {i18n} = useLingui();
 	return (
 		<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.admin-account-step">
 			<div className={styles.accountSetupForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
 				<AuthRegisterFormCore
 					fields={{
-						showEmail: true,
+						showEmail: !usernameSignIn,
 						showPassword: true,
 						showPasswordConfirmation: true,
 						showUsernameValidation: true,
+						requireUsername: usernameSignIn,
 					}}
 					submitLabel={i18n._(CREATE_ADMIN_ACCOUNT_DESCRIPTOR)}
 					redirectPath=""
+					offerRecoveryKit={usernameSignIn}
 					theme={theme}
 					showLegalConsent={false}
 					data-flx="app.self-hosted-setup-wizard-gate.admin-register-form"
@@ -591,6 +820,34 @@ export const AdminAccountStep = observer(({theme}: {theme: ThemeType}) => {
 		</section>
 	);
 });
+
+export const AdminRecoveryKitStep = observer(
+	({hasRecoveryKit, creating, onCreate}: {hasRecoveryKit: boolean; creating: boolean; onCreate: () => void}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.centeredStep} data-flx="app.self-hosted-setup-wizard-gate.admin-recovery-kit-step">
+				<StepHeader
+					title={i18n._(ADMIN_RECOVERY_KIT_TITLE_DESCRIPTOR)}
+					body={i18n._(ADMIN_RECOVERY_KIT_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.admin-recovery-kit-step.step-header"
+				/>
+				<Button
+					variant={hasRecoveryKit ? 'secondary' : 'primary'}
+					submitting={creating}
+					onClick={onCreate}
+					data-flx="app.self-hosted-setup-wizard-gate.admin-recovery-kit-step.button.create"
+				>
+					{hasRecoveryKit
+						? i18n._(ADMIN_RECOVERY_KIT_RECREATE_DESCRIPTOR)
+						: i18n._(ADMIN_RECOVERY_KIT_CREATE_DESCRIPTOR)}
+				</Button>
+				<p className={styles.body} role="status" data-flx="app.self-hosted-setup-wizard-gate.admin-recovery-kit-status">
+					{hasRecoveryKit ? i18n._(ADMIN_RECOVERY_KIT_SAVED_DESCRIPTOR) : i18n._(ADMIN_RECOVERY_KIT_MISSING_DESCRIPTOR)}
+				</p>
+			</section>
+		);
+	},
+);
 
 export const LoadingStep = observer(() => {
 	const {i18n} = useLingui();
@@ -875,21 +1132,14 @@ export interface MediaExpiryDraft {
 	renewWindowDays: string;
 }
 
-export type IntegrationStepKind = 'gif' | 'youtube' | 'captcha' | 'email' | 'bluesky';
+export type IntegrationStepKind = 'gif' | 'youtube' | 'email' | 'bluesky';
 export type IntegrationSetupMode = 'later' | 'configure';
-export type CaptchaProvider = 'hcaptcha' | 'turnstile';
 
 export interface ServiceIntegrationDraft {
 	gifMode: IntegrationSetupMode;
 	klipyApiKey: string;
 	youtubeMode: IntegrationSetupMode;
 	youtubeApiKey: string;
-	captchaMode: IntegrationSetupMode;
-	captchaProvider: CaptchaProvider;
-	hcaptchaSiteKey: string;
-	hcaptchaSecretKey: string;
-	turnstileSiteKey: string;
-	turnstileSecretKey: string;
 	emailMode: IntegrationSetupMode;
 	emailEnabled: boolean;
 	emailFromEmail: string;
@@ -942,14 +1192,6 @@ const YOUTUBE_SETUP_BODY_DESCRIPTOR = msg({
 	message: 'Add a YouTube Data API key to enrich YouTube links.',
 	comment: 'Setup wizard body for YouTube integration credentials.',
 });
-const CAPTCHA_SETUP_TITLE_DESCRIPTOR = msg({
-	message: 'Bot protection',
-	comment: 'Setup wizard title for CAPTCHA integration credentials.',
-});
-const CAPTCHA_SETUP_BODY_DESCRIPTOR = msg({
-	message: 'Choose hCaptcha or Cloudflare Turnstile for signup challenges.',
-	comment: 'Setup wizard body for CAPTCHA integration credentials.',
-});
 const EMAIL_SETUP_TITLE_DESCRIPTOR = msg({
 	message: 'Email delivery',
 	comment: 'Setup wizard title for SMTP integration credentials.',
@@ -966,18 +1208,7 @@ const BLUESKY_SETUP_BODY_DESCRIPTOR = msg({
 	message: 'Add Bluesky OAuth client metadata and a signing key.',
 	comment: 'Setup wizard body for Bluesky integration credentials.',
 });
-const PROVIDER_LABEL_DESCRIPTOR = msg({
-	message: 'Provider',
-	comment: 'Label for an integration provider choice.',
-});
-const HCAPTCHA_NAME_DESCRIPTOR = msg({message: 'hCaptcha', comment: 'hCaptcha provider option.'});
-const TURNSTILE_NAME_DESCRIPTOR = msg({
-	message: 'Cloudflare Turnstile',
-	comment: 'Cloudflare Turnstile provider option.',
-});
 const API_KEY_LABEL_DESCRIPTOR = msg({message: 'API key', comment: 'Label for an integration API key input.'});
-const SITE_KEY_LABEL_DESCRIPTOR = msg({message: 'Site key', comment: 'Label for a CAPTCHA site key input.'});
-const SECRET_KEY_LABEL_DESCRIPTOR = msg({message: 'Secret key', comment: 'Label for a CAPTCHA secret key input.'});
 const ENABLE_EMAIL_LABEL_DESCRIPTOR = msg({
 	message: 'Enable email delivery',
 	comment: 'Label for enabling SMTP email delivery in setup.',
@@ -1005,6 +1236,10 @@ const SMTP_TEST_DESCRIPTOR = msg({
 const SMTP_TEST_OK_DESCRIPTOR = msg({
 	message: 'SMTP connection verified.',
 	comment: 'Success message after validating SMTP credentials.',
+});
+const SMTP_TEST_FAILED_DESCRIPTOR = msg({
+	message: 'SMTP validation failed.',
+	comment: 'Failure message after validating SMTP credentials when the server returns no error detail.',
 });
 const BLUESKY_ENABLED_LABEL_DESCRIPTOR = msg({
 	message: 'Enable Bluesky OAuth',
@@ -1062,8 +1297,6 @@ function getIntegrationMode(draft: ServiceIntegrationDraft, kind: IntegrationSte
 			return draft.gifMode;
 		case 'youtube':
 			return draft.youtubeMode;
-		case 'captcha':
-			return draft.captchaMode;
 		case 'email':
 			return draft.emailMode;
 		case 'bluesky':
@@ -1077,8 +1310,6 @@ function getIntegrationCopy(kind: IntegrationStepKind): {title: MessageDescripto
 			return {title: GIF_SETUP_TITLE_DESCRIPTOR, body: GIF_SETUP_BODY_DESCRIPTOR};
 		case 'youtube':
 			return {title: YOUTUBE_SETUP_TITLE_DESCRIPTOR, body: YOUTUBE_SETUP_BODY_DESCRIPTOR};
-		case 'captcha':
-			return {title: CAPTCHA_SETUP_TITLE_DESCRIPTOR, body: CAPTCHA_SETUP_BODY_DESCRIPTOR};
 		case 'email':
 			return {title: EMAIL_SETUP_TITLE_DESCRIPTOR, body: EMAIL_SETUP_BODY_DESCRIPTOR};
 		case 'bluesky':
@@ -1258,9 +1489,6 @@ export const IntegrationStep = observer(
 					case 'youtube':
 						onDraftChange({youtubeMode: next});
 						break;
-					case 'captcha':
-						onDraftChange({captchaMode: next});
-						break;
 					case 'email':
 						onDraftChange({emailMode: next});
 						break;
@@ -1271,10 +1499,6 @@ export const IntegrationStep = observer(
 			},
 			[kind, onDraftChange],
 		);
-		const captchaOptions: ReadonlyArray<RadioOption<CaptchaProvider>> = [
-			{value: 'hcaptcha', name: i18n._(HCAPTCHA_NAME_DESCRIPTOR), desc: i18n._(CAPTCHA_SETUP_BODY_DESCRIPTOR)},
-			{value: 'turnstile', name: i18n._(TURNSTILE_NAME_DESCRIPTOR), desc: i18n._(CAPTCHA_SETUP_BODY_DESCRIPTOR)},
-		];
 		return (
 			<section className={styles.step} data-flx={`app.self-hosted-setup-wizard-gate.integration-${kind}-step`}>
 				<StepHeader
@@ -1309,48 +1533,6 @@ export const IntegrationStep = observer(
 								disabled={disabled}
 								data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--2"
 							/>
-						)}
-						{kind === 'captcha' && (
-							<>
-								<div className={styles.fieldLabel} data-flx="app.setup.setup-wizard-steps.integration-step.field-label">
-									{i18n._(PROVIDER_LABEL_DESCRIPTOR)}
-								</div>
-								<RadioGroup
-									options={captchaOptions}
-									value={draft.captchaProvider}
-									onChange={(value) => onDraftChange({captchaProvider: value})}
-									disabled={disabled}
-									aria-label={i18n._(PROVIDER_LABEL_DESCRIPTOR)}
-									data-flx="app.setup.setup-wizard-steps.integration-step.radio-group.draft-change"
-								/>
-								<Input
-									label={i18n._(SITE_KEY_LABEL_DESCRIPTOR)}
-									value={draft.captchaProvider === 'hcaptcha' ? draft.hcaptchaSiteKey : draft.turnstileSiteKey}
-									onChange={(event) =>
-										onDraftChange(
-											draft.captchaProvider === 'hcaptcha'
-												? {hcaptchaSiteKey: event.target.value}
-												: {turnstileSiteKey: event.target.value},
-										)
-									}
-									disabled={disabled}
-									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change--3"
-								/>
-								<Input
-									label={i18n._(SECRET_KEY_LABEL_DESCRIPTOR)}
-									type="password"
-									value={draft.captchaProvider === 'hcaptcha' ? draft.hcaptchaSecretKey : draft.turnstileSecretKey}
-									onChange={(event) =>
-										onDraftChange(
-											draft.captchaProvider === 'hcaptcha'
-												? {hcaptchaSecretKey: event.target.value}
-												: {turnstileSecretKey: event.target.value},
-										)
-									}
-									disabled={disabled}
-									data-flx="app.setup.setup-wizard-steps.integration-step.input.draft-change.password"
-								/>
-							</>
 						)}
 						{kind === 'email' && (
 							<>
@@ -1443,7 +1625,11 @@ export const IntegrationStep = observer(
 											role="status"
 											data-flx="app.setup.setup-wizard-steps.integration-step.integration-status"
 										>
-											{smtpTestResult === 'ok' ? i18n._(SMTP_TEST_OK_DESCRIPTOR) : smtpTestResult}
+											{smtpTestResult === 'ok'
+												? i18n._(SMTP_TEST_OK_DESCRIPTOR)
+												: smtpTestResult === 'failed'
+													? i18n._(SMTP_TEST_FAILED_DESCRIPTOR)
+													: smtpTestResult}
 										</span>
 									)}
 								</div>
@@ -1517,6 +1703,40 @@ export const IntegrationStep = observer(
 						)}
 					</div>
 				)}
+			</section>
+		);
+	},
+);
+
+export const PushRelayConsentStep = observer(
+	({accepted, disabled, onChange}: {accepted: boolean; disabled: boolean; onChange: (value: boolean) => void}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.push-relay-consent-step">
+				<StepHeader
+					title={i18n._(PUSH_RELAY_TITLE_DESCRIPTOR)}
+					body={i18n._(PUSH_RELAY_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.push-relay-consent-step.step-header"
+				/>
+				<Switch
+					label={i18n._(PUSH_RELAY_ACCEPT_LABEL_DESCRIPTOR)}
+					description={i18n._(PUSH_RELAY_ACCEPT_DESC_DESCRIPTOR)}
+					value={accepted}
+					onChange={onChange}
+					disabled={disabled}
+					data-flx="app.self-hosted-setup-wizard-gate.push-relay-consent-switch"
+				/>
+				<FocusRing data-flx="app.setup.setup-wizard-steps.push-relay-consent-step.focus-ring">
+					<a
+						className={styles.noticeLink}
+						href={PUSH_RELAY_NOTICE_URL}
+						target="_blank"
+						rel="noreferrer"
+						data-flx="app.self-hosted-setup-wizard-gate.push-relay-notice-link"
+					>
+						{i18n._(PUSH_RELAY_NOTICE_LINK_DESCRIPTOR)}
+					</a>
+				</FocusRing>
 			</section>
 		);
 	},
@@ -1637,18 +1857,24 @@ const SummaryRow: React.FC<SummaryRowProps> = ({label, value}) => (
 export const FinishStep = observer(
 	({
 		productName,
+		accountIdentity,
+		tagStyle,
 		registrationMode,
 		singleCommunityEnabled,
 		directMessagesDisabled,
 		attachmentExpiryEnabled,
+		pushRelayConsentAccepted,
 		premiumMode,
 		submitError,
 	}: {
 		productName: string;
+		accountIdentity: AccountIdentityMode;
+		tagStyle: TagStyle;
 		registrationMode: RegistrationMode;
 		singleCommunityEnabled: boolean;
 		directMessagesDisabled: boolean;
 		attachmentExpiryEnabled: boolean;
+		pushRelayConsentAccepted: boolean;
 		premiumMode: PremiumMode;
 		submitError: string | null;
 	}) => {
@@ -1677,6 +1903,24 @@ export const FinishStep = observer(
 						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row"
 					/>
 					<SummaryRow
+						label={i18n._(SUMMARY_SIGN_IN_METHOD_DESCRIPTOR)}
+						value={
+							accountIdentity === AccountIdentityModes.USERNAME
+								? i18n._(SIGN_IN_METHOD_USERNAME_SUMMARY_DESCRIPTOR)
+								: i18n._(SIGN_IN_METHOD_EMAIL_NAME_DESCRIPTOR)
+						}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row.sign-in-method"
+					/>
+					{accountIdentity === AccountIdentityModes.EMAIL && (
+						<SummaryRow
+							label={i18n._(TAG_STYLE_TITLE_DESCRIPTOR)}
+							value={i18n._(
+								tagStyle === TagStyles.NONE ? TAG_STYLE_NONE_SUMMARY_DESCRIPTOR : TAG_STYLE_RANDOM_SUMMARY_DESCRIPTOR,
+							)}
+							data-flx="app.setup.setup-wizard-steps.finish-step.summary-row.username-style"
+						/>
+					)}
+					<SummaryRow
 						label={i18n._(SUMMARY_REGISTRATION_DESCRIPTOR)}
 						value={registrationLabel}
 						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--2"
@@ -1697,9 +1941,16 @@ export const FinishStep = observer(
 						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--5"
 					/>
 					<SummaryRow
+						label={i18n._(SUMMARY_PUSH_RELAY_DESCRIPTOR)}
+						value={
+							pushRelayConsentAccepted ? i18n._(SUMMARY_ACCEPTED_DESCRIPTOR) : i18n._(SUMMARY_NOT_ACCEPTED_DESCRIPTOR)
+						}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--6"
+					/>
+					<SummaryRow
 						label={i18n._(SUMMARY_PREMIUM_DESCRIPTOR)}
 						value={premiumLabel}
-						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--6"
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--7"
 					/>
 				</div>
 				{submitError && (

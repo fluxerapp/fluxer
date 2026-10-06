@@ -149,9 +149,16 @@ websocket_info(_, State) ->
     {ok, State}.
 
 -spec terminate(term(), cowboy_req:req(), state() | term()) -> ok.
-terminate(_Reason, _Req, State) when is_map(State) ->
-    terminate_with_state(eqwalizer:dynamic_cast(State));
+terminate(Reason, _Req, State) when is_map(State) ->
+    terminate_with_state(eqwalizer:dynamic_cast(State)),
+    exit_on_client_close(Reason);
 terminate(_Reason, _Req, _State) ->
+    ok.
+
+-spec exit_on_client_close(term()) -> ok.
+exit_on_client_close({remote, Code, _Payload}) when Code =:= 1000; Code =:= 1001 ->
+    exit({shutdown, client_closed});
+exit_on_client_close(_Reason) ->
     ok.
 
 -spec terminate_with_state(state()) -> ok.
@@ -254,11 +261,15 @@ handle_incoming_data(Data, #{encoding := Encoding, compress_ctx := CompressCtx0}
     ws_result().
 handle_decompressed_incoming_data(Data, Encoding, CompressCtx, State) ->
     MaxPayloadSize = constants:max_payload_size(),
-    case gateway_compress:decompress(Data, CompressCtx) of
+    case gateway_compress:decompress(Data, CompressCtx, MaxPayloadSize) of
         {ok, Decompressed, NewCompressCtx} when byte_size(Decompressed) =< MaxPayloadSize ->
             Decoded = gateway_codec:decode(Decompressed, Encoding),
             handle_decode(Decoded, State#{compress_ctx => NewCompressCtx});
         {ok, _Decompressed, _NewCompressCtx} ->
+            gateway_handler_encode:close_with_reason(
+                decode_error, <<"Payload too large">>, State
+            );
+        {error, decompression_too_large} ->
             gateway_handler_encode:close_with_reason(
                 decode_error, <<"Payload too large">>, State
             );

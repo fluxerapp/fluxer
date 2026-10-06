@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GifService} from '@app/api/gif/GifService';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {
 	GIF_PROVIDER_ATTRIBUTION_HEADER,
 	GIF_PROVIDER_DISPLAY_NAME_HEADER,
 	GIF_PROVIDER_HEADER,
 } from '@fluxer/schema/src/domains/gif/GifSchemas';
 import {createMiddleware} from 'hono/factory';
-import type {HonoEnv} from '../types/HonoEnv';
-import type {GifService} from './GifService';
 
 export const GifProviderHeaderMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	await next();

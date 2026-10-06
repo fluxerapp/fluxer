@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
+import {Logger} from '@app/api/Logger';
+import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../../channel/services/message/MessageHelpers';
-import {Logger} from '../../Logger';
-import {getExpiryBucket} from '../../utils/AttachmentDecay';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const BUCKET_LOOKBACK_DAYS = 3;
 const FETCH_LIMIT = 200;

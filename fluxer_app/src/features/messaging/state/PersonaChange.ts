@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
-import {comparer, makeAutoObservable, reaction} from 'mobx';
+import {compareStructural, makeAutoObservable, reaction} from 'mobx';
 
 class PersonaChange {
 	private editingMessageIds: Record<string, string> = {};
@@ -38,7 +37,7 @@ class PersonaChange {
 		return reaction(
 			() => Object.entries(this.editingMessageIds),
 			() => callback(),
-			{fireImmediately: true, equals: comparer.structural},
+			{fireImmediately: true, equals: compareStructural},
 		);
 	}
 }

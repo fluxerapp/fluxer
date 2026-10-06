@@ -4,7 +4,7 @@ import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
 import {normalizeVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type NormalizedVoiceState = Omit<
 	VoiceState,
@@ -200,6 +200,7 @@ function removeStaleSessionConnections(
 	for (const [connectionId, existing] of Object.entries(indexedGuildStates)) {
 		if (connectionId === voiceState.connection_id) continue;
 		if (existing.session_id !== voiceState.session_id) continue;
+		if (existing.channel_id !== voiceState.channel_id) continue;
 		next = removeConnection(next, connectionId);
 	}
 	return next;
@@ -360,7 +361,7 @@ export const voiceGatewayStateMachine = setup({
 export type VoiceGatewayStateSnapshot = SnapshotFrom<typeof voiceGatewayStateMachine>;
 
 export function createVoiceGatewayStateSnapshot(): VoiceGatewayStateSnapshot {
-	return getInitialSnapshot(voiceGatewayStateMachine);
+	return initialTransition(voiceGatewayStateMachine)[0];
 }
 
 export function transitionVoiceGatewayStateSnapshot(

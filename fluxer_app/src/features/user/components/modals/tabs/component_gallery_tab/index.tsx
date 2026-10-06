@@ -33,7 +33,7 @@ import type React from 'react';
 import {useCallback, useState} from 'react';
 
 const THIS_IS_SOME_EXAMPLE_TEXT_IN_THE_TEXTAREA_DESCRIPTOR = msg({
-	message: 'This is some example text in the textarea.',
+	message: 'This is some example text in the text area.',
 	comment: 'Description text in the index.',
 });
 const EDITABLE_TEXT_DESCRIPTOR = msg({

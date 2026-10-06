@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {CalendarDateType, IsoTimestampStringType} from '@fluxer/schema/src/primitives/DateValidators';
 import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {createStringType, SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
@@ -52,28 +53,17 @@ export type ListJobsRequest = z.infer<typeof ListJobsRequest>;
 
 const CURSOR_FIELD_NAMES = ['cursor_bucket_day', 'cursor_created_at', 'cursor_job_id'] as const;
 
-const BUCKET_DAY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-const ISO_TIMESTAMP_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/;
-
-function isCalendarDay(value: string): boolean {
-	return BUCKET_DAY_REGEX.test(value) && !Number.isNaN(new Date(`${value}T00:00:00Z`).getTime());
-}
-
-function isIsoTimestamp(value: string): boolean {
-	return ISO_TIMESTAMP_REGEX.test(value) && !Number.isNaN(new Date(value).getTime());
-}
-
 export const ListJobsQuery = z
 	.object({
 		limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 200}).describe(
 			'Maximum number of jobs to return (1-200, default 50)',
 		),
 		cursor_bucket_day: createStringType(10, 10)
-			.refine(isCalendarDay, ValidationErrorCodes.INVALID_FORMAT)
+			.refine((value) => CalendarDateType.safeParse(value).success, ValidationErrorCodes.INVALID_FORMAT)
 			.optional()
 			.describe('Day bucket to resume from as a YYYY-MM-DD UTC date, taken from next_cursor.bucket_day'),
 		cursor_created_at: createStringType(1, 64)
-			.refine(isIsoTimestamp, ValidationErrorCodes.INVALID_ISO_TIMESTAMP)
+			.refine((value) => IsoTimestampStringType.safeParse(value).success, ValidationErrorCodes.INVALID_ISO_TIMESTAMP)
 			.optional()
 			.describe('Creation time to resume before as an ISO 8601 timestamp, taken from next_cursor.created_at'),
 		cursor_job_id: SnowflakeStringType.optional().describe('Job to resume from, taken from next_cursor.job_id'),

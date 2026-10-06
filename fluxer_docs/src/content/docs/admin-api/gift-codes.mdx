@@ -10,13 +10,13 @@ Admin gift code generation issues [premium](/http-api/premium/) codes in bulk, e
 
 This resource has that one operation. No Admin operation lists, revokes, or redeems a code, or reports who redeemed one.
 
-:::caution[A self-hosted instance answers 403]
-The error code is `FEATURE_NOT_AVAILABLE_SELF_HOSTED`. Body validation runs first, so a request that also fails validation is refused by that failure.
+:::caution[A self-hosted instance needs the `mirror` premium mode]
+A self-hosted instance whose [premium mode](/admin-api/instance/#premium-modes) is `everyone` answers 403 `FEATURE_NOT_AVAILABLE_SELF_HOSTED`. Body validation runs first, so it answers a body that fails validation with 400 `INVALID_FORM_BODY`. Generated codes need no payment provider.
 :::
 
 ## Gift duration units
 
-The unit and the quantity together define the span a redeemed code grants. Fluxer adds the span to the redeemer's entitlement anchor at redemption time. Lifetime gifts are not supported.
+The unit and the quantity together define the span a redeemed code grants. At redemption, Fluxer adds the span to the entitlement anchor, which is the latest of the current time, the end of the redeemer's premium, and the end of any earlier gift extension. Lifetime gifts are not supported.
 
 | Value | Description |
 | --- | --- |
@@ -29,7 +29,7 @@ The unit and the quantity together define the span a redeemed code grants. Fluxe
 
 ## Create gift codes
 
-<RouteHeader method="POST" path="/v1/admin/gift-codes" />
+<RouteHeader method="POST" path="/v1/admin/gift-codes" auditReason />
 
 Generates the requested number of unredeemed gift codes. Requires `gift_codes:generate`. Returns the complete redemption links on success.
 
@@ -47,7 +47,7 @@ Generates the requested number of unredeemed gift codes. Requires `gift_codes:ge
 | --- | --- | --- |
 | codes<sup>1</sup> | array[string] | The complete redemption links, one for each generated code, in generation order |
 
-<sup>1</sup> Each entry is the instance's configured gift endpoint, with one trailing slash removed if present, followed by `/` and the code
+<sup>1</sup> Each link uses the instance's configured gift endpoint followed by `/` and the code
 
 ```json
 {
@@ -63,9 +63,9 @@ Generates the requested number of unredeemed gift codes. Requires `gift_codes:ge
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The codes were generated |
-| 403<sup>1</sup> | [error response](/admin-api/#error-response) | The account does not hold `admin:authenticate`, does not hold `gift_codes:generate`, or the instance is self-hosted |
+| 403<sup>1</sup> | [error response](/admin-api/#error-response) | The account lacks `admin:authenticate` or `gift_codes:generate`, or the instance is self-hosted in the `everyone` premium mode |
 
-<sup>1</sup> Returned as `MISSING_PERMISSIONS` without `admin:authenticate`, as `MISSING_ACL` with that but without `gift_codes:generate`, and as `FEATURE_NOT_AVAILABLE_SELF_HOSTED` on a self-hosted instance
+<sup>1</sup> Returned as `MISSING_PERMISSIONS` without `admin:authenticate`, as `MISSING_ACL` with that but without `gift_codes:generate`, and as `FEATURE_NOT_AVAILABLE_SELF_HOSTED` on a self-hosted instance in the `everyone` premium mode
 
 :::caution[The codes are returned once]
 Reading a code back requires presenting it to [Get gift](/http-api/gifts/#get-gift), so a lost response cannot be recovered.
@@ -75,9 +75,9 @@ Reading a code back requires presenting it to [Get gift](/http-api/gifts/#get-gi
 
 Each code is 32 characters drawn from the uppercase letters, the lowercase letters, and the digits. Fluxer creates it unredeemed and records the system account with ID `0` as its creator, which is the creator the [gift object](/http-api/gifts/#gift-object) reports to the redeemer.
 
-Fluxer writes the codes one at a time. A failure part way through leaves the codes already written redeemable while the response reports the failure. Those codes appear in no response.
+A failed request can leave some codes redeemable without returning them. Retrying can therefore create additional codes.
 
-The operation records no Admin audit entry and emits no Gateway Dispatch.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `generate_gift_codes`, target type `gift_code`, target ID `0`, and metadata keys `count`, `duration_type`, and `duration_quantity`. The codes are not recorded. It emits no Gateway Dispatch.
 
 ### Rate limit
 

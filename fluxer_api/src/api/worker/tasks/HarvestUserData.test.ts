@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
+import {User} from '@app/api/models/User';
+import {mapStorePurchaseToResponse} from '@app/api/store_billing/StoreBillingMappers';
+import {buildStorePurchaseRow} from '@app/api/store_billing/tests/StoreBillingTestUtils';
+import {buildUserDataJson, harvestMessages} from '@app/api/worker/tasks/HarvestUserData';
 import {describe, expect, it} from 'vitest';
-import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '../../BrandedTypes';
-import {harvestMessages} from './HarvestUserData';
 
 const AUTHOR = createUserID(1000000000000000000n);
 
@@ -64,5 +68,54 @@ describe('harvestMessages', () => {
 		const result = await harvestMessages(repo, AUTHOR, Date.now(), null);
 		expect(result.totalMessages).toBe(0);
 		expect(result.channelMessagesMap.size).toBe(0);
+	});
+});
+
+function userDataParams(overrides: Partial<Parameters<typeof buildUserDataJson>[0]> = {}) {
+	return {
+		user: new User({...EMPTY_USER_ROW, user_id: AUTHOR, username: 'exporter', discriminator: 1}),
+		userId: AUTHOR,
+		productName: 'Fluxer',
+		authSessions: [],
+		relationships: [],
+		userNotes: new Map(),
+		userSettings: null,
+		guildMemberships: [],
+		guildSettings: [],
+		savedMessages: [],
+		privateChannels: [],
+		favoriteMemes: [],
+		pushSubscriptions: [],
+		webAuthnCredentials: [],
+		mfaBackupCodes: [],
+		recoveryKitCreatedAt: null,
+		createdGiftCodes: [],
+		payments: [],
+		storePurchases: [],
+		oauthClients: [],
+		connections: [],
+		pinnedDms: [],
+		authorizedIps: [],
+		activityData: {last_active_at: null, last_active_ip: null},
+		...overrides,
+	};
+}
+
+describe('buildUserDataJson', () => {
+	it('exports the store purchases in their public shape', () => {
+		const purchase = buildStorePurchaseRow({user_id: AUTHOR});
+		const data = buildUserDataJson(userDataParams({storePurchases: [purchase]}));
+		expect(data.store_purchases).toEqual([mapStorePurchaseToResponse(purchase)]);
+	});
+
+	it('exports when the recovery kit was created and nothing else about it', () => {
+		const createdAt = new Date('2026-10-01T12:00:00.000Z');
+		const data = buildUserDataJson(userDataParams({recoveryKitCreatedAt: createdAt}));
+		expect(data.recovery_kit).toEqual({created_at: '2026-10-01T12:00:00.000Z'});
+	});
+
+	it('leaves the recovery kit out when the account has none', () => {
+		const data = buildUserDataJson(userDataParams());
+		expect('recovery_kit' in data).toBe(false);
 	});
 });

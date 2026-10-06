@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserSettingsRow} from '@app/api/database/types/UserTypes';
+import {UserCustomStatus} from '@app/api/models/UserCustomStatus';
+import {UserGuildFolder} from '@app/api/models/UserGuildFolder';
 import type {LocaleCode} from '@fluxer/constants/src/Locales';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
@@ -21,11 +26,6 @@ import {
 	UserExplicitContentFilterTypes,
 } from '@fluxer/constants/src/UserConstants';
 import {decodeSyncedPreferences} from '@fluxer/schema/src/domains/user/SyncedPreferencesCodec';
-import type {GuildID, UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {UserSettingsRow} from '../database/types/UserTypes';
-import {UserCustomStatus} from './UserCustomStatus';
-import {UserGuildFolder} from './UserGuildFolder';
 
 export class UserSettings {
 	readonly userId: UserID;
@@ -216,7 +216,7 @@ export class UserSettings {
 			friend_source_flags: friendSourceFlags,
 			incoming_call_flags: IncomingCallFlags.FRIENDS_ONLY,
 			group_dm_add_permission_flags: GroupDmAddPermissionFlags.FRIENDS_ONLY,
-			default_guilds_restricted: false,
+			default_guilds_restricted: true,
 			bot_default_guilds_restricted: false,
 			restricted_guilds: new Set(),
 			bot_restricted_guilds: new Set(),

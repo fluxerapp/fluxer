@@ -327,10 +327,10 @@ run_send_member_list_update_encodes_wire_payload() ->
         ?assert(false)
     end.
 
-broadcast_presence_delta_outside_list_payload_skips_sync_test() ->
-    with_sync_dispatch_mock(fun run_broadcast_presence_delta_outside_list_payload_skips_sync/0).
+broadcast_afk_only_change_skips_sync_test() ->
+    with_sync_dispatch_mock(fun run_broadcast_afk_only_change_skips_sync/0).
 
-run_broadcast_presence_delta_outside_list_payload_skips_sync() ->
+run_broadcast_afk_only_change_skips_sync() ->
     Ref = guild_member_list_engine:new(),
     try
         State = presence_delta_state(Ref),
@@ -338,8 +338,8 @@ run_broadcast_presence_delta_outside_list_payload_skips_sync() ->
             1,
             State,
             State,
-            presence_map(<<"online">>, false, null),
-            presence_map(<<"online">>, true, null)
+            presence_map(<<"online">>, false, false, null),
+            presence_map(<<"online">>, false, true, null)
         ),
         ?assertEqual(State, NewState),
         assert_no_sync_dispatch()
@@ -416,10 +416,13 @@ presence_delta_state(Ref) ->
     channel_list_state(Ref, make_subs_tab([{<<"500">>, <<"s1">>, [{0, 99}]}]), [Member]).
 
 presence_map(Status, Mobile, CustomStatus) ->
+    presence_map(Status, Mobile, false, CustomStatus).
+
+presence_map(Status, Mobile, Afk, CustomStatus) ->
     #{
         <<"status">> => Status,
         <<"mobile">> => Mobile,
-        <<"afk">> => false,
+        <<"afk">> => Afk,
         <<"custom_status">> => CustomStatus
     }.
 

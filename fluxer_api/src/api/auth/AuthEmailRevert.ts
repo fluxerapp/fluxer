@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {createEmailRevertToken} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
-import type {ApiContext} from '../ApiContext';
-import {createEmailRevertToken} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {getUserSearchService} from '../SearchFactory';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import * as AuthPassword from './AuthPassword';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
 
 interface IssueEmailRevertTokenParams {
 	user: User;
@@ -75,6 +73,7 @@ export async function revertEmailChange(
 		},
 		user.toRow(),
 	);
+	await users.deleteAllPasswordResetTokens(user.id);
 	await users.deleteEmailRevertToken(token);
 	await users.deleteAllMfaBackupCodes(user.id);
 	await users.deleteAllWebAuthnCredentials(user.id);
@@ -87,14 +86,6 @@ export async function revertEmailChange(
 			clientIpHeaderName: config.proxy.client_ip_header,
 		}),
 	);
-	const userSearchService = getUserSearchService();
-	if (userSearchService && updatedUser && 'updateUser' in userSearchService) {
-		await userSearchService
-			.updateUser(updatedUser)
-			.catch((error) =>
-				Logger.debug({error, userId: updatedUser.id}, 'Failed to update search index after email revert'),
-			);
-	}
 	await gateway.dispatchPresence({
 		userId: updatedUser.id,
 		event: 'USER_UPDATE',

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {generateKeyPairSync} from 'node:crypto';
+import {ApnsPushServiceTestHooks, ensureApnsSigningKey} from '@app/api/push/ApnsPushService';
 import {describe, expect, it} from 'vitest';
-import {ApnsPushServiceTestHooks, ensureApnsSigningKey} from '../ApnsPushService';
 
 function pkcs8Pem(der: Buffer): string {
 	const base64 = der.toString('base64');
@@ -139,7 +139,7 @@ describe('ApnsPushService', () => {
 			notification: {title: 'Alice', body: 'Hello', icon: 'https://cdn.example/avatar.png'},
 		});
 		expect(payload.image_url).toBeUndefined();
-		expect(payload.aps).not.toHaveProperty('mutable-content');
+		expect(payload.aps).toHaveProperty('mutable-content', 1);
 		expect(payload.author_avatar_url).toBe('https://cdn.example/avatar.png');
 	});
 	it('imports the APNs signing key once per PEM and rejects a truncated one every time', async () => {

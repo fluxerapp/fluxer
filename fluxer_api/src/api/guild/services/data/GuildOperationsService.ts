@@ -1,5 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createRoleID, guildIdToRoleId} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import {
+	type ChannelFollowerRemovalCopyMode,
+	scheduleDeletedChannelFollowerRemoval,
+} from '@app/api/channel/services/ChannelFollowers';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
+import type {PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '@app/api/guild/GuildModel';
+import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Guild} from '@app/api/models/Guild';
+import type {User} from '@app/api/models/User';
+import {getGuildSearchService} from '@app/api/SearchFactory';
+import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
+import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {Channels, ChannelsByGuild, GuildMembers, GuildMembersByUserId, GuildRoles, Guilds} from '@app/api/Tables';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapUserSettingsToResponse} from '@app/api/user/UserMappers';
+import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '@app/api/user/utils/GuildFolderUtils';
+import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ALL_PERMISSIONS, ChannelTypes, DEFAULT_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
@@ -10,12 +46,15 @@ import {
 	GuildSplashCardAlignment,
 	GuildVerificationLevel,
 	JoinSourceTypes,
+	resolveVoiceChannelBitrate,
 	SystemChannelFlags,
 } from '@fluxer/constants/src/GuildConstants';
 import {
 	MAX_GUILD_CHANNELS,
 	MAX_GUILD_ROLES,
+	VOICE_CHANNEL_BITRATE_DEFAULT,
 	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
+	VOICE_CHANNEL_USER_LIMIT_MAX,
 } from '@fluxer/constants/src/LimitConstants';
 import {DEFAULT_GUILD_FOLDER_ICON} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -36,49 +75,28 @@ import type {
 	TemplateSerializedGuild,
 } from '@fluxer/schema/src/domains/guild/GuildTemplateSchemas';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import type {ChannelID, GuildID, RoleID, UserID} from '../../../BrandedTypes';
-import {createChannelID, createGuildID, createRoleID, guildIdToRoleId} from '../../../BrandedTypes';
-import type {IChannelRepository} from '../../../channel/IChannelRepository';
-import type {ChannelService} from '../../../channel/services/ChannelService';
-import {BatchBuilder} from '../../../database/CassandraQueryExecution';
-import type {PermissionOverwrite} from '../../../database/types/ChannelTypes';
-import type {GuildRow} from '../../../database/types/GuildTypes';
-import {contentModerationService} from '../../../infrastructure/ContentModerationService';
-import type {EntityAssetService, PreparedAssetUpload} from '../../../infrastructure/EntityAssetService';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {InviteRepository} from '../../../invite/InviteRepository';
-import {Logger} from '../../../Logger';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import {Guild} from '../../../models/Guild';
-import type {User} from '../../../models/User';
-import {getGuildSearchService} from '../../../SearchFactory';
-import type {GuildDiscoveryContext} from '../../../search/guild/GuildSearchSerializer';
-import {deleteChannelMessageSearchDocuments} from '../../../search/MessageSearchIndexCleanup';
-import {Channels, ChannelsByGuild, GuildMembers, GuildMembersByUserId, GuildRoles, Guilds} from '../../../Tables';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {mapUserSettingsToResponse} from '../../../user/UserMappers';
-import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '../../../user/utils/GuildFolderUtils';
-import type {IWebhookRepository} from '../../../webhook/IWebhookRepository';
-import {mapGuildToGuildResponse, mapGuildToPartialResponse} from '../../GuildModel';
-import type {IGuildDiscoveryRepository} from '../../repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import type {GuildDataHelpers} from './GuildDataHelpers';
 
-const DEFAULT_TEXT_CATEGORY_NAME = 'Text Channels';
-const DEFAULT_VOICE_CATEGORY_NAME = 'Voice Channels';
-const DEFAULT_TEXT_CHANNEL_NAME = 'general';
-const DEFAULT_VOICE_CHANNEL_NAME = 'General';
-
-interface PreparedGuildAssets {
-	icon: PreparedAssetUpload | null;
-	banner: PreparedAssetUpload | null;
-	splash: PreparedAssetUpload | null;
-	embed_splash: PreparedAssetUpload | null;
-}
+const GUILD_IMAGE_FIELDS = [
+	{field: 'icon', hash: 'icon_hash', dimensions: null, gate: null},
+	{
+		field: 'banner',
+		hash: 'banner_hash',
+		dimensions: {width: 'banner_width', height: 'banner_height'},
+		gate: {feature: GuildFeatures.BANNER, error: ValidationErrorCodes.GUILD_BANNER_REQUIRES_FEATURE},
+	},
+	{
+		field: 'splash',
+		hash: 'splash_hash',
+		dimensions: {width: 'splash_width', height: 'splash_height'},
+		gate: {feature: GuildFeatures.INVITE_SPLASH, error: ValidationErrorCodes.INVITE_SPLASH_REQUIRES_FEATURE},
+	},
+	{
+		field: 'embed_splash',
+		hash: 'embed_splash_hash',
+		dimensions: {width: 'embed_splash_width', height: 'embed_splash_height'},
+		gate: {feature: GuildFeatures.INVITE_SPLASH, error: ValidationErrorCodes.EMBED_SPLASH_REQUIRES_FEATURE},
+	},
+] as const;
 
 interface TemplateGuildSettings {
 	verificationLevel: number;
@@ -104,11 +122,39 @@ const USER_TOGGLEABLE_GUILD_FEATURES: ReadonlySet<string> = new Set([
 	GuildFeatures.INVITES_DISABLED,
 	GuildFeatures.TEXT_CHANNEL_FLEXIBLE_NAMES,
 	GuildFeatures.DETACHED_BANNER,
-	GuildFeatures.CLONE_EMOJI_DISABLED,
-	GuildFeatures.CLONE_STICKER_DISABLED,
+	GuildFeatures.CLONE_EMOJI_ENABLED,
+	GuildFeatures.CLONE_STICKER_ENABLED,
 	GuildFeatures.HIDE_OWNER_CROWN,
 ]);
 const SUPPORTED_SYSTEM_CHANNEL_FLAGS = SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS;
+const GUILD_SETTINGS_AUDIT_KEYS: ReadonlySet<string> = new Set([
+	'name',
+	'icon_hash',
+	'banner_hash',
+	'banner_width',
+	'banner_height',
+	'splash_hash',
+	'splash_width',
+	'splash_height',
+	'splash_card_alignment',
+	'embed_splash_hash',
+	'embed_splash_width',
+	'embed_splash_height',
+	'features',
+	'verification_level',
+	'mfa_level',
+	'nsfw_level',
+	'nsfw',
+	'content_warning_level',
+	'content_warning_text',
+	'explicit_content_filter',
+	'default_message_notifications',
+	'system_channel_id',
+	'system_channel_flags',
+	'afk_channel_id',
+	'afk_timeout',
+	'message_history_cutoff',
+]);
 
 function setsEqual(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 	if (a === b) return true;
@@ -121,8 +167,11 @@ function setsEqual(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 
 const TEMPLATE_AFK_TIMEOUT_MIN_SECONDS = 60;
 const TEMPLATE_AFK_TIMEOUT_MAX_SECONDS = 3600;
-const THE_OTHER_PLATFORM_GUILD_ANNOUNCEMENT_CHANNEL_TYPE = 5;
 const THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE = 13;
+
+function isSystemChannelType(type: number): boolean {
+	return type === ChannelTypes.GUILD_TEXT || type === ChannelTypes.GUILD_ANNOUNCEMENT;
+}
 
 export class GuildOperationsService {
 	constructor(
@@ -249,7 +298,7 @@ export class GuildOperationsService {
 		},
 		_auditLogReason?: string | null,
 	): Promise<GuildResponse> {
-		const {user, data} = params;
+		const {user, data, locale = null} = params;
 		if (user.isBot) {
 			throw new BotsCannotCreateGuildsError();
 		}
@@ -292,11 +341,11 @@ export class GuildOperationsService {
 		let systemChannelId: ChannelID;
 		if (data.template) {
 			const templateBatch = new BatchBuilder();
-			const templateResult = await this.buildTemplateEntities(guildId, data.template, templateBatch);
+			const templateResult = await this.buildTemplateEntities(guildId, data.template, templateBatch, locale);
 			systemChannelId = templateResult.systemChannelId;
 			await templateBatch.executeChunked(50);
 		} else {
-			const defaultResult = await this.buildDefaultEntities(guildId, batch);
+			const defaultResult = await this.buildDefaultEntities(guildId, batch, locale);
 			systemChannelId = defaultResult.systemChannelId;
 		}
 		const guildData: GuildRow = {
@@ -449,129 +498,9 @@ export class GuildOperationsService {
 		}
 		const updatedFeatures = this.computeUpdatedFeatures(previousFeatures, data.features);
 		const featuresChanged = !setsEqual(previousFeatures, updatedFeatures);
-		const preparedAssets: PreparedGuildAssets = {icon: null, banner: null, splash: null, embed_splash: null};
 		const patch: Partial<GuildRow> = {};
 		if (data.name !== undefined) {
 			patch.name = data.name;
-		}
-		if (data.icon !== undefined) {
-			preparedAssets.icon = await this.entityAssetService.prepareAssetUpload({
-				assetType: 'icon',
-				entityType: 'guild',
-				entityId: guildId,
-				previousHash: currentGuild.iconHash,
-				base64Image: data.icon,
-				errorPath: 'icon',
-			});
-			patch.icon_hash = preparedAssets.icon.newHash;
-		}
-		if (data.banner !== undefined) {
-			if (data.banner && !currentGuild.features.has(GuildFeatures.BANNER)) {
-				await this.rollbackPreparedAssets(preparedAssets);
-				throw InputValidationError.fromCode('banner', ValidationErrorCodes.GUILD_BANNER_REQUIRES_FEATURE);
-			}
-			if (data.banner === null) {
-				patch.banner_hash = null;
-				patch.banner_width = null;
-				patch.banner_height = null;
-			} else {
-				try {
-					preparedAssets.banner = await this.entityAssetService.prepareAssetUpload({
-						assetType: 'banner',
-						entityType: 'guild',
-						entityId: guildId,
-						previousHash: currentGuild.bannerHash,
-						base64Image: data.banner,
-						errorPath: 'banner',
-					});
-					if (preparedAssets.banner.isAnimated && !currentGuild.features.has(GuildFeatures.ANIMATED_BANNER)) {
-						await this.rollbackPreparedAssets(preparedAssets);
-						throw InputValidationError.fromCode('banner', ValidationErrorCodes.ANIMATED_GUILD_BANNER_REQUIRES_FEATURE);
-					}
-					patch.banner_hash = preparedAssets.banner.newHash;
-					patch.banner_height =
-						preparedAssets.banner.newHash === currentGuild.bannerHash && currentGuild.bannerHeight != null
-							? currentGuild.bannerHeight
-							: (preparedAssets.banner.height ?? null);
-					patch.banner_width =
-						preparedAssets.banner.newHash === currentGuild.bannerHash && currentGuild.bannerWidth != null
-							? currentGuild.bannerWidth
-							: (preparedAssets.banner.width ?? null);
-				} catch (error) {
-					await this.rollbackPreparedAssets(preparedAssets);
-					throw error;
-				}
-			}
-		}
-		if (data.splash !== undefined) {
-			if (data.splash && !currentGuild.features.has(GuildFeatures.INVITE_SPLASH)) {
-				await this.rollbackPreparedAssets(preparedAssets);
-				throw InputValidationError.fromCode('splash', ValidationErrorCodes.INVITE_SPLASH_REQUIRES_FEATURE);
-			}
-			if (data.splash === null) {
-				patch.splash_hash = null;
-				patch.splash_width = null;
-				patch.splash_height = null;
-			} else {
-				try {
-					preparedAssets.splash = await this.entityAssetService.prepareAssetUpload({
-						assetType: 'splash',
-						entityType: 'guild',
-						entityId: guildId,
-						previousHash: currentGuild.splashHash,
-						base64Image: data.splash,
-						errorPath: 'splash',
-					});
-					patch.splash_hash = preparedAssets.splash.newHash;
-					patch.splash_height =
-						preparedAssets.splash.newHash === currentGuild.splashHash && currentGuild.splashHeight != null
-							? currentGuild.splashHeight
-							: (preparedAssets.splash.height ?? null);
-					patch.splash_width =
-						preparedAssets.splash.newHash === currentGuild.splashHash && currentGuild.splashWidth != null
-							? currentGuild.splashWidth
-							: (preparedAssets.splash.width ?? null);
-				} catch (error) {
-					await this.rollbackPreparedAssets(preparedAssets);
-					throw error;
-				}
-			}
-		}
-		if (data.embed_splash !== undefined) {
-			if (data.embed_splash && !currentGuild.features.has(GuildFeatures.INVITE_SPLASH)) {
-				await this.rollbackPreparedAssets(preparedAssets);
-				throw InputValidationError.fromCode('embed_splash', ValidationErrorCodes.EMBED_SPLASH_REQUIRES_FEATURE);
-			}
-			if (data.embed_splash === null) {
-				patch.embed_splash_hash = null;
-				patch.embed_splash_width = null;
-				patch.embed_splash_height = null;
-			} else {
-				try {
-					preparedAssets.embed_splash = await this.entityAssetService.prepareAssetUpload({
-						assetType: 'embed_splash',
-						entityType: 'guild',
-						entityId: guildId,
-						previousHash: currentGuild.embedSplashHash,
-						base64Image: data.embed_splash,
-						errorPath: 'embed_splash',
-					});
-					patch.embed_splash_hash = preparedAssets.embed_splash.newHash;
-					patch.embed_splash_height =
-						preparedAssets.embed_splash.newHash === currentGuild.embedSplashHash &&
-						currentGuild.embedSplashHeight != null
-							? currentGuild.embedSplashHeight
-							: (preparedAssets.embed_splash.height ?? null);
-					patch.embed_splash_width =
-						preparedAssets.embed_splash.newHash === currentGuild.embedSplashHash &&
-						currentGuild.embedSplashWidth != null
-							? currentGuild.embedSplashWidth
-							: (preparedAssets.embed_splash.width ?? null);
-				} catch (error) {
-					await this.rollbackPreparedAssets(preparedAssets);
-					throw error;
-				}
-			}
 		}
 		if (data.splash_card_alignment !== undefined) {
 			patch.splash_card_alignment = data.splash_card_alignment;
@@ -604,7 +533,7 @@ export class GuildOperationsService {
 						ValidationErrorCodes.SYSTEM_CHANNEL_MUST_BE_IN_GUILD,
 					);
 				}
-				if (systemChannel.type !== ChannelTypes.GUILD_TEXT) {
+				if (!isSystemChannelType(systemChannel.type)) {
 					throw InputValidationError.fromCode('system_channel_id', ValidationErrorCodes.SYSTEM_CHANNEL_MUST_BE_TEXT);
 				}
 				patch.system_channel_id = systemChannelId;
@@ -661,14 +590,12 @@ export class GuildOperationsService {
 				const cutoffDate = new Date(data.message_history_cutoff);
 				const guildCreationTimestamp = extractTimestamp(guildId.toString());
 				if (cutoffDate.getTime() < guildCreationTimestamp) {
-					await this.rollbackPreparedAssets(preparedAssets);
 					throw InputValidationError.fromCode(
 						'message_history_cutoff',
 						ValidationErrorCodes.MESSAGE_HISTORY_CUTOFF_BEFORE_GUILD_CREATION,
 					);
 				}
 				if (cutoffDate.getTime() > Date.now()) {
-					await this.rollbackPreparedAssets(preparedAssets);
 					throw InputValidationError.fromCode(
 						'message_history_cutoff',
 						ValidationErrorCodes.MESSAGE_HISTORY_CUTOFF_IN_FUTURE,
@@ -680,6 +607,7 @@ export class GuildOperationsService {
 		if (featuresChanged) {
 			patch.features = updatedFeatures;
 		}
+		const preparedAssets = await this.prepareGuildAssetUpdates(currentGuild, data, patch);
 		let updatedGuild: Guild;
 		if (Object.keys(patch).length === 0) {
 			updatedGuild = currentGuild;
@@ -687,13 +615,12 @@ export class GuildOperationsService {
 			try {
 				updatedGuild = await this.guildRepository.upsertPartial(guildId, patch, currentGuild.toRow());
 			} catch (error) {
-				await this.rollbackPreparedAssets(preparedAssets);
-				Logger.error({error, guildId}, 'Guild update failed, rolled back asset uploads');
+				Logger.error({error, guildId}, 'Guild update failed with unknown commit status; retaining uploaded assets');
 				throw error;
 			}
 		}
 		try {
-			await this.commitPreparedAssets(preparedAssets);
+			await this.entityAssetService.commitAssetChanges(preparedAssets);
 		} catch (error) {
 			Logger.error({error, guildId}, 'Failed to commit asset changes after successful guild update');
 		}
@@ -716,7 +643,7 @@ export class GuildOperationsService {
 				Logger.error({guildId: updatedGuild.id, error}, 'Failed to update guild in search');
 			});
 		}
-		const auditLogChanges = this.helpers.computeGuildChanges(previousSnapshot, updatedGuild);
+		const auditLogChanges = this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, GUILD_SETTINGS_AUDIT_KEYS);
 		if (auditLogChanges.length > 0) {
 			await this.helpers.recordAuditLog({
 				guildId,
@@ -724,15 +651,8 @@ export class GuildOperationsService {
 				action: AuditLogActionType.GUILD_UPDATE,
 				targetId: guildId,
 				auditLogReason: auditLogReason ?? null,
-				metadata: {name: updatedGuild.name},
 				changes: auditLogChanges,
 			});
-		}
-		if (data.name !== undefined && currentGuild.name !== updatedGuild.name) {
-		}
-		if (data.icon !== undefined && currentGuild.iconHash !== updatedGuild.iconHash) {
-		}
-		if (data.banner !== undefined && currentGuild.bannerHash !== updatedGuild.bannerHash) {
 		}
 		return {
 			guild: mapGuildToGuildResponse(updatedGuild),
@@ -767,40 +687,48 @@ export class GuildOperationsService {
 		return next;
 	}
 
-	private async rollbackPreparedAssets(assets: PreparedGuildAssets): Promise<void> {
-		const rollbackPromises: Array<Promise<void>> = [];
-		if (assets.icon) {
-			rollbackPromises.push(this.entityAssetService.rollbackAssetUpload(assets.icon));
+	private async prepareGuildAssetUpdates(
+		guild: Guild,
+		data: GuildUpdateRequest,
+		patch: Partial<GuildRow>,
+	): Promise<Array<PreparedAssetUpload>> {
+		const previous = guild.toRow();
+		const preparedAssets: Array<PreparedAssetUpload> = [];
+		try {
+			for (const {field, hash, dimensions, gate} of GUILD_IMAGE_FIELDS) {
+				const image = data[field];
+				if (image === undefined) continue;
+				if (image && gate && !guild.features.has(gate.feature)) {
+					throw InputValidationError.fromCode(field, gate.error);
+				}
+				const prepared = await this.entityAssetService.prepareAssetUpload({
+					assetType: field,
+					entityType: 'guild',
+					entityId: guild.id,
+					previousHash: previous[hash],
+					base64Image: image,
+					errorPath: field,
+				});
+				preparedAssets.push(prepared);
+				if (field === 'banner' && prepared.isAnimated && !guild.features.has(GuildFeatures.ANIMATED_BANNER)) {
+					throw InputValidationError.fromCode(field, ValidationErrorCodes.ANIMATED_GUILD_BANNER_REQUIRES_FEATURE);
+				}
+				patch[hash] = prepared.newHash;
+				if (!dimensions) continue;
+				if (image === null) {
+					patch[dimensions.width] = null;
+					patch[dimensions.height] = null;
+					continue;
+				}
+				const sameHash = prepared.newHash === previous[hash];
+				patch[dimensions.width] = (sameHash ? previous[dimensions.width] : null) ?? prepared.width ?? null;
+				patch[dimensions.height] = (sameHash ? previous[dimensions.height] : null) ?? prepared.height ?? null;
+			}
+			return preparedAssets;
+		} catch (error) {
+			await Promise.all(preparedAssets.map((prepared) => this.entityAssetService.rollbackAssetUpload(prepared)));
+			throw error;
 		}
-		if (assets.banner) {
-			rollbackPromises.push(this.entityAssetService.rollbackAssetUpload(assets.banner));
-		}
-		if (assets.splash) {
-			rollbackPromises.push(this.entityAssetService.rollbackAssetUpload(assets.splash));
-		}
-		if (assets.embed_splash) {
-			rollbackPromises.push(this.entityAssetService.rollbackAssetUpload(assets.embed_splash));
-		}
-		await Promise.all(rollbackPromises);
-	}
-
-	private async commitPreparedAssets(assets: PreparedGuildAssets): Promise<void> {
-		const commitPromises: Array<Promise<void>> = [];
-		if (assets.icon) {
-			commitPromises.push(this.entityAssetService.commitAssetChange({prepared: assets.icon, deferDeletion: true}));
-		}
-		if (assets.banner) {
-			commitPromises.push(this.entityAssetService.commitAssetChange({prepared: assets.banner, deferDeletion: true}));
-		}
-		if (assets.splash) {
-			commitPromises.push(this.entityAssetService.commitAssetChange({prepared: assets.splash, deferDeletion: true}));
-		}
-		if (assets.embed_splash) {
-			commitPromises.push(
-				this.entityAssetService.commitAssetChange({prepared: assets.embed_splash, deferDeletion: true}),
-			);
-		}
-		await Promise.all(commitPromises);
 	}
 
 	async deleteGuild(
@@ -815,17 +743,21 @@ export class GuildOperationsService {
 		if (!guildData || guildData.owner_id !== user.id.toString()) {
 			throw new MissingPermissionsError();
 		}
-		await this.performGuildDeletion(guildId);
+		await this.performGuildDeletion(guildId, 'source_deleted');
 	}
 
 	async deleteGuildById(guildId: GuildID): Promise<void> {
-		await this.performGuildDeletion(guildId);
+		await this.performGuildDeletion(guildId, 'purge');
 	}
 
-	private async performGuildDeletion(guildId: GuildID): Promise<void> {
+	private async performGuildDeletion(guildId: GuildID, copyMode: ChannelFollowerRemovalCopyMode): Promise<void> {
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) {
 			throw new UnknownGuildError();
+		}
+		const channels = await this.channelRepository.listGuildChannels(guildId);
+		for (const channel of channels) {
+			await scheduleDeletedChannelFollowerRemoval({channel, crossposts: this.channelRepository.crossposts, copyMode});
 		}
 		const members = await this.guildRepository.listMembers(guildId);
 		await this.gatewayService.dispatchGuild({
@@ -856,12 +788,13 @@ export class GuildOperationsService {
 		await Promise.all(invites.map((invite) => this.inviteRepository.delete(invite.code)));
 		const webhooks = await this.webhookRepository.listByGuild(guildId);
 		await Promise.all(webhooks.map((webhook) => this.webhookRepository.delete(webhook.id)));
-		const channels = await this.channelRepository.listGuildChannels(guildId);
+		for (const channel of channels) {
+			await this.channelService.attachments.purgeChannelAttachments(channel);
+		}
 		await Promise.all(channels.map((channel) => this.channelRepository.deleteAllChannelMessages(channel.id)));
 		await Promise.all(
 			channels.map((channel) => deleteChannelMessageSearchDocuments(channel.id, {context: {source: 'guild_delete'}})),
 		);
-		await Promise.all(channels.map((channel) => this.channelService.attachments.purgeChannelAttachments(channel)));
 		const discoveryRow = await this.discoveryRepository.findByGuildId(guildId);
 		if (discoveryRow) {
 			await this.discoveryRepository.deleteByGuildId(guildId, discoveryRow.status, discoveryRow.applied_at);
@@ -879,6 +812,7 @@ export class GuildOperationsService {
 	private async buildDefaultEntities(
 		guildId: GuildID,
 		batch: BatchBuilder,
+		locale: string | null,
 	): Promise<{
 		systemChannelId: ChannelID;
 	}> {
@@ -907,7 +841,7 @@ export class GuildOperationsService {
 					position,
 					owner_id: null,
 					recipient_ids: null,
-					nsfw: false,
+					nsfw: null,
 					content_warning_level: null,
 					content_warning_text: null,
 					rate_limit_per_user: 0,
@@ -931,10 +865,35 @@ export class GuildOperationsService {
 				}),
 			);
 		};
-		addChannel(textCategoryId, ChannelTypes.GUILD_CATEGORY, DEFAULT_TEXT_CATEGORY_NAME, null, 0);
-		addChannel(voiceCategoryId, ChannelTypes.GUILD_CATEGORY, DEFAULT_VOICE_CATEGORY_NAME, null, 1);
-		addChannel(generalChannelId, ChannelTypes.GUILD_TEXT, DEFAULT_TEXT_CHANNEL_NAME, textCategoryId, 0);
-		addChannel(generalVoiceId, ChannelTypes.GUILD_VOICE, DEFAULT_VOICE_CHANNEL_NAME, voiceCategoryId, 0, 64000);
+		addChannel(
+			textCategoryId,
+			ChannelTypes.GUILD_CATEGORY,
+			getContentMessage('guild.default_category_text', locale),
+			null,
+			0,
+		);
+		addChannel(
+			voiceCategoryId,
+			ChannelTypes.GUILD_CATEGORY,
+			getContentMessage('guild.default_category_voice', locale),
+			null,
+			1,
+		);
+		addChannel(
+			generalChannelId,
+			ChannelTypes.GUILD_TEXT,
+			getContentMessage('guild.default_channel_text', locale),
+			textCategoryId,
+			0,
+		);
+		addChannel(
+			generalVoiceId,
+			ChannelTypes.GUILD_VOICE,
+			getContentMessage('guild.default_channel_voice', locale),
+			voiceCategoryId,
+			0,
+			VOICE_CHANNEL_BITRATE_DEFAULT,
+		);
 		batch.addPrepared(
 			GuildRoles.insert({
 				guild_id: guildId,
@@ -958,6 +917,7 @@ export class GuildOperationsService {
 		guildId: GuildID,
 		template: TemplateSerializedGuild,
 		batch: BatchBuilder,
+		locale: string | null,
 	): Promise<{
 		systemChannelId: ChannelID;
 	}> {
@@ -1085,7 +1045,7 @@ export class GuildOperationsService {
 					permissionOverwrites = null;
 				}
 			}
-			if (fluxerType === ChannelTypes.GUILD_TEXT && !firstTextChannelId) {
+			if (isSystemChannelType(fluxerType) && !firstTextChannelId) {
 				firstTextChannelId = channelId;
 			}
 			batch.addPrepared(
@@ -1101,12 +1061,12 @@ export class GuildOperationsService {
 					position: channel.position,
 					owner_id: null,
 					recipient_ids: null,
-					nsfw: channel.nsfw ?? false,
+					nsfw: channel.nsfw === true ? true : null,
 					content_warning_level: null,
 					content_warning_text: null,
 					rate_limit_per_user: channel.rate_limit_per_user ?? 0,
-					bitrate: isVoice ? (channel.bitrate ?? 64000) : null,
-					user_limit: isVoice ? (channel.user_limit ?? 0) : null,
+					bitrate: isVoice ? resolveVoiceChannelBitrate(channel.bitrate, null) : null,
+					user_limit: isVoice ? Math.min(channel.user_limit ?? 0, VOICE_CHANNEL_USER_LIMIT_MAX) : null,
 					voice_connection_limit: isVoice
 						? (channel.voice_connection_limit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT)
 						: null,
@@ -1131,7 +1091,7 @@ export class GuildOperationsService {
 		if (template.system_channel_id != null) {
 			const templateSystemChannelKey = this.getTemplateEntityKey(template.system_channel_id);
 			const templateSystemChannelType = channelTypeMap.get(templateSystemChannelKey);
-			if (templateSystemChannelType === ChannelTypes.GUILD_TEXT) {
+			if (templateSystemChannelType !== undefined && isSystemChannelType(templateSystemChannelType)) {
 				systemChannelId = channelIdMap.get(templateSystemChannelKey) ?? null;
 			}
 		}
@@ -1145,7 +1105,7 @@ export class GuildOperationsService {
 					channel_id: systemChannelId,
 					guild_id: guildId,
 					type: ChannelTypes.GUILD_TEXT,
-					name: DEFAULT_TEXT_CHANNEL_NAME,
+					name: getContentMessage('guild.default_channel_text', locale),
 					topic: null,
 					icon_hash: null,
 					url: null,
@@ -1153,7 +1113,7 @@ export class GuildOperationsService {
 					position: 0,
 					owner_id: null,
 					recipient_ids: null,
-					nsfw: false,
+					nsfw: null,
 					content_warning_level: null,
 					content_warning_text: null,
 					rate_limit_per_user: 0,
@@ -1204,13 +1164,11 @@ export class GuildOperationsService {
 	private mapOtherPlatformTemplateChannelTypeToFluxer(channelType: number): number | null {
 		if (
 			channelType === ChannelTypes.GUILD_TEXT ||
+			channelType === ChannelTypes.GUILD_ANNOUNCEMENT ||
 			channelType === ChannelTypes.GUILD_VOICE ||
 			channelType === ChannelTypes.GUILD_CATEGORY
 		) {
 			return channelType;
-		}
-		if (channelType === THE_OTHER_PLATFORM_GUILD_ANNOUNCEMENT_CHANNEL_TYPE) {
-			return ChannelTypes.GUILD_TEXT;
 		}
 		if (channelType === THE_OTHER_PLATFORM_GUILD_STAGE_VOICE_CHANNEL_TYPE) {
 			return ChannelTypes.GUILD_VOICE;
@@ -1220,7 +1178,12 @@ export class GuildOperationsService {
 
 	private sanitiseTemplateGuildSettings(template?: TemplateSerializedGuild): TemplateGuildSettings {
 		return {
-			verificationLevel: this.clampTemplateSetting(template?.verification_level, 0, 4, 0),
+			verificationLevel: this.clampTemplateSetting(
+				template?.verification_level,
+				GuildVerificationLevel.NONE,
+				GuildVerificationLevel.HIGH,
+				GuildVerificationLevel.NONE,
+			),
 			explicitContentFilter: this.clampTemplateSetting(template?.explicit_content_filter, 0, 2, 0),
 			defaultMessageNotifications: this.clampTemplateSetting(template?.default_message_notifications, 0, 1, 0),
 			systemChannelFlags: (template?.system_channel_flags ?? 0) & SUPPORTED_SYSTEM_CHANNEL_FLAGS,

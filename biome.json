@@ -48,7 +48,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"complexity": {
 				"noForEach": "off",
 				"noImportantStyles": "off",
@@ -83,6 +83,7 @@
 					}
 				},
 				"useConst": "error",
+				"noDescendingSpecificity": "off",
 				"noNonNullAssertion": "off",
 				"noParameterAssign": "off",
 				"noRestrictedImports": {
@@ -98,7 +99,7 @@
 				}
 			},
 			"a11y": {
-				"recommended": true,
+				"preset": "recommended",
 				"useAriaPropsForRole": "error",
 				"useValidAriaRole": "error",
 				"useValidAriaValues": "error",
@@ -141,6 +142,10 @@
 				"fluxer_app/src/features/i18n/components/AppI18nProvider.test.tsx"
 			],
 			"linter": {"rules": {"style": {"noRestrictedImports": "off"}}}
+		},
+		{
+			"includes": ["fluxer_app/src/**/*.worklet.js"],
+			"javascript": {"globals": ["AudioWorkletProcessor", "registerProcessor", "sampleRate", "currentTime"]}
 		},
 		{
 			"includes": ["**/*.astro"],

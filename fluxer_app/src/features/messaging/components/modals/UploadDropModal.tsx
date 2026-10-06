@@ -26,7 +26,7 @@ const YOU_CAN_ADD_COMMENTS_BEFORE_UPLOADING_DIRECT_UPLOAD_DESCRIPTOR = msg({
 	comment: 'Helper text in the upload drop modal during slowmode, when direct upload is disabled.',
 });
 const YOU_CAN_ADD_COMMENTS_BEFORE_UPLOADING_HOLD_SHIFT_DESCRIPTOR = msg({
-	message: 'You can add comments before uploading. Hold shift to upload directly.',
+	message: 'You can add comments before uploading. Hold Shift to upload directly.',
 	comment: 'Helper text in the upload drop modal explaining the shift-to-direct-upload behavior.',
 });
 const DIRECT_UPLOAD_ACTIVE_DESCRIPTOR = msg({

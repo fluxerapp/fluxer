@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentRequestData} from '@app/api/channel/AttachmentDTOs';
 import type {
 	MessageRequestSchemaType,
 	MessageUpdateRequestSchemaType,
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
-import type {AttachmentRequestData} from './AttachmentDTOs';
 
 interface BaseMessageRequestType extends Omit<MessageRequestSchemaType, 'attachments'> {}
 

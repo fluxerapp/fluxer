@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {ChannelID, GuildID, MessageID, PhoneVerificationToken, UserID} from '../../BrandedTypes';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {
 	AuthSessionRow,
 	EmailRevertTokenRow,
 	EmailVerificationTokenRow,
 	PasswordResetTokenRow,
-	PhoneTokenRow,
-} from '../../database/types/AuthTypes';
-import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '../../database/types/PaymentTypes';
+} from '@app/api/database/types/AuthTypes';
+import type {GiftCodeRow, PaymentBySubscriptionRow, PaymentRow} from '@app/api/database/types/PaymentTypes';
 import type {
 	PushSubscriptionRow,
 	RecentMentionRow,
@@ -17,40 +15,42 @@ import type {
 	UserGuildSettingsRow,
 	UserRow,
 	UserSettingsRow,
-} from '../../database/types/UserTypes';
-import {getKVClient} from '../../middleware/ServiceRegistry';
-import type {AuthSession, AuthSessionTombstone} from '../../models/AuthSession';
-import type {Channel} from '../../models/Channel';
-import type {EmailRevertToken} from '../../models/EmailRevertToken';
-import type {EmailVerificationToken} from '../../models/EmailVerificationToken';
-import type {GiftCode} from '../../models/GiftCode';
-import type {MfaBackupCode} from '../../models/MfaBackupCode';
-import type {PasswordResetToken} from '../../models/PasswordResetToken';
-import type {Payment} from '../../models/Payment';
-import type {PushSubscription} from '../../models/PushSubscription';
-import type {ReadState} from '../../models/ReadState';
-import type {RecentMention} from '../../models/RecentMention';
-import type {Relationship} from '../../models/Relationship';
-import type {SavedMessage} from '../../models/SavedMessage';
-import type {User} from '../../models/User';
-import type {UserGuildSettings} from '../../models/UserGuildSettings';
-import type {UserNote} from '../../models/UserNote';
-import type {UserSettings} from '../../models/UserSettings';
-import type {VisionarySlot} from '../../models/VisionarySlot';
-import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
-import {ReadStateRepository} from '../../read_state/ReadStateRepository';
+} from '@app/api/database/types/UserTypes';
+import {getKVClient} from '@app/api/middleware/ServiceRegistry';
+import type {AuthSession, AuthSessionTombstone} from '@app/api/models/AuthSession';
+import type {Channel} from '@app/api/models/Channel';
+import type {EmailRevertToken} from '@app/api/models/EmailRevertToken';
+import type {EmailVerificationToken} from '@app/api/models/EmailVerificationToken';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {PasswordResetToken} from '@app/api/models/PasswordResetToken';
+import type {Payment} from '@app/api/models/Payment';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
+import type {ReadState} from '@app/api/models/ReadState';
+import type {RecentMention} from '@app/api/models/RecentMention';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {SavedMessage} from '@app/api/models/SavedMessage';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserNote} from '@app/api/models/UserNote';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {VisionarySlot} from '@app/api/models/VisionarySlot';
+import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
+import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/IUserAccountRepository';
 import type {
 	HistoricalDmChannelSummary,
 	ListHistoricalDmChannelOptions,
 	PrivateChannelSummary,
-} from './IUserChannelRepository';
-import type {IUserRepositoryAggregate} from './IUserRepositoryAggregate';
-import {UserAccountRepository} from './UserAccountRepository';
-import {UserAuthRepository} from './UserAuthRepository';
-import {UserChannelRepository} from './UserChannelRepository';
-import {UserContentRepository} from './UserContentRepository';
-import {UserRelationshipRepository} from './UserRelationshipRepository';
-import {UserSettingsRepository} from './UserSettingsRepository';
+} from '@app/api/user/repositories/IUserChannelRepository';
+import type {IUserRepositoryAggregate} from '@app/api/user/repositories/IUserRepositoryAggregate';
+import {UserAccountRepository} from '@app/api/user/repositories/UserAccountRepository';
+import {UserAuthRepository} from '@app/api/user/repositories/UserAuthRepository';
+import {UserChannelRepository} from '@app/api/user/repositories/UserChannelRepository';
+import {UserContentRepository} from '@app/api/user/repositories/UserContentRepository';
+import {UserRelationshipRepository} from '@app/api/user/repositories/UserRelationshipRepository';
+import {UserSettingsRepository} from '@app/api/user/repositories/UserSettingsRepository';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 export class UserRepository implements IUserRepositoryAggregate {
 	private accountRepo: UserAccountRepository;
@@ -83,6 +83,30 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.accountRepo.patchUpsert(userId, patchData, oldData);
 	}
 
+	async compareAndSetFlags(user: User, flags: bigint): Promise<User | null> {
+		return this.accountRepo.compareAndSetFlags(user, flags);
+	}
+
+	async updateFlags(userId: UserID, mutate: (flags: bigint) => bigint): Promise<User | null> {
+		return this.accountRepo.updateFlags(userId, mutate);
+	}
+
+	async updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User> {
+		return this.accountRepo.updateDeletionSchedule(user, patch);
+	}
+
+	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {
+		return this.accountRepo.startDeletion(userId, pendingDeletionAt);
+	}
+
+	async anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User> {
+		return this.accountRepo.anonymizeForDeletion(user, patch);
+	}
+
+	async completeDeletion(user: User): Promise<void> {
+		return this.accountRepo.completeDeletion(user);
+	}
+
 	async findUnique(userId: UserID): Promise<User | null> {
 		return this.accountRepo.findUnique(userId);
 	}
@@ -97,6 +121,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 
 	async findDiscriminatorsByUsername(username: string): Promise<Set<number>> {
 		return this.accountRepo.findDiscriminatorsByUsername(username);
+	}
+
+	async findUsersByUsername(username: string): Promise<Array<User>> {
+		return this.accountRepo.findUsersByUsername(username);
 	}
 
 	async findByEmail(email: string): Promise<User | null> {
@@ -260,20 +288,8 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.authRepo.deleteAuthSessions(userId, sessionIdHashes);
 	}
 
-	async revokeAuthSession(sessionIdHash: Buffer): Promise<void> {
-		return this.authRepo.revokeAuthSession(sessionIdHash);
-	}
-
 	async deleteAllAuthSessions(userId: UserID): Promise<void> {
 		return this.authRepo.deleteAllAuthSessions(userId);
-	}
-
-	async recordCountrySighting(userId: UserID, country: string): Promise<void> {
-		return this.authRepo.recordCountrySighting(userId, country);
-	}
-
-	async hasCountrySightingOutsideSet(userId: UserID, countryCodes: Iterable<string>): Promise<boolean> {
-		return this.authRepo.hasCountrySightingOutsideSet(userId, countryCodes);
 	}
 
 	async listMfaBackupCodes(userId: UserID): Promise<Array<MfaBackupCode>> {
@@ -336,18 +352,6 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.authRepo.deleteEmailRevertToken(token);
 	}
 
-	async createPhoneToken(token: PhoneVerificationToken, phone: string, userId: UserID | null): Promise<void> {
-		return this.authRepo.createPhoneToken(token, phone, userId);
-	}
-
-	async getPhoneToken(token: PhoneVerificationToken): Promise<PhoneTokenRow | null> {
-		return this.authRepo.getPhoneToken(token);
-	}
-
-	async deletePhoneToken(token: PhoneVerificationToken): Promise<void> {
-		return this.authRepo.deletePhoneToken(token);
-	}
-
 	async checkIpAuthorized(userId: UserID, ip: string): Promise<boolean> {
 		return this.authRepo.checkIpAuthorized(userId, ip);
 	}
@@ -394,8 +398,9 @@ export class UserRepository implements IUserRepositoryAggregate {
 		counter: bigint,
 		transports: Set<string> | null,
 		name: string,
+		rpId: string | null,
 	): Promise<void> {
-		return this.authRepo.createWebAuthnCredential(userId, credentialId, publicKey, counter, transports, name);
+		return this.authRepo.createWebAuthnCredential(userId, credentialId, publicKey, counter, transports, name, rpId);
 	}
 
 	async updateWebAuthnCredentialCounter(userId: UserID, credentialId: string, counter: bigint): Promise<void> {
@@ -408,6 +413,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 
 	async updateWebAuthnCredentialName(userId: UserID, credentialId: string, name: string): Promise<void> {
 		return this.authRepo.updateWebAuthnCredentialName(userId, credentialId, name);
+	}
+
+	async setWebAuthnCredentialSupersededBy(userId: UserID, credentialId: string, supersededBy: string): Promise<void> {
+		return this.authRepo.setWebAuthnCredentialSupersededBy(userId, credentialId, supersededBy);
 	}
 
 	async deleteWebAuthnCredential(userId: UserID, credentialId: string): Promise<void> {
@@ -653,6 +662,18 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.contentRepo.revokeGiftCode(code);
 	}
 
+	async unrevokeGiftCode(code: string): Promise<void> {
+		return this.contentRepo.unrevokeGiftCode(code);
+	}
+
+	async markGiftPremiumReversed(gift: GiftCode, seconds: number): Promise<boolean> {
+		return this.contentRepo.markGiftPremiumReversed(gift, seconds);
+	}
+
+	async clearGiftPremiumReversed(code: string, seconds: number): Promise<boolean> {
+		return this.contentRepo.clearGiftPremiumReversed(code, seconds);
+	}
+
 	async updateGiftCode(code: string, data: Partial<GiftCodeRow>): Promise<void> {
 		return this.contentRepo.updateGiftCode(code, data);
 	}
@@ -717,6 +738,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 
 	async getPaymentByCheckoutSession(checkoutSessionId: string): Promise<Payment | null> {
 		return this.contentRepo.getPaymentByCheckoutSession(checkoutSessionId);
+	}
+
+	async findPaymentsByUserId(userId: UserID): Promise<Array<Payment>> {
+		return this.contentRepo.findPaymentsByUserId(userId);
 	}
 
 	async getPaymentByPaymentIntent(paymentIntentId: string): Promise<Payment | null> {

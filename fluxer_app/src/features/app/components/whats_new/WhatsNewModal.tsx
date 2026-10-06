@@ -139,7 +139,7 @@ export function WhatsNewModal({entry}: WhatsNewModalProps) {
 						>
 							<SafeMarkdown
 								content={entry.content}
-								options={{context: MarkdownContext.STANDARD_WITHOUT_JUMBO}}
+								options={{context: MarkdownContext.STANDARD_WITHOUT_JUMBO, disableEmojiInfoCard: true}}
 								data-flx="app.whats-new.whats-new-modal.safe-markdown"
 							/>
 						</div>

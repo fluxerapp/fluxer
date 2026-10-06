@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {checkGuildVerificationWithGuildModel} from '@app/api/utils/GuildVerificationUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
@@ -7,15 +16,8 @@ import {CannotTransferOwnershipToBotError} from '@fluxer/errors/src/domains/guil
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {GuildID, UserID} from '../../../BrandedTypes';
-import type {Guild} from '../../../models/Guild';
-import type {GuildMember} from '../../../models/GuildMember';
-import type {User} from '../../../models/User';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {checkGuildVerificationWithGuildModel} from '../../../utils/GuildVerificationUtils';
-import {mapGuildToGuildResponse} from '../../GuildModel';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import type {GuildDataHelpers} from './GuildDataHelpers';
+
+const OWNERSHIP_AUDIT_KEYS: ReadonlySet<string> = new Set(['owner_id']);
 
 export class GuildOwnershipService {
 	constructor(
@@ -64,8 +66,7 @@ export class GuildOwnershipService {
 			action: AuditLogActionType.GUILD_UPDATE,
 			targetId: guildId,
 			auditLogReason: auditLogReason ?? null,
-			metadata: {new_owner_id: newOwnerId.toString()},
-			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild),
+			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, OWNERSHIP_AUDIT_KEYS),
 		});
 		return mapGuildToGuildResponse(updatedGuild);
 	}

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isTransientDatabaseError} from '@app/api/database/TransientDatabaseError';
+import type {ILogger} from '@app/api/ILogger';
 import {ms} from 'itty-time';
-import {isTransientDatabaseError} from '../database/TransientDatabaseError';
-import type {ILogger} from '../ILogger';
 
 export type WorkerProcessErrorSource = 'uncaughtException' | 'unhandledRejection';
 

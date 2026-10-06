@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import type {RelationshipRow} from '@app/api/database/types/UserTypes';
+import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {IUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Channel} from '@app/api/models/Channel';
+import {Relationship} from '@app/api/models/Relationship';
+import {UserChannelRequestService} from '@app/api/user/services/UserChannelRequestService';
+import type {UserChannelService} from '@app/api/user/services/UserChannelService';
+import {UserRelationshipRequestService} from '@app/api/user/services/UserRelationshipRequestService';
+import type {UserRelationshipService} from '@app/api/user/services/UserRelationshipService';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {DELETED_USER_GLOBAL_NAME, DELETED_USER_USERNAME, RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {describe, expect, test} from 'vitest';
-import {type ChannelID, createChannelID, createUserID, type UserID} from '../../BrandedTypes';
-import type {ChannelRow} from '../../database/types/ChannelTypes';
-import type {RelationshipRow} from '../../database/types/UserTypes';
-import {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {IUsersServiceClient} from '../../infrastructure/UsersServiceClient';
-import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
-import {Channel} from '../../models/Channel';
-import {Relationship} from '../../models/Relationship';
-import {UserChannelRequestService} from '../services/UserChannelRequestService';
-import type {UserChannelService} from '../services/UserChannelService';
-import {UserRelationshipRequestService} from '../services/UserRelationshipRequestService';
-import type {UserRelationshipService} from '../services/UserRelationshipService';
 
 class RecordingUsersServiceClient implements IUsersServiceClient {
 	readonly requests: Array<Array<UserID>> = [];

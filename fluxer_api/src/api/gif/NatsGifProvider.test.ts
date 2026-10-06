@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {buildKlipyShareUrl, extractKlipySlugFromUrl} from '@app/api/gif/NatsGifProvider';
 import {describe, expect, it} from 'vitest';
-import {buildKlipyShareUrl, extractKlipySlugFromUrl} from './NatsGifProvider';
 
 describe('NatsGifProvider KLIPY URL helpers', () => {
 	it('extracts GIF and clip slugs from KLIPY share URLs', () => {

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID} from '@app/api/BrandedTypes';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
 import type {
 	ISearchAdapter as SchemaISearchAdapter,
 	SearchOptions as SchemaSearchOptions,
 	SearchResult as SchemaSearchResult,
 } from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {GuildSearchFilters, SearchableGuild} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import type {GuildID} from '../BrandedTypes';
-import type {Guild} from '../models/Guild';
-import type {GuildDiscoveryContext} from './guild/GuildSearchSerializer';
 
 export interface IGuildSearchService extends SchemaISearchAdapter<GuildSearchFilters, SearchableGuild> {
 	indexGuild(guild: Guild, discovery?: GuildDiscoveryContext): Promise<void>;

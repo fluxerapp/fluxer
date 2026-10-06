@@ -8,6 +8,7 @@ import {
 	openBrowserVoiceDebugEventSinkPopout,
 } from '@app/features/voice/diagnostics/VoiceDebugBrowserEventSinkPopout';
 import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {assertNonNullObject, assertString} from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import type {DesktopVoiceDebugEventSinkEntry} from '@app/types/electron.d';
 import type {
 	LocalTrackPublication,
@@ -18,7 +19,6 @@ import type {
 	TrackPublication,
 } from 'livekit-client';
 import {RoomEvent} from 'livekit-client';
-import {assertNonNullObject, assertString} from './VoiceEngineV2AppAdapterAssertions';
 
 const logger = new Logger('VoiceEngineV2AppDebugEventSinkHostAdapter');
 

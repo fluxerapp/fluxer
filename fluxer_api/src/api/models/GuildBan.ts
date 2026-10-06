@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../BrandedTypes';
-import type {GuildBanRow} from '../database/types/GuildTypes';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildBanRow} from '@app/api/database/types/GuildTypes';
 
 export class GuildBan {
 	readonly guildId: GuildID;

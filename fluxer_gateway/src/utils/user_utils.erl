@@ -22,13 +22,11 @@ partial_user_fields() ->
 
 -spec normalize_user(map() | term()) -> map().
 normalize_user(User) when is_map(User) ->
-    CleanPairs =
-        lists:foldl(
-            fun(Key, Acc) -> add_normalized_field(Key, User, Acc) end,
-            [],
-            partial_user_fields()
-        ),
-    maps:from_list(lists:reverse(CleanPairs));
+    lists:foldl(
+        fun(Key, Acc) -> add_normalized_field(Key, User, Acc) end,
+        #{},
+        partial_user_fields()
+    );
 normalize_user(_) ->
     #{}.
 
@@ -46,19 +44,18 @@ normalize_field(<<"mention_flags">>, Value) ->
 normalize_field(_Key, Value) ->
     Value.
 
--spec add_normalized_field(binary(), map(), [{binary(), term()}]) -> [{binary(), term()}].
+-spec add_normalized_field(binary(), map(), map()) -> map().
 add_normalized_field(Key, User, Acc) ->
     case maps:get(Key, User, undefined) of
         undefined -> Acc;
         Value -> maybe_add_normalized_field(Key, normalize_field(Key, Value), Acc)
     end.
 
--spec maybe_add_normalized_field(binary(), term(), [{binary(), term()}]) ->
-    [{binary(), term()}].
+-spec maybe_add_normalized_field(binary(), term(), map()) -> map().
 maybe_add_normalized_field(_Key, undefined, Acc) ->
     Acc;
 maybe_add_normalized_field(Key, Normalized, Acc) ->
-    [{Key, Normalized} | Acc].
+    Acc#{Key => Normalized}.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

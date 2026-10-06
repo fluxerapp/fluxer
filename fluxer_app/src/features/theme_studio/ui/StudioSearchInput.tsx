@@ -2,12 +2,12 @@
 
 import {CLEAR_SEARCH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import styles from '@app/features/theme_studio/ui/StudioSearchInput.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon, XCircleIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {forwardRef, type InputHTMLAttributes, useImperativeHandle, useRef} from 'react';
-import styles from './StudioSearchInput.module.css';
 
 const SEARCH_DESCRIPTOR = msg({
 	message: 'Search…',

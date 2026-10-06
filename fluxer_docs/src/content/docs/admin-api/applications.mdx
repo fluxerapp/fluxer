@@ -6,9 +6,9 @@ description: Application inspection, the owner and guild selectors, and ownershi
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An application is an OAuth2 client, and it can own one bot account. These routes report its ownership, bot state, redirect configuration, and non-secret credential metadata. [Transfer application ownership](#transfer-application-ownership) is the only one that writes.
+An application is an OAuth2 client that can own one bot account. These routes inspect applications and [transfer their ownership](#transfer-application-ownership).
 
-These records are the same ones the public [Applications](/http-api/applications/) resource serves. Creation, deletion, renaming, bot creation, redirect URI editing, and credential rotation stay there.
+These records are the same ones the public [Applications](/http-api/applications/) resource serves. Creation, deletion, renaming, bot creation, redirect URI editing, and credential rotation are available only through that resource.
 
 :::note[Admin operations report credential metadata only]
 The Admin application object reports whether a client secret or bot token hash is stored, when it was created, and the non-secret bot token preview.
@@ -42,9 +42,9 @@ The Admin view of one application. An application and its bot account share one 
 | client_secret_created_at<sup>4</sup> | ?ISO8601 timestamp | When the client secret was created |
 | version<sup>5</sup> | integer | The optimistic locking version of the stored record (0-2147483647) |
 
-<sup>1</sup> Null when the owner account can no longer be read
+<sup>1</sup> Null when no account with `owner_user_id` exists
 
-<sup>2</sup> Null when the application has no bot, and also null when the bot account can no longer be read
+<sup>2</sup> Null when the application has no bot, and also null when no account with `bot_user_id` exists
 
 <sup>3</sup> The stored set arrives in no guaranteed order
 
@@ -85,16 +85,16 @@ Fluxer serves one synthetic application for its own Admin OAuth2 client. The app
 - `id` is the fixed constant `1234567890123456789`.
 - `name` is `Fluxer Admin`, and `owner_user_id` is the system account `0`.
 - `oauth2_redirect_uris` has one entry, the configured Admin endpoint followed by `/oauth2_callback`.
-- `has_client_secret` is true on every response that has it, and `client_secret_created_at` is null.
+- `has_client_secret` is true in every response that returns this application, and `client_secret_created_at` is null.
 - `version` is always 1.
 
 :::caution[The built-in application is read-only]
-[Get application](#get-application) resolves it only while a client secret is configured for the deployment, and answers a null `application` otherwise. [List applications](#list-applications) never returns it. [Transfer application ownership](#transfer-application-ownership) answers 403 `FORBIDDEN`.
+[Get application](#get-application) returns it only while an Admin client secret is configured for the deployment, and returns a null `application` otherwise. [List applications](#list-applications) never returns it. [Transfer application ownership](#transfer-application-ownership) answers 403 `FORBIDDEN`.
 :::
 
 ## List applications
 
-<RouteHeader method="GET" path="/v1/admin/applications" />
+<RouteHeader method="GET" path="/v1/admin/applications" auditReason />
 
 Returns the [Admin application](#admin-application-object) objects selected by exactly one of `owner_id` and `guild_id`. Requires `application:lookup` or `application:list:by_owner`.
 
@@ -130,13 +130,17 @@ The route returns the complete selection in one response. There is no cursor, no
 | 200 | response body | The selected applications were returned |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER` when `owner_id` names no account, or `UNKNOWN_GUILD` when `guild_id` names no guild |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with a metadata key `application_count`. An `owner_id` request records action `list_user_applications`, target type `user`, and the owner as target ID. A `guild_id` request records action `list_guild_applications`, target type `guild`, and the guild as target ID. A failed request records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get application
 
-<RouteHeader method="GET" path="/v1/admin/applications/{application_id}" />
+<RouteHeader method="GET" path="/v1/admin/applications/{application_id}" auditReason />
 
 Returns one [Admin application](#admin-application-object) object wrapped in a single-member object. Requires `application:lookup`.
 
@@ -162,6 +166,10 @@ Fluxer answers 200 with `application` set to null when the ID names no applicati
 | --- | --- | --- |
 | 200 | response body | The lookup completed, whether or not it resolved an application |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_application`, target type `application`, the path `application_id` as target ID, and a metadata key `found`. `found` is `true` when `application` is an object and `false` when it is null. A returned application adds `owner_user_id`, and `bot_user_id` when the application has a bot.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
@@ -172,7 +180,7 @@ Fluxer answers 200 with `application` set to null when the ID names no applicati
 
 Moves the application to another account and returns the stored [Admin application](#admin-application-object) object. Requires `application:transfer_ownership`.
 
-Ownership is the only field this operation writes. The new owner need not be related to the application, and Fluxer does not notify the previous owner.
+Ownership is the only field this operation writes. The new owner can be any existing account, and Fluxer does not notify the previous owner.
 
 ### Path parameters
 
@@ -186,7 +194,7 @@ Ownership is the only field this operation writes. The new owner need not be rel
 | --- | --- | --- |
 | new_owner_id<sup>1</sup> | snowflake | The account to transfer the application to |
 
-<sup>1</sup> Fluxer resolves the application before the account, so an unknown application fails with 404 `UNKNOWN_APPLICATION` and an unknown replacement owner fails with 404 `UNKNOWN_USER`
+<sup>1</sup> An unknown application fails with 404 `UNKNOWN_APPLICATION`, and an unknown replacement owner fails with 404 `UNKNOWN_USER`. Fluxer looks up the application first, so a request where both are unknown fails with `UNKNOWN_APPLICATION`
 
 ### Response body
 
@@ -204,7 +212,7 @@ Ownership is the only field this operation writes. The new owner need not be rel
 
 ### Side effects
 
-Fluxer rewrites the record with the new `owner_user_id` and increments its `version`. The application moves in both the `owner_id` selector of [List applications](#list-applications) and [List user applications](/admin-api/users/#list-user-applications). The operation emits no Gateway Dispatch.
+The transfer changes `owner_user_id`, increments `version`, and updates the results of [List applications](#list-applications) and [List user applications](/admin-api/users/#list-user-applications). It emits no Gateway Dispatch.
 
 Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the target type `application`, the target ID equal to the application ID, and the action `transfer_ownership`. Its metadata is `old_owner_id` and `new_owner_id`. Neither owner is resolved into `related_users`.
 

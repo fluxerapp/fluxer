@@ -225,7 +225,7 @@ describe('HttpClient', () => {
 				expect(response.url).toBe(`${redirectServer.url}/target`);
 				expect(json.path).toBe('/target');
 			});
-			it('follows 301 redirect and changes method to GET for non-GET requests', async () => {
+			it('follows 301 redirect and changes POST to GET', async () => {
 				const client = createHttpClient(TEST_USER_AGENT);
 				testServer.setHandler((_req, res) => {
 					res.writeHead(301, {Location: `${redirectServer.url}/moved`});
@@ -260,7 +260,7 @@ describe('HttpClient', () => {
 				expect(response.status).toBe(200);
 				expect(body).toBe('/found');
 			});
-			it('follows 302 redirect and changes method to GET for non-GET requests', async () => {
+			it('follows 302 redirect preserving PATCH', async () => {
 				const client = createHttpClient(TEST_USER_AGENT);
 				testServer.setHandler((_req, res) => {
 					res.writeHead(302, {Location: `${redirectServer.url}/found`});
@@ -278,7 +278,7 @@ describe('HttpClient', () => {
 				const body = await client.streamToString(response.stream);
 				const json = JSON.parse(body);
 				expect(response.status).toBe(200);
-				expect(json.method).toBe('GET');
+				expect(json.method).toBe('PATCH');
 			});
 			it('follows 303 redirect and changes method to GET', async () => {
 				const client = createHttpClient(TEST_USER_AGENT);

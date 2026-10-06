@@ -1,17 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {DonationRateLimitConfigs} from '@app/api/rate_limit_configs/DonationRateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
+import {DonationMagicLinkExpiredError} from '@fluxer/errors/src/domains/donation/DonationMagicLinkExpiredError';
+import {DonationMagicLinkInvalidError} from '@fluxer/errors/src/domains/donation/DonationMagicLinkInvalidError';
+import {DonationMagicLinkUsedError} from '@fluxer/errors/src/domains/donation/DonationMagicLinkUsedError';
+import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
+import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment/StripePaymentNotAvailableError';
 import {
 	DonationCheckoutRequest,
 	DonationCheckoutResponse,
 	DonationManageQuery,
 	DonationRequestLinkRequest,
 } from '@fluxer/schema/src/domains/donation/DonationSchemas';
-import {Config} from '../Config';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {DonationRateLimitConfigs} from '../rate_limit_configs/DonationRateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
+
+function donationManageAlertUrl(alert: string): string {
+	return `${Config.endpoints.marketing}/donate/manage?alert=${alert}`;
+}
+
+function getMagicLinkAlert(error: unknown): string | null {
+	if (error instanceof DonationMagicLinkExpiredError) {
+		return 'link_expired';
+	}
+	if (error instanceof DonationMagicLinkUsedError) {
+		return 'link_used';
+	}
+	if (error instanceof DonationMagicLinkInvalidError) {
+		return 'link_invalid';
+	}
+	if (error instanceof StripeError || error instanceof StripePaymentNotAvailableError) {
+		return 'portal_error';
+	}
+	return null;
+}
 
 export function DonationController(app: HonoApp) {
 	app.post(
@@ -29,7 +54,7 @@ export function DonationController(app: HonoApp) {
 		Validator('json', DonationRequestLinkRequest),
 		async (ctx) => {
 			const {email} = ctx.req.valid('json');
-			await ctx.get('donationService').requestMagicLink(email);
+			await ctx.get('donationService').requestMagicLink(email, ctx.get('requestLocale') ?? null);
 			return ctx.body(null, 204);
 		},
 	);
@@ -38,8 +63,9 @@ export function DonationController(app: HonoApp) {
 		RateLimitMiddleware(DonationRateLimitConfigs.DONATION_MANAGE),
 		OpenAPI({
 			operationId: 'manage_donation',
-			summary: 'Manage donation subscription',
-			description: 'Validates the magic link token and redirects to Stripe billing portal.',
+			summary: 'Open donation management link',
+			description:
+				'Checks the magic link token without consuming it and redirects to the donation management confirmation page.',
 			responseSchema: null,
 			statusCode: 302,
 			security: [],
@@ -48,12 +74,50 @@ export function DonationController(app: HonoApp) {
 		Validator('query', DonationManageQuery),
 		async (ctx) => {
 			const {token} = ctx.req.valid('query');
-			const {stripeCustomerId} = await ctx.get('donationService').validateMagicLinkToken(token);
-			if (!stripeCustomerId) {
-				return ctx.redirect(`${Config.endpoints.marketing}/donate`);
+			try {
+				const {stripeCustomerId} = await ctx.get('donationService').validateMagicLinkToken(token);
+				if (!stripeCustomerId) {
+					return ctx.redirect(donationManageAlertUrl('no_customer'), 302);
+				}
+			} catch (error: unknown) {
+				const alert = getMagicLinkAlert(error);
+				if (!alert) {
+					throw error;
+				}
+				return ctx.redirect(donationManageAlertUrl(alert), 302);
 			}
-			const portalUrl = await ctx.get('donationService').createDonorPortalSession(stripeCustomerId);
-			return ctx.redirect(portalUrl);
+			const encodedToken = encodeURIComponent(token);
+			return ctx.redirect(`${Config.endpoints.marketing}/donate/manage/confirm?token=${encodedToken}`, 302);
+		},
+	);
+	app.post(
+		'/donations/manage',
+		RateLimitMiddleware(DonationRateLimitConfigs.DONATION_MANAGE),
+		OpenAPI({
+			operationId: 'redeem_donation_magic_link',
+			summary: 'Redeem donation management link',
+			description: 'Consumes the magic link token and redirects to the Stripe billing portal.',
+			responseSchema: null,
+			statusCode: 302,
+			security: [],
+			tags: 'Donations',
+		}),
+		Validator('query', DonationManageQuery),
+		async (ctx) => {
+			const {token} = ctx.req.valid('query');
+			try {
+				const portalUrl = await ctx.get('donationService').redeemMagicLinkToken(token);
+				if (!portalUrl) {
+					return ctx.redirect(donationManageAlertUrl('no_customer'), 302);
+				}
+				return ctx.redirect(portalUrl, 302);
+			} catch (error: unknown) {
+				const alert = getMagicLinkAlert(error);
+				if (!alert) {
+					throw error;
+				}
+				return ctx.redirect(donationManageAlertUrl(alert), 302);
+			}
 		},
 	);
 	app.post(
@@ -77,6 +141,7 @@ export function DonationController(app: HonoApp) {
 				currency: body.currency,
 				interval: body.interval,
 				isBusiness: body.is_business,
+				locale: ctx.get('requestLocale') ?? null,
 			});
 			return ctx.json({url});
 		},

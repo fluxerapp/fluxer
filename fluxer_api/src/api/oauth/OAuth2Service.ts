@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {
+	OAuth2AccessTokenRow,
+	OAuth2AuthorizationCodeRow,
+	OAuth2RefreshTokenRow,
+} from '@app/api/database/types/OAuth2Types';
+import {Logger} from '@app/api/Logger';
+import type {Application} from '@app/api/models/Application';
+import {filterOAuth2ScopeSet, isOAuth2Scope, sortOAuth2Scopes} from '@app/api/oauth/OAuth2ScopeUtils';
+import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
+import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
+import {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import {isSignInRefused} from '@app/api/user/UserHelpers';
+import {mapUserToOAuthResponse} from '@app/api/user/UserMappers';
+import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {InvalidRequestError} from '@fluxer/errors/src/domains/core/InvalidRequestError';
 import {InvalidTokenError} from '@fluxer/errors/src/domains/core/InvalidTokenError';
 import {BotIsPrivateError} from '@fluxer/errors/src/domains/oauth/BotIsPrivateError';
@@ -11,25 +31,6 @@ import {InvalidRedirectUriError} from '@fluxer/errors/src/domains/oauth/InvalidR
 import {InvalidScopeError} from '@fluxer/errors/src/domains/oauth/InvalidScopeError';
 import {MissingClientSecretError} from '@fluxer/errors/src/domains/oauth/MissingClientSecretError';
 import {MissingRedirectUriError} from '@fluxer/errors/src/domains/oauth/MissingRedirectUriError';
-import type {ApiContext} from '../ApiContext';
-import type {ApplicationID, UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {
-	OAuth2AccessTokenRow,
-	OAuth2AuthorizationCodeRow,
-	OAuth2RefreshTokenRow,
-} from '../database/types/OAuth2Types';
-import {Logger} from '../Logger';
-import type {Application} from '../models/Application';
-import {mapUserToOAuthResponse} from '../user/UserMappers';
-import {verifyPassword} from '../utils/PasswordUtils';
-import {filterOAuth2ScopeSet, isOAuth2Scope, sortOAuth2Scopes} from './OAuth2ScopeUtils';
-import {ACCESS_TOKEN_TTL_SECONDS} from './OAuth2TokenConstants';
-import {generateOAuthTokenSecret} from './OAuthTokenSecret';
-import {ApplicationRepository} from './repositories/ApplicationRepository';
-import type {IApplicationRepository} from './repositories/IApplicationRepository';
-import type {IOAuth2TokenRepository} from './repositories/IOAuth2TokenRepository';
-import {OAuth2TokenRepository} from './repositories/OAuth2TokenRepository';
 
 interface OAuth2ServiceDeps {
 	applicationRepository?: IApplicationRepository;
@@ -48,6 +49,11 @@ export class OAuth2Service {
 	) {
 		this.applications = deps.applicationRepository ?? new ApplicationRepository();
 		this.tokens = deps.oauth2TokenRepository ?? new OAuth2TokenRepository();
+	}
+
+	private async findActiveUser(userId: UserID) {
+		const user = await this.apiContext.services.users.findUnique(userId);
+		return user && !isSignInRefused(user) ? user : null;
 	}
 
 	private parseScope(scope: string): Array<string> {
@@ -295,7 +301,13 @@ export class OAuth2Service {
 					throw new InvalidGrantError();
 				}
 			}
-			await this.tokens.deleteAuthorizationCode(code);
+			if (authCode.userId && !(await this.findActiveUser(authCode.userId))) {
+				throw new InvalidGrantError();
+			}
+			if (!(await this.tokens.consumeAuthorizationCode(code, authCode.applicationId))) {
+				Logger.debug({code_len: code.length}, 'OAuth2 tokenExchange: authorization code already redeemed');
+				throw new InvalidGrantError();
+			}
 			const res = await this.issueTokens({
 				application,
 				userId: authCode.userId,
@@ -316,7 +328,12 @@ export class OAuth2Service {
 		if (refresh.applicationId !== application.applicationId) {
 			throw new InvalidGrantError();
 		}
-		await this.tokens.deleteRefreshToken(params.refreshToken!, refresh.applicationId, refresh.userId);
+		if (!(await this.findActiveUser(refresh.userId))) {
+			throw new InvalidGrantError();
+		}
+		if (!(await this.tokens.consumeRefreshToken(params.refreshToken!, refresh.applicationId, refresh.userId))) {
+			throw new InvalidGrantError();
+		}
 		const res = await this.issueTokens({
 			application,
 			userId: refresh.userId,
@@ -333,14 +350,14 @@ export class OAuth2Service {
 
 	async userInfo(accessToken: string) {
 		const token = await this.tokens.getAccessToken(accessToken);
-		if (!token || !token.userId) {
+		if (!token?.userId) {
 			throw new InvalidTokenError();
 		}
 		const application = await this.applications.getApplication(token.applicationId);
 		if (!application) {
 			throw new InvalidTokenError();
 		}
-		const user = await this.apiContext.services.users.findUnique(token.userId);
+		const user = await this.findActiveUser(token.userId);
 		if (!user) {
 			throw new InvalidTokenError();
 		}
@@ -378,6 +395,9 @@ export class OAuth2Service {
 		}
 		const accessToken = await this.tokens.getAccessToken(tokenStr);
 		if (accessToken && accessToken.applicationId === application.applicationId) {
+			if (accessToken.userId && !(await this.findActiveUser(accessToken.userId))) {
+				return {active: false};
+			}
 			return {
 				active: true,
 				client_id: accessToken.applicationId.toString(),
@@ -390,6 +410,9 @@ export class OAuth2Service {
 		}
 		const refreshToken = await this.tokens.getRefreshToken(tokenStr);
 		if (refreshToken && refreshToken.applicationId === application.applicationId) {
+			if (!(await this.findActiveUser(refreshToken.userId))) {
+				return {active: false};
+			}
 			return {
 				active: true,
 				client_id: refreshToken.applicationId.toString(),

@@ -12,7 +12,10 @@
     message_id := integer(),
     region := binary() | undefined,
     ringing := [integer()],
-    recipients := [integer()]
+    recipients := [integer()],
+    caller_id => integer() | undefined,
+    caller_name => binary() | undefined,
+    caller_avatar => binary() | undefined
 }.
 -type call_request() ::
     {get_state}
@@ -28,7 +31,9 @@
     | {update_voice_state, integer(), map()}
     | {get_sessions}
     | {get_pending_connections}.
--type cast_request() :: {join_async, integer(), map(), binary(), pid()}.
+-type cast_request() ::
+    {join_async, integer(), map(), binary(), pid()}
+    | {set_caller, map()}.
 -type info_message() ::
     {'DOWN', reference(), process, pid(), term()}
     | {ring_timeout, integer()}
@@ -58,20 +63,25 @@ init(CallData) ->
     {ok, FinalState}.
 
 -spec build_initial_state(call_data()) -> map().
-build_initial_state(#{
-    channel_id := ChannelId,
-    message_id := MessageId,
-    region := Region,
-    ringing := Ringing,
-    recipients := Recipients
-}) ->
+build_initial_state(
     #{
+        channel_id := ChannelId,
+        message_id := MessageId,
+        region := Region,
+        ringing := Ringing,
+        recipients := Recipients
+    } = CallData
+) ->
+    State = #{
         channel_id => ChannelId,
         message_id => MessageId,
         region => Region,
         ringing => [],
         pending_ringing => Ringing,
         recipients => Recipients,
+        caller_id => undefined,
+        caller_name => undefined,
+        caller_avatar => undefined,
         voice_states => #{},
         sessions => #{},
         pending_connections => #{},
@@ -81,7 +91,8 @@ build_initial_state(#{
         created_at => erlang:system_time(millisecond),
         participants_history => sets:new(),
         last_call_event => undefined
-    }.
+    },
+    call_state:put_caller(CallData, State).
 
 -spec run_init_pipeline(map()) -> map().
 run_init_pipeline(State) ->
@@ -155,6 +166,8 @@ handle_cast(Request, State) ->
     case decode_cast_request(Request) of
         {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}} ->
             call_voice:handle_join_async(UserId, VoiceState, SessionId, SessionPid, State);
+        {ok, {set_caller, Caller}} ->
+            {noreply, call_state:put_caller(Caller, State)};
         error ->
             {noreply, State}
     end.
@@ -308,6 +321,8 @@ decode_cast_request({join_async, UserId, VoiceState, SessionId, SessionPid}) whe
     is_integer(UserId), is_map(VoiceState), is_binary(SessionId), is_pid(SessionPid)
 ->
     {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}};
+decode_cast_request({set_caller, Caller}) when is_map(Caller) ->
+    {ok, {set_caller, Caller}};
 decode_cast_request(_) ->
     error.
 

@@ -152,7 +152,7 @@ spawn_connect(Host, Port, AuthToken, State) ->
 -spec connect_and_notify(string(), inet:port_number(), map(), pid()) -> ok.
 connect_and_notify(Host, Port, Opts, Parent) ->
     _ =
-        case nats:connect(Host, Port, Opts) of
+        case gateway_nats_pool_conn:connect(Host, Port, Opts) of
             {ok, Conn} ->
                 ok = nats:controlling_process(Conn, Parent),
                 Parent ! {nats_connect_result, self(), {ok, Conn}};
@@ -169,7 +169,7 @@ do_subscribe(#{conn := Conn, rpc_enabled := RpcEnabled} = State) when
         false ->
             logger:info(
                 "Gateway NATS RPC connected but subscription disabled"
-                " (GATEWAY_NATS_RPC_ENABLED=false)"
+                " (FLUXER_GATEWAY_NATS_RPC_ENABLED=false)"
             ),
             State;
         _ ->

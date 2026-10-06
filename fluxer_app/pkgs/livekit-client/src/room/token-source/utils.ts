@@ -11,19 +11,24 @@ const ONE_MINUTE_IN_MILLISECONDS = 60 * ONE_SECOND_IN_MILLISECONDS;
 
 export function isResponseTokenValid(response: TokenSourceResponse) {
 	const jwtPayload = decodeTokenPayload(response.participantToken);
-	if (!jwtPayload?.nbf || !jwtPayload?.exp) {
-		return true;
+	if (!jwtPayload?.exp) {
+		return false;
 	}
 
 	const now = new Date();
 
-	const nbfInMilliseconds = jwtPayload.nbf * ONE_SECOND_IN_MILLISECONDS;
-	const nbfDate = new Date(nbfInMilliseconds);
+	if (jwtPayload.nbf) {
+		const nbfInMilliseconds = jwtPayload.nbf * ONE_SECOND_IN_MILLISECONDS;
+		const nbfDate = new Date(nbfInMilliseconds);
+		if (nbfDate > now) {
+			return false;
+		}
+	}
 
 	const expInMilliseconds = jwtPayload.exp * ONE_SECOND_IN_MILLISECONDS;
 	const expDate = new Date(expInMilliseconds - ONE_MINUTE_IN_MILLISECONDS);
 
-	return nbfDate <= now && expDate > now;
+	return expDate > now;
 }
 
 export function decodeTokenPayload(token: string) {
@@ -34,7 +39,9 @@ export function decodeTokenPayload(token: string) {
 	const mappedPayload: TokenPayload = {
 		...rest,
 		roomConfig: payload.roomConfig
-			? (RoomConfiguration.fromJson(toJsonObject(payload.roomConfig)) as RoomConfigurationObject)
+			? (RoomConfiguration.fromJson(toJsonObject(payload.roomConfig), {
+					ignoreUnknownFields: true,
+				}) as RoomConfigurationObject)
 			: undefined,
 	};
 
@@ -60,6 +67,7 @@ export function areTokenSourceFetchOptionsEqual(a: TokenSourceFetchOptions, b: T
 			case 'participantAttributes':
 			case 'agentName':
 			case 'agentMetadata':
+			case 'deployment':
 				if (a[key] !== b[key]) {
 					return false;
 				}

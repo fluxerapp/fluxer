@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
+import type {Guild} from '@app/api/models/Guild';
+import type {User} from '@app/api/models/User';
 import type {GuildAdminResponse, ListUserGuildsResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
-import {mapGuildFeatures} from '../../guild/GuildFeatureUtils';
-import type {Guild} from '../../models/Guild';
-import type {User} from '../../models/User';
 
 function formatOwnerFields(ownerUser: User | null): {
 	owner_username: string | null;

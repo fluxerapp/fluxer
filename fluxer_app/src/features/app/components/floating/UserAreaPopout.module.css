@@ -1,9 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.container {
-	width: 20rem;
-}
-
 .customStatusRow {
 	display: flex;
 	align-items: center;

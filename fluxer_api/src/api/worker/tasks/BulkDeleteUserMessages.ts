@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import {Logger} from '@app/api/Logger';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import {createUserID} from '../../BrandedTypes';
-import {UserMessageDeletionService} from '../../channel/services/message/UserMessageDeletionService';
-import {Logger} from '../../Logger';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	userId: z.string(),
@@ -16,7 +16,8 @@ const bulkDeleteUserMessages: WorkerTaskHandler = async (payload, helpers) => {
 	helpers.logger.debug({payload: validated}, 'Processing bulkDeleteUserMessages task');
 	const userId = createUserID(BigInt(validated.userId));
 	const scheduledAtMs = validated.scheduledAt ?? Number.POSITIVE_INFINITY;
-	const {channelRepository, gatewayService, userRepository, storageService, purgeQueue} = getWorkerDependencies();
+	const {channelRepository, gatewayService, userRepository, storageService, purgeQueue, workerService} =
+		getWorkerDependencies();
 	const user = await userRepository.findUniqueAssert(userId);
 	if (!user.pendingBulkMessageDeletionAt) {
 		Logger.debug({userId}, 'User has no pending bulk message deletion, skipping (already completed)');
@@ -27,6 +28,7 @@ const bulkDeleteUserMessages: WorkerTaskHandler = async (payload, helpers) => {
 		gatewayService,
 		storageService,
 		purgeQueue,
+		workerService,
 	});
 	const totalDeleted = await deletionService.deleteUserMessagesBulk(userId, {
 		beforeTimestamp: scheduledAtMs,

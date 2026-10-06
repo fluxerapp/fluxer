@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export const VOICE_LOCAL_AUDIO_RECONCILE_REASON_LIMIT = 8;
 export const VOICE_LOCAL_AUDIO_RECONCILE_FOLLOW_UP_WARN_LIMIT = 16;
@@ -98,7 +98,7 @@ const voiceLocalAudioReconcileCoalescerMachine = setup({
 export type VoiceLocalAudioReconcileCoalescerSnapshot = SnapshotFrom<typeof voiceLocalAudioReconcileCoalescerMachine>;
 
 export function createVoiceLocalAudioReconcileCoalescerSnapshot(): VoiceLocalAudioReconcileCoalescerSnapshot {
-	return getInitialSnapshot(voiceLocalAudioReconcileCoalescerMachine);
+	return initialTransition(voiceLocalAudioReconcileCoalescerMachine)[0];
 }
 
 export function transitionVoiceLocalAudioReconcileCoalescerSnapshot(
@@ -209,7 +209,7 @@ const voiceMicrophoneFailureLatchMachine = setup({
 export type VoiceMicrophoneFailureLatchSnapshot = SnapshotFrom<typeof voiceMicrophoneFailureLatchMachine>;
 
 export function createVoiceMicrophoneFailureLatchSnapshot(): VoiceMicrophoneFailureLatchSnapshot {
-	return getInitialSnapshot(voiceMicrophoneFailureLatchMachine);
+	return initialTransition(voiceMicrophoneFailureLatchMachine)[0];
 }
 
 export function transitionVoiceMicrophoneFailureLatchSnapshot(

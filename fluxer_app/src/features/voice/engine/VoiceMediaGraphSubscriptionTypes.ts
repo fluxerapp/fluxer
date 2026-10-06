@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceTrackSource} from './VoiceTrackSource';
+import type {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 
 export type VoiceMediaGraphVideoQuality = 'low' | 'medium' | 'high';
 export type VoiceMediaGraphSubscriptionContext = 'focused' | 'carousel' | 'hidden';

@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {ChannelPinsResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createMessageResponseDataService} from '../services/message/MessageResponseDataService';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
 import {
 	createPermissionOverwrite,
 	pinMessage,
 	sendChannelMessage,
 	setupTestGuildWithMembers,
 	updateGuild,
-} from './ChannelTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {ChannelPinsResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 describe('Channel pins listing', () => {
 	let harness: ApiTestHarness;

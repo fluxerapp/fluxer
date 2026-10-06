@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, MessageID} from '../../../BrandedTypes';
-import {fetchOne} from '../../../database/CassandraQueryExecution';
-import type {AttachmentLookupRow} from '../../../database/types/MessageTypes';
-import {AttachmentLookup} from '../../../Tables';
+import type {AttachmentID, ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {fetchOne} from '@app/api/database/CassandraQueryExecution';
+import type {AttachmentLookupRow} from '@app/api/database/types/MessageTypes';
+import {AttachmentLookup} from '@app/api/Tables';
 
 const LOOKUP_ATTACHMENT_BY_CHANNEL_AND_FILENAME_QUERY = AttachmentLookup.selectCql({
 	where: [

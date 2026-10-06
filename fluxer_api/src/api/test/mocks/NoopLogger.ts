@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ILogger} from '@app/api/ILogger';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
-import type {ILogger} from '../../ILogger';
 
 function noop(): void {}
 

@@ -285,7 +285,7 @@ const IMAGE_LOOKUP_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const GOOGLE_LENS_DESCRIPTOR = msg({
-	message: 'Google lens',
+	message: 'Google Lens',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const IMAGE_SEARCH_PROVIDER_DESCRIPTOR = msg({
@@ -386,6 +386,34 @@ const TEXT_REPLACEMENT_DESCRIPTOR = msg({
 });
 const REPLACE_COMMON_EMOTICONS_LIKE_SMILE_AND_HEART_DESCRIPTOR = msg({
 	message: 'Swap common text faces such as :) and <3 for emoji when sending messages',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+const KEEP_ATTACHMENTS_WHEN_CLEARING_AN_EDIT_DESCRIPTOR = msg({
+	message: 'Keep attachments when clearing an edit',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+const EMPTY_EDIT_DESCRIPTOR = msg({
+	message: 'Empty edit',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const CLEAR_MESSAGE_TEXT_DESCRIPTOR = msg({
+	message: 'Clear message text',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const DELETE_PROMPT_DESCRIPTOR = msg({
+	message: 'Delete prompt',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const MESSAGE_EDITING_DESCRIPTOR = msg({
+	message: 'Message editing',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const KEEP_ATTACHMENTS_DESCRIPTOR = msg({
+	message: 'Keep attachments',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const CLEARING_THE_TEXT_OF_A_MESSAGE_WITH_ATTACHMENTS_ASKS_TO_DELETE_IT_DESCRIPTOR = msg({
+	message: 'When this is off, clearing the text of a message with attachments asks you to delete the message',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const MESSAGE_INPUT_BUTTONS_DESCRIPTOR = msg({
@@ -692,6 +720,23 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 		description: REPLACE_COMMON_EMOTICONS_LIKE_SMILE_AND_HEART_DESCRIPTOR,
 		audience: 'primary',
 		tags: ['chat'],
+	},
+	{
+		id: 'chat-settings-keep-attachments-on-empty-edit',
+		tabType: 'chat_settings',
+		sectionId: 'input',
+		label: KEEP_ATTACHMENTS_WHEN_CLEARING_AN_EDIT_DESCRIPTOR,
+		keywords: [
+			EMPTY_EDIT_DESCRIPTOR,
+			CLEAR_MESSAGE_TEXT_DESCRIPTOR,
+			DELETE_PROMPT_DESCRIPTOR,
+			MESSAGE_EDITING_DESCRIPTOR,
+			KEEP_ATTACHMENTS_DESCRIPTOR,
+		],
+		description: CLEARING_THE_TEXT_OF_A_MESSAGE_WITH_ATTACHMENTS_ASKS_TO_DELETE_IT_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['chat'],
+		addedAt: '2026-09-11T00:00:00.000Z',
 	},
 	{
 		id: 'chat-settings-scroll-to-bottom-on-send',

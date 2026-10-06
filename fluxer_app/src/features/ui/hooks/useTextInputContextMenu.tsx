@@ -172,7 +172,7 @@ export const useTextInputContextMenu = () => {
 	useEffect(() => {
 		if (!nativeShim) return;
 		const electronAPI = getElectronAPI();
-		if (!electronAPI || !electronAPI.onTextareaContextMenu) return;
+		if (!electronAPI?.onTextareaContextMenu) return;
 		let recentTarget: RecentContextMenuTarget | null = null;
 		const onContextMenuCapture = (event: MouseEvent) => {
 			const editable = getEditableTarget(event.target as Element | null);

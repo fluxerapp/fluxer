@@ -15,7 +15,10 @@ use self::iso_bmff::iso_bmff_sniff;
 use self::stream_containers::{is_adts, looks_like_svg, matroska_sniff, mpeg_ts_sniff, ogg_sniff};
 use crate::media_type::MediaType;
 
-pub use self::registry::{category, extension_mime, normalize, passthrough_mime};
+pub use self::registry::{
+    INERT_CONTENT_TYPE, category, extension_mime, is_javascript_content_type, normalize,
+    passthrough_mime,
+};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Category {

@@ -15,7 +15,8 @@ const DISPLAY_DESCRIPTOR = msg({
 });
 const INPUT_DESCRIPTOR = msg({
 	message: 'Input',
-	comment: 'Short label in the chat settings tab. Keep it concise.',
+	context: 'chat-settings-section',
+	comment: 'Chat settings section for message composer/input behavior.',
 });
 const ChatSettingsTab: React.FC = observer(() => {
 	const {i18n} = useLingui();

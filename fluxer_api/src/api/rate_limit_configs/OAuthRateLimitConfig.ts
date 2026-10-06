@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const OAuthRateLimitConfigs = {
 	OAUTH_AUTHORIZE: {
@@ -15,6 +15,7 @@ export const OAuthRateLimitConfigs = {
 	OAUTH_TOKEN: {
 		bucket: 'oauth:token',
 		config: {limit: 120, windowMs: ms('1 minute')},
+		trustForwardedClientIp: true,
 	} as RouteRateLimitConfig,
 	OAUTH_INTROSPECT: {
 		bucket: 'oauth:introspect',
@@ -23,6 +24,7 @@ export const OAuthRateLimitConfigs = {
 	OAUTH_REVOKE: {
 		bucket: 'oauth:revoke',
 		config: {limit: 120, windowMs: ms('1 minute')},
+		trustForwardedClientIp: true,
 	} as RouteRateLimitConfig,
 	OAUTH_DEV_CLIENTS_LIST: {
 		bucket: 'oauth_dev:clients:list',

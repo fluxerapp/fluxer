@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GifController} from '@app/api/gif/GifController';
+import {GifService} from '@app/api/gif/GifService';
+import type {IGifProvider} from '@app/api/gif/IGifProvider';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {GIF_PROVIDER_HEADER, type GifResponse} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import {Hono} from 'hono';
 import {describe, expect, it, vi} from 'vitest';
-import type {HonoEnv} from '../types/HonoEnv';
-import {GifController} from './GifController';
-import {GifService} from './GifService';
-import type {IGifProvider} from './IGifProvider';
 
 function createProvider(gifs: Array<GifResponse>): IGifProvider {
 	return {
@@ -33,7 +33,6 @@ function createApp(gifService: GifService): Hono<HonoEnv> {
 		ctx.set('gifService', gifService);
 		ctx.set('user', {
 			isBot: false,
-			suspiciousActivityFlags: 0,
 		} as HonoEnv['Variables']['user']);
 		ctx.set('authTokenType', 'session');
 		await next();

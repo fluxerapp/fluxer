@@ -9,6 +9,7 @@ import {
 import {Message} from '@app/features/channel/components/ChannelMessage';
 import {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import {isNewMessageGroup} from '@app/features/messaging/utils/MessageGroupingUtils';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
@@ -239,7 +240,7 @@ export const MessagesTabContent: React.FC = observer(() => {
 		() =>
 			MESSAGE_GROUP_SPACING_OPTIONS.map((value) => ({
 				value,
-				label: i18n._(PIXELS_DESCRIPTOR, {messageGroupSpacing: value}),
+				label: i18n._(PIXELS_DESCRIPTOR, {messageGroupSpacing: getCachedNumberFormat(i18n.locale).format(value)}),
 			})),
 		[i18n.locale],
 	);

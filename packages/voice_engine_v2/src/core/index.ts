@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export {isVoiceEngineV2CommandCompletionStale, transitionVoiceEngineV2} from './reducer';
-export {shouldApplyGatewayVoiceStateEcho} from './reducers/gateway';
+export {isVoiceEngineV2CommandCompletionStale, transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
+export {shouldApplyGatewayVoiceStateEcho} from '@fluxer/voice_engine_v2/src/core/reducers/gateway';
 export type {
 	VoiceEngineV2CapabilitiesProjection,
 	VoiceEngineV2DeviceProjection,
@@ -10,7 +10,7 @@ export type {
 	VoiceEngineV2StatsPresentationNetworkSummary,
 	VoiceEngineV2StatsPresentationProjection,
 	VoiceEngineV2StatsProjection,
-} from './selectors';
+} from '@fluxer/voice_engine_v2/src/core/selectors';
 export {
 	selectVoiceEngineV2CapabilitiesProjection,
 	selectVoiceEngineV2ConnectionProjection,
@@ -26,7 +26,7 @@ export {
 	selectVoiceEngineV2StatsProjection,
 	selectVoiceEngineV2StatsSummary,
 	selectVoiceEngineV2WatchedStreams,
-} from './selectors';
+} from '@fluxer/voice_engine_v2/src/core/selectors';
 export type {
 	SourceLifecycleState,
 	VoiceEngineV2ConnectionState,
@@ -49,11 +49,11 @@ export type {
 	VoiceEngineV2RoomState,
 	VoiceEngineV2Snapshot,
 	VoiceEngineV2Transition,
-} from './state';
+} from '@fluxer/voice_engine_v2/src/core/state';
 export {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	createVoiceEngineV2PermissionResult,
 	emptyVoiceEngineV2DeviceInventory,
 	unavailableVoiceEngineV2Capabilities,
-} from './state';
+} from '@fluxer/voice_engine_v2/src/core/state';

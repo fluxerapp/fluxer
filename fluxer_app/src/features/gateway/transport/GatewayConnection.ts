@@ -28,6 +28,7 @@ import {selectGuildActivationTarget} from '@app/features/gateway/transport/Guild
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch from '@app/features/member/state/MemberSearch';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
@@ -44,7 +45,7 @@ import LayerManager from '@app/features/ui/state/LayerManager';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {DEFAULT_API_VERSION, FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 import {GatewayIdentifyFlags} from '@fluxer/constants/src/GatewayConstants';
-import {action, makeAutoObservable, reaction, runInAction} from 'mobx';
+import {action, actionBound, makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const logger = new Logger('GatewayConnection');
 
@@ -97,26 +98,26 @@ class GatewayConnection {
 		>(
 			this,
 			{
-				startSession: action.bound,
-				beginConnectionGrace: action.bound,
-				clearConnectionGrace: action.bound,
+				startSession: actionBound,
+				beginConnectionGrace: actionBound,
+				clearConnectionGrace: actionBound,
 				connectionGraceTimer: false,
 				previousSessionId: false,
-				setToken: action.bound,
-				sendInvisiblePresenceForCurrentSession: action.bound,
-				retireCurrentSession: action.bound,
-				logout: action.bound,
-				handleGatewayReady: action.bound,
-				handleConnectionResumed: action.bound,
-				handleConnectionClosed: action.bound,
-				cleanupSocket: action.bound,
-				handleGatewayDispatch: action.bound,
-				handleFatalGatewaySocketError: action.bound,
-				ensureGuildActiveAndSynced: action.bound,
-				flushPendingGuildSync: action.bound,
-				syncGuildIfNeeded: action.bound,
-				markGuildSynced: action.bound,
-				applyGatewayGeoip: action.bound,
+				setToken: actionBound,
+				sendInvisiblePresenceForCurrentSession: actionBound,
+				retireCurrentSession: actionBound,
+				logout: actionBound,
+				handleGatewayReady: actionBound,
+				handleConnectionResumed: actionBound,
+				handleConnectionClosed: actionBound,
+				cleanupSocket: actionBound,
+				handleGatewayDispatch: actionBound,
+				handleFatalGatewaySocketError: actionBound,
+				ensureGuildActiveAndSynced: actionBound,
+				flushPendingGuildSync: actionBound,
+				syncGuildIfNeeded: actionBound,
+				markGuildSynced: actionBound,
+				applyGatewayGeoip: actionBound,
 			},
 			{autoBind: true},
 		);
@@ -587,6 +588,7 @@ class GatewayConnection {
 		Presence.handleSessionInvalidated();
 		Messages.handleSessionInvalidated();
 		FavoriteMemes.reset();
+		AttachmentUrlRefresher.reset();
 		GuildMatureContentAgree.reset();
 		Initialization.reset();
 		MemberSearch.handleLogout();

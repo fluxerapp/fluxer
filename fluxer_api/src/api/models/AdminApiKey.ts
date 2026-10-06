@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import type {AdminApiKeyRow} from '../database/types/AdminAuthTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {AdminApiKeyRow} from '@app/api/database/types/AdminAuthTypes';
 
 export class AdminApiKey {
 	readonly keyId: bigint;

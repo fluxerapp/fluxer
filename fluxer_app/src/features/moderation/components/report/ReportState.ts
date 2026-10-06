@@ -7,7 +7,7 @@ import {
 	INITIAL_FORM_VALUES,
 	type State,
 } from '@app/features/moderation/components/report/ReportTypes';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 type ReportMachineContext = Omit<State, 'flowStep'>;
 
@@ -162,7 +162,7 @@ export const reportStateMachine = setup({
 export type ReportMachineSnapshot = SnapshotFrom<typeof reportStateMachine>;
 
 export function createReportSnapshot(): ReportMachineSnapshot {
-	return getInitialSnapshot(reportStateMachine);
+	return initialTransition(reportStateMachine)[0];
 }
 
 export function transitionReportSnapshot(snapshot: ReportMachineSnapshot, event: Action): ReportMachineSnapshot {

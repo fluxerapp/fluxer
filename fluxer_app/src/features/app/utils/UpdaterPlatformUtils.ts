@@ -5,5 +5,5 @@ export function shouldShowNativeDesktopUpdateInApp(platform: string | null | und
 }
 
 export function shouldShowNativeDesktopUpdateDownloadProgress(platform: string | null | undefined): boolean {
-	return platform === 'win32';
+	return platform === 'win32' || platform === 'linux';
 }

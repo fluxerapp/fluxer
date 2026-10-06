@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import {Config} from '@app/api/Config';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IMediaService, MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {stripNonJpegImageMetadata} from '@app/api/infrastructure/StorageObjectHelpers';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {bannedAvatarHashCache} from '@app/api/middleware/BannedAvatarHashCache';
 import {
 	type AssetKind,
 	formatAssetUploadExtensions,
@@ -14,15 +23,6 @@ import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlo
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import sharp from 'sharp';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import {bannedAvatarHashCache} from '../middleware/BannedAvatarHashCache';
-import {contentModerationService} from './ContentModerationService';
-import type {IMediaService, MediaProxyMetadataResponse} from './IMediaService';
-import type {IStorageService} from './IStorageService';
-import {stripNonJpegImageMetadata} from './StorageObjectHelpers';
 
 type ResourceType = 'attachment' | 'avatar' | 'emoji' | 'sticker' | 'banner' | 'other';
 type LimitConfigSnapshotProvider = Pick<LimitConfigService, 'getConfigSnapshot'>;
@@ -251,6 +251,45 @@ export class AvatarService {
 			destinationBucket: Config.s3.buckets.cdn,
 			destinationKey: `emojis/${emojiId}`,
 		});
+	}
+
+	async copyGuildIconToWebhookAvatar(params: {
+		guildId: bigint;
+		iconHash: string | null;
+		webhookId: bigint;
+	}): Promise<string | null> {
+		const {guildId, iconHash, webhookId} = params;
+		if (!iconHash) return null;
+		const key = this.stripAnimationPrefix(iconHash);
+		try {
+			await this.storageService.copyObject({
+				sourceBucket: Config.s3.buckets.cdn,
+				sourceKey: `icons/${guildId}/${key}`,
+				destinationBucket: Config.s3.buckets.cdn,
+				destinationKey: `avatars/${webhookId}/${key}`,
+			});
+		} catch (error) {
+			if (error instanceof Error && (error.name === 'NoSuchKey' || error.name === 'NotFound')) {
+				return null;
+			}
+			throw error;
+		}
+		return iconHash;
+	}
+
+	async ensureWebhookAvatarFromGuildIcon(params: {
+		guildId: bigint;
+		iconHash: string | null;
+		webhookId: bigint;
+	}): Promise<string | null> {
+		const {iconHash, webhookId} = params;
+		if (!iconHash) return null;
+		const existing = await this.storageService.getObjectMetadata(
+			Config.s3.buckets.cdn,
+			`avatars/${webhookId}/${this.stripAnimationPrefix(iconHash)}`,
+		);
+		if (existing) return iconHash;
+		return this.copyGuildIconToWebhookAvatar(params);
 	}
 
 	async processSticker(params: {errorPath: string; base64Image: string; guildFeatures: Iterable<string>}): Promise<{

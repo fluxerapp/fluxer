@@ -1,0 +1,178 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.banner {
+	position: relative;
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 5.5rem;
+	overflow: hidden;
+	background-color: var(--background-tertiary);
+	border-bottom: 0.0625rem solid var(--background-header-secondary);
+}
+
+.patternImage {
+	position: absolute;
+	inset: 0;
+	background-size: 16.25rem 16.25rem;
+	background-repeat: repeat;
+	opacity: 0.06;
+	filter: invert(1);
+	background-color: transparent;
+	pointer-events: none;
+}
+
+.bannerRow {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-3);
+}
+
+.sourceGuildIcon {
+	box-shadow: 0 0 0 0.25rem var(--background-tertiary);
+}
+
+.sourceChip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	min-width: 0;
+	max-width: 14rem;
+	height: 2.5rem;
+	padding: 0 var(--spacing-3);
+	border-radius: var(--radius-md);
+	background-color: var(--background-modifier-accent);
+	color: var(--text-primary);
+}
+
+.sourceChipIcon {
+	width: 1.125rem;
+	height: 1.125rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.sourceChipName {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 1rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+	padding-top: var(--spacing-5);
+	padding-bottom: var(--spacing-4);
+}
+
+.intro {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	text-align: center;
+}
+
+.title {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 700;
+	line-height: 1.5rem;
+	color: var(--text-primary);
+}
+
+.description {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.hint {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.emptyState {
+	border-radius: var(--radius-lg);
+	background-color: var(--background-tertiary);
+	padding: var(--spacing-4);
+	text-align: center;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.guildOption {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	width: 100%;
+	min-height: 2rem;
+}
+
+.guildAvatar,
+.guildAvatarPlaceholder {
+	height: 1.5rem;
+	width: 1.5rem;
+	border-radius: 62.4375rem;
+	flex: 0 0 1.5rem;
+}
+
+.guildAvatar {
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.guildAvatarPlaceholder {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--background-modifier-accent);
+	color: var(--text-primary);
+	font-weight: 700;
+	font-size: 0.75rem;
+}
+
+.optionLabel {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-primary);
+}
+
+.channelOption {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	width: 100%;
+	min-width: 0;
+	min-height: 2rem;
+}
+
+.channelIcon {
+	height: 1.125rem;
+	width: 1.125rem;
+	flex-shrink: 0;
+	color: var(--text-tertiary);
+}
+
+.categoryName {
+	margin-left: auto;
+	flex-shrink: 0;
+	max-width: 40%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+}

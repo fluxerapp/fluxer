@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {StickerID} from '../BrandedTypes';
-import type {MessageStickerItem} from '../database/types/MessageTypes';
+import type {StickerID} from '@app/api/BrandedTypes';
+import type {MessageStickerItem} from '@app/api/database/types/MessageTypes';
 
 export class StickerItem {
 	readonly id: StickerID;

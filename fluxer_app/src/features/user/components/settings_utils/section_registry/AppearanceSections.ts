@@ -7,8 +7,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {shouldShowHdrSettings} from '@app/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab';
 import {shouldShowAppZoomLevel} from '@app/features/user/components/settings_utils/AppZoomLevelUtils';
-import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	CHANNEL_LIST_DESCRIPTOR,
 	CHAT_INPUT_DESCRIPTOR,
@@ -29,7 +28,8 @@ import {
 	TYPING_DESCRIPTOR,
 	UNREAD_DESCRIPTOR,
 	VOICE_DESCRIPTOR,
-} from './SharedDescriptors';
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {msg} from '@lingui/core/macro';
 
 const CHOOSE_A_BASE_APPEARANCE_MANAGE_QUICK_CSS_ORGANIZE_DESCRIPTOR = msg({
 	message: 'Choose a base appearance, manage quick CSS, organize saved theme files, and tune theme tokens.',
@@ -380,7 +380,7 @@ const JOIN_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const DOUBLE_CLICK_DESCRIPTOR = msg({
-	message: 'Double click',
+	message: 'Double-click',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const DOUBLE_CLICK_2_DESCRIPTOR = msg({
@@ -432,7 +432,7 @@ const ACTIVE_NOW_DESCRIPTOR = msg({
 	comment: 'Settings section label. Also used as a search synonym in the settings search bar.',
 });
 const CONTROL_HOW_ACTIVE_NOW_SURFACES_ACROSS_THE_APP_DESCRIPTOR = msg({
-	message: 'Control how active now surfaces across the app.',
+	message: 'Control how active now appears across the app.',
 	comment: 'Settings section description. One-line summary of what the settings section controls.',
 });
 const ACTIVITY_DESCRIPTOR = msg({

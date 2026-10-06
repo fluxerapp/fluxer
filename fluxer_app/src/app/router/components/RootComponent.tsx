@@ -66,6 +66,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 			pathname.startsWith(Routes.REGISTER) ||
 			pathname.startsWith(Routes.FORGOT_PASSWORD) ||
 			pathname.startsWith(Routes.RESET_PASSWORD) ||
+			pathname.startsWith(Routes.RECOVER_ACCOUNT) ||
 			pathname.startsWith(Routes.VERIFY_EMAIL) ||
 			pathname.startsWith(Routes.AUTHORIZE_IP) ||
 			pathname.startsWith(Routes.EMAIL_REVERT) ||
@@ -214,7 +215,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		) {
 			return;
 		}
-		if (location.pathname === Routes.HOME) {
+		if (location.pathname === Routes.HOME || location.pathname === Routes.APP) {
 			return;
 		}
 		hasStartedRestoreRef.current = true;

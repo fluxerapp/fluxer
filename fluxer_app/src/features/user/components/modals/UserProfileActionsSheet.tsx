@@ -136,7 +136,7 @@ export const UserProfileActionsSheet: React.FC<UserProfileActionsSheetProps> = o
 			((isCurrentUser && hasChangeNicknamePermission && !memberIsTimedOut) ||
 				(hasManageNicknamesPermission && canManageTarget(user.id)));
 		const handleCopyFluxerTag = () => {
-			TextCopyCommands.copy(i18n, `${user.username}#${user.discriminator}`, true);
+			TextCopyCommands.copy(i18n, user.tag, true);
 			onClose();
 		};
 		const handleCopyUserId = () => {

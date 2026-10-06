@@ -11,25 +11,25 @@
 	"scripts": {
 		"build": "node scripts/build.mjs",
 		"set-channel": "../tools/ci/run.sh build-desktop --step set_build_channel",
-		"test": "cargo test --manifest-path native/rust/Cargo.toml",
-		"typecheck": "pnpm set-channel && tsgo --noEmit"
+		"test": "pnpm test:main && cargo test --manifest-path native/rust/Cargo.toml",
+		"test:main": "node --test 'src/main/*.test.mjs'",
+		"typecheck": "pnpm set-channel && tsc --noEmit"
 	},
 	"dependencies": {
 		"@fluxer/voice_engine_v2": "workspace:*",
-		"@simplewebauthn/browser": "13.2.2",
+		"@simplewebauthn/browser": "14.0.0",
 		"franc-min": "6.2.0",
 		"hunspell-asm": "4.0.2",
-		"update-electron-app": "3.1.2",
-		"velopack": "0.0.1298"
+		"update-electron-app": "3.3.0",
+		"velopack": "1.2.0"
 	},
 	"devDependencies": {
-		"@types/node": "24.10.9",
-		"@typescript/native-preview": "7.0.0-dev.20260130.1",
-		"electron": "44.1.1",
-		"electron-builder": "27.0.0-alpha.7",
-		"electron-builder-squirrel-windows": "27.0.0-alpha.7",
-		"esbuild": "0.27.2",
-		"typescript": "5.9.3"
+		"@types/node": "24.13.5",
+		"electron": "44.4.1",
+		"electron-builder": "27.0.0-alpha.8",
+		"electron-builder-squirrel-windows": "27.0.0-alpha.8",
+		"esbuild": "catalog:",
+		"typescript": "catalog:ts7"
 	},
 	"knip": {
 		"ignoreDependencies": [
@@ -59,6 +59,6 @@
 		"@fluxer/win-game-capture": "file:./native/win-game-capture",
 		"@fluxer/win-process-loopback": "file:./native/win-process-loopback",
 		"@fluxer/windows-input-hook": "file:./native/windows-input-hook",
-		"electron-log": "5.4.3"
+		"electron-log": "5.4.4"
 	}
 }

@@ -29,12 +29,12 @@ Every bit Fluxer defines appears below.
 | 1 &lt;&lt; 8 | PRIORITY_SPEAKER | Use priority speaker in a guild voice channel, evaluated by the client |
 | 1 &lt;&lt; 9 | STREAM<sup>2</sup> | Publish a screenshare track on a guild voice connection |
 | 1 &lt;&lt; 10 | VIEW_CHANNEL<sup>3</sup> | View a guild channel |
-| 1 &lt;&lt; 11 | SEND_MESSAGES | Send a message in a guild text or voice channel |
+| 1 &lt;&lt; 11 | SEND_MESSAGES | Send a message in a guild text, announcement, or voice channel, and publish the caller's own announcement |
 | 1 &lt;&lt; 12 | SEND_TTS_MESSAGES | Send a message that requests text-to-speech playback |
 | 1 &lt;&lt; 13 | MANAGE_MESSAGES<sup>4</sup> | Delete another member's message, bulk delete messages, remove another member's reaction, and edit the flags and attachments of another member's message |
 | 1 &lt;&lt; 14 | EMBED_LINKS | Have a link in the caller's own message expanded into an embed |
 | 1 &lt;&lt; 15 | ATTACH_FILES | Attach a file to a message |
-| 1 &lt;&lt; 16 | READ_MESSAGE_HISTORY | Read messages that were sent before the current access began |
+| 1 &lt;&lt; 16 | READ_MESSAGE_HISTORY | Read messages sent before the guild's `message_history_cutoff`, or any message when the guild has no cutoff |
 | 1 &lt;&lt; 17 | MENTION_EVERYONE | Use the everyone and here mentions in a guild channel |
 | 1 &lt;&lt; 18 | USE_EXTERNAL_EMOJIS | Use an emoji owned by another guild in a message or a reaction |
 | 1 &lt;&lt; 20 | CONNECT | Connect to a guild voice channel |
@@ -46,7 +46,7 @@ Every bit Fluxer defines appears below.
 | 1 &lt;&lt; 26 | CHANGE_NICKNAME | Change the caller's own nickname in the guild |
 | 1 &lt;&lt; 27 | MANAGE_NICKNAMES | Change another member's nickname in the guild |
 | 1 &lt;&lt; 28 | MANAGE_ROLES<sup>5</sup> | Create, modify, position, and delete a role, assign a role to a member, and set a channel permission overwrite |
-| 1 &lt;&lt; 29 | MANAGE_WEBHOOKS | Create, modify, and delete a webhook on a guild channel |
+| 1 &lt;&lt; 29 | MANAGE_WEBHOOKS | Create, modify, and delete a webhook on a guild channel, and follow an announcement channel into it |
 | 1 &lt;&lt; 30 | MANAGE_EXPRESSIONS<sup>6</sup> | Modify and delete an emoji or sticker created by another member |
 | 1 &lt;&lt; 37 | USE_EXTERNAL_STICKERS | Use a sticker owned by another guild |
 | 1 &lt;&lt; 40 | MODERATE_MEMBERS | Apply and clear a member communication timeout |
@@ -96,6 +96,14 @@ Fluxer trims and lowercases each name in the header before matching it. A name t
 
 On [Create guild role](#create-guild-role), a request that supplies `permissions` without declaring the feature always creates the role with `VIEW_CHANNEL_MEMBERS` cleared. A request that omits `permissions` copies the everyone role mask without applying the gate.
 
+## Announcement channel permissions
+
+[Crosspost message](/http-api/messages/#crosspost-message) publishes a message from an announcement channel. The author needs `VIEW_CHANNEL` and `SEND_MESSAGES` in the channel. Publishing another member's message, or a webhook's, needs `MANAGE_MESSAGES` as well, and a caller without `READ_MESSAGE_HISTORY` can publish only a message newer than the guild's message history cutoff.
+
+[Follow announcement channel](/http-api/channels/#follow-announcement-channel) needs `VIEW_CHANNEL` on the announcement channel alone, so any member who can read it can follow it. The follow is created in the target guild, which needs `MANAGE_WEBHOOKS` at guild level and `VIEW_CHANNEL` and `MANAGE_WEBHOOKS` in the target channel. A guild receives copies only in a channel that one of its webhook managers chose.
+
+Delivery rechecks access. While the account that created a follow cannot view the announcement channel, no new copy is delivered through it.
+
 ## Elevated permissions
 
 `KICK_MEMBERS`, `BAN_MEMBERS`, `ADMINISTRATOR`, `MANAGE_CHANNELS`, `MANAGE_GUILD`, `MANAGE_MESSAGES`, `MANAGE_ROLES`, `MANAGE_WEBHOOKS`, and `MODERATE_MEMBERS` are elevated permissions. In a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, only the guild owner uses them without an enrolled authenticator.
@@ -105,7 +113,7 @@ An operation that asserts an elevated permission the caller holds but cannot use
 [List guild roles](#list-guild-roles) asserts no permission, so it never produces `TWO_FACTOR_REQUIRED`.
 
 :::note[The reported mask keeps every elevated bit]
-Elevation gates the operation. A `permissions` field reports what the caller's roles grant, so a client hiding an action must compare the guild [MFA level](/http-api/guilds/#mfa-levels) and its own enrolment state.
+The MFA requirement blocks the operation and leaves the mask unchanged. A `permissions` field reports what the caller's roles grant, so a client hiding an action must compare the guild [MFA level](/http-api/guilds/#mfa-levels) and its own enrolment state.
 :::
 
 ## Permission computation
@@ -138,6 +146,7 @@ While the timeout is in the future, these operations fail with 403 `COMMUNICATIO
 
 - Sending a message
 - Editing the caller's own message
+- Publishing the caller's own message in an announcement channel
 - Adding a reaction
 - Requesting an attachment upload
 - Starting a typing indicator
@@ -158,7 +167,7 @@ A caller manages a role when the caller's rank is strictly above the role's rank
 Fluxer enforces hierarchy independently of `MANAGE_ROLES`. A caller who holds the permission without outranking the target role receives 403 `MISSING_PERMISSIONS`. A caller whose only `MANAGE_ROLES` comes from the everyone role has no assigned role, so they can manage no role.
 
 :::caution[A non-owner cannot grant a permission they lack]
-A requested bit outside the caller's own effective guild permissions fails the whole request with `MISSING_PERMISSIONS`. Fluxer runs that check after it resolves the unassigned and feature-gated bits.
+A requested bit outside the caller's own effective guild permissions fails the whole request with `MISSING_PERMISSIONS`. Fluxer runs that check after it discards unassigned bits and handles feature-gated bits as [Feature-gated permission bits](#feature-gated-permission-bits) describes.
 :::
 
 ## Guild role object
@@ -213,7 +222,7 @@ Each entry names one role and the rank the caller requests for it.
 | id | snowflake | The ID of the role |
 | position?<sup>1</sup> | integer | The rank the caller requests for the role, where a larger value ranks higher |
 
-<sup>1</sup> Fluxer ranks a role whose entry omits the field by its stored `position` in the same sort, so a role that requested a position above that value still displaces it
+<sup>1</sup> Fluxer sorts a role whose entry omits the field by its stored `position`, in the same sort as the other entries. A role whose entry requests a higher position than that stored value is placed above it
 
 ### Example
 
@@ -304,7 +313,7 @@ Creates a role and returns its [guild role object](#guild-role-object). Requires
 | color? | integer | The colour of the role as a 24-bit RGB integer (0-16777215, default 0) |
 | permissions?<sup>1</sup> | decimal string \| integer | The [permission](#permissions) bitfield the role grants |
 
-<sup>1</sup> An omitted field copies the current permissions of the everyone role unchanged. A supplied value is intersected with the set of defined bits, resolved against the caller's [feature declaration](#feature-gated-permission-bits), then checked against the caller's own permissions
+<sup>1</sup> An omitted field copies the current permissions of the everyone role unchanged. A supplied value is intersected with the set of defined bits, Fluxer clears `VIEW_CHANNEL_MEMBERS` unless the caller's [feature declaration](#feature-gated-permission-bits) includes `view_channel_members_permission`, then checks the value against the caller's own permissions
 
 ### Response
 
@@ -363,7 +372,7 @@ Every field is optional, and an omitted field leaves the stored value unchanged.
 
 <sup>1</sup> The field is accepted and then ignored when the target is the everyone role, which cannot be renamed, hoisted, given a member list position, or made mentionable
 
-<sup>2</sup> The supplied value becomes the complete stored mask. Fluxer intersects it with the set of defined bits and resolves it against the caller's [feature declaration](#feature-gated-permission-bits) before checking the caller's authority
+<sup>2</sup> The supplied value becomes the complete stored mask. Before it checks the caller's authority, Fluxer intersects it with the set of defined bits and keeps each feature-gated bit at its stored value unless the caller's [feature declaration](#feature-gated-permission-bits) names the feature for that bit
 
 ### Response
 
@@ -376,7 +385,7 @@ Every field is optional, and an omitted field leaves the stored value unchanged.
 
 ### Side effects
 
-The operation creates a [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason and emits [Guild Role Update](/gateway/events/#guild-role-update) to every session that can see the guild. A permission change adds a [permissions_diff](/http-api/guild-audit-logs/#guild-role-change-fields) change entry recording the exact added and removed permission names. A request whose values all match the current role still emits the Dispatch and still records the entry, with no change rows in it.
+The operation creates a [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied reason and emits [Guild Role Update](/gateway/events/#guild-role-update) to every session that can see the guild. A permission change adds a [permissions_diff](/http-api/guild-audit-logs/#guild-role-change-fields) change entry recording the exact added and removed permission names. A request whose values all match the current role still emits the Dispatch and records no entry.
 
 ### Rate limit
 
@@ -393,7 +402,7 @@ Reorders the role hierarchy and returns 204 with an empty body. Requires [MANAGE
 - The caller needs [hierarchy authority](#role-hierarchy) over every role whose entry supplies a position differing from that role's stored `position`.
 - An entry that omits the field or repeats the stored value is accepted without that check.
 
-Fluxer holds a guild-wide lock while the operation runs, so a concurrent position write on the same guild returns 423 `GENERAL_ERROR`.
+A concurrent role position change in the same guild can return 423 `GENERAL_ERROR`.
 
 Every role the caller can manage is sorted by its requested position in descending order. A role that supplied no position keeps its stored position as the sort key, and any remaining tie is resolved by the current order. Fluxer then puts those roles back into the same set of slots they held before, so a role the caller cannot manage never moves. Every role other than the everyone role is then renumbered to a dense position. The highest-ranked role receives the number of roles other than the everyone role, the lowest-ranked role receives 1, and the everyone role stays at 0.
 
@@ -423,7 +432,7 @@ The top-level body is an array of [role position objects](#role-position-object)
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose position changed. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. A request that produces no positional change creates no audit entry and emits no Dispatch. Dense renumbering can change the numeric `position` of an unnamed role without changing its rank, and such a role is included in the Dispatch.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role that moved, under the [ordering rule](/http-api/guild-audit-logs/#guild-role-change-fields) the audit log defines. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with every role whose stored position changed to every session that can see the guild. A request that produces no positional change creates no audit entry and emits no Dispatch. Dense renumbering can change the numeric `position` of an unnamed role without changing its rank, and such a role is included in the Dispatch and records no audit entry.
 
 ### Rate limit
 
@@ -440,7 +449,7 @@ Sets the member list position of one or more roles and returns 204 with an empty
 - The caller needs [hierarchy authority](#role-hierarchy) over every named role.
 - The everyone role cannot receive a hoist position.
 
-A hoist position orders the separately displayed member list groups and is independent of the permission hierarchy. The operation holds a guild-wide lock, so a concurrent hoist position write on the same guild returns 423 `GENERAL_ERROR`.
+A hoist position orders the separately displayed member list groups independently of the permission hierarchy. A concurrent hoist position change in the same guild can return 423 `GENERAL_ERROR`.
 
 ### Path parameters
 
@@ -464,7 +473,7 @@ The top-level body is an array of [role hoist position objects](#role-hoist-posi
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each named role whose hoist position changed. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with the changed roles to every session that can see the guild. Setting the current positions again changes nothing, creates no audit entry, and emits no Dispatch.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each named role that moved in the member list order, under the [ordering rule](/http-api/guild-audit-logs/#guild-role-change-fields) the audit log defines, and for each changed role that is not hoisted. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with every role whose hoist position changed to every session that can see the guild. Setting the current positions again changes nothing, creates no audit entry, and emits no Dispatch.
 
 ### Rate limit
 
@@ -480,7 +489,7 @@ Clears the member list position of every role in the guild and returns 204 with 
 
 - [Role hierarchy](#role-hierarchy) is not evaluated. The permission alone clears the hoist position of every role in the guild, including roles the caller does not outrank.
 
-The operation takes the same guild-wide lock as [Modify role hoist positions](#modify-role-hoist-positions).
+A concurrent hoist position change in the same guild can return 423 `GENERAL_ERROR`.
 
 ### Path parameters
 
@@ -502,7 +511,7 @@ The request has no body.
 
 ### Side effects
 
-The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each role whose hoist position is cleared. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with those roles to every session that can see the guild. When no role held a hoist position, no audit entry is created and no Dispatch is emitted.
+The operation creates one [ROLE_UPDATE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry for each cleared role that moved in the member list order, under the [ordering rule](/http-api/guild-audit-logs/#guild-role-change-fields) the audit log defines, and for each cleared role that is not hoisted. It emits one [Guild Role Update Bulk](/gateway/events/#guild-role-update-bulk) with every cleared role to every session that can see the guild. When no role held a hoist position, no audit entry is created and no Dispatch is emitted.
 
 ### Rate limit
 
@@ -543,7 +552,7 @@ A deleted role cannot be restored, and its permissions, colour, and hoist state 
 
 ### Side effects
 
-The operation removes the role from every member that held it, removes the role record, and frees the guild role slot it occupied. It creates a [ROLE_DELETE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied audit reason and emits [Guild Role Delete](/gateway/events/#guild-role-delete) to every session that can see the guild. Subsequent member reads and [Guild Member Update](/gateway/events/#guild-member-update) payloads reflect the removed role.
+The operation removes the role from every member that held it, removes the role record, and frees the guild role slot it occupied. It creates a [ROLE_DELETE](/http-api/guild-audit-logs/#audit-actions) guild audit log entry with the supplied audit reason and emits [Guild Role Delete](/gateway/events/#guild-role-delete) to every session that can see the guild. The deleted role no longer appears in `roles` on a later member read or [Guild Member Update](/gateway/events/#guild-member-update) payload.
 
 ### Rate limit
 

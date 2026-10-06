@@ -1,20 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createMultipartFormData} from '@app/api/channel/tests/AttachmentTestUtils';
+import {getPngDataUrl, VALID_PNG_BASE64} from '@app/api/emoji/tests/EmojiTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import type {GuildEmojiWithUserResponse} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
-import {createMultipartFormData} from '../../channel/tests/AttachmentTestUtils';
-import {getPngDataUrl, VALID_PNG_BASE64} from '../../emoji/tests/EmojiTestUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import type {
+	WebhookCreateResponse,
+	WebhookResponse,
+	WebhookTokenResponse,
+} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
 
 export async function createWebhook(
 	harness: ApiTestHarness,
 	channelId: string,
 	token: string,
 	name: string,
-): Promise<WebhookResponse> {
-	return createBuilder<WebhookResponse>(harness, token).post(`/channels/${channelId}/webhooks`).body({name}).execute();
+): Promise<WebhookCreateResponse> {
+	return createBuilder<WebhookCreateResponse>(harness, token)
+		.post(`/channels/${channelId}/webhooks`)
+		.body({name})
+		.execute();
 }
 
 export async function getWebhook(harness: ApiTestHarness, webhookId: string, token: string): Promise<WebhookResponse> {

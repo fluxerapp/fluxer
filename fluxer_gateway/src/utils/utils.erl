@@ -30,7 +30,7 @@ generate_session_id() ->
 -spec generate_resume_token() -> binary().
 generate_resume_token() ->
     Bytes = crypto:strong_rand_bytes(32),
-    base64url:encode(Bytes).
+    base64:encode(Bytes, #{mode => urlsafe, padding => false}).
 
 -spec hash_token(binary()) -> binary().
 hash_token(Token) ->

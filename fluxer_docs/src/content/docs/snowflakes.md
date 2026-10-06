@@ -24,13 +24,11 @@ A snowflake packs a timestamp, a worker ID, and a sequence into 64 bits. The wor
 
 <sup>1</sup> The timestamp records the instant the identifier was issued, which can fall shortly before the resource exists
 
-<sup>2</sup> Sequence order applies only within one worker and one millisecond
+<sup>2</sup> A higher sequence value means a later identifier only when both identifiers come from one worker in one millisecond
 
 The epoch is 1420070400000 milliseconds after the Unix epoch. Every Fluxer instance uses the same value. The lower 22 bits expose allocator details, so a client MUST NOT use them for routing or resource semantics.
 
-One worker issues strictly increasing values. It advances the sequence for each identifier issued during the same millisecond, and it waits for the next millisecond once the sequence passes 4095.
-
-A worker whose clock moves backwards keeps issuing against the highest millisecond it has already used. An extracted timestamp can therefore fall later than the wall clock at the moment of issuing.
+Treat the embedded timestamp as an approximate issue time, not proof that the resource already exists.
 
 ## Extracting a timestamp
 

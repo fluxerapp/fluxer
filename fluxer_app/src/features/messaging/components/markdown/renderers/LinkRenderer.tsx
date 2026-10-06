@@ -11,6 +11,8 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {getDMDisplayName, getIcon, getName} from '@app/features/channel/utils/ChannelUtils';
 import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
+import {joinDiscoveryGuild} from '@app/features/discovery/commands/DiscoveryJoinCommands';
+import DiscoveryChannelPreviews from '@app/features/discovery/state/DiscoveryChannelPreviews';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import {getGuildIconDisplayInitials} from '@app/features/guild/utils/GuildInitialsUtils';
@@ -22,12 +24,24 @@ import {
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import jumpLinkStyles from '@app/features/messaging/components/markdown/renderers/MessageJumpLink.module.css';
-import {MarkdownContext, type RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {
+	isRestrictedInlineContext,
+	type MarkdownRenderOptions,
+	type RendererProps,
+} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {ExternalLinkWarningModal} from '@app/features/messaging/components/modals/ExternalLinkWarningModal';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import type {LinkNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import {
+	type AppPageId,
+	getAppPageIcon,
+	getAppPageLabel,
+	navigateToAppPage,
+	parseAppPageLink,
+} from '@app/features/navigation/utils/AppPageLinks';
 import {
 	handleDeepLinkUrl,
 	isInternalChannelHost,
@@ -41,6 +55,7 @@ import {
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import * as ThemeCommands from '@app/features/theme/commands/ThemeCommands';
+import linkRendererStyles from '@app/features/theme/styles/LinkRenderer.module.css';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import * as ThemeUtils from '@app/features/theme/utils/ThemeUtils';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
@@ -52,6 +67,8 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {APP_PROTOCOL_PREFIX, APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
 import {
@@ -63,14 +80,17 @@ import type {UserSettingsDeepLinkTarget} from '@app/features/user/components/set
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as StringUtils from '@app/lib/strings';
 import {ME} from '@fluxer/constants/src/AppConstants';
+import {isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react';
-import {CaretRightIcon, ChatTeardropIcon, LockIcon} from '@phosphor-icons/react';
+import {CaretRightIcon, ChatTeardropIcon, LockIcon, WarningIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback} from 'react';
+import {useCallback, useEffect, useState} from 'react';
+
+const LINK_CONTENT_OPTION_OVERRIDES: Partial<MarkdownRenderOptions> = {disableEmojiInteractions: true};
 
 const MESSAGE_LINK_DESCRIPTOR = msg({
 	message: 'message link',
@@ -103,6 +123,15 @@ const OPEN_SETTINGS_SECTION_DESCRIPTOR = msg({
 	message: 'Open {labelText} in settings',
 	comment:
 		'Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.',
+});
+const OPEN_APP_PAGE_DESCRIPTOR = msg({
+	message: 'Open {labelText}',
+	comment:
+		'Accessible label for an inline chat link pill that opens an app page such as Discovery. labelText is the page name.',
+});
+const PAGE_LINK_DESCRIPTOR = msg({
+	message: 'page link',
+	comment: 'Role description announced for an inline chat link pill that opens an app page. Lowercase.',
 });
 const SETTINGS_LINK_DESCRIPTOR = msg({
 	message: 'settings link',
@@ -178,7 +207,7 @@ type CompactGuildMentionIconStyle = React.CSSProperties & {
 	'--jump-link-guild-icon-image'?: string;
 };
 
-function CompactGuildMentionIcon({guild}: {guild: Guild}) {
+function CompactGuildMentionIcon({guild}: {guild: Pick<Guild, 'id' | 'name' | 'icon'>}) {
 	const iconUrl = guild.icon ? AvatarUtils.getGuildIconURL({id: guild.id, icon: guild.icon}) : '';
 	const style: CompactGuildMentionIconStyle | undefined = iconUrl
 		? {'--jump-link-guild-icon-image': `url(${iconUrl})`}
@@ -491,6 +520,143 @@ function InaccessibleJumpLinkMention({url, i18n, interactive = true}: Inaccessib
 	);
 }
 
+interface DiscoverableJumpLinkMentionProps {
+	guildId: string;
+	channelId: string;
+	messageId?: string;
+	url: string;
+	i18n: I18n;
+	interactive?: boolean;
+}
+
+const DiscoverableJumpLinkMention = observer(function DiscoverableJumpLinkMention({
+	guildId,
+	channelId,
+	messageId,
+	url,
+	i18n,
+	interactive = true,
+}: DiscoverableJumpLinkMentionProps) {
+	useLingui();
+	const [joining, setJoining] = useState(false);
+	useEffect(() => {
+		DiscoveryChannelPreviews.request(guildId, channelId);
+	}, [guildId, channelId]);
+	const handleClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			event.preventDefault();
+			event.stopPropagation();
+			if (joining) return;
+			setJoining(true);
+			void joinDiscoveryGuild(guildId, {channelId, messageId}).finally(() => setJoining(false));
+		},
+		[channelId, guildId, interactive, joining, messageId],
+	);
+	const handleAuxClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			if (event.button !== 1) return;
+			event.preventDefault();
+			event.stopPropagation();
+			void openExternalUrl(url);
+		},
+		[interactive, url],
+	);
+	const handleContextMenu = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
+				<JumpLinkContextMenu
+					url={url}
+					i18n={i18n}
+					onClose={onClose}
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.context-menu"
+				/>
+			));
+		},
+		[interactive, i18n, url],
+	);
+	const entry = DiscoveryChannelPreviews.get(guildId, channelId);
+	if (entry?.status !== 'ready') {
+		return (
+			<InaccessibleJumpLinkMention
+				url={url}
+				i18n={i18n}
+				interactive={interactive}
+				data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.inaccessible"
+			/>
+		);
+	}
+	const {guild, channel} = entry.preview;
+	const ariaLabel = messageId
+		? i18n._(JUMP_TO_THE_MESSAGE_IN_DESCRIPTOR, {labelText: guild.name})
+		: i18n._(JUMP_TO_DESCRIPTOR, {labelText: guild.name});
+	const Component = interactive ? 'button' : 'span';
+	return (
+		<Component
+			data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.component.click"
+			{...(interactive ? {type: 'button'} : {})}
+			className={clsx(markupStyles.mention, interactive && markupStyles.interactive, jumpLinkStyles.jumpLinkButton)}
+			onClick={handleClick}
+			onAuxClick={handleAuxClick}
+			onContextMenu={handleContextMenu}
+			aria-label={ariaLabel}
+			aria-busy={joining || undefined}
+			{...(interactive
+				? {'aria-roledescription': i18n._(messageId ? MESSAGE_LINK_DESCRIPTOR : CHANNEL_LINK_DESCRIPTOR)}
+				: {})}
+			tabIndex={interactive ? 0 : -1}
+		>
+			<span
+				className={jumpLinkStyles.part}
+				data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.part--guild"
+			>
+				<CompactGuildMentionIcon
+					guild={guild}
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.guild-icon"
+				/>
+				<span
+					className={jumpLinkStyles.name}
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.guild-name"
+				>
+					{guild.name}
+				</span>
+			</span>
+			<span
+				className={jumpLinkStyles.divider}
+				aria-hidden="true"
+				data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.divider"
+			>
+				<CaretRightIcon
+					weight="bold"
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.caret-right-icon"
+				/>
+			</span>
+			{messageId ? (
+				<ChatTeardropIcon
+					className={jumpLinkStyles.icon}
+					weight="fill"
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.chat-teardrop-icon"
+				/>
+			) : (
+				<span
+					className={jumpLinkStyles.part}
+					data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.part--channel"
+				>
+					{getIcon({type: channel.type}, {className: jumpLinkStyles.icon})}
+					<span
+						className={jumpLinkStyles.name}
+						data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention.channel-name"
+					>
+						{channel.name ?? channel.id}
+					</span>
+				</span>
+			)}
+		</Component>
+	);
+});
+
 interface SettingsJumpLinkMentionProps {
 	target: UserSettingsDeepLinkTarget;
 	url: string;
@@ -623,6 +789,83 @@ function SettingsJumpLinkMention({target, url, i18n, interactive = true}: Settin
 	);
 }
 
+interface AppPageJumpLinkMentionProps {
+	page: AppPageId;
+	url: string;
+	i18n: I18n;
+	interactive?: boolean;
+}
+
+function AppPageJumpLinkMention({page, url, i18n, interactive = true}: AppPageJumpLinkMentionProps) {
+	const handleClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			event.preventDefault();
+			event.stopPropagation();
+			navigateToAppPage(page);
+		},
+		[interactive, page],
+	);
+	const handleAuxClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			if (event.button !== 1) return;
+			event.preventDefault();
+			event.stopPropagation();
+			void openExternalUrl(url);
+		},
+		[interactive, url],
+	);
+	const handleContextMenu = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
+			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
+				<SettingsLinkContextMenu
+					url={url}
+					i18n={i18n}
+					onClose={onClose}
+					data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.context-menu"
+				/>
+			));
+		},
+		[interactive, i18n, url],
+	);
+	const label = getAppPageLabel(i18n, page);
+	const PageIcon = getAppPageIcon(page);
+	const Component = interactive ? 'button' : 'span';
+	return (
+		<Component
+			data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.component.click"
+			{...(interactive ? {type: 'button'} : {})}
+			className={clsx(markupStyles.mention, interactive && markupStyles.interactive, jumpLinkStyles.jumpLinkButton)}
+			onClick={handleClick}
+			onAuxClick={handleAuxClick}
+			onContextMenu={handleContextMenu}
+			aria-label={i18n._(OPEN_APP_PAGE_DESCRIPTOR, {labelText: label})}
+			{...(interactive ? {'aria-roledescription': i18n._(PAGE_LINK_DESCRIPTOR)} : {})}
+			tabIndex={interactive ? 0 : -1}
+		>
+			<span
+				className={jumpLinkStyles.part}
+				data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.part"
+			>
+				<PageIcon
+					className={jumpLinkStyles.icon}
+					weight="fill"
+					aria-hidden="true"
+					data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.icon"
+				/>
+				<span
+					className={jumpLinkStyles.name}
+					data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention.name"
+				>
+					{label}
+				</span>
+			</span>
+		</Component>
+	);
+}
+
 export const LinkRenderer = observer(function LinkRenderer({
 	node,
 	id,
@@ -631,7 +874,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 }: RendererProps<LinkNode>): React.ReactElement {
 	const i18n = options.i18n!;
 	const {url, text} = node;
-	const content = text ? renderChildren([text]) : url;
+	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : url;
 	const inviteCode = InviteUtils.findInvite(url);
 	const themeCode = ThemeUtils.findTheme(url);
 	const userProfileId = parseUserProfileUrl(url);
@@ -640,8 +883,17 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const jumpTarget = messageJumpTarget ?? channelJumpTarget;
 	const jumpChannel = jumpTarget ? (Channels.getChannel(jumpTarget.channelId) ?? null) : null;
 	const jumpGuild = jumpChannel?.guildId ? (Guilds.getGuild(jumpChannel.guildId) ?? null) : null;
+	const discoverableGuildId =
+		jumpTarget &&
+		!jumpChannel &&
+		jumpTarget.scope !== ME &&
+		isProbablyAValidSnowflake(jumpTarget.scope) &&
+		!Guilds.getGuild(jumpTarget.scope)
+			? jumpTarget.scope
+			: null;
 	const settingsTarget = isAppProtocolUrl(url) ? parseUserSettingsDeepLink(url) : null;
-	const isInlineReplyContext = options.context === MarkdownContext.RESTRICTED_INLINE_REPLY;
+	const appPage = settingsTarget ? null : parseAppPageLink(url);
+	const isInlineReplyContext = isRestrictedInlineContext(options.context);
 	const shouldDisableInteractions = options.disableInteractions === true;
 	if (inviteCode && StreamerMode.shouldHideInviteLinks) {
 		return (
@@ -664,6 +916,24 @@ export const LinkRenderer = observer(function LinkRenderer({
 			mention
 		) : (
 			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--settings">
+				{mention}
+			</FocusRing>
+		);
+	}
+	if (appPage && !text) {
+		const mention = (
+			<AppPageJumpLinkMention
+				page={appPage}
+				url={url}
+				i18n={i18n}
+				interactive={!isInlineReplyContext && !shouldDisableInteractions}
+				data-flx="messaging.markdown.renderers.link-renderer.app-page-jump-link-mention"
+			/>
+		);
+		return shouldDisableInteractions || isInlineReplyContext ? (
+			mention
+		) : (
+			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--app-page">
 				{mention}
 			</FocusRing>
 		);
@@ -691,11 +961,22 @@ export const LinkRenderer = observer(function LinkRenderer({
 		);
 	}
 	if (jumpTarget && !jumpChannel && !text) {
-		const mention = (
+		const interactive = !isInlineReplyContext && !shouldDisableInteractions;
+		const mention = discoverableGuildId ? (
+			<DiscoverableJumpLinkMention
+				guildId={discoverableGuildId}
+				channelId={jumpTarget.channelId}
+				messageId={messageJumpTarget?.messageId}
+				url={url}
+				i18n={i18n}
+				interactive={interactive}
+				data-flx="messaging.markdown.renderers.link-renderer.discoverable-jump-link-mention"
+			/>
+		) : (
 			<InaccessibleJumpLinkMention
 				url={url}
 				i18n={i18n}
-				interactive={!isInlineReplyContext && !shouldDisableInteractions}
+				interactive={interactive}
 				data-flx="messaging.markdown.renderers.link-renderer.inaccessible-jump-link-mention"
 			/>
 		);
@@ -717,6 +998,8 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const shouldShowAccessDeniedModal = Boolean(jumpTarget && !jumpChannel);
 	let isInternal = false;
 	let handleClick: ((e: React.MouseEvent) => void) | undefined;
+	let isExternalDestination = false;
+	let isTrustedExternalDestination = false;
 	if (userProfileId) {
 		handleClick = (event) => {
 			event.preventDefault();
@@ -765,6 +1048,13 @@ export const LinkRenderer = observer(function LinkRenderer({
 					)),
 				);
 			}
+		};
+		isInternal = true;
+	} else if (appPage) {
+		handleClick = (event) => {
+			event.preventDefault();
+			event.stopPropagation();
+			navigateToAppPage(appPage);
 		};
 		isInternal = true;
 	} else if (isAppProtocolUrl(url)) {
@@ -865,6 +1155,8 @@ export const LinkRenderer = observer(function LinkRenderer({
 			}
 			if (!isInternal && !inviteCode) {
 				const isTrusted = TrustedDomain.isTrustedDomain(parsed.hostname);
+				isExternalDestination = true;
+				isTrustedExternalDestination = isTrusted;
 				if (!isTrusted) {
 					handleClick = (e) => {
 						e.preventDefault();
@@ -883,12 +1175,17 @@ export const LinkRenderer = observer(function LinkRenderer({
 			logger.warn('Invalid URL in link:', url);
 		}
 	}
-	return (
+	const href = AttachmentUrlRefresher.fresh(url);
+	const warmAttachmentUrl = () => AttachmentUrlRefresher.warm(url);
+	const showDestinationTooltip = isExternalDestination && text != null;
+	const linkElement = (
 		<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--2">
 			<a
-				href={url}
+				href={href}
 				target={isInternal ? undefined : '_blank'}
 				rel={isInternal ? undefined : 'noopener noreferrer'}
+				onPointerEnter={warmAttachmentUrl}
+				onFocus={warmAttachmentUrl}
 				onClick={(e) => {
 					e.stopPropagation();
 					if (handleClick) {
@@ -914,5 +1211,23 @@ export const LinkRenderer = observer(function LinkRenderer({
 				{content}
 			</a>
 		</FocusRing>
+	);
+	if (!showDestinationTooltip) {
+		return linkElement;
+	}
+	const destinationTooltipText = MobileLayout.enabled
+		? url
+		: () => (
+				<span className={linkRendererStyles.destination}>
+					{!isTrustedExternalDestination && (
+						<WarningIcon size={16} weight="fill" className={linkRendererStyles.destinationWarningIcon} />
+					)}
+					<span>{url}</span>
+				</span>
+			);
+	return (
+		<Tooltip text={destinationTooltipText} type="normal" position="bottom" maxWidth="xl">
+			{linkElement}
+		</Tooltip>
 	);
 });

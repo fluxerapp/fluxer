@@ -26,7 +26,7 @@ handle_process_down(Ref, Reason, State) ->
     PresenceRef = maps:get(presence_mref, State, undefined),
     case Ref of
         SocketRef when Ref =:= SocketRef ->
-            handle_socket_down(State);
+            handle_socket_down(Reason, State);
         PresenceRef when Ref =:= PresenceRef ->
             handle_presence_down(State);
         _ ->
@@ -63,8 +63,15 @@ handle_call_or_ignore(Ref, Reason, State, Calls) ->
             {noreply, State}
     end.
 
--spec handle_socket_down(session_state()) -> {noreply, session_state()}.
-handle_socket_down(State) ->
+-spec handle_socket_down(term(), session_state()) ->
+    {noreply, session_state()} | {stop, normal, session_state()}.
+handle_socket_down({shutdown, client_closed}, State) ->
+    {stop, normal, State#{socket_pid => undefined, socket_mref => undefined}};
+handle_socket_down(_Reason, State) ->
+    hold_session_for_resume(State).
+
+-spec hold_session_for_resume(session_state()) -> {noreply, session_state()}.
+hold_session_for_resume(State) ->
     ResumeToken = make_ref(),
     ResumeTimerRef = erlang:send_after(
         constants:resume_timeout(), self(), {resume_timeout, ResumeToken}
@@ -330,6 +337,23 @@ handle_socket_down_delays_session_offline_test() ->
     after 200 ->
         ?assert(false)
     end,
+    SocketPid ! stop.
+
+handle_socket_down_client_closed_stops_the_session_test() ->
+    SocketRef = make_ref(),
+    SocketPid = spawn_test_proc(),
+    State0 = (build_test_session_state(50000, #{}))#{
+        presence_pid => self(),
+        socket_pid => SocketPid,
+        socket_mref => SocketRef
+    },
+    {stop, normal, State1} = handle_process_down(
+        SocketRef, {shutdown, client_closed}, State0
+    ),
+    ?assertEqual(undefined, maps:get(socket_pid, State1)),
+    ?assertEqual(undefined, maps:get(socket_mref, State1)),
+    ?assertEqual(maps:get(resume_timer, State0), maps:get(resume_timer, State1)),
+    ?assertEqual(maps:get(offline_timer, State0), maps:get(offline_timer, State1)),
     SocketPid ! stop.
 
 spawn_test_proc() ->

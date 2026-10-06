@@ -80,7 +80,7 @@ async function applyCameraVideoProcessor(
 		if (track.getProcessor() !== activeProcessor) {
 			throw new Error('Updated camera video processor is no longer attached to the active track');
 		}
-		if (!activeProcessor.processedTrack || activeProcessor.processedTrack.readyState !== 'live') {
+		if (activeProcessor.processedTrack?.readyState !== 'live') {
 			throw new Error('Updated camera video processor has no live output track');
 		}
 		return activeProcessor;
@@ -98,7 +98,7 @@ async function applyCameraVideoProcessor(
 		if (track.getProcessor() !== processor) {
 			throw new Error('Camera video processor was not retained by the active track');
 		}
-		if (!processor.processedTrack || processor.processedTrack.readyState !== 'live') {
+		if (processor.processedTrack?.readyState !== 'live') {
 			throw new Error('Camera video processor produced no live output track');
 		}
 		logger.info(logLabel);

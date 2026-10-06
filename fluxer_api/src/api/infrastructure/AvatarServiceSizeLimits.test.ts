@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AvatarService} from '@app/api/infrastructure/AvatarService';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {EMOJI_MAX_SIZE, STICKER_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {LimitConfigSnapshot, LimitRule} from '@fluxer/limits/src/LimitTypes';
 import {describe, expect, it} from 'vitest';
-import {AvatarService} from './AvatarService';
-import type {IMediaService} from './IMediaService';
-import type {IStorageService} from './IStorageService';
 
 function createSnapshot(rules: Array<LimitRule> = []): LimitConfigSnapshot {
 	return {traitDefinitions: [], rules};
@@ -82,7 +82,7 @@ describe('AvatarService emoji and sticker size ceilings', () => {
 			{path: 'image', code: ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, variables: {maxSize: 1024}},
 		]);
 	});
-	it('applies a guild-feature-filtered emoji_max_size rule only to a guild that carries the feature', async () => {
+	it('applies a guild-feature-filtered emoji_max_size rule only to a guild that has the feature', async () => {
 		const rules: Array<LimitRule> = [
 			{id: 'big-emoji', filters: {guildFeatures: ['BIG_EMOJI']}, limits: {emoji_max_size: EMOJI_MAX_SIZE * 2}},
 		];

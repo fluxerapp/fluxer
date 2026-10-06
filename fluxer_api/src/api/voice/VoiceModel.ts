@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../BrandedTypes';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
 
 interface VoiceRestriction {
 	vipOnly: boolean;
@@ -30,6 +30,7 @@ export interface VoiceServerRecord {
 	latitude: number | null;
 	longitude: number | null;
 	isActive: boolean;
+	softConnectionLimit: number | null;
 	restrictions: VoiceRestriction;
 	createdAt: Date | null;
 	updatedAt: Date | null;

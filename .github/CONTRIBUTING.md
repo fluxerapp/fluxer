@@ -1,24 +1,24 @@
 # Contributing to Fluxer
 
-This policy applies to all issues, discussions, commits and pull requests.
+This policy applies to all commits and pull requests.
 
 ## Scope
 
 To prevent spam, only approved contributors may submit pull requests.
 
-To request approval, comment on an existing issue and ask to implement it. For work that extends beyond a defect fix, open a [discussion](https://github.com/orgs/fluxerapp/discussions) first.
+To request approval, comment on the [feedback.fluxer.com](https://feedback.fluxer.com) post you want to implement and ask to work on it. For work that extends beyond a defect fix, post a feature request there first.
 
 Every pull request must:
 
 - Target the repository's default branch.
-- Include a closing reference for each repository issue it resolves.
+- Link each feedback.fluxer.com post it resolves.
 - Receive approval from a maintainer before it is merged.
 
-Place each closing reference on a separate line:
+Place each link on a separate line:
 
 ```text
-Closes #123
-Closes #456
+Resolves https://feedback.fluxer.com/p/123
+Resolves https://feedback.fluxer.com/p/456
 ```
 
 ## Authorship
@@ -78,32 +78,14 @@ Complete every section of the pull request template. Clearly describe:
 
 ## Reports and other contributions
 
-Use the [bug report form](https://github.com/fluxerapp/fluxer/issues/new?template=bug-report.yaml) to report reproducible defects.
+Report bugs and request features at [feedback.fluxer.com](https://feedback.fluxer.com).
 
-Report security vulnerabilities privately through the channels specified in the [security policy](https://github.com/fluxerapp/fluxer/blob/main/.github/SECURITY.md). Do not report vulnerabilities in public issues or discussions.
+Report security vulnerabilities privately through [fluxer.app/security](https://fluxer.app/security). Never post them publicly.
 
-Use [discussions](https://github.com/orgs/fluxerapp/discussions) for feature proposals and self-hosting questions.
+Read the [operator documentation](https://fluxer.dev) for self-hosting questions.
 
 Submit translations through [Weblate](https://weblate.fluxer.tools), not through pull requests.
 
 All repository activity is governed by the [Code of Conduct](https://github.com/fluxerapp/fluxer/blob/main/.github/CODE_OF_CONDUCT.md).
 
 Fluxer is distributed under the [GNU Affero General Public License, version 3.0 or later](https://github.com/fluxerapp/fluxer/blob/main/LICENSE). By adding a DCO sign-off, you certify that you have the right to submit the contribution under that licence.
-
-## Private marketing project
-
-The marketing implementation is maintained in a private repository at the `fluxer_marketing` submodule path. The public workspace, bootstrap, checks, and development stack work without initializing it.
-
-Authorized maintainers can initialize only that submodule and install its independent dependencies:
-
-```sh
-./scripts/setup-private-marketing.sh
-pnpm --dir fluxer_marketing install --frozen-lockfile
-cargo metadata --locked --manifest-path fluxer_marketing/Cargo.toml
-```
-
-To run the private marketing service in the local development stack and direct application links to it, add this override to the ignored `config/env/local.env` file:
-
-```sh
-FLUXER_MARKETING_ENDPOINT=http://localhost:8088/marketing
-```

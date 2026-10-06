@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {normalizeVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface LocalVoiceConnectionState {
 	selfMute: boolean;
@@ -593,7 +593,7 @@ export const localVoiceStateMachine = setup({
 export type LocalVoiceStateSnapshot = SnapshotFrom<typeof localVoiceStateMachine>;
 
 export function createLocalVoiceStateSnapshot(input: LocalVoiceStateInput): LocalVoiceStateSnapshot {
-	return getInitialSnapshot(localVoiceStateMachine, input);
+	return initialTransition(localVoiceStateMachine, input)[0];
 }
 
 export function transitionLocalVoiceStateSnapshot(

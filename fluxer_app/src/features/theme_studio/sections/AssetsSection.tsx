@@ -3,6 +3,13 @@
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {createThemeAssetReference, createThemeLocalFileReference} from '@app/features/theme/utils/ThemeCssUtils';
+import styles from '@app/features/theme_studio/sections/AssetsSection.module.css';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import {StudioButton} from '@app/features/theme_studio/ui/StudioButton';
+import {StudioEmptyState} from '@app/features/theme_studio/ui/StudioEmptyState';
+import {StudioIconButton} from '@app/features/theme_studio/ui/StudioIconButton';
+import {StudioListItem} from '@app/features/theme_studio/ui/StudioListItem';
+import {StudioPanel} from '@app/features/theme_studio/ui/StudioPanel';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -13,13 +20,6 @@ import {CopyIcon, FilePlusIcon, ImageIcon, TrashIcon, UploadSimpleIcon} from '@p
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useRef} from 'react';
-import {broadcastThemeStudioMessage} from '../state/ThemeStudioBroadcast';
-import {StudioButton} from '../ui/StudioButton';
-import {StudioEmptyState} from '../ui/StudioEmptyState';
-import {StudioIconButton} from '../ui/StudioIconButton';
-import {StudioListItem} from '../ui/StudioListItem';
-import {StudioPanel} from '../ui/StudioPanel';
-import styles from './AssetsSection.module.css';
 
 const UPLOADED_OTHER_DESCRIPTOR = msg({
 	message: 'Uploaded {length, plural, one {# theme asset} other {# theme assets}}.',

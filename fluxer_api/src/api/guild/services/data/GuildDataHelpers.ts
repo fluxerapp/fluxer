@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
+import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {createGuildMfaEnforcer} from '@app/api/guild/services/GuildMfaEnforcement';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {Guild} from '@app/api/models/Guild';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {serializeGuildForAudit as serializeGuildForAuditUtil} from '@app/api/utils/AuditSerializationUtils';
+import {requirePermission} from '@app/api/utils/PermissionUtils';
 import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {ChannelID, EmojiID, GuildID, RoleID, StickerID, UserID} from '../../../BrandedTypes';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import {Logger} from '../../../Logger';
-import type {Guild} from '../../../models/Guild';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {serializeGuildForAudit as serializeGuildForAuditUtil} from '../../../utils/AuditSerializationUtils';
-import {requirePermission} from '../../../utils/PermissionUtils';
-import type {GuildAuditLogService} from '../../GuildAuditLogService';
-import type {GuildAuditLogChange} from '../../GuildAuditLogTypes';
-import {mapGuildToGuildResponse} from '../../GuildModel';
-import {GuildRepository} from '../../repositories/GuildRepository';
-import {createGuildMfaEnforcer} from '../GuildMfaEnforcement';
 
 interface GuildAuth {
 	guildData: GuildResponse;
@@ -71,13 +71,18 @@ export class GuildDataHelpers {
 	computeGuildChanges(
 		previousSnapshot: Record<string, unknown> | null,
 		guildOrSnapshot: Guild | Record<string, unknown> | null,
+		keys?: ReadonlySet<string>,
 	): GuildAuditLogChange {
 		const currentSnapshot = guildOrSnapshot
 			? 'id' in guildOrSnapshot
 				? this.serializeGuildForAudit(guildOrSnapshot as Guild)
 				: guildOrSnapshot
 			: null;
-		return this.guildAuditLogService.computeChanges(previousSnapshot, currentSnapshot);
+		const changes = this.guildAuditLogService.computeChanges(previousSnapshot, currentSnapshot);
+		if (!keys) {
+			return changes;
+		}
+		return changes.filter((change) => keys.has(change.key));
 	}
 
 	async dispatchGuildUpdate(guild: Guild): Promise<void> {

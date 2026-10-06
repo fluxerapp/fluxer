@@ -12,8 +12,8 @@ resolver = "2"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-napi = {version = "3.9.1", default-features = false, features = ["dyn-symbols", "napi8"]}
-napi-derive = "3.5.6"
+napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8"]}
+napi-derive = "3.6.7"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = {version = "0.62.2", features = [
@@ -28,4 +28,4 @@ windows = {version = "0.62.2", features = [
 ]}
 
 [build-dependencies]
-napi-build = "2.3.2"
+napi-build = "2.4.3"

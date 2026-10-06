@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {getStoreBillingRepository} from '@app/api/middleware/ServiceSingletons';
+import {seedStorePurchase} from '@app/api/store_billing/tests/StoreBillingTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import type {StorePurchaseResponse} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface CurrentUserPremiumState {
 	premium_type: number | null;
@@ -65,6 +69,26 @@ describe('User premium reset endpoint', () => {
 		expect(me.premium_billing_cycle).toBeNull();
 		expect(me.premium_lifetime_sequence).toBeNull();
 		expect(me.premium_enabled_override).toBe(false);
+	});
+	test('staff reset unbinds the account store purchases', async () => {
+		const account = await createTestAccount(harness);
+		const userId = createUserID(BigInt(account.userId));
+		await createBuilder(harness, account.token)
+			.post(`/test/users/${account.userId}/security-flags`)
+			.body({set_flags: ['STAFF']})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const row = await seedStorePurchase(userId);
+		await createBuilder<void>(harness, account.token)
+			.post('/users/@me/premium/reset')
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const purchases = await createBuilder<Array<StorePurchaseResponse>>(harness, account.token)
+			.get('/premium/store/purchases')
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(purchases).toEqual([]);
+		expect((await getStoreBillingRepository().findPurchase(row.store_key))?.user_id).toBeNull();
 	});
 	test('non-staff user cannot reset premium state', async () => {
 		const account = await createTestAccount(harness);

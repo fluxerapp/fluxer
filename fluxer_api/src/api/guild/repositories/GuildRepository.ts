@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
-import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '../../BrandedTypes';
+import type {EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
 import type {
 	GuildAuditLogRow,
 	GuildBanRow,
@@ -11,21 +10,22 @@ import type {
 	GuildRoleRow,
 	GuildRow,
 	GuildStickerRow,
-} from '../../database/types/GuildTypes';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Guild} from '../../models/Guild';
-import type {GuildAuditLog} from '../../models/GuildAuditLog';
-import type {GuildBan} from '../../models/GuildBan';
-import type {GuildEmoji} from '../../models/GuildEmoji';
-import type {GuildMember} from '../../models/GuildMember';
-import type {GuildRole} from '../../models/GuildRole';
-import type {GuildSticker} from '../../models/GuildSticker';
-import {GuildContentRepository} from './GuildContentRepository';
-import {GuildDataRepository} from './GuildDataRepository';
-import {GuildMemberRepository} from './GuildMemberRepository';
-import {GuildModerationRepository} from './GuildModerationRepository';
-import {GuildRoleRepository} from './GuildRoleRepository';
-import type {IGuildRepositoryAggregate} from './IGuildRepositoryAggregate';
+} from '@app/api/database/types/GuildTypes';
+import {GuildContentRepository} from '@app/api/guild/repositories/GuildContentRepository';
+import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
+import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepository';
+import {GuildModerationRepository} from '@app/api/guild/repositories/GuildModerationRepository';
+import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildAuditLog} from '@app/api/models/GuildAuditLog';
+import type {GuildBan} from '@app/api/models/GuildBan';
+import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {GuildRole} from '@app/api/models/GuildRole';
+import type {GuildSticker} from '@app/api/models/GuildSticker';
+import type {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 
 export class GuildRepository implements IGuildRepositoryAggregate {
 	private dataRepo: GuildDataRepository;

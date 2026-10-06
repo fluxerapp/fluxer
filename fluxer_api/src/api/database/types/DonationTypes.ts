@@ -14,6 +14,7 @@ export interface DonorRow {
 	subscription_interval: Nullish<string>;
 	subscription_current_period_end: Nullish<Date>;
 	subscription_cancel_at: Nullish<Date>;
+	subscription_status: Nullish<string>;
 	created_at: Date;
 	updated_at: Date;
 	version: number;
@@ -53,6 +54,7 @@ export const DONOR_COLUMNS = [
 	'subscription_interval',
 	'subscription_current_period_end',
 	'subscription_cancel_at',
+	'subscription_status',
 	'created_at',
 	'updated_at',
 	'version',

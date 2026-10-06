@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import styles from '@app/features/theme_studio/ui/StudioListItem.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {clsx} from 'clsx';
 import type React from 'react';
 import type {ReactNode} from 'react';
-import styles from './StudioListItem.module.css';
 
 interface StudioListItemProps {
 	leading?: ReactNode;

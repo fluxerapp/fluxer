@@ -8,12 +8,14 @@ mod tests;
 use crate::{
     asset_size,
     coalescer::CoalescerError,
+    config::PolicyMode,
     constants::{self, AssetExtension, AssetKind},
     image_quality::ImageQuality,
     image_transform::{AnimationMode, ResizeMode},
     media_process, mime, output_format,
     server::{
         asset_path::{ParsedAssetPath, asset_filename_hint},
+        attachment_signature,
         format_policy::{
             OriginalImageRequest, default_transform_quality,
             effective_animated_image_output_format, extension_from_mime, is_svg_content_type,
@@ -288,6 +290,22 @@ async fn read_cdn_object_with_fallback(
 }
 
 pub(in crate::server) async fn serve_attachment(
+    app: &Arc<AppState>,
+    method: Method,
+    key: &str,
+    params: &HashMap<String, String>,
+    headers: &HeaderMap,
+) -> Response {
+    let response = read_attachment(app, method, key, params, headers).await;
+    if app.cfg.attachment_signature.mode == PolicyMode::Enforce
+        && response.status() == StatusCode::NOT_FOUND
+    {
+        return attachment_signature::masked_not_found_response(key);
+    }
+    response
+}
+
+async fn read_attachment(
     app: &Arc<AppState>,
     method: Method,
     key: &str,

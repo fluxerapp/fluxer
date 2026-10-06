@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {PremiumStoreSubscriptionState} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
+import {createStringType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {UserPremiumTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {z} from 'zod';
 
-export const PricingModeEnum = z.enum(['localized', 'base']);
+export const PremiumCurrency = z.string().regex(/^[A-Z]{3}$/);
 
-export type PricingMode = z.infer<typeof PricingModeEnum>;
+export type PremiumCurrency = z.infer<typeof PremiumCurrency>;
+
+const BillingCycleSchema = z.enum(['monthly', 'yearly']);
 
 export const WebhookReceivedResponse = z.object({
 	received: z.boolean().describe('Whether the webhook was successfully received'),
@@ -33,59 +36,30 @@ export const PriceIdsResponse = z.object({
 		.nullish()
 		.describe('Gift 1 month price amount in the currency minor unit'),
 	gift_1_year_amount_minor: z.number().int().nullish().describe('Gift 1 year price amount in the currency minor unit'),
-	currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).describe('Currency for the prices'),
-	gift_currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).describe('Currency for gift prices'),
+	currency: PremiumCurrency.describe('Currency for the prices'),
+	gift_currency: PremiumCurrency.nullable().describe(
+		'Currency for gift prices, null when no gift prices are configured',
+	),
 });
 
 export type PriceIdsResponse = z.infer<typeof PriceIdsResponse>;
 
 export const PriceIdsQueryRequest = z.object({
-	country_code: createStringType(2, 2).optional().describe('Two-letter country code for regional pricing'),
-	pricing_mode: PricingModeEnum.optional().describe('Whether to resolve localized or standard USD/EUR pricing'),
+	country_code: createStringType(2, 2)
+		.optional()
+		.describe(
+			'Two-letter country code for regional pricing. Only used when the server cannot geolocate the request; otherwise the request GeoIP country wins.',
+		),
 });
 
 export type PriceIdsQueryRequest = z.infer<typeof PriceIdsQueryRequest>;
-
-export const LocalizedCardPreapprovalContinueRequest = z.object({
-	token: createStringType(1, 256).describe('Continuation token for the localized card preapproval flow'),
-});
-
-export type LocalizedCardPreapprovalContinueRequest = z.infer<typeof LocalizedCardPreapprovalContinueRequest>;
-
-const LocalizedCardPreapprovalRejectedReason = z.enum([
-	'country_mismatch',
-	'missing_customer',
-	'missing_payment_method',
-	'missing_setup_intent',
-	'payment_method_not_card',
-	'unknown',
-]);
-export const LocalizedCardPreapprovalContinueResponse = z.discriminatedUnion('status', [
-	z.object({
-		status: z.literal('pending').describe('The preapproval result is still being processed'),
-	}),
-	z.object({
-		status: z.literal('ready').describe('The preapproval succeeded and the paid checkout URL is ready'),
-		url: z.string().describe('The URL to redirect to'),
-	}),
-	z.object({
-		status: z.literal('rejected').describe('The preapproval failed and the paid checkout should not continue'),
-		reason: LocalizedCardPreapprovalRejectedReason.describe('The reason the preapproval was rejected'),
-		actual_country: createStringType(2, 2).nullish().describe('The detected card issuing country when available'),
-	}),
-	z.object({
-		status: z.literal('expired').describe('The preapproval token has expired or is unknown'),
-	}),
-]);
-
-export type LocalizedCardPreapprovalContinueResponse = z.infer<typeof LocalizedCardPreapprovalContinueResponse>;
 
 export const CurrentSubscriptionPriceResponse = z
 	.object({
 		price_id: z.string().describe('The Stripe price ID the user is currently billed against'),
 		amount_minor: z.number().int().describe('The amount the user is actually charged, in the currency minor unit'),
-		currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).describe('Currency of the charged amount'),
-		billing_cycle: z.enum(['monthly', 'yearly']).describe('The recurring billing cycle of the active subscription'),
+		currency: PremiumCurrency.describe('Currency of the charged amount'),
+		billing_cycle: BillingCycleSchema.describe('The recurring billing cycle of the active subscription'),
 		is_grandfathered: z
 			.boolean()
 			.describe('Whether the user is on a legacy price that no longer matches the current list price'),
@@ -100,15 +74,27 @@ export const CurrentSubscriptionPriceResponse = z
 
 export type CurrentSubscriptionPriceResponse = z.infer<typeof CurrentSubscriptionPriceResponse>;
 
+export const PendingSubscriptionChangeKind = z.enum(['billing_cycle', 'price']);
+
+export type PendingSubscriptionChangeKind = z.infer<typeof PendingSubscriptionChangeKind>;
+
 export const PendingSubscriptionChangeResponse = z
 	.object({
 		schedule_id: z.string().describe('Stripe subscription schedule ID managing the pending change'),
-		current_billing_cycle: z.enum(['monthly', 'yearly']).nullable().describe('Current recurring billing cycle'),
-		target_billing_cycle: z.enum(['monthly', 'yearly']).describe('Recurring billing cycle that will start later'),
+		change_kind: PendingSubscriptionChangeKind.describe(
+			'Whether the pending change moves the billing cycle or only the price within the same cycle',
+		),
+		current_billing_cycle: BillingCycleSchema.nullable().describe('Current recurring billing cycle'),
+		target_billing_cycle: BillingCycleSchema.describe('Recurring billing cycle that will start later'),
 		effective_at: z.string().describe('ISO timestamp when the pending change takes effect'),
 		current_price_id: z.string().nullable().describe('Current Stripe price ID, when known'),
 		target_price_id: z.string().nullable().describe('Stripe price ID that will be used after the change'),
-		currency: z.enum(['USD', 'EUR', 'BRL', 'INR', 'PLN', 'TRY']).nullable().describe('Currency for the pending change'),
+		target_amount_minor: z
+			.number()
+			.int()
+			.nullable()
+			.describe('Unit amount of the price that will be used after the change, in the currency minor unit'),
+		currency: PremiumCurrency.nullable().describe('Currency for the pending change'),
 		initial_amount_minor: z
 			.number()
 			.int()
@@ -130,15 +116,83 @@ export const PendingSubscriptionChangeResponse = z
 export type PendingSubscriptionChangeResponse = z.infer<typeof PendingSubscriptionChangeResponse>;
 
 export const ChangeSubscriptionRequest = z.object({
-	billing_cycle: z
-		.enum(['monthly', 'yearly'])
-		.describe('The recurring billing cycle to switch the active subscription to'),
+	billing_cycle: BillingCycleSchema.describe('The recurring billing cycle to switch the active subscription to'),
 	effective_at: z.enum(['now', 'period_end']).optional().describe('When the billing cycle change should take effect'),
 });
 
 export type ChangeSubscriptionRequest = z.infer<typeof ChangeSubscriptionRequest>;
 
-const PremiumBillingCycle = z.enum(['monthly', 'yearly']).nullable();
+export const ListPriceSwitchIneligibilityReason = z.enum([
+	'feature_unavailable',
+	'no_active_subscription',
+	'subscription_not_chargeable',
+	'unsupported_subscription',
+	'no_list_price',
+	'already_on_list_price',
+	'not_a_price_decrease',
+	'subscription_cancelling',
+	'cancellation_managed_by_schedule',
+	'conflicting_pending_change',
+	'missing_period_end',
+	'switch_in_progress',
+]);
+
+export type ListPriceSwitchIneligibilityReason = z.infer<typeof ListPriceSwitchIneligibilityReason>;
+
+export const ListPriceSwitchState = z.object({
+	available: z
+		.boolean()
+		.describe('Whether the authenticated user can move their subscription down to the current list price right now'),
+	reason: ListPriceSwitchIneligibilityReason.nullable().describe(
+		'Why the switch is unavailable, when available is false',
+	),
+	pending: z.boolean().describe('Whether a switch to the current list price is already scheduled'),
+	current_price_id: z.string().nullable().describe('Stripe price ID the subscription is billed against today'),
+	current_amount_minor: z
+		.number()
+		.int()
+		.nullable()
+		.describe('Amount the subscription is billed today, in the currency minor unit'),
+	list_price_id: z.string().nullable().describe('Current list Stripe price ID for the same cycle and currency'),
+	list_amount_minor: z
+		.number()
+		.int()
+		.nullable()
+		.describe('Current list price for the same cycle and currency, in the currency minor unit'),
+	currency: PremiumCurrency.nullable().describe('Currency of both the current and the list amount'),
+	billing_cycle: BillingCycleSchema.nullable().describe('Recurring billing cycle the switch applies to'),
+	effective_at: z
+		.string()
+		.nullable()
+		.describe('ISO timestamp the switch takes effect, which is the end of the current billing period'),
+});
+
+export type ListPriceSwitchState = z.infer<typeof ListPriceSwitchState>;
+
+const ScheduledListPriceSwitch = z.object({
+	effective_at: z.string().describe('ISO timestamp the switch takes effect'),
+	target_price_id: z.string().describe('Stripe price ID the subscription will be billed against after the switch'),
+	target_amount_minor: z.number().int().describe('Amount billed after the switch, in the currency minor unit'),
+	current_amount_minor: z.number().int().describe('Amount billed before the switch, in the currency minor unit'),
+	currency: PremiumCurrency.describe('Currency of both amounts'),
+});
+
+export const SwitchToListPriceResponse = z.discriminatedUnion('status', [
+	ScheduledListPriceSwitch.extend({
+		status: z.literal('scheduled').describe('The switch was scheduled for the end of the current billing period'),
+	}),
+	ScheduledListPriceSwitch.extend({
+		status: z.literal('already_scheduled').describe('The switch was already scheduled by an earlier request'),
+	}),
+	z.object({
+		status: z.literal('ineligible').describe('The subscription cannot be moved to the current list price'),
+		reason: ListPriceSwitchIneligibilityReason.describe('Why the switch was refused'),
+	}),
+]);
+
+export type SwitchToListPriceResponse = z.infer<typeof SwitchToListPriceResponse>;
+
+const PremiumBillingCycle = BillingCycleSchema.nullable();
 const PremiumActualState = z.object({
 	premium_type: UserPremiumTypesSchema.nullable().describe('Actual subscription type before local perk disabling'),
 	premium_since: z.string().nullable().describe('ISO timestamp when actual premium access first started'),
@@ -258,8 +312,9 @@ export type SelfServeRefundEligibilityResponse = z.infer<typeof SelfServeRefundE
 
 const PremiumBillingState = z.object({
 	stripe_customer_id: z.string().nullable(),
-	current_subscription_price: CurrentSubscriptionPriceResponse.nullable(),
-	pending_subscription_change: PendingSubscriptionChangeResponse.nullable(),
+	current_subscription_price: CurrentSubscriptionPriceResponse,
+	pending_subscription_change: PendingSubscriptionChangeResponse,
+	list_price_switch: ListPriceSwitchState,
 	subscription: PremiumBillingSubscriptionResponse.nullable(),
 	invoices: z.array(PremiumBillingInvoiceResponse),
 	invoices_has_more: z.boolean(),
@@ -270,23 +325,33 @@ const PremiumBillingState = z.object({
 export const PremiumPricingState = z.object({
 	country_code: createStringType(2, 2).nullable().describe('Country code used to resolve localized prices'),
 	localized: PriceIdsResponse.nullable().describe('Localized checkout prices resolved from mirrored billing data'),
-	base: PriceIdsResponse.nullable().describe('Standard USD/EUR checkout prices resolved from mirrored billing data'),
 });
 
 export type PremiumPricingState = z.infer<typeof PremiumPricingState>;
+
+export const PremiumSubscriptionProvider = withOpenApiType(
+	z.enum(['stripe', 'app_store', 'google_play']),
+	'PremiumSubscriptionProvider',
+);
+
+export type PremiumSubscriptionProvider = z.infer<typeof PremiumSubscriptionProvider>;
 
 export const PremiumStateResponse = z.object({
 	actual: PremiumActualState,
 	effective: PremiumEffectiveState,
 	billing: PremiumBillingState,
 	pricing: PremiumPricingState,
+	store: PremiumStoreSubscriptionState.nullish().describe(
+		'Active App Store or Google Play subscription, null when no store subscription is active',
+	),
+	subscription_provider: PremiumSubscriptionProvider.nullable().describe(
+		'Billing platform that owns the current recurring subscription, null for gift, lifetime or no subscription. When a Stripe and a store subscription are both active, the one paid through later',
+	),
 });
 
 export type PremiumStateResponse = z.infer<typeof PremiumStateResponse>;
 
-export const PremiumStateQueryRequest = z.object({
-	country_code: createStringType(2, 2).optional().describe('Two-letter country code for regional pricing'),
-});
+export const PremiumStateQueryRequest = PriceIdsQueryRequest;
 
 export type PremiumStateQueryRequest = z.infer<typeof PremiumStateQueryRequest>;
 

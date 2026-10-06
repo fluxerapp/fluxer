@@ -5,6 +5,8 @@ import {
 	THEME_VARIABLES,
 	type ThemeVariableDefinition,
 } from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeConstants';
+import type {MessageDescriptor} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 
 export interface TokenGroupDefinition {
 	id: string;
@@ -35,6 +37,93 @@ const GROUP_ORDER: ReadonlyArray<string> = [
 	'emoji',
 	'other',
 ];
+
+const GROUP_LABEL_DESCRIPTORS: Readonly<Record<string, MessageDescriptor | undefined>> = {
+	typography: msg({
+		message: 'Typography',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for font and text-sizing tokens.',
+	}),
+	surfaces: msg({
+		message: 'Surfaces',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for background surface tokens.',
+	}),
+	text: msg({
+		message: 'Text',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for text color tokens.',
+	}),
+	brand: msg({
+		message: 'Brand & accents',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for brand and accent color tokens.',
+	}),
+	status: msg({
+		message: 'Status indicators',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for presence and status color tokens.',
+	}),
+	buttons: msg({
+		message: 'Buttons',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for button color tokens.',
+	}),
+	borders: msg({
+		message: 'Borders & focus',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for border and focus ring tokens.',
+	}),
+	alerts: msg({
+		message: 'Alerts & callouts',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for alert and callout tokens.',
+	}),
+	markup: msg({
+		message: 'Markup & mentions',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for markdown and mention tokens.',
+	}),
+	code: msg({
+		message: 'Code & terminal',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for code block and terminal tokens.',
+	}),
+	tables: msg({
+		message: 'Tables',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for table tokens.',
+	}),
+	messages: msg({
+		message: 'Messages',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for chat message tokens.',
+	}),
+	forms: msg({
+		message: 'Forms',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for form input tokens.',
+	}),
+	layout: msg({
+		message: 'Layout',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for spacing and sizing tokens.',
+	}),
+	scrolling: msg({
+		message: 'Scrolling',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for scrollbar tokens.',
+	}),
+	motion: msg({
+		message: 'Motion',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for animation and transition tokens.',
+	}),
+	layering: msg({
+		message: 'Layering',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for stacking order tokens.',
+	}),
+	media: msg({
+		message: 'Media',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for image and video tokens.',
+	}),
+	emoji: msg({
+		message: 'Emoji',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for emoji tokens.',
+	}),
+	other: msg({
+		message: 'Other',
+		comment: 'Collapsible group heading in the Theme Studio tokens list, for tokens that fit no other group.',
+	}),
+};
+
+export function getTokenGroupLabelDescriptor(groupId: string): MessageDescriptor | null {
+	return GROUP_LABEL_DESCRIPTORS[groupId] ?? null;
+}
 
 export const TOKEN_VARIABLES_BY_NAME: ReadonlyMap<string, ThemeVariableDefinition> = new Map(
 	THEME_VARIABLES.map((definition) => [definition.name, definition]),

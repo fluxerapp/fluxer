@@ -10,11 +10,11 @@ Every main Gateway connection has limits on what it sends, how long its session 
 
 [Framing](/gateway/overview/#framing) owns the protocol version, the payload bound, and the compression contract. One inbound WebSocket message is limited to 4,096 bytes on the wire and to a further 4,096 bytes after decompression, and either bound closes with `4002` and reason `Payload too large`.
 
-A compressed message that decompresses past 10 MiB closes with `4002` and reason `Decompression failed`, before the 4,096-byte bound is reached.
+A compressed message that decompresses past 10 MiB closes with `4002` and reason `Decompression failed`. That message never closes with `Payload too large`.
 
 ## Session lifecycle
 
-Hello advertises a heartbeat interval of 41,250 ms. The Gateway checks the heartbeat state every 13,750 ms. When 37,125 ms have elapsed since the last acknowledgement it sends Opcode `1` and waits. If no new acknowledgement is accepted before the elapsed time passes 45,000 ms, the connection closes with `4009` and reason `Heartbeat timeout`.
+Hello advertises a heartbeat interval of 41,250 ms. The Gateway checks the heartbeat state every 13,750 ms. When 37,125 ms have elapsed since the last acknowledgement it sends Opcode `1`, and a client answers it immediately. If no new acknowledgement is accepted before the elapsed time passes 45,000 ms, the connection closes with `4009` and reason `Heartbeat timeout`.
 
 There is no separate authentication deadline. The heartbeat rule alone closes a socket that never authenticates.
 
@@ -24,37 +24,21 @@ One user credential holds at most 100 live sessions. A further Identify closes w
 
 Shard counts run from 1 through 16,384. One bot shard covers at most 2,500 guilds. A malformed shard pair closes with `4010` for every credential. A bot assignment above the guild ceiling closes with `4011` and reason `Sharding required`. A user session is never refused for its guild count.
 
-One Gateway node admits 512 concurrent session starts by default, which an operator configures as `max_concurrent_session_starts` in the Gateway rollout config. Setting `session_rollout_percentage` to zero pauses session starts entirely, and a value below 100 admits only that share.
-
-`session_rollout_mode` decides which share. The default `modulo` hashes the account ID, so one account is admitted or refused consistently at a given percentage. The alternative `random` draws once per admission attempt, and the percentage is a share of session starts. One account can be admitted on one attempt and refused on the next.
-
-:::note[A refused session start is held and retried]
-The Gateway refuses a session start for draining, capacity, paused starts, the rollout percentage, or a failed backend RPC. It keeps the Identify payload and retries after a jittered 1,000 ms to 1,999 ms delay until it succeeds. A rollout config change retries it immediately.
+:::note[Session creation can be delayed]
+An Identify can remain pending with no response while the node drains, while the node is at capacity, while session starts are paused, or while the account is outside the session rollout percentage. Continue heartbeating while waiting for Ready.
 :::
 
 ## Session start limit
 
-[`GET /v1/gateway/bot`](/http-api/gateway/#get-gateway-information) returns a [session start limit](/http-api/gateway/#session-start-limit-object) object for client compatibility. Its four values are constants. Admission is bounded by the source IP Identify budget, the per-user session count, the node's concurrent session-start bucket, and the rollout percentage.
+[`GET /v1/gateway/bot`](/http-api/gateway/#get-gateway-information) returns a [session start limit](/http-api/gateway/#session-start-limit-object) object for client compatibility. Its values are constants. Admission is bounded by the source IP Identify budget, the per-user session count, the node's concurrent session-start bucket, and the rollout percentage.
 
 ## Connection and command rate limits
 
-A Gateway node running with `FLUXER_DISABLE_RATE_LIMITS` set to `1`, `true`, or `TRUE` disables nine budgets together:
-
-- Connection payload budget
-- Session payload budget
-- Source IP payload budget
-- Source IP connection ceiling
-- Presence Update budget
-- Voice State Update queue
-- Source IP Identify budget
-- Per-user session count
-- 30-second complete member list budget
-
-The figures below are the enforced defaults.
+The figures below are the defaults. An operator can disable these limits.
 
 One WebSocket accepts 600 client payloads in a rolling 60-second window. One authenticated session accepts 600 client payloads in each fixed 60-second bucket. One source IP address accepts 6,000 client payloads in each fixed 60-second bucket. Exceeding any of these budgets closes the current connection with `4008` and reason `Rate limited`.
 
-Fluxer evaluates the three payload budgets before any command-specific budget. The session budget is skipped while the connection is unauthenticated.
+The session budget applies only after authentication.
 
 One source IP address holds 256 concurrent Gateway WebSockets. A further connection closes with `4008` and reason `Too many connections` before Hello is sent.
 
@@ -86,7 +70,7 @@ Both byte bounds measure in-memory size, not wire bytes, so both figures are app
 
 [Guild Members Chunk](/gateway/events/#guild-members-chunk) is delivered live and is never retained for Resume, whatever its size.
 
-[Guild Sync](/gateway/events/#guild-sync) and [Guild Member List Update](/gateway/events/#guild-member-list-update) are delivered with a sequence and never retained. Those two and Guild Members Chunk are the only events excluded by name. Every other Dispatch is retained, including the pre-encoded guild fan-out that broadcasts one event to every eligible session. A replay is therefore a subset of the sequence range it covers, so replay frames have sequence gaps.
+[Guild Sync](/gateway/events/#guild-sync) and [Guild Member List Update](/gateway/events/#guild-member-list-update) are also excluded from replay. A replay can therefore have sequence gaps even within its retention window.
 
 A heartbeat with a sequence discards every retained Dispatch at or below that sequence and records it as the acknowledged sequence. A client MUST acknowledge only a sequence whose events it has finished processing. A heartbeat with `null`, and a heartbeat with a sequence below the acknowledged sequence, change nothing. Resume neither acknowledges nor evicts. A client that never heartbeats with a sequence keeps its full window until the count or byte bound evicts from the front.
 
@@ -94,9 +78,7 @@ Resume closes with `4007` on a `seq` below the acknowledged sequence, and on a `
 
 An eviction from the count or byte bound raises a replay floor to the highest sequence it dropped. A Resume with a `seq` below that floor produces Opcode `9` with `d: false` and no close, so a client that reconnects long after it fell behind Identifies again.
 
-Each session holds at most 2,048 entries in its presence hold queue and discards the oldest when full. [Presence Update](/gateway/events/#presence-update) states when the queue is held and released.
-
-Fluxer drops a presence cast to a session process whose mailbox already holds more than 5,000 messages. A session that cannot keep up sheds presence casts and stays connected.
+Presence updates can be dropped under load without closing the connection.
 
 ## Command payload limits
 
@@ -106,11 +88,11 @@ Lazy Request accepts at most 10 member list ranges per channel, each with `end` 
 
 Request Guild Counts accepts at most 100 guild IDs after deduplication. Request Channel Member Counts accepts at most 25 channel IDs after deduplication. Both nonces run from 1 through 64 bytes, and a nonce outside that bound is omitted from the result.
 
-Identify accepts at most 256 `ignored_events` entries. A longer array closes with `4002` and reason `Invalid identify payload`. Every other command payload bound coerces or drops. [Client commands](/gateway/commands/) states the exact coercion or drop rule for each field.
+Identify accepts at most 256 `ignored_events` entries. A longer array closes with `4002` and reason `Invalid identify payload`. Fluxer coerces or drops a value outside any other command payload bound. [Client commands](/gateway/commands/) states the exact coercion or drop rule for each field.
 
 ## Voice admission
 
-Voice admission follows the enclosing guild, DM, group DM, channel, and permission rules. A refusal is reported as [Voice State Ack](/gateway/events/#voice-state-ack) with an `error_code` and closes nothing. A Voice State Update that has no `mutation_id` produces no event when it is refused.
+Voice admission follows the enclosing guild, DM, group DM, channel, and permission rules. A refusal produces no event and closes nothing.
 
 A guild voice channel admits at most `user_limit` users, where `0` means unlimited. A channel in which any participant has a camera enabled also admits at most 25 users in total, whatever its `user_limit`. A channel that already holds 25 users with cameras enabled refuses a further camera with `VOICE_CAMERA_USER_LIMIT`. [Capacity](/voice/#capacity) states these bounds in full.
 

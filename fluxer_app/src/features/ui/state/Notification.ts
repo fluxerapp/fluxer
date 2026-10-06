@@ -54,6 +54,10 @@ const IS_NOW_YOUR_FRIEND_DESCRIPTOR = msg({
 	message: '{displayName} is now your friend!',
 	comment: 'Toast title announcing a newly accepted friend request.',
 });
+const GROUP_DM_DESCRIPTOR = msg({
+	message: 'Group DM',
+	comment: 'Fallback name shown in a desktop notification for a group DM that has no custom name.',
+});
 const logger = new Logger('Notification');
 const shouldManagePushSubscriptions = (): boolean => isInstalledPwa();
 
@@ -311,14 +315,15 @@ class NotificationState {
 		let subtitle: string | undefined;
 		switch (channel.type) {
 			case ChannelTypes.GUILD_TEXT:
+			case ChannelTypes.GUILD_ANNOUNCEMENT:
 			case ChannelTypes.GUILD_VOICE:
 				if (message.type === MessageTypes.DEFAULT) {
 					if (useMacOSNotificationPresentation) {
 						const guild = channel.guildId ? Guilds.getGuild(channel.guildId) : null;
-						const channelPrefix = channel.type === ChannelTypes.GUILD_TEXT ? '#' : '';
+						const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
 						subtitle = guild ? `${guild.name} ${channelPrefix}${channel.name}` : `${channelPrefix}${channel.name}`;
 					} else {
-						const channelPrefix = channel.type === ChannelTypes.GUILD_TEXT ? '#' : '';
+						const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
 						title = `${title} (${channelPrefix}${channel.name})`;
 					}
 				} else {
@@ -326,22 +331,24 @@ class NotificationState {
 					if (guild) {
 						if (useMacOSNotificationPresentation) {
 							title = guild.name;
-							const channelPrefix = channel.type === ChannelTypes.GUILD_TEXT ? '#' : '';
+							const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
 							subtitle = `${channelPrefix}${channel.name}`;
 						} else {
-							const channelPrefix = channel.type === ChannelTypes.GUILD_TEXT ? '#' : '';
+							const channelPrefix = channel.type === ChannelTypes.GUILD_VOICE ? '' : '#';
 							title = `${guild.name} (${channelPrefix}${channel.name})`;
 						}
 					}
 				}
 				break;
-			case ChannelTypes.GROUP_DM:
+			case ChannelTypes.GROUP_DM: {
+				const groupDmName = channel.name || i18n._(GROUP_DM_DESCRIPTOR);
 				if (useMacOSNotificationPresentation) {
-					subtitle = channel.name || 'Group DM';
+					subtitle = groupDmName;
 				} else {
-					title = `${title} (${channel.name || 'Group DM'})`;
+					title = `${title} (${groupDmName})`;
 				}
 				break;
+			}
 		}
 		const body = buildMessageNotificationBody(data.messageRecord, i18n);
 		const notificationUrl =

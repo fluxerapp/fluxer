@@ -2,7 +2,8 @@
 
 import type {GatewayRolloutConfig} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {StringCodec} from 'nats';
+
+const textEncoder = new TextEncoder();
 
 export const GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT = 'config.gateway.rollout';
 
@@ -12,8 +13,6 @@ interface GatewayRolloutConfigNatsMessage {
 }
 
 export class GatewayRolloutConfigPublisher {
-	private readonly codec = StringCodec();
-
 	constructor(private readonly connectionManager: INatsConnectionManager) {}
 
 	async publish(config: GatewayRolloutConfig): Promise<void> {
@@ -25,7 +24,7 @@ export class GatewayRolloutConfigPublisher {
 			type: 'gateway_rollout_config',
 			config,
 		};
-		connection.publish(GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT, this.codec.encode(JSON.stringify(message)));
+		connection.publish(GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT, textEncoder.encode(JSON.stringify(message)));
 		await connection.flush();
 	}
 }

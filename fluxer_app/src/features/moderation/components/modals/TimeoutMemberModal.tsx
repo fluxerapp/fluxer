@@ -21,7 +21,7 @@ import type React from 'react';
 import {useMemo, useState} from 'react';
 
 const TIMEOUT_DESCRIPTOR = msg({
-	message: 'Timeout {tag}',
+	message: 'Time out {tag}',
 	comment:
 		'Title of the timeout-member modal. {tag} is the target user tag (username#tag). Moderation action; keep tone direct.',
 });

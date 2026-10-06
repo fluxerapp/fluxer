@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import type {ZodTypeAny} from 'zod';
+import {type BitflagEntry, type EnumEntry, schemaMetadata, withSchemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
-export function withOpenApiType<T extends ZodTypeAny>(schema: T, typeName: string): T {
-	(schema as Record<string, unknown>).__fluxer_custom_type__ = typeName;
-	return schema;
+export function withOpenApiType<T extends z.ZodType>(schema: T, typeName: string): T {
+	return withSchemaMetadata(schema, {...schemaMetadata.get(schema), name: typeName});
 }
 
-export function withFieldDescription<T extends z.ZodTypeAny>(schema: T, fieldDescription: string): T {
-	const currentDesc = schema.description ?? '';
-	const newDesc = currentDesc ? `${currentDesc}|fieldDesc:${fieldDescription}` : `|fieldDesc:${fieldDescription}`;
-	return schema.describe(newDesc) as T;
+export function withFieldDescription<T extends z.ZodType>(schema: T, fieldDescription: string): T {
+	return withSchemaMetadata(schema.describe(fieldDescription), schemaMetadata.get(schema) ?? {});
 }
 
 const MESSAGE_REMOVED_FORMAT_REGEX = /\u202E/g;
@@ -24,82 +21,55 @@ export function normalizeString(value: string): string {
 	return value.replace(MESSAGE_REMOVED_CONTROL_REGEX, '').replace(MESSAGE_REMOVED_FORMAT_REGEX, '').trim();
 }
 
-export const Int64Type = z
-	.union([z.string(), z.number().int()])
-	.transform((value, ctx) => {
-		if (typeof value === 'number' && !Number.isSafeInteger(value)) {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.INVALID_INTEGER_FORMAT,
-			});
-			return z.NEVER;
-		}
-		const normalized = typeof value === 'number' ? value.toString() : value;
-		const trimmed = normalized.trim();
-		try {
-			const bigInt = BigInt(trimmed);
-			if (bigInt < -9223372036854775808n || bigInt > 9223372036854775807n) {
-				ctx.addIssue({
-					code: 'custom',
-					message: ValidationErrorCodes.INTEGER_OUT_OF_INT64_RANGE,
-				});
-				return z.NEVER;
-			}
-			return bigInt;
-		} catch {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.INVALID_INTEGER_FORMAT,
-			});
-			return z.NEVER;
-		}
-	})
-	.describe('fluxer:Int64Type');
-export const UnsignedInt64Type = z
-	.union([z.string(), z.number().int()])
-	.transform((value, ctx) => {
-		if (typeof value === 'number' && !Number.isSafeInteger(value)) {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.INVALID_INTEGER_FORMAT,
-			});
-			return z.NEVER;
-		}
-		const normalized = typeof value === 'number' ? value.toString() : value;
-		const trimmed = normalized.trim();
-		if (!/^\d+$/.test(trimmed)) {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.INVALID_INTEGER_FORMAT,
-			});
-			return z.NEVER;
-		}
-		try {
-			const bigInt = BigInt(trimmed);
-			if (bigInt < 0n || bigInt > 9223372036854775807n) {
-				ctx.addIssue({
-					code: 'custom',
-					message: ValidationErrorCodes.INTEGER_OUT_OF_INT64_RANGE,
-				});
-				return z.NEVER;
-			}
-			return bigInt;
-		} catch {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.INVALID_INTEGER_FORMAT,
-			});
-			return z.NEVER;
-		}
-	})
-	.describe('fluxer:UnsignedInt64Type');
-export const Int64StringType = z
-	.string()
-	.regex(/^-?\d+$/)
-	.describe('fluxer:Int64StringType');
+const MIN_INT64_VALUE = -9223372036854775808n;
+const MAX_INT64_VALUE = 9223372036854775807n;
+const INTEGER_STRING_REGEX = /^[+-]?\d+$/;
 const SNOWFLAKE_REGEX = /^(0|[1-9][0-9]*)$/;
 const UNSIGNED_INT64_STRING_REGEX = /^\d+$/;
 const MAX_UINT64_VALUE = 18446744073709551615n;
+
+interface BigIntTypeOptions {
+	minimum: bigint;
+	maximum: bigint;
+	pattern: RegExp;
+	invalidFormatCode: string;
+	outOfRangeCode: string;
+}
+
+function createBigIntType({minimum, maximum, pattern, invalidFormatCode, outOfRangeCode}: BigIntTypeOptions) {
+	return z.union([z.string(), z.number().int()]).transform((value, ctx) => {
+		const normalized = String(value).trim();
+		if (!pattern.test(normalized)) {
+			ctx.addIssue({code: 'custom', message: invalidFormatCode});
+			return z.NEVER;
+		}
+		const parsed = BigInt(normalized);
+		if (parsed < minimum || parsed > maximum) {
+			ctx.addIssue({code: 'custom', message: outOfRangeCode});
+			return z.NEVER;
+		}
+		return parsed;
+	});
+}
+
+export const Int64Type = createBigIntType({
+	minimum: MIN_INT64_VALUE,
+	maximum: MAX_INT64_VALUE,
+	pattern: INTEGER_STRING_REGEX,
+	invalidFormatCode: ValidationErrorCodes.INVALID_INTEGER_FORMAT,
+	outOfRangeCode: ValidationErrorCodes.INTEGER_OUT_OF_INT64_RANGE,
+}).register(schemaMetadata, {name: 'Int64Type', format: 'int64'});
+export const UnsignedInt64Type = createBigIntType({
+	minimum: 0n,
+	maximum: MAX_INT64_VALUE,
+	pattern: UNSIGNED_INT64_STRING_REGEX,
+	invalidFormatCode: ValidationErrorCodes.INVALID_INTEGER_FORMAT,
+	outOfRangeCode: ValidationErrorCodes.INTEGER_OUT_OF_INT64_RANGE,
+}).register(schemaMetadata, {name: 'UnsignedInt64Type', format: 'int64'});
+export const Int64StringType = z
+	.string()
+	.regex(/^-?\d+$/)
+	.register(schemaMetadata, {name: 'Int64StringType', format: 'int64'});
 export const UnsignedInt64StringType = z
 	.string()
 	.regex(UNSIGNED_INT64_STRING_REGEX)
@@ -118,66 +88,56 @@ export const UnsignedInt64StringType = z
 			});
 		}
 	})
-	.describe('fluxer:UnsignedInt64StringType');
-export const SnowflakeStringType = z.string().regex(SNOWFLAKE_REGEX).describe('fluxer:SnowflakeStringType');
-const BitflagStringType = z.string().regex(UNSIGNED_INT64_STRING_REGEX).describe('fluxer:BitflagStringType');
+	.register(schemaMetadata, {name: 'UnsignedInt64StringType', format: 'int64'});
+export const SnowflakeStringType = z
+	.string()
+	.regex(SNOWFLAKE_REGEX)
+	.register(schemaMetadata, {name: 'SnowflakeStringType', format: 'snowflake'});
+const BitflagStringType = z
+	.string()
+	.regex(UNSIGNED_INT64_STRING_REGEX)
+	.register(schemaMetadata, {name: 'BitflagStringType'});
 const HEX_STRING_16_REGEX = /^[a-f0-9]{16}$/;
-export const HexString16Type = z.string().regex(HEX_STRING_16_REGEX).describe('fluxer:HexString16Type');
+export const HexString16Type = z
+	.string()
+	.regex(HEX_STRING_16_REGEX)
+	.register(schemaMetadata, {name: 'HexString16Type'});
 const HEX_STRING_32_REGEX = /^[a-f0-9]{32}$/;
-export const HexString32Type = z.string().regex(HEX_STRING_32_REGEX).describe('fluxer:HexString32Type');
-export const SnowflakeType = z
-	.union([z.string(), z.number().int()])
-	.transform((value, ctx) => {
-		if (typeof value === 'number' && !Number.isSafeInteger(value)) {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.INVALID_SNOWFLAKE_FORMAT,
-			});
-			return z.NEVER;
-		}
-		const normalized = typeof value === 'number' ? value.toString() : value;
-		const trimmed = normalized.trim();
-		if (!SNOWFLAKE_REGEX.test(trimmed)) {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.INVALID_SNOWFLAKE_FORMAT,
-			});
-			return z.NEVER;
-		}
-		try {
-			const bigInt = BigInt(trimmed);
-			if (bigInt < 0n || bigInt > 9223372036854775807n) {
-				ctx.addIssue({
-					code: 'custom',
-					message: ValidationErrorCodes.SNOWFLAKE_OUT_OF_RANGE,
-				});
-				return z.NEVER;
-			}
-			return bigInt;
-		} catch {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.INVALID_SNOWFLAKE_FORMAT,
-			});
-			return z.NEVER;
-		}
-	})
-	.describe('fluxer:SnowflakeType');
+export const HexString32Type = z
+	.string()
+	.regex(HEX_STRING_32_REGEX)
+	.register(schemaMetadata, {name: 'HexString32Type'});
+export const SnowflakeType = createBigIntType({
+	minimum: 0n,
+	maximum: MAX_INT64_VALUE,
+	pattern: SNOWFLAKE_REGEX,
+	invalidFormatCode: ValidationErrorCodes.INVALID_SNOWFLAKE_FORMAT,
+	outOfRangeCode: ValidationErrorCodes.SNOWFLAKE_OUT_OF_RANGE,
+}).register(schemaMetadata, {name: 'SnowflakeType', format: 'snowflake'});
 export const ColorType = z
 	.number()
 	.int()
 	.min(0x000000, ValidationErrorCodes.COLOR_VALUE_TOO_LOW)
 	.max(0xffffff, ValidationErrorCodes.COLOR_VALUE_TOO_HIGH)
-	.describe('fluxer:ColorType');
-export const Int32Type = z.number().int().min(0).max(2147483647).describe('fluxer:Int32Type');
-export const SignedInt32Type = z.number().int().min(-2147483648).max(2147483647).describe('fluxer:SignedInt32Type');
+	.register(schemaMetadata, {name: 'ColorType'});
+export const Int32Type = z
+	.number()
+	.int()
+	.min(0)
+	.max(2147483647)
+	.register(schemaMetadata, {name: 'Int32Type', format: 'int32'});
+export const SignedInt32Type = z
+	.number()
+	.int()
+	.min(-2147483648)
+	.max(2147483647)
+	.register(schemaMetadata, {name: 'SignedInt32Type', format: 'int32'});
 export const NonNegativeSafeIntegerType = z
 	.number()
 	.int()
 	.min(0)
 	.max(Number.MAX_SAFE_INTEGER)
-	.describe('fluxer:NonNegativeSafeIntegerType');
-const INTEGER_STRING_REGEX = /^[+-]?\d+$/;
+	.register(schemaMetadata, {name: 'NonNegativeSafeIntegerType'});
 
 function coerceNumericStringToNumber(value: unknown): unknown {
 	if (typeof value !== 'string') {
@@ -187,29 +147,30 @@ function coerceNumericStringToNumber(value: unknown): unknown {
 	if (trimmed.length === 0 || !INTEGER_STRING_REGEX.test(trimmed)) {
 		return value;
 	}
-	const parsed = Number(trimmed);
-	return Number.isNaN(parsed) ? value : parsed;
+	return Number(trimmed);
 }
 
-export function coerceNumberFromString<T extends z.ZodNumber>(schema: T) {
-	return z.preprocess((value) => coerceNumericStringToNumber(value), schema);
+export function coerceNumberFromString<T extends z.ZodType<number, number>>(schema: T) {
+	return z.preprocess(coerceNumericStringToNumber, schema);
 }
 
-export function withStringLengthRangeValidation(
-	schema: z.ZodString,
+export function withStringLengthRangeValidation<T extends z.ZodType<string>>(
+	schema: T,
 	minLength: number,
 	maxLength: number,
 	errorCode: string,
 ) {
-	return schema.superRefine((value, ctx) => {
-		if (value.length < minLength || value.length > maxLength) {
-			const params: Record<string, unknown> = {min: minLength, max: maxLength};
-			if (minLength === maxLength) {
-				params.length = minLength;
+	return schema
+		.superRefine((value, ctx) => {
+			if (value.length < minLength || value.length > maxLength) {
+				const params: Record<string, unknown> = {min: minLength, max: maxLength};
+				if (minLength === maxLength) {
+					params.length = minLength;
+				}
+				ctx.addIssue({code: 'custom', message: errorCode, params});
 			}
-			ctx.addIssue({code: 'custom', message: errorCode, params});
-		}
-	});
+		})
+		.meta({...(minLength > 0 ? {minLength} : {}), maxLength});
 }
 
 export function createStringType(minLength = 1, maxLength = 256) {
@@ -217,12 +178,12 @@ export function createStringType(minLength = 1, maxLength = 256) {
 		minLength === maxLength ? ValidationErrorCodes.STRING_LENGTH_EXACT : ValidationErrorCodes.STRING_LENGTH_INVALID;
 	return z
 		.string()
-		.transform(normalizeString)
+		.overwrite(normalizeString)
 		.pipe(withStringLengthRangeValidation(z.string(), minLength, maxLength, errorMessage));
 }
 
 export function createUnboundedStringType() {
-	return z.string().transform(normalizeString);
+	return z.string().overwrite(normalizeString);
 }
 
 // biome-ignore lint/complexity/useRegexLiterals: The literal form trips noControlCharactersInRegex for C0/C1 controls.
@@ -278,127 +239,94 @@ export function stripVariationSelectors(s: string): string {
 	return s.replace(VARIATION_SELECTORS_BASIC, '').replace(VARIATION_SELECTORS_IDEOGRAPHIC, '');
 }
 
-interface EnumEntryJson {
-	n: string;
-	v: string | number;
-	d?: string;
+type NamedLiteralPairs<T extends string | number> = ReadonlyArray<readonly [T, string, string?]>;
+
+function getEnumEntries<T extends string | number>(pairs: NamedLiteralPairs<T>): Array<EnumEntry> {
+	return pairs.map(([value, name, description]) => ({name, value, ...(description ? {description} : {})}));
 }
 
 export function createNamedLiteral<T extends number>(value: T, name: string, description?: string) {
-	const entry: EnumEntryJson = {n: name, v: value};
-	if (description) entry.d = description;
-	return z.literal(value).describe(`fluxer:EnumValue:${JSON.stringify(entry)}`);
+	return withSchemaMetadata(z.literal(value), {enumEntries: [{name, value, ...(description ? {description} : {})}]});
 }
 
-export function createNamedLiteralUnion<T extends number>(
-	pairs: ReadonlyArray<readonly [T, string] | readonly [T, string, string?]>,
-	description?: string,
-) {
-	const literals = pairs.map(([value]) => z.literal(value));
-	const entries: Array<EnumEntryJson> = pairs.map(([value, name, desc]) => {
-		const entry: EnumEntryJson = {n: name, v: value};
-		if (desc) entry.d = desc;
-		return entry;
+function createNamedUnion<T extends string | number>(pairs: NamedLiteralPairs<T>, description?: string) {
+	if (pairs.length < 2) {
+		throw new Error('Named literal unions require at least two values');
+	}
+	return withSchemaMetadata(z.union(pairs.map(([value]) => z.literal(value))).describe(description ?? ''), {
+		enumEntries: getEnumEntries(pairs),
 	});
-	const descPart = description ? ` ${description}` : '';
-	return z
-		.union(literals as [z.ZodLiteral<T>, z.ZodLiteral<T>, ...Array<z.ZodLiteral<T>>])
-		.describe(`fluxer:EnumValues:${JSON.stringify(entries)}${descPart}`);
 }
 
-export function createNamedStringLiteralUnion<T extends string>(
-	pairs: ReadonlyArray<readonly [T, string] | readonly [T, string, string?]>,
-	description?: string,
-) {
-	const literals = pairs.map(([value]) => z.literal(value));
-	const entries: Array<EnumEntryJson> = pairs.map(([value, name, desc]) => {
-		const entry: EnumEntryJson = {n: name, v: value};
-		if (desc) entry.d = desc;
-		return entry;
-	});
-	const descPart = description ? ` ${description}` : '';
-	return z
-		.union(literals as [z.ZodLiteral<T>, z.ZodLiteral<T>, ...Array<z.ZodLiteral<T>>])
-		.describe(`fluxer:EnumValues:${JSON.stringify(entries)}${descPart}`);
+export function createNamedLiteralUnion<T extends number>(pairs: NamedLiteralPairs<T>, description?: string) {
+	return createNamedUnion(pairs, description);
+}
+
+export function createNamedStringLiteralUnion<T extends string>(pairs: NamedLiteralPairs<T>, description?: string) {
+	return createNamedUnion(pairs, description);
 }
 
 export function createNamedObject<T extends z.ZodRawShape>(typeName: string, shape: T, description?: string) {
-	const descPart = description ? ` ${description}` : '';
-	return z.object(shape).describe(`fluxer:NamedObject:${typeName}${descPart}`);
+	return z
+		.object(shape)
+		.describe(description ?? '')
+		.register(schemaMetadata, {name: typeName});
 }
 
-type FlexibleStringLiteralUnionOperand<T extends string> = z.ZodLiteral<T> | z.ZodString;
-type FlexibleStringLiteralUnionOperands<T extends string> = [
-	z.ZodLiteral<T>,
-	z.ZodLiteral<T>,
-	...Array<FlexibleStringLiteralUnionOperand<T>>,
-];
-
-function createFlexibleStringLiteralUnionOperands<T extends string>(
-	literals: Array<z.ZodLiteral<T>>,
-): FlexibleStringLiteralUnionOperands<T> {
-	const [first, second, ...rest] = literals;
-	if (!first || !second) {
-		throw new Error('createFlexibleStringLiteralUnion requires at least two literals');
+export function createFlexibleStringLiteralUnion<T extends string>(pairs: NamedLiteralPairs<T>, description?: string) {
+	if (pairs.length < 2) {
+		throw new Error('Flexible string literal unions require at least two values');
 	}
-	return [first, second, ...rest, z.string()];
-}
-
-export function createFlexibleStringLiteralUnion<T extends string>(
-	pairs: ReadonlyArray<readonly [T, string] | readonly [T, string, string?]>,
-	description?: string,
-) {
-	const literals = pairs.map(([value]) => z.literal(value));
-	const entries: Array<EnumEntryJson> = pairs.map(([value, name, desc]) => {
-		const entry: EnumEntryJson = {n: name, v: value};
-		if (desc) entry.d = desc;
-		return entry;
-	});
-	const descPart = description ? ` ${description}` : '';
-	const flexibleUnionOperands = createFlexibleStringLiteralUnionOperands(literals);
-	return z.union(flexibleUnionOperands).describe(`fluxer:FlexibleEnumValues:${JSON.stringify(entries)}${descPart}`);
+	return withSchemaMetadata(
+		z.union([...pairs.map(([value]) => z.literal(value)), z.string()]).describe(description ?? ''),
+		{
+			enumEntries: getEnumEntries(pairs),
+			openEnum: true,
+		},
+	);
 }
 
 export function createInt32EnumType<T extends number>(
-	pairs: ReadonlyArray<readonly [T, string] | readonly [T, string, string?]>,
+	pairs: NamedLiteralPairs<T>,
 	description?: string,
 	typeName?: string,
 ) {
-	const entries: Array<EnumEntryJson> = pairs.map(([value, name, desc]) => {
-		const entry: EnumEntryJson = {n: name, v: value};
-		if (desc) entry.d = desc;
-		return entry;
-	});
-	const allowed = new Set<number>(pairs.map(([value]) => value));
-	const typeNamePart = typeName ? `:${typeName}` : '';
-	const descPart = description ? ` ${description}` : '';
-	return Int32Type.refine((value): value is T => allowed.has(value), {
-		message: `Expected one of [${[...allowed].join(', ')}]`,
-	}).describe(`fluxer:Int32Enum${typeNamePart}:${JSON.stringify(entries)}${descPart}`);
+	const values = pairs.map(([value]) => value);
+	const allowed = new Set<number>(values);
+	return Int32Type.refine((value) => allowed.has(value), {
+		error: `Expected one of [${[...allowed].join(', ')}]`,
+	})
+		.pipe(z.literal(values))
+		.describe(description ?? '')
+		.register(schemaMetadata, {
+			name: typeName,
+			enumEntries: getEnumEntries(pairs),
+			format: 'int32',
+		});
 }
 
 type BitflagConstantsObject = Readonly<Record<string, number | bigint>>;
 type BitflagDescriptionsObject<T extends BitflagConstantsObject> = Readonly<Partial<Record<keyof T, string>>>;
 
-interface BitflagEntryJson {
-	n: string;
-	v: string;
-	d?: string;
-}
-
-function formatBitflagAnnotation<T extends BitflagConstantsObject>(
+function createBitflagType<TSchema extends z.ZodType, T extends BitflagConstantsObject>(
+	schema: TSchema,
 	constants: T,
-	descriptions?: BitflagDescriptionsObject<T>,
-): string {
-	const entries: Array<BitflagEntryJson> = Object.entries(constants)
-		.filter(([, value]) => typeof value === 'number' || typeof value === 'bigint')
-		.map(([name, value]) => {
-			const desc = descriptions?.[name as keyof T];
-			const entry: BitflagEntryJson = {n: name, v: value.toString()};
-			if (desc) entry.d = desc;
-			return entry;
-		});
-	return JSON.stringify(entries);
+	descriptionOrDescriptions?: string | BitflagDescriptionsObject<T>,
+	description?: string,
+	typeName?: string,
+) {
+	const descriptions = typeof descriptionOrDescriptions === 'object' ? descriptionOrDescriptions : undefined;
+	const overallDescription = typeof descriptionOrDescriptions === 'string' ? descriptionOrDescriptions : description;
+	const bitflagValues: Array<BitflagEntry> = Object.entries(constants).map(([name, value]) => ({
+		name,
+		value: value.toString(),
+		...(descriptions?.[name as keyof T] ? {description: descriptions[name as keyof T]} : {}),
+	}));
+	return withSchemaMetadata(schema.describe(overallDescription ?? ''), {
+		name: typeName,
+		bitflagValues,
+		format: schema instanceof z.ZodNumber ? 'int32' : 'int64',
+	});
 }
 
 export function createBitflagStringType<T extends BitflagConstantsObject>(
@@ -407,12 +335,7 @@ export function createBitflagStringType<T extends BitflagConstantsObject>(
 	description?: string,
 	typeName?: string,
 ) {
-	const descriptions = typeof descriptionOrDescriptions === 'object' ? descriptionOrDescriptions : undefined;
-	const overallDescription = typeof descriptionOrDescriptions === 'string' ? descriptionOrDescriptions : description;
-	const annotation = formatBitflagAnnotation(constants, descriptions);
-	const typeNamePart = typeName ? `:${typeName}` : '';
-	const descPart = overallDescription ? ` ${overallDescription}` : '';
-	return BitflagStringType.describe(`fluxer:Bitflags64${typeNamePart}:${annotation}${descPart}`);
+	return createBitflagType(BitflagStringType, constants, descriptionOrDescriptions, description, typeName);
 }
 
 export function createBitflagInt32Type<T extends BitflagConstantsObject>(
@@ -421,12 +344,7 @@ export function createBitflagInt32Type<T extends BitflagConstantsObject>(
 	description?: string,
 	typeName?: string,
 ) {
-	const descriptions = typeof descriptionOrDescriptions === 'object' ? descriptionOrDescriptions : undefined;
-	const overallDescription = typeof descriptionOrDescriptions === 'string' ? descriptionOrDescriptions : description;
-	const annotation = formatBitflagAnnotation(constants, descriptions);
-	const typeNamePart = typeName ? `:${typeName}` : '';
-	const descPart = overallDescription ? ` ${overallDescription}` : '';
-	return Int32Type.describe(`fluxer:Bitflags32${typeNamePart}:${annotation}${descPart}`);
+	return createBitflagType(Int32Type, constants, descriptionOrDescriptions, description, typeName);
 }
 
 export function createPermissionStringType<T extends BitflagConstantsObject>(
@@ -435,13 +353,5 @@ export function createPermissionStringType<T extends BitflagConstantsObject>(
 	description?: string,
 	typeName?: string,
 ) {
-	const descriptions = typeof descriptionOrDescriptions === 'object' ? descriptionOrDescriptions : undefined;
-	const overallDescription = typeof descriptionOrDescriptions === 'string' ? descriptionOrDescriptions : description;
-	const annotation = formatBitflagAnnotation(constants, descriptions);
-	const typeNamePart = typeName ? `:${typeName}` : '';
-	const descPart = overallDescription ? ` ${overallDescription}` : '';
-	return z
-		.string()
-		.regex(UNSIGNED_INT64_STRING_REGEX)
-		.describe(`fluxer:Permissions${typeNamePart}:${annotation}${descPart}`);
+	return createBitflagType(BitflagStringType, constants, descriptionOrDescriptions, description, typeName);
 }

@@ -2,7 +2,47 @@
 
 import crypto from 'node:crypto';
 import type {Readable} from 'node:stream';
+import type {ApiContext} from '@app/api/ApiContext';
+import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {PushSubscriptionRow} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Message} from '@app/api/models/Message';
+import {PushSubscription} from '@app/api/models/PushSubscription';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserContentRepository} from '@app/api/user/repositories/IUserContentRepository';
+import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
+import {verifyHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
+import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
+import {
+	findInstalledLegacyPushSubscriptionIds,
+	findTargetPushSubscriptionIds,
+	getPushOriginReplacement,
+	getPushSessionPredecessor,
+	markInstalledLegacyPushSubscription,
+	markPushOriginReplaced,
+	markTargetPushSubscription,
+	sameUserAgentFamily,
+	type WebPushOriginKind,
+} from '@app/api/user/services/WebPushOriginReplacement';
+import {UserHarvest} from '@app/api/user/UserHarvestModel';
+import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
+import {serializeSelfMessageFilter} from '@app/api/worker/utils/SelfMessageFilterPayload';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {MAX_BOOKMARKS_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
@@ -18,6 +58,7 @@ import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domain
 import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {HarvestCreationResponse, HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {
 	BulkDeleteSelfMessagesFilter,
 	HarvestSelfDataRequest,
@@ -27,35 +68,9 @@ import type {
 import type {SavedMessageStatus} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {isPubliclyRoutableUrlShape} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import {type ChannelID, createChannelID, createUserID, type MessageID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import {createMessageResponseDataService} from '../../channel/services/message/MessageResponseDataService';
-import type {PushSubscriptionRow} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {KVBulkMessageDeletionQueueService} from '../../infrastructure/KVBulkMessageDeletionQueueService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Message} from '../../models/Message';
-import type {PushSubscription} from '../../models/PushSubscription';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserContentRepository} from '../repositories/IUserContentRepository';
-import {UserHarvest, type UserHarvestResponse} from '../UserHarvestModel';
-import {UserHarvestRepository} from '../UserHarvestRepository';
-import {BaseUserUpdatePropagator} from './BaseUserUpdatePropagator';
-import {verifyHarvestDownloadToken} from './HarvestDownloadToken';
-import {buildHarvestDownloadUrl} from './HarvestDownloadUrl';
 
 export interface SavedMessageEntry {
 	channelId: ChannelID;
@@ -102,6 +117,33 @@ function assertPublicPushEndpoint(endpoint: string, fieldName: string): void {
 	}
 }
 
+function isPushEndpointUrl(token: string): boolean {
+	const normalized = token.trim().toLowerCase();
+	return normalized.startsWith('https://') || normalized.startsWith('http://');
+}
+
+function resolveMobileWebPushKeys(device: RegisterMobileDeviceRequest): {p256dh: string; auth: string} | null {
+	const p256dh = device.encryption_key;
+	const auth = device.auth_secret;
+	if (p256dh && auth) return {p256dh, auth};
+	if (p256dh || auth) {
+		throw InputValidationError.create(
+			p256dh ? 'auth_secret' : 'encryption_key',
+			'Web Push registrations require encryption_key and auth_secret',
+		);
+	}
+	if (device.platform === 'android_unified_push' || device.platform === 'ios_apns_voip') {
+		throw InputValidationError.create(
+			'encryption_key',
+			'Web Push registrations require encryption_key and auth_secret',
+		);
+	}
+	if (isPushEndpointUrl(device.token)) {
+		throw InputValidationError.create('token', 'Endpoint URL registrations require encryption_key and auth_secret');
+	}
+	return null;
+}
+
 function normalizeMobileAppId(appId: string | undefined): string {
 	const normalized = appId?.trim();
 	return normalized && normalized.length > 0 ? normalized : DEFAULT_MOBILE_APP_ID;
@@ -112,7 +154,7 @@ function normalizeProviderEnvironment(
 	environment: RegisterMobileDeviceRequest['provider_environment'],
 ): string | null {
 	if (environment) return environment;
-	return platform === 'ios_apns' ? DEFAULT_APNS_PROVIDER_ENVIRONMENT : null;
+	return platform === 'ios_apns' || platform === 'ios_apns_voip' ? DEFAULT_APNS_PROVIDER_ENVIRONMENT : null;
 }
 
 const isUnreachableEntityError = (error: unknown): boolean =>
@@ -130,6 +172,7 @@ export class UserContentService {
 	private readonly gatewayService: IGatewayService;
 	private readonly workerService: IWorkerService<WorkerTaskName>;
 	private readonly snowflakeService: ISnowflakeService;
+	private readonly kv: IKVProvider;
 
 	constructor(
 		apiContext: ApiContext,
@@ -139,11 +182,12 @@ export class UserContentService {
 		private bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
 		private limitConfigService: LimitConfigService,
 	) {
-		const {users, gateway, worker, snowflake} = apiContext.services;
+		const {users, gateway, worker, snowflake, kv} = apiContext.services;
 		this.userRepository = users;
 		this.gatewayService = gateway;
 		this.workerService = worker;
 		this.snowflakeService = snowflake;
+		this.kv = kv;
 		this.updatePropagator = new BaseUserUpdatePropagator({
 			userCacheService,
 			gatewayService: this.gatewayService,
@@ -330,8 +374,10 @@ export class UserContentService {
 			auth: string;
 		};
 		userAgent?: string;
+		originKind?: WebPushOriginKind | null;
+		installedApp?: boolean;
 	}): Promise<PushSubscription> {
-		const {userId, authSessionIdHash, endpoint, keys, userAgent} = params;
+		const {userId, authSessionIdHash, endpoint, keys, userAgent, originKind, installedApp} = params;
 		assertPublicPushEndpoint(endpoint, 'endpoint');
 		const subscriptionId = createWebPushSubscriptionId(endpoint);
 		const data: PushSubscriptionRow = {
@@ -346,9 +392,73 @@ export class UserContentService {
 			app_id: null,
 			provider_environment: null,
 		};
-		const subscription = await this.userRepository.createPushSubscription(data);
-		await this.gatewayService.invalidatePushSubscriptions({userId});
+		const subscription = await this.storeWebPushSubscription(data, originKind ?? null, installedApp === true);
 		return subscription;
+	}
+
+	private async storeWebPushSubscription(
+		data: PushSubscriptionRow,
+		originKind: WebPushOriginKind | null,
+		installedApp: boolean,
+	): Promise<PushSubscription> {
+		if (originKind === 'legacy' && (await this.isLegacyWebPushReplaced(data, installedApp))) {
+			return new PushSubscription(data);
+		}
+		const subscription = await this.userRepository.createPushSubscription(data);
+		if (originKind === 'legacy' && installedApp) {
+			await this.bestEffortPushOriginWrite(() => markInstalledLegacyPushSubscription(this.kv, data.subscription_id));
+		}
+		if (originKind === 'target') {
+			await this.bestEffortPushOriginWrite(() => this.replaceLegacyWebPushSubscriptions(data, installedApp));
+		}
+		return subscription;
+	}
+
+	private async isLegacyWebPushReplaced(data: PushSubscriptionRow, installedApp: boolean): Promise<boolean> {
+		const sessionIdHash = data.auth_session_id_hash;
+		if (!sessionIdHash) return false;
+		try {
+			const replacement = await getPushOriginReplacement(this.kv, sessionIdHash);
+			return replacement === 'installed' || (replacement === 'browser' && !installedApp);
+		} catch (error) {
+			Logger.warn({error}, 'Failed to read the web push origin replacement');
+			return false;
+		}
+	}
+
+	private async bestEffortPushOriginWrite(write: () => Promise<void>): Promise<void> {
+		try {
+			await write();
+		} catch (error) {
+			Logger.warn({error}, 'Failed to apply the web push origin replacement');
+		}
+	}
+
+	private async replaceLegacyWebPushSubscriptions(data: PushSubscriptionRow, installedApp: boolean): Promise<void> {
+		await markTargetPushSubscription(this.kv, data.subscription_id);
+		const sessionIdHash = data.auth_session_id_hash;
+		if (!sessionIdHash) return;
+		await markPushOriginReplaced(this.kv, sessionIdHash, installedApp ? 'installed' : 'browser');
+		const predecessor = await getPushSessionPredecessor(this.kv, sessionIdHash);
+		const candidates = (await this.userRepository.listPushSubscriptions(data.user_id)).filter(
+			(subscription) =>
+				subscription.platform === WEB_PUSH_PLATFORM &&
+				subscription.endpoint !== data.endpoint &&
+				(subscription.authSessionIdHash === sessionIdHash ||
+					(predecessor !== null &&
+						subscription.authSessionIdHash === predecessor &&
+						sameUserAgentFamily(subscription.userAgent, data.user_agent))),
+		);
+		const candidateIds = candidates.map((subscription) => subscription.subscriptionId);
+		const [targetSubscriptionIds, installedLegacySubscriptionIds] = await Promise.all([
+			findTargetPushSubscriptionIds(this.kv, candidateIds),
+			installedApp ? Promise.resolve(new Set<string>()) : findInstalledLegacyPushSubscriptionIds(this.kv, candidateIds),
+		]);
+		for (const subscription of candidates) {
+			if (targetSubscriptionIds.has(subscription.subscriptionId)) continue;
+			if (installedLegacySubscriptionIds.has(subscription.subscriptionId)) continue;
+			await this.userRepository.deletePushSubscription(data.user_id, subscription.subscriptionId);
+		}
 	}
 
 	async listPushSubscriptions(userId: UserID): Promise<Array<PushSubscription>> {
@@ -358,7 +468,6 @@ export class UserContentService {
 
 	async deletePushSubscription(userId: UserID, subscriptionId: string): Promise<void> {
 		await this.userRepository.deletePushSubscription(userId, subscriptionId);
-		await this.gatewayService.invalidatePushSubscriptions({userId});
 	}
 
 	async rotatePushSubscription(params: {
@@ -371,8 +480,10 @@ export class UserContentService {
 			auth: string;
 		};
 		userAgent?: string;
+		originKind?: WebPushOriginKind | null;
+		installedApp?: boolean;
 	}): Promise<PushSubscription> {
-		const {userId, authSessionIdHash, oldEndpoint, endpoint, keys, userAgent} = params;
+		const {userId, authSessionIdHash, oldEndpoint, endpoint, keys, userAgent, originKind, installedApp} = params;
 		assertPublicPushEndpoint(endpoint, 'endpoint');
 		const oldSubscriptionId = createWebPushSubscriptionId(oldEndpoint);
 		const newSubscriptionId = createWebPushSubscriptionId(endpoint);
@@ -391,14 +502,14 @@ export class UserContentService {
 			app_id: null,
 			provider_environment: null,
 		};
-		const subscription = await this.userRepository.createPushSubscription(data);
-		await this.gatewayService.invalidatePushSubscriptions({userId});
+		const subscription = await this.storeWebPushSubscription(data, originKind ?? null, installedApp === true);
 		return subscription;
 	}
 
 	async registerMobileDevice(params: RegisterMobileDeviceParams): Promise<PushSubscription> {
 		const {userId, authSessionIdHash, device} = params;
-		if (device.platform === 'android_unified_push') {
+		const webPushKeys = resolveMobileWebPushKeys(device);
+		if (webPushKeys) {
 			assertPublicPushEndpoint(device.token, 'token');
 		}
 		const appId = normalizeMobileAppId(device.app_id);
@@ -409,15 +520,14 @@ export class UserContentService {
 			subscription_id: subscriptionId,
 			auth_session_id_hash: authSessionIdHash ?? null,
 			endpoint: device.token,
-			p256dh_key: device.platform === 'android_unified_push' ? (device.encryption_key ?? null) : null,
-			auth_key: device.platform === 'android_unified_push' ? (device.auth_secret ?? null) : null,
+			p256dh_key: webPushKeys?.p256dh ?? null,
+			auth_key: webPushKeys?.auth ?? null,
 			user_agent: device.user_agent ?? null,
 			platform: device.platform,
 			app_id: appId,
 			provider_environment: providerEnvironment,
 		};
 		const subscription = await this.userRepository.createPushSubscription(data);
-		await this.gatewayService.invalidatePushSubscriptions({userId});
 		return subscription;
 	}
 
@@ -438,30 +548,21 @@ export class UserContentService {
 		await this.deleteMobileDevice(userId, deviceId);
 	}
 
-	async requestDataHarvest(userId: UserID): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	async requestDataHarvest(userId: UserID): Promise<HarvestCreationResponse> {
 		return this.requestDataHarvestInternal(userId, null);
 	}
 
-	async requestFilteredDataHarvest(params: {userId: UserID; filter: HarvestSelfDataRequest}): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	async requestFilteredDataHarvest(params: {
+		userId: UserID;
+		filter: HarvestSelfDataRequest;
+	}): Promise<HarvestCreationResponse> {
 		return this.requestDataHarvestInternal(params.userId, params.filter);
 	}
 
 	private async requestDataHarvestInternal(
 		userId: UserID,
 		filter: HarvestSelfDataRequest | null,
-	): Promise<{
-		harvest_id: string;
-		status: 'pending' | 'processing' | 'completed' | 'failed';
-		created_at: string;
-	}> {
+	): Promise<HarvestCreationResponse> {
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) throw new UnknownUserError();
 		const harvestId = await this.snowflakeService.generate();
@@ -486,18 +587,7 @@ export class UserContentService {
 			harvestId: harvestId.toString(),
 			...(filter
 				? {
-						filter: {
-							scope: filter.scope,
-							includeDms: filter.include_dms,
-							includeDmsClosed: filter.include_dms_closed,
-							includeGroupDms: filter.include_group_dms,
-							includeGuilds: filter.include_guilds,
-							guildFilterMode: filter.guild_filter_mode,
-							excludedGuildIds: filter.excluded_guild_ids.map((id) => id.toString()),
-							includedGuildIds: filter.included_guild_ids.map((id) => id.toString()),
-							startTimestamp: filter.start_date ? new Date(filter.start_date).getTime() : null,
-							endTimestamp: filter.end_date ? new Date(filter.end_date).getTime() : null,
-						},
+						filter: serializeSelfMessageFilter(filter),
 					}
 				: {}),
 		});
@@ -508,7 +598,7 @@ export class UserContentService {
 		};
 	}
 
-	async getHarvestStatus(userId: UserID, harvestId: bigint): Promise<UserHarvestResponse> {
+	async getHarvestStatus(userId: UserID, harvestId: bigint): Promise<HarvestStatusResponse> {
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findByUserAndHarvestId(userId, harvestId);
 		if (!harvest) {
@@ -517,7 +607,7 @@ export class UserContentService {
 		return harvest.toResponse();
 	}
 
-	async getLatestHarvest(userId: UserID): Promise<UserHarvestResponse | null> {
+	async getLatestHarvest(userId: UserID): Promise<HarvestStatusResponse | null> {
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findLatestByUserId(userId);
 		return harvest ? harvest.toResponse() : null;
@@ -588,7 +678,7 @@ export class UserContentService {
 		}
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findByUserAndHarvestId(userId, params.harvestId);
-		if (!harvest || !harvest.completedAt || !harvest.storageKey || harvest.failedAt) {
+		if (!harvest?.completedAt || !harvest.storageKey || harvest.failedAt) {
 			return null;
 		}
 		if (harvest.downloadUrlExpiresAt && harvest.downloadUrlExpiresAt < new Date()) {
@@ -650,18 +740,7 @@ export class UserContentService {
 			'bulkDeleteSelfMessagesImmediate',
 			{
 				userId: userId.toString(),
-				filter: {
-					scope: filter.scope,
-					includeDms: filter.include_dms,
-					includeDmsClosed: filter.include_dms_closed,
-					includeGroupDms: filter.include_group_dms,
-					includeGuilds: filter.include_guilds,
-					guildFilterMode: filter.guild_filter_mode,
-					excludedGuildIds: filter.excluded_guild_ids.map((id) => id.toString()),
-					includedGuildIds: filter.included_guild_ids.map((id) => id.toString()),
-					startTimestamp: filter.start_date ? new Date(filter.start_date).getTime() : null,
-					endTimestamp: filter.end_date ? new Date(filter.end_date).getTime() : null,
-				},
+				filter: serializeSelfMessageFilter(filter),
 			},
 			{maxAttempts: 5},
 		);
@@ -670,6 +749,7 @@ export class UserContentService {
 	async cancelBulkMessageDeletion(userId: UserID): Promise<void> {
 		Logger.debug({userId: userId.toString()}, 'Canceling pending bulk message deletion');
 		const user = await this.userRepository.findUniqueAssert(userId);
+		if ((user.flags & UserFlags.SPAMMER) !== 0n) return;
 		const updatedUser = await this.userRepository.patchUpsert(
 			userId,
 			{
@@ -743,6 +823,7 @@ export class UserContentService {
 		requestCache: RequestCache;
 	}): Promise<void> {
 		const data = (await this.buildMessageResponsesForUser(userId, [message]))[0];
+		if (!data) return;
 		await this.gatewayService
 			.dispatchPresence({
 				userId,

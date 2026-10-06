@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {MessageSnapshot as CassandraMessageSnapshot} from '@app/api/database/types/MessageTypes';
+import {Attachment} from '@app/api/models/Attachment';
+import {Embed} from '@app/api/models/Embed';
+import {StickerItem} from '@app/api/models/StickerItem';
 import type {MessageTypeValue} from '@fluxer/constants/src/ChannelConstants';
-import type {ChannelID, RoleID, UserID} from '../BrandedTypes';
-import type {MessageSnapshot as CassandraMessageSnapshot} from '../database/types/MessageTypes';
-import {Attachment} from './Attachment';
-import {Embed} from './Embed';
-import {StickerItem} from './StickerItem';
 
 export class MessageSnapshot {
 	readonly content: string | null;

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	computeReconnectBackoffMs,
 	createInitialActiveState,
@@ -13,7 +12,8 @@ import {
 	SourceLifecycleRegistry,
 	type SourceLifecycleState,
 	transitionSourceLifecycle,
-} from './index';
+} from '@fluxer/voice_engine_v2/src/source_isolation/index';
+import {describe, expect, it} from 'vitest';
 
 function makeClock(startNs: bigint = 1_000n, stepNs: bigint = 1_000n): SourceLifecycleClock {
 	let value = startNs;

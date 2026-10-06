@@ -3,7 +3,7 @@
 import Navigation from '@app/features/navigation/state/Navigation';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {action, makeAutoObservable, reaction} from 'mobx';
+import {makeAutoObservable, reaction} from 'mobx';
 
 const FAVORITES_ROUTE_ID = '@favorites';
 
@@ -18,7 +18,6 @@ class SelectedGuild {
 		void this.initPersistence();
 	}
 
-	@action
 	private async initPersistence(): Promise<void> {
 		await makePersistent(this, 'SelectedGuild', ['lastSelectedGuildId']);
 		this.setupNavigationReaction();
@@ -49,7 +48,6 @@ class SelectedGuild {
 		return guildId;
 	}
 
-	@action
 	selectGuild(guildId: string, _forceSync = false): void {
 		if (!guildId) {
 			return;
@@ -57,12 +55,10 @@ class SelectedGuild {
 		this.setGuild(guildId, {forceNonce: true});
 	}
 
-	@action
 	syncCurrentGuild(): void {
 		this.bumpNonce();
 	}
 
-	@action
 	deselectGuild(): void {
 		this.clearSelection();
 	}

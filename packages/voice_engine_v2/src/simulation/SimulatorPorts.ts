@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import type {
 	VoiceEngineV2Driver,
 	VoiceEngineV2ExternalEventListener,
-} from '../implementations/VoiceEngineV2ImplementationBase';
-import type {VoiceEngineV2Event} from '../protocol/events';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
@@ -29,8 +29,8 @@ import type {
 	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2Stats,
-} from '../protocol/types';
-import type {VoiceEngineV2ClockPort, VoiceEngineV2RandomPort} from '../runtime/platformPort';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {VoiceEngineV2ClockPort, VoiceEngineV2RandomPort} from '@fluxer/voice_engine_v2/src/runtime/platformPort';
 
 const SIMULATOR_CLOCK_MAX_NS = 1_000_000_000_000;
 const SIMULATOR_NS_PER_MS = 1_000_000;

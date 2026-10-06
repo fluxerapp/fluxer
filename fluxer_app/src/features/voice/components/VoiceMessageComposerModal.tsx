@@ -3,6 +3,7 @@
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -110,11 +111,6 @@ function pickRecorderMime(): string | undefined {
 		if (MediaRecorder.isTypeSupported(candidate)) return candidate;
 	}
 	return undefined;
-}
-
-function formatSeconds(value: number): string {
-	const safe = Math.max(0, value);
-	return `${safe.toFixed(2)}s`;
 }
 
 function formatElapsedMs(value: number): string {
@@ -426,6 +422,18 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 	const selectionDuration = Math.max(0, endSeconds - startSeconds);
 	const totalDuration = audioBuffer?.duration ?? 0;
 
+	const formatSeconds = useCallback(
+		(value: number) =>
+			getCachedNumberFormat(i18n.locale, {
+				style: 'unit',
+				unit: 'second',
+				unitDisplay: 'narrow',
+				minimumFractionDigits: 2,
+				maximumFractionDigits: 2,
+			}).format(Math.max(0, value)),
+		[i18n.locale],
+	);
+
 	const handleSelectionChange = useCallback(
 		(next: {startSeconds: number; endSeconds: number}) => {
 			stopPlayback();
@@ -481,7 +489,11 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 	const send = useCallback(() => {
 		if (!audioBuffer || !recordedBlob || sentRef.current) return;
 		if (selectionDuration < MIN_DURATION_SECONDS) {
-			setErrorMessage(i18n._(TOO_SHORT_DESCRIPTOR, {seconds: MIN_DURATION_SECONDS.toFixed(1)}));
+			setErrorMessage(
+				i18n._(TOO_SHORT_DESCRIPTOR, {
+					seconds: getCachedNumberFormat(i18n.locale, {maximumFractionDigits: 1}).format(MIN_DURATION_SECONDS),
+				}),
+			);
 			return;
 		}
 		sentRef.current = true;

@@ -1,0 +1,86 @@
+image:
+  registry: ghcr.io/fluxerapp
+  tag: v1
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env:
+  NODE_ENV: production
+  FLUXER_ENV: production
+  FLUXER_PUBLIC_ORIGIN: https://web.example.com
+  FLUXER_API_ENDPOINT: https://api.example.com
+  FLUXER_GATEWAY_ENDPOINT: wss://gateway.example.com
+  FLUXER_MEDIA_ENDPOINT: https://media.example.com
+  FLUXER_ADMIN_ENDPOINT: https://admin.example.com
+  FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: https://uploads.example.com
+  FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: http://media-proxy:8080
+  FLUXER_KV_URL: redis://valkey:6379/0
+  FLUXER_NATS_URL: nats://nats:4222
+  FLUXER_NATS_JETSTREAM_URL: nats://nats:4222
+
+extraEnv: []
+
+envFrom:
+  - secretRef:
+      name: fluxer-env
+
+podAnnotations: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+
+probes:
+  startup:
+    httpGet:
+      path: /_health
+      port: http
+    periodSeconds: 10
+    failureThreshold: 30
+  liveness:
+    httpGet:
+      path: /_health
+      port: http
+  readiness:
+    httpGet:
+      path: /_health
+      port: http
+
+strategy:
+  type: RollingUpdate
+
+topologySpreadConstraints: []
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+api:
+  api:
+    replicas: 1
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        memory: 2560Mi
+
+workers:
+  worker:
+    replicas: 1
+    env:
+      FLUXER_API_WORKER_MODE: all_lanes
+      FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
+    resources:
+      requests:
+        cpu: 250m
+        memory: 1Gi
+      limits:
+        memory: 2560Mi

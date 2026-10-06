@@ -2,7 +2,7 @@
 
 import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
-import {comparer, makeAutoObservable, reaction} from 'mobx';
+import {compareStructural, makeAutoObservable, reaction} from 'mobx';
 
 const MESSAGE_EDIT_STORAGE_KEY = 'MessageEdit';
 
@@ -83,7 +83,7 @@ class MessageEdit {
 		return reaction(
 			() => Object.entries(this.editingMessageIds),
 			() => callback(),
-			{fireImmediately: true, equals: comparer.structural},
+			{fireImmediately: true, equals: compareStructural},
 		);
 	}
 }

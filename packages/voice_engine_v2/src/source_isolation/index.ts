@@ -5,7 +5,7 @@ export {
 	type SourceLifecycleDispatchResult,
 	SourceLifecycleRegistry,
 	type SourceLifecycleSnapshotEntry,
-} from './SourceLifecycleRegistry';
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleRegistry';
 export {
 	computeReconnectBackoffMs,
 	createInitialActiveState,
@@ -20,4 +20,4 @@ export {
 	type SourceLifecycleState,
 	type SourceLifecycleTransitionResult,
 	transitionSourceLifecycle,
-} from './SourceLifecycleState';
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';

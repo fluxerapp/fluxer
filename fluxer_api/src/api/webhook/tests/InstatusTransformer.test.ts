@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {transformInstatusWebhook} from '@app/api/webhook/transformers/InstatusTransformer';
 import {RICH_EMBED_DESCRIPTION_MAX_LENGTH} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
 import {describe, expect, it} from 'vitest';
-import {transformInstatusWebhook} from '../transformers/InstatusTransformer';
 
 function createMeta(): InstatusWebhook['meta'] {
 	return {unsubscribe: 'https://fluxerstatus.com/unsubscribe?id=1&token=abc', documentation: ''};

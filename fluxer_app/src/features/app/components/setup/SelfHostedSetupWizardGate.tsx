@@ -6,6 +6,7 @@ import {
 	classifySetupUnauthorized,
 	fetchInstanceConfig,
 	type SetupBrandingAssetKind,
+	setSetupAccountIdentity,
 	testSmtpConfig,
 	updateInstanceConfig,
 	uploadBrandingAsset,
@@ -19,6 +20,7 @@ import {
 import {
 	AdminAccountStep,
 	AdminIntroStep,
+	AdminRecoveryKitStep,
 	type BrandingAssetState,
 	BrandingStep,
 	CommunityStep,
@@ -30,12 +32,14 @@ import {
 	MediaExpiryStep,
 	type PremiumMode,
 	PremiumStep,
+	PushRelayConsentStep,
 	type RegistrationMode,
 	RegistrationStep,
 	type ServiceAvailability,
 	type ServiceIntegrationDraft,
 	type ServiceSelection,
 	ServicesStep,
+	SignInMethodStep,
 	ThemeStep,
 	WelcomeStep,
 } from '@app/features/app/components/setup/SetupWizardSteps';
@@ -47,13 +51,24 @@ import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import Theme from '@app/features/theme/state/Theme';
 import {Button} from '@app/features/ui/button/Button';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
+import * as RecoveryKitCommands from '@app/features/user/commands/RecoveryKitCommands';
+import {confirmNewRecoveryKit} from '@app/features/user/components/modals/tabs/account_security_tab/RecoveryKitSettings';
+import RecoveryKitStatus from '@app/features/user/state/RecoveryKitStatus';
 import {fileToBase64} from '@app/features/user/utils/AvatarUtils';
 import * as FormUtils from '@app/lib/forms';
+import {
+	type AccountIdentityMode,
+	AccountIdentityModes,
+	type TagStyle,
+	TagStyles,
+} from '@fluxer/constants/src/AccountIdentityConstants';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {type ThemeType, ThemeTypes} from '@fluxer/constants/src/UserConstants';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {MessageDescriptor} from '@lingui/core';
@@ -85,6 +100,18 @@ const NEXT_DESCRIPTOR = msg({
 const FINISH_DESCRIPTOR = msg({
 	message: 'Finish setup',
 	comment: 'Button that saves the configuration and completes the setup wizard.',
+});
+const SIGN_IN_METHOD_LOCKED_USERNAME_DESCRIPTOR = msg({
+	message: 'This instance already uses usernames to sign in. This can no longer change.',
+	comment: 'Setup wizard error when the operator picks email sign-in but the instance is already fixed to usernames.',
+});
+const USERNAME_STYLE_LOCKED_DESCRIPTOR = msg({
+	message: 'The username tags on this instance are already set. They can no longer change.',
+	comment: 'Setup wizard error when the username style was already fixed because an account exists.',
+});
+const SIGN_IN_METHOD_LOCKED_EMAIL_DESCRIPTOR = msg({
+	message: 'This instance already uses email to sign in. This can no longer change.',
+	comment: 'Setup wizard error when the operator picks username sign-in but the instance is already fixed to email.',
 });
 const LOADING_DESCRIPTOR = msg({
 	message: 'Loading instance configuration',
@@ -155,12 +182,6 @@ const DEFAULT_INTEGRATION_DRAFT: ServiceIntegrationDraft = {
 	klipyApiKey: '',
 	youtubeMode: 'later',
 	youtubeApiKey: '',
-	captchaMode: 'later',
-	captchaProvider: 'hcaptcha',
-	hcaptchaSiteKey: '',
-	hcaptchaSecretKey: '',
-	turnstileSiteKey: '',
-	turnstileSecretKey: '',
 	emailMode: 'later',
 	emailEnabled: true,
 	emailFromEmail: '',
@@ -199,8 +220,6 @@ function wizardStepToIntegrationKind(step: WizardStep): IntegrationStepKind | nu
 			return 'gif';
 		case 'integration_youtube':
 			return 'youtube';
-		case 'integration_captcha':
-			return 'captcha';
 		case 'integration_email':
 			return 'email';
 		case 'integration_bluesky':
@@ -277,11 +296,6 @@ function isIntegrationStepValid(kind: IntegrationStepKind, draft: ServiceIntegra
 			return draft.klipyApiKey.trim().length > 0;
 		case 'youtube':
 			return draft.youtubeMode === 'later' || draft.youtubeApiKey.trim().length > 0;
-		case 'captcha':
-			if (draft.captchaMode === 'later') return true;
-			return draft.captchaProvider === 'hcaptcha'
-				? draft.hcaptchaSiteKey.trim().length > 0 && draft.hcaptchaSecretKey.trim().length > 0
-				: draft.turnstileSiteKey.trim().length > 0 && draft.turnstileSecretKey.trim().length > 0;
 		case 'email':
 			if (draft.emailMode === 'later' || !draft.emailEnabled) return true;
 			return (
@@ -303,7 +317,7 @@ function isIntegrationStepValid(kind: IntegrationStepKind, draft: ServiceIntegra
 	}
 }
 
-function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
+function buildIntegrationsPatch(draft: ServiceIntegrationDraft, accountIdentity: AccountIdentityMode) {
 	const integrations: {
 		gif?: {
 			provider: 'klipy';
@@ -311,13 +325,6 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
 		};
 		youtube?: {
 			api_key: string;
-		};
-		captcha?: {
-			provider: 'hcaptcha' | 'turnstile';
-			hcaptcha_site_key?: string;
-			hcaptcha_secret_key?: string;
-			turnstile_site_key?: string;
-			turnstile_secret_key?: string;
 		};
 		email?: {
 			enabled: boolean;
@@ -348,21 +355,7 @@ function buildIntegrationsPatch(draft: ServiceIntegrationDraft) {
 	if (draft.youtubeMode === 'configure') {
 		integrations.youtube = {api_key: draft.youtubeApiKey.trim()};
 	}
-	if (draft.captchaMode === 'configure') {
-		integrations.captcha =
-			draft.captchaProvider === 'hcaptcha'
-				? {
-						provider: 'hcaptcha',
-						hcaptcha_site_key: draft.hcaptchaSiteKey.trim(),
-						hcaptcha_secret_key: draft.hcaptchaSecretKey.trim(),
-					}
-				: {
-						provider: 'turnstile',
-						turnstile_site_key: draft.turnstileSiteKey.trim(),
-						turnstile_secret_key: draft.turnstileSecretKey.trim(),
-					};
-	}
-	if (draft.emailMode === 'configure') {
+	if (draft.emailMode === 'configure' && accountIdentity === AccountIdentityModes.EMAIL) {
 		integrations.email = {
 			enabled: draft.emailEnabled,
 			provider: 'smtp',
@@ -432,6 +425,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const stepNavigationUnlockTimerRef = useRef<number | null>(null);
 
 	const [config, setConfig] = useState<InstanceConfigResponse | null>(null);
+	const accountIdentity = config?.account_identity.mode ?? RuntimeConfig.accountIdentity;
 	const [loadError, setLoadError] = useState<MessageDescriptor | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState<string | null>(null);
@@ -447,6 +441,11 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	}));
 	const [smtpTesting, setSmtpTesting] = useState(false);
 	const [smtpTestResult, setSmtpTestResult] = useState<string | null>(null);
+	const [signInMethod, setSignInMethod] = useState<AccountIdentityMode>(() => RuntimeConfig.accountIdentity);
+	const [tagStyleChoice, setTagStyleChoice] = useState<TagStyle>(() => RuntimeConfig.tagStyle);
+	const [savingSignInMethod, setSavingSignInMethod] = useState(false);
+	const [signInMethodError, setSignInMethodError] = useState<string | null>(null);
+	const [creatingRecoveryKit, setCreatingRecoveryKit] = useState(false);
 
 	const [productName, setProductName] = useState('');
 	const [themeColor, setThemeColor] = useState(0);
@@ -459,6 +458,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		youtube: false,
 		bluesky: false,
 	});
+	const [pushRelayConsentAccepted, setPushRelayConsentAccepted] = useState(false);
 	const [premiumMode, setPremiumMode] = useState<PremiumMode>('mirror');
 	const [assets, setAssets] = useState<ReadonlyArray<BrandingAssetState>>(() =>
 		BRANDING_ASSET_KINDS.map((kind) => ({kind, url: null, preview: null})),
@@ -549,8 +549,12 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		clearStepNavigationLock();
 		setIntegrationDraft({...DEFAULT_INTEGRATION_DRAFT});
 		setMediaExpiryDraft({...DEFAULT_MEDIA_EXPIRY_DRAFT});
+		setPushRelayConsentAccepted(false);
 		setSmtpTesting(false);
 		setSmtpTestResult(null);
+		setSignInMethodError(null);
+		setSavingSignInMethod(false);
+		setCreatingRecoveryKit(false);
 		try {
 			await SessionManager.logout();
 		} catch (error) {
@@ -569,6 +573,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setSingleCommunityEnabled(next.policy.single_community_enabled);
 		setDirectMessagesDisabled(next.policy.direct_messages_disabled);
 		setPremiumMode(next.policy.premium_mode);
+		setPushRelayConsentAccepted(next.push_relay.relay_consent_accepted);
 		setServiceSelection({
 			gif: next.policy.services_resolved.gif_enabled,
 			youtube: next.policy.services_resolved.youtube_enabled,
@@ -576,7 +581,6 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		});
 		setIntegrationDraft((current) => ({
 			...current,
-			captchaProvider: next.integrations.captcha.effective_provider === 'turnstile' ? 'turnstile' : 'hcaptcha',
 			emailEnabled: next.integrations.email.effective_enabled || next.integrations.email.enabled !== false,
 			emailFromEmail: next.integrations.email.from_email ?? current.emailFromEmail,
 			emailFromName: next.integrations.email.from_name ?? current.emailFromName,
@@ -655,15 +659,34 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	);
 
 	const hasConfig = Boolean(config);
+	const identityLocked = RuntimeConfig.appPublic.setup.account_identity_locked === true;
 	const syncedSnapshot =
-		wizardSnapshot.context.isAuthenticated !== isAuthenticated || wizardSnapshot.context.hasConfig !== hasConfig
-			? transitionSetupWizardSnapshot(wizardSnapshot, {type: 'wizard.sync', isAuthenticated, hasConfig})
+		wizardSnapshot.context.isAuthenticated !== isAuthenticated ||
+		wizardSnapshot.context.hasConfig !== hasConfig ||
+		wizardSnapshot.context.accountIdentity !== accountIdentity ||
+		wizardSnapshot.context.identityLocked !== identityLocked
+			? transitionSetupWizardSnapshot(wizardSnapshot, {
+					type: 'wizard.sync',
+					isAuthenticated,
+					hasConfig,
+					accountIdentity,
+					identityLocked,
+				})
 			: wizardSnapshot;
 	if (syncedSnapshot !== wizardSnapshot) {
 		setWizardSnapshot(syncedSnapshot);
 	}
 	const wizardModel = selectSetupWizardModel(syncedSnapshot);
 	const {step, steps, direction} = wizardModel;
+	const currentUserId = Authentication.userId;
+	const hasRecoveryKit = currentUserId ? (RecoveryKitStatus.get(currentUserId)?.hasRecoveryKit ?? false) : false;
+
+	useEffect(() => {
+		if (step !== 'admin_recovery_kit') return;
+		void RecoveryKitCommands.fetchRecoveryKitStatus().catch((error) => {
+			logger.warn('Failed to load recovery kit status', error);
+		});
+	}, [step]);
 
 	const productNameTrimmed = productName.trim();
 	const productNameError = productNameTrimmed.length < 1 || productNameTrimmed.length > 80;
@@ -674,13 +697,26 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const canAdvance = useMemo(() => {
 		if (step === 'welcome') return !isAuthenticated || Boolean(config);
 		if (step === 'admin_account' || step === 'loading') return false;
+		if (step === 'sign_in_method') return !savingSignInMethod;
+		if (step === 'admin_recovery_kit') return hasRecoveryKit;
 		if (step === 'branding') return !productNameError;
 		if (step === 'community') return !singleCommunityNameError;
 		if (step === 'media_expiry') return isMediaExpiryStepValid(mediaExpiryDraft);
+		if (step === 'push_relay_consent') return true;
 		const integrationKind = wizardStepToIntegrationKind(step);
 		if (integrationKind) return isIntegrationStepValid(integrationKind, integrationDraft);
 		return true;
-	}, [step, isAuthenticated, config, productNameError, singleCommunityNameError, mediaExpiryDraft, integrationDraft]);
+	}, [
+		step,
+		isAuthenticated,
+		config,
+		productNameError,
+		singleCommunityNameError,
+		mediaExpiryDraft,
+		integrationDraft,
+		savingSignInMethod,
+		hasRecoveryKit,
+	]);
 
 	const goNext = useCallback(() => {
 		if (!beginStepNavigation()) return;
@@ -693,6 +729,83 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setSubmitError(null);
 		setWizardSnapshot((current) => transitionSetupWizardSnapshot(current, {type: 'wizard.back'}));
 	}, [beginStepNavigation]);
+
+	const submitSignInMethod = useCallback(async () => {
+		if (savingSignInMethod) return;
+		setSavingSignInMethod(true);
+		setSignInMethodError(null);
+		let locked = false;
+		const effectiveTagStyle = signInMethod === AccountIdentityModes.USERNAME ? TagStyles.NONE : tagStyleChoice;
+		try {
+			let saved: Awaited<ReturnType<typeof setSetupAccountIdentity>> | null = null;
+			try {
+				saved = await setSetupAccountIdentity(signInMethod, effectiveTagStyle);
+			} catch (error) {
+				if (failureCode(error) !== APIErrorCodes.ACCOUNT_IDENTITY_LOCKED) {
+					throw error;
+				}
+				locked = true;
+				logger.info('The sign-in method is already locked');
+			}
+			await RuntimeConfig.refreshDiscovery();
+			if (saved) {
+				RuntimeConfig.applyAccountIdentity(saved.mode, saved.tag_style);
+			}
+		} catch (error) {
+			logger.error('Failed to save the sign-in method', error);
+			setSignInMethodError(FormUtils.extractErrorMessage(i18n, error));
+			setSavingSignInMethod(false);
+			return;
+		}
+		const lockedMode = RuntimeConfig.accountIdentity;
+		const lockedTagStyle = RuntimeConfig.tagStyle;
+		const modeDiffers = lockedMode !== signInMethod;
+		if (locked && (modeDiffers || lockedTagStyle !== effectiveTagStyle)) {
+			setSignInMethod(lockedMode);
+			setTagStyleChoice(lockedTagStyle);
+			setSignInMethodError(
+				i18n._(
+					!modeDiffers
+						? USERNAME_STYLE_LOCKED_DESCRIPTOR
+						: lockedMode === AccountIdentityModes.USERNAME
+							? SIGN_IN_METHOD_LOCKED_USERNAME_DESCRIPTOR
+							: SIGN_IN_METHOD_LOCKED_EMAIL_DESCRIPTOR,
+				),
+			);
+			setSavingSignInMethod(false);
+			return;
+		}
+		setSavingSignInMethod(false);
+		goNext();
+	}, [savingSignInMethod, signInMethod, tagStyleChoice, i18n, goNext]);
+
+	const handleSignInMethodChange = useCallback((mode: AccountIdentityMode) => {
+		setSignInMethod(mode);
+		setSignInMethodError(null);
+	}, []);
+
+	const createRecoveryKit = useCallback(async () => {
+		setCreatingRecoveryKit(true);
+		try {
+			await RecoveryKitCommands.createAndShowRecoveryKit();
+		} catch (error) {
+			logger.error('Failed to create the administrator recovery kit', error);
+			FormUtils.pushApiErrorModal(i18n, error);
+		} finally {
+			setCreatingRecoveryKit(false);
+		}
+	}, [i18n]);
+
+	const knownWithoutRecoveryKit = currentUserId
+		? RecoveryKitStatus.get(currentUserId)?.hasRecoveryKit === false
+		: false;
+	const handleCreateRecoveryKit = useCallback(() => {
+		if (knownWithoutRecoveryKit) {
+			void createRecoveryKit();
+			return;
+		}
+		confirmNewRecoveryKit(i18n, createRecoveryKit);
+	}, [knownWithoutRecoveryKit, i18n, createRecoveryKit]);
 
 	const handleUploadAsset = useCallback(
 		async (kind: SetupBrandingAssetKind) => {
@@ -741,7 +854,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 				password: integrationDraft.smtpPassword,
 				secure: integrationDraft.smtpSecure,
 			});
-			setSmtpTestResult(result.ok ? 'ok' : (result.error ?? 'SMTP validation failed.'));
+			setSmtpTestResult(result.ok ? 'ok' : (result.error ?? 'failed'));
 		} catch (error) {
 			logger.error('Failed to validate SMTP configuration', error);
 			setSmtpTestResult(FormUtils.extractErrorMessage(i18n, error));
@@ -764,8 +877,12 @@ export const SelfHostedSetupWizardGate = observer(() => {
 				}
 			}
 			const nextConfig = await updateInstanceConfig({
-				integrations: buildIntegrationsPatch(integrationDraft),
+				integrations: buildIntegrationsPatch(integrationDraft, accountIdentity),
 				media: buildMediaPatch(mediaExpiryDraft),
+				push_relay:
+					config.push_relay.relay_consent_accepted === pushRelayConsentAccepted
+						? undefined
+						: {relay_consent_accepted: pushRelayConsentAccepted},
 				registration: {mode: registrationMode},
 				app_public: {
 					branding: {
@@ -796,6 +913,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	}, [
 		config,
 		assets,
+		accountIdentity,
 		registrationMode,
 		integrationDraft,
 		mediaExpiryDraft,
@@ -804,6 +922,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		singleCommunityEnabled,
 		singleCommunityNameTrimmed,
 		directMessagesDisabled,
+		pushRelayConsentAccepted,
 		premiumMode,
 		serviceAvailability,
 		serviceSelection,
@@ -819,7 +938,8 @@ export const SelfHostedSetupWizardGate = observer(() => {
 	const showFooter = !loadError && (showBackButton || showPrimaryButton);
 	const primaryButtonLabel = isLoading ? i18n._(LOADING_DESCRIPTOR) : i18n._(NEXT_DESCRIPTOR);
 	const primaryButtonDisabled = !canAdvance || stepNavigationLocked;
-	const handlePrimaryButton = goNext;
+	const primaryButtonSubmitting = isLoading || savingSignInMethod;
+	const handlePrimaryButton = step === 'sign_in_method' ? submitSignInMethod : goNext;
 	const footerButtonInitial = shouldReduceMotion ? {opacity: 0} : {opacity: 0, y: 4, scale: 0.98};
 	const footerButtonAnimate = shouldReduceMotion ? {opacity: 1} : {opacity: 1, y: 0, scale: 1};
 	const footerButtonExit = shouldReduceMotion ? {opacity: 0} : {opacity: 0, y: -4, scale: 0.98};
@@ -905,13 +1025,36 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											data-flx="app.setup.self-hosted-setup-wizard-gate.theme-step"
 										/>
 									)}
+									{step === 'sign_in_method' && (
+										<SignInMethodStep
+											mode={signInMethod}
+											tagStyle={tagStyleChoice}
+											onTagStyleChange={(value) => {
+												setTagStyleChoice(value);
+												setSignInMethodError(null);
+											}}
+											disabled={savingSignInMethod}
+											error={signInMethodError}
+											onChange={handleSignInMethodChange}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.sign-in-method-step"
+										/>
+									)}
 									{step === 'admin_intro' && (
 										<AdminIntroStep data-flx="app.setup.self-hosted-setup-wizard-gate.admin-intro-step" />
 									)}
 									{step === 'admin_account' && (
 										<AdminAccountStep
 											theme={setupTheme}
+											usernameSignIn={accountIdentity === AccountIdentityModes.USERNAME}
 											data-flx="app.setup.self-hosted-setup-wizard-gate.admin-account-step"
+										/>
+									)}
+									{step === 'admin_recovery_kit' && (
+										<AdminRecoveryKitStep
+											hasRecoveryKit={hasRecoveryKit}
+											creating={creatingRecoveryKit}
+											onCreate={handleCreateRecoveryKit}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.admin-recovery-kit-step"
 										/>
 									)}
 									{step === 'loading' && (
@@ -972,6 +1115,14 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											data-flx="app.setup.self-hosted-setup-wizard-gate.integration-step"
 										/>
 									)}
+									{step === 'push_relay_consent' && (
+										<PushRelayConsentStep
+											accepted={pushRelayConsentAccepted}
+											disabled={submitting}
+											onChange={setPushRelayConsentAccepted}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.push-relay-consent-step"
+										/>
+									)}
 									{step === 'services' && (
 										<ServicesStep
 											available={serviceAvailability}
@@ -992,10 +1143,13 @@ export const SelfHostedSetupWizardGate = observer(() => {
 									{step === 'finish' && (
 										<FinishStep
 											productName={productNameTrimmed}
+											accountIdentity={accountIdentity}
+											tagStyle={config?.account_identity.tag_style ?? RuntimeConfig.tagStyle}
 											registrationMode={registrationMode}
 											singleCommunityEnabled={singleCommunityEnabled}
 											directMessagesDisabled={directMessagesDisabled}
 											attachmentExpiryEnabled={mediaExpiryDraft.enabled}
+											pushRelayConsentAccepted={pushRelayConsentAccepted}
 											premiumMode={premiumMode}
 											submitError={submitError}
 											data-flx="app.setup.self-hosted-setup-wizard-gate.finish-step"
@@ -1088,7 +1242,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 													>
 														<Button
 															disabled={primaryButtonDisabled}
-															submitting={isLoading}
+															submitting={primaryButtonSubmitting}
 															rightIcon={
 																<ArrowRightIcon
 																	size={18}

@@ -5,6 +5,8 @@ import type {BaseMediaProps} from '@app/features/channel/components/embeds/media
 import styles from '@app/features/channel/components/embeds/media/VoiceMessagePlayer.module.css';
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {PAUSE_DESCRIPTOR, PLAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -93,11 +95,12 @@ export function waveformBarHeightPercent(value: number): number {
 	return ((22 * clamped + 2) / 24) * 100;
 }
 
-function formatTime(time: number): string {
-	if (!Number.isFinite(time)) return '0:00';
-	const minutes = Math.floor(time / 60);
-	const seconds = Math.floor(time % 60);
-	return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+function formatTime(time: number, locale: string): string {
+	const minutes = Number.isFinite(time) ? Math.floor(time / 60) : 0;
+	const seconds = Number.isFinite(time) ? Math.floor(time % 60) : 0;
+	const minutesLabel = getCachedNumberFormat(locale, {useGrouping: false}).format(minutes);
+	const secondsLabel = getCachedNumberFormat(locale, {minimumIntegerDigits: 2, useGrouping: false}).format(seconds);
+	return `${minutesLabel}:${secondsLabel}`;
 }
 
 const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
@@ -117,6 +120,7 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 		const {i18n} = useLingui();
 		const messageViewContext = useMaybeMessageViewContext();
 		const effectiveSrc = buildMediaProxyURL(src);
+		const handleMediaError = useAttachmentRefreshOnError(effectiveSrc);
 		const [hasStarted, setHasStarted] = useState(false);
 		const [wantsMetadata, setWantsMetadata] = useState(false);
 		const [prePlayCurrentTime, setPrePlayCurrentTime] = useState(0);
@@ -300,7 +304,9 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 		const hasBegunPlayback = hasStarted || displayCurrentTime > 0;
 		const remainingSeconds = Math.max(0, Math.ceil(displayDuration - displayCurrentTime));
 		const readoutText =
-			displayDuration > 0 ? formatTime(hasBegunPlayback ? remainingSeconds : Math.ceil(displayDuration)) : '--:--';
+			displayDuration > 0
+				? formatTime(hasBegunPlayback ? remainingSeconds : Math.ceil(displayDuration), i18n.locale)
+				: '--:--';
 		const isMobile = MobileLayout.enabled;
 		return (
 			<motion.div
@@ -320,6 +326,7 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 					ref={mediaRef as React.RefObject<HTMLAudioElement>}
 					src={hasStarted || wantsMetadata ? effectiveSrc : undefined}
 					preload={wantsMetadata ? 'metadata' : 'none'}
+					onError={handleMediaError}
 					data-flx="channel.embeds.media.voice-message-player.audio"
 				>
 					<track kind="captions" data-flx="channel.embeds.media.voice-message-player.track" />
@@ -380,7 +387,9 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 					aria-valuemin={0}
 					aria-valuemax={100}
 					aria-valuetext={
-						displayDuration > 0 ? `${formatTime(displayCurrentTime)} / ${formatTime(displayDuration)}` : undefined
+						displayDuration > 0
+							? `${formatTime(displayCurrentTime, i18n.locale)} / ${formatTime(displayDuration, i18n.locale)}`
+							: undefined
 					}
 					data-flx="channel.embeds.media.voice-message-player.waveform-container.waveform-click"
 				>

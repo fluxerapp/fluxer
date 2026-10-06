@@ -187,7 +187,7 @@ export const MarkdownTab: React.FC = observer(() => {
 			{
 				title: i18n._(LINKS_DESCRIPTOR),
 				items: [
-					{label: '[text](url)', content: '[Masked Link](https://fluxer.app)'},
+					{label: '[text](url)', content: '[Masked link](https://fluxer.app)'},
 					{label: '<url>', content: '<https://fluxer.app>'},
 					{label: 'url', content: 'https://fluxer.app'},
 					{label: '<email>', content: '<contact@fluxer.app>'},
@@ -200,14 +200,14 @@ export const MarkdownTab: React.FC = observer(() => {
 					{label: i18n._(ORDERED_DESCRIPTOR), content: '1. First item\n2. Second item\n3. Third item'},
 					{
 						label: i18n._(NESTED_DESCRIPTOR),
-						content: '- Parent item\n  - Nested item\n  - Another nested\n- Another parent',
+						content: '- Parent item\n  - Nested item\n  - Another nested item\n- Another parent item',
 					},
 				],
 			},
 			{
 				title: i18n._(BLOCKQUOTES_DESCRIPTOR),
 				items: [
-					{label: i18n._(SINGLE_LINE_DESCRIPTOR), content: '> Single line quote'},
+					{label: i18n._(SINGLE_LINE_DESCRIPTOR), content: '> Single-line quote'},
 					{
 						label: i18n._(MULTI_LINE_DESCRIPTOR),
 						content: '> Multi-line quote\n> Spans multiple lines\n> Continues here',

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {WorkerDependencies} from '@app/api/worker/WorkerDependencies';
 import {
 	clearWorkerDependencies as clearWorkerDependenciesBase,
 	getWorkerDependencies as getWorkerDependenciesBase,
 	setWorkerDependencies as setWorkerDependenciesBase,
 } from '@pkgs/worker/src/context/WorkerContext';
-import type {WorkerDependencies} from './WorkerDependencies';
 
 export function setWorkerDependencies(dependencies: WorkerDependencies): void {
 	setWorkerDependenciesBase(dependencies);

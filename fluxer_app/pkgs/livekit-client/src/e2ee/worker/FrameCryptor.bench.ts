@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 import {getEncryptedFrameLayout, isFrameServerInjected} from './FrameCryptor.ts';
 
 const sifTrailer = Uint8Array.from([0xde, 0xad, 0xbe, 0xef]);
@@ -15,14 +15,14 @@ function makeEncryptedFrame(): Uint8Array {
 	return frame;
 }
 
-describe('FrameCryptor frame guards', () => {
-	bench('valid encrypted frame layout', () => {
+test('FrameCryptor frame guards', async ({bench}) => {
+	await bench('valid encrypted frame layout', () => {
 		getEncryptedFrameLayout(encryptedFrame.buffer, 10);
-	});
-	bench('short encrypted frame layout rejection', () => {
+	}).run();
+	await bench('short encrypted frame layout rejection', () => {
 		getEncryptedFrameLayout(shortFrame.buffer, 10);
-	});
-	bench('short SIF trailer rejection', () => {
+	}).run();
+	await bench('short SIF trailer rejection', () => {
 		isFrameServerInjected(shortFrame.buffer, sifTrailer);
-	});
+	}).run();
 });

@@ -145,37 +145,12 @@ div.urlEmbedSpoiler {
 	width: 10rem;
 }
 
+.stickerWrapperInteractive {
+	cursor: pointer;
+}
+
 .stickerImage {
 	height: 100%;
 	width: 100%;
 	object-fit: contain;
-}
-
-.stickerTooltip {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-}
-
-.stickerName {
-	font-weight: 500;
-}
-
-.stickerGuildInfo {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	color: var(--text-tertiary);
-}
-
-.stickerGuildIcon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	--guild-icon-size: 1rem;
-}
-
-.stickerGuildName {
-	font-size: 0.75rem;
-	line-height: 1rem;
 }

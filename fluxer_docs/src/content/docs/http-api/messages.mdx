@@ -14,7 +14,7 @@ A text-bearing channel is a [channel type](/http-api/channels/#channel-types) th
 
 Fluxer resolves the channel before it applies any per-route authorisation. A private channel returns 404 `UNKNOWN_CHANNEL` to a caller who is not a recipient. A guild channel returns 403 `MISSING_PERMISSIONS` to a non-member and to a member without [VIEW_CHANNEL](/http-api/permissions/). A guild an operator has marked unavailable returns 403 `MISSING_ACCESS` before the route runs. A guild that no Gateway process serves returns 404 `UNKNOWN_GUILD`, or 403 `ACCESS_DENIED` when its stored record survives.
 
-The message read, create, modify, and delete routes, [Bulk delete messages](#bulk-delete-messages), [Bulk delete own messages](#bulk-delete-own-messages), and [List pinned messages](#list-pinned-messages) also enforce age verification on an effectively age restricted guild channel. They return 403 `NSFW_CONTENT_AGE_RESTRICTED` until the account satisfies it. The attachment routes, the pin routes, the reaction routes, and [Indicate typing](#indicate-typing) resolve the channel without that check.
+The message read, create, modify, and delete routes, [Bulk delete messages](#bulk-delete-messages), [Bulk delete own messages](#bulk-delete-own-messages), and [List pinned messages](#list-pinned-messages) also enforce age verification on an age restricted guild channel. A guild channel is age restricted when its own setting says so. A channel with no setting of its own uses its parent category's setting, and then the guild's. They return 403 `NSFW_CONTENT_AGE_RESTRICTED` until the account satisfies it. The attachment routes, the pin routes, the reaction routes, and [Indicate typing](#indicate-typing) resolve the channel without that check.
 
 [Clear channel read state](#clear-channel-read-state) and [Acknowledge message](#acknowledge-message) resolve no channel. [Acknowledge pins](#acknowledge-pins) reads the channel without checking the caller's access. None of the three checks a permission.
 
@@ -47,7 +47,7 @@ A message object is the full stored form of one post in a channel.
 | stickers | array[[sticker item](#sticker-item-object) object] | The stickers sent with the message |
 | nsfw_emojis? | array[snowflake] | IDs of the custom emojis in the message that are classified as explicit |
 | reactions? | array[[reaction](#reaction-object) object] | Reaction summaries |
-| message_reference? | [message reference](#message-reference-object) object | Reply or forward reference |
+| message_reference? | [message reference](#message-reference-object) object | Reply, forward, or published message reference |
 | message_snapshots? | array[[message snapshot](#message-snapshot-object) object] | The immutable copies captured for a forward |
 | nonce?<sup>6</sup> | string | Caller-supplied message nonce, echoed to the sender as a string of 1 through 32 characters |
 | call? | [message call](#message-call-object) object | Call state attached to a call message |
@@ -57,19 +57,19 @@ A message object is the full stored form of one post in a channel.
 
 <sup>2</sup> Echoed from the create request, so a message read through any other operation always reports false
 
-<sup>3</sup> A user who became an active mention appears in `mentions`, and a user who is only referenced by rendered text appears in `users` instead, so the two arrays never contain the same user
+<sup>3</sup> A user who became an active mention appears in `mentions`, and a user who is only referenced by rendered text appears in `users` instead, so the arrays never contain the same user
 
 <sup>4</sup> Empty while `SUPPRESS_EMBEDS` is set on the message
 
-<sup>5</sup> An attachment that a resolved embed owns is excluded from this array and is exposed through that embed's media object instead
+<sup>5</sup> An attachment that a [rich embed input](#rich-embed-input-objects) names with an `attachment://` URL in `image` or `thumbnail` is excluded from this array. The attachment's URL is in that embed's media object instead
 
 <sup>6</sup> Echoed only in the create message response and its originating [Message Create](/gateway/events/#message-create) Gateway Dispatch, and never stored on the message
 
-<sup>7</sup> The key is absent when the message has no reply reference, present and null when the reply target no longer resolves, and present with the message when it does. A client must tell absent apart from null by key presence
+<sup>7</sup> The key is absent when the message has no reply reference, present and null when the reply target no longer resolves, and present with the message when it does. It is always absent on a copy of a [published message](#crosspost-message). A client must tell absent apart from null by key presence
 
 A webhook-authored message has no stored author user. Fluxer builds its author from the webhook, with the webhook ID as `id`, the stored webhook name as `username`, the discriminator `0000`, the stored webhook avatar hash as `avatar`, and `bot` true. A message whose stored author ID no longer resolves to an account is served with a deleted-user placeholder. The placeholder has that ID, the discriminator `0000`, and no avatar.
 
-`mentions`, `mention_roles`, `embeds`, `attachments`, and `stickers` are always present and can be empty. Every optional field above is omitted entirely, and `referenced_message` is the one that can instead be present and null. A message whose author user and webhook are both absent is omitted from every read.
+`mentions`, `mention_roles`, `embeds`, `attachments`, and `stickers` are always present and can be empty. A field marked `?` above is omitted from the object when it has no value. `referenced_message` is the one optional field that can also be present and null. A message whose author user and webhook are both absent is omitted from every read.
 
 :::note[A forward has immutable copies in `message_snapshots`]
 A reply reference resolves into `referenced_message`, and a forward has none. Fluxer captures the snapshots at forward time, and they never follow later edits to the source. [Message reference types](#message-reference-types) tells the two apart.
@@ -115,25 +115,33 @@ A reply reference resolves into `referenced_message`, and a forward has none. Fl
 | 5 | CHANNEL_ICON_CHANGE | Group direct message icon-change system message |
 | 6 | CHANNEL_PINNED_MESSAGE<sup>2</sup> | Channel pin system message |
 | 7 | USER_JOIN<sup>2</sup> | User-join system message |
+| 12 | CHANNEL_FOLLOW_ADD<sup>2</sup> <sup>3</sup> | System message posted when a channel starts following an announcement channel |
 | 19 | REPLY<sup>1</sup> <sup>2</sup> | Message with a reply reference |
 
 <sup>1</sup> Only `DEFAULT` and `REPLY` can be modified, pinned, unpinned, or used as the target of a reply reference. Any other type rejects modification, pinning, and unpinning with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and rejects being replied to with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`
 
-<sup>2</sup> Only `DEFAULT`, `CHANNEL_PINNED_MESSAGE`, `USER_JOIN`, and `REPLY` can be deleted, and any other type rejects deletion with 403 `MISSING_PERMISSIONS`
+<sup>2</sup> Only `DEFAULT`, `CHANNEL_PINNED_MESSAGE`, `USER_JOIN`, `CHANNEL_FOLLOW_ADD`, and `REPLY` can be deleted, and any other type rejects deletion with 403 `MISSING_PERMISSIONS`
+
+<sup>3</sup> Its `content` is the name of the new [channel follower webhook](/http-api/webhooks/#webhook-types). Its `message_reference` names the followed announcement channel and its guild, has `type` `0`, and has no `message_id`. It never sends a push notification
 
 ## Message flags
 
 | Value | Name | Description |
 | --- | --- | --- |
+| 1 &lt;&lt; 0 | CROSSPOSTED<sup>3</sup> | Message was published to the channels that follow its announcement channel |
+| 1 &lt;&lt; 1 | IS_CROSSPOST<sup>3</sup> | Message is a copy delivered from a followed announcement channel |
 | 1 &lt;&lt; 2 | SUPPRESS_EMBEDS<sup>1</sup> | Suppress rendering of embeds |
+| 1 &lt;&lt; 3 | SOURCE_MESSAGE_DELETED<sup>3</sup> | The published message this copy came from was deleted |
 | 1 &lt;&lt; 12 | SUPPRESS_NOTIFICATIONS | Do not generate ordinary mention notifications |
 | 1 &lt;&lt; 13 | VOICE_MESSAGE<sup>2</sup> | Message has one voice recording attachment |
 
 <sup>1</sup> The only flag a guild moderator can change on a message they did not author
 
-<sup>2</sup> Setting this flag binds the message to the voice message contract described under [Create message](#create-message)
+<sup>2</sup> A message with this flag has the voice message restrictions listed under [Create message](#create-message)
 
-These bits are also the complete sendable set. A create masks the supplied value down to them, and a modify replaces only them and leaves every other stored bit untouched. A bit outside this table is discarded, and the request still succeeds.
+<sup>3</sup> Set by the server. [Announcement channels](/topics/announcement-channels/) describes when each is set
+
+`SUPPRESS_EMBEDS`, `SUPPRESS_NOTIFICATIONS`, and `VOICE_MESSAGE` are the complete sendable set. A create masks the supplied value down to them, and a modify replaces only them and leaves every other stored bit untouched. Any other bit in the request is discarded, and the request still succeeds.
 
 ## Message attachment object
 
@@ -150,8 +158,8 @@ An attachment is one file stored against a message and served from media deliver
 | content_type<sup>1</sup> | string | The media type detected for the attachment |
 | content_hash | ?string | The hash of the attachment's stored bytes, or null when they were never hashed |
 | size | integer | The stored size of the attachment in bytes |
-| url<sup>2</sup> | ?string | Public attachment URL, or null once the attachment has expired |
-| proxy_url<sup>2</sup> | ?string | Media Proxy URL, or null once the attachment has expired |
+| url<sup>2</sup> | ?string | Signed public attachment URL, or null once the attachment has expired |
+| proxy_url<sup>2</sup> | ?string | Signed Media Proxy URL, or null once the attachment has expired |
 | width?<sup>3</sup> | integer | Pixel width for visual media |
 | height?<sup>3</sup> | integer | Pixel height for visual media |
 | placeholder? | string | Encoded media placeholder |
@@ -164,13 +172,46 @@ An attachment is one file stored against a message and served from media deliver
 
 <sup>1</sup> Always present. It falls back to a type guessed from the stored filename when the attachment has no recorded media type, and to `application/octet-stream` when the filename yields no guess
 
-<sup>2</sup> Both fields are the same canonical media endpoint URL, and both become null together once the attachment has expired
+<sup>2</sup> Both fields are the same media endpoint URL with the same [signature](#signed-attachment-urls), and both become null together once the attachment has expired
 
 <sup>3</sup> Omitted for an audio media type even when a stored dimension exists
 
-<sup>4</sup> The key is always present. Its value is the recorded decay deadline, or null when the attachment has none
+<sup>4</sup> The key is always present. Its value is the recorded decay deadline, or null when the attachment has none. It is unrelated to the `ex` time of a signed URL
 
 <sup>5</sup> Present and true only when the attachment has already expired, so an absent key must be read as false
+
+A new attachment starts with the media type derived from the filename given when its upload was requested. For a pre-uploaded attachment that is the `filename` of its [attachment upload request item](#attachment-upload-request-item-object), which can differ from the `filename` the message sends. When the starting type is not a supported image, video, or audio type, Fluxer checks the first 8 KiB of the file for one. For an image, video, or audio file the Media Proxy can read, `content_type` is then the type detected from its bytes. When the starting type is not a media type, SVG bytes keep it. So does a file Fluxer cannot check or the Media Proxy cannot read.
+
+### Signed attachment URLs
+
+An instance configured with attachment URL secrets signs `url` and `proxy_url`. Fluxer adds the signature parameters to the attachment path, before any other parameter. An instance without those secrets returns the URL with none of them.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ex | string | The Unix time in seconds at which the URL expires, as 8 lowercase hexadecimal digits, or `0` on a data package URL |
+| is | string | The Unix time in seconds at which the URL was issued, as 8 lowercase hexadecimal digits |
+| hm | string | The signature over `ex`, `is`, `uc`, and the attachment path, as 64 lowercase hexadecimal digits |
+| uc | string | Present only on a data package URL, where the value is always `dp` |
+
+An ordinary URL has `ex`, `is`, and `hm`, and no `uc`. It is valid for 24 hours from `is`. `is` starts at the attachment's creation time and moves forward in steps of 12 hours, so a URL Fluxer returns has more than 12 and at most 24 hours left. Fluxer signs the URL each time it returns the attachment, so a later read of the message returns a URL for the current step. [Refresh attachment URLs](#refresh-attachment-urls) signs a URL again without reading the message.
+
+A client MUST keep `ex`, `is`, `hm`, and `uc` exactly as issued. It MAY add any other query parameter, such as a [transformation](/media-proxy/transformations/), because the signature covers no other parameter. A client SHOULD refresh a URL whose `ex` is absent or less than one hour away. Once the operator enforces signatures, a read with a missing, altered, or expired signature returns 404 from the Media Proxy, as [Signed attachment URLs](/media-proxy/overview/#signed-attachment-urls) defines.
+
+Fluxer never rewrites message `content` or embed text. An attachment URL pasted into either keeps the parameters it was sent with, and it stops working when its own `ex` passes.
+
+### Data package attachment URLs
+
+A [data harvest](/http-api/users/data-harvest/) archive records a data package URL for each attachment instead of an ordinary one. It has `uc=dp`, and its `ex` is the single character `0`:
+
+```text
+?ex=0&is={issued}&hm={signature}&uc=dp
+```
+
+A data package URL does not expire. The Media Proxy checks its signature against every configured secret and skips the expiry check, so it reads its object for as long as the secret that signed it stays in the instance's secret list. Removing that secret is the only thing that ends it, and it ends every data package URL that secret signed at once.
+
+`is` is set the way it is on an ordinary URL, and the signature covers `uc`, so an ordinary URL relabelled `uc=dp` does not verify, and neither does a data package URL with `uc` removed.
+
+A client treats a data package URL as never expiring and does not refresh it before use. A refused read still triggers the same forced refresh as any other attachment URL, and that returns an ordinary URL.
 
 ### Example
 
@@ -183,8 +224,8 @@ An attachment is one file stored against a message and served from media deliver
   "content_type": "image/png",
   "content_hash": "9f86d081884c7d659a2feaa0c55ad015",
   "size": 18422,
-  "url": "https://media.example.com/attachments/1501314428688998182/1501320000000000001/diagram.png",
-  "proxy_url": "https://media.example.com/attachments/1501314428688998182/1501320000000000001/diagram.png",
+  "url": "https://media.example.com/attachments/1501314428688998182/1501320000000000001/diagram.png?ex=69fba4b5&is=69fa5335&hm=5586be3ae70411fe6582431649e2f28abc6c201e4f12a4f43a3256b72b90d3de",
+  "proxy_url": "https://media.example.com/attachments/1501314428688998182/1501320000000000001/diagram.png?ex=69fba4b5&is=69fa5335&hm=5586be3ae70411fe6582431649e2f28abc6c201e4f12a4f43a3256b72b90d3de",
   "width": 1280,
   "height": 720,
   "flags": 0,
@@ -248,27 +289,31 @@ Each message has at most the resolved `max_reactions_per_message` distinct group
 
 ## Message reference object
 
-A message reference names the message that a reply points at or that a forward was taken from.
+A message reference names the message that a reply points at, that a forward was taken from, or that a copy was published from.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | channel_id | snowflake | The ID of the referenced channel |
-| message_id | snowflake | The ID of the referenced message |
+| message_id?<sup>1</sup> | snowflake | The ID of the referenced message |
 | guild_id? | snowflake | The ID of the referenced guild, present only for a guild message |
 | type | integer | [Message reference type](#message-reference-types) |
+
+<sup>1</sup> Absent only on a `CHANNEL_FOLLOW_ADD` [system message](#message-types), whose reference names a channel and no message
 
 ## Message reference types
 
 | Value | Name | Description |
 | --- | --- | --- |
-| 0 | DEFAULT<sup>1</sup> | Reply reference |
+| 0 | DEFAULT<sup>1</sup> <sup>3</sup> | Reply reference, or the source of a published copy |
 | 1 | FORWARD<sup>2</sup> | Forward reference represented by snapshots |
 
 <sup>1</sup> The default when a create message request supplies `message_reference` without a `type`
 
 <sup>2</sup> Requires `channel_id` in the create message request, and the created message has `message_snapshots` and no `referenced_message`
+
+<sup>3</sup> On a message with the `IS_CROSSPOST` [flag](#message-flags), the reference names the published message in the announcement channel. The copy is not a reply and never has `referenced_message`
 
 ## Message reference input object
 
@@ -440,6 +485,10 @@ Every optional field above is omitted entirely.
 
 <sup>1</sup> Always derived from `url`, so every serialised media object has it
 
+When `url` is an attachment URL of this instance, Fluxer signs both fields, so `url` and `proxy_url` are the same URL with the same fresh [signature](#signed-attachment-urls). A rich embed can name such a URL with or without `ex`, `is`, `hm`, and `uc`. Fluxer removes them before it stores the URL, and signs both fields again each time it returns the embed.
+
+Fluxer signs every other embed field that can hold an attachment URL of this instance the same way. That is `url` on the embed itself, `url`, `icon_url`, and `proxy_icon_url` on an [embed author](#embed-author-object), `icon_url` and `proxy_icon_url` on an [embed footer](#embed-footer-object), and `url` on an [embed provider](#embed-provider-object). An icon URL and its proxy twin are then the same signed URL. A field whose URL is not an attachment URL of this instance is returned as it was stored, and a proxy field of an external URL is the [signed external media](/media-proxy/routes/#get-signed-external-media) path instead.
+
 ## Embed footer object
 
 ### Structure
@@ -462,7 +511,7 @@ Every optional field above is omitted entirely.
 
 ## Embed provider object
 
-Fluxer sets a provider only from resolved embed metadata.
+Only an embed the unfurler builds from a link has a provider. A rich embed input cannot set one.
 
 ### Structure
 
@@ -484,7 +533,7 @@ An allowed mentions object selects which mentions written in the message text be
 | roles?<sup>2</sup> | array[snowflake] | At most 100 role IDs permitted to become active mentions |
 | replied_user?<sup>3</sup> | boolean | Whether a reply mentions the referenced message author (default true) |
 
-<sup>1</sup> Defaults to every category when the object is absent, to the empty set when `users` or `roles` is supplied without it, and to the empty set when the object is present with none of its four fields
+<sup>1</sup> Defaults to every category when the object is absent, to the empty set when `users` or `roles` is supplied without it, and to the empty set when the object is present with none of its fields
 
 <sup>2</sup> A non-empty `parse` combined with a non-empty `users` or `roles` is rejected with the field code `PARSE_AND_USERS_OR_ROLES_CANNOT_BE_USED_TOGETHER`
 
@@ -641,7 +690,7 @@ An `attachment://` reference on a request that has no attachment fails with the 
 
 Fluxer issues an upload URL for an attachment before any message can reference it. [Request attachment upload URLs](#request-attachment-upload-urls) plans the upload. A plan whose declared size exceeds 10 MiB is a multipart plan, and [Complete attachment upload](#complete-attachment-upload) finishes it.
 
-An `upload_url` is either a presigned object storage URL or a Fluxer [upload relay](/media-proxy/upload-relay/) URL, and the instance picks which per request from the caller's country. A caller whose IP is unknown, or whose country is not on the instance's direct-upload list, is given a relay URL. A client MUST send the URL exactly as issued and MUST NOT assume either shape.
+An `upload_url` can point to object storage or the Fluxer [upload relay](/media-proxy/upload-relay/). Send it exactly as issued without assuming its shape.
 
 An upload key can be referenced only by a message that the same identity creates in the same channel.
 
@@ -660,7 +709,7 @@ One declared upload inside a [Request attachment upload URLs](#request-attachmen
 
 <sup>1</sup> A decimal string is converted to the integer
 
-<sup>2</sup> The issued capability and the stored attachment both use the media type derived from `filename`
+<sup>2</sup> The issued upload URL uses the media type derived from `filename`. The [message attachment object](#message-attachment-object) states how the stored attachment is typed
 
 ### Singlepart attachment upload object
 
@@ -680,7 +729,7 @@ Returned when the declared `file_size` is at most 10 MiB.
 
 <sup>1</sup> This value is the `upload_filename` of a [pre-uploaded attachment](#pre-uploaded-attachment-object) in a later [Create message](#create-message) or [Modify message](#modify-message) request
 
-<sup>2</sup> The capability is bound to the derived media type and to exactly `file_size` bytes, so a `PUT` of any other length is rejected
+<sup>2</sup> The upload URL accepts only the derived media type and exactly `file_size` bytes, so a `PUT` of any other length is rejected
 
 ### Multipart attachment upload object
 
@@ -698,7 +747,7 @@ Returned when the declared `file_size` exceeds 10 MiB.
 | upload_mode | string | Always `multipart` |
 | upload_id | string | Object storage multipart upload identifier of 1 through 1,024 characters |
 | part_size<sup>1</sup> | integer | Byte size of every part except the last |
-| parts | array[[attachment upload part](#attachment-upload-part-object) object] | Presigned part capabilities in ascending part number (1-10,000 entries) |
+| parts | array[[attachment upload part](#attachment-upload-part-object) object] | Presigned part upload URLs in ascending part number (1-10,000 entries) |
 
 <sup>1</sup> The plan targets 20 parts, so `part_size` is one twentieth of `file_size` rounded up to a whole mebibyte, and it is never smaller than 10 MiB. The last part is the remainder
 
@@ -713,7 +762,7 @@ One presigned part of a multipart upload plan.
 | part_number | integer | One-based part number |
 | upload_url<sup>1</sup> | string | Presigned URL that accepts exactly this part |
 
-<sup>1</sup> Each capability is bound to the exact byte count of its part, so a `PUT` of any other length is rejected
+<sup>1</sup> Each part upload URL accepts only the exact byte count of its part, so a `PUT` of any other length is rejected
 
 ### Multipart upload completion item object
 
@@ -725,6 +774,28 @@ One planned upload named in a [Complete attachment upload](#complete-attachment-
 | --- | --- | --- |
 | upload_filename | string | Opaque upload key returned when the upload was planned |
 | upload_id | string | Multipart upload identifier returned when the upload was planned |
+
+## Refreshed attachment URL object
+
+One result of [Refresh attachment URLs](#refresh-attachment-urls).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| original | string | The URL exactly as it was sent |
+| refreshed<sup>1</sup> | string | The URL with a fresh [signature](#signed-attachment-urls), or `original` unchanged |
+
+<sup>1</sup> Equal to `original` when the URL is not an attachment URL of this instance, or when the instance has no attachment URL secrets
+
+A URL is an attachment URL of this instance when all of these hold:
+
+- It parses as an absolute URL whose scheme, host, and port equal those of the media endpoint. The host is compared without regard to case, and a default port equals no port.
+- Its path, as written in the string, starts with the media endpoint path followed by `/attachments/`.
+- The rest of the path, percent-decoded, is valid UTF-8 and a safe storage key with no empty, `.`, or `..` segment.
+- That key is `attachments/{channel_id}/{attachment_id}/{filename}`, where both IDs are decimal digits and the filename is not empty.
+
+To sign a URL, Fluxer removes every `ex`, `is`, `hm`, and `uc` parameter and every empty pair, then places the fresh `ex`, `is`, and `hm` first. Every other parameter follows in its original order and bytes, and a fragment is kept. A [data package URL](#data-package-attachment-urls) loses its `uc` this way, so the result is an ordinary URL valid for 24 hours.
 
 ## Channel pin object
 
@@ -758,7 +829,7 @@ The page has no cursor field. The next request repeats the operation with `befor
 
 | Field | Type | Description |
 | --- | --- | --- |
-| items | array[[partial user](/http-api/users/#partial-user-object) object] | Users in ascending cursor order |
+| items | array[[partial user](/http-api/users/#partial-user-object) object] | Users in ascending user ID order |
 | has_more | boolean | Whether another page exists |
 | next_after<sup>1</sup> | ?snowflake | User ID cursor for the next page |
 
@@ -842,7 +913,7 @@ Returns a bulk message response object holding bounded message windows from seve
 ### Limitations
 
 - This is a user-only operation, and a bot credential is refused with 403 `ACCESS_DENIED`.
-- Fluxer resolves and authorises each requested channel independently, under exactly the same boundary as [List channel messages](#list-channel-messages).
+- Fluxer resolves and authorises each requested channel independently, with exactly the same channel checks as [List channel messages](#list-channel-messages).
 - An inaccessible channel fails the whole request, so the response has no window for any channel.
 
 ### JSON body
@@ -915,7 +986,7 @@ Plans from 1 through 10 attachment uploads. Returns a [singlepart](#singlepart-a
 - The channel must support messages, and one that does not fails with 400 `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL`.
 - A guild channel requires [SEND_MESSAGES](/http-api/permissions/) and [ATTACH_FILES](/http-api/permissions/), and a timed-out member is refused with 403 `COMMUNICATION_DISABLED`.
 
-Fluxer checks each declared `file_size` separately against the attachment size limit it resolves for the caller and the guild context. A declaration above that limit returns 400 `FILE_SIZE_TOO_LARGE` with the resolved ceiling. The resolved ceiling defaults to 26214400 bytes, the 25 MiB non-premium allowance, and 524288000 bytes, the 500 MiB premium allowance. A bot credential is clamped to 52428800 bytes, the 50 MiB bot ceiling, even when the resolved limit is higher.
+Fluxer checks each declared `file_size` separately against the attachment size limit it resolves for the caller and the guild context. A declaration above that limit returns 400 `FILE_SIZE_TOO_LARGE` with the resolved ceiling. By default the resolved ceiling is 26214400 bytes (25 MiB) for a caller without premium and 524288000 bytes (500 MiB) for a caller with premium. A bot credential is clamped to 52428800 bytes, the 50 MiB bot ceiling, even when the resolved limit is higher.
 
 ### Path parameters
 
@@ -952,7 +1023,7 @@ Fluxer checks each declared `file_size` separately against the attachment size l
 
 ### Side effects
 
-The operation records one pending upload for each declaration against the caller and the channel, and opens a storage multipart upload for each multipart plan. It creates no message.
+The operation reserves the uploads for the caller and channel. It creates no message.
 
 An issued `upload_filename` becomes an attachment only when a later [Create message](#create-message) or [Modify message](#modify-message) request references it from a [pre-uploaded attachment](#pre-uploaded-attachment-object) entry. A singlepart plan needs no completion step, so a message can reference its key as soon as the `PUT` succeeds.
 
@@ -1013,11 +1084,55 @@ Fluxer reports the field code `UPLOADED_ATTACHMENT_NOT_FOUND` for an upload key 
 
 ### Side effects
 
-The operation finishes each multipart upload and records its completion time and completion IP. It creates no message, and the upload key stays available until a message consumes it.
+The operation makes each completed upload available for a message. It creates no message.
 
 ### Rate limit
 
 10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:attachment:upload::channel_id` bucket, which is shared with [Request attachment upload URLs](#request-attachment-upload-urls).
+
+## Refresh attachment URLs
+
+<RouteHeader method="POST" path="/v1/attachments/refresh-urls" bot />
+
+Signs from 1 through 50 attachment URLs again. Returns one [refreshed attachment URL](#refreshed-attachment-url-object) object for each URL sent. A [data package URL](#data-package-attachment-urls) is accepted like any other, and its result is an ordinary URL valid for 24 hours.
+
+### Limitations
+
+- An OAuth2 bearer token is refused with 403 `ACCESS_DENIED`.
+- Fluxer checks no channel membership, no permission, and no attachment existence, and reads no stored data. A URL is signed whether or not its object exists or the caller can see it.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| attachment_urls<sup>1</sup> | array[string] | URLs to sign again (1-50 entries, each at most 2,048 characters) |
+
+<sup>1</sup> Each entry is read exactly as sent, with no trimming or normalisation
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| refreshed_urls<sup>1</sup> | array[[refreshed attachment URL](#refreshed-attachment-url-object) object] | Results in request order |
+
+<sup>1</sup> Contains exactly one entry for each requested URL, in the order the entries were sent, and a duplicated URL therefore produces a duplicated entry
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Every URL was processed |
+| 400 | [error response](/http-api/#error-response) | Body, URL count, or a URL length is invalid and the request returns `INVALID_FORM_BODY` |
+| 401 | [error response](/http-api/#error-response) | The credential is missing or invalid and the request returns `UNAUTHORIZED` |
+| 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential and the request returns `ACCESS_DENIED` |
+
+:::caution[A refreshed URL is not an access check]
+Anyone who can authenticate can sign any attachment URL of the instance whose path they know. A signature limits how long a copied URL works. It does not decide who can read the file.
+:::
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `attachment:refresh_urls` bucket.
 
 ## Create message
 
@@ -1028,11 +1143,12 @@ Creates a message from a JSON body or from multipart form data. Returns the crea
 ### Limitations
 
 - The channel must be a text-bearing type.
-- A guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [SEND_MESSAGES](/http-api/permissions/), an untimed-out membership, and any membership verification the guild requires.
+- A guild channel requires [VIEW_CHANNEL](/http-api/permissions/) and [SEND_MESSAGES](/http-api/permissions/), an untimed-out membership, and a membership that meets the guild's [verification level](/http-api/guilds/#verification-levels).
 - A timed-out member is refused with 403 `COMMUNICATION_DISABLED`.
 - Embeds require [EMBED_LINKS](/http-api/permissions/), attachments require [ATTACH_FILES](/http-api/permissions/), a favourite meme requires both, and active everyone mentions require [MENTION_EVERYONE](/http-api/permissions/).
 - Slowmode applies to a non-bot caller unless they hold [BYPASS_SLOWMODE](/http-api/permissions/).
 - A one-to-one direct message also applies the recipient's direct message policy and relationship state, and a denial returns 400 `CANNOT_SEND_MESSAGES_TO_USER`.
+- A message in a one-to-one direct message is refused with 403 `NEW_CONVERSATIONS_LIMITED` when the caller is under a [new conversation limit](/http-api/users/private-channels/#new-conversation-limit), the recipient is not a friend or a bot, and the recipient has not written in that direct message.
 - An unclaimed account can send only to its own personal notes channel, and a send to any other channel is refused with 400 `UNCLAIMED_ACCOUNT_CANNOT_SEND_MESSAGES` before the channel is resolved.
 - A non-bot caller must have started a session, and one that has not is refused with the field code `MUST_START_SESSION_BEFORE_SENDING`.
 
@@ -1055,13 +1171,13 @@ The request body is read as a multipart form when `Content-Type` contains `multi
 | message_reference? | ?[message reference input](#message-reference-input-object) object | Reply or forward reference |
 | allowed_mentions? | ?[allowed mentions](#allowed-mentions-object) object | Active mention policy |
 | flags?<sup>3</sup> | integer | [Message flags](#message-flags), defaulting to `0` |
-| favorite_meme_id?<sup>4</sup> | ?snowflake | Favorite meme to attach |
+| favorite_meme_id?<sup>4</sup> | ?snowflake | Favourite meme to attach |
 | sticker_ids? | ?array[snowflake] | At most 3 sticker IDs |
 | tts?<sup>5</sup> | boolean | Whether to request text-to-speech |
 
 <sup>1</sup> Echoed back on the created message and on its [Message Create](/gateway/events/#message-create) Dispatch so a client can match the result to its optimistic entry. An integer is converted to its decimal string form
 
-<sup>2</sup> The schema sets no length bound. Exceeding the effective one returns 400 `INVALID_FORM_BODY` with `CONTENT_EXCEEDS_MAX_LENGTH` on the path `content`
+<sup>2</sup> The schema sets no length bound. Exceeding the effective `max_message_length` described below returns 400 `INVALID_FORM_BODY` with `CONTENT_EXCEEDS_MAX_LENGTH` on the path `content`
 
 <sup>3</sup> Fluxer keeps only the bits in [message flags](#message-flags) and silently drops every other bit
 
@@ -1091,7 +1207,7 @@ A nonce is remembered for the authenticated identity for five minutes, so a clie
 
 Reusing a nonce in the same channel inside that window returns the message the first request created. Reusing it in a different channel fails with 404 `UNKNOWN_MESSAGE`. The replay check runs after authorisation and body validation, so a retry that is otherwise invalid still fails, and a retry after the window has passed creates a second message.
 
-A reply applies the caller's message history cutoff to its target, and a forward applies none to its source. A reply whose target is a system message fails with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`, and a reference that resolves to no message fails with 404 `UNKNOWN_MESSAGE`.
+A reply from a guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) fails with 404 `UNKNOWN_MESSAGE` when its target was created before the guild's message history cutoff, or when the guild has no cutoff. A forward has no cutoff check on its source. A reply whose target is a system message fails with the field code `CANNOT_REPLY_TO_SYSTEM_MESSAGE`, and a reference that resolves to no message fails with 404 `UNKNOWN_MESSAGE`.
 
 Every `FORWARD` reference has `channel_id`. One that does not is refused by body validation before the operation runs, with 400 `INVALID_MESSAGE_DATA` on a JSON body and a per-field 400 `INVALID_FORM_BODY` on a multipart body.
 
@@ -1127,7 +1243,7 @@ A body that cannot be parsed as a multipart form fails with the field code `FAIL
 | More than one file under one index | `MULTIPLE_FILES_FOR_INDEX_NOT_ALLOWED` |
 | More files than the resolved limit | `TOO_MANY_FILES` |
 
-Each is a field code inside a 400 `INVALID_FORM_BODY` body. A `FILE_INDEX_EXCEEDS_MAXIMUM` element reports a `maxIndex` member, 10000 against the absolute bound and the resolved limit minus one otherwise.
+Each is a field code inside a 400 `INVALID_FORM_BODY` body. A `FILE_INDEX_EXCEEDS_MAXIMUM` element has a `maxIndex` member. It is 10000 when the index is below 0 or above 10000, and the resolved limit minus one when the index is at or above that limit.
 
 The `attachments` array inside `payload_json` uses [direct multipart attachment metadata](#direct-multipart-attachment-metadata-object), and an entry with `upload_filename` is instead read as a [pre-uploaded attachment](#pre-uploaded-attachment-object). An entry whose `id` matches a supplied file index supplies that file's metadata, and two entries claiming the same file fail with the field code `DUPLICATE_ATTACHMENT_IDS_NOT_ALLOWED`.
 
@@ -1160,6 +1276,8 @@ The resolved `max_voice_message_duration` limit defaults to 1200 seconds.
 | 403 | [error response](/http-api/#error-response) | Is timed out and the request returns `COMMUNICATION_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | Is age restricted from the channel and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 403 | [error response](/http-api/#error-response) | Message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | A limited caller messages an account that has not written in the direct message and the request returns `NEW_CONVERSATIONS_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation), the channel is not its personal notes channel, and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel, referenced message, sticker, or guild does not exist or is unavailable, or the supplied nonce was last used in a different channel and the request returns `UNKNOWN_MESSAGE` |
 
 :::caution[Slowmode denials are 400, not 429]
@@ -1193,11 +1311,15 @@ Modifies a message. Returns the updated [message](#message-object) object. Emits
 - The target must be a `DEFAULT` or `REPLY` message, and any other type fails with 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`.
 - A message that has [message snapshots](#message-snapshot-object) cannot be edited by its author and fails with the field code `MESSAGES_WITH_SNAPSHOTS_CANNOT_BE_EDITED`. A non-author moderator holding `MANAGE_MESSAGES` can still toggle `SUPPRESS_EMBEDS` and change existing attachment metadata on a forwarded message.
 - The author can modify every supported field, and a timed-out author is refused with 403 `COMMUNICATION_DISABLED`.
-- A caller who is not the author can act only in a guild channel, must hold [MANAGE_MESSAGES](/http-api/permissions/), and can change only `SUPPRESS_EMBEDS` and the metadata of attachments that already exist. A non-author edit that does not satisfy all three conditions fails with 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
+- An author edit in a one-to-one direct message is refused with 403 `NEW_CONVERSATIONS_LIMITED` when the author is under a [new conversation limit](/http-api/users/private-channels/#new-conversation-limit), the recipient is not a friend or a bot, and the recipient has not written in that direct message.
+- A caller who is not the author can act only in a guild channel, must hold [MANAGE_MESSAGES](/http-api/permissions/), and can change only `SUPPRESS_EMBEDS` and the metadata of attachments that already exist. A non-author edit that does not satisfy all these conditions fails with 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
 - `MANAGE_MESSAGES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who holds it with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 - A caller who does not hold the bit at all is treated as any other non-author and receives 403 `CANNOT_EDIT_OTHER_USER_MESSAGE`.
 - Embeds require [EMBED_LINKS](/http-api/permissions/) and adding an upload requires [ATTACH_FILES](/http-api/permissions/).
-- The route takes a per-message write lock for the duration of the edit, and a request that cannot take it fails with 429 `RESOURCE_LOCKED` and a `Retry-After` of 1.
+- A concurrent edit can fail with 429 `RESOURCE_LOCKED` and `Retry-After: 1`.
+- A [published](#crosspost-message) message has its own edit allowance, described below.
+
+Published messages: 3 edits in a row, then one every 20 minutes, code `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`. Edits by other members with Manage Messages are not limited. The allowance is kept for each message and counts author edits, [Edit webhook message](/http-api/webhooks/#edit-webhook-message) calls, and [Delete message attachment](#delete-message-attachment) calls.
 
 The body is read exactly as it is for [Create message](#create-message), so a `multipart/form-data` request is accepted with the same `payload_json` and `files[N]` fields. A file that is not uploaded directly must first be planned through [Request attachment upload URLs](#request-attachment-upload-urls) and then referenced by its `upload_filename`.
 
@@ -1245,7 +1367,10 @@ An `id` that names no attachment on the message is skipped, and the edit still s
 | 403 | [error response](/http-api/#error-response) | The caller is timed out and the request returns `COMMUNICATION_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The caller is age restricted from the channel and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 403 | [error response](/http-api/#error-response) | Message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | A limited author edits a direct message the other account has not written in and the request returns `NEW_CONVERSATIONS_LIMITED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation), the channel is not its personal notes channel, and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist |
+| 429 | [error response](/http-api/#error-response) | The published message edit allowance is used up, returning `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED` |
 
 ### Side effects
 
@@ -1253,9 +1378,128 @@ The operation updates the message, advances its edit timestamp when `content` ch
 
 It emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. It writes no audit log entry, even for a moderator edit.
 
+An edit of a published message, including a moderator edit, reaches every copy of it in the background. Fluxer batches the edits of one message into 10-second windows and copies the latest state once per window. A moderator in a following channel can set `SUPPRESS_EMBEDS` on a copy, and the next copied edit of the published message overwrites it.
+
 ### Rate limit
 
 20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:message:update::channel_id` bucket.
+
+## Crosspost message
+
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/{message_id}/crosspost" bot />
+
+Publishes a message in an announcement channel to every channel that follows it, and returns the updated [message](#message-object) object with the `CROSSPOSTED` [flag](#message-flags). Emits a [Message Update](/gateway/events/#message-update) Gateway event. The copies are delivered in the background after the response. [Announcement channels](/topics/announcement-channels/) describes what is copied.
+
+### Limitations
+
+- The channel must be an announcement channel, and the caller needs [VIEW_CHANNEL](/http-api/permissions/) and [SEND_MESSAGES](/http-api/permissions/) in it.
+- The author can publish their own message, and a timed-out author is refused with 403 `COMMUNICATION_DISABLED`.
+- Publishing another member's message, or a webhook's, also requires [MANAGE_MESSAGES](/http-api/permissions/).
+- A caller who publishes another member's message without [READ_MESSAGE_HISTORY](/http-api/permissions/) can publish only a message newer than the guild's message history cutoff.
+- Only a `DEFAULT` message with no `message_snapshots` can be published. A reply, a forward, a system message, and a copy of a published message cannot.
+- A message is published once.
+- Content, rich embed text, and attachment hashes that match the instance blocklists are refused with 403 `CONTENT_BLOCKED`.
+
+`MANAGE_MESSAGES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who holds it with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
+
+Each announcement channel can publish 10 messages in a row, then one every 6 minutes. The allowance is shared by every member, and Fluxer counts a publish only after every other check passes. A denial returns 429 `MESSAGE_CROSSPOST_RATE_LIMITED` with `X-RateLimit-Scope: shared`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the announcement channel |
+| message_id | snowflake | The ID of the message to publish |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [message](#message-object) object | Message was published |
+| 400 | [error response](/http-api/#error-response) | The channel is not an announcement channel, returning `ANNOUNCEMENT_CHANNEL_REQUIRED` |
+| 400 | [error response](/http-api/#error-response) | The message type or shape cannot be published, returning `MESSAGE_NOT_CROSSPOSTABLE` |
+| 400 | [error response](/http-api/#error-response) | The message was already published, returning `MESSAGE_ALREADY_CROSSPOSTED` |
+| 403 | [error response](/http-api/#error-response) | A required permission is absent, returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | The author is timed out, returning `COMMUNICATION_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The message matches an instance blocklist, returning `CONTENT_BLOCKED` |
+| 403<sup>1</sup> | [error response](/http-api/#error-response) | Publishing is disabled for the guild, returning `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
+| 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or is older than the caller's history cutoff |
+| 429<sup>2</sup> | [error response](/http-api/#error-response) | The channel publish allowance is used up |
+| 429 | [error response](/http-api/#error-response) | A concurrent change holds the message, returning `RESOURCE_LOCKED` |
+| 503 | [error response](/http-api/#error-response) | The delivery queue is full, returning `SERVICE_UNAVAILABLE` |
+
+<sup>1</sup> Returned when message sending is disabled for the guild, or the guild has [ANNOUNCEMENT_CHANNELS_DISABLED](/http-api/guilds/#guild-features)
+
+<sup>2</sup> `MESSAGE_CROSSPOST_RATE_LIMITED`, with the [rate limit response](/topics/rate-limits/#rate-limit-response-object) members
+
+A 503 leaves the message unpublished, and the publish it counted stays counted.
+
+### Side effects
+
+The operation sets `CROSSPOSTED` on the message without changing its `edited_timestamp`, and emits [Message Update](/gateway/events/#message-update) in the announcement channel. Fluxer then creates one copy in each following channel through its [channel follower webhook](/http-api/webhooks/#webhook-types), each announced by [Message Create](/gateway/events/#message-create) in that channel. A copy has the `IS_CROSSPOST` flag, a `DEFAULT` `message_reference` to the published message, and no mentions.
+
+Publishing writes no audit log entry.
+
+### Rate limit
+
+5 requests per 5 seconds for each authenticated user and channel ID, on the `channel:message:crosspost::channel_id` bucket. The channel publish allowance above applies on top of it.
+
+## Get message crosspost source
+
+<RouteHeader method="GET" path="/v1/channels/{channel_id}/messages/{message_id}/crosspost-source" bot />
+
+Returns the public profile of the guild a copy of a published message came from, as a [crosspost source](#crosspost-source-object) object. Clients use it to show the source guild of a copy to a reader who is not a member of that guild. Requires [VIEW_CHANNEL](/http-api/permissions/) in the channel of the copy.
+
+### Limitations
+
+- The caller needs the same access as [Get message](#get-message), so a message outside the caller's message history cutoff is reported as 404 `UNKNOWN_MESSAGE`.
+- The message must be a copy with the `IS_CROSSPOST` [flag](#message-flags), or the `CHANNEL_FOLLOW_ADD` [system message](#message-types) posted when the channel followed an announcement channel. Any other message returns 404 `UNKNOWN_MESSAGE`.
+- The response never says whether the caller is a member of the source guild, and it names no channel of that guild.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| channel_id | snowflake | The ID of the channel that holds the copy |
+| message_id | snowflake | The ID of the copy or of the `CHANNEL_FOLLOW_ADD` message |
+
+### Crosspost source object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| guild | [crosspost source guild](#crosspost-source-guild-object) object | The guild the message was published from |
+
+### Crosspost source guild object
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the source guild |
+| name | string | The name of the source guild |
+| icon | ?string | The hash of the source guild icon |
+| banner | ?string | The hash of the source guild banner |
+| description | ?string | The discovery description of the source guild, or null when the guild is not listed in discovery |
+| features | array of strings | The badge [features](/http-api/guilds/#guild-features) of the source guild, limited to `VERIFIED`, `PARTNERED`, and `DISCOVERABLE` |
+| approximate_member_count | ?integer | Approximate member count, or null when Fluxer cannot count the guild right now |
+| approximate_presence_count | ?integer | Approximate online member count, or null when Fluxer cannot count the guild right now |
+| discoverable | boolean | Whether the caller can join the guild through [Join discovery guild](/http-api/discovery/#join-discovery-guild) |
+
+`discoverable` is true when discovery is on for the instance, the guild is listed in discovery, and its invites are not disabled. The counts are cached for 60 seconds per guild.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [crosspost source](#crosspost-source-object) object | The source guild was returned |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL`, returning `MISSING_PERMISSIONS` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks age verification for the channel, returning `NSFW_CONTENT_AGE_RESTRICTED` |
+| 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller cannot see it, returning `UNKNOWN_CHANNEL` |
+| 404 | [error response](/http-api/#error-response) | Message does not exist, is outside the caller's history cutoff, or is not eligible, returning `UNKNOWN_MESSAGE` |
+| 404 | [error response](/http-api/#error-response) | The source guild was deleted, returning `UNKNOWN_GUILD` |
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user and channel ID, on the `channel:message:crosspost_source::channel_id` bucket.
 
 ## Clear channel read state
 
@@ -1279,11 +1523,11 @@ Deletes the authenticated identity's read state entry for one channel. Returns 2
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Read state was absent or deleted |
-| 403 | [error response](/http-api/#error-response) | Credential type or account state denies the request and it returns `ACCESS_DENIED` or `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Credential type denies the request and it returns `ACCESS_DENIED` |
 
 ### Side effects
 
-The operation deletes the caller's stored read-through marker, mention count, and pin acknowledgement for the channel, and invalidates the caller's cached unread badge count. It emits no Gateway Dispatch.
+The operation deletes the caller's read-through marker, mention count, and pin acknowledgement for the channel. It emits no Gateway Dispatch.
 
 ### Rate limit
 
@@ -1291,7 +1535,7 @@ The operation deletes the caller's stored read-through marker, mention count, an
 
 ## Delete message
 
-<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/messages/{message_id}" bot />
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/messages/{message_id}" bot auditReason />
 
 Deletes one message. Returns 204 with an empty body on success. Emits a [Message Delete](/gateway/events/#message-delete) Gateway event.
 
@@ -1301,7 +1545,6 @@ Deletes one message. Returns 204 with an empty body on success. Emits a [Message
 - The author can delete their own message anywhere.
 - Deleting another user's guild message requires both [SEND_MESSAGES](/http-api/permissions/) and [MANAGE_MESSAGES](/http-api/permissions/), which is an [elevated permission](/http-api/permissions/#elevated-permissions). No caller can delete another user's private channel message.
 - A caller who holds `MANAGE_MESSAGES` with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
-- The operation reads no audit reason header.
 
 ### Path parameters
 
@@ -1328,9 +1571,11 @@ There is no grace period and no restore operation.
 
 The operation permanently deletes the message, its reactions, and its attachments and removes it from search.
 
+Deleting a [published](#crosspost-message) message keeps each copy of it in the following channels and turns it into a placeholder in the background. The content of the placeholder is `[Original message deleted]`, its attachments, embeds, and stickers are removed, its `edited_timestamp` is set, and it has the `SOURCE_MESSAGE_DELETED` [flag](#message-flags). Deleting a copy removes that copy alone.
+
 It emits [Message Delete](/gateway/events/#message-delete) to every session that can see the channel. When the message was pinned, it also removes the channel pin entry and emits [Channel Pins Update](/gateway/events/#channel-pins-update) with the channel's unchanged last-pin timestamp.
 
-Every deletion in a guild channel writes one `MESSAGE_DELETE` guild audit log entry with no reason, including deletion of the caller's own message.
+Every deletion in a guild channel writes one `MESSAGE_DELETE` guild audit log entry with the supplied reason, including deletion of the caller's own message.
 
 ### Rate limit
 
@@ -1346,7 +1591,7 @@ Deletes one attachment from the caller's own message. Returns 204 with an empty 
 
 - Only the message author can use this operation, and a guild moderator must use [Modify message](#modify-message) instead.
 - This route cannot address an attachment that a resolved embed owns.
-- When the attachment was the message's last remaining payload, the [Delete message](#delete-message) effects apply.
+- When the attachment is the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message with the [Delete message](#delete-message) effects.
 
 ### Path parameters
 
@@ -1370,7 +1615,7 @@ The response is 204 whether the message survives or is deleted, so the emitted G
 
 ### Side effects
 
-The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removal leaves the message with no payload, the complete [Delete message](#delete-message) effect set applies instead, including its Dispatches and guild audit log entry.
+The operation permanently deletes the stored attachment object, purges it from media delivery, removes it from the message, and advances the message's edit timestamp. On a [published](#crosspost-message) message it counts toward the published message edit allowance described under [Modify message](#modify-message), and a denial returns 429 `PUBLISHED_MESSAGE_EDIT_RATE_LIMITED`. It then emits [Message Update](/gateway/events/#message-update) to every session that can see the channel. When the removed attachment was the message's only attachment and the message has no content, embeds, or stickers, Fluxer deletes the whole message instead, with the complete [Delete message](#delete-message) effect set, including its Dispatches and guild audit log entry.
 
 ### Rate limit
 
@@ -1378,7 +1623,7 @@ The operation permanently deletes the stored attachment object, purges it from m
 
 ## Bulk delete messages
 
-<RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/bulk-delete" bot mfa />
+<RouteHeader method="POST" path="/v1/channels/{channel_id}/messages/bulk-delete" bot auditReason mfa />
 
 Deletes from 1 through 100 messages in one guild channel. Returns 204 with an empty body on success. Emits one [Message Delete Bulk](/gateway/events/#message-delete-bulk) Gateway event.
 
@@ -1388,7 +1633,6 @@ Deletes from 1 through 100 messages in one guild channel. Returns 204 with an em
 - The caller requires [MANAGE_MESSAGES](/http-api/permissions/), which is an [elevated permission](/http-api/permissions/#elevated-permissions).
 - A caller who holds `MANAGE_MESSAGES` with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 - The operation applies no age boundary, so a message of any age can be selected.
-- The operation reads no audit reason header.
 
 ### Path parameters
 
@@ -1428,7 +1672,7 @@ The operation permanently removes every selected message, attachment, and reacti
 
 When at least one ID matched, it emits one [Message Delete Bulk](/gateway/events/#message-delete-bulk) with every requested ID to sessions that can see the channel, including an ID that matched nothing. It emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no individual [Message Delete](/gateway/events/#message-delete).
 
-It writes one `MESSAGE_BULK_DELETE` guild audit log entry with the matched count and no reason.
+It writes one `MESSAGE_BULK_DELETE` guild audit log entry with the matched count and the supplied reason.
 
 ### Rate limit
 
@@ -1444,7 +1688,7 @@ Deletes every message in the authenticated user's personal notes channel. Return
 
 - The channel must be the caller's own `DM_PERSONAL_NOTES` channel, and any other channel fails with 400 `INVALID_CHANNEL_TYPE`.
 
-The deletion runs inside the request in pages of 100 messages, so a channel with a very large history holds the request open until the last message is gone.
+The response is returned only after deletion finishes, which can take longer for a large history.
 
 ### Path parameters
 
@@ -1467,7 +1711,7 @@ Deletion has no age boundary and no confirmation step, and there is no restore o
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | Every personal note was deleted |
-| 403 | [error response](/http-api/#error-response) | Credential type or account state denies the request and it returns `ACCESS_DENIED` or `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Credential type denies the request and it returns `ACCESS_DENIED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist or the caller cannot resolve it |
 
 ### Side effects
@@ -1490,8 +1734,8 @@ Deletes every message the caller authored in one channel. Returns 202 with an em
 
 - User session and bot credentials are accepted, and a bot credential satisfies the sudo requirement without any proof.
 - The caller must be able to resolve the channel and be in [sudo mode](/http-api/users/mfa/#sudo-mode), established by the `X-Fluxer-Sudo-Mode-JWT` header or by supplying a proof in the body.
-- A caller who satisfies none of those receives 403 `SUDO_MODE_REQUIRED` with `has_mfa` and the available `methods`.
-- An account that holds no verifiable credential at all, meaning it is not a bot, has no enrolled authenticator, and has no stored password, satisfies the sudo requirement with an empty body.
+- A caller who satisfies none of those receives 403 `SUDO_MODE_REQUIRED` with `has_mfa` and the available `methods`, which report `totp`, `webauthn`, and `backup_codes`.
+- An account that holds no verifiable credential at all, meaning it is not a bot, has no TOTP secret, no registered WebAuthn credential, and no stored password, satisfies the sudo requirement with an empty body.
 
 The deletion runs inside the request despite the 202 status, so every matching message is gone by the time the response is returned.
 
@@ -1539,7 +1783,7 @@ The deletion has no age boundary and no selection. There is no cancellation and 
 
 ### Side effects
 
-Each matching message, with its attachments and reactions, is permanently deleted and removed from search. Deletions emit batched [Message Delete Bulk](/gateway/events/#message-delete-bulk) Dispatches.
+Each matching message, with its attachments and reactions, is permanently deleted and removed from search. Fluxer emits one [Message Delete Bulk](/gateway/events/#message-delete-bulk) Dispatch for each batch of at most 100 deleted messages.
 
 The operation emits no [Channel Pins Update](/gateway/events/#channel-pins-update) and no individual [Message Delete](/gateway/events/#message-delete), and it writes no guild audit log entry.
 
@@ -1593,7 +1837,7 @@ Acknowledging pins is a separate operation, [Acknowledge pins](#acknowledge-pins
 
 ## Pin message
 
-<RouteHeader method="PUT" path="/v1/channels/{channel_id}/pins/{message_id}" bot />
+<RouteHeader method="PUT" path="/v1/channels/{channel_id}/pins/{message_id}" bot auditReason />
 
 Pins a `DEFAULT` or `REPLY` message. Returns 204 with an empty body on success. Emits [Message Update](/gateway/events/#message-update), [Channel Pins Update](/gateway/events/#channel-pins-update), and [Message Create](/gateway/events/#message-create) Gateway events.
 
@@ -1602,6 +1846,7 @@ Pins a `DEFAULT` or `REPLY` message. Returns 204 with an empty body on success. 
 - A guild caller requires [PIN_MESSAGES](/http-api/permissions/) and channel access.
 - A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can pin only a message on or after the guild's message history cutoff.
 - A one-to-one direct message caller must satisfy the recipient's direct message policy, and one who may not send fails with 400 `CANNOT_SEND_MESSAGES_TO_USER`.
+- A one-to-one direct message pin is refused with 403 `NEW_CONVERSATIONS_LIMITED` when the caller is under a [new conversation limit](/http-api/users/private-channels/#new-conversation-limit), the recipient is not a friend or a bot, and the recipient has not written in that direct message.
 - A group direct message and the personal notes channel apply no send policy.
 - The operation is idempotent.
 
@@ -1622,6 +1867,7 @@ Pins a `DEFAULT` or `REPLY` message. Returns 204 with an empty body on success. 
 | 400 | [error response](/http-api/#error-response) | The target is a system message and the request returns `CANNOT_MODIFY_SYSTEM_WEBHOOK` |
 | 400 | [error response](/http-api/#error-response) | The private channel's send policy denies the caller and the request returns `CANNOT_SEND_MESSAGES_TO_USER` |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `PIN_MESSAGES` and the request returns `MISSING_PERMISSIONS`, or message sending is temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The caller is under a new conversation limit in a direct message the recipient has not written in, and the request returns `NEW_CONVERSATIONS_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects
@@ -1630,7 +1876,7 @@ Pinning a message that is not already pinned sets its pin timestamp, advances th
 
 It emits [Message Update](/gateway/events/#message-update) for the target, [Channel Pins Update](/gateway/events/#channel-pins-update) for the channel, and [Message Create](/gateway/events/#message-create) for the system message, each to every session that can see the channel.
 
-A guild pin also writes one `MESSAGE_PIN` guild audit log entry with no reason. Pinning an already pinned message changes nothing and emits no Dispatch.
+A guild pin also writes one `MESSAGE_PIN` guild audit log entry with the supplied reason. Pinning an already pinned message changes nothing and emits no Dispatch.
 
 ### Rate limit
 
@@ -1638,7 +1884,7 @@ A guild pin also writes one `MESSAGE_PIN` guild audit log entry with no reason. 
 
 ## Unpin message
 
-<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/pins/{message_id}" bot />
+<RouteHeader method="DELETE" path="/v1/channels/{channel_id}/pins/{message_id}" bot auditReason />
 
 Unpins a message. Returns 204 with an empty body on success. Emits [Message Update](/gateway/events/#message-update) and [Channel Pins Update](/gateway/events/#channel-pins-update) Gateway events.
 
@@ -1668,7 +1914,7 @@ Unpins a message. Returns 204 with an empty body on success. Emits [Message Upda
 
 ### Side effects
 
-Unpinning a pinned message clears its pin timestamp and emits [Message Update](/gateway/events/#message-update) and [Channel Pins Update](/gateway/events/#channel-pins-update) to every session that can see the channel. A guild unpin also writes one `MESSAGE_UNPIN` guild audit log entry with no reason.
+Unpinning a pinned message clears its pin timestamp and emits [Message Update](/gateway/events/#message-update) and [Channel Pins Update](/gateway/events/#channel-pins-update) to every session that can see the channel. A guild unpin also writes one `MESSAGE_UNPIN` guild audit log entry with the supplied reason.
 
 It creates no system message. The `CHANNEL_PINNED_MESSAGE` system message the original pin created stays in the channel, and the channel's last-pin timestamp is unchanged.
 
@@ -1699,7 +1945,7 @@ A channel the caller cannot see is acknowledged like any other whenever it store
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | Pin state was absent or acknowledged |
-| 403 | [error response](/http-api/#error-response) | Credential type or account state denies the request and it returns `ACCESS_DENIED` or `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 403 | [error response](/http-api/#error-response) | Credential type denies the request and it returns `ACCESS_DENIED` |
 
 ### Side effects
 
@@ -1729,7 +1975,7 @@ Returns a bare array of [partial user](/http-api/users/#partial-user-object) obj
 
 - Authorisation, query parameters, and ordering are exactly those of [List reaction users](#list-reaction-users), and the array is the same page that operation returns in its `items` field.
 
-The pagination signal is in two response headers. `X-Has-More` is `true` or `false`. `X-Next-After` is the ID of the last user in the array, and it is absent when no further page exists. [List reaction users](#list-reaction-users) returns the same users with both values in the body.
+The pagination signal is in the response headers. `X-Has-More` is `true` or `false`. `X-Next-After` is the ID of the last user in the array, and it is absent when no further page exists. [List reaction users](#list-reaction-users) returns the same users with both values in the body.
 
 ### Path parameters
 
@@ -1810,14 +2056,14 @@ Adds the authenticated identity's reaction. Returns 204 with an empty body. Emit
 
 ### Limitations
 
-- The caller must be able to view the text-bearing channel, must not be timed out, and must reach the message under the message history cutoff.
+- The caller must be able to view the text-bearing channel, must not be timed out. A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can react only to a message on or after the guild's message history cutoff, and to no message when the guild has no cutoff.
 - A non-bot caller must have a verified email, and one that does not receives 403 `REACTION_EMAIL_VERIFICATION_REQUIRED`.
 - Creating a new emoji reaction group in a guild requires [ADD_REACTIONS](/http-api/permissions/), while adding to an existing group does not.
 - A custom emoji whose source guild is not the channel's guild requires the `feature_global_expressions` entitlement, and a caller without it receives the field code `CUSTOM_EMOJIS_REQUIRE_PREMIUM_OUTSIDE_SOURCE`.
 - In a guild channel a custom emoji also requires [USE_EXTERNAL_EMOJIS](/http-api/permissions/).
 - A non-bot caller must have started a session, and one that has not receives the field code `MUST_START_SESSION_BEFORE_SENDING`.
 - An unclaimed account can react only in its personal notes channel, and elsewhere receives 400 `UNCLAIMED_ACCOUNT_CANNOT_ADD_REACTIONS`.
-- This route applies no direct message send policy.
+- This route applies no direct message send policy. A one-to-one direct message reaction is still refused with 403 `NEW_CONVERSATIONS_LIMITED` when the caller is under a [new conversation limit](/http-api/users/private-channels/#new-conversation-limit), the recipient is not a friend or a bot, and the recipient has not written in that direct message.
 
 ### Path parameters
 
@@ -1836,7 +2082,7 @@ Adds the authenticated identity's reaction. Returns 204 with an empty body. Emit
 <sup>1</sup> See [reaction session correlation](#reaction-emoji-path-value)
 
 :::note[Permission is checked only for a new group]
-`ADD_REACTIONS`, Unicode emoji validation, custom emoji existence, and the external emoji checks apply only when the request would open a new group. Joining an existing group is authorised by channel access alone.
+`ADD_REACTIONS`, Unicode emoji validation, custom emoji existence, and the external emoji checks apply only when the request would open a new group. Joining an existing group skips them. Every other check in the list above still runs, including the timeout, the message history cutoff, and email verification.
 :::
 
 [Reaction object](#reaction-object) states the group and user ceilings for a message, and reaching either returns 400 `MAX_REACTIONS`.
@@ -1856,7 +2102,9 @@ Adds the authenticated identity's reaction. Returns 204 with an empty body. Emit
 | 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL`, `ADD_REACTIONS`, or `USE_EXTERNAL_EMOJIS` and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The caller is timed out and the request returns `COMMUNICATION_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The caller has an unverified email and the request returns `REACTION_EMAIL_VERIFICATION_REQUIRED` |
+| 403 | [error response](/http-api/#error-response) | The caller is under a new conversation limit in a direct message the recipient has not written in, and the request returns `NEW_CONVERSATIONS_LIMITED` |
 | 403 | [error response](/http-api/#error-response) | Reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | The account is [limited](/http-api/users/#account-limitation) and the request returns `ACCOUNT_LIMITED` |
 | 404 | [error response](/http-api/#error-response) | Channel or message does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects
@@ -1922,8 +2170,7 @@ Removes one named user's reaction. Returns 204 with an empty body. Emits a [Mess
 ### Limitations
 
 - The caller must be able to view the text-bearing channel and reach the message under the message history cutoff.
-- The message author may remove any user's reaction from their own message in any channel.
-- Any other caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), so a non-author in a private channel is refused with 403 `MISSING_PERMISSIONS`.
+- The caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), so a caller in a private channel is refused with 403 `MISSING_PERMISSIONS`.
 - `MANAGE_MESSAGES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who holds it with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 
 ### Path parameters
@@ -1951,10 +2198,10 @@ Removes one named user's reaction. Returns 204 with an empty body. Emits a [Mess
 | --- | --- | --- |
 | 204 | empty | Target reaction was absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path, emoji, or session input is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
-| 403 | [error response](/http-api/#error-response) | Caller is not the message author and lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or is not the author in a private channel, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
-A message that does not exist returns 204 before the authorship and permission checks. A request naming a target user with no such reaction also returns 204.
+A message that does not exist returns 204 before the `MANAGE_MESSAGES` check. A request naming a target user with no such reaction also returns 204.
 
 ### Side effects
 
@@ -1973,8 +2220,7 @@ Removes every reaction for one emoji. Returns 204 with an empty body. Emits a [M
 ### Limitations
 
 - The caller must be able to view the text-bearing channel and reach the message under the message history cutoff.
-- The message author may clear the emoji on their own message in any channel.
-- Any other caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions).
+- The caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions).
 - A caller who holds `MANAGE_MESSAGES` with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 
 ### Path parameters
@@ -1991,7 +2237,7 @@ Removes every reaction for one emoji. Returns 204 with an empty body. Emits a [M
 | --- | --- | --- |
 | 204 | empty | Emoji reactions were absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path or emoji is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
-| 403 | [error response](/http-api/#error-response) | Caller is not the message author and lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or is not the author in a private channel, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects
@@ -2011,8 +2257,7 @@ Removes every reaction from a message. Returns 204 with an empty body. Emits a [
 ### Limitations
 
 - The caller must be able to view the text-bearing channel and reach the message under the message history cutoff.
-- The message author may clear their own message in any channel.
-- Any other caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions).
+- The caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions).
 - A caller who holds `MANAGE_MESSAGES` with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 
 ### Path parameters
@@ -2028,7 +2273,7 @@ Removes every reaction from a message. Returns 204 with an empty body. Emits a [
 | --- | --- | --- |
 | 204 | empty | Reactions were absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path parameters are invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
-| 403 | [error response](/http-api/#error-response) | Caller is not the message author and lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or is not the author in a private channel, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects
@@ -2119,7 +2364,7 @@ Without `manual`, the marker advances to the larger of its current value and `me
 
 ### Side effects
 
-The operation stores the new read-through marker and the supplied mention count for the caller and channel. It invalidates the caller's cached unread badge count, clears the channel's delivered notifications through the acknowledged watermark, and emits [Message ACK](/gateway/events/#message-ack) to the caller's own sessions only.
+The operation updates the caller's read-through marker and mention count, clears delivered notifications through the acknowledged watermark, and emits [Message ACK](/gateway/events/#message-ack) to the caller's own sessions only.
 
 A non-manual acknowledgement whose `message_id` is below the stored watermark leaves the stored watermark and mention count unchanged. The Dispatch reports the stored values.
 

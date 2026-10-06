@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {timingSafeEqual} from 'node:crypto';
+import {Config} from '@app/api/Config';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
-import {Config} from '../Config';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 const INTERNAL_RPC_AUTH_HEADER = 'x-fluxer-rpc-auth';
 

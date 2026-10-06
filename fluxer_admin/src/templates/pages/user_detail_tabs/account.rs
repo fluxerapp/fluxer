@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::types::{AdminUser, UserSession, WebAuthnCredential},
+    acl,
+    api::types::{
+        AccountIdentityMode, AdminUser, PasswordResetLinkResponse, UserSession, WebAuthnCredential,
+    },
     config::AdminConfig,
     templates::components::{
+        alert::{AlertVariant, alert},
         form::{checkbox, csrf_input, form_actions, submit_button},
         page_container::card_with_header,
     },
+    utils::timestamps::format_admin_timestamp,
 };
 use maud::{Markup, html};
 
@@ -17,28 +22,113 @@ const BTN_CLS: &str = "w-full inline-flex items-center justify-center rounded-md
                         bg-brand-primary px-4 py-2 text-sm font-medium text-white \
                         shadow-sm hover:bg-brand-primary-dark";
 
+pub struct AccountTabOptions<'a> {
+    pub admin_acls: &'a [String],
+    pub account_identity: AccountIdentityMode,
+    pub password_reset_link: Option<&'a PasswordResetLinkResponse>,
+}
+
 pub fn account_tab(
     config: &AdminConfig,
     user: &AdminUser,
     sessions: &[UserSession],
     webauthn_credentials: &[WebAuthnCredential],
     csrf_token: &str,
+    options: &AccountTabOptions<'_>,
 ) -> Markup {
     let base = &config.base_path;
+    let username_sign_in = options.account_identity.is_username();
+    let can_create_reset_link = username_sign_in
+        && acl::has_permission(options.admin_acls, acl::USER_CREATE_PASSWORD_RESET_LINK);
+    let can_revoke_recovery_kit = username_sign_in
+        && !user.bot
+        && acl::has_permission(options.admin_acls, acl::USER_DELETE_RECOVERY_KIT);
     html! {
         div class="space-y-6" {
-            (edit_account_card(base, user, csrf_token))
+            @if can_create_reset_link {
+                (password_reset_link_card(base, user, csrf_token, options.password_reset_link))
+            }
+            (edit_account_card(base, user, csrf_token, username_sign_in))
             (sessions_card(config, sessions))
-            (quick_actions_card(base, user, csrf_token))
+            (quick_actions_card(base, user, csrf_token, username_sign_in, can_revoke_recovery_kit))
             (clear_fields_card(base, user, csrf_token))
-            (user_status_card(base, user, csrf_token))
             (security_actions_card(base, user, csrf_token))
             (webauthn_credentials_card(base, user, webauthn_credentials, csrf_token))
         }
     }
 }
 
-fn edit_account_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
+fn password_reset_link_card(
+    base: &str,
+    user: &AdminUser,
+    csrf_token: &str,
+    link: Option<&PasswordResetLinkResponse>,
+) -> Markup {
+    let action_url = format!(
+        "{base}/users/{}?action=create_password_reset_link&tab=account",
+        user.id
+    );
+    html! {
+        (card_with_header("Password Reset Link", html! {
+            div class="space-y-4" {
+                (password_reset_link_result(link))
+                p class="text-sm text-neutral-600" {
+                    "Create a one-time link that lets this user choose a new password. \
+                     Hand it to them yourself. It works once and expires after an hour."
+                }
+                form method="post"
+                    action=(&action_url)
+                    data-admin-result-form="true"
+                    hx-post=(&action_url)
+                    hx-target={"#" (PASSWORD_RESET_LINK_RESULT_ID)}
+                    hx-swap="outerHTML"
+                    hx-push-url="false" {
+                    (csrf_input(csrf_token))
+                    button type="submit" class=(BTN_CLS) { "Create Password Reset Link" }
+                }
+            }
+        }))
+    }
+}
+
+pub const PASSWORD_RESET_LINK_RESULT_ID: &str = "password-reset-link-result";
+
+pub fn password_reset_link_result(link: Option<&PasswordResetLinkResponse>) -> Markup {
+    html! {
+        div id=(PASSWORD_RESET_LINK_RESULT_ID) hx-history=[link.is_some().then_some("false")] {
+            @if let Some(link) = link {
+                (alert(AlertVariant::Success, Some("Password reset link created"), html! {
+                    div class="flex flex-col gap-2" {
+                        p class="text-sm" {
+                            "Copy this link now. It is shown only once."
+                        }
+                        div class="flex items-center gap-2" {
+                            input type="url" readonly value=(link.url)
+                                aria-label="Password reset link"
+                                class="h-8 min-w-0 flex-1 rounded-lg border border-green-200 bg-white px-3 py-1.5 text-xs text-neutral-900";
+                            button type="button"
+                                class="inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-neutral-300 bg-neutral-50 px-3 text-xs font-medium text-neutral-700 hover:border-neutral-400 hover:text-neutral-900"
+                                data-copy-value=(link.url)
+                                onclick="window.__adminCopyToClipboard && window.__adminCopyToClipboard(this.dataset.copyValue, this, 'Copied')" {
+                                "Copy Link"
+                            }
+                        }
+                        p class="text-xs" {
+                            "Expires " (format_admin_timestamp(&link.expires_at))
+                        }
+                    }
+                }))
+            }
+        }
+    }
+}
+
+fn edit_account_card(
+    base: &str,
+    user: &AdminUser,
+    csrf_token: &str,
+    username_sign_in: bool,
+) -> Markup {
     html! {
         (card_with_header("Edit Account Information", html! {
             div class="grid gap-4 md:grid-cols-2" {
@@ -47,22 +137,26 @@ fn edit_account_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
                     p class="text-sm font-medium text-neutral-700" { "Change Username:" }
                     input type="text" name="username" placeholder="New username"
                         required class=(INPUT_CLS);
-                    input type="text" name="discriminator"
-                        placeholder="Discriminator (optional)" inputmode="numeric" pattern="[0-9]{1,4}" maxlength="4"
-                        class=(INPUT_CLS);
+                    @if !crate::utils::user_tag::unique_usernames() || user.bot {
+                        input type="text" name="discriminator"
+                            placeholder="Discriminator (optional)" inputmode="numeric" pattern="[0-9]{1,4}" maxlength="4"
+                            class=(INPUT_CLS);
+                    }
                     (form_actions(html! {
                         (submit_button("Change Username"))
                     }))
                 }, csrf_token))
-                (post_form(base, &user.id, "change_email", "account",
-                    "Are you sure you want to change this user\\'s email address?", html! {
-                    p class="text-sm font-medium text-neutral-700" { "Change Email:" }
-                    input type="email" name="email" placeholder="New email address"
-                        required class=(INPUT_CLS);
-                    (form_actions(html! {
-                        (submit_button("Change Email"))
-                    }))
-                }, csrf_token))
+                @if !username_sign_in {
+                    (post_form(base, &user.id, "change_email", "account",
+                        "Are you sure you want to change this user\\'s email address?", html! {
+                        p class="text-sm font-medium text-neutral-700" { "Change Email:" }
+                        input type="email" name="email" placeholder="New email address"
+                            required class=(INPUT_CLS);
+                        (form_actions(html! {
+                            (submit_button("Change Email"))
+                        }))
+                    }, csrf_token))
+                }
                 (post_form(base, &user.id, "change_dob", "account",
                     "Are you sure you want to change this user\\'s date of birth?", html! {
                     p class="text-sm font-medium text-neutral-700" { "Change Date of Birth:" }
@@ -153,34 +247,28 @@ fn session_entry(base: &str, s: &UserSession, is_tombstone: bool) -> Markup {
     }
 }
 
-fn quick_actions_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
-    let phone_action = format!(
-        "{base}/users/{}?action=update_has_verified_phone&tab=account",
-        user.id
-    );
+fn quick_actions_card(
+    base: &str,
+    user: &AdminUser,
+    csrf_token: &str,
+    username_sign_in: bool,
+    can_revoke_recovery_kit: bool,
+) -> Markup {
     html! {
         (card_with_header("Quick Actions", html! {
             div class="flex flex-wrap gap-3" {
-                @if !user.email_verified {
+                @if !user.email_verified && !username_sign_in {
                     (action_form(base, &user.id, "verify_email", "account", None,
                         "Verify Email", csrf_token))
                 }
-                form method="post"
-                    action=(&phone_action)
-                    hx-post=(&phone_action)
-                    hx-target="#flash-container"
-                    hx-swap="none"
-                    hx-push-url="false" {
-                    (csrf_input(csrf_token))
-                    input type="hidden" name="has_verified_phone"
-                        value=@if user.has_verified_phone { "false" } @else { "true" };
-                    button type="submit" class=(BTN_CLS) {
-                        @if user.has_verified_phone { "Clear Phone Verified" }
-                        @else { "Mark Phone Verified" }
-                    }
+                @if !username_sign_in {
+                    (action_form(base, &user.id, "send_password_reset", "account", None,
+                        "Send Password Reset", csrf_token))
                 }
-                (action_form(base, &user.id, "send_password_reset", "account", None,
-                    "Send Password Reset", csrf_token))
+                @if can_revoke_recovery_kit {
+                    (action_form(base, &user.id, "revoke_recovery_kit", "account", None,
+                        "Revoke Recovery Kit", csrf_token))
+                }
             }
         }))
     }
@@ -217,19 +305,6 @@ fn clear_fields_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
                         (submit_button("Clear Selected Fields"))
                     }))
                 }
-            }
-        }))
-    }
-}
-
-fn user_status_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
-    let is_bot = user.bot;
-    let is_sys = user.system;
-    html! {
-        (card_with_header("User Status", html! {
-            div class="grid grid-cols-1 gap-4 md:grid-cols-2" {
-                (status_toggle(base, &user.id, "set_bot_status", is_bot, "bot", csrf_token))
-                (status_toggle(base, &user.id, "set_system_status", is_sys, "system", csrf_token))
             }
         }))
     }
@@ -373,42 +448,5 @@ fn action_form(
             (csrf_input(csrf))
             button type="submit" class=(BTN_CLS) { (label) }
         }
-    }
-}
-
-fn status_toggle(
-    base: &str,
-    uid: &str,
-    action: &str,
-    active: bool,
-    kind: &str,
-    csrf: &str,
-) -> Markup {
-    let status_val = if active { "false" } else { "true" };
-    let label = format!(
-        "{} {} Status",
-        if active { "Remove" } else { "Set" },
-        capitalize(kind)
-    );
-    let action_url = format!("{base}/users/{uid}?action={action}&status={status_val}&tab=account");
-    html! {
-        form method="post"
-            action=(&action_url)
-            hx-post=(&action_url)
-            hx-target="#flash-container"
-            hx-swap="none"
-            hx-push-url="false" {
-            (csrf_input(csrf))
-            input type="hidden" name=(kind) value=(status_val);
-            button type="submit" class=(BTN_CLS) { (label) }
-        }
-    }
-}
-
-fn capitalize(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().chain(c).collect(),
     }
 }

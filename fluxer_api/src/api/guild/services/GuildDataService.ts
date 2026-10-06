@@ -1,5 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import {GuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import {GuildOperationsService} from '@app/api/guild/services/data/GuildOperationsService';
+import {GuildOwnershipService} from '@app/api/guild/services/data/GuildOwnershipService';
+import {GuildVanityService} from '@app/api/guild/services/data/GuildVanityService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import type {
 	GuildCreateRequest,
 	GuildUpdateRequest,
@@ -10,27 +31,6 @@ import type {
 	GuildResponse,
 	GuildVanityURLResponse,
 } from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import type {EntityAssetService} from '../../infrastructure/EntityAssetService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {InviteRepository} from '../../invite/InviteRepository';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Guild} from '../../models/Guild';
-import type {GuildMember} from '../../models/GuildMember';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {IWebhookRepository} from '../../webhook/IWebhookRepository';
-import type {GuildAuditLogService} from '../GuildAuditLogService';
-import {GuildDiscoveryRepository} from '../repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
-import {GuildDataHelpers} from './data/GuildDataHelpers';
-import {GuildOperationsService} from './data/GuildOperationsService';
-import {GuildOwnershipService} from './data/GuildOwnershipService';
-import {GuildVanityService} from './data/GuildVanityService';
 
 export class GuildDataService {
 	private readonly helpers: GuildDataHelpers;

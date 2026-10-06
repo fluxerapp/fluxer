@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {writeFileSync} from 'node:fs';
-import type {ILogger} from '../ILogger';
+import type {ILogger} from '@app/api/ILogger';
 
 const WORKER_HEARTBEAT_PATH = '/tmp/fluxer-worker-heartbeat';
 export const WORKER_HEARTBEAT_WRITE_INTERVAL_MS = 5000;

@@ -1,5 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import {type GiftCode, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
+import type {User} from '@app/api/models/User';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {getBillingBranding} from '@app/api/stripe/BillingBranding';
+import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
+import type {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
+import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {CannotRedeemPlutoniumWithVisionaryError} from '@fluxer/errors/src/domains/payment/CannotRedeemPlutoniumWithVisionaryError';
 import {GiftCodeAlreadyRedeemedError} from '@fluxer/errors/src/domains/payment/GiftCodeAlreadyRedeemedError';
@@ -11,21 +28,6 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import {createUserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import {type GiftCode, mapGiftDurationMonthsToFields} from '../../models/GiftCode';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import * as RandomUtils from '../../utils/RandomUtils';
-import type {ProductInfo} from '../ProductRegistry';
-import type {StripeCheckoutService} from './StripeCheckoutService';
-import type {StripePremiumService} from './StripePremiumService';
-import type {StripeSubscriptionService} from './StripeSubscriptionService';
 
 export class StripeGiftService {
 	constructor(
@@ -36,6 +38,7 @@ export class StripeGiftService {
 		private checkoutService: StripeCheckoutService,
 		private premiumService: StripePremiumService,
 		private subscriptionService: StripeSubscriptionService,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {}
 
 	async getGiftCode(code: string): Promise<GiftCode> {
@@ -119,7 +122,7 @@ export class StripeGiftService {
 			Logger.debug({userId, giftCode: code}, 'Redeemer passed gift purchase validation');
 			if (user.premiumType === UserPremiumTypes.LIFETIME) {
 				Logger.debug({userId, giftCode: code}, 'Rejecting redemption for lifetime user');
-				throw new CannotRedeemPlutoniumWithVisionaryError();
+				throw new CannotRedeemPlutoniumWithVisionaryError((await getBillingBranding()).premiumName);
 			}
 			await this.userRepository.redeemGiftCode(code, userId);
 			Logger.debug({userId, giftCode: code}, 'Applied gift redemption row update');
@@ -480,6 +483,7 @@ export class StripeGiftService {
 		Logger.debug({userId: user.id, patch}, 'Clearing stale Stripe identity before premium field fallback');
 		const updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
 		await this.dispatchUser(updatedUser);
+		await this.storeEntitlementService?.reapplyAfterStripeChange(user.id);
 	}
 
 	private async cancelStripeSubscriptionImmediately(user: User): Promise<void> {

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createWorkerProcessErrorHandler,
+	type WorkerProcessErrorSource,
+} from '@app/api/worker/WorkerProcessErrorHandler';
 import {describe, expect, it, vi} from 'vitest';
-import {createWorkerProcessErrorHandler, type WorkerProcessErrorSource} from '../WorkerProcessErrorHandler';
 
 function createHarness(overrides: {shutdown?: () => Promise<void>; forceExitDelayMs?: number} = {}) {
 	const logger = {error: vi.fn(), warn: vi.fn()};
@@ -63,17 +66,17 @@ describe('Worker process error handler', () => {
 		expect(exit).not.toHaveBeenCalled();
 	});
 
-	it.each([
-		['uncaughtException' as WorkerProcessErrorSource],
-		['unhandledRejection' as WorkerProcessErrorSource],
-	])('survives a transient error arriving as %s', async (source) => {
-		const {exit, shutdown, handle} = createHarness();
+	it.each([['uncaughtException' as WorkerProcessErrorSource], ['unhandledRejection' as WorkerProcessErrorSource]])(
+		'survives a transient error arriving as %s',
+		async (source) => {
+			const {exit, shutdown, handle} = createHarness();
 
-		await handle(source, adminShutdownError());
+			await handle(source, adminShutdownError());
 
-		expect(shutdown).not.toHaveBeenCalled();
-		expect(exit).not.toHaveBeenCalled();
-	});
+			expect(shutdown).not.toHaveBeenCalled();
+			expect(exit).not.toHaveBeenCalled();
+		},
+	);
 
 	it('survives a socket error raised by a pooled Postgres client', async () => {
 		const {exit, shutdown, handle} = createHarness();

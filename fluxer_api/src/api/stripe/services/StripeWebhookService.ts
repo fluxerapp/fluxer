@@ -1,36 +1,37 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminRepository} from '@app/api/admin/AdminRepository';
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
+import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {getAcceptedWebhookSecrets} from '@app/api/stripe/BillingConfigCache';
+import type {ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import type {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
+import {StripeCheckoutWebhookHandler} from '@app/api/stripe/services/StripeCheckoutWebhookHandler';
+import {StripeDisputeWebhookHandler} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
+import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
+import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
+import {StripePaymentFraudService} from '@app/api/stripe/services/StripePaymentFraudService';
+import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import type {StripeRefundService} from '@app/api/stripe/services/StripeRefundService';
+import {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
+import {StripeSubscriptionWebhookHandler} from '@app/api/stripe/services/StripeSubscriptionWebhookHandler';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripeWebhookNotAvailableError} from '@fluxer/errors/src/domains/payment/StripeWebhookNotAvailableError';
 import {StripeWebhookSignatureInvalidError} from '@fluxer/errors/src/domains/payment/StripeWebhookSignatureInvalidError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type Stripe from 'stripe';
-import type {AdminRepository} from '../../admin/AdminRepository';
-import {AdminAuditService} from '../../admin/services/AdminAuditService';
-import type {ISessionTerminator} from '../../auth/ISessionTerminator';
-import type {BillingRepository} from '../../billing/repositories/BillingRepository';
-import {Config} from '../../Config';
-import type {IDonationRepository} from '../../donation/IDonationRepository';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import type {PremiumStateReconciliationQueueService} from '../../infrastructure/PremiumStateReconciliationQueueService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {ProductRegistry} from '../ProductRegistry';
-import type {AgeVerificationService} from './AgeVerificationService';
-import type {StripeCheckoutService} from './StripeCheckoutService';
-import {StripeCheckoutWebhookHandler} from './StripeCheckoutWebhookHandler';
-import {StripeDisputeWebhookHandler} from './StripeDisputeWebhookHandler';
-import {StripeGiftReversalHandler} from './StripeGiftReversalHandler';
-import type {StripeGiftService} from './StripeGiftService';
-import {StripePaymentFraudService} from './StripePaymentFraudService';
-import type {StripePremiumService} from './StripePremiumService';
-import type {StripeRefundService} from './StripeRefundService';
-import {StripeSubscriptionReconciler} from './StripeSubscriptionReconciler';
-import {StripeSubscriptionWebhookHandler} from './StripeSubscriptionWebhookHandler';
 
 interface HandleWebhookParams {
 	body: string;
@@ -45,7 +46,6 @@ export class StripeWebhookService {
 
 	constructor(
 		private stripe: Stripe | null,
-		private checkoutService: StripeCheckoutService,
 		userRepository: IUserRepository,
 		userCacheService: UserCacheService,
 		sessionTerminator: ISessionTerminator,
@@ -55,7 +55,7 @@ export class StripeWebhookService {
 		cacheService: ICacheService,
 		giftService: StripeGiftService,
 		premiumService: StripePremiumService,
-		donationRepository: IDonationRepository,
+		private donationRepository: IDonationRepository,
 		kvDeletionQueue: KVAccountDeletionQueueService,
 		premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService,
 		private ageVerificationService: AgeVerificationService | null,
@@ -63,6 +63,7 @@ export class StripeWebhookService {
 		snowflakeService: ISnowflakeService,
 		private billingRepository: BillingRepository,
 		private refundService: StripeRefundService,
+		storeEntitlementService: StoreEntitlementService | null = null,
 	) {
 		this.checkoutHandler = new StripeCheckoutWebhookHandler(
 			stripe,
@@ -79,8 +80,8 @@ export class StripeWebhookService {
 		const giftReversalHandler = new StripeGiftReversalHandler(
 			userRepository,
 			gatewayService,
-			premiumService,
 			premiumStateReconciliationQueueService,
+			storeEntitlementService,
 		);
 		const auditService = new AdminAuditService(adminRepository, snowflakeService);
 		this.paymentFraudService = new StripePaymentFraudService({
@@ -94,6 +95,7 @@ export class StripeWebhookService {
 			cacheService,
 			auditService,
 			kvDeletionQueue,
+			oauth2Tokens: new OAuth2TokenRepository(),
 		});
 		this.subscriptionHandler = new StripeSubscriptionWebhookHandler(
 			userRepository,
@@ -103,6 +105,7 @@ export class StripeWebhookService {
 			premiumStateReconciliationQueueService,
 			reconciler,
 			billingRepository,
+			storeEntitlementService,
 		);
 		this.disputeHandler = new StripeDisputeWebhookHandler(
 			userRepository,
@@ -116,18 +119,31 @@ export class StripeWebhookService {
 		);
 	}
 
+	private constructVerifiedEvent(
+		stripe: Stripe,
+		body: string,
+		signature: string,
+		webhookSecrets: Array<string>,
+	): Stripe.Event {
+		const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60;
+		let lastError: unknown = null;
+		for (const webhookSecret of webhookSecrets) {
+			try {
+				return stripe.webhooks.constructEvent(body, signature, webhookSecret, SEVEN_DAYS_SECONDS);
+			} catch (error: unknown) {
+				lastError = error;
+			}
+		}
+		Logger.error({error: lastError}, 'Invalid webhook signature');
+		throw new StripeWebhookSignatureInvalidError();
+	}
+
 	async handleWebhook({body, signature}: HandleWebhookParams): Promise<void> {
-		if (!this.stripe || !Config.stripe.webhookSecret) {
+		const webhookSecrets = getAcceptedWebhookSecrets();
+		if (!this.stripe || webhookSecrets.length === 0) {
 			throw new StripeWebhookNotAvailableError();
 		}
-		let event: Stripe.Event;
-		try {
-			const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60;
-			event = this.stripe.webhooks.constructEvent(body, signature, Config.stripe.webhookSecret, SEVEN_DAYS_SECONDS);
-		} catch (error: unknown) {
-			Logger.error({error}, 'Invalid webhook signature');
-			throw new StripeWebhookSignatureInvalidError();
-		}
+		const event = this.constructVerifiedEvent(this.stripe, body, signature, webhookSecrets);
 		Logger.debug({eventType: event.type, eventId: event.id}, 'Processing Stripe webhook');
 		const claim = await this.billingRepository.webhookEvents.tryClaim(event.id);
 		if (claim === 'already_processed') {
@@ -156,10 +172,6 @@ export class StripeWebhookService {
 				);
 				if (checkoutSession.metadata?.verification_type === 'uk_age_verification' && this.ageVerificationService) {
 					await this.ageVerificationService.completeVerification(checkoutSession);
-					break;
-				}
-				if (checkoutSession.metadata?.setup_type === 'localized_card_preapproval') {
-					await this.checkoutService.completeLocalizedCardPreapproval(checkoutSession);
 					break;
 				}
 				await this.checkoutHandler.handleCheckoutSessionCompleted(checkoutSession);
@@ -281,6 +293,7 @@ export class StripeWebhookService {
 				const cust = event.data.object as Stripe.Customer | Stripe.DeletedCustomer;
 				await this.safeMirrorUpsert(event, () => this.billingRepository.customers.upsertFromStripe(cust));
 				await this.safeMirrorUpsert(event, () => this.billingRepository.customers.markDeleted(cust.id, new Date()));
+				await this.donationRepository.clearDonorStripeCustomer(cust.id);
 				break;
 			}
 			case 'product.created':
@@ -307,6 +320,10 @@ export class StripeWebhookService {
 			case 'payment_method.detached': {
 				const pm = event.data.object as Stripe.PaymentMethod;
 				await this.safeMirrorUpsert(event, () => this.billingRepository.paymentMethods.markDetached(pm.id, new Date()));
+				break;
+			}
+			case 'mandate.updated': {
+				await this.handleMandateUpdated(event.data.object as Stripe.Mandate);
 				break;
 			}
 			case 'payment_intent.created':
@@ -367,6 +384,18 @@ export class StripeWebhookService {
 				Logger.debug({eventType: event.type, eventId: event.id}, 'Stripe webhook event type not handled');
 			}
 		}
+	}
+
+	private async handleMandateUpdated(mandate: Stripe.Mandate): Promise<void> {
+		if (mandate.status !== 'inactive') {
+			return;
+		}
+		const paymentMethodId =
+			typeof mandate.payment_method === 'string' ? mandate.payment_method : (mandate.payment_method?.id ?? null);
+		Logger.warn(
+			{mandateId: mandate.id, paymentMethodId, status: mandate.status},
+			'Stripe mandate is no longer active; recurring payments on this payment method will fail',
+		);
 	}
 
 	private async resolveRefundCustomerId(refund: Stripe.Refund): Promise<string | null> {

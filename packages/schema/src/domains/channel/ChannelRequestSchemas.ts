@@ -11,6 +11,7 @@ import {
 	RTC_REGION_ID_MAX_LENGTH,
 	RTC_REGION_ID_MIN_LENGTH,
 	VOICE_CHANNEL_BITRATE_MAX,
+	VOICE_CHANNEL_BITRATE_MAX_STANDARD,
 	VOICE_CHANNEL_BITRATE_MIN,
 	VOICE_CHANNEL_CONNECTION_LIMIT_MAX,
 	VOICE_CHANNEL_CONNECTION_LIMIT_MIN,
@@ -43,8 +44,8 @@ const ChannelOverwriteRequest = z.object({
 		],
 		'The type of overwrite (0 = role, 1 = member)',
 	),
-	allow: UnsignedInt64Type.optional().describe('fluxer:UnsignedInt64Type Bitwise value of allowed permissions'),
-	deny: UnsignedInt64Type.optional().describe('fluxer:UnsignedInt64Type Bitwise value of denied permissions'),
+	allow: UnsignedInt64Type.optional().describe('Bitwise value of allowed permissions'),
+	deny: UnsignedInt64Type.optional().describe('Bitwise value of denied permissions'),
 });
 
 const ChannelCommonBase = z.object({
@@ -59,7 +60,9 @@ const ChannelCommonBase = z.object({
 		.min(VOICE_CHANNEL_BITRATE_MIN)
 		.max(VOICE_CHANNEL_BITRATE_MAX)
 		.nullish()
-		.describe(`Voice channel bitrate in bits per second (${VOICE_CHANNEL_BITRATE_MIN}-${VOICE_CHANNEL_BITRATE_MAX})`),
+		.describe(
+			`Voice channel bitrate in bits per second (${VOICE_CHANNEL_BITRATE_MIN}-${VOICE_CHANNEL_BITRATE_MAX}), clamped to ${VOICE_CHANNEL_BITRATE_MAX_STANDARD} unless the guild holds an AUDIO_BITRATE feature`,
+		),
 	user_limit: z
 		.number()
 		.int()
@@ -134,6 +137,15 @@ const ChannelCreateTextRequest = ChannelCreateCommon.extend({
 	name: GeneralChannelNameType.describe('The name of the channel'),
 });
 
+const ChannelCreateAnnouncementRequest = ChannelCreateCommon.extend({
+	type: createNamedLiteral(
+		ChannelTypes.GUILD_ANNOUNCEMENT,
+		'GUILD_ANNOUNCEMENT',
+		'Channel type (announcement channel)',
+	),
+	name: GeneralChannelNameType.describe('The name of the channel'),
+});
+
 const ChannelCreateVoiceRequest = ChannelCreateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_VOICE, 'GUILD_VOICE', 'Channel type (voice channel)'),
 	name: GeneralChannelNameType.describe('The name of the channel'),
@@ -151,6 +163,7 @@ const ChannelCreateLinkRequest = ChannelCreateCommon.extend({
 
 export const ChannelCreateRequest = z.discriminatedUnion('type', [
 	ChannelCreateTextRequest,
+	ChannelCreateAnnouncementRequest,
 	ChannelCreateVoiceRequest,
 	ChannelCreateCategoryRequest,
 	ChannelCreateLinkRequest,
@@ -160,6 +173,15 @@ export type ChannelCreateRequest = z.infer<typeof ChannelCreateRequest>;
 
 const ChannelUpdateTextRequest = ChannelUpdateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'Channel type (text channel)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
+});
+
+const ChannelUpdateAnnouncementRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(
+		ChannelTypes.GUILD_ANNOUNCEMENT,
+		'GUILD_ANNOUNCEMENT',
+		'Channel type (announcement channel)',
+	),
 	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
 });
 
@@ -190,6 +212,7 @@ const ChannelUpdateGroupDmRequest = z.object({
 
 export const ChannelUpdateRequest = z.discriminatedUnion('type', [
 	ChannelUpdateTextRequest,
+	ChannelUpdateAnnouncementRequest,
 	ChannelUpdateVoiceRequest,
 	ChannelUpdateCategoryRequest,
 	ChannelUpdateLinkRequest,
@@ -198,10 +221,26 @@ export const ChannelUpdateRequest = z.discriminatedUnion('type', [
 
 export type ChannelUpdateRequest = z.infer<typeof ChannelUpdateRequest>;
 
+const ChannelTypeConversionField = z
+	.union([z.literal(ChannelTypes.GUILD_TEXT), z.literal(ChannelTypes.GUILD_ANNOUNCEMENT)])
+	.optional()
+	.describe('Convert between text (0) and announcement (5). Other conversions are rejected.');
+
+const CONVERTIBLE_UPDATE_REQUESTS = new Set<z.ZodObject>([ChannelUpdateTextRequest, ChannelUpdateAnnouncementRequest]);
+
+export const ChannelUpdateRequestBody = z.union(
+	ChannelUpdateRequest.options.map((option) => {
+		const {type, ...shape} = option.shape;
+		return CONVERTIBLE_UPDATE_REQUESTS.has(option)
+			? z.object({...shape, type: ChannelTypeConversionField})
+			: z.object(shape);
+	}),
+);
+
 export const PermissionOverwriteCreateRequest = z.object({
 	type: ChannelOverwriteTypeSchema.describe('The type of overwrite (0 = role, 1 = member)'),
-	allow: UnsignedInt64Type.nullish().describe('fluxer:UnsignedInt64Type Bitwise value of allowed permissions'),
-	deny: UnsignedInt64Type.nullish().describe('fluxer:UnsignedInt64Type Bitwise value of denied permissions'),
+	allow: UnsignedInt64Type.nullish().describe('Bitwise value of allowed permissions'),
+	deny: UnsignedInt64Type.nullish().describe('Bitwise value of denied permissions'),
 });
 
 export type PermissionOverwriteCreateRequest = z.infer<typeof PermissionOverwriteCreateRequest>;
@@ -313,11 +352,13 @@ export const StreamPreviewUploadUrlBodySchema = z.object({
 
 export type StreamPreviewUploadUrlBodySchema = z.infer<typeof StreamPreviewUploadUrlBodySchema>;
 
+export const StreamPreviewResponse = z.file().describe('The current stream preview image');
+
 export const StreamPreviewUploadUrlResponseSchema = z.object({
 	upload_url: URLType.describe('URL used to upload the stream preview with a PUT request'),
 	method: z.literal('PUT').describe('HTTP method to use for the upload URL'),
 	content_type: createStringType(1, 64).describe('MIME type that must be sent with the upload request'),
-	expires_at: z.string().datetime().describe('ISO timestamp when the upload URL expires'),
+	expires_at: z.iso.datetime().describe('ISO timestamp when the upload URL expires'),
 	expires_in: Int32Type.describe('Number of seconds the upload URL remains valid'),
 	max_bytes: Int32Type.describe('Maximum supported preview image size in bytes'),
 });

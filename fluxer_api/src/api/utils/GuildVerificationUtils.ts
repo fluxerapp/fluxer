@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createRoleIDSet, createUserID, type RoleID, type UserID} from '@app/api/BrandedTypes';
+import {usesUsernameSignIn} from '@app/api/instance/AccountIdentityModeCache';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
 import {
 	GuildFeatures,
 	GuildVerificationLevel,
 	getEffectiveGuildVerificationLevel,
 } from '@fluxer/constants/src/GuildConstants';
 import {GuildEmailVerificationRequiredError} from '@fluxer/errors/src/domains/auth/EmailVerificationRequiredError';
-import {GuildPhoneVerificationRequiredError} from '@fluxer/errors/src/domains/auth/GuildPhoneVerificationRequiredError';
 import {AccountTooNewForGuildError} from '@fluxer/errors/src/domains/guild/AccountTooNewForGuildError';
 import {GuildVerificationRequiredError} from '@fluxer/errors/src/domains/guild/GuildVerificationRequiredError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {ms} from 'itty-time';
-import {createRoleIDSet, createUserID, type RoleID, type UserID} from '../BrandedTypes';
-import type {Guild} from '../models/Guild';
-import type {GuildMember} from '../models/GuildMember';
-import type {User} from '../models/User';
 
 interface VerificationParams {
 	user: User;
@@ -40,18 +40,18 @@ function checkGuildVerification(params: VerificationParams): void {
 	if (memberRoles && memberRoles.size > 0) {
 		return;
 	}
-	if (verificationLevel === GuildVerificationLevel.VERY_HIGH) {
-		if (!user.hasVerifiedPhone) {
-			throw new GuildPhoneVerificationRequiredError();
+	if (usesUsernameSignIn()) {
+		if (user.isUnclaimedAccount()) {
+			throw new GuildVerificationRequiredError('You need to claim your account to send messages in this guild.');
 		}
-		return;
-	}
-	if (!user.email) {
-		throw new GuildVerificationRequiredError('You need to claim your account to send messages in this guild.');
-	}
-	if (verificationLevel >= GuildVerificationLevel.LOW) {
-		if (!user.emailVerified) {
-			throw new GuildEmailVerificationRequiredError();
+	} else {
+		if (!user.email) {
+			throw new GuildVerificationRequiredError('You need to claim your account to send messages in this guild.');
+		}
+		if (verificationLevel >= GuildVerificationLevel.LOW) {
+			if (!user.emailVerified) {
+				throw new GuildEmailVerificationRequiredError();
+			}
 		}
 	}
 	if (verificationLevel >= GuildVerificationLevel.MEDIUM) {

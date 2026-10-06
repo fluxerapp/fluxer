@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Gateway control is the Admin view of the running [main Gateway](/gateway/overview/) cluster. It reads live node state and submits guild reload requests, and it exposes no session, presence, or call payload.
 
-Fluxer answers every operation on this page with one RPC call to the main Gateway. An unanswered call returns 504 `GATEWAY_TIMEOUT`. An overloaded cluster, or one with no responder, returns 503 `SERVICE_UNAVAILABLE`. A reply that cannot be interpreted returns 502 `BAD_GATEWAY`.
+An unanswered Gateway request returns 504 `GATEWAY_TIMEOUT`. An overloaded or unavailable cluster returns 503 `SERVICE_UNAVAILABLE`. An invalid Gateway response returns 502 `BAD_GATEWAY`.
 
 :::note[Every value is live state]
 The Gateway cluster answers each read at request time. Two consecutive reads can differ without any Admin action, and a node that is restarting can be absent from one response and present in the next.
@@ -24,6 +24,9 @@ One snapshot of the Gateway cluster, taken across the nodes the request polled. 
 | --- | --- | --- |
 | status<sup>1</sup> | string | The aggregate health of the cluster |
 | sessions | integer | The connected client Gateway sessions, summed across nodes |
+| session_resumes_total | integer | The total number of session resumes, summed across nodes |
+| websocket_dispatches_total | integer | The total number of WebSocket dispatches, summed across nodes |
+| websocket_dispatch_drops_total | integer | The total number of WebSocket dispatches dropped, summed across nodes |
 | guilds | integer | The live guild processes, summed across nodes |
 | presences | integer | The tracked presences, summed across nodes |
 | calls | integer | The live calls, summed across nodes |
@@ -48,6 +51,9 @@ One snapshot of the Gateway cluster, taken across the nodes the request polled. 
 {
   "status": "healthy",
   "sessions": 4820,
+  "session_resumes_total": 1234,
+  "websocket_dispatches_total": 1234567,
+  "websocket_dispatch_drops_total": 123,
   "guilds": 1913,
   "presences": 4611,
   "calls": 12,
@@ -71,6 +77,9 @@ One entry for each node the request polled, including nodes that did not answer 
 | node_id<sup>1</sup> | string | The name the node reports for itself |
 | status<sup>2</sup> | string | The health this node reported |
 | sessions | integer | The connected client Gateway sessions on this node |
+| session_resumes_total | integer | The total number of session resumes on this node |
+| websocket_dispatches_total | integer | The total number of WebSocket dispatches on this node |
+| websocket_dispatch_drops_total | integer | The total number of WebSocket dispatches dropped on this node |
 | guilds | integer | The live guild processes on this node |
 | presences | integer | The tracked presences on this node |
 | calls | integer | The live calls on this node |
@@ -99,7 +108,7 @@ Byte counts for one node, or for every polled node summed together. Each count i
 
 ## Guild memory statistics object
 
-One entry for each live guild process the read sampled. Every value except `nsfw_level` is read from the guild process itself.
+Memory and activity for one live guild.
 
 ### Structure
 
@@ -173,7 +182,7 @@ One entry for each voice server that holds at least one voice state.
 
 ## Get Gateway node statistics
 
-<RouteHeader method="GET" path="/v1/admin/gateway/stats" />
+<RouteHeader method="GET" path="/v1/admin/gateway/stats" auditReason />
 
 Returns the [node statistics](#node-statistics-object) object for the whole Gateway cluster. Requires `gateway:memory_stats`.
 
@@ -183,13 +192,17 @@ Returns the [node statistics](#node-statistics-object) object for the whole Gate
 | --- | --- | --- |
 | 200 | [node statistics](#node-statistics-object) object | Cluster state was returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_gateway_stats`, target type `gateway`, target ID `0`, and metadata key `node_count`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get guild memory statistics
 
-<RouteHeader method="GET" path="/v1/admin/gateway/memory-stats" />
+<RouteHeader method="GET" path="/v1/admin/gateway/memory-stats" auditReason />
 
 Returns the heaviest live guild processes as [guild memory statistics](#guild-memory-statistics-object) objects. Requires `gateway:memory_stats`.
 
@@ -217,13 +230,15 @@ Returns the heaviest live guild processes as [guild memory statistics](#guild-me
 
 A node that does not answer within 5 seconds contributes no entries, and the request still returns 200.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_guild_memory_stats`, target type `guild`, target ID `0`, and metadata keys `limit` and `result_count` for the entries in this response.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get voice state counts
 
-<RouteHeader method="GET" path="/v1/admin/gateway/voice-state-counts" />
+<RouteHeader method="GET" path="/v1/admin/gateway/voice-state-counts" auditReason />
 
 Returns the [voice state count](#voice-state-count-object) object. Requires `gateway:memory_stats`.
 
@@ -237,15 +252,17 @@ Returns the [voice state count](#voice-state-count-object) object. Requires `gat
 
 The counts cover voice states in guild channels and in calls. A node that does not answer within 10 seconds contributes zero, and the request still returns 200.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_voice_state_counts`, target type `gateway`, target ID `0`, and metadata keys `total_voice_states`, `region_count`, and `server_count`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Reload Gateway guilds
 
-<RouteHeader method="POST" path="/v1/admin/gateway/reloads" />
+<RouteHeader method="POST" path="/v1/admin/gateway/reloads" auditReason />
 
-Rebuilds server-side state for the supplied guilds from the database and returns how many live guild processes were selected. Requires `gateway:reload_all`.
+Fetches the guild data for the supplied guilds from the database again and sends it to each live guild process and returns how many live guild processes were selected. Requires `gateway:reload_all`.
 
 ### JSON body
 
@@ -277,11 +294,13 @@ Every reloaded guild process fires one [Guild Update](/gateway/events/#guild-upd
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Every selected guild process was dispatched |
+| 200 | response body | Fluxer started a reload for every selected guild process |
 
 ### Side effects
 
-Each node reloads its selection in batches of ten with a 100 millisecond delay between batches. A guild whose owner node cannot be resolved is not counted. The response returns once the last batch has been dispatched, so an individual reload can still be in progress when the caller receives it. No guild data is changed and no Admin audit entry is recorded.
+A guild whose owner node cannot be resolved is not counted. Reloads can still be in progress when the response arrives. No guild data is changed.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `reload_guilds`, target type `guild`, target ID `0`, and metadata keys `guild_count` for the requested guilds and `reloaded` for the returned `count`.
 
 ### Rate limit
 

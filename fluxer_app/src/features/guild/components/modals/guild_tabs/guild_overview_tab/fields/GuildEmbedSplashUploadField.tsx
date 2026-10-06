@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	IMAGE_MAX_SIZE_LABEL,
+	IMAGE_MAX_SIZE_BYTES,
 	STATIC_IMAGE_WITH_AVIF_FORMATS,
 	WIDE_IMAGE_ASPECT_RATIO_LABEL,
 } from '@app/features/app/config/I18nDisplayConstants';
@@ -13,6 +13,7 @@ import styles from '@app/features/guild/components/modals/guild_tabs/guild_overv
 import type {GuildLike} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTypes';
 import {useGuildImageAssetField} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField';
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Button} from '@app/features/ui/button/Button';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -75,7 +76,7 @@ export const GuildEmbedSplashUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_CHAT_EMBED_BACKGROUND_DESCRIPTOR),
 		uploadHint: formatImageUploadMinimumHintWithNote(i18n, {
 			formats: STATIC_IMAGE_WITH_AVIF_FORMATS,
-			maxSize: IMAGE_MAX_SIZE_LABEL,
+			maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 			minimumSize: embedSplashMinimumSize,
 			aspectRatio: WIDE_IMAGE_ASPECT_RATIO_LABEL,
 			note: i18n._(SHOWN_IN_INVITE_EMBEDS_IN_CHAT_DESCRIPTOR),

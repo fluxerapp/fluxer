@@ -1,16 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Client} from '@elastic/elasticsearch';
-import type {SearchRequest, SortCombinations, SortResults} from '@elastic/elasticsearch/lib/api/types';
+import type {
+	BulkOperationType,
+	BulkResponse,
+	DeleteByQueryResponse,
+	ErrorCause,
+	SearchRequest,
+	SortCombinations,
+	SortResults,
+} from '@elastic/elasticsearch/lib/api/types';
 import type {ISearchAdapter, SearchOptions, SearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
-import type {ElasticsearchFilter} from '../ElasticsearchFilterUtils';
-import {compactFilters} from '../ElasticsearchFilterUtils';
-import type {ElasticsearchIndexDefinition} from '../ElasticsearchIndexDefinitions';
+import type {ElasticsearchFilter} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import {compactFilters} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import type {ElasticsearchIndexDefinition} from '@pkgs/elasticsearch_search/src/ElasticsearchIndexDefinitions';
 
 const ELASTICSEARCH_MAX_RESULT_WINDOW = 10000;
 const DEEP_PAGINATION_BATCH_SIZE = 1000;
 const MAX_SEARCH_LIMIT = 1000;
 const FACET_TERM_LIMIT = 200;
+const ERROR_TYPE_MAX_LENGTH = 128;
 
 interface ElasticsearchSearchHit<TResult> {
 	_source?: TResult;
@@ -191,7 +200,8 @@ export class ElasticsearchIndexAdapter<
 		}
 		this.assertInitialised();
 		const operations = docs.flatMap((doc) => [{index: {_index: this.indexDefinition.indexName, _id: doc.id}}, doc]);
-		await this.client.bulk({operations, refresh: false});
+		const response = await this.client.bulk({operations, refresh: false});
+		this.assertBulkSucceeded(response, 'index');
 	}
 
 	async updateDocument(doc: TResult): Promise<void> {
@@ -205,12 +215,7 @@ export class ElasticsearchIndexAdapter<
 	}
 
 	async bulkIndexDocuments(docs: Array<TResult>): Promise<void> {
-		if (docs.length === 0) {
-			return;
-		}
-		this.assertInitialised();
-		const operations = docs.flatMap((doc) => [{index: {_index: this.indexDefinition.indexName, _id: doc.id}}, doc]);
-		await this.client.bulk({operations, refresh: false});
+		await this.indexDocuments(docs);
 	}
 
 	async refreshIndex(): Promise<void> {
@@ -228,25 +233,28 @@ export class ElasticsearchIndexAdapter<
 		}
 		this.assertInitialised();
 		const operations = ids.map((id) => ({delete: {_index: this.indexDefinition.indexName, _id: id}}));
-		await this.client.bulk({operations, refresh: false});
+		const response = await this.client.bulk({operations, refresh: false});
+		this.assertBulkSucceeded(response, 'delete');
 	}
 
 	async deleteByQuery(query: Record<string, unknown>): Promise<void> {
 		this.assertInitialised();
-		await this.client.deleteByQuery({
+		const response = await this.client.deleteByQuery({
 			index: this.indexDefinition.indexName,
 			query,
 			refresh: false,
 		});
+		this.assertDeleteByQuerySucceeded(response);
 	}
 
 	async deleteAllDocuments(): Promise<void> {
 		this.assertInitialised();
-		await this.client.deleteByQuery({
+		const response = await this.client.deleteByQuery({
 			index: this.indexDefinition.indexName,
 			query: {match_all: {}},
 			refresh: true,
 		});
+		this.assertDeleteByQuerySucceeded(response);
 	}
 
 	async search(query: string, filters: TFilters, options?: SearchOptions): Promise<SearchResult<TResult>> {
@@ -304,6 +312,29 @@ export class ElasticsearchIndexAdapter<
 	private assertInitialised(): void {
 		if (!this.initialized) {
 			throw new Error('Elasticsearch adapter not initialised');
+		}
+	}
+
+	private assertBulkSucceeded(response: BulkResponse, operation: BulkOperationType): void {
+		if (!response.errors) return;
+		const context = `Elasticsearch bulk ${operation} failed for index ${this.indexDefinition.indexName}`;
+		for (const item of response.items ?? []) {
+			const failure = item[operation];
+			if (failure?.error) {
+				throw new Error(`${context}: ${summarizeOperationFailure(failure.status, failure.error)}`);
+			}
+		}
+		throw new Error(`${context}: response reported errors without ${operation} item error details`);
+	}
+
+	private assertDeleteByQuerySucceeded(response: DeleteByQueryResponse): void {
+		const context = `Elasticsearch delete by query failed for index ${this.indexDefinition.indexName}`;
+		if (response.timed_out) {
+			throw new Error(`${context}: timed out`);
+		}
+		const failure = response.failures?.[0];
+		if (failure) {
+			throw new Error(`${context}: ${summarizeOperationFailure(failure.status, failure.cause)}`);
 		}
 	}
 
@@ -401,6 +432,12 @@ export class ElasticsearchIndexAdapter<
 		const totalValue = result.hits.total;
 		return typeof totalValue === 'number' ? totalValue : (totalValue?.value ?? 0);
 	}
+}
+
+function summarizeOperationFailure(status: number, error: ErrorCause): string {
+	const errorType =
+		typeof error.type === 'string' ? JSON.stringify(error.type.slice(0, ERROR_TYPE_MAX_LENGTH)) : 'missing error type';
+	return `HTTP ${status}, ${errorType}`;
 }
 
 function isResourceAlreadyExistsError(error: unknown): boolean {

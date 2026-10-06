@@ -2,10 +2,13 @@
 
 import {STICKERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getPermissionTitleDescriptor} from '@app/features/permissions/utils/PermissionLabelDescriptors';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
+import {
+	EMOJI_DESCRIPTOR,
+	MENTIONS_DESCRIPTOR,
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
-import {EMOJI_DESCRIPTOR, MENTIONS_DESCRIPTOR} from './SharedDescriptors';
 
 const REACTIONS_DESCRIPTOR = msg({
 	message: 'Reactions',

@@ -55,11 +55,13 @@ import {MoreOptionsSheet} from '@app/features/channel/components/bottomsheets/ch
 import {NotificationSettingsSheet} from '@app/features/channel/components/bottomsheets/channel_details_bottom_sheet/NotificationSettingsSheet';
 import {QuickActionButton} from '@app/features/channel/components/bottomsheets/channel_details_bottom_sheet/QuickActionButton';
 import {createMuteConfig} from '@app/features/channel/components/MuteOptions';
+import {ChannelFollowModal} from '@app/features/channel/components/modals/ChannelFollowModal';
 import {ChannelSettingsModal} from '@app/features/channel/components/modals/ChannelSettingsModal';
 import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMModal';
 import {EditGroupModal} from '@app/features/channel/components/modals/EditGroupModal';
 import {GroupInvitesModal} from '@app/features/channel/components/modals/GroupInvitesModal';
 import {useDeleteMyMessagesInChannel} from '@app/features/channel/hooks/useDeleteMyMessagesInChannel';
+import {canFollowAnnouncementChannel, FOLLOW_DESCRIPTOR} from '@app/features/channel/utils/ChannelFollowUtils';
 import {
 	CLOSE_DM_DESCRIPTOR,
 	DELETE_CHANNEL_DESCRIPTOR,
@@ -76,6 +78,7 @@ import {useLeaveGroup} from '@app/features/guild/hooks/useLeaveGroup';
 import Guilds from '@app/features/guild/state/Guilds';
 import {
 	ADDED_TO_FAVORITES_TOAST_DESCRIPTOR,
+	ANNOUNCEMENT_CHANNEL_DESCRIPTOR,
 	CHANNEL_DELETED_DESCRIPTOR,
 	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
 	PERSONAL_NOTES_DESCRIPTOR,
@@ -119,6 +122,7 @@ import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
+import {MegaphoneSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -156,6 +160,8 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 			switch (channel.type) {
 				case ChannelTypes.GUILD_TEXT:
 					return i18n._(TEXT_CHANNEL_DESCRIPTOR);
+				case ChannelTypes.GUILD_ANNOUNCEMENT:
+					return i18n._(ANNOUNCEMENT_CHANNEL_DESCRIPTOR);
 				case ChannelTypes.GUILD_VOICE:
 					return i18n._(VOICE_CHANNEL_DESCRIPTOR);
 				case ChannelTypes.DM:
@@ -213,6 +219,17 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 					<InviteModal
 						channelId={channel.id}
 						data-flx="channel.channel-details-bottom-sheet.handle-invite.invite-modal"
+					/>
+				)),
+			);
+		}, [channel.id, onClose]);
+		const handleFollowChannel = useCallback(() => {
+			ModalCommands.pushAfterBottomSheetClose(
+				onClose,
+				modal(() => (
+					<ChannelFollowModal
+						channelId={channel.id}
+						data-flx="channel.channel-details-bottom-sheet.handle-follow-channel.channel-follow-modal"
 					/>
 				)),
 			);
@@ -551,6 +568,16 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 										onClick={() => setSearchSheetOpen(true)}
 										data-flx="channel.channel-details-bottom-sheet.quick-action-button.search-click"
 									/>
+									{canFollowAnnouncementChannel(channel) && (
+										<QuickActionButton
+											icon={
+												<MegaphoneSimpleIcon size={20} data-flx="channel.channel-details-bottom-sheet.follow-icon" />
+											}
+											label={i18n._(FOLLOW_DESCRIPTOR)}
+											onClick={handleFollowChannel}
+											data-flx="channel.channel-details-bottom-sheet.quick-action-button.follow-click"
+										/>
+									)}
 									<QuickActionButton
 										icon={
 											<MoreOptionsVerticalIcon

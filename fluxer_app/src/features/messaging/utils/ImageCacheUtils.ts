@@ -21,6 +21,7 @@ interface ImageCacheEntry {
 	subscribers: Set<ImageSubscriber>;
 	failedAttempts: number;
 	retryDelayMs: number;
+	failedUntil: number;
 	loadTimeoutId: number;
 	retryTimeoutId: number;
 	connectivityListener: (() => void) | null;
@@ -30,9 +31,10 @@ const MAX_CACHE_ENTRIES = 1000;
 const MAX_IMAGE_SOURCE_LENGTH = 16 * 1024;
 const MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD = 256;
 const IMAGE_LOAD_TIMEOUT_MS = 30_000;
-const IMAGE_RETRY_ATTEMPT_LIMIT = 5;
-const IMAGE_RETRY_INITIAL_DELAY_MS = 500;
+const IMAGE_RETRY_ATTEMPT_LIMIT = 2;
+const IMAGE_RETRY_INITIAL_DELAY_MS = 1000;
 const IMAGE_RETRY_MAX_DELAY_MS = IMAGE_RETRY_INITIAL_DELAY_MS * 10;
+const IMAGE_FAILURE_COOLDOWN_MS = 60_000;
 
 const imageCache = new LRUCache<string, ImageCacheEntry>({
 	max: MAX_CACHE_ENTRIES,
@@ -65,6 +67,8 @@ const imageHasSource = (image: HTMLImageElement, src: string): boolean => {
 };
 
 const ownsCacheKey = (entry: ImageCacheEntry): boolean => imageCache.peek(entry.src) === entry;
+
+const isCoolingDown = (entry: ImageCacheEntry): boolean => entry.failedUntil > Date.now();
 
 function clearRetryState(entry: ImageCacheEntry): void {
 	if (entry.retryTimeoutId !== 0) {
@@ -110,8 +114,15 @@ function abandonEntry(entry: ImageCacheEntry): void {
 	notifySubscribers(entry, false);
 }
 
-function failEntry(entry: ImageCacheEntry): void {
+function dropEntry(entry: ImageCacheEntry): void {
 	if (ownsCacheKey(entry)) imageCache.delete(entry.src);
+	abandonEntry(entry);
+}
+
+function failEntry(entry: ImageCacheEntry): void {
+	entry.failedAttempts = 0;
+	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
+	entry.failedUntil = Date.now() + IMAGE_FAILURE_COOLDOWN_MS;
 	abandonEntry(entry);
 }
 
@@ -123,6 +134,7 @@ function settleLoaded(entry: ImageCacheEntry, image: HTMLImageElement): void {
 	entry.height = image.naturalHeight;
 	entry.failedAttempts = 0;
 	entry.retryDelayMs = IMAGE_RETRY_INITIAL_DELAY_MS;
+	entry.failedUntil = 0;
 	notifySubscribers(entry, true);
 }
 
@@ -187,6 +199,7 @@ function createEntry(src: string): ImageCacheEntry {
 		subscribers: new Set(),
 		failedAttempts: 0,
 		retryDelayMs: IMAGE_RETRY_INITIAL_DELAY_MS,
+		failedUntil: 0,
 		loadTimeoutId: 0,
 		retryTimeoutId: 0,
 		connectivityListener: null,
@@ -203,6 +216,12 @@ function rejectImageLoad(onError: (() => void) | undefined): () => void {
 export function hasImage(src: string | null | undefined): boolean {
 	if (!acceptsImageSource(src)) return false;
 	return imageCache.get(src)?.loaded === true;
+}
+
+export function hasFailedImage(src: string | null | undefined): boolean {
+	if (!acceptsImageSource(src)) return false;
+	const entry = imageCache.peek(src);
+	return entry != null && isCoolingDown(entry);
 }
 
 export function getImageSize(src: string | null | undefined): CachedImageSize | undefined {
@@ -223,7 +242,7 @@ export function forgetImage(src: string | null | undefined): void {
 	if (!acceptsImageSource(src)) return;
 	const entry = imageCache.get(src);
 	if (entry == null) return;
-	failEntry(entry);
+	dropEntry(entry);
 }
 
 export function loadImage(src: string | null | undefined, onLoad: () => void, onError?: () => void): () => void {
@@ -233,13 +252,16 @@ export function loadImage(src: string | null | undefined, onLoad: () => void, on
 		onLoad();
 		return () => {};
 	}
-	if (cached != null && cached.subscribers.size >= MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD) {
+	if (cached != null && (isCoolingDown(cached) || cached.subscribers.size >= MAX_PENDING_IMAGE_CALLBACKS_PER_LOAD)) {
 		return rejectImageLoad(onError);
 	}
 	const entry = cached ?? createEntry(src);
 	const subscriber: ImageSubscriber = {onLoad, onError};
 	entry.subscribers.add(subscriber);
-	if (cached == null) startImageLoad(entry);
+	if (cached == null || cached.failedUntil !== 0) {
+		entry.failedUntil = 0;
+		startImageLoad(entry);
+	}
 	return () => {
 		entry.subscribers.delete(subscriber);
 	};

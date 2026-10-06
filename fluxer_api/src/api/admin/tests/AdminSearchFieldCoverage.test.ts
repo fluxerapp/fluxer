@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/channel/tests/ChannelTestUtils';
+import {getUserActivityBuffer} from '@app/api/middleware/ServiceSingletons';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../channel/tests/ChannelTestUtils';
-import {getUserActivityBuffer} from '../../middleware/ServiceSingletons';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 interface UserSearchResponse {
 	users: Array<UserAdminResponse>;
@@ -18,21 +18,6 @@ interface UserSearchResponse {
 interface GuildSearchResponse {
 	guilds: Array<GuildAdminResponse>;
 	total: number;
-}
-
-async function setContactInfo(
-	harness: ApiTestHarness,
-	userId: string,
-	data: {
-		has_verified_phone?: boolean;
-		email?: string | null;
-	},
-): Promise<void> {
-	await createBuilderWithoutAuth(harness)
-		.post(`/test/users/${userId}/set-contact-info`)
-		.body(data)
-		.expect(HTTP_STATUS.OK)
-		.execute();
 }
 
 async function setLastActiveIp(harness: ApiTestHarness, token: string, ip: string): Promise<void> {
@@ -197,7 +182,6 @@ describe('Admin Search Field Coverage', () => {
 			const email = `fields-check-${Date.now()}@fieldtest.example`;
 			const username = `fieldcheck_${Date.now()}`;
 			const targetUser = await createTestAccount(harness, {email, username});
-			await setContactInfo(harness, targetUser.userId, {has_verified_phone: true});
 			const result = await createBuilder<UserSearchResponse>(harness, `${admin.token}`)
 				.get(`/admin/users?q=${encodeURIComponent(email)}&limit=10&offset=0`)
 				.expect(HTTP_STATUS.OK)
@@ -207,7 +191,6 @@ describe('Admin Search Field Coverage', () => {
 			expect(found!.id).toBe(targetUser.userId);
 			expect(found!.username).toBe(username);
 			expect(found!.email).toBe(email);
-			expect(found!.has_verified_phone).toBe(true);
 			expect(found!).toHaveProperty('discriminator');
 			expect(found!).toHaveProperty('global_name');
 			expect(found!).toHaveProperty('flags');
@@ -215,7 +198,6 @@ describe('Admin Search Field Coverage', () => {
 			expect(found!).toHaveProperty('email_bounced');
 			expect(found!).toHaveProperty('premium_type');
 			expect(found!).toHaveProperty('acls');
-			expect(found!).toHaveProperty('suspicious_activity_flags');
 		});
 	});
 	describe('user search isolation across fields', () => {

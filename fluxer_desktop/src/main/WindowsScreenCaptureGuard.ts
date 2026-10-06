@@ -1,24 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import os from 'node:os';
 import {BrowserWindow, screen} from 'electron';
 import log from 'electron-log';
 
-const PENDING_GUARD_TTL_MS = 120000;
 const GUARD_SIZE_DIP = 2;
+const WGC_SCREEN_CAPTURE_MIN_WINDOWS_BUILD = 26100;
 
-interface ActiveWindowsScreenCaptureGuard {
+interface ActiveMonitorCompositionGuard {
 	window: BrowserWindow;
 	sourceId: string;
 	displayId?: string;
-	retained: boolean;
-	timeout: NodeJS.Timeout | null;
+	owner: Electron.WebContents;
+	onOwnerDestroyed: () => void;
 }
 
-let activeGuard: ActiveWindowsScreenCaptureGuard | null = null;
-let guardRetentionRequested = false;
+let activeGuard: ActiveMonitorCompositionGuard | null = null;
 
 function isScreenSource(source: Electron.DesktopCapturerSource): boolean {
 	return source.id.startsWith('screen:');
+}
+
+function getWindowsBuildNumber(): number | null {
+	const build = Number.parseInt(os.release().split('.')[2] ?? '', 10);
+	return Number.isSafeInteger(build) && build > 0 ? build : null;
+}
+
+function monitorCaptureUsesDxgiDuplication(): boolean {
+	const build = getWindowsBuildNumber();
+	return build === null || build < WGC_SCREEN_CAPTURE_MIN_WINDOWS_BUILD;
 }
 
 function parseScreenSourceOrdinal(sourceId: string): number | null {
@@ -41,31 +51,15 @@ function resolveDisplayForSource(source: Electron.DesktopCapturerSource): Electr
 	return screen.getPrimaryDisplay();
 }
 
-function clearGuardTimeout(guard: ActiveWindowsScreenCaptureGuard): void {
-	if (guard.timeout) {
-		clearTimeout(guard.timeout);
-		guard.timeout = null;
+function detachOwnerListener(guard: ActiveMonitorCompositionGuard): void {
+	try {
+		guard.owner.removeListener('destroyed', guard.onOwnerDestroyed);
+	} catch (error) {
+		log.debug('[WindowsScreenCaptureGuard] Failed to detach capturer listener', {error});
 	}
 }
 
-function armPendingGuardTimeout(guard: ActiveWindowsScreenCaptureGuard): void {
-	clearGuardTimeout(guard);
-	guard.timeout = setTimeout(() => {
-		if (activeGuard !== guard || guard.retained) return;
-		destroyActiveGuard('pending-timeout');
-	}, PENDING_GUARD_TTL_MS);
-}
-
-function retainGuardIfRequested(guard: ActiveWindowsScreenCaptureGuard): void {
-	guard.retained = guardRetentionRequested;
-	if (guard.retained) {
-		clearGuardTimeout(guard);
-	} else {
-		armPendingGuardTimeout(guard);
-	}
-}
-
-function createGuardWindow(display: Electron.Display): BrowserWindow {
+function createCompositionGuardWindow(display: Electron.Display): BrowserWindow {
 	const {x, y, width, height} = display.bounds;
 	const guardWindow = new BrowserWindow({
 		x: x + Math.max(0, width - GUARD_SIZE_DIP),
@@ -118,57 +112,67 @@ function createGuardWindow(display: Electron.Display): BrowserWindow {
 	return guardWindow;
 }
 
-export function startWindowsScreenCaptureGuardForSource(source: Electron.DesktopCapturerSource): void {
+export function startWindowsScreenCaptureGuardForSource(
+	source: Electron.DesktopCapturerSource,
+	owner: Electron.WebContents,
+): void {
 	if (process.platform !== 'win32') return;
 	if (!isScreenSource(source)) return;
-	if (activeGuard?.sourceId === source.id && !activeGuard.window.isDestroyed()) {
-		retainGuardIfRequested(activeGuard);
+	if (owner.isDestroyed()) return;
+	if (!monitorCaptureUsesDxgiDuplication()) {
+		log.info('[WindowsScreenCaptureGuard] Not forcing DWM composition; Chromium captures monitors with WGC here', {
+			sourceId: source.id,
+			windowsBuild: getWindowsBuildNumber(),
+		});
+		return;
+	}
+	if (activeGuard?.sourceId === source.id && activeGuard.owner === owner && !activeGuard.window.isDestroyed()) {
 		return;
 	}
 	destroyActiveGuard('replace');
 	const display = resolveDisplayForSource(source);
 	if (!display) return;
 	try {
-		const guardWindow = createGuardWindow(display);
-		const guard: ActiveWindowsScreenCaptureGuard = {
+		const guardWindow = createCompositionGuardWindow(display);
+		const onOwnerDestroyed = (): void => {
+			if (activeGuard?.window === guardWindow) {
+				destroyActiveGuard('capturer-destroyed');
+			}
+		};
+		const guard: ActiveMonitorCompositionGuard = {
 			window: guardWindow,
 			sourceId: source.id,
 			displayId: source.display_id,
-			retained: guardRetentionRequested,
-			timeout: null,
+			owner,
+			onOwnerDestroyed,
 		};
 		guardWindow.once('closed', () => {
 			if (activeGuard === guard) {
-				clearGuardTimeout(guard);
+				detachOwnerListener(guard);
 				activeGuard = null;
 			}
 		});
+		owner.once('destroyed', onOwnerDestroyed);
 		activeGuard = guard;
-		retainGuardIfRequested(guard);
-		log.info('[WindowsScreenCaptureGuard] Armed monitor composition guard', {
+		log.info('[WindowsScreenCaptureGuard] Forcing DWM composition on the captured monitor for DXGI duplication', {
 			sourceId: source.id,
 			displayId: source.display_id,
-			retained: guard.retained,
+			windowsBuild: getWindowsBuildNumber(),
 			bounds: display.bounds,
 		});
 	} catch (error) {
-		log.warn('[WindowsScreenCaptureGuard] Failed to arm monitor composition guard', {sourceId: source.id, error});
+		log.warn('[WindowsScreenCaptureGuard] Failed to force DWM composition on the captured monitor', {
+			sourceId: source.id,
+			error,
+		});
 	}
-}
-
-export function retainWindowsScreenCaptureGuard(): void {
-	if (process.platform !== 'win32') return;
-	guardRetentionRequested = true;
-	if (!activeGuard) return;
-	activeGuard.retained = true;
-	clearGuardTimeout(activeGuard);
 }
 
 function destroyActiveGuard(reason: string): void {
 	const guard = activeGuard;
 	if (!guard) return;
 	activeGuard = null;
-	clearGuardTimeout(guard);
+	detachOwnerListener(guard);
 	if (!guard.window.isDestroyed()) {
 		try {
 			guard.window.destroy();
@@ -176,7 +180,7 @@ function destroyActiveGuard(reason: string): void {
 			log.debug('[WindowsScreenCaptureGuard] Failed to destroy guard window', {reason, error});
 		}
 	}
-	log.info('[WindowsScreenCaptureGuard] Stopped monitor composition guard', {
+	log.info('[WindowsScreenCaptureGuard] Stopped forcing DWM composition on the captured monitor', {
 		reason,
 		sourceId: guard.sourceId,
 		displayId: guard.displayId,
@@ -184,6 +188,5 @@ function destroyActiveGuard(reason: string): void {
 }
 
 export function stopWindowsScreenCaptureGuard(reason: string): void {
-	guardRetentionRequested = false;
 	destroyActiveGuard(reason);
 }

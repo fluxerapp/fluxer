@@ -16,7 +16,7 @@ import {useLingui} from '@lingui/react/macro';
 import {ArrowLeftIcon, MagnifyingGlassIcon, XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {type FormEvent, type KeyboardEvent, useCallback, useEffect, useRef, useState} from 'react';
+import {type KeyboardEvent, type SubmitEvent, useCallback, useEffect, useRef, useState} from 'react';
 
 const ALL_DESCRIPTOR = msg({
 	message: 'All',
@@ -155,7 +155,7 @@ export const DiscoveryNavbar = observer(function DiscoveryNavbar({
 		[onCategorySelect],
 	);
 	const handleSubmit = useCallback(
-		(event: FormEvent<HTMLFormElement>) => {
+		(event: SubmitEvent<HTMLFormElement>) => {
 			event.preventDefault();
 			const trimmedQuery = draftQuery.trim();
 			setDraftQuery(trimmedQuery);

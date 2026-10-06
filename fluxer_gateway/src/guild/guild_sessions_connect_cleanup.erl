@@ -19,8 +19,13 @@
 
 -spec cleanup_connect_admission_for_session(session_id(), guild_state()) -> guild_state().
 cleanup_connect_admission_for_session(SessionId, State) ->
-    State1 = cleanup_connect_pending(SessionId, State),
-    cleanup_connect_queue(SessionId, State1).
+    case maps:get(session_connect_pending, State, undefined) of
+        #{SessionId := _} = Pending ->
+            State1 = State#{session_connect_pending => maps:remove(SessionId, Pending)},
+            cleanup_connect_queue(SessionId, State1);
+        _ ->
+            State
+    end.
 
 -spec normalize_connect_queue(term()) -> queue:queue() | undefined.
 normalize_connect_queue({In, Out}) when is_list(In), is_list(Out) ->
@@ -49,15 +54,6 @@ clear_auto_stop_pending(State) ->
             maps:remove(auto_stop_pending, State);
         _ ->
             maps:remove(auto_stop_pending, State)
-    end.
-
--spec cleanup_connect_pending(session_id(), guild_state()) -> guild_state().
-cleanup_connect_pending(SessionId, State) ->
-    case maps:get(session_connect_pending, State, undefined) of
-        Pending when is_map(Pending) ->
-            State#{session_connect_pending => maps:remove(SessionId, Pending)};
-        _ ->
-            State
     end.
 
 -spec cleanup_connect_queue(session_id(), guild_state()) -> guild_state().

@@ -49,6 +49,7 @@ export const DEFAULT_RESTRICTED_LIMITS: Record<LimitKey, number> = {
 	feature_custom_notification_sounds: 1,
 	feature_early_access: 0,
 	feature_global_expressions: 0,
+	feature_guild_create: 0,
 	feature_higher_video_quality: 0,
 	feature_per_guild_profiles: 0,
 	feature_voice_entrance_sounds: 0,

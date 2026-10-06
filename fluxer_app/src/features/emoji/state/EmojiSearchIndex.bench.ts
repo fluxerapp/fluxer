@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createEmojiSearchIndex} from '@app/features/emoji/state/EmojiSearchIndex';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import {bench, describe} from 'vitest';
-import {createEmojiSearchIndex} from './EmojiSearchIndex';
+import {test} from 'vitest';
 
 const EMOJI_COUNT = 20_000;
 const QUERY_COUNT = 1_000;
@@ -42,21 +42,21 @@ const QUERIES = Object.freeze(
 	}),
 );
 
-describe('EmojiSearchIndex benchmarks', () => {
-	bench('builds an n-gram index for 20k emoji-like records', () => {
+test('EmojiSearchIndex benchmarks', async ({bench}) => {
+	await bench('builds an n-gram index for 20k emoji-like records', () => {
 		const index = createEmojiSearchIndex(EMOJIS);
 		(globalThis as {__emojiSearchIndexBenchSink?: number}).__emojiSearchIndexBenchSink = index.getStats().postingCount;
-	});
+	}).run();
 
-	bench('serves 1k mixed top-10 searches over 20k records', () => {
+	await bench('serves 1k mixed top-10 searches over 20k records', () => {
 		let total = 0;
 		for (const query of QUERIES) {
 			total += INDEX.search(query, {count: 10}).length;
 		}
 		(globalThis as {__emojiSearchIndexBenchSink?: number}).__emojiSearchIndexBenchSink = total;
-	});
+	}).run();
 
-	bench('serves 1k filtered ranked searches over 20k records', () => {
+	await bench('serves 1k filtered ranked searches over 20k records', () => {
 		let total = 0;
 		for (const query of QUERIES) {
 			total += INDEX.search(query, {
@@ -66,5 +66,5 @@ describe('EmojiSearchIndex benchmarks', () => {
 			}).length;
 		}
 		(globalThis as {__emojiSearchIndexBenchSink?: number}).__emojiSearchIndexBenchSink = total;
-	});
+	}).run();
 });

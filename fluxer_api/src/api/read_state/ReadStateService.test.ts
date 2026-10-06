@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
-import {describe, expect, it, vi} from 'vitest';
 import {
 	type ChannelID,
 	createChannelID,
@@ -9,58 +7,13 @@ import {
 	createUserID,
 	type MessageID,
 	type UserID,
-} from '../BrandedTypes';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import {ReadState} from '../models/ReadState';
-import type {IReadStateRepository} from './IReadStateRepository';
-import {ReadStateService} from './ReadStateService';
-
-describe('ReadStateService.bulkIncrementMentionCounts', () => {
-	it('invalidates badge counts for touched users in a single bulk call', async () => {
-		const channelId = createChannelID(2n);
-		const messageId = createMessageID(3n);
-		const touched: Array<{userId: UserID; channelId: ChannelID}> = [
-			{userId: createUserID(10n), channelId},
-			{userId: createUserID(11n), channelId},
-			{userId: createUserID(10n), channelId: createChannelID(4n)},
-		];
-		const repository = {
-			bulkIncrementMentionCounts: vi.fn().mockResolvedValue(touched),
-		} as unknown as IReadStateRepository;
-		const invalidatePushBadgeCounts = vi.fn().mockResolvedValue(undefined);
-		const invalidatePushBadgeCount = vi.fn().mockResolvedValue(undefined);
-		const gatewayService = {
-			invalidatePushBadgeCounts,
-			invalidatePushBadgeCount,
-		} as unknown as IGatewayService;
-		const service = new ReadStateService(repository, gatewayService);
-
-		await service.bulkIncrementMentionCounts([
-			{userId: createUserID(10n), channelId, messageId},
-			{userId: createUserID(11n), channelId, messageId},
-			{userId: createUserID(12n), channelId, messageId},
-		]);
-
-		expect(invalidatePushBadgeCount).not.toHaveBeenCalled();
-		expect(invalidatePushBadgeCounts).toHaveBeenCalledTimes(1);
-		expect(invalidatePushBadgeCounts).toHaveBeenCalledWith({userIds: [createUserID(10n), createUserID(11n)]});
-	});
-
-	it('skips the bulk call when no read state was touched', async () => {
-		const repository = {
-			bulkIncrementMentionCounts: vi.fn().mockResolvedValue([]),
-		} as unknown as IReadStateRepository;
-		const invalidatePushBadgeCounts = vi.fn().mockResolvedValue(undefined);
-		const gatewayService = {invalidatePushBadgeCounts} as unknown as IGatewayService;
-		const service = new ReadStateService(repository, gatewayService);
-
-		await service.bulkIncrementMentionCounts([
-			{userId: createUserID(10n), channelId: createChannelID(2n), messageId: createMessageID(3n)},
-		]);
-
-		expect(invalidatePushBadgeCounts).not.toHaveBeenCalled();
-	});
-});
+} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {ReadState} from '@app/api/models/ReadState';
+import type {IReadStateRepository} from '@app/api/read_state/IReadStateRepository';
+import {ReadStateService} from '@app/api/read_state/ReadStateService';
+import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {describe, expect, it, vi} from 'vitest';
 
 const USER_ID = createUserID(20n);
 const CHANNEL_ID = createChannelID(21n);
@@ -78,17 +31,16 @@ function makeReadState(channelId: ChannelID, messageId: MessageID, mentionCount 
 }
 
 describe('ReadStateService gateway side effects after the write', () => {
-	it('returns the committed read state when the badge invalidation fails', async () => {
+	it('returns the committed read state when clearing push notifications fails', async () => {
 		const stored: Array<{channelId: ChannelID; messageId: MessageID}> = [];
 		const repository = {
 			upsertReadState: vi.fn(async (_userId: UserID, channelId: ChannelID, messageId: MessageID) => {
 				stored.push({channelId, messageId});
-				return makeReadState(channelId, messageId);
+				return {readState: makeReadState(channelId, messageId), previous: null};
 			}),
 		} as unknown as IReadStateRepository;
 		const gatewayService = {
-			invalidatePushBadgeCount: vi.fn().mockRejectedValue(new BadGatewayError()),
-			clearPushChannelNotifications: vi.fn().mockResolvedValue(undefined),
+			clearPushChannelNotifications: vi.fn().mockRejectedValue(new BadGatewayError()),
 			dispatchPresence: vi.fn().mockResolvedValue(undefined),
 		} as unknown as IGatewayService;
 		const service = new ReadStateService(repository, gatewayService);
@@ -108,12 +60,12 @@ describe('ReadStateService gateway side effects after the write', () => {
 
 	it('acknowledges the message when the MESSAGE_ACK dispatch fails', async () => {
 		const repository = {
-			upsertReadState: vi.fn(async (_userId: UserID, channelId: ChannelID, messageId: MessageID) =>
-				makeReadState(channelId, messageId),
-			),
+			upsertReadState: vi.fn(async (_userId: UserID, channelId: ChannelID, messageId: MessageID) => ({
+				readState: makeReadState(channelId, messageId),
+				previous: null,
+			})),
 		} as unknown as IReadStateRepository;
 		const gatewayService = {
-			invalidatePushBadgeCount: vi.fn().mockResolvedValue(undefined),
 			clearPushChannelNotifications: vi.fn().mockResolvedValue(undefined),
 			dispatchPresence: vi.fn().mockRejectedValue(new BadGatewayError()),
 		} as unknown as IGatewayService;
@@ -134,11 +86,10 @@ describe('ReadStateService gateway side effects after the write', () => {
 		const repository = {
 			upsertReadState: vi.fn(async (_userId: UserID, channelId: ChannelID, messageId: MessageID) => {
 				stored.push(channelId.toString());
-				return makeReadState(channelId, messageId, 1);
+				return {readState: makeReadState(channelId, messageId, 1), previous: null};
 			}),
 		} as unknown as IReadStateRepository;
 		const gatewayService = {
-			invalidatePushBadgeCount: vi.fn().mockResolvedValue(undefined),
 			clearPushChannelNotifications: vi.fn().mockResolvedValue(undefined),
 			dispatchPresence: vi.fn().mockRejectedValue(new BadGatewayError()),
 		} as unknown as IGatewayService;
@@ -156,42 +107,13 @@ describe('ReadStateService gateway side effects after the write', () => {
 		expect(stored).toEqual(['21', '23']);
 	});
 
-	it('deletes the read state when the badge invalidation fails', async () => {
-		const deleteReadState = vi.fn().mockResolvedValue(undefined);
-		const repository = {deleteReadState} as unknown as IReadStateRepository;
-		const gatewayService = {
-			invalidatePushBadgeCount: vi.fn().mockRejectedValue(new BadGatewayError()),
-		} as unknown as IGatewayService;
-		const service = new ReadStateService(repository, gatewayService);
-
-		await expect(service.deleteReadState({userId: USER_ID, channelId: CHANNEL_ID})).resolves.toBeUndefined();
-
-		expect(deleteReadState).toHaveBeenCalledWith(USER_ID, CHANNEL_ID);
-	});
-
-	it('increments the mention count when the badge invalidation fails', async () => {
-		const incrementReadStateMentions = vi.fn().mockResolvedValue(makeReadState(CHANNEL_ID, MESSAGE_ID, 1));
-		const repository = {incrementReadStateMentions} as unknown as IReadStateRepository;
-		const gatewayService = {
-			invalidatePushBadgeCount: vi.fn().mockRejectedValue(new BadGatewayError()),
-		} as unknown as IGatewayService;
-		const service = new ReadStateService(repository, gatewayService);
-
-		await expect(
-			service.incrementMentionCount({userId: USER_ID, channelId: CHANNEL_ID, messageId: MESSAGE_ID}),
-		).resolves.toBeUndefined();
-
-		expect(incrementReadStateMentions).toHaveBeenCalledTimes(1);
-	});
-
-	it('returns the bulk acknowledged states when the badge invalidation fails', async () => {
+	it('returns the bulk acknowledged states when clearing push notifications fails', async () => {
 		const updated = [makeReadState(CHANNEL_ID, MESSAGE_ID)];
 		const repository = {
 			bulkAckMessages: vi.fn().mockResolvedValue(updated),
 		} as unknown as IReadStateRepository;
 		const gatewayService = {
-			invalidatePushBadgeCount: vi.fn().mockRejectedValue(new BadGatewayError()),
-			clearPushChannelNotifications: vi.fn().mockResolvedValue(undefined),
+			clearPushChannelNotifications: vi.fn().mockRejectedValue(new BadGatewayError()),
 			dispatchPresence: vi.fn().mockResolvedValue(undefined),
 		} as unknown as IGatewayService;
 		const service = new ReadStateService(repository, gatewayService);
@@ -202,5 +124,105 @@ describe('ReadStateService gateway side effects after the write', () => {
 		});
 
 		expect(readStates).toBe(updated);
+	});
+});
+
+describe('ReadStateService implicit acknowledgements', () => {
+	async function implicitAck(params: {
+		previous: ReadState | null;
+		messageId: MessageID;
+		unreadThrough: MessageID | null;
+	}): Promise<Array<MessageID>> {
+		const repository = {
+			upsertReadState: vi.fn(async (_userId: UserID, channelId: ChannelID, messageId: MessageID) => ({
+				readState: makeReadState(channelId, messageId),
+				previous: params.previous,
+			})),
+		} as unknown as IReadStateRepository;
+		const clearPushChannelNotifications = vi.fn().mockResolvedValue(undefined);
+		const gatewayService = {
+			clearPushChannelNotifications,
+			dispatchPresence: vi.fn().mockResolvedValue(undefined),
+		} as unknown as IGatewayService;
+		await new ReadStateService(repository, gatewayService).ackMessage({
+			userId: USER_ID,
+			channelId: CHANNEL_ID,
+			messageId: params.messageId,
+			mentionCount: 0,
+			implicit: {unreadThrough: params.unreadThrough},
+			emitGateway: false,
+		});
+		return clearPushChannelNotifications.mock.calls.map(([call]) => call.messageId);
+	}
+
+	it('clears when the previous read state lagged the latest earlier message', async () => {
+		const cleared = await implicitAck({
+			previous: makeReadState(CHANNEL_ID, createMessageID(30n)),
+			messageId: createMessageID(40n),
+			unreadThrough: createMessageID(35n),
+		});
+		expect(cleared).toEqual([createMessageID(40n)]);
+	});
+
+	it('does not clear when the previous read state already covered the latest earlier message', async () => {
+		const cleared = await implicitAck({
+			previous: makeReadState(CHANNEL_ID, createMessageID(35n)),
+			messageId: createMessageID(40n),
+			unreadThrough: createMessageID(35n),
+		});
+		expect(cleared).toEqual([]);
+	});
+
+	it('clears when unread mentions remained', async () => {
+		const cleared = await implicitAck({
+			previous: makeReadState(CHANNEL_ID, createMessageID(35n), 2),
+			messageId: createMessageID(40n),
+			unreadThrough: createMessageID(35n),
+		});
+		expect(cleared).toEqual([createMessageID(40n)]);
+	});
+
+	it('does not clear when the read state was already past the acknowledged message', async () => {
+		const cleared = await implicitAck({
+			previous: makeReadState(CHANNEL_ID, createMessageID(50n), 2),
+			messageId: createMessageID(40n),
+			unreadThrough: createMessageID(40n),
+		});
+		expect(cleared).toEqual([]);
+	});
+
+	it('clears when there was no read state and the channel had earlier messages', async () => {
+		const cleared = await implicitAck({
+			previous: null,
+			messageId: createMessageID(40n),
+			unreadThrough: createMessageID(35n),
+		});
+		expect(cleared).toEqual([createMessageID(40n)]);
+	});
+
+	it('does not clear when there was no read state and no earlier message', async () => {
+		const cleared = await implicitAck({previous: null, messageId: createMessageID(40n), unreadThrough: null});
+		expect(cleared).toEqual([]);
+	});
+
+	it('does not wait for the push clear to finish', async () => {
+		const repository = {
+			upsertReadState: vi.fn(async (_userId: UserID, channelId: ChannelID, messageId: MessageID) => ({
+				readState: makeReadState(channelId, messageId),
+				previous: makeReadState(channelId, createMessageID(30n), 1),
+			})),
+		} as unknown as IReadStateRepository;
+		const clearPushChannelNotifications = vi.fn(() => new Promise<void>(() => {}));
+		const gatewayService = {clearPushChannelNotifications} as unknown as IGatewayService;
+		const readState = await new ReadStateService(repository, gatewayService).ackMessage({
+			userId: USER_ID,
+			channelId: CHANNEL_ID,
+			messageId: createMessageID(40n),
+			mentionCount: 0,
+			implicit: {unreadThrough: createMessageID(35n)},
+			emitGateway: false,
+		});
+		expect(readState.lastMessageId).toBe(createMessageID(40n));
+		expect(clearPushChannelNotifications).toHaveBeenCalledTimes(1);
 	});
 });

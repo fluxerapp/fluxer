@@ -5,7 +5,7 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import type {Router} from '@app/features/platform/components/router/RouterTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {action, makeAutoObservable} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
 type NavigationMode = 'push' | 'replace';
 
@@ -23,7 +23,6 @@ class Navigation {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	@action
 	initialize(router: Router): void {
 		this.router = router;
 		this.updateFromRouter();
@@ -32,7 +31,6 @@ class Navigation {
 		});
 	}
 
-	@action
 	private updateFromRouter(): void {
 		if (!this.router) return;
 		const state = this.router.getState();

@@ -50,7 +50,7 @@ export const EmojiTooltipContent = React.forwardRef<HTMLDivElement, EmojiTooltip
 						src={emojiUrl}
 						alt={emojiAlt}
 						draggable={false}
-						className={clsx('emoji', styles.emoji, 'jumboable', emojiClassName)}
+						className={clsx(styles.emoji, emojiClassName)}
 						data-flx="ui.emoji-tooltip-content.emoji-tooltip-content.render-emoji.emoji"
 					/>
 				);

@@ -2,6 +2,7 @@
 
 import {ColorPickerPopover} from '@app/features/app/components/floating/ColorPickerPopover';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import styles from '@app/features/theme_studio/ui/StudioToken.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import type {ThemeVariableKind} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeConstants';
 import {
@@ -15,7 +16,6 @@ import {clsx} from 'clsx';
 import type React from 'react';
 import {useCallback, useEffect, useState} from 'react';
 import {Button as AriaButton, Dialog, DialogTrigger, Popover} from 'react-aria-components';
-import styles from './StudioToken.module.css';
 
 const EDIT_COLOR_FOR_DESCRIPTOR = msg({
 	message: 'Edit color for {tokenLabel}',

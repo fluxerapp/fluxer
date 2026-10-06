@@ -8,6 +8,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
+import type {ChannelFollowerStatsResponse} from '@fluxer/schema/src/domains/channel/ChannelFollowSchemas';
 import type {Channel, ChannelSlowmodeStateResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 
@@ -31,6 +32,7 @@ type ChannelUpdateParams = Partial<
 	Pick<
 		Channel,
 		| 'name'
+		| 'type'
 		| 'topic'
 		| 'url'
 		| 'nsfw'
@@ -153,6 +155,11 @@ export async function update(channelId: string, params: ChannelUpdateParams): Pr
 		logger.error(`Failed to update channel ${channelId}:`, error);
 		throw error;
 	}
+}
+
+export async function fetchFollowerStats(channelId: string): Promise<ChannelFollowerStatsResponse> {
+	const response = await http.get<ChannelFollowerStatsResponse>(Endpoints.CHANNEL_FOLLOWER_STATS(channelId));
+	return response.body;
 }
 
 export async function updateGroupDMNickname(

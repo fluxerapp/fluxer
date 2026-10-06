@@ -95,6 +95,56 @@ filter_members_by_query_matches_nick_test() ->
     Results = guild_request_members_search:filter_members_by_query(Members, <<"super">>, 10),
     ?assertEqual(1, length(Results)).
 
+filter_members_by_query_matches_username_behind_nick_test() ->
+    Members = [
+        #{
+            <<"user">> => #{
+                <<"id">> => <<"1">>,
+                <<"username">> => <<"jiralite">>,
+                <<"global_name">> => <<"Jiralite">>
+            },
+            <<"nick">> => <<"Specsaver engineer">>
+        },
+        #{<<"user">> => #{<<"id">> => <<"2">>, <<"username">> => <<"bob">>}}
+    ],
+    [Match] = guild_request_members_search:filter_members_by_query(Members, <<"JIRA">>, 10),
+    ?assertEqual(1, guild_request_members_search:extract_user_id(Match)).
+
+member_matches_every_name_test() ->
+    Member = #{
+        <<"user">> => #{
+            <<"id">> => <<"1">>,
+            <<"username">> => <<"jiralite">>,
+            <<"global_name">> => <<"Jira Lite">>
+        },
+        <<"nick">> => <<"Specsaver engineer">>
+    },
+    Matches = fun(Query) ->
+        guild_request_members_search:member_matches_normalized_query(Member, Query)
+    end,
+    ?assert(Matches(<<"specsaver">>)),
+    ?assert(Matches(<<"jira l">>)),
+    ?assert(Matches(<<"jiral">>)),
+    ?assert(Matches(<<>>)),
+    ?assertNot(Matches(<<"engineer">>)),
+    ?assertNot(Matches(<<"lite">>)).
+
+member_matches_ignores_non_binary_names_test() ->
+    Member = #{
+        <<"user">> => #{<<"username">> => <<"user">>, <<"global_name">> => null},
+        <<"nick">> => 12345
+    },
+    ?assert(guild_request_members_search:member_matches_normalized_query(Member, <<"us">>)),
+    ?assertNot(guild_request_members_search:member_matches_normalized_query(Member, <<"12">>)).
+
+member_matches_non_map_member_test() ->
+    ?assert(
+        guild_request_members_search:member_matches_normalized_query(invalid_member(), <<>>)
+    ),
+    ?assertNot(
+        guild_request_members_search:member_matches_normalized_query(invalid_member(), <<"a">>)
+    ).
+
 fetch_members_with_query_uses_guild_search_call_test() ->
     Parent = self(),
     Member = #{<<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"Alice">>}},

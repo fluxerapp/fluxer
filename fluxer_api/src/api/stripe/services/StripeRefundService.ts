@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import {shouldBlockFurtherPurchases} from '@app/api/stripe/services/RefundAllowance';
+import {REFUND_ALLOWANCE_CLAIM_PREFIX} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
+import type {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import {FeatureNotAvailableSelfHostedError} from '@fluxer/errors/src/domains/core/FeatureNotAvailableSelfHostedError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripeNoPurchaseHistoryError} from '@fluxer/errors/src/domains/payment/StripeNoPurchaseHistoryError';
@@ -13,14 +25,6 @@ import type {
 	SelfServeRefundResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type Stripe from 'stripe';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {extractId} from '../StripeUtils';
-import type {StripeSubscriptionService} from './StripeSubscriptionService';
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 export const SELF_SERVE_REFUND_WINDOW_DAYS = 3;
@@ -258,18 +262,57 @@ export class StripeRefundService {
 		const subscriptionId = refund.metadata.subscription_id;
 		if (subscriptionId) {
 			try {
-				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund');
+				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund', subscriptionId);
 			} catch (error) {
-				Logger.warn(
+				Logger.error(
 					{error, userId: user.id.toString(), subscriptionId},
-					'Self-serve refund confirmed but subscription cancellation failed; will reconcile via webhook',
+					'Self-serve refund confirmed but subscription cancellation failed; the subscription is still active and will keep billing until it is cancelled manually',
 				);
 			}
 		}
-		await this.userRepository.patchUpsert(user.id, {first_refund_at: new Date()}, user.toRow());
+		const claimKey = `${REFUND_ALLOWANCE_CLAIM_PREFIX}:${refund.id}`;
+		const claim = await getBillingRepository().webhookEvents.tryClaim(claimKey);
+		if (claim === 'in_flight') {
+			Logger.debug(
+				{userId: user.id.toString(), refundId: refund.id, claim},
+				'Self-serve refund allowance is being counted by another delivery',
+			);
+			return;
+		}
+		const isFirstRefund = !user.firstRefundAt;
+		let patch: Partial<UserRow>;
+		let countedRefundIds: Array<string> = [];
+		if (isFirstRefund) {
+			patch = {first_refund_at: new Date()};
+		} else {
+			const outcome = await shouldBlockFurtherPurchases(user, this.userRepository);
+			countedRefundIds = outcome.countedRefundIds;
+			if (!outcome.blocked) {
+				await getBillingRepository().webhookEvents.markProcessed(claimKey);
+				Logger.info(
+					{userId: user.id.toString(), refundId: refund.id, countedRefundIds},
+					'Self-serve refund redelivered after the allowance claim expired; not counting it twice',
+				);
+				return;
+			}
+			patch = {premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED};
+		}
+		try {
+			await this.userRepository.patchUpsert(user.id, patch, user.toRow());
+		} catch (error) {
+			await getBillingRepository().webhookEvents.releaseClaim(claimKey);
+			throw error;
+		}
+		await getBillingRepository().webhookEvents.markProcessed(claimKey);
 		Logger.info(
-			{userId: user.id.toString(), refundId: refund.id, subscriptionId: subscriptionId || null},
-			'Self-serve refund confirmed succeeded; cooldown and cancellation finalized',
+			{
+				userId: user.id.toString(),
+				refundId: refund.id,
+				subscriptionId: subscriptionId || null,
+				isFirstRefund,
+				countedRefundIds,
+			},
+			'Self-serve refund confirmed succeeded; refund allowance and cancellation finalized',
 		);
 	}
 

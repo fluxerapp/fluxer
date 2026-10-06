@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {
+	computeLiveKitPublishSources,
+	LiveKitService,
+	VOICE_TOKEN_TTL_SECONDS,
+} from '@app/api/infrastructure/LiveKitService';
 import {AccessToken, TrackSource} from 'livekit-server-sdk';
 import {describe, expect, it} from 'vitest';
-import {createChannelID, createGuildID} from '../../BrandedTypes';
-import {computeLiveKitPublishSources, LiveKitService, VOICE_TOKEN_TTL_SECONDS} from '../LiveKitService';
 
 function decodeJwtPayload(token: string): Record<string, unknown> {
 	const [, payload] = token.split('.');
@@ -131,5 +135,64 @@ describe('LiveKitService listParticipants', () => {
 		});
 		const result = await service.listParticipants(params);
 		expect(result).toEqual({status: 'ok', participants: []});
+	});
+});
+
+describe('LiveKitService updateParticipant mute', () => {
+	const params = {
+		userId: createUserID(3n),
+		guildId: createGuildID(1n),
+		channelId: createChannelID(2n),
+		connectionId: 'conn-1',
+		regionId: 'region-1',
+		serverId: 'region-1-server-1',
+	};
+
+	function roomServiceClient(
+		listedTracks: Array<{sid: string; source: TrackSource}>,
+		updatedTracks: typeof listedTracks,
+	) {
+		const calls: Array<Array<unknown>> = [];
+		const client = {
+			listParticipants: async () => [{identity: 'user_3_conn-1', tracks: listedTracks}],
+			updateParticipant: async (...args: Array<unknown>) => {
+				calls.push(['updateParticipant', ...args]);
+				return {identity: 'user_3_conn-1', tracks: updatedTracks};
+			},
+			mutePublishedTrack: async (...args: Array<unknown>) => {
+				calls.push(['mutePublishedTrack', ...args]);
+			},
+		};
+		return {client, calls};
+	}
+
+	it('records the mute on the participant and mutes every current microphone track', async () => {
+		const {client, calls} = roomServiceClient(
+			[{sid: 'TR_old', source: TrackSource.MICROPHONE}],
+			[
+				{sid: 'TR_old', source: TrackSource.MICROPHONE},
+				{sid: 'TR_new', source: TrackSource.MICROPHONE},
+			],
+		);
+		const service = createServiceWithRoomServiceClient(client);
+
+		await service.updateParticipant({...params, mute: true});
+
+		expect(calls).toEqual([
+			['updateParticipant', 'guild_1_channel_2', 'user_3_conn-1', {attributes: {server_mute: 'true'}}],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_old', true],
+			['mutePublishedTrack', 'guild_1_channel_2', 'user_3_conn-1', 'TR_new', true],
+		]);
+	});
+
+	it('clears the recorded mute on unmute', async () => {
+		const {client, calls} = roomServiceClient([], []);
+		const service = createServiceWithRoomServiceClient(client);
+
+		await service.updateParticipant({...params, mute: false});
+
+		expect(calls).toEqual([
+			['updateParticipant', 'guild_1_channel_2', 'user_3_conn-1', {attributes: {server_mute: ''}}],
+		]);
 	});
 });

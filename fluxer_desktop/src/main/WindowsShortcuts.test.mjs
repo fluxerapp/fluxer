@@ -157,7 +157,7 @@ describe('Windows Start Menu shortcut repair', () => {
 		assert.equal(harness.files.has(AUTHOR_SHORTCUT), false);
 	});
 
-	test('still rewrites the author shortcut carrying the legacy AppUserModelID', async () => {
+	test('still rewrites the author shortcut with the legacy AppUserModelID', async () => {
 		const harness = loadWindowsShortcuts([[AUTHOR_SHORTCUT, lnkBuffer(CURRENT_EXE, LEGACY_APP_USER_MODEL_ID)]]);
 
 		await runRepair(harness);

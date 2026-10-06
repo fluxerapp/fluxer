@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A Go Live stream is a screen share on a member's existing voice connection. A stream key names one stream. The operations here record a region preference and manage the stream's JPEG preview image.
 
-Every route on this page is user-only. Bot and OAuth2 credentials are rejected.
+Every route on this page is user-only. Fluxer rejects a bot token and an OAuth2 bearer credential with 403 `ACCESS_DENIED`.
 
 ## Stream lifecycle
 
@@ -36,17 +36,17 @@ A key with a different segment count, a non-numeric channel segment, an empty co
 
 Fluxer checks the scope segment against the resolved channel. A guild-scoped key whose resolved channel is private returns 400 `STREAM_KEY_SCOPE_MISMATCH`, and so does a `dm` key whose resolved channel belongs to a guild. A guild-scoped key whose guild segment is not the resolved channel's guild returns the same code.
 
-The route then compares the channel segment against the resolved channel ID, and a mismatch returns 400 `STREAM_KEY_CHANNEL_MISMATCH`. On the two routes that have a body `channel_id`, a caller MUST send the same value in the body and in the key.
+The route then compares the channel segment against the resolved channel ID, and a mismatch returns 400 `STREAM_KEY_CHANNEL_MISMATCH`. On the routes that have a body `channel_id`, a caller MUST send the same value in the body and in the key.
 
-That comparison is the last check of the read boundary. Channel lookup, the scope check, the channel type check, and the `CONNECT` check all run first, so a body `channel_id` naming a channel the caller cannot see answers 404 `UNKNOWN_CHANNEL` or 403.
+Fluxer runs that comparison after every other [read access](#access-rules) check. Channel lookup, the scope check, the channel type check, and the `CONNECT` check all run first, so a body `channel_id` naming a channel the caller cannot see returns 404 `UNKNOWN_CHANNEL` or one of the 403 codes listed under [Access rules](#access-rules).
 
 ## Access rules
 
-Two boundaries apply across this page.
+[Get stream preview](#get-stream-preview) requires read access. Every other route on this page requires mutation access.
 
 Read access matches [Get channel](/http-api/channels/#get-channel) for the [resolved channel](#stream-key). A guild channel also requires the [CONNECT](/http-api/permissions/) permission. The caller does not have to own the stream, so any member who can join the channel can read its preview.
 
-Mutation access requires everything read access does. A guild channel also requires the [STREAM](/http-api/permissions/) permission. The caller must hold a voice state in exactly the resolved channel and the connection identifier the key names. Fluxer rejects a caller that holds no such voice state with 403 `ACCESS_DENIED`, even when it owns the channel.
+Mutation access requires everything read access does. A guild channel also requires the [STREAM](/http-api/permissions/) permission. The caller must hold a voice state whose channel is the resolved channel and whose `connection_id` is the connection segment of the key. Fluxer rejects a caller that holds no such voice state with 403 `ACCESS_DENIED`, even when it owns the channel.
 
 :::caution[A preview can exist with no live stream]
 A caller can record a region and upload a preview for any voice connection it holds, whether or not it is streaming.
@@ -81,7 +81,7 @@ A short-lived URL that accepts one stream's preview image. [Create stream previe
 
 A client MUST send the URL exactly as returned and MUST NOT rebuild or reorder it. Rebuilding drops the signed capability in `t`, and a relay URL that arrives without `t` returns 401.
 
-The capability keeps accepting `PUT` requests until it expires. Nothing records that it has been redeemed, and each request overwrites the object the previous one wrote.
+The URL accepts repeated `PUT` requests until it expires. Each replaces the previous preview.
 
 ### Example
 
@@ -114,7 +114,7 @@ Records the preferred media region for a stream and returns 204 with an empty bo
 | --- | --- | --- |
 | region?<sup>1</sup> | string | The RTC region ID of 1 through 64 characters |
 
-<sup>1</sup> An omitted field stores no region for this stream
+<sup>1</sup> An omitted field removes any region already stored for this stream
 
 A region identifier is the `id` of an [RTC region object](/http-api/channels/#rtc-region-object), as returned by [List RTC regions](/http-api/channels/#list-rtc-regions).
 
@@ -182,7 +182,7 @@ The response `Content-Type` is the media type recorded when the preview was writ
 
 Replaces the stream's preview with a JPEG sent inline as base64 and returns 204 with an empty body. The caller must satisfy the [mutation access](#access-rules) boundary.
 
-When the image should travel out of band, use [Create stream preview upload URL](#create-stream-preview-upload-url).
+To upload the image bytes with a separate `PUT` request, use [Create stream preview upload URL](#create-stream-preview-upload-url).
 
 ### Path parameters
 
@@ -229,9 +229,7 @@ A `thumbnail` that is not [canonical base64](/topics/uploads/#stream-previews) r
 
 The decoded bytes replace whatever preview the stream key already had, and the preview metadata expires one day after the write. Fluxer emits no Gateway Dispatch, so a viewer observes the new image on its next [Get stream preview](#get-stream-preview) read.
 
-Fluxer absorbs a transient object storage failure. The request still answers 204 and the previous preview remains readable, so a publisher that needs the image present re-uploads on its normal interval.
-
-A transient failure of the metadata write also answers 204. The next read returns the new bytes under the `Content-Type` and the expiry recorded by the previous write. When no metadata existed at all, the object is stored and no read finds it.
+A 204 does not guarantee that the new preview is readable. A temporary failure can leave the previous image, content type, or expiry in place, or leave no readable preview. Publishers should continue uploading on their normal interval.
 
 ### Rate limit
 
@@ -277,7 +275,7 @@ Returns a [stream preview upload object](#stream-preview-upload-object) granting
 
 ### Side effects
 
-The operation issues one bounded upload capability and immediately points the stream key's preview metadata at the object that capability writes to. There is no separate completion call. The preview becomes readable as soon as the `PUT` lands, and until then a [Get stream preview](#get-stream-preview) read answers an empty 404 or still returns the previous image.
+There is no separate completion call. After the `PUT` succeeds, [Get stream preview](#get-stream-preview) returns the uploaded image. Until then it returns an empty 404 or the previous image.
 
 A client MUST send the returned `content_type` with the `PUT` and MUST NOT exceed `max_bytes`. The preview metadata expires one day after this call, so a capability used later than that writes an object no read can find. Fluxer emits no Gateway Dispatch.
 
@@ -317,7 +315,7 @@ Deletes the stored preview for a stream and returns 204 with an empty body. Dele
 
 ### Side effects
 
-Fluxer drops the preview metadata first and removes the stored object second, so the preview stops being readable even when a transient storage failure leaves the object in place. Fluxer emits no Gateway Dispatch, and a viewer observes the removal on its next [Get stream preview](#get-stream-preview) read.
+The preview stops being readable. No Gateway Dispatch is emitted, so viewers observe the removal on their next [Get stream preview](#get-stream-preview) request.
 
 ### Rate limit
 

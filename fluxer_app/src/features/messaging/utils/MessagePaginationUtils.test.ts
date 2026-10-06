@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	calculateAroundPaginationState,
+	getAroundWindowCounts,
+	mergeAscendingById,
+} from '@app/features/messaging/utils/MessagePaginationUtils';
 import {describe, expect, it} from 'vitest';
-import {calculateAroundPaginationState, getAroundWindowCounts, mergeAscendingById} from './MessagePaginationUtils';
 
 describe('MessagePaginationUtils', () => {
 	it('splits around windows with the newer side receiving the extra item for even limits', () => {

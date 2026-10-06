@@ -3,7 +3,6 @@
 import {
 	type DesktopTroubleshootingSettings,
 	type DesktopWindowBehaviorSettings,
-	getDesktopTroubleshootingSettings,
 	getDesktopWindowBehaviorSettings,
 	setDesktopWindowBehaviorSettings,
 } from '@electron/common/DesktopConfig';
@@ -14,13 +13,15 @@ import type {
 	TrayPresenceStatus,
 } from '@electron/common/Types';
 import {hasEnabledBlinkFeature, MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE} from '@electron/main/ChromiumRuntime';
+import {getLaunchDesktopTroubleshootingSettings} from '@electron/main/DesktopDebugInfo';
 import {
 	applyDesktopWindowBehaviorSettings,
 	desktopTrayChangePendingRestart,
 	hasActiveDesktopTray,
 	updateTrayRuntimeState,
 } from '@electron/main/DesktopTray';
-import {downloadFile} from '@electron/main/FileDownloads';
+import {registerDomainMigrationHandlers} from '@electron/main/DomainMigration';
+import {DownloadChecksumError, downloadFile} from '@electron/main/FileDownloads';
 import {
 	type LinuxAppearanceSnapshot,
 	type LinuxAppearanceSubscription,
@@ -32,7 +33,6 @@ import {setNativeStrings} from '@electron/main/MainI18n';
 import {copyRemoteFileToClipboard, parseClipboardWriteFileOptions} from '@electron/main/MediaClipboard';
 import {registerNotificationIpcHandlers} from '@electron/main/NotificationsIpc';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
-import {getStatus as getOpenH264Status, setEnabled as setOpenH264Enabled} from '@electron/main/OpenH264Manager';
 import {registerPasskeyHandlers} from '@electron/main/Passkeys';
 import {getAppMetricsSnapshot, getDesktopInfo, getGpuInfo} from '@electron/main/PlatformInfo';
 import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
@@ -108,6 +108,9 @@ function normalizeDesktopWindowBehaviorUpdate(value: unknown): Partial<DesktopWi
 	if (typeof value.closeToTray === 'boolean') {
 		update.closeToTray = value.closeToTray;
 	}
+	if (typeof value.startMinimized === 'boolean') {
+		update.startMinimized = value.startMinimized;
+	}
 	if (typeof value.useNativeTitleBar === 'boolean') {
 		update.useNativeTitleBar = value.useNativeTitleBar;
 	}
@@ -137,11 +140,10 @@ function getActiveMiddleClickAutoscroll(): boolean {
 export function registerIpcHandlers(): void {
 	registerVoiceDebugEventSinkPopoutIpcHandlers();
 	registerVoiceBackgroundMediaCacheHandlers();
+	registerDomainMigrationHandlers();
 	ipcMain.handle('get-desktop-info', () => getDesktopInfo());
 	ipcMain.handle('get-gpu-info', () => getGpuInfo());
 	ipcMain.handle('get-app-metrics', () => getAppMetricsSnapshot());
-	ipcMain.handle('get-openh264-status', () => getOpenH264Status());
-	ipcMain.handle('set-openh264-enabled', (_event, enabled: unknown) => setOpenH264Enabled(Boolean(enabled)));
 	ipcMain.handle('streamer-mode:get-capture-app-status', () => getStreamerModeCaptureAppStatus());
 	ipcMain.handle('system-idle-time-ms', (): number => {
 		return Math.max(0, powerMonitor.getSystemIdleTime() * 1000);
@@ -156,10 +158,7 @@ export function registerIpcHandlers(): void {
 		};
 	});
 	ipcMain.handle('desktop-troubleshooting-get', (): DesktopTroubleshootingSettings => {
-		if (process.platform === 'darwin') {
-			return {...getDesktopTroubleshootingSettings(), disableHardwareAcceleration: false};
-		}
-		return getDesktopTroubleshootingSettings();
+		return getLaunchDesktopTroubleshootingSettings();
 	});
 	ipcMain.handle(
 		'desktop-troubleshooting-set-disable-hardware-acceleration',
@@ -176,10 +175,7 @@ export function registerIpcHandlers(): void {
 			} else {
 				setHardwareAccelerationDisabled(disable);
 			}
-			if (process.platform === 'darwin') {
-				return {...getDesktopTroubleshootingSettings(), disableHardwareAcceleration: false};
-			}
-			return getDesktopTroubleshootingSettings();
+			return getLaunchDesktopTroubleshootingSettings();
 		},
 	);
 	ipcMain.handle('desktop-troubleshooting-reload', (): void => {
@@ -387,6 +383,7 @@ export function registerIpcHandlers(): void {
 			options: {
 				url: string;
 				defaultPath: string;
+				sha256?: string | null;
 			},
 		): Promise<DownloadFileResult> => {
 			requirePrivilegedRendererDocumentSender(event, 'download-file');
@@ -401,9 +398,12 @@ export function registerIpcHandlers(): void {
 				if (result.canceled || !result.filePath) {
 					return {success: false, canceled: true};
 				}
-				await downloadFile(options.url, result.filePath);
+				await downloadFile(options.url, result.filePath, {sha256: options.sha256});
 				return {success: true, path: result.filePath};
 			} catch (error) {
+				if (error instanceof DownloadChecksumError) {
+					return {success: false, checksumMismatch: true, error: error.message};
+				}
 				return {success: false, error: error instanceof Error ? error.message : 'Unknown error'};
 			}
 		},

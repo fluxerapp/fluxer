@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
+import {executeConditional, fetchMany, fetchOne, fetchPage, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type DbOp, nextVersion} from '@app/api/database/CassandraTypes';
+import {applyPatchToRow, buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {EMPTY_USER_ROW, USER_COLUMNS} from '@app/api/database/types/UserTypes';
+import {emitAccountChangedIfRelevant} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import {User} from '@app/api/models/User';
+import {Users} from '@app/api/Tables';
+import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DELETED_USER_ID, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {BACKGROUND_READ_TIMEOUT_MS} from '@pkgs/cassandra/src/Client';
-import {createUserID, type UserID} from '../../../../BrandedTypes';
-import {fetchMany, fetchOne, fetchPage, upsertOne} from '../../../../database/CassandraQueryExecution';
-import {Db, type DbOp, nextVersion} from '../../../../database/CassandraTypes';
-import {
-	applyPatchToRow,
-	buildPatchFromData,
-	executeVersionedUpdate,
-} from '../../../../database/CassandraVersionedUpdate';
-import type {UserRow} from '../../../../database/types/UserTypes';
-import {EMPTY_USER_ROW, USER_COLUMNS} from '../../../../database/types/UserTypes';
-import {User} from '../../../../models/User';
-import {Users} from '../../../../Tables';
 
 const FLUXER_BOT_USER_ID = 0n;
 const FETCH_USERS_BY_IDS_CQL = Users.selectCql({
@@ -44,6 +45,20 @@ const createFetchAllUsersPaginatedQuery = (limit: number) =>
 type UserPatch = Partial<{
 	[K in Exclude<keyof UserRow, 'user_id'> & string]: DbOp<UserRow[K]>;
 }>;
+
+export type UserDeletionTransition = 'schedule' | 'anonymise' | 'complete';
+
+function assertOrdinaryUserPatch(patch: UserPatch): void {
+	if (patch.pending_deletion_at || patch.deletion_started_at) {
+		throw new Error('User deletion state must be changed through the deletion lifecycle');
+	}
+}
+
+function assertWritableUserId(userId: UserID): void {
+	if (isSyntheticUserId(userId)) {
+		throw new Error(`Refusing to write a users row for synthetic user ${userId}`);
+	}
+}
 
 export class UserDataRepository {
 	async findUnique(userId: UserID): Promise<User | null> {
@@ -125,22 +140,22 @@ export class UserDataRepository {
 		updatedData: UserRow;
 	}> {
 		const userId = data.user_id;
+		assertWritableUserId(userId);
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
 			},
-			(current) => ({
-				pk: {user_id: userId},
-				patch: buildPatchFromData(data, current, USER_COLUMNS, ['user_id']),
-			}),
+			(current) => {
+				const patch = buildPatchFromData(data, current, USER_COLUMNS, ['user_id']);
+				assertOrdinaryUserPatch(patch);
+				return {pk: {user_id: userId}, patch};
+			},
 			Users,
 			{initialData: oldData},
 		);
-		return {
-			finalVersion: result.finalVersion,
-			previousData: result.previousData,
-			updatedData: {...data, version: result.finalVersion ?? data.version},
-		};
+		const updatedData = {...data, version: result.finalVersion ?? data.version};
+		await emitAccountChangedIfRelevant(result.previousData, updatedData);
+		return {finalVersion: result.finalVersion, previousData: result.previousData, updatedData};
 	}
 
 	async patchUser(
@@ -152,6 +167,8 @@ export class UserDataRepository {
 		previousData: UserRow | null;
 		updatedData: UserRow;
 	}> {
+		assertWritableUserId(userId);
+		assertOrdinaryUserPatch(patch);
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});
@@ -169,7 +186,94 @@ export class UserDataRepository {
 			user_id: userId,
 			version: result.finalVersion ?? nextVersion(previousData?.version),
 		};
+		await emitAccountChangedIfRelevant(previousData, updatedData);
 		return {finalVersion: result.finalVersion, previousData, updatedData};
+	}
+
+	async patchDeletion(
+		user: User,
+		patch: UserPatch,
+		transition: UserDeletionTransition,
+	): Promise<{
+		finalVersion: number;
+		previousData: UserRow;
+		updatedData: UserRow;
+	}> {
+		assertWritableUserId(user.id);
+		if (patch.deletion_started_at) throw new Error('The deletion start marker is immutable');
+		if (transition === 'schedule' && user.deletionStartedAt) {
+			throw new ConflictError({code: APIErrorCodes.CONFLICT, message: 'Account deletion has already started'});
+		}
+		if (transition !== 'schedule' && (!user.deletionStartedAt || !user.pendingDeletionAt)) {
+			throw new Error('Account deletion must be started before completion');
+		}
+		if (transition === 'anonymise' && patch.pending_deletion_at) {
+			throw new Error('Account deletion must retain its schedule until cleanup completes');
+		}
+		const previousData = user.toRow();
+		const finalVersion = nextVersion(user.version);
+		const applied = await executeConditional(
+			Users.conditionalPatchByPk(
+				{user_id: user.id},
+				{...patch, version: Db.set(finalVersion)},
+				{
+					pending_deletion_at: user.pendingDeletionAt,
+					deletion_started_at: transition === 'schedule' ? null : user.deletionStartedAt,
+					flags: previousData.flags,
+					version: user.version,
+				},
+			),
+		);
+		if (!applied) {
+			throw new ConflictError({code: APIErrorCodes.CONFLICT, message: 'Account deletion state has changed'});
+		}
+		const updatedData = {...previousData, ...applyPatchToRow(previousData, patch), version: finalVersion};
+		await emitAccountChangedIfRelevant(previousData, updatedData, 'deletion');
+		return {finalVersion, previousData, updatedData};
+	}
+
+	async compareAndSetFlags(user: User, flags: bigint): Promise<{previousData: UserRow; updatedData: UserRow} | null> {
+		assertWritableUserId(user.id);
+		const previousData = user.toRow();
+		const version = nextVersion(user.version);
+		const expected = previousData.flags ?? 0n;
+		const conditions: Array<Partial<UserRow>> = [{flags: expected}];
+		if (expected === 0n && previousData.version != null) {
+			conditions.push({flags: null, version: previousData.version});
+		}
+		for (const condition of conditions) {
+			const applied = await executeConditional(
+				Users.conditionalPatchByPk({user_id: user.id}, {flags: Db.set(flags), version: Db.set(version)}, condition),
+			);
+			if (!applied) continue;
+			const updatedData = {...previousData, flags, version};
+			await emitAccountChangedIfRelevant(previousData, updatedData);
+			return {previousData, updatedData};
+		}
+		return null;
+	}
+
+	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {
+		assertWritableUserId(userId);
+		const scheduledAt = pendingDeletionAt.getTime();
+		if (!Number.isFinite(scheduledAt)) throw new Error('Account deletion requires a valid captured schedule');
+		const user = await this.findUnique(userId);
+		if (!user || user.pendingDeletionAt?.getTime() !== scheduledAt) return null;
+		if (user.deletionStartedAt) return user;
+		const startedAt = new Date();
+		if (scheduledAt > startedAt.getTime() || isPendingDeletionBlocked(user)) return null;
+		const version = nextVersion(user.version);
+		const applied = await executeConditional(
+			Users.conditionalPatchByPk(
+				{user_id: userId},
+				{deletion_started_at: Db.set(startedAt), version: Db.set(version)},
+				{pending_deletion_at: pendingDeletionAt, deletion_started_at: null, flags: user.flags, version: user.version},
+			),
+		);
+		if (!applied) {
+			throw new ConflictError({code: APIErrorCodes.CONFLICT, message: 'Account deletion state has changed'});
+		}
+		return new User({...user.toRow(), deletion_started_at: startedAt, version});
 	}
 
 	async updateLastActiveAt(params: {userId: UserID; lastActiveAt: Date; lastActiveIp?: string}): Promise<{
@@ -183,6 +287,7 @@ export class UserDataRepository {
 		};
 	}> {
 		const {userId, lastActiveAt, lastActiveIp} = params;
+		assertWritableUserId(userId);
 		const previousData = (await this.getActivityTracking(userId)) ?? {last_active_at: null, last_active_ip: null};
 		await upsertOne(
 			Users.patchByPk(
@@ -219,6 +324,7 @@ export class UserDataRepository {
 	): Promise<{
 		finalVersion: number | null;
 	}> {
+		assertWritableUserId(userId);
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
 				return fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {user_id: userId});

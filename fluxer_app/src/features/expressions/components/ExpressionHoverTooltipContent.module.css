@@ -1,0 +1,36 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.container {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	text-align: left;
+}
+
+.preview {
+	display: block;
+	flex-shrink: 0;
+	width: 2rem;
+	height: 2rem;
+	min-width: 2rem;
+	min-height: 2rem;
+	object-fit: contain;
+}
+
+.text {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.name {
+	font-weight: 600;
+	word-break: break-word;
+}
+
+.hint {
+	font-size: 0.75rem;
+	font-weight: 400;
+	color: var(--text-primary-muted);
+}

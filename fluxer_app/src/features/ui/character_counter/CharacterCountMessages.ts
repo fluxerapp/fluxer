@@ -3,12 +3,13 @@
 import {msg} from '@lingui/core/macro';
 
 export const CHARACTERS_LEFT_DESCRIPTOR = msg({
-	message: '{remaining} characters left',
+	message: '{remaining, plural, one {# character left} other {# characters left}}',
 	comment: 'Character counter status showing the number of characters remaining.',
 });
 
 export const CHARACTERS_LEFT_GET_TO_WRITE_UP_TO_CHARACTERS_DESCRIPTOR = msg({
-	message: '{remaining} characters left. Get {premiumProductName} to write up to {premiumMaxLength} characters.',
+	message:
+		'{remaining, plural, one {# character left} other {# characters left}}. Get {premiumProductName} to write up to {premiumMaxLength, plural, one {# character} other {# characters}}.',
 	comment: 'Character counter status with an upsell to the premium tier.',
 });
 

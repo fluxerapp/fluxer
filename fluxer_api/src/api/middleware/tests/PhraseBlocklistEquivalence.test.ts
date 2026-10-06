@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PhraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {buildPhraseMatchForms, canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
+import {SubstringMatcher} from '@app/api/utils/SubstringMatcher';
 import {transliterate} from 'transliteration';
 import {describe, expect, test} from 'vitest';
-import {buildPhraseMatchForms, canonicalizeStoredPhrase} from '../../utils/PhraseBlocklistNormalization';
-import {SubstringMatcher} from '../../utils/SubstringMatcher';
-import {PhraseBlocklistCache} from '../PhraseBlocklistCache';
 
 const LEGACY_CONTROL_OR_FORMAT_REGEX = /[\p{Cc}\p{Cf}\uFFFE\uFFFF]/gu;
 const LEGACY_VARIATION_SELECTOR_REGEX = /(?:[\uFE00-\uFE0F]|[\u{E0100}-\u{E01EF}])/gu;

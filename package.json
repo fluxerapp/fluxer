@@ -37,7 +37,6 @@
 		"lint": "cargo run -p fluxer-dev -- lint",
 		"openapi:generate": "pnpm --filter @fluxer/openapi generate",
 		"openapi:validate": "pnpm --filter @fluxer/openapi validate",
-		"remote": "node scripts/remote.mjs",
 		"test": "cargo run -p fluxer-dev -- test",
 		"typecheck": "cargo run -p fluxer-dev -- typecheck"
 	},
@@ -58,5 +57,5 @@
 		"typescript-eslint": "catalog:",
 		"vite": "catalog:"
 	},
-	"packageManager": "pnpm@10.29.3"
+	"packageManager": "pnpm@11.27.0"
 }

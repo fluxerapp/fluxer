@@ -23,3 +23,21 @@ export const UnreadBadgeCustomizationControl = observer(() => {
 		/>
 	);
 });
+
+const ENABLE_EXPRESSION_CLONE_SHORTCUTS_DESCRIPTOR = msg({
+	message: 'Enable emoji and sticker cloning shortcuts',
+	comment: 'Short label for the experimental advanced setting.',
+});
+
+export const ExpressionCloneShortcutsControl = observer(() => {
+	const {i18n} = useLingui();
+	return (
+		<Switch
+			ariaLabel={i18n._(ENABLE_EXPRESSION_CLONE_SHORTCUTS_DESCRIPTOR)}
+			value={AdvancedSettings.expressionCloneShortcutsEnabled}
+			onChange={AdvancedSettings.setExpressionCloneShortcutsEnabled}
+			compact
+			data-flx="user.advanced-settings-tab.switch.expression-clone-shortcuts"
+		/>
+	);
+});

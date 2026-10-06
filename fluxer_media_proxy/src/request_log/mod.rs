@@ -19,6 +19,7 @@ use axum::{
     middleware::Next,
     response::Response,
 };
+use fluxer_common::attachment_url_signature::is_signature_parameter_name;
 use rand::RngExt;
 use stage::{StageTimingSnapshot, StageTimings};
 use std::{future::Future, sync::Arc, time::Instant};
@@ -27,7 +28,8 @@ use tracing::{Level, event};
 const ID_ALPHABET: &[u8] = b"0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const ID_LEN: usize = 12;
 const TARGET_LOG_BYTES_MAX: usize = 512;
-const HEADER_LOG_BYTES_MAX: usize = 256;
+pub(crate) const HEADER_LOG_BYTES_MAX: usize = 256;
+const REDACTED_VALUE: &str = "[redacted]";
 
 #[derive(Clone, Debug)]
 pub struct RequestId(pub String);
@@ -70,7 +72,7 @@ impl RequestObservation {
             kind: classify_route(path),
             path: clip(path, TARGET_LOG_BYTES_MAX),
             query: query
-                .map(|query| clip(query, TARGET_LOG_BYTES_MAX))
+                .map(|query| clip(&redact_signature_values(query), TARGET_LOG_BYTES_MAX))
                 .unwrap_or_default(),
             referer: header_str(headers, header::REFERER)
                 .map(|value| clip(&external_url_for_log(value), HEADER_LOG_BYTES_MAX)),
@@ -87,6 +89,7 @@ pub fn classify_route(path: &str) -> RequestKind {
         "/_health" => Some(RequestKind::Health),
         "/_metrics" => Some(RequestKind::Other),
         "/_metadata" => Some(RequestKind::Metadata),
+        "/_sniff" => Some(RequestKind::Sniff),
         "/_thumbnail" => Some(RequestKind::Thumbnail),
         "/_frames" => Some(RequestKind::Frames),
         _ => None,
@@ -271,7 +274,28 @@ fn log_reason(reason: Option<ErrorReason>, status: StatusCode) -> (&'static str,
     }
 }
 
-fn clip(value: &str, max: usize) -> String {
+fn redact_signature_values(query: &str) -> String {
+    if !query.contains('=') {
+        return query.to_owned();
+    }
+    let mut out = String::with_capacity(query.len());
+    for (index, field) in query.split('&').enumerate() {
+        if index > 0 {
+            out.push('&');
+        }
+        match field.split_once('=') {
+            Some((name, _)) if is_signature_parameter_name(name) => {
+                out.push_str(name);
+                out.push('=');
+                out.push_str(REDACTED_VALUE);
+            }
+            _ => out.push_str(field),
+        }
+    }
+    out
+}
+
+pub(crate) fn clip(value: &str, max: usize) -> String {
     if value.len() <= max {
         return value.to_owned();
     }
@@ -292,8 +316,48 @@ fn default_reason(status: StatusCode) -> &'static str {
 mod tests {
     use super::*;
     use crate::metrics::Metrics;
-    use axum::{Router, body::Body, middleware, response::IntoResponse, routing::get};
+    use axum::{
+        Router,
+        body::Body,
+        middleware,
+        response::IntoResponse,
+        routing::{get, post},
+    };
+    use std::sync::Mutex;
     use tower::ServiceExt;
+    use tracing_subscriber::fmt::MakeWriter;
+
+    #[derive(Clone, Default)]
+    struct CapturedLog(Arc<Mutex<Vec<u8>>>);
+
+    impl CapturedLog {
+        fn text(&self) -> String {
+            String::from_utf8(self.0.lock().expect("captured log is not poisoned").clone())
+                .expect("captured log is utf-8")
+        }
+    }
+
+    impl std::io::Write for CapturedLog {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.0
+                .lock()
+                .expect("captured log is not poisoned")
+                .extend_from_slice(buf);
+            Ok(buf.len())
+        }
+
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
+    }
+
+    impl<'a> MakeWriter<'a> for CapturedLog {
+        type Writer = Self;
+
+        fn make_writer(&'a self) -> Self::Writer {
+            self.clone()
+        }
+    }
 
     fn req_id_is_alphabet_only(id: &str) -> bool {
         id.len() == ID_LEN && id.bytes().all(|c| ID_ALPHABET.contains(&c))
@@ -324,6 +388,8 @@ mod tests {
     fn classify_route_buckets_known_prefixes() {
         assert_eq!(RequestKind::Health, classify_route("/_health"));
         assert_eq!(RequestKind::Metadata, classify_route("/_metadata"));
+        assert_eq!(RequestKind::Sniff, classify_route("/_sniff"));
+        assert_eq!(RequestKind::Other, classify_route("/_metrics"));
         assert_eq!(RequestKind::Upload, classify_route("/v1/relay/abc"));
         assert_eq!(RequestKind::External, classify_route("/external/x/y"));
         assert_eq!(RequestKind::Attachment, classify_route("/attachments/a/b"));
@@ -363,6 +429,69 @@ mod tests {
                 Some(ErrorReason::with_message("storage_error", "key=a")),
                 StatusCode::NOT_FOUND
             )
+        );
+    }
+
+    #[test]
+    fn a_live_signature_never_reaches_the_log() {
+        let signature = "f84dea2dbe168641c69753d838f270806583fedfe5c86f3f7a9a80f93af7ad28";
+        for query in [
+            format!("ex=6a9a7231&is=6a9920b1&hm={signature}"),
+            format!("ex=6a9a7231&is=6a9920b1&hm={signature}&"),
+            format!("width=64&ex=6a9a7231&is=6a9920b1&hm={signature}"),
+            format!("%65x=6a9a7231&is=6a9920b1&hm={signature}&"),
+            format!("hm={signature}&hm={signature}"),
+            format!("ex=0&is=6a9920b1&hm={signature}&uc=dp"),
+            format!("ex=0&is=6a9920b1&hm={signature}&uc=dp&"),
+            format!("width=64&%75c=dp&hm={signature}&ex=6a9a7231&is=6a9920b1"),
+        ] {
+            let observation = RequestObservation::new(
+                RequestId::generate(),
+                Method::GET,
+                "/attachments/1/2/a.png",
+                Some(&query),
+                &HeaderMap::new(),
+            );
+            assert!(!observation.query.contains(signature), "{query}");
+            assert!(!observation.query.contains("6a9a7231"), "{query}");
+            assert!(!observation.query.contains("6a9920b1"), "{query}");
+            assert_eq!(
+                query.matches('&').count(),
+                observation.query.matches('&').count(),
+                "{query}"
+            );
+        }
+    }
+
+    #[test]
+    fn redaction_leaves_every_other_parameter_byte_for_byte() {
+        for query in [
+            "",
+            "size=128",
+            "width=64&height=64&format=webp",
+            "download=1",
+            "hm",
+            "uc",
+            "a=b&&c=d",
+            "ucx=dp&dp=1",
+        ] {
+            assert_eq!(query, redact_signature_values(query), "{query}");
+        }
+        assert_eq!(
+            "width=64&ex=[redacted]&is=[redacted]&hm=[redacted]&download=1",
+            redact_signature_values("width=64&ex=6a9a7231&is=6a9920b1&hm=abc&download=1")
+        );
+        assert_eq!(
+            "ex=[redacted]&is=[redacted]&hm=[redacted]&uc=[redacted]&&width=64",
+            redact_signature_values("ex=0&is=6a9920b1&hm=abc&uc=dp&&width=64")
+        );
+        assert_eq!(
+            "ex=[redacted]&is=[redacted]&hm=[redacted]",
+            redact_signature_values("ex=6a9a7231&is=6a9920b1&hm=abc")
+        );
+        assert_eq!(
+            "ex=[redacted]&is=[redacted]&hm=[redacted]&uc=[redacted]",
+            redact_signature_values("ex=0&is=6a9920b1&hm=abc&uc=dp")
         );
     }
 
@@ -461,6 +590,56 @@ mod tests {
         let rendered = metrics.render();
         assert!(rendered.contains("fluxer_media_proxy_requests_5xx_total{kind=\"other\"} 1\n"));
         assert!(rendered.contains("fluxer_media_proxy_request_duration_ms_count 1\n"));
+    }
+
+    #[tokio::test]
+    async fn a_successful_sniff_writes_its_own_request_line_and_series() {
+        let metrics = Metrics::new();
+        let app = Router::new()
+            .route("/_sniff", post(|| async { "{\"content_type\":null}" }))
+            .route("/_metrics", get(|| async { "" }))
+            .layer(middleware::from_fn_with_state(metrics.request(), trace));
+        let captured = CapturedLog::default();
+        let subscriber = tracing_subscriber::fmt()
+            .with_writer(captured.clone())
+            .with_ansi(false)
+            .with_max_level(tracing::Level::TRACE)
+            .finish();
+        {
+            let _guard = tracing::subscriber::set_default(subscriber);
+            for (method, uri) in [(Method::POST, "/_sniff"), (Method::GET, "/_metrics")] {
+                let response = app
+                    .clone()
+                    .oneshot(
+                        axum::http::Request::builder()
+                            .method(method)
+                            .uri(uri)
+                            .body(Body::empty())
+                            .unwrap(),
+                    )
+                    .await
+                    .unwrap();
+                assert_eq!(StatusCode::OK, response.status(), "{uri}");
+            }
+        }
+        let log = captured.text();
+        let request_lines: Vec<&str> = log
+            .lines()
+            .filter(|line| line.contains(" request "))
+            .collect();
+        assert_eq!(1, request_lines.len(), "{log}");
+        assert!(request_lines[0].contains("kind=\"sniff\""), "{log}");
+        assert!(request_lines[0].contains("method=POST"), "{log}");
+        assert!(request_lines[0].contains("path=/_sniff"), "{log}");
+        assert!(request_lines[0].contains("status=200"), "{log}");
+        let rendered = metrics.render();
+        assert!(rendered.contains("fluxer_media_proxy_requests_2xx_total{kind=\"sniff\"} 1\n"));
+        assert!(rendered.contains("fluxer_media_proxy_requests_2xx_total{kind=\"other\"} 1\n"));
+        assert!(
+            rendered.contains(
+                "fluxer_media_proxy_request_duration_by_route_ms_count{kind=\"sniff\"} 1\n"
+            )
+        );
     }
 
     #[tokio::test]

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {PASSKEY_RP_IDS} from '@electron/common/Constants';
 import type {
 	AppMetricsSnapshot,
 	ClipboardWriteFileOptions,
@@ -19,6 +20,10 @@ import type {
 	GlobalKeyEvent,
 	GlobalKeyHookRegisterOptions,
 	GlobalMouseEvent,
+	GlobalShortcutCaptureEvent,
+	GlobalShortcutEvent,
+	GlobalShortcutsStatus,
+	GlobalShortcutsSyncPayload,
 	GpuInfo,
 	InputMonitoringPermissionStatus,
 	LinuxAppearanceSnapshot,
@@ -42,7 +47,6 @@ import type {
 	NativeScreenCaptureStartResult,
 	NotificationOptions,
 	NotificationResult,
-	OpenH264Status,
 	SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
 	SpellcheckBundledDictionary,
 	SpellcheckResolvedEngineInfo,
@@ -50,6 +54,7 @@ import type {
 	StreamerModeCaptureAppStatus,
 	StreamingPriorityDiagnostics,
 	TextareaContextMenuParams,
+	ThemeLinkedFileChange,
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
 	UpdaterContext,
@@ -340,9 +345,6 @@ const api: ElectronAPI = {
 	getDesktopInfo: (): Promise<DesktopInfo> => ipcRenderer.invoke('get-desktop-info'),
 	getGpuInfo: (): Promise<GpuInfo> => ipcRenderer.invoke('get-gpu-info'),
 	getAppMetrics: (): Promise<AppMetricsSnapshot> => ipcRenderer.invoke('get-app-metrics'),
-	getOpenH264Status: (): Promise<OpenH264Status> => ipcRenderer.invoke('get-openh264-status'),
-	setOpenH264Enabled: (enabled: boolean): Promise<OpenH264Status> =>
-		ipcRenderer.invoke('set-openh264-enabled', enabled),
 	getSystemIdleTimeMs: (): Promise<number> => ipcRenderer.invoke('system-idle-time-ms'),
 	getDesktopWindowBehaviorSettings: (): Promise<DesktopWindowBehaviorSettings> =>
 		ipcRenderer.invoke('desktop-window-behavior-get'),
@@ -356,6 +358,13 @@ const api: ElectronAPI = {
 	readThemeLocalFiles: (paths: Array<string>) => ipcRenderer.invoke('theme-local-files-read', paths),
 	clearThemeLocalFiles: () => ipcRenderer.invoke('theme-local-files-clear'),
 	importThemeDirectory: () => ipcRenderer.invoke('theme-directory-import'),
+	pickThemeLinkedFiles: (options?: {multiple?: boolean}) => ipcRenderer.invoke('theme-linked-files-pick', options),
+	watchThemeLinkedFiles: (paths: Array<string>) => ipcRenderer.invoke('theme-linked-files-watch', paths),
+	onThemeLinkedFileChange: (callback: (change: ThemeLinkedFileChange) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, change: ThemeLinkedFileChange) => callback(change);
+		ipcRenderer.on('theme-linked-file-changed', handler);
+		return () => ipcRenderer.removeListener('theme-linked-file-changed', handler);
+	},
 	cacheVoiceBackgroundMedia: (options) => ipcRenderer.invoke('voice-background-media-cache:write', options),
 	readVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:read', id),
 	deleteVoiceBackgroundMedia: (id) => ipcRenderer.invoke('voice-background-media-cache:delete', id),
@@ -444,8 +453,8 @@ const api: ElectronAPI = {
 		ipcRenderer.invoke('mac-tcc:status', 'screen-recording'),
 	requestScreenRecordingPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'screen-recording'),
-	downloadFile: (url: string, defaultPath: string): Promise<DownloadFileResult> =>
-		ipcRenderer.invoke('download-file', {url, defaultPath}),
+	downloadFile: (url: string, defaultPath: string, sha256?: string | null): Promise<DownloadFileResult> =>
+		ipcRenderer.invoke('download-file', {url, defaultPath, sha256}),
 	passkeyIsSupported: (): Promise<boolean> => ipcRenderer.invoke('passkey-is-supported'),
 	passkeyAuthenticate: (
 		options: PublicKeyCredentialRequestOptionsJSON,
@@ -455,6 +464,11 @@ const api: ElectronAPI = {
 		options: PublicKeyCredentialCreationOptionsJSON,
 		requestContext?: {pin?: string},
 	): Promise<RegistrationResponseJSON> => ipcRenderer.invoke('passkey-register', options, requestContext),
+	passkeyRpIds: PASSKEY_RP_IDS,
+	domainMigration: {
+		version: 1,
+		setAppOrigin: (origin: string): Promise<void> => ipcRenderer.invoke('domain-migration:set-app-origin', origin),
+	},
 	toggleDevTools: (): void => {
 		ipcRenderer.send('toggle-devtools');
 	},
@@ -624,6 +638,45 @@ const api: ElectronAPI = {
 		return () => {
 			ipcRenderer.removeListener('global-keybind-triggered', handler);
 		};
+	},
+	globalShortcuts: {
+		sync: (payload: GlobalShortcutsSyncPayload): Promise<void> => ipcRenderer.invoke('global-shortcuts:sync', payload),
+		setPaused: (paused: boolean): Promise<void> => ipcRenderer.invoke('global-shortcuts:set-paused', paused),
+		getStatus: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:get-status'),
+		onStatus: (callback: (status: GlobalShortcutsStatus) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutsStatus): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcuts:status', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcuts:status', handler);
+			};
+		},
+		onEvent: (callback: (event: GlobalShortcutEvent) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutEvent): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcut-event', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcut-event', handler);
+			};
+		},
+		setUp: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:set-up'),
+		recheck: (): Promise<GlobalShortcutsStatus> => ipcRenderer.invoke('global-shortcuts:recheck'),
+		configure: (): Promise<void> => ipcRenderer.invoke('global-shortcuts:configure'),
+		setDirectInputEnabled: (enabled: boolean): Promise<GlobalShortcutsStatus> =>
+			ipcRenderer.invoke('global-shortcuts:set-direct-input-enabled', enabled),
+		startCapture: (): Promise<number | null> => ipcRenderer.invoke('global-shortcuts:start-capture'),
+		stopCapture: (captureId: number): Promise<void> => ipcRenderer.invoke('global-shortcuts:stop-capture', captureId),
+		onCapture: (callback: (event: GlobalShortcutCaptureEvent) => void): (() => void) => {
+			const handler = (_event: Electron.IpcRendererEvent, data: GlobalShortcutCaptureEvent): void => {
+				callback(data);
+			};
+			ipcRenderer.on('global-shortcuts:capture', handler);
+			return () => {
+				ipcRenderer.removeListener('global-shortcuts:capture', handler);
+			};
+		},
 	},
 	spellcheckGetState: (): Promise<SpellcheckState> => ipcRenderer.invoke('spellcheck-get-state'),
 	spellcheckSetState: (state: Partial<SpellcheckState>): Promise<SpellcheckState> =>

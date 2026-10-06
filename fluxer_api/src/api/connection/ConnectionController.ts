@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {ConnectionRateLimitConfigs} from '@app/api/rate_limit_configs/ConnectionRateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
+import {Validator} from '@app/api/Validator';
 import {
 	ConnectionListResponse,
 	ConnectionResponse,
@@ -10,13 +18,6 @@ import {
 	UpdateConnectionRequest,
 	VerifyAndCreateConnectionRequest,
 } from '@fluxer/schema/src/domains/connection/ConnectionSchemas';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {requireOAuth2ScopeForBearer} from '../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {ConnectionRateLimitConfigs} from '../rate_limit_configs/ConnectionRateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function ConnectionController(app: HonoApp) {
 	app.get(
@@ -56,6 +57,7 @@ export function ConnectionController(app: HonoApp) {
 				'Initiates a new external service connection and returns verification instructions. No database record is created until verification succeeds.',
 		}),
 		async (ctx) => {
+			assertAccountNotLimited(ctx.get('user'));
 			const verification = await ctx
 				.get('connectionRequestService')
 				.initiateConnection(ctx.get('user').id, ctx.req.valid('json'));
@@ -79,6 +81,7 @@ export function ConnectionController(app: HonoApp) {
 				'Verifies the external service connection using the initiation token and creates the connection record on success.',
 		}),
 		async (ctx) => {
+			assertAccountNotLimited(ctx.get('user'));
 			const connection = await ctx
 				.get('connectionRequestService')
 				.verifyAndCreateConnection(ctx.get('user').id, ctx.req.valid('json'));
@@ -128,29 +131,6 @@ export function ConnectionController(app: HonoApp) {
 			const {type, connection_id} = ctx.req.valid('param');
 			await ctx.get('connectionRequestService').deleteConnection(ctx.get('user').id, type, connection_id);
 			return ctx.body(null, 204);
-		},
-	);
-	app.post(
-		'/users/@me/connections/:type/:connection_id/verify',
-		RateLimitMiddleware(ConnectionRateLimitConfigs.CONNECTION_VERIFY),
-		LoginRequired,
-		DefaultUserOnly,
-		Validator('param', ConnectionTypeParam),
-		OpenAPI({
-			operationId: 'verify_connection',
-			summary: 'Verify connection',
-			responseSchema: ConnectionResponse,
-			statusCode: 200,
-			security: ['bearerToken', 'sessionToken'],
-			tags: ['Connections'],
-			description: 'Triggers verification for an external service connection.',
-		}),
-		async (ctx) => {
-			const {type, connection_id} = ctx.req.valid('param');
-			const connection = await ctx
-				.get('connectionRequestService')
-				.verifyConnection(ctx.get('user').id, type, connection_id);
-			return ctx.json(connection);
 		},
 	);
 	app.patch(

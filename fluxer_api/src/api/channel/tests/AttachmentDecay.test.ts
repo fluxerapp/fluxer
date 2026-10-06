@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createChannel,
+	createGuild,
+	loadFixture,
+	sendMessageWithAttachments,
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
 import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {getExpiryBucket} from '../../utils/AttachmentDecay';
-import {createChannel, createGuild, loadFixture, sendMessageWithAttachments} from './AttachmentTestUtils';
 
 interface AttachmentDecayRow {
 	attachment_id: string;
@@ -71,7 +76,7 @@ describe('Attachment Decay', () => {
 		const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 		const channelId = guild.system_channel_id ?? channel.id;
 		const file1Data = loadFixture('yeah.png');
-		const file2Data = loadFixture('thisisfine.gif');
+		const file2Data = loadFixture('animated.gif');
 		const {response, json} = await sendMessageWithAttachments(
 			harness,
 			account.token,
@@ -253,7 +258,7 @@ describe('Attachment Decay', () => {
 		const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 		const channelId = guild.system_channel_id ?? channel.id;
 		const smallFile = loadFixture('yeah.png');
-		const largeFile = loadFixture('thisisfine.gif');
+		const largeFile = loadFixture('animated.gif');
 		const smallResult = await sendMessageWithAttachments(
 			harness,
 			account.token,

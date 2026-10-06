@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use super::{
-    Metrics,
+    Metrics, attachment_signature,
     histogram::Histogram,
     now_ms,
     request::{REQUEST_KIND_COUNT, RequestKind},
@@ -272,6 +272,19 @@ pub(super) fn render_metrics(out: &mut String, metrics: &Metrics) -> fmt::Result
         "fluxer_media_proxy_avif_libheif_decode_failures_total",
         &metrics.transform.avif_libheif_decode_failures,
     )?;
+    writeln!(
+        out,
+        "# TYPE fluxer_media_proxy_attachment_signature_verdicts_total counter"
+    )?;
+    for verdict in attachment_signature::VERDICTS {
+        writeln!(
+            out,
+            "fluxer_media_proxy_attachment_signature_verdicts_total{{verdict=\"{}\"}} {}",
+            verdict.label(),
+            metrics.attachment_signature.verdicts[attachment_signature::verdict_index(verdict)]
+                .load(Ordering::Relaxed)
+        )?;
+    }
     let uptime_ms = now_ms() - metrics.start_ms;
     writeln!(
         out,

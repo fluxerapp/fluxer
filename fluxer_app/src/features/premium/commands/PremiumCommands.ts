@@ -8,12 +8,11 @@ import PremiumState from '@app/features/premium/state/PremiumState';
 import Users from '@app/features/user/state/Users';
 import type {
 	CurrentSubscriptionPriceResponse,
-	LocalizedCardPreapprovalContinueResponse,
 	PremiumStateResponse,
 	PriceIdsResponse,
-	PricingMode,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundResponse,
+	SwitchToListPriceResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 
 const logger = new Logger('Premium');
@@ -49,15 +48,12 @@ async function resolvePremiumStateCountryCode(countryCode?: string): Promise<str
 	return normalizedCountryCode(GeoIP.countryCode ?? undefined);
 }
 
-function priceIdsCacheKey(countryCode: string | undefined, pricingMode: PricingMode): string {
-	return `${countryCode ?? 'default'}:${pricingMode}`;
+function priceIdsCacheKey(countryCode: string | undefined): string {
+	return countryCode ?? 'default';
 }
 
-function priceIdsQuery(countryCode: string | undefined, pricingMode: PricingMode): Record<string, string> {
-	return {
-		...(countryCode ? {country_code: countryCode} : {}),
-		pricing_mode: pricingMode,
-	};
+function priceIdsQuery(countryCode: string | undefined): Record<string, string> {
+	return countryCode ? {country_code: countryCode} : {};
 }
 
 function checkoutEndpoint(isGift: boolean): string {
@@ -68,34 +64,14 @@ function checkoutSessionBody(
 	priceId: string,
 	countryCode: string | undefined,
 	isGift: boolean,
-	pricingMode: PricingMode,
 	paymentMethod?: CheckoutPaymentMethod,
 ): Record<string, string> {
 	return {
 		price_id: priceId,
 		...(countryCode ? {country_code: countryCode} : {}),
 		...(countryCode ? {client_geoip_country_code: countryCode} : {}),
-		pricing_mode: pricingMode,
 		...(paymentMethod && !isGift ? {payment_method: paymentMethod} : {}),
 	};
-}
-
-function preapprovalSessionBody(
-	priceId: string,
-	countryCode: string,
-	pricingMode: PricingMode,
-): Record<string, string> {
-	const normalized = normalizedCountryCode(countryCode) ?? countryCode;
-	return {
-		price_id: priceId,
-		country_code: normalized,
-		client_geoip_country_code: normalized,
-		pricing_mode: pricingMode,
-	};
-}
-
-function tokenBody(token: string): {token: string} {
-	return {token};
 }
 
 async function postAndInvalidate(endpoint: string, body?: Record<string, string>): Promise<void> {
@@ -103,9 +79,9 @@ async function postAndInvalidate(endpoint: string, body?: Record<string, string>
 	invalidateCurrentSubscriptionPriceCache();
 }
 
-export async function fetchPriceIds(countryCode?: string, pricingMode: PricingMode = 'localized'): Promise<PriceIds> {
+export async function fetchPriceIds(countryCode?: string): Promise<PriceIds> {
 	const country = normalizedCountryCode(countryCode);
-	const cacheKey = priceIdsCacheKey(country, pricingMode);
+	const cacheKey = priceIdsCacheKey(country);
 	const cachedEntry = priceIdsCache.get(cacheKey);
 	if (cachedEntry?.value && cachedEntry.fetchedAt && Date.now() - cachedEntry.fetchedAt < PRICE_IDS_CACHE_TTL_MS) {
 		return cachedEntry.value;
@@ -116,7 +92,7 @@ export async function fetchPriceIds(countryCode?: string, pricingMode: PricingMo
 	const request = (async () => {
 		try {
 			const response = await http.get<PriceIds>(Endpoints.PREMIUM_PRICE_IDS, {
-				query: priceIdsQuery(country, pricingMode),
+				query: priceIdsQuery(country),
 			});
 			logger.debug('Price IDs fetched', response.body);
 			priceIdsCache.set(cacheKey, {
@@ -214,6 +190,9 @@ export async function refreshPremiumState(countryCode?: string): Promise<Premium
 	}
 	try {
 		const state = await fetchPremiumState(countryCode);
+		if (Users.currentUser?.id !== currentUserId) {
+			return state;
+		}
 		if (currentUserId) {
 			PremiumState.setState(currentUserId, state);
 		}
@@ -227,10 +206,13 @@ export async function refreshPremiumState(countryCode?: string): Promise<Premium
 }
 
 export async function setPremiumPerksDisabled(disabled: boolean): Promise<PremiumStateResponse> {
+	const currentUserId = Users.currentUser?.id;
 	const response = await http.patch<PremiumStateResponse>(Endpoints.PREMIUM_PERKS_DISABLED, {
 		body: {disabled} satisfies PremiumPerksDisabledRequest,
 	});
-	const currentUserId = Users.currentUser?.id;
+	if (Users.currentUser?.id !== currentUserId) {
+		return response.body;
+	}
 	if (currentUserId) {
 		PremiumState.setState(currentUserId, response.body);
 	}
@@ -255,51 +237,17 @@ export async function createCheckoutSession(
 	priceId: string,
 	countryCode?: string,
 	isGift: boolean = false,
-	pricingMode: PricingMode = 'localized',
 	paymentMethod?: CheckoutPaymentMethod,
 ): Promise<string> {
 	try {
 		const country = normalizedCountryCode(countryCode);
 		const response = await http.post<UrlResponse>(checkoutEndpoint(isGift), {
-			body: checkoutSessionBody(priceId, country, isGift, pricingMode, paymentMethod),
+			body: checkoutSessionBody(priceId, country, isGift, paymentMethod),
 		});
-		logger.info('Checkout session created', {priceId, countryCode, isGift, pricingMode, paymentMethod});
+		logger.info('Checkout session created', {priceId, countryCode, isGift, paymentMethod});
 		return response.body.url;
 	} catch (error) {
 		logger.error('Checkout session creation failed', error);
-		throw error;
-	}
-}
-
-export async function createLocalizedCardPreapprovalSession(
-	priceId: string,
-	countryCode: string,
-	pricingMode: PricingMode = 'localized',
-): Promise<string> {
-	try {
-		const response = await http.post<UrlResponse>(Endpoints.STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL, {
-			body: preapprovalSessionBody(priceId, countryCode, pricingMode),
-		});
-		logger.info('Localized card preapproval session created', {priceId, countryCode, pricingMode});
-		return response.body.url;
-	} catch (error) {
-		logger.error('Localized card preapproval session creation failed', error);
-		throw error;
-	}
-}
-
-export async function continueLocalizedCardPreapproval(
-	token: string,
-): Promise<LocalizedCardPreapprovalContinueResponse> {
-	try {
-		const response = await http.post<LocalizedCardPreapprovalContinueResponse>(
-			Endpoints.STRIPE_CHECKOUT_SUBSCRIPTION_PREAPPROVAL_CONTINUE,
-			{body: tokenBody(token)},
-		);
-		logger.debug('Localized card preapproval continuation polled', response.body);
-		return response.body;
-	} catch (error) {
-		logger.error('Localized card preapproval continuation failed', error);
 		throw error;
 	}
 }
@@ -348,6 +296,18 @@ export async function changeSubscriptionBillingCycle(
 		logger.info('Subscription billing cycle changed', {billingCycle, effectiveAt});
 	} catch (error) {
 		logger.error('Failed to change subscription billing cycle', error);
+		throw error;
+	}
+}
+
+export async function switchSubscriptionToListPrice(): Promise<SwitchToListPriceResponse> {
+	try {
+		const response = await http.post<SwitchToListPriceResponse>(Endpoints.PREMIUM_SWITCH_TO_LIST_PRICE);
+		invalidateCurrentSubscriptionPriceCache();
+		logger.info('Subscription list price switch requested', response.body);
+		return response.body;
+	} catch (error) {
+		logger.error('Failed to switch subscription to the current list price', error);
 		throw error;
 	}
 }

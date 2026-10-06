@@ -1,41 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
-import {PremiumFlags, SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {EmailServiceNotTestableError} from '@fluxer/errors/src/domains/auth/EmailServiceNotTestableError';
-import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
-import {AclsMustBeNonEmptyError} from '@fluxer/errors/src/domains/core/AclsMustBeNonEmptyError';
-import {DeletionFailedError} from '@fluxer/errors/src/domains/core/DeletionFailedError';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {InvalidAclsFormatError} from '@fluxer/errors/src/domains/core/InvalidAclsFormatError';
-import {InvalidFlagsFormatError} from '@fluxer/errors/src/domains/core/InvalidFlagsFormatError';
-import {InvalidSuspiciousFlagsFormatError} from '@fluxer/errors/src/domains/core/InvalidSuspiciousFlagsFormatError';
-import {InvalidSystemFlagError} from '@fluxer/errors/src/domains/core/InvalidSystemFlagError';
-import {InvalidTimestampError} from '@fluxer/errors/src/domains/core/InvalidTimestampError';
-import {NoPendingDeletionError} from '@fluxer/errors/src/domains/core/NoPendingDeletionError';
-import {ProcessingFailedError} from '@fluxer/errors/src/domains/core/ProcessingFailedError';
-import {TestHarnessDisabledError} from '@fluxer/errors/src/domains/core/TestHarnessDisabledError';
-import {TestHarnessForbiddenError} from '@fluxer/errors/src/domains/core/TestHarnessForbiddenError';
-import {UnknownSuspiciousFlagError} from '@fluxer/errors/src/domains/core/UnknownSuspiciousFlagError';
-import {UpdateFailedError} from '@fluxer/errors/src/domains/core/UpdateFailedError';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
-import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
-import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
-import {InvalidBotFlagError} from '@fluxer/errors/src/domains/oauth/InvalidBotFlagError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import {UnknownUserFlagError} from '@fluxer/errors/src/domains/user/UnknownUserFlagError';
-import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
-import {createSnowflakeFromTimestamp, snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {IEmailService} from '@pkgs/email/src/IEmailService';
-import type {ITestEmailService, SentEmailRecord} from '@pkgs/email/src/ITestEmailService';
-import type {Context} from 'hono';
-import {seconds} from 'itty-time';
-import {AttachmentDecayRepository} from '../attachment/AttachmentDecayRepository';
-import type {IpAuthorizationTicketCache} from '../auth/AuthLogin';
-import {getTicketCacheKey} from '../auth/AuthLogin';
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import type {IpAuthorizationTicketCache} from '@app/api/auth/AuthLogin';
+import {getTicketCacheKey} from '@app/api/auth/AuthLogin';
 import {
 	type ChannelID,
 	createApplicationID,
@@ -47,13 +14,13 @@ import {
 	type GuildID,
 	type MessageID,
 	type UserID,
-} from '../BrandedTypes';
-import {Config} from '../Config';
-import {ChannelRepository} from '../channel/ChannelRepository';
-import {createMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne} from '../database/CassandraQueryExecution';
-import {defineTable} from '../database/CassandraTableDsl';
-import type {ChannelRow} from '../database/types/ChannelTypes';
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
 import {
 	CHANNEL_EMPTY_BUCKET_COLUMNS,
 	CHANNEL_MESSAGE_BUCKET_COLUMNS,
@@ -65,33 +32,64 @@ import {
 	MESSAGE_COLUMNS,
 	type MessageByAuthorRow,
 	type MessageRow,
-} from '../database/types/MessageTypes';
-import type {GiftCodeDurationType} from '../database/types/PaymentTypes';
-import {GuildRepository} from '../guild/repositories/GuildRepository';
-import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
-import {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
-import {KVActivityTracker} from '../infrastructure/KVActivityTracker';
-import {StorageService} from '../infrastructure/StorageService';
-import {Logger} from '../Logger';
-import {requireOAuth2Scope} from '../middleware/OAuth2ScopeMiddleware';
-import {getKVClient, getSnowflakeService} from '../middleware/ServiceRegistry';
-import {mapGiftDurationMonthsToFields} from '../models/GiftCode';
-import {OAuth2TokenRepository} from '../oauth/repositories/OAuth2TokenRepository';
-import {IpAuthorizationTokens, OAuth2AccessTokensByUser} from '../Tables';
-import type {HonoApp, HonoEnv} from '../types/HonoEnv';
-import {UserSearchRepository} from '../user/repositories/account/crud/UserSearchRepository';
-import {AuthSessionRepository} from '../user/repositories/auth/AuthSessionRepository';
-import {UserChannelRepository} from '../user/repositories/UserChannelRepository';
-import {UserRepository} from '../user/repositories/UserRepository';
-import {processUserDeletion} from '../user/services/UserDeletionService';
-import {UserHarvestRepository} from '../user/UserHarvestRepository';
-import {getExpiryBucket} from '../utils/AttachmentDecay';
-import {parseReportedClientOs} from '../utils/SessionClientIdentity';
-import {processExpiredAttachments} from '../worker/tasks/ExpireAttachments';
-import {processInactivityDeletionsCore} from '../worker/tasks/ProcessInactivityDeletions';
-import {setWorkerDependencies} from '../worker/WorkerContext';
-import {initializeWorkerDependencies} from '../worker/WorkerDependencies';
-import {resetTestHarnessState} from './TestHarnessReset';
+} from '@app/api/database/types/MessageTypes';
+import type {GiftCodeDurationType} from '@app/api/database/types/PaymentTypes';
+import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {StorageService} from '@app/api/infrastructure/StorageService';
+import {Logger} from '@app/api/Logger';
+import {requireOAuth2Scope} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {getKVClient, getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
+import {mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import {IpAuthorizationTokens, OAuth2AccessTokensByUser} from '@app/api/Tables';
+import {resetTestHarnessState} from '@app/api/test/TestHarnessReset';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {UserSearchRepository} from '@app/api/user/repositories/account/crud/UserSearchRepository';
+import {AuthSessionRepository} from '@app/api/user/repositories/auth/AuthSessionRepository';
+import type {UserDeletionScheduleUpdate} from '@app/api/user/repositories/IUserAccountRepository';
+import {UserChannelRepository} from '@app/api/user/repositories/UserChannelRepository';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {processUserDeletion} from '@app/api/user/services/UserDeletionService';
+import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
+import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
+import {parseReportedClientOs} from '@app/api/utils/SessionClientIdentity';
+import {processExpiredAttachments} from '@app/api/worker/tasks/ExpireAttachments';
+import {processInactivityDeletionsCore} from '@app/api/worker/tasks/ProcessInactivityDeletions';
+import {setWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {initializeWorkerDependencies} from '@app/api/worker/WorkerDependencies';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
+import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {EmailServiceNotTestableError} from '@fluxer/errors/src/domains/auth/EmailServiceNotTestableError';
+import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {AclsMustBeNonEmptyError} from '@fluxer/errors/src/domains/core/AclsMustBeNonEmptyError';
+import {DeletionFailedError} from '@fluxer/errors/src/domains/core/DeletionFailedError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {InvalidAclsFormatError} from '@fluxer/errors/src/domains/core/InvalidAclsFormatError';
+import {InvalidFlagsFormatError} from '@fluxer/errors/src/domains/core/InvalidFlagsFormatError';
+import {InvalidSystemFlagError} from '@fluxer/errors/src/domains/core/InvalidSystemFlagError';
+import {InvalidTimestampError} from '@fluxer/errors/src/domains/core/InvalidTimestampError';
+import {NoPendingDeletionError} from '@fluxer/errors/src/domains/core/NoPendingDeletionError';
+import {ProcessingFailedError} from '@fluxer/errors/src/domains/core/ProcessingFailedError';
+import {TestHarnessDisabledError} from '@fluxer/errors/src/domains/core/TestHarnessDisabledError';
+import {TestHarnessForbiddenError} from '@fluxer/errors/src/domains/core/TestHarnessForbiddenError';
+import {UpdateFailedError} from '@fluxer/errors/src/domains/core/UpdateFailedError';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
+import {InvalidBotFlagError} from '@fluxer/errors/src/domains/oauth/InvalidBotFlagError';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import {UnknownUserFlagError} from '@fluxer/errors/src/domains/user/UnknownUserFlagError';
+import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
+import {createSnowflakeFromTimestamp, snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
+import type {IEmailService} from '@pkgs/email/src/IEmailService';
+import type {ITestEmailService, SentEmailRecord} from '@pkgs/email/src/ITestEmailService';
+import type {Context} from 'hono';
+import {seconds} from 'itty-time';
 
 const TEST_EMAIL_ENDPOINT = '/test/emails';
 const TEST_AUTH_HEADER = 'x-test-token';
@@ -238,7 +236,6 @@ async function initializeWorkerDepsWithHarnessEmail(ctx: Context<HonoEnv>, snowf
 
 const userFlagEntries = Object.entries(UserFlags);
 const premiumFlagEntries = Object.entries(PremiumFlags);
-const suspiciousFlagEntries = Object.entries(SuspiciousActivityFlags);
 
 function parseUserFlagNames(names: Array<string>): bigint | null {
 	let mask = 0n;
@@ -258,18 +255,6 @@ function parsePremiumFlagNames(names: Array<string>): number | null {
 		const entry = premiumFlagEntries.find(([flagName]) => flagName === name);
 		if (!entry) return null;
 		mask |= entry[1] as number;
-	}
-	return mask;
-}
-
-function parseSuspiciousFlagNames(names: Array<string>): number | null {
-	let mask = 0;
-	for (const name of names) {
-		const entry = suspiciousFlagEntries.find(([flagName]) => flagName === name);
-		if (!entry) {
-			return null;
-		}
-		mask |= entry[1];
 	}
 	return mask;
 }
@@ -443,8 +428,6 @@ export function TestHarnessController(app: HonoApp) {
 			clear_flags: clearFlags,
 			set_premium_flags: setPremiumFlags,
 			clear_premium_flags: clearPremiumFlags,
-			suspicious_activity_flags: suspiciousFlagsValue,
-			suspicious_activity_flag_names: suspiciousFlagNames,
 			email_bounced: emailBounced,
 			email_verified: emailVerified,
 		} = body as {
@@ -452,8 +435,6 @@ export function TestHarnessController(app: HonoApp) {
 			clear_flags?: Array<string>;
 			set_premium_flags?: Array<string>;
 			clear_premium_flags?: Array<string>;
-			suspicious_activity_flags?: number | null;
-			suspicious_activity_flag_names?: Array<string>;
 			email_bounced?: boolean;
 			email_verified?: boolean;
 		};
@@ -493,20 +474,6 @@ export function TestHarnessController(app: HonoApp) {
 		if (setPremiumFlags || clearPremiumFlags) {
 			pendingUpdates['premium_flags'] = nextPremiumFlags;
 		}
-		let suspiciousValue: number | null | undefined = suspiciousFlagsValue;
-		if (Array.isArray(suspiciousFlagNames)) {
-			const parsed = parseSuspiciousFlagNames(suspiciousFlagNames);
-			if (parsed === null) {
-				throw new UnknownSuspiciousFlagError();
-			}
-			suspiciousValue = parsed;
-		}
-		if (suspiciousValue !== undefined) {
-			if (suspiciousValue !== null && typeof suspiciousValue !== 'number') {
-				throw new InvalidSuspiciousFlagsFormatError();
-			}
-			pendingUpdates['suspicious_activity_flags'] = suspiciousValue;
-		}
 		if (emailBounced !== undefined) {
 			if (typeof emailBounced !== 'boolean') {
 				throw new InvalidFlagsFormatError();
@@ -527,7 +494,6 @@ export function TestHarnessController(app: HonoApp) {
 			success: true,
 			updated: true,
 			flags: (pendingUpdates['flags'] as bigint | undefined)?.toString() ?? user.flags?.toString(),
-			suspicious_activity_flags: pendingUpdates['suspicious_activity_flags'] ?? user.suspiciousActivityFlags ?? null,
 			email_bounced: pendingUpdates['email_bounced'] ?? user.emailBounced,
 			email_verified: pendingUpdates['email_verified'] ?? user.emailVerified,
 		});
@@ -591,13 +557,13 @@ export function TestHarnessController(app: HonoApp) {
 		} catch {
 			throw new InvalidTimestampError();
 		}
-		const updates: Record<string, unknown> = {pending_deletion_at: date};
+		const updates: UserDeletionScheduleUpdate = {pending_deletion_at: date};
 		const shouldSetSelfDeleted = setSelfDeletedFlag !== false;
 		if (shouldSetSelfDeleted) {
 			const nextFlags = (user.flags ?? 0n) | UserFlags.SELF_DELETED;
 			updates['flags'] = nextFlags;
 		}
-		const updated = await userRepository.patchUpsert(userId, updates, user.toRow());
+		const updated = await userRepository.updateDeletionSchedule(user, updates);
 		const kvClient = getKVClient();
 		const kvDeletionQueue = new KVAccountDeletionQueueService(kvClient, userRepository);
 		try {
@@ -1618,7 +1584,7 @@ export function TestHarnessController(app: HonoApp) {
 					'[test/worker/process-pending-deletions] Processing deletion',
 				);
 				const user = await userRepository.findUnique(userId);
-				if (!user || !user.pendingDeletionAt) {
+				if (!user?.pendingDeletionAt) {
 					Logger.info(
 						{
 							userId: userId.toString(),
@@ -1630,8 +1596,7 @@ export function TestHarnessController(app: HonoApp) {
 					continue;
 				}
 				const pendingDeletionAt = user.pendingDeletionAt;
-				await processUserDeletion(userId, deletion.deletionReasonCode, workerDeps);
-				await userRepository.removePendingDeletion(userId, pendingDeletionAt);
+				await processUserDeletion(userId, pendingDeletionAt, deletion.deletionReasonCode, workerDeps);
 				await kvDeletionQueue.removeFromQueue(userId);
 				Logger.info({userId: userId.toString()}, '[test/worker/process-pending-deletions] Deletion completed');
 				processed++;
@@ -1694,7 +1659,7 @@ export function TestHarnessController(app: HonoApp) {
 		try {
 			const snowflakeService = getSnowflakeService();
 			const workerDeps = await initializeWorkerDepsWithHarnessEmail(ctx, snowflakeService);
-			await processUserDeletion(userId, deletionReasonCode, workerDeps);
+			await processUserDeletion(userId, user.pendingDeletionAt, deletionReasonCode, workerDeps);
 			Logger.info(
 				{userId: userId.toString()},
 				'[test/worker/process-pending-deletion/:userId] Deletion completed successfully',
@@ -1726,6 +1691,7 @@ export function TestHarnessController(app: HonoApp) {
 				kvClient: workerDeps.kvClient,
 				userRepository: workerDeps.userRepository,
 				deletionQueueService: workerDeps.deletionQueueService,
+				gatewayService: workerDeps.gatewayService,
 				emailService: workerDeps.emailService,
 				isEmailEnabled: () => workerDeps.instanceConfigRepository.isEmailEnabled(),
 				activityTracker: workerDeps.activityTracker,
@@ -2135,12 +2101,7 @@ export function TestHarnessController(app: HonoApp) {
 			throw new InvalidTimestampError();
 		}
 		const harvestRepository = new UserHarvestRepository();
-		const harvest = await harvestRepository.findByUserAndHarvestId(userId, harvestId);
-		if (!harvest) {
-			throw new UnknownHarvestError();
-		}
-		harvest.downloadUrlExpiresAt = date;
-		await harvestRepository.update(harvest);
+		await harvestRepository.setDownloadUrlExpiry(userId, harvestId, date);
 		return ctx.json({success: true}, 200);
 	});
 	app.get('/test/users/:userId/presence/has-active', async (ctx) => {
@@ -2472,7 +2433,7 @@ export function TestHarnessController(app: HonoApp) {
 		if (!channel) {
 			return ctx.json({error: 'Channel not found'}, 404);
 		}
-		const {getMessageSearchService} = await import('../SearchFactory');
+		const {getMessageSearchService} = await import('@app/api/SearchFactory');
 		const searchService = getMessageSearchService();
 		let messagesIndexed = 0;
 		if (searchService) {
@@ -2531,7 +2492,7 @@ export function TestHarnessController(app: HonoApp) {
 		if (!guild) {
 			return ctx.json({error: 'Guild not found'}, 404);
 		}
-		const {getGuildMemberSearchService} = await import('../SearchFactory');
+		const {getGuildMemberSearchService} = await import('@app/api/SearchFactory');
 		const searchService = getGuildMemberSearchService();
 		let membersIndexed = 0;
 		if (searchService) {
@@ -2751,8 +2712,7 @@ export function TestHarnessController(app: HonoApp) {
 		}
 		const userId = createUserID(BigInt(userIdParam));
 		const body = await ctx.req.json();
-		const {has_verified_phone, email} = body as {
-			has_verified_phone?: boolean;
+		const {email} = body as {
 			email?: string | null;
 		};
 		const userRepository = new UserRepository();
@@ -2761,9 +2721,6 @@ export function TestHarnessController(app: HonoApp) {
 			throw new UnknownUserError();
 		}
 		const updates: Record<string, unknown> = {};
-		if (has_verified_phone !== undefined) {
-			updates['has_verified_phone'] = has_verified_phone;
-		}
 		if (email !== undefined) {
 			updates['email'] = email;
 		}
@@ -2779,7 +2736,6 @@ export function TestHarnessController(app: HonoApp) {
 		return ctx.json({
 			success: true,
 			updated: true,
-			has_verified_phone: updates['has_verified_phone'] ?? user.hasVerifiedPhone,
 			email: updates['email'] ?? user.email,
 		});
 	});

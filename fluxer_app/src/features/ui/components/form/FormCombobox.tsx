@@ -4,6 +4,7 @@ import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/P
 import styles from '@app/features/ui/components/form/FormCombobox.module.css';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
 import {Combobox as BaseCombobox, type ComboboxPortalProps} from '@base-ui/react/combobox';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -172,6 +173,7 @@ export const Combobox = observer(function Combobox<
 	'data-flx': dataFlx,
 }: ComboboxProps<V, IsMulti, O>) {
 	const {i18n} = useLingui();
+	const portalHost = usePortalHost();
 	const generatedId = useId();
 	const inputId = id ?? generatedId;
 	const inputRef = useRef<HTMLInputElement | null>(null);
@@ -432,7 +434,7 @@ export const Combobox = observer(function Combobox<
 							</div>
 						</BaseCombobox.InputGroup>
 					</FocusRing>
-					<BaseCombobox.Portal {...portalProps} data-flx="ui.form.combobox.portal">
+					<BaseCombobox.Portal container={portalHost ?? undefined} {...portalProps} data-flx="ui.form.combobox.portal">
 						<BaseCombobox.Positioner
 							className={styles.positioner}
 							positionMethod="fixed"

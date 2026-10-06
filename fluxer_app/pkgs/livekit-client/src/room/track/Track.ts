@@ -6,7 +6,9 @@ import {EventEmitter} from 'events';
 import type TypedEventEmitter from 'typed-emitter';
 import type {SignalClient} from '../../api/SignalClient.ts';
 import log, {getLogger, LoggerNames, type StructuredLogger} from '../../logger.ts';
+import type {NonSharedUint8Array} from '../../type-polyfills/non-shared-typed-arrays.ts';
 import {TrackEvent} from '../events.ts';
+import {summarizeStatsReport} from '../statsSummary.ts';
 import CriticalTimers, {type TimerHandle} from '../timers.ts';
 import type {LoggerOptions} from '../types.ts';
 import {isFireFox, isSafari, isWeb} from '../utils.ts';
@@ -50,6 +52,9 @@ export abstract class Track<
 	}
 
 	setStreamState(value: Track.StreamState) {
+		if (this._streamState !== value) {
+			this.log.debug(`stream state changed: ${this._streamState} -> ${value}`);
+		}
 		this._streamState = value;
 	}
 
@@ -68,17 +73,16 @@ export abstract class Track<
 	protected timeSyncHandle: number | undefined;
 
 	protected _currentBitrate: number = 0;
-
 	protected monitorInterval?: TimerHandle;
-
 	protected monitorInFlight: boolean = false;
+	private finalStatsLogged = false;
 
 	protected log: StructuredLogger = log;
 
 	protected constructor(mediaTrack: MediaStreamTrack, kind: TrackKind, loggerOptions: LoggerOptions = {}) {
 		super();
-		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.Track);
 		this.loggerContextCb = loggerOptions.loggerContextCb;
+		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.Track, () => this.logContext);
 
 		this.setMaxListeners(100);
 		this.kind = kind;
@@ -153,9 +157,9 @@ export abstract class Track<
 				if (e.name === 'NotAllowedError') {
 					this.emit(hasAudio ? TrackEvent.AudioPlaybackFailed : TrackEvent.VideoPlaybackFailed, e);
 				} else if (e.name === 'AbortError') {
-					log.debug(`${hasAudio ? 'audio' : 'video'} playback aborted, likely due to new play request`);
+					this.log.debug(`${hasAudio ? 'audio' : 'video'} playback aborted, likely due to new play request`);
 				} else {
-					log.warn(`could not playback ${hasAudio ? 'audio' : 'video'}`, e);
+					this.log.warn(`could not playback ${hasAudio ? 'audio' : 'video'}`, {error: e});
 				}
 				if (
 					hasAudio &&
@@ -206,6 +210,7 @@ export abstract class Track<
 	}
 
 	stop() {
+		this.log.debug('stopping track');
 		this.stopMonitor();
 		this._mediaStreamTrack.stop();
 	}
@@ -219,7 +224,6 @@ export abstract class Track<
 	}
 
 	abstract startMonitor(signalClient?: SignalClient): void;
-
 	protected runMonitor(monitor: () => void | Promise<void>): void {
 		if (this.monitorInFlight) return;
 		this.monitorInFlight = true;
@@ -229,6 +233,7 @@ export abstract class Track<
 				this.monitorInFlight = false;
 			});
 	}
+	abstract getRTCStatsReport(): Promise<RTCStatsReport | undefined>;
 
 	stopMonitor() {
 		if (this.monitorInterval) {
@@ -236,18 +241,33 @@ export abstract class Track<
 			this.monitorInterval = undefined;
 		}
 		this.monitorInFlight = false;
-		if (this.timeSyncHandle) {
+		if (this.timeSyncHandle !== undefined) {
 			cancelAnimationFrame(this.timeSyncHandle);
 			this.timeSyncHandle = undefined;
 		}
+		this.logFinalStats();
+	}
+
+	private logFinalStats() {
+		if (this.finalStatsLogged) {
+			return;
+		}
+		this.finalStatsLogged = true;
+		this.getRTCStatsReport()
+			.then((report) => {
+				if (report) {
+					this.log.info('final track stats', summarizeStatsReport(report));
+				}
+			})
+			.catch((error) => this.log.debug('could not collect final track stats', {error}));
 	}
 
 	updateLoggerOptions(loggerOptions: LoggerOptions) {
-		if (loggerOptions.loggerName) {
-			this.log = getLogger(loggerOptions.loggerName);
-		}
 		if (loggerOptions.loggerContextCb) {
 			this.loggerContextCb = loggerOptions.loggerContextCb;
+		}
+		if (loggerOptions.loggerName) {
+			this.log = getLogger(loggerOptions.loggerName, () => this.logContext);
 		}
 	}
 
@@ -467,6 +487,6 @@ export type TrackEventCallbacks = {
 	trackProcessorUpdate: TrackEventHandler<[processor?: TrackProcessorEventValue]>;
 	audioTrackFeatureUpdate: TrackEventHandler<[track: unknown, feature: AudioTrackFeature, enabled: boolean]>;
 	timeSyncUpdate: TrackEventHandler<[update: {timestamp: number; rtpTimestamp: number}]>;
-	preConnectBufferFlushed: TrackEventHandler<[buffer: Array<Uint8Array>]>;
+	preConnectBufferFlushed: TrackEventHandler<[buffer: Array<NonSharedUint8Array>]>;
 	cpuConstrained: TrackEventHandler;
 };

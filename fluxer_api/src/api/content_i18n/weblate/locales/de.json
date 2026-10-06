@@ -1,5 +1,11 @@
 {
-	"billing.eu_withdrawal_waiver_checkout": "Als EU/EWR-Verbraucher stimmst du ausdrücklich zu, dass {product_name} {premium_tier_name} digitale Inhalte sofort bereitgestellt werden, und erkennst an, dass dein gesetzliches Widerrufsrecht erlischt, sobald der Zugriff gewährt wird. Dies berührt nicht andere zwingende Verbraucherrechte. Sieh dir die [Nutzungsbedingungen]({terms_url}) an.",
+	"auth.unknown_location": "Unbekannter Ort",
+	"billing.donation_description_monthly": "Monatliche Spende zur Unterstützung von {product_name}",
+	"billing.donation_description_one_time": "Einmalige Spende zur Unterstützung von {product_name}",
+	"billing.donation_description_yearly": "Jährliche Spende zur Unterstützung von {product_name}",
+	"billing.donation_name_one_time": "{product_name}-Spende",
+	"billing.donation_name_recurring": "Wiederkehrende {product_name}-Spende",
+	"billing.eu_withdrawal_waiver_checkout": "Wenn ich Verbraucher in der EU oder im EWR bin, stimme ich ausdrücklich zu, dass die digitalen Inhalte von {product_name} {premium_tier_name} sofort bereitgestellt werden, und nehme zur Kenntnis, dass ich mein gesetzliches Widerrufsrecht verliere, sobald ich Zugriff erhalte. Andere zwingende Verbraucherrechte bleiben davon unberührt. Siehe die [Nutzungsbedingungen]({terms_url}).",
 	"bulk_message_deletion.complete": "Wir haben deine Nachrichten gelöscht. Entfernt wurden {message_count, plural, =0 {0 Nachrichten} one {# Nachricht} other {# Nachrichten}} aus {channel_count, plural, =0 {0 Orten} one {# Ort} other {# Orten}}.",
 	"content.virus_detected": "Diese Datei wurde als potenziell unsicher eingestuft und entfernt.",
 	"guild.bulk_create.emoji_limit": "Maximale Anzahl an Emojis erreicht ({limit}).",
@@ -7,6 +13,6 @@
 	"guild.bulk_create.unknown_error": "Unbekannter Fehler.",
 	"guild.default_category_text": "Textkanäle",
 	"guild.default_category_voice": "Sprachkanäle",
-	"guild.default_channel_text": "Allgemein",
+	"guild.default_channel_text": "allgemein",
 	"guild.default_channel_voice": "Allgemein"
 }

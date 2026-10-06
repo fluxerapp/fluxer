@@ -8,9 +8,6 @@ import {
 	MEDIA_PROXY_IMAGE_SIZE_LADDER,
 	snapMediaProxyImageSize,
 } from '@app/features/messaging/utils/MediaProxyUtils';
-
-export {MEDIA_PROXY_IMAGE_SIZE_LADDER, snapMediaProxyImageSize};
-
 import {cdnUrl, mediaUrl, setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import type {User} from '@app/features/user/models/User';
 import {
@@ -25,6 +22,8 @@ import {
 } from '@fluxer/constants/src/MediaProxyAssetSizes';
 import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import {SOUNDBOARD_SOUND_PATH_PREFIX} from '@fluxer/constants/src/SoundboardConstants';
+
+export {MEDIA_PROXY_IMAGE_SIZE_LADDER, snapMediaProxyImageSize};
 
 const GUILD_BANNER_CSS_WIDTH = 360;
 const GUILD_EMBED_SPLASH_CSS_WIDTH = 360;

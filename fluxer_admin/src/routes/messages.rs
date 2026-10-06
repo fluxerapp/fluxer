@@ -16,7 +16,6 @@ use axum::{
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct MessagesQuery {
     channel_id: Option<String>,
     message_id: Option<String>,
@@ -82,13 +81,7 @@ async fn messages_page(
     let before = query.before.as_deref().filter(|s| !s.is_empty());
     let after = query.after.as_deref().filter(|s| !s.is_empty());
     let search = query.search.as_deref().filter(|s| !s.is_empty());
-    let context_limit = query
-        .context_limit
-        .as_deref()
-        .and_then(|s| s.parse::<u32>().ok())
-        .filter(|n| *n > 0)
-        .unwrap_or(50)
-        .min(100);
+    let context_limit = super::message_actions::parse_context_limit(query.context_limit.as_deref());
     let mut lookup_result = None;
     let mut browse_result = None;
     let mut search_result = None;
@@ -208,6 +201,13 @@ async fn bulk_actions_page(
     csrf: axum::Extension<CsrfToken>,
 ) -> Response {
     let config = state.config();
-    let markup = templates::pages::bulk_actions::bulk_actions_page(config, &auth.0, &csrf.0.0);
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let account_identity = state.account_identity(&client).await;
+    let markup = templates::pages::bulk_actions::bulk_actions_page(
+        config,
+        &auth.0,
+        &csrf.0.0,
+        account_identity.is_username(),
+    );
     Html(markup.into_string()).into_response()
 }

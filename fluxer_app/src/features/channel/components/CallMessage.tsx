@@ -37,27 +37,27 @@ const A_MINUTE_DESCRIPTOR = msg({
 	comment: 'Duration label component for an elapsed call. Shown when the call lasted about a minute.',
 });
 const YEARS_DESCRIPTOR = msg({
-	message: '{countLabel} years',
+	message: '{count, plural, one {{countLabel} year} other {{countLabel} years}}',
 	comment: 'Duration label component for an elapsed call. countLabel is a formatted count.',
 });
 const MONTHS_DESCRIPTOR = msg({
-	message: '{countLabel} months',
+	message: '{count, plural, one {{countLabel} month} other {{countLabel} months}}',
 	comment: 'Duration label component for an elapsed call. countLabel is a formatted count.',
 });
 const WEEKS_DESCRIPTOR = msg({
-	message: '{countLabel} weeks',
+	message: '{count, plural, one {{countLabel} week} other {{countLabel} weeks}}',
 	comment: 'Duration label component for an elapsed call. countLabel is a formatted count.',
 });
 const DAYS_DESCRIPTOR = msg({
-	message: '{countLabel} days',
+	message: '{count, plural, one {{countLabel} day} other {{countLabel} days}}',
 	comment: 'Duration label component for an elapsed call. countLabel is a formatted count.',
 });
 const HOURS_DESCRIPTOR = msg({
-	message: '{countLabel} hours',
+	message: '{count, plural, one {{countLabel} hour} other {{countLabel} hours}}',
 	comment: 'Duration label component for an elapsed call. countLabel is a formatted count.',
 });
 const MINUTES_DESCRIPTOR = msg({
-	message: '{countLabel} minutes',
+	message: '{count, plural, one {{countLabel} minute} other {{countLabel} minutes}}',
 	comment: 'Duration label component for an elapsed call. countLabel is a formatted count.',
 });
 const A_FEW_SECONDS_DESCRIPTOR = msg({
@@ -103,17 +103,17 @@ const formatDurationUnit = (i18n: I18n, value: number, unit: DurationUnit): stri
 	const countLabel = formatLocalizedNumber(value);
 	switch (unit) {
 		case 'year':
-			return i18n._(YEARS_DESCRIPTOR, {countLabel});
+			return i18n._(YEARS_DESCRIPTOR, {countLabel, count: value});
 		case 'month':
-			return i18n._(MONTHS_DESCRIPTOR, {countLabel});
+			return i18n._(MONTHS_DESCRIPTOR, {countLabel, count: value});
 		case 'week':
-			return i18n._(WEEKS_DESCRIPTOR, {countLabel});
+			return i18n._(WEEKS_DESCRIPTOR, {countLabel, count: value});
 		case 'day':
-			return i18n._(DAYS_DESCRIPTOR, {countLabel});
+			return i18n._(DAYS_DESCRIPTOR, {countLabel, count: value});
 		case 'hour':
-			return i18n._(HOURS_DESCRIPTOR, {countLabel});
+			return i18n._(HOURS_DESCRIPTOR, {countLabel, count: value});
 		default:
-			return i18n._(MINUTES_DESCRIPTOR, {countLabel});
+			return i18n._(MINUTES_DESCRIPTOR, {countLabel, count: value});
 	}
 };
 const FEW_SECONDS_DESCRIPTOR = A_FEW_SECONDS_DESCRIPTOR;

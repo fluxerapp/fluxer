@@ -15,11 +15,9 @@ export type TextualAttachmentRenderMode = 'code' | 'csv';
 export type PreviewError =
 	| {
 			type: 'size';
-			message?: string;
 	  }
 	| {
 			type: 'network';
-			message?: string;
 	  };
 export type PreviewStatus = 'idle' | 'loading' | 'loaded' | 'error';
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, setup, transition} from 'xstate';
+import {assign, initialTransition, setup, transition} from 'xstate';
 
 export type VoiceControlBarMuteLabel =
 	| 'moderatorDeafened'
@@ -152,7 +152,7 @@ export const voiceControlBarStateMachine = setup({
 });
 
 export function transitionVoiceControlBarState(signals: VoiceControlBarSignals): VoiceControlBarState {
-	const [snapshot] = transition(voiceControlBarStateMachine, getInitialSnapshot(voiceControlBarStateMachine), {
+	const [snapshot] = transition(voiceControlBarStateMachine, initialTransition(voiceControlBarStateMachine)[0], {
 		type: 'controls.evaluate',
 		signals,
 	});

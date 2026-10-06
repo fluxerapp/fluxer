@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {type LegacyRef, type MutableRefObject, type RefCallback, useCallback, useRef} from 'react';
+import {type Ref, type RefCallback, useCallback, useRef} from 'react';
 
-export function useMergeRefs<T>(
-	refs: Array<MutableRefObject<T | null> | LegacyRef<T> | undefined | null>,
-): RefCallback<T> {
+export function useMergeRefs<T>(refs: Array<Ref<T> | undefined>): RefCallback<T> {
 	const latestRefs = useRef(refs);
 	latestRefs.current = refs;
 	return useCallback((value: T | null) => {
@@ -12,7 +10,7 @@ export function useMergeRefs<T>(
 			if (typeof ref === 'function') {
 				ref(value);
 			} else if (ref != null) {
-				(ref as MutableRefObject<T | null>).current = value;
+				ref.current = value;
 			}
 		}
 	}, []);

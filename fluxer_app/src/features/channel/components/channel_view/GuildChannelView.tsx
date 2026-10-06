@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
+	AccountLimitedBarrier,
 	AccountTooNewBarrier,
-	NoPhoneNumberBarrier,
+	AnnouncementFollowBarrier,
 	NotMemberLongEnoughBarrier,
 	SendMessageDisabledBarrier,
 	UnclaimedAccountBarrier,
@@ -39,6 +40,7 @@ import {Button} from '@app/features/ui/button/Button';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {isPwaOnMobileOrTablet} from '@app/features/ui/utils/PwaUtils';
+import Users from '@app/features/user/state/Users';
 import {CompactVoiceCallStreamHeaderInfo} from '@app/features/voice/components/CompactVoiceCallStreamHeaderInfo';
 import {useVoiceCallFullscreenViewState} from '@app/features/voice/components/useVoiceCallAppFullscreen';
 import {VoiceCallView} from '@app/features/voice/components/VoiceCallView';
@@ -346,6 +348,23 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 		/>
 	) : null;
 	const passesVerification = channel.isPrivate() || GuildVerification.canAccessGuild(channel.guildId || '');
+	const renderComposer = (inputSuppressed: boolean) => {
+		if (channel.type === ChannelTypes.GUILD_ANNOUNCEMENT && !Permission.can(Permissions.SEND_MESSAGES, channel)) {
+			return (
+				<AnnouncementFollowBarrier
+					channelId={channel.id}
+					data-flx="channel.channel-view.guild-channel-view.render-composer.announcement-follow-barrier"
+				/>
+			);
+		}
+		return (
+			<ChannelTextarea
+				channel={channel}
+				inputSuppressed={inputSuppressed}
+				data-flx="channel.channel-view.guild-channel-view.render-composer.channel-textarea"
+			/>
+		);
+	};
 	const renderChatArea = (inputSuppressed = false) => {
 		if (DeveloperOptions.mockVerificationBarrier !== 'none' && !channel.isPrivate()) {
 			switch (DeveloperOptions.mockVerificationBarrier) {
@@ -371,9 +390,9 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 							data-flx="channel.channel-view.guild-channel-view.render-chat-area.not-member-long-enough-barrier"
 						/>
 					);
-				case 'no_phone':
+				case 'account_limited':
 					return (
-						<NoPhoneNumberBarrier data-flx="channel.channel-view.guild-channel-view.render-chat-area.no-phone-number-barrier" />
+						<AccountLimitedBarrier data-flx="channel.channel-view.guild-channel-view.render-chat-area.account-limited-barrier" />
 					);
 				case 'send_message_disabled':
 					return (
@@ -381,11 +400,7 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 					);
 				default:
 					return passesVerification ? (
-						<ChannelTextarea
-							channel={channel}
-							inputSuppressed={inputSuppressed}
-							data-flx="channel.channel-view.guild-channel-view.render-chat-area.channel-textarea"
-						/>
+						renderComposer(inputSuppressed)
 					) : (
 						<VerificationBarrier
 							channel={channel}
@@ -394,12 +409,13 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 					);
 			}
 		}
+		if (Users.currentUser?.accountLimited) {
+			return (
+				<AccountLimitedBarrier data-flx="channel.channel-view.guild-channel-view.render-chat-area.account-limited-barrier--2" />
+			);
+		}
 		return passesVerification ? (
-			<ChannelTextarea
-				channel={channel}
-				inputSuppressed={inputSuppressed}
-				data-flx="channel.channel-view.guild-channel-view.render-chat-area.channel-textarea--2"
-			/>
+			renderComposer(inputSuppressed)
 		) : (
 			<VerificationBarrier
 				channel={channel}

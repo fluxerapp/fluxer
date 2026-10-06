@@ -71,7 +71,7 @@ const SIGN_OUT_SELECTED_DEVICES_DESCRIPTOR = msg({
 	comment: 'Danger button in the devices tab. Signs out the currently selected devices.',
 });
 const SELECTED_DEVICES_FOR_LOGOUT_DESCRIPTOR = msg({
-	message: '{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}',
+	message: '{deviceCount, plural, one {# device selected for sign-out} other {# devices selected for sign-out}}',
 	comment: 'Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.',
 });
 
@@ -439,7 +439,7 @@ export const DevicesTabContent: React.FC<DevicesTabContentProps> = observer(({pr
 					<div className={styles.deviceListBody} data-flx="user.devices-tab.device-list-body">
 						<p className={styles.selectionHint} data-flx="user.devices-tab.selection-hint">
 							<Trans>
-								Hold Shift and press X to mark devices for sign out. Press {selectAllShortcutLabel} to select all.
+								Hold Shift and press X to mark devices for sign-out. Press {selectAllShortcutLabel} to select all.
 							</Trans>
 						</p>
 						<div className={styles.devicesGrid} data-flx="user.devices-tab.devices-grid">

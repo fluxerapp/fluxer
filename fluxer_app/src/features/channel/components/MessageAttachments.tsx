@@ -14,15 +14,22 @@ import {useMessageViewContext} from '@app/features/channel/components/MessageVie
 import {ThemeEmbed} from '@app/features/channel/components/ThemeEmbed';
 import {TimestampWithTooltip} from '@app/features/channel/components/TimestampWithTooltip';
 import type {Channel} from '@app/features/channel/models/Channel';
+import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
+import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
+import {ExpressionHoverTooltipContent} from '@app/features/expressions/components/ExpressionHoverTooltipContent';
+import {ExpressionInfoCard} from '@app/features/expressions/components/ExpressionInfoCard';
+import {ExpressionInfoPopout} from '@app/features/expressions/components/ExpressionInfoPopout';
+import {
+	EXPRESSION_INFO_SURFACE_OPEN_IS_INTERACTION,
+	STICKER_PREVIEW_SIZE,
+} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import * as GiftCodeUtils from '@app/features/gift/utils/GiftCodeUtils';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
-import Guilds from '@app/features/guild/state/Guilds';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
-import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {extractEmbeddableCodeLinkContent} from '@app/features/messaging/utils/EmbeddableCodeLinkContent';
@@ -31,7 +38,6 @@ import {buildMessageSnapshotCopyText} from '@app/features/messaging/utils/Messag
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import {canonicalizeMediaUrl, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
-import matureStyles from '@app/features/theme/styles/MatureBlur.module.css';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import * as ThemeUtils from '@app/features/theme/utils/ThemeUtils';
 import {StickerInlineMenuItems} from '@app/features/ui/action_menu/items/StickerContextMenuItems';
@@ -39,7 +45,7 @@ import {MessageContextMenu} from '@app/features/ui/action_menu/MessageContextMen
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import MobileLayout from '@app/features/ui/state/MobileLayout';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -50,11 +56,11 @@ import type {
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {ArrowBendUpRightIcon, CaretRightIcon, HashIcon, NotePencilIcon, SpeakerHighIcon} from '@phosphor-icons/react';
+import {ArrowBendUpRightIcon, CaretRightIcon, NotePencilIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useMemo} from 'react';
+import {useCallback, useMemo, useState} from 'react';
 
 interface SpoileredCodeLinkMatch {
 	code: string;
@@ -118,7 +124,7 @@ const SpoileredUrlEmbed = observer(function SpoileredUrlEmbed({
 const ForwardedFromSource = observer(({message}: {message: Message}) => {
 	const {sourceChannel, sourceGuild, sourceUser, hasAccessToSource, displayName} = useForwardedMessageContext(message);
 	const handleJumpToOriginal = useCallback(() => {
-		if (message.messageReference && sourceChannel) {
+		if (message.messageReference?.message_id && sourceChannel) {
 			goToMessage(message.messageReference.channel_id, message.messageReference.message_id, {
 				returnToMessageId: message.id,
 				returnChannelId: message.channelId,
@@ -167,24 +173,11 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 				</div>
 			);
 		}
-		if (sourceChannel.type === ChannelTypes.GUILD_VOICE) {
-			return (
-				<SpeakerHighIcon
-					className={styles.forwardedSourceIcon}
-					weight="fill"
-					size={iconSize}
-					data-flx="channel.message-attachments.render-channel-icon.forwarded-source-icon--2"
-				/>
-			);
-		}
-		return (
-			<HashIcon
-				className={styles.forwardedSourceIcon}
-				weight="bold"
-				size={iconSize}
-				data-flx="channel.message-attachments.render-channel-icon.forwarded-source-icon--3"
-			/>
-		);
+		return ChannelUtils.getIcon(sourceChannel, {
+			className: styles.forwardedSourceIcon,
+			weight: 'bold',
+			size: iconSize,
+		});
 	}, [sourceChannel, sourceUser]);
 	if (!hasAccessToSource || !sourceChannel || !displayName || !message.messageReference) {
 		return null;
@@ -194,6 +187,20 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 		sourceChannel.type === ChannelTypes.GROUP_DM ||
 		sourceChannel.type === ChannelTypes.DM_PERSONAL_NOTES
 	) {
+		const sourceInfo = (
+			<span
+				className={styles.forwardedSourceInfo}
+				data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-info"
+			>
+				{renderChannelIcon()}
+				<span
+					className={styles.forwardedSourceName}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name"
+				>
+					{displayName}
+				</span>
+			</span>
+		);
 		return (
 			<FocusRing data-flx="channel.message-attachments.forwarded-from-source.focus-ring">
 				<button
@@ -202,29 +209,54 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 					className={styles.forwardedSourceButton}
 					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-button.jump-to-original"
 				>
-					<span
-						className={styles.forwardedSourceLabel}
-						data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-label"
-					>
-						<Trans>Forwarded from</Trans>
-					</span>
-					<span
-						className={styles.forwardedSourceInfo}
-						data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-info"
-					>
-						{renderChannelIcon()}
+					<Trans comment="Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.">
 						<span
-							className={styles.forwardedSourceName}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name"
+							className={styles.forwardedSourceLabel}
+							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-label"
 						>
-							{displayName}
+							Forwarded from
 						</span>
-					</span>
+						{sourceInfo}
+					</Trans>
 				</button>
 			</FocusRing>
 		);
 	}
 	if (sourceGuild) {
+		const sourceInfo = (
+			<span
+				className={styles.forwardedSourceInfo}
+				data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-info--2"
+			>
+				<GuildIcon
+					id={sourceGuild.id}
+					name={sourceGuild.name}
+					icon={sourceGuild.icon}
+					className={styles.forwardedSourceGuildIcon}
+					sizePx={16}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-guild-icon"
+				/>
+				<span
+					className={styles.forwardedSourceName}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name--2"
+				>
+					{sourceGuild.name}
+				</span>
+				<CaretRightIcon
+					className={styles.forwardedSourceChevron}
+					weight="bold"
+					size={12}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-chevron"
+				/>
+				{renderChannelIcon()}
+				<span
+					className={styles.forwardedSourceName}
+					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name--3"
+				>
+					{displayName}
+				</span>
+			</span>
+		);
 		return (
 			<FocusRing data-flx="channel.message-attachments.forwarded-from-source.focus-ring--2">
 				<button
@@ -233,44 +265,15 @@ const ForwardedFromSource = observer(({message}: {message: Message}) => {
 					className={styles.forwardedSourceButton}
 					data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-button.jump-to-original--2"
 				>
-					<span
-						className={styles.forwardedSourceLabel}
-						data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-label--2"
-					>
-						<Trans>Forwarded from</Trans>
-					</span>
-					<span
-						className={styles.forwardedSourceInfo}
-						data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-info--2"
-					>
-						<GuildIcon
-							id={sourceGuild.id}
-							name={sourceGuild.name}
-							icon={sourceGuild.icon}
-							className={styles.forwardedSourceGuildIcon}
-							sizePx={16}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-guild-icon"
-						/>
+					<Trans comment="Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.">
 						<span
-							className={styles.forwardedSourceName}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name--2"
+							className={styles.forwardedSourceLabel}
+							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-label--2"
 						>
-							{sourceGuild.name}
+							Forwarded from
 						</span>
-						<CaretRightIcon
-							className={styles.forwardedSourceChevron}
-							weight="bold"
-							size={12}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-chevron"
-						/>
-						{renderChannelIcon()}
-						<span
-							className={styles.forwardedSourceName}
-							data-flx="channel.message-attachments.forwarded-from-source.forwarded-source-name--3"
-						>
-							{displayName}
-						</span>
-					</span>
+						{sourceInfo}
+					</Trans>
 				</button>
 			</FocusRing>
 		);
@@ -411,6 +414,7 @@ export const ForwardedMessageContent = observer(({message, snapshot, onDelete}: 
 									message={message}
 									embedIndex={index}
 									contextualEmbeds={snapshot.embeds}
+									contextualContent={snapshot.content}
 									onDelete={onDelete}
 									isPreview={true}
 									data-flx="channel.message-attachments.forwarded-message-content.embed"
@@ -453,43 +457,25 @@ interface StickerItemProps {
 
 const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: StickerItemProps) => {
 	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker.animated});
+	const {shouldAnimate: shouldAnimateInfoPreview} = useStickerAnimation({
+		isAnimated: sticker.animated,
+		isInteracting: EXPRESSION_INFO_SURFACE_OPEN_IS_INTERACTION,
+	});
 	const stickerUrl = AvatarUtils.getStickerURL({
 		id: sticker.id,
 		animated: shouldAnimate,
 		isAnimatable: sticker.animated,
 		size: 320,
 	});
+	const previewUrl = AvatarUtils.getStickerURL({
+		id: sticker.id,
+		animated: shouldAnimateInfoPreview,
+		isAnimatable: sticker.animated,
+		size: STICKER_PREVIEW_SIZE,
+	});
 	const stickerRecord = Sticker.getStickerById(sticker.id);
-	const guild = stickerRecord?.guildId ? Guilds.getGuild(stickerRecord.guildId) : null;
-	const {shouldBlur, shouldBlock, canReveal, reveal} = useMatureMedia(false, message.channelId);
-	const tooltipContent = () => (
-		<div className={styles.stickerTooltip} data-flx="channel.message-attachments.tooltip-content.sticker-tooltip">
-			<span className={styles.stickerName} data-flx="channel.message-attachments.tooltip-content.sticker-name">
-				{sticker.name}
-			</span>
-			{guild && (
-				<div
-					className={styles.stickerGuildInfo}
-					data-flx="channel.message-attachments.tooltip-content.sticker-guild-info"
-				>
-					<GuildIcon
-						id={guild.id}
-						name={guild.name}
-						icon={guild.icon}
-						className={styles.stickerGuildIcon}
-						sizePx={16}
-						data-flx="channel.message-attachments.tooltip-content.sticker-guild-icon"
-					/>
-					<span
-						className={styles.stickerGuildName}
-						data-flx="channel.message-attachments.tooltip-content.sticker-guild-name"
-					>
-						{guild.name}
-					</span>
-				</div>
-			)}
-		</div>
-	);
+	const isMobile = MobileLayout.enabled;
+	const [isBottomSheetOpen, setIsBottomSheetOpen] = useState(false);
 	const handleContextMenu = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -520,46 +506,85 @@ const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: S
 			/>
 		));
 	};
-	const handleRevealClick = useCallback(
-		(e: React.MouseEvent) => {
-			if (shouldBlur && canReveal) {
-				e.preventDefault();
-				e.stopPropagation();
-				reveal();
-			}
-		},
-		[shouldBlur, canReveal, reveal],
-	);
-	if (shouldBlock) {
-		return null;
-	}
+	const handleMobileClick = useCallback(() => {
+		setIsBottomSheetOpen(true);
+	}, []);
+	const handleCloseBottomSheet = useCallback(() => {
+		setIsBottomSheetOpen(false);
+	}, []);
 	const stickerImage = (
 		<img
 			src={stickerUrl}
 			alt={stickerRecord?.description || sticker.name}
-			className={clsx(styles.stickerImage, shouldBlur && matureStyles.matureStickerBlurred)}
+			className={styles.stickerImage}
 			width="160"
 			height="160"
 			data-flx="channel.message-attachments.sticker-item.sticker-image"
 		/>
 	);
+	if (isMobile) {
+		return (
+			<>
+				<FocusRing data-flx="channel.message-attachments.sticker-item.focus-ring.mobile">
+					<button
+						type="button"
+						aria-label={stickerRecord?.description || sticker.name}
+						className={styles.stickerWrapper}
+						data-message-sticker="true"
+						onContextMenu={handleContextMenu}
+						onClick={handleMobileClick}
+						data-flx="channel.message-attachments.sticker-item.sticker-wrapper.open-bottom-sheet"
+						{...interactionHandlers}
+					>
+						{stickerImage}
+					</button>
+				</FocusRing>
+				<ExpressionInfoBottomSheet
+					kind="sticker"
+					isOpen={isBottomSheetOpen}
+					onClose={handleCloseBottomSheet}
+					sticker={{id: sticker.id, name: sticker.name, animated: sticker.animated}}
+					data-flx="channel.message-attachments.sticker-item.expression-info-bottom-sheet"
+				/>
+			</>
+		);
+	}
+	const renderHoverTooltip = () => (
+		<ExpressionHoverTooltipContent
+			displayName={sticker.name}
+			previewUrl={previewUrl}
+			data-flx="channel.message-attachments.sticker-item.expression-hover-tooltip-content"
+		/>
+	);
+	const renderInfoCard = ({onClose}: {onClose: () => void}) => (
+		<ExpressionInfoCard
+			kind="sticker"
+			expressionId={sticker.id}
+			guildId={stickerRecord?.guildId ?? null}
+			displayName={sticker.name}
+			previewUrl={previewUrl}
+			onClose={onClose}
+			data-flx="channel.message-attachments.sticker-item.expression-info-card"
+		/>
+	);
 	return (
-		<Tooltip key={sticker.id} text={tooltipContent} data-flx="channel.message-attachments.sticker-item.tooltip">
-			<FocusRing data-flx="channel.message-attachments.sticker-item.focus-ring">
-				<button
-					type="button"
-					aria-label={stickerRecord?.description || sticker.name}
-					className={styles.stickerWrapper}
-					data-message-sticker="true"
-					onContextMenu={handleContextMenu}
-					onClick={handleRevealClick}
-					data-flx="channel.message-attachments.sticker-item.sticker-wrapper.reveal-click"
-					{...interactionHandlers}
-				>
-					{stickerImage}
-				</button>
-			</FocusRing>
-		</Tooltip>
+		<ExpressionInfoPopout
+			renderTooltip={renderHoverTooltip}
+			renderCard={renderInfoCard}
+			data-flx="channel.message-attachments.sticker-item.expression-info-popout"
+		>
+			<button
+				type="button"
+				aria-label={stickerRecord?.description || sticker.name}
+				className={clsx(styles.stickerWrapper, styles.stickerWrapperInteractive)}
+				data-message-sticker="true"
+				onContextMenu={handleContextMenu}
+				data-flx="channel.message-attachments.sticker-item.sticker-wrapper.reveal-click"
+				{...interactionHandlers}
+			>
+				{stickerImage}
+			</button>
+		</ExpressionInfoPopout>
 	);
 });
 export const MessageAttachments = observer(() => {

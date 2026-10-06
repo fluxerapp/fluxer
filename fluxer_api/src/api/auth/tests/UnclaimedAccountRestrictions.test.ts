@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
+import {createTestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
@@ -11,11 +8,14 @@ import {
 	createFriendship,
 	createGuild,
 	sendMessage,
-} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createTestAccount, unclaimAccount} from './AuthTestUtils';
+} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 async function setBotFlag(harness: ApiTestHarness, userId: string, isBot: boolean): Promise<void> {
 	await createBuilder(harness, '').post(`/test/users/${userId}/set-bot-flag`).body({is_bot: isBot}).execute();

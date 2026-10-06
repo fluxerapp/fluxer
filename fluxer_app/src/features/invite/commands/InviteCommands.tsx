@@ -4,7 +4,9 @@ import {FeatureTemporarilyDisabledModal} from '@app/features/app/components/aler
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {TemporaryInviteRequiresPresenceModal} from '@app/features/app/components/alerts/TemporaryInviteRequiresPresenceModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
+import {isAbortError} from '@app/features/auth/state/SudoPrompt';
 import {GuildAtCapacityModal} from '@app/features/guild/components/alerts/GuildAtCapacityModal';
 import {MaxGuildsModal} from '@app/features/guild/components/alerts/MaxGuildsModal';
 import {InviteAcceptFailedModal} from '@app/features/invite/components/alerts/InviteAcceptFailedModal';
@@ -19,10 +21,11 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import Users from '@app/features/user/state/Users';
+import {blockIfAccountLimited, showAccountLimitedModal} from '@app/features/user/utils/AccountLimitUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -40,6 +43,11 @@ const PLEASE_VERIFY_YOUR_ACCOUNT_BY_SETTING_AN_EMAIL_DESCRIPTOR = msg({
 	message: 'Add an email and password to your account first.',
 	comment:
 		'Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite. Tells the user to complete sign-up first.',
+});
+const ADD_A_USERNAME_AND_PASSWORD_DESCRIPTOR = msg({
+	message: 'Add a username and password to your account first.',
+	comment:
+		'Body of the error modal shown when an unclaimed (guest) account tries to accept a community invite on an instance where people sign in with a username.',
 });
 const logger = new Logger('Invites');
 const ACCEPT_INVITE_BODY = {} as Invite;
@@ -74,7 +82,11 @@ function showUnclaimedAccountInviteModal(i18n: I18n): void {
 		modal(() => (
 			<GenericErrorModal
 				title={i18n._(ACCOUNT_VERIFICATION_REQUIRED_DESCRIPTOR)}
-				message={i18n._(PLEASE_VERIFY_YOUR_ACCOUNT_BY_SETTING_AN_EMAIL_DESCRIPTOR)}
+				message={i18n._(
+					RuntimeConfig.usesUsernameSignIn
+						? ADD_A_USERNAME_AND_PASSWORD_DESCRIPTOR
+						: PLEASE_VERIFY_YOUR_ACCOUNT_BY_SETTING_AN_EMAIL_DESCRIPTOR,
+				)}
 				data-flx="invite.invite-commands.show-unclaimed-account-invite-modal.generic-error-modal"
 			/>
 		)),
@@ -88,13 +100,9 @@ function showGuildInviteAcceptFailure(
 	responseErr: HttpError | null,
 ): void {
 	const isRaidDetected = guildInviteFeatures(invite).includes(GuildFeatures.RAID_DETECTED);
-	if (
-		errorCode === APIErrorCodes.ACCOUNT_SUSPICIOUS_ACTIVITY &&
-		(Users.currentUser?.requiredActions?.length ?? 0) > 0
-	) {
-		return;
-	}
-	if (errorCode === APIErrorCodes.INVITES_DISABLED) {
+	if (errorCode === APIErrorCodes.ACCOUNT_LIMITED) {
+		showAccountLimitedModal(responseErr ? failureMessage(responseErr) : undefined);
+	} else if (errorCode === APIErrorCodes.INVITES_DISABLED) {
 		ModalCommands.push(
 			modal(() => (
 				<InvitesDisabledModal
@@ -172,6 +180,9 @@ export async function fetchWithCoalescing(code: string): Promise<Invite> {
 }
 
 const accept = async (code: string): Promise<Invite> => {
+	if (blockIfAccountLimited()) {
+		throw new DOMException('Invite accept skipped', 'AbortError');
+	}
 	try {
 		logger.debug(`Accepting invite with code ${code}`);
 		const response = await http.post<Invite>(Endpoints.INVITE(code), {body: ACCEPT_INVITE_BODY});
@@ -223,6 +234,7 @@ export async function acceptAndTransitionToChannel(code: string, i18n: I18n): Pr
 		);
 		NavigationCommands.selectChannel(guildId, targetChannelId);
 	} catch (error) {
+		if (isAbortError(error)) throw error;
 		const responseErr = error instanceof HttpError ? error : null;
 		const errorCode = failureCode(error);
 		logger.error(`Failed to accept invite and transition for code ${code}:`, error);

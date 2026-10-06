@@ -2,21 +2,28 @@
 
 use crate::config::ServiceConfig;
 use crate::hash_ring::HashRing;
-use crate::metrics::{ServiceMetrics, now_ms};
-use crate::transport::{Transport, TransportMessage, TransportSubscriber, reply_message};
-use moka::future::Cache;
-use std::sync::Arc;
-use std::time::Duration;
+use crate::metrics::ServiceMetrics;
+use crate::transport::{
+    Transport, TransportMessage, TransportSubscriber, reply_bytes, reply_json_error,
+};
+use anyhow::Context;
+use futures::future::{BoxFuture, FutureExt, Shared};
+use futures::stream::{FuturesUnordered, StreamExt};
+use std::collections::HashMap;
+use std::future::Future;
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 use tokio::sync::{Semaphore, TryAcquireError};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
-pub(crate) const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
-const INFLIGHT_TTL: Duration = Duration::from_millis(200);
-const INFLIGHT_MAX_ENTRIES: u64 = 10_000;
+pub const SHARD_REQUEST_TIMEOUT: Duration = Duration::from_secs(5);
+const MAX_BROADCAST_CONCURRENCY: usize = 32;
 const MAX_ROUTER_REQUEST_BYTES: usize = 2 * 1024 * 1024;
 const LEGACY_SHARD_DECODE_ERROR: &[u8] = br#"{"error":"shard_request_decode_error"}"#;
 type InflightKey = (String, String);
+type InflightCall = Shared<BoxFuture<'static, Result<Vec<u8>, Arc<anyhow::Error>>>>;
+type Inflight = Arc<Mutex<HashMap<InflightKey, InflightCall>>>;
 
 pub trait RouterService: Send + Sync + 'static {
     type Request: serde::Serialize + serde::de::DeserializeOwned + Send + Sync + 'static;
@@ -28,6 +35,13 @@ pub trait RouterService: Send + Sync + 'static {
     fn route_key(request: &Self::Request) -> String;
     fn coalesce_key(_request: &Self::Request) -> Option<String> {
         None
+    }
+
+    fn is_broadcast_request(_request: &Self::Request) -> bool {
+        false
+    }
+    fn is_broadcast_acknowledgement(_response: &Self::Response) -> bool {
+        false
     }
 
     fn l1_lookup(&self, _req: &Self::Request) -> Option<Self::Response> {
@@ -111,18 +125,123 @@ async fn dispatch_to_shard<S: RouterService>(
     }
 }
 
+async fn forward_to_all_shards<S: RouterService>(
+    transport: &impl Transport,
+    service: &S,
+    ring: &HashRing,
+    request: &S::Request,
+) -> anyhow::Result<Vec<u8>> {
+    let payload = rmp_serde::to_vec_named(request)
+        .context("failed to encode broadcast request as msgpack")?;
+    let payload = payload.as_slice();
+    let service_name = service.service_name();
+    let deadline = tokio::time::Instant::now() + SHARD_REQUEST_TIMEOUT;
+    let request_shard = |shard_id| async move {
+        let timeout = deadline.saturating_duration_since(tokio::time::Instant::now());
+        if timeout.is_zero() {
+            anyhow::bail!("broadcast deadline expired before shard {shard_id}");
+        }
+        let subject = format!("svc.{service_name}.shard.{shard_id}");
+        let response_bytes = transport
+            .request(&subject, payload, timeout)
+            .await
+            .with_context(|| format!("broadcast request to shard {shard_id} failed"))?;
+        let response = rmp_serde::from_slice::<S::Response>(&response_bytes)
+            .with_context(|| format!("invalid broadcast response from shard {shard_id}"))?;
+        if !S::is_broadcast_acknowledgement(&response) {
+            anyhow::bail!("unexpected broadcast acknowledgement from shard {shard_id}");
+        }
+        anyhow::Ok(response)
+    };
+
+    let mut shard_ids = 0..ring.shard_count();
+    let mut pending = FuturesUnordered::new();
+    for shard_id in shard_ids.by_ref().take(MAX_BROADCAST_CONCURRENCY) {
+        pending.push(request_shard(shard_id));
+    }
+
+    let mut acknowledgement = None;
+    let mut first_error = None;
+    while let Some(result) = pending.next().await {
+        match result {
+            Ok(response) => acknowledgement = Some(response),
+            Err(error) => {
+                first_error.get_or_insert(error);
+            }
+        }
+        if first_error.is_none()
+            && let Some(shard_id) = shard_ids.next()
+        {
+            pending.push(request_shard(shard_id));
+        }
+    }
+    if let Some(error) = first_error {
+        return Err(error);
+    }
+    let acknowledgement = acknowledgement.context("broadcast request has no configured shards")?;
+    if S::CACHES_RESPONSES {
+        rmp_serde::to_vec_named(&acknowledgement)
+            .context("failed to encode broadcast acknowledgement as msgpack")
+    } else {
+        serde_json::to_vec(&acknowledgement)
+            .context("failed to encode broadcast acknowledgement as json")
+    }
+}
+
+async fn coalesce<F>(inflight: &Inflight, key: InflightKey, call: F) -> anyhow::Result<Vec<u8>>
+where
+    F: Future<Output = anyhow::Result<Vec<u8>>> + Send + 'static,
+{
+    let shared = {
+        let mut calls = inflight.lock().unwrap();
+        calls
+            .entry(key.clone())
+            .or_insert_with(|| {
+                let inflight = inflight.clone();
+                async move {
+                    let result = call.await.map_err(Arc::new);
+                    inflight.lock().unwrap().remove(&key);
+                    result
+                }
+                .boxed()
+                .shared()
+            })
+            .clone()
+    };
+    shared.await.map_err(|err| anyhow::anyhow!("{err}"))
+}
+
+async fn reply_json_response(
+    message: &impl TransportMessage,
+    transport: &impl Transport,
+    response: &impl serde::Serialize,
+    metrics: &ServiceMetrics,
+) {
+    if !message.has_reply() {
+        return;
+    }
+    match serde_json::to_vec(response) {
+        Ok(payload) => reply_bytes(message, transport, &payload).await,
+        Err(error) => {
+            warn!(error = %error, subject = message.subject(), "failed to encode router response");
+            metrics.record_request_error();
+            reply_json_error(message, transport, "encode_error").await;
+        }
+    }
+}
+
 async fn handle_router_request<S, T>(
     msg: T::Message,
     transport: T,
     service: Arc<S>,
     ring: Arc<HashRing>,
-    inflight: Cache<InflightKey, Vec<u8>>,
+    inflight: Inflight,
     metrics: Arc<ServiceMetrics>,
 ) where
     S: RouterService,
     T: Transport,
 {
-    let request_start = now_ms();
+    let request_start = Instant::now();
     metrics.record_request();
     if msg.payload().len() > MAX_ROUTER_REQUEST_BYTES {
         warn!(
@@ -131,12 +250,7 @@ async fn handle_router_request<S, T>(
             "rejecting oversized router request"
         );
         metrics.record_request_error();
-        if msg.has_reply() {
-            let error_response =
-                serde_json::to_vec(&serde_json::json!({"error": "request_too_large"}))
-                    .unwrap_or_default();
-            let _ = reply_message(&msg, &transport, &error_response).await;
-        }
+        reply_json_error(&msg, &transport, "request_too_large").await;
         return;
     }
     let request: S::Request = match serde_json::from_slice(msg.payload()) {
@@ -144,25 +258,20 @@ async fn handle_router_request<S, T>(
         Err(err) => {
             warn!(error = %err, "failed to decode incoming request");
             metrics.record_request_error();
-            if msg.has_reply() {
-                let error_response =
-                    serde_json::to_vec(&serde_json::json!({"error": "decode_error"}))
-                        .unwrap_or_default();
-                let _ = reply_message(&msg, &transport, &error_response).await;
-            }
+            reply_json_error(&msg, &transport, "decode_error").await;
             return;
         }
     };
     let request = Arc::new(request);
+    let broadcast = S::is_broadcast_request(&request);
 
-    if let Some(cached) = service.l1_lookup(&request) {
+    if S::CACHES_RESPONSES
+        && !broadcast
+        && let Some(cached) = service.l1_lookup(&request)
+    {
         metrics.record_cache_hit();
-        let elapsed = (now_ms() - request_start).max(0) as u64;
-        metrics.record_request_duration(elapsed);
-        if msg.has_reply() {
-            let response_bytes = serde_json::to_vec(&cached).unwrap_or_default();
-            let _ = reply_message(&msg, &transport, &response_bytes).await;
-        }
+        metrics.record_request_duration(request_start.elapsed().as_millis() as u64);
+        reply_json_response(&msg, &transport, &cached, &metrics).await;
         return;
     }
 
@@ -170,7 +279,9 @@ async fn handle_router_request<S, T>(
     metrics.record_cache_miss();
     metrics.record_shard_forward();
 
-    let coalesce_result = if let Some(coalesce_key) = S::coalesce_key(&request) {
+    let coalesce_result = if broadcast {
+        forward_to_all_shards::<S>(&transport, service.as_ref(), ring.as_ref(), &request).await
+    } else if let Some(coalesce_key) = S::coalesce_key(&request) {
         let forward_transport = transport.clone();
         let forward_service = service.clone();
         let forward_ring = ring.clone();
@@ -182,20 +293,18 @@ async fn handle_router_request<S, T>(
             msg.payload().to_vec()
         };
         let inflight_key = (route_key, coalesce_key);
-        inflight
-            .try_get_with(inflight_key, async move {
-                dispatch_to_shard::<S>(
-                    &forward_transport,
-                    forward_service.as_ref(),
-                    forward_ring.as_ref(),
-                    &forward_request,
-                    &forward_route_key,
-                    &forward_payload,
-                )
-                .await
-            })
+        coalesce(&inflight, inflight_key, async move {
+            dispatch_to_shard::<S>(
+                &forward_transport,
+                forward_service.as_ref(),
+                forward_ring.as_ref(),
+                &forward_request,
+                &forward_route_key,
+                &forward_payload,
+            )
             .await
-            .map_err(|err| anyhow::anyhow!("{err}"))
+        })
+        .await
     } else {
         dispatch_to_shard::<S>(
             &transport,
@@ -208,36 +317,31 @@ async fn handle_router_request<S, T>(
         .await
     };
 
-    let elapsed = (now_ms() - request_start).max(0) as u64;
-    metrics.record_request_duration(elapsed);
+    metrics.record_request_duration(request_start.elapsed().as_millis() as u64);
 
     match coalesce_result {
         Ok(response_bytes) => {
             if !S::CACHES_RESPONSES {
                 if msg.has_reply() {
-                    let _ = reply_message(&msg, &transport, &response_bytes).await;
+                    reply_bytes(&msg, &transport, &response_bytes).await;
                 }
                 return;
             }
             match rmp_serde::from_slice::<S::Response>(&response_bytes) {
                 Ok(response) => {
-                    service.l1_insert(&request, &response);
-                    if msg.has_reply() {
-                        let json = serde_json::to_vec(&response).unwrap_or_default();
-                        let _ = reply_message(&msg, &transport, &json).await;
+                    if !broadcast {
+                        service.l1_insert(&request, &response);
                     }
+                    reply_json_response(&msg, &transport, &response, &metrics).await;
                 }
                 Err(err) => {
                     debug!(error = %err, "failed to decode shard response");
                     if msg.has_reply() {
                         if serde_json::from_slice::<serde_json::Value>(&response_bytes).is_ok() {
-                            let _ = reply_message(&msg, &transport, &response_bytes).await;
+                            reply_bytes(&msg, &transport, &response_bytes).await;
                             return;
                         }
-                        let error_response =
-                            serde_json::to_vec(&serde_json::json!({"error": "shard_decode_error"}))
-                                .unwrap_or_default();
-                        let _ = reply_message(&msg, &transport, &error_response).await;
+                        reply_json_error(&msg, &transport, "shard_decode_error").await;
                     }
                 }
             }
@@ -245,12 +349,7 @@ async fn handle_router_request<S, T>(
         Err(err) => {
             debug!(error = %err, "shard request failed (coalesced)");
             metrics.record_request_error();
-            if msg.has_reply() {
-                let error_response =
-                    serde_json::to_vec(&serde_json::json!({"error": "shard_unavailable"}))
-                        .unwrap_or_default();
-                let _ = reply_message(&msg, &transport, &error_response).await;
-            }
+            reply_json_error(&msg, &transport, "shard_unavailable").await;
         }
     }
 }
@@ -267,16 +366,12 @@ where
     let ring = Arc::new(HashRing::new(config.shard_count));
     let name = service.service_name().to_owned();
     let request_subject = format!("svc.{name}");
-    let invalidate_subject = format!("svc.{name}.invalidate.>");
     let queue_group = format!("{name}-router");
 
     let metrics = Arc::new(ServiceMetrics::default());
     metrics.init();
 
-    let inflight: Cache<InflightKey, Vec<u8>> = Cache::builder()
-        .max_capacity(INFLIGHT_MAX_ENTRIES)
-        .time_to_live(INFLIGHT_TTL)
-        .build();
+    let inflight = Inflight::default();
 
     let mut tasks = JoinSet::new();
 
@@ -295,6 +390,7 @@ where
     let req_metrics = metrics.clone();
     let req_permits = Arc::new(Semaphore::new(config.max_concurrent_requests));
     tasks.spawn(async move {
+        let mut requests = JoinSet::new();
         loop {
             let mut sub = req_transport
                 .subscribe_queue(&request_subject, &req_queue)
@@ -307,6 +403,12 @@ where
 
             loop {
                 let msg = tokio::select! {
+                    result = requests.join_next(), if !requests.is_empty() => {
+                        if let Err(err) = result.expect("nonempty router request set") {
+                            warn!(error = %err, "router request task failed");
+                        }
+                        continue;
+                    }
                     msg_opt = sub.next() => {
                         let Some(msg) = msg_opt else {
                             warn!("router request subscription stream ended, will re-subscribe");
@@ -314,24 +416,20 @@ where
                         };
                         msg
                     }
-                    _ = req_transport.wait_for_reconnect() => {
-                        info!("NATS reconnected, re-subscribing router request listener");
-                        break;
-                    }
                 };
 
+                while let Some(result) = requests.try_join_next() {
+                    if let Err(err) = result {
+                        warn!(error = %err, "router request task failed");
+                    }
+                }
                 let permit = match req_permits.clone().try_acquire_owned() {
                     Ok(permit) => permit,
                     Err(TryAcquireError::NoPermits) => {
                         debug!("shedding router request, no permits available");
                         req_metrics.record_request();
                         req_metrics.record_request_error();
-                        if msg.has_reply() {
-                            let error_response =
-                                serde_json::to_vec(&serde_json::json!({"error": "overloaded"}))
-                                    .unwrap_or_default();
-                            let _ = reply_message(&msg, &req_transport, &error_response).await;
-                        }
+                        reply_json_error(&msg, &req_transport, "overloaded").await;
                         continue;
                     }
                     Err(TryAcquireError::Closed) => return anyhow::Ok(()),
@@ -341,7 +439,7 @@ where
                 let ring = ring.clone();
                 let inflight = inflight.clone();
                 let metrics = req_metrics.clone();
-                tokio::spawn(async move {
+                requests.spawn(async move {
                     let _permit = permit;
                     handle_router_request::<S, _>(msg, transport, service, ring, inflight, metrics)
                         .await;
@@ -350,39 +448,32 @@ where
         }
     });
 
-    let inv_transport = transport.clone();
-    let inv_service = service.clone();
-    tasks.spawn(async move {
-        loop {
-            let mut sub = inv_transport.subscribe(&invalidate_subject).await?;
-            info!(
-                subject = invalidate_subject,
-                "router listening for cache invalidations"
-            );
-
+    if S::CACHES_RESPONSES {
+        let inv_transport = transport.clone();
+        let inv_service = service.clone();
+        let invalidate_prefix = format!("svc.{name}.invalidate.");
+        let invalidate_subject = format!("{invalidate_prefix}>");
+        tasks.spawn(async move {
             loop {
-                tokio::select! {
-                    msg_opt = sub.next() => {
-                        let Some(msg) = msg_opt else {
-                            warn!("router invalidation subscription stream ended, will re-subscribe");
-                            break;
-                        };
-                        let subject = msg.subject().to_owned();
-                        let key = subject
-                            .strip_prefix(&format!("svc.{name}.invalidate."))
-                            .unwrap_or("");
-                        if !key.is_empty() {
-                            inv_service.l1_invalidate(key);
-                        }
-                    }
-                    _ = inv_transport.wait_for_reconnect() => {
-                        info!("NATS reconnected, re-subscribing router invalidation listener");
-                        break;
+                let mut sub = inv_transport.subscribe(&invalidate_subject).await?;
+                info!(
+                    subject = invalidate_subject,
+                    "router listening for cache invalidations"
+                );
+
+                while let Some(msg) = sub.next().await {
+                    if let Some(key) = msg
+                        .subject()
+                        .strip_prefix(&invalidate_prefix)
+                        .filter(|key| !key.is_empty())
+                    {
+                        inv_service.l1_invalidate(key);
                     }
                 }
+                warn!("router invalidation subscription stream ended, will re-subscribe");
             }
-        }
-    });
+        });
+    }
 
     tokio::select! {
         result = tasks.join_next() => {
@@ -742,6 +833,142 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn router_does_not_reuse_a_finished_coalesced_response() {
+        let transport = InMemoryTransport::new();
+        let mut shard_sub = transport
+            .subscribe("svc.passthrough-mock.shard.0")
+            .await
+            .unwrap();
+
+        let calls = Arc::new(AtomicUsize::new(0));
+        let shard_transport = transport.clone();
+        let shard_calls = calls.clone();
+        let shard_task = tokio::spawn(async move {
+            while let Some(msg) = shard_sub.next().await {
+                let call = shard_calls.fetch_add(1, Ordering::SeqCst) + 1;
+                let response = serde_json::to_vec(&MockResponse {
+                    key: format!("v{call}"),
+                })
+                .unwrap();
+                reply_message(&msg, &shard_transport, &response)
+                    .await
+                    .unwrap();
+            }
+        });
+
+        let router_config = test_config(4);
+        let router_transport = transport.clone();
+        let router_task = tokio::spawn(async move {
+            run_router(&router_config, PassThroughRouter, router_transport).await
+        });
+
+        tokio::time::sleep(Duration::from_millis(25)).await;
+
+        let request = serde_json::to_vec(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+
+        let first = transport
+            .request("svc.passthrough-mock", &request, Duration::from_secs(1))
+            .await
+            .unwrap();
+        let second = transport
+            .request("svc.passthrough-mock", &request, Duration::from_secs(1))
+            .await
+            .unwrap();
+
+        assert_eq!(
+            serde_json::from_slice::<MockResponse>(&first).unwrap(),
+            MockResponse {
+                key: "v1".to_owned()
+            }
+        );
+        assert_eq!(
+            serde_json::from_slice::<MockResponse>(&second).unwrap(),
+            MockResponse {
+                key: "v2".to_owned()
+            }
+        );
+        assert_eq!(calls.load(Ordering::SeqCst), 2);
+
+        shard_task.abort();
+        router_task.abort();
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn router_coalesces_concurrent_in_flight_requests() {
+        let transport = InMemoryTransport::new();
+        let mut shard_sub = transport
+            .subscribe("svc.passthrough-mock.shard.0")
+            .await
+            .unwrap();
+
+        let calls = Arc::new(AtomicUsize::new(0));
+        let (forwarded_tx, forwarded_rx) = tokio::sync::oneshot::channel();
+        let (release_tx, release_rx) = tokio::sync::oneshot::channel::<()>();
+        let shard_transport = transport.clone();
+        let shard_calls = calls.clone();
+        let shard_task = tokio::spawn(async move {
+            let msg = shard_sub.next().await.unwrap();
+            shard_calls.fetch_add(1, Ordering::SeqCst);
+            let _ = forwarded_tx.send(());
+            release_rx.await.unwrap();
+            reply_message(&msg, &shard_transport, br#"{"key":"shared"}"#)
+                .await
+                .unwrap();
+            while shard_sub.next().await.is_some() {
+                shard_calls.fetch_add(1, Ordering::SeqCst);
+            }
+        });
+
+        let router_config = test_config(4);
+        let router_transport = transport.clone();
+        let router_task = tokio::spawn(async move {
+            run_router(&router_config, PassThroughRouter, router_transport).await
+        });
+
+        tokio::time::sleep(Duration::from_millis(25)).await;
+
+        let request = serde_json::to_vec(&MockRequest {
+            key: "a".to_owned(),
+        })
+        .unwrap();
+
+        let client_a = {
+            let transport = transport.clone();
+            let request = request.clone();
+            tokio::spawn(async move {
+                transport
+                    .request("svc.passthrough-mock", &request, Duration::from_secs(1))
+                    .await
+            })
+        };
+        forwarded_rx.await.unwrap();
+
+        let client_b = {
+            let transport = transport.clone();
+            tokio::spawn(async move {
+                transport
+                    .request("svc.passthrough-mock", &request, Duration::from_secs(1))
+                    .await
+            })
+        };
+        tokio::time::sleep(Duration::from_millis(50)).await;
+
+        release_tx.send(()).unwrap();
+        let response_a = client_a.await.unwrap().unwrap();
+        let response_b = client_b.await.unwrap().unwrap();
+
+        assert_eq!(response_a, br#"{"key":"shared"}"#);
+        assert_eq!(response_b, br#"{"key":"shared"}"#);
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+
+        shard_task.abort();
+        router_task.abort();
+    }
+
+    #[tokio::test]
     async fn router_retries_pass_through_requests_that_legacy_shards_reject() {
         let transport = InMemoryTransport::new();
         let mut shard_sub = transport
@@ -871,7 +1098,6 @@ mod tests {
             nats_auth_token: None,
             cache_max_entries: 100,
             cache_ttl: Duration::from_secs(30),
-            cache_hard_ttl: Duration::from_secs(600),
             max_concurrent_requests,
             scylla_hosts: Vec::new(),
             scylla_keyspace: "fluxer".to_owned(),

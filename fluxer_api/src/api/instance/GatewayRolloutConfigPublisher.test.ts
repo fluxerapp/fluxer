@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT,
+	GatewayRolloutConfigPublisher,
+} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import type {GatewayRolloutConfig} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
+import type {NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {type NatsConnection, StringCodec} from 'nats';
 import {describe, expect, it} from 'vitest';
-import {GATEWAY_ROLLOUT_CONFIG_NATS_SUBJECT, GatewayRolloutConfigPublisher} from './GatewayRolloutConfigPublisher';
 
 interface FakePublish {
 	subject: string;
@@ -12,7 +15,6 @@ interface FakePublish {
 }
 
 class FakeNatsConnectionManager implements INatsConnectionManager {
-	private readonly codec = StringCodec();
 	private closed = true;
 	readonly publishes: Array<FakePublish> = [];
 	connectCalls = 0;
@@ -31,7 +33,7 @@ class FakeNatsConnectionManager implements INatsConnectionManager {
 			publish: (subject: string, data: Uint8Array) => {
 				this.publishes.push({
 					subject,
-					body: JSON.parse(this.codec.decode(data)) as Record<string, unknown>,
+					body: JSON.parse(new TextDecoder().decode(data)) as Record<string, unknown>,
 				});
 			},
 			flush: async () => {

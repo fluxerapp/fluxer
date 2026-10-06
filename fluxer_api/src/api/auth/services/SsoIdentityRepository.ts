@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import {deleteOneOrMany, executeQuery, fetchOne} from '../../database/CassandraQueryExecution';
-import type {UserSsoIdentityRow} from '../../database/types/AuthTypes';
-import {UserSsoIdentities} from '../../Tables';
+import type {UserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, executeQuery, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import type {UserSsoIdentityRow} from '@app/api/database/types/AuthTypes';
+import {UserSsoIdentities} from '@app/api/Tables';
 
 interface ConditionalInsertResult {
 	'[applied]': boolean;

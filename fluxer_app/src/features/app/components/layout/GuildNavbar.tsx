@@ -4,6 +4,7 @@ import {TopNagbarContext} from '@app/features/app/components/layout/app_layout/T
 import {ChannelListContent} from '@app/features/app/components/layout/ChannelListContent';
 import {GuildHeader} from '@app/features/app/components/layout/GuildHeader';
 import {GuildSidebar} from '@app/features/app/components/layout/GuildSidebar';
+import {useGuildBannerPresentation} from '@app/features/app/hooks/useGuildBannerPresentation';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import KeybindManager from '@app/features/app/keybindings/KeybindManager';
 import Channels from '@app/features/channel/state/Channels';
@@ -12,18 +13,16 @@ import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuil
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {useMotionValue} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
-import {useContext, useEffect, useMemo} from 'react';
+import {useContext, useMemo} from 'react';
 import {useHotkeys} from 'react-hotkeys-hook';
 
 export const GuildNavbar = observer(({guild}: {guild: Guild}) => {
 	const scrollY = useMotionValue(0);
+	const banner = useGuildBannerPresentation({guild, scrollY});
 	const {isNative, isWindows, isLinux} = useNativePlatform();
 	const topNagbarCount = useContext(TopNagbarContext);
 	const hasTopNagbar = topNagbarCount > 0;
 	const shouldRoundTopLeft = isNative && (isWindows || isLinux) && !hasTopNagbar;
-	useEffect(() => {
-		scrollY.set(0);
-	}, [guild.id, scrollY]);
 	const channels = Channels.getGuildChannels(guild.id);
 	const categoryIds = useMemo(() => {
 		return channels.filter((ch) => ch.type === ChannelTypes.GUILD_CATEGORY).map((ch) => ch.id);
@@ -46,8 +45,15 @@ export const GuildNavbar = observer(({guild}: {guild: Guild}) => {
 	return (
 		<GuildSidebar
 			roundTopLeft={shouldRoundTopLeft}
-			header={<GuildHeader guild={guild} data-flx="app.guild-navbar.guild-header" />}
-			content={<ChannelListContent guild={guild} scrollY={scrollY} data-flx="app.guild-navbar.channel-list-content" />}
+			header={<GuildHeader guild={guild} banner={banner} data-flx="app.guild-navbar.guild-header" />}
+			content={
+				<ChannelListContent
+					guild={guild}
+					scrollY={scrollY}
+					banner={banner}
+					data-flx="app.guild-navbar.channel-list-content"
+				/>
+			}
 			data-flx="app.guild-navbar.guild-sidebar"
 		/>
 	);

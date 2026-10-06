@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import type {GuildDiscoveryByStatusRow, GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {GuildDiscovery, GuildDiscoveryByStatus} from '@app/api/Tables';
 import {DISCOVERY_DEFAULT_LANGUAGE, DiscoveryCategories} from '@fluxer/constants/src/DiscoveryConstants';
-import type {GuildID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import type {GuildDiscoveryByStatusRow, GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
-import {GuildDiscovery, GuildDiscoveryByStatus} from '../../Tables';
 
 const FETCH_DISCOVERY_BY_GUILD_ID = GuildDiscovery.selectCql({
 	where: GuildDiscovery.where.eq('guild_id'),

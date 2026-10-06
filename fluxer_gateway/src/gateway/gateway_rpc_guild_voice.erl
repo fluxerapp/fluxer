@@ -24,8 +24,6 @@ handle(<<"guild.disconnect_all_voice_users_in_channel">>, P) ->
     handle_disconnect_all_in_channel(P);
 handle(<<"guild.confirm_voice_connection_from_livekit">>, P) ->
     handle_confirm_connection(P);
-handle(<<"guild.repair_voice_state_from_cache">>, P) ->
-    handle_repair_state(P);
 handle(<<"guild.get_voice_states_for_channel">>, P) ->
     handle_get_voice_states(P);
 handle(<<"guild.get_pending_joins_for_channel">>, P) ->
@@ -166,27 +164,6 @@ format_confirm_result({error, _, EA}) ->
     #{<<"success">> => false, <<"error">> => normalize_voice_rpc_error(EA)};
 format_confirm_result(#{error := E}) ->
     raise_voice_error(E).
-
--spec handle_repair_state(map()) -> term().
-handle_repair_state(P) ->
-    GuildId = validation:snowflake_or_throw(<<"guild_id">>, maps:get(<<"guild_id">>, P)),
-    ChannelId = validation:snowflake_or_throw(<<"channel_id">>, maps:get(<<"channel_id">>, P)),
-    UserId = validation:snowflake_or_throw(<<"user_id">>, maps:get(<<"user_id">>, P)),
-    gateway_rpc_guild_infra:with_voice_server(GuildId, fun(VPid, _) ->
-        repair_voice_state(VPid, P, ChannelId, UserId)
-    end).
-
--spec repair_voice_state(pid(), map(), integer(), integer()) -> map().
-repair_voice_state(VPid, P, ChannelId, UserId) ->
-    Req = #{
-        connection_id => maps:get(<<"connection_id">>, P),
-        channel_id => ChannelId,
-        user_id => UserId
-    },
-    Result = gen_server:call(
-        VPid, {repair_voice_state_from_guild_cache, Req}, ?GUILD_CALL_TIMEOUT
-    ),
-    gateway_rpc_guild_voice_util:handle_repair_result(Result).
 
 -spec handle_get_voice_states(map()) -> term().
 handle_get_voice_states(P) ->

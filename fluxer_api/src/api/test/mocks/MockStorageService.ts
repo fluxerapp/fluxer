@@ -3,16 +3,16 @@
 import crypto, {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import {Readable} from 'node:stream';
-import {S3ServiceException} from '@aws-sdk/client-s3';
-import {isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
-import {vi} from 'vitest';
-import {Config} from '../../Config';
+import {Config} from '@app/api/Config';
 import {
 	type IStorageService,
 	type ProcessedStorageObjectMetadata,
 	StorageObjectListingOverflowError,
 	StorageObjectRangeNotSatisfiableError,
-} from '../../infrastructure/IStorageService';
+} from '@app/api/infrastructure/IStorageService';
+import {S3ServiceException} from '@aws-sdk/client-s3';
+import {isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
+import {vi} from 'vitest';
 
 const OBJECT_ID_SEPARATOR = '\u0000';
 const BYTE_RANGE_PATTERN = /^bytes=(\d*)-(\d*)$/u;

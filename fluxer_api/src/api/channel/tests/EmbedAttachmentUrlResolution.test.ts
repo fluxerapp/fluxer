@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createChannel,
+	createGuild,
+	loadFixture,
+	sendMessageWithAttachments,
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createChannel, createGuild, loadFixture, sendMessageWithAttachments} from './AttachmentTestUtils';
 
 describe('Embed Attachment URL Resolution', () => {
 	let harness: ApiTestHarness;
@@ -81,25 +86,25 @@ describe('Embed Attachment URL Resolution', () => {
 			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 			const channelId = guild.system_channel_id ?? channel.id;
 			const file1Data = loadFixture('yeah.png');
-			const file2Data = loadFixture('thisisfine.gif');
+			const file2Data = loadFixture('animated.gif');
 			const payload = {
 				content: 'Both image and thumbnail',
 				attachments: [
 					{id: 0, filename: 'yeah.png'},
-					{id: 1, filename: 'thisisfine.gif'},
+					{id: 1, filename: 'animated.gif'},
 				],
 				embeds: [
 					{
 						title: 'Complete Embed',
 						description: 'This embed uses both image and thumbnail',
-						image: {url: 'attachment://thisisfine.gif'},
+						image: {url: 'attachment://animated.gif'},
 						thumbnail: {url: 'attachment://yeah.png'},
 					},
 				],
 			};
 			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
 				{index: 0, filename: 'yeah.png', data: file1Data},
-				{index: 1, filename: 'thisisfine.gif', data: file2Data},
+				{index: 1, filename: 'animated.gif', data: file2Data},
 			]);
 			expect(response.status).toBe(200);
 			expect(json.embeds).toBeDefined();
@@ -507,6 +512,34 @@ describe('Embed Attachment URL Resolution', () => {
 			expect(json.embeds).toHaveLength(1);
 			expect(json.embeds![0].image?.url).not.toContain('attachment://');
 		});
+		it('should accept image and video attachments beyond the legacy image extensions', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Media Type Guild');
+			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
+			const channelId = guild.system_channel_id ?? channel.id;
+			const payload = {
+				content: 'Test with jxl and mp4 embed media',
+				attachments: [
+					{id: 0, filename: 'photo.jxl'},
+					{id: 1, filename: 'clip.mp4'},
+				],
+				embeds: [
+					{
+						title: 'Media Embed',
+						image: {url: 'attachment://clip.mp4'},
+						thumbnail: {url: 'attachment://photo.jxl'},
+					},
+				],
+			};
+			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
+				{index: 0, filename: 'photo.jxl', data: Buffer.from('jxl bytes')},
+				{index: 1, filename: 'clip.mp4', data: Buffer.from('mp4 bytes')},
+			]);
+			expect(response.status).toBe(200);
+			expect(json.embeds).toHaveLength(1);
+			expect(json.embeds![0].image?.url).not.toContain('attachment://');
+			expect(json.embeds![0].thumbnail?.url).not.toContain('attachment://');
+		});
 	});
 	describe('Multiple Embeds and Files', () => {
 		it('should handle multiple embeds with different URL types', async () => {
@@ -543,12 +576,12 @@ describe('Embed Attachment URL Resolution', () => {
 			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 			const channelId = guild.system_channel_id ?? channel.id;
 			const file1Data = loadFixture('yeah.png');
-			const file2Data = loadFixture('thisisfine.gif');
+			const file2Data = loadFixture('animated.gif');
 			const payload = {
 				content: 'Multiple embeds with different attachments',
 				attachments: [
 					{id: 0, filename: 'yeah.png'},
-					{id: 1, filename: 'thisisfine.gif'},
+					{id: 1, filename: 'animated.gif'},
 				],
 				embeds: [
 					{
@@ -559,19 +592,19 @@ describe('Embed Attachment URL Resolution', () => {
 					{
 						title: 'Second Embed',
 						description: 'Uses GIF',
-						image: {url: 'attachment://thisisfine.gif'},
+						image: {url: 'attachment://animated.gif'},
 					},
 				],
 			};
 			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
 				{index: 0, filename: 'yeah.png', data: file1Data},
-				{index: 1, filename: 'thisisfine.gif', data: file2Data},
+				{index: 1, filename: 'animated.gif', data: file2Data},
 			]);
 			expect(response.status).toBe(200);
 			expect(json.embeds).toBeDefined();
 			expect(json.embeds).toHaveLength(2);
 			expect(json.embeds![0].image?.url).toContain('yeah.png');
-			expect(json.embeds![1].image?.url).toContain('thisisfine.gif');
+			expect(json.embeds![1].image?.url).toContain('animated.gif');
 		});
 		it('should resolve multiple files referenced by embeds', async () => {
 			const account = await createTestAccount(harness);

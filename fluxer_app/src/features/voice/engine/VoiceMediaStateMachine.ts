@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {EffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type VoiceMediaPermissionWarmupState =
 	| 'unknown'
@@ -686,7 +686,7 @@ export const voiceMediaStateMachine = setup({
 export type VoiceMediaSnapshot = SnapshotFrom<typeof voiceMediaStateMachine>;
 
 export function createVoiceMediaSnapshot(): VoiceMediaSnapshot {
-	return getInitialSnapshot(voiceMediaStateMachine);
+	return initialTransition(voiceMediaStateMachine)[0];
 }
 
 export function transitionVoiceMediaSnapshot(snapshot: VoiceMediaSnapshot, event: VoiceMediaEvent): VoiceMediaSnapshot {

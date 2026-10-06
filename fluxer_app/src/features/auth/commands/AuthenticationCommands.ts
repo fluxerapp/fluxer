@@ -36,13 +36,6 @@ export const VerificationResult = {
 
 export type VerificationResult = ValueOf<typeof VerificationResult>;
 
-type CaptchaType = 'turnstile' | 'hcaptcha';
-
-type RegisterData = RegisterRequest & {
-	captchaToken?: string;
-	captchaType?: CaptchaType;
-};
-
 export type AuthResponseUser = UserPartial & {
 	email?: string | null;
 };
@@ -64,6 +57,7 @@ interface MfaLoginResponse {
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes?: boolean;
 	allowed_methods?: Array<string>;
 }
 
@@ -110,6 +104,13 @@ export function isRegistrationPendingApprovalResponse(
 
 export type ResetPasswordResponse = AuthTokenResponse | MfaLoginResponse;
 
+interface RecoveryKitIssued {
+	recovery_key: string;
+	recovery_kit_created_at: string;
+}
+
+export type RecoverAccountResponse = (AuthTokenResponse | MfaLoginResponse) & RecoveryKitIssued;
+
 interface DesktopHandoffInitiateResponse {
 	code: string;
 	expires_at: string;
@@ -138,39 +139,27 @@ export interface DesktopHandoffInfoResponse {
 	client_info?: DesktopHandoffInfoClientInfo | null;
 }
 
-interface LoginParams {
-	email: string;
+export type LoginIdentifier = {email: string; login?: undefined} | {login: string; email?: undefined};
+
+type LoginParams = LoginIdentifier & {
 	password: string;
-	captchaToken?: string;
 	inviteCode?: string;
-	captchaType?: CaptchaType;
-}
-
-interface CaptchaParams {
-	captchaToken?: string;
-	captchaType?: CaptchaType;
-}
-
-function captchaHeaders({captchaToken, captchaType}: CaptchaParams): Record<string, string> {
-	if (!captchaToken) {
-		return {};
-	}
-	return {
-		'X-Captcha-Token': captchaToken,
-		'X-Captcha-Type': captchaType || 'hcaptcha',
-	};
-}
+};
 
 function withInviteCode<T extends object>(body: T, inviteCode?: string): T & {invite_code?: string} {
 	return inviteCode ? {...body, invite_code: inviteCode} : body;
 }
 
-function loginBody({email, password, inviteCode}: Pick<LoginParams, 'email' | 'password' | 'inviteCode'>): {
-	email: string;
+function loginBody(params: LoginParams): {
+	email?: string;
+	login?: string;
 	password: string;
 	invite_code?: string;
 } {
-	return withInviteCode({email, password}, inviteCode);
+	if (params.login !== undefined) {
+		return withInviteCode({login: params.login, password: params.password}, params.inviteCode);
+	}
+	return withInviteCode({email: params.email, password: params.password}, params.inviteCode);
 }
 
 function mfaTotpBody(
@@ -196,11 +185,6 @@ function webAuthnBody(
 	inviteCode?: string,
 ): {response: AuthenticationResponseJSON; challenge: string; invite_code?: string} {
 	return withInviteCode({response, challenge}, inviteCode);
-}
-
-function registerBody(data: RegisterData): RegisterRequest {
-	const {captchaToken: _, captchaType: __, ...bodyData} = data;
-	return bodyData;
 }
 
 function ticketBody(ticket: string): {ticket: string} {
@@ -246,17 +230,11 @@ function verificationResultFromError(
 	return responseErr.status === invalidStatus ? invalidResult : VerificationResult.SERVER_ERROR;
 }
 
-export async function login({
-	email,
-	password,
-	captchaToken,
-	inviteCode,
-	captchaType,
-}: LoginParams): Promise<LoginResponse | IpAuthorizationRequiredResponse> {
+export async function login(params: LoginParams): Promise<LoginResponse | IpAuthorizationRequiredResponse> {
 	try {
 		const response = await http.post<LoginResponse>(Endpoints.AUTH_LOGIN, {
-			body: loginBody({email, password, inviteCode}),
-			headers: withAuthLocaleHeader(captchaHeaders({captchaToken, captchaType})),
+			body: loginBody(params),
+			headers: withAuthLocaleHeader(),
 		});
 		logger.debug('Login successful', {mfa: response.body?.mfa});
 		return response.body;
@@ -264,7 +242,7 @@ export async function login({
 		if (error instanceof HttpError) {
 			const ipAuthorization = loginIpAuthorizationResponse(error);
 			if (ipAuthorization) {
-				logger.info('Login requires IP authorization', {email});
+				logger.info('Login requires IP authorization', {email: params.email});
 				return ipAuthorization;
 			}
 		}
@@ -356,11 +334,11 @@ export async function authenticateWithWebAuthn(
 	}
 }
 
-export async function register(data: RegisterData): Promise<RegisterResponse> {
+export async function register(data: RegisterRequest): Promise<RegisterResponse> {
 	try {
 		const response = await http.post<RegisterResponse>(Endpoints.AUTH_REGISTER, {
-			body: registerBody(data),
-			headers: withAuthLocaleHeader(captchaHeaders(data)),
+			body: data,
+			headers: withAuthLocaleHeader(),
 		});
 		const responseBody = response.body;
 		logger.info('Registration successful');
@@ -390,15 +368,24 @@ export async function getUsernameSuggestions(globalName: string): Promise<Array<
 	}
 }
 
-export async function forgotPassword(
-	email: string,
-	captchaToken?: string,
-	captchaType?: 'turnstile' | 'hcaptcha',
-): Promise<void> {
+interface UsernameAvailabilityResponse {
+	available: boolean;
+}
+
+export async function checkUsernameAvailability(username: string, signal?: AbortSignal): Promise<boolean> {
+	const response = await http.get<UsernameAvailabilityResponse>(Endpoints.AUTH_USERNAME_AVAILABILITY, {
+		query: {username},
+		headers: withAuthLocaleHeader(),
+		signal,
+	});
+	return response.body.available;
+}
+
+export async function forgotPassword(email: string): Promise<void> {
 	try {
 		await http.post(Endpoints.AUTH_FORGOT_PASSWORD, {
 			body: {email},
-			headers: withAuthLocaleHeader(captchaHeaders({captchaToken, captchaType})),
+			headers: withAuthLocaleHeader(),
 		});
 		logger.debug('Password reset email sent');
 	} catch (error) {
@@ -431,6 +418,28 @@ export async function resetPassword(token: string, password: string): Promise<Re
 		return responseBody;
 	} catch (error) {
 		logger.error('Password reset failed', error);
+		throw error;
+	}
+}
+
+export async function recoverAccount({
+	login,
+	recoveryKey,
+	password,
+}: {
+	login: string;
+	recoveryKey: string;
+	password: string;
+}): Promise<RecoverAccountResponse> {
+	try {
+		const response = await http.post<RecoverAccountResponse>(Endpoints.AUTH_RECOVER, {
+			body: {login, recovery_key: recoveryKey, password},
+			headers: withAuthLocaleHeader(),
+		});
+		logger.info('Account recovery successful');
+		return response.body;
+	} catch (error) {
+		logger.error('Account recovery failed', error);
 		throw error;
 	}
 }
@@ -679,11 +688,12 @@ interface SetMfaTicketPayload {
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
 }
 
-export function setMfaTicket({ticket, totp, webauthn}: SetMfaTicketPayload): void {
+export function setMfaTicket({ticket, totp, webauthn, backupCodes}: SetMfaTicketPayload): void {
 	logger.debug('Setting MFA ticket');
-	Authentication.handleMfaTicketSet({ticket, totp, webauthn});
+	Authentication.handleMfaTicketSet({ticket, totp, webauthn, backupCodes});
 }
 
 export function clearMfaTicket(): void {

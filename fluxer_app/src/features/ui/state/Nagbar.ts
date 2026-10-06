@@ -17,11 +17,14 @@ export interface NagbarSettings {
 	pendingBulkDeletionDismissed: Record<string, boolean>;
 	invitesDisabledDismissed: Record<string, boolean>;
 	guildMfaRequirementDismissed: Record<string, boolean>;
+	priceAnnouncementDismissed: Record<string, boolean>;
+	legacyPriceOptInDismissed: Record<string, boolean>;
 	guildMembershipCtaDismissed: boolean;
 	visionaryMfaDismissed: boolean;
 	claimAccountModalShownThisSession: boolean;
-	forceOffline: boolean;
+	forceConnectionNotice: boolean;
 	forceEmailVerification: boolean;
+	forceAccountLimited: boolean;
 	forceIOSInstall: boolean;
 	forcePWAInstall: boolean;
 	forcePushNotification: boolean;
@@ -40,8 +43,10 @@ export interface NagbarSettings {
 	forceScheduledMaintenance: boolean;
 	forceVoiceSessionRestore: boolean;
 	forceGuildMfaRequirement: boolean;
-	forceHideOffline: boolean;
+	forceDomainMoved: boolean;
+	forceHideConnectionNotice: boolean;
 	forceHideEmailVerification: boolean;
+	forceHideAccountLimited: boolean;
 	forceHideIOSInstall: boolean;
 	forceHidePWAInstall: boolean;
 	forceHidePushNotification: boolean;
@@ -60,6 +65,7 @@ export interface NagbarSettings {
 	forceHideScheduledMaintenance: boolean;
 	forceHideVoiceSessionRestore: boolean;
 	forceHideGuildMfaRequirement: boolean;
+	forceHideDomainMoved: boolean;
 }
 
 export type NagbarToggleKey = Exclude<
@@ -68,6 +74,8 @@ export type NagbarToggleKey = Exclude<
 	| 'invitesDisabledDismissed'
 	| 'claimAccountModalShownThisSession'
 	| 'pendingBulkDeletionDismissed'
+	| 'priceAnnouncementDismissed'
+	| 'legacyPriceOptInDismissed'
 >;
 
 export class Nagbar implements NagbarSettings {
@@ -83,6 +91,8 @@ export class Nagbar implements NagbarSettings {
 	pendingBulkDeletionDismissed: Record<string, boolean> = {};
 	invitesDisabledDismissed: Record<string, boolean> = {};
 	guildMfaRequirementDismissed: Record<string, boolean> = {};
+	priceAnnouncementDismissed: Record<string, boolean> = {};
+	legacyPriceOptInDismissed: Record<string, boolean> = {};
 	guildMembershipCtaDismissed = false;
 	visionaryMfaDismissed = false;
 	buildEnvironmentDismissedThisSession = false;
@@ -90,6 +100,7 @@ export class Nagbar implements NagbarSettings {
 	claimAccountModalShownThisSession = false;
 	forceOffline = false;
 	forceEmailVerification = false;
+	forceAccountLimited = false;
 	forceIOSInstall = false;
 	forcePWAInstall = false;
 	forcePushNotification = false;
@@ -108,9 +119,11 @@ export class Nagbar implements NagbarSettings {
 	forceScheduledMaintenance = false;
 	forceVoiceSessionRestore = false;
 	forceGuildMfaRequirement = false;
+	forceDomainMoved = false;
 	forceConnectionNotice = false;
 	forceHideOffline = false;
 	forceHideEmailVerification = false;
+	forceHideAccountLimited = false;
 	forceHideIOSInstall = false;
 	forceHidePWAInstall = false;
 	forceHidePushNotification = false;
@@ -129,6 +142,7 @@ export class Nagbar implements NagbarSettings {
 	forceHideScheduledMaintenance = false;
 	forceHideVoiceSessionRestore = false;
 	forceHideGuildMfaRequirement = false;
+	forceHideDomainMoved = false;
 	forceHideConnectionNotice = false;
 
 	constructor() {
@@ -153,6 +167,8 @@ export class Nagbar implements NagbarSettings {
 				'pendingBulkDeletionDismissed',
 				'invitesDisabledDismissed',
 				'guildMfaRequirementDismissed',
+				'priceAnnouncementDismissed',
+				'legacyPriceOptInDismissed',
 				'guildMembershipCtaDismissed',
 				'visionaryMfaDismissed',
 			],
@@ -171,6 +187,8 @@ export class Nagbar implements NagbarSettings {
 				pendingBulkDeletion: {...s.pendingBulkDeletionDismissed},
 				invitesDisabled: {...s.invitesDisabledDismissed},
 				guildMfaRequirement: {...s.guildMfaRequirementDismissed},
+				priceAnnouncement: {...s.priceAnnouncementDismissed},
+				legacyPriceOptIn: {...s.legacyPriceOptInDismissed},
 			}),
 			applyMessage: (s, m) => {
 				s.iosInstallDismissed = m.iosInstall;
@@ -187,6 +205,8 @@ export class Nagbar implements NagbarSettings {
 				s.pendingBulkDeletionDismissed = {...m.pendingBulkDeletion};
 				s.invitesDisabledDismissed = {...m.invitesDisabled};
 				s.guildMfaRequirementDismissed = {...m.guildMfaRequirement};
+				s.priceAnnouncementDismissed = {...m.priceAnnouncement};
+				s.legacyPriceOptInDismissed = {...m.legacyPriceOptIn};
 			},
 		});
 	}
@@ -203,8 +223,8 @@ export class Nagbar implements NagbarSettings {
 		return this.pushNotificationDismissed;
 	}
 
-	getForceOffline(): boolean {
-		return this.forceOffline;
+	getForceConnectionNotice(): boolean {
+		return this.forceConnectionNotice;
 	}
 
 	getForceEmailVerification(): boolean {
@@ -235,12 +255,20 @@ export class Nagbar implements NagbarSettings {
 		return this.guildMfaRequirementDismissed[guildId] ?? false;
 	}
 
+	getPriceAnnouncementDismissed(campaignId: string): boolean {
+		return this.priceAnnouncementDismissed[campaignId] ?? false;
+	}
+
+	getLegacyPriceOptInDismissed(campaignId: string): boolean {
+		return this.legacyPriceOptInDismissed[campaignId] ?? false;
+	}
+
 	getForceInvitesDisabled(): boolean {
 		return this.forceInvitesDisabled;
 	}
 
-	getForceHideOffline(): boolean {
-		return this.forceHideOffline;
+	getForceHideConnectionNotice(): boolean {
+		return this.forceHideConnectionNotice;
 	}
 
 	getForceHideEmailVerification(): boolean {
@@ -329,6 +357,20 @@ export class Nagbar implements NagbarSettings {
 		};
 	}
 
+	dismissPriceAnnouncement(campaignId: string): void {
+		this.priceAnnouncementDismissed = {
+			...this.priceAnnouncementDismissed,
+			[campaignId]: true,
+		};
+	}
+
+	dismissLegacyPriceOptIn(campaignId: string): void {
+		this.legacyPriceOptInDismissed = {
+			...this.legacyPriceOptInDismissed,
+			[campaignId]: true,
+		};
+	}
+
 	reset(nagbarType: NagbarToggleKey): void {
 		this[nagbarType] = false;
 	}
@@ -347,6 +389,16 @@ export class Nagbar implements NagbarSettings {
 		this.guildMfaRequirementDismissed = rest;
 	}
 
+	resetPriceAnnouncement(campaignId: string): void {
+		const {[campaignId]: _, ...rest} = this.priceAnnouncementDismissed;
+		this.priceAnnouncementDismissed = rest;
+	}
+
+	resetLegacyPriceOptIn(campaignId: string): void {
+		const {[campaignId]: _, ...rest} = this.legacyPriceOptInDismissed;
+		this.legacyPriceOptInDismissed = rest;
+	}
+
 	resetAll(): void {
 		this.iosInstallDismissed = false;
 		this.pwaInstallDismissed = false;
@@ -360,12 +412,15 @@ export class Nagbar implements NagbarSettings {
 		this.pendingBulkDeletionDismissed = {};
 		this.invitesDisabledDismissed = {};
 		this.guildMfaRequirementDismissed = {};
+		this.priceAnnouncementDismissed = {};
+		this.legacyPriceOptInDismissed = {};
 		this.guildMembershipCtaDismissed = false;
 		this.visionaryMfaDismissed = false;
 		this.buildEnvironmentDismissedThisSession = false;
 		this.claimAccountModalShownThisSession = false;
 		this.forceOffline = false;
 		this.forceEmailVerification = false;
+		this.forceAccountLimited = false;
 		this.forceIOSInstall = false;
 		this.forcePWAInstall = false;
 		this.forcePushNotification = false;
@@ -384,9 +439,11 @@ export class Nagbar implements NagbarSettings {
 		this.forceScheduledMaintenance = false;
 		this.forceVoiceSessionRestore = false;
 		this.forceGuildMfaRequirement = false;
+		this.forceDomainMoved = false;
 		this.forceConnectionNotice = false;
 		this.forceHideOffline = false;
 		this.forceHideEmailVerification = false;
+		this.forceHideAccountLimited = false;
 		this.forceHideIOSInstall = false;
 		this.forceHidePWAInstall = false;
 		this.forceHidePushNotification = false;
@@ -405,6 +462,7 @@ export class Nagbar implements NagbarSettings {
 		this.forceHideScheduledMaintenance = false;
 		this.forceHideVoiceSessionRestore = false;
 		this.forceHideGuildMfaRequirement = false;
+		this.forceHideDomainMoved = false;
 		this.forceHideConnectionNotice = false;
 	}
 

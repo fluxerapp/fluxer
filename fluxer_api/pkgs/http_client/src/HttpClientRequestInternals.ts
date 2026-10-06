@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {addAbortListener} from 'node:events';
 import type {HttpErrorType} from '@pkgs/http_client/src/HttpError';
+
+export const DEFAULT_TIMEOUT_MS = 30000;
+export const DEFAULT_MAX_REDIRECTS = 5;
+const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 
 const NETWORK_ERROR_CODES = new Set([
 	'ENOTFOUND',
@@ -11,24 +16,11 @@ const NETWORK_ERROR_CODES = new Set([
 	'EHOSTUNREACH',
 	'ENETUNREACH',
 ]);
-const NETWORK_ERROR_MESSAGE_FRAGMENTS = [
-	'ENOTFOUND',
-	'ECONNREFUSED',
-	'ECONNRESET',
-	'ETIMEDOUT',
-	'EAI_AGAIN',
-	'EHOSTUNREACH',
-	'ENETUNREACH',
-	'fetch failed',
-] as const;
+const NETWORK_ERROR_MESSAGE_FRAGMENTS = [...NETWORK_ERROR_CODES, 'fetch failed'];
 
 interface NodeErrorLike {
 	code?: unknown;
 	cause?: unknown;
-}
-
-interface NodeCauseLike {
-	code?: unknown;
 }
 
 interface ClassifiedRequestError {
@@ -39,7 +31,28 @@ interface ClassifiedRequestError {
 
 interface RequestSignalContext {
 	signal: AbortSignal;
+	abort(reason: unknown): void;
 	cleanup(): void;
+}
+
+export function normalizeMaxRedirects(value: number | undefined): number {
+	const maxRedirects = value === undefined ? DEFAULT_MAX_REDIRECTS : value;
+	if (!Number.isSafeInteger(maxRedirects) || maxRedirects < 0) {
+		throw new RangeError('maxRedirects must be a nonnegative safe integer');
+	}
+	return maxRedirects;
+}
+
+export function normalizeTimeoutMs(
+	value: number | undefined,
+	setting: 'defaultTimeoutMs' | 'timeout',
+	defaultTimeoutMs = DEFAULT_TIMEOUT_MS,
+): number {
+	const timeoutMs = value === undefined ? defaultTimeoutMs : value;
+	if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > MAX_TIMEOUT_MS) {
+		throw new RangeError(`${setting} must be an integer between 1 and 2147483647`);
+	}
+	return timeoutMs;
 }
 
 function isNodeErrorLike(error: unknown): error is NodeErrorLike {
@@ -53,84 +66,61 @@ function resolveErrorCode(error: unknown): string | undefined {
 	if (typeof error.code === 'string') {
 		return error.code;
 	}
-	if (!isNodeErrorLike(error.cause)) {
-		return undefined;
-	}
-	const cause: NodeCauseLike = error.cause;
-	if (typeof cause.code === 'string') {
-		return cause.code;
+	if (isNodeErrorLike(error.cause) && typeof error.cause.code === 'string') {
+		return error.cause.code;
 	}
 	return undefined;
 }
 
 export function buildRequestHeaders(
-	defaultHeaders: Record<string, string>,
+	defaultHeaders: Headers | Record<string, string>,
 	requestHeaders?: Record<string, string>,
-): Record<string, string> {
-	if (!requestHeaders) {
-		return {...defaultHeaders};
+): Headers {
+	const headers = new Headers(defaultHeaders);
+	for (const [name, value] of Object.entries(requestHeaders ?? {})) {
+		headers.set(name, value);
 	}
-	return {...defaultHeaders, ...requestHeaders};
+	return headers;
 }
 
-export function resolveRequestBody(body: unknown, headers: Record<string, string>): string | undefined {
+export function resolveRequestBody(body: unknown, headers: Headers): string | undefined {
 	if (body === null || body === undefined) {
 		return undefined;
 	}
 	if (body instanceof URLSearchParams) {
-		if (!headers['Content-Type'] && !headers['content-type']) {
-			headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
+		if (!headers.get('content-type')) {
+			headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
 		}
 		return body.toString();
 	}
 	if (typeof body === 'string') {
 		return body;
 	}
-	if (!headers['Content-Type'] && !headers['content-type']) {
-		headers['Content-Type'] = 'application/json';
+	if (!headers.get('content-type')) {
+		headers.set('content-type', 'application/json');
 	}
 	return JSON.stringify(body);
 }
 
 export function createRequestSignal(timeoutMs: number, inputSignal?: AbortSignal): RequestSignalContext {
-	const timeoutController = new AbortController();
-	const combinedController = new AbortController();
-	const attachedListeners: Array<{
-		signal: AbortSignal;
-		listener: () => void;
-	}> = [];
+	const controller = new AbortController();
 	const timeoutId = setTimeout(() => {
-		timeoutController.abort('Request timed out');
+		controller.abort('Request timed out');
 	}, timeoutMs);
-	function abortWithReason(reason: unknown): void {
-		if (!combinedController.signal.aborted) {
-			combinedController.abort(reason);
-		}
-	}
-	function attachSignal(signal: AbortSignal): void {
-		if (signal.aborted) {
-			abortWithReason(signal.reason);
-			return;
-		}
-		const listener = () => {
-			abortWithReason(signal.reason);
-		};
-		signal.addEventListener('abort', listener, {once: true});
-		attachedListeners.push({signal, listener});
-	}
-	if (inputSignal) {
-		attachSignal(inputSignal);
-	}
-	attachSignal(timeoutController.signal);
-	function cleanup(): void {
-		clearTimeout(timeoutId);
-		for (const attachedListener of attachedListeners) {
-			attachedListener.signal.removeEventListener('abort', attachedListener.listener);
-		}
+	timeoutId.unref();
+	let inputSubscription: Disposable | undefined;
+	if (inputSignal?.aborted) {
+		controller.abort(inputSignal.reason);
+	} else if (inputSignal) {
+		inputSubscription = addAbortListener(inputSignal, () => controller.abort(inputSignal.reason));
 	}
 	return {
-		signal: combinedController.signal,
-		cleanup,
+		signal: controller.signal,
+		abort: (reason) => controller.abort(reason),
+		cleanup: () => {
+			clearTimeout(timeoutId);
+			inputSubscription?.[Symbol.dispose]();
+		},
 	};
 }
 

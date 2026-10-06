@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {PhoneVerificationToken, UserID} from '../../BrandedTypes';
+import type {UserID} from '@app/api/BrandedTypes';
 import type {
 	AuthSessionRow,
 	EmailRevertTokenRow,
 	EmailVerificationTokenRow,
 	PasswordResetTokenRow,
-	PhoneTokenRow,
-} from '../../database/types/AuthTypes';
-import type {AuthSession, AuthSessionTombstone} from '../../models/AuthSession';
-import type {EmailRevertToken} from '../../models/EmailRevertToken';
-import type {EmailVerificationToken} from '../../models/EmailVerificationToken';
-import type {MfaBackupCode} from '../../models/MfaBackupCode';
-import type {PasswordResetToken} from '../../models/PasswordResetToken';
-import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
+} from '@app/api/database/types/AuthTypes';
+import type {AuthSession, AuthSessionTombstone} from '@app/api/models/AuthSession';
+import type {EmailRevertToken} from '@app/api/models/EmailRevertToken';
+import type {EmailVerificationToken} from '@app/api/models/EmailVerificationToken';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {PasswordResetToken} from '@app/api/models/PasswordResetToken';
+import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
 
 export interface IUserAuthRepository {
 	listAuthSessions(userId: UserID): Promise<Array<AuthSession>>;
@@ -22,10 +21,7 @@ export interface IUserAuthRepository {
 	createAuthSession(sessionData: AuthSessionRow): Promise<AuthSession>;
 	updateAuthSessionLastUsed(sessionIdHash: Buffer): Promise<void>;
 	deleteAuthSessions(userId: UserID, sessionIdHashes: Array<Buffer>): Promise<void>;
-	revokeAuthSession(sessionIdHash: Buffer): Promise<void>;
 	deleteAllAuthSessions(userId: UserID): Promise<void>;
-	recordCountrySighting(userId: UserID, country: string): Promise<void>;
-	hasCountrySightingOutsideSet(userId: UserID, countryCodes: Iterable<string>): Promise<boolean>;
 	listMfaBackupCodes(userId: UserID): Promise<Array<MfaBackupCode>>;
 	createMfaBackupCodes(userId: UserID, codes: Array<string>): Promise<Array<MfaBackupCode>>;
 	clearMfaBackupCodes(userId: UserID): Promise<void>;
@@ -41,9 +37,6 @@ export interface IUserAuthRepository {
 	getEmailRevertToken(token: string): Promise<EmailRevertToken | null>;
 	createEmailRevertToken(tokenData: EmailRevertTokenRow): Promise<EmailRevertToken>;
 	deleteEmailRevertToken(token: string): Promise<void>;
-	createPhoneToken(token: PhoneVerificationToken, phone: string, userId: UserID | null): Promise<void>;
-	getPhoneToken(token: PhoneVerificationToken): Promise<PhoneTokenRow | null>;
-	deletePhoneToken(token: PhoneVerificationToken): Promise<void>;
 	checkIpAuthorized(userId: UserID, ip: string): Promise<boolean>;
 	createAuthorizedIp(userId: UserID, ip: string): Promise<void>;
 	createIpAuthorizationToken(userId: UserID, token: string, email: string): Promise<void>;
@@ -66,10 +59,12 @@ export interface IUserAuthRepository {
 		counter: bigint,
 		transports: Set<string> | null,
 		name: string,
+		rpId: string | null,
 	): Promise<void>;
 	updateWebAuthnCredentialCounter(userId: UserID, credentialId: string, counter: bigint): Promise<void>;
 	updateWebAuthnCredentialLastUsed(userId: UserID, credentialId: string): Promise<void>;
 	updateWebAuthnCredentialName(userId: UserID, credentialId: string, name: string): Promise<void>;
+	setWebAuthnCredentialSupersededBy(userId: UserID, credentialId: string, supersededBy: string): Promise<void>;
 	deleteWebAuthnCredential(userId: UserID, credentialId: string): Promise<void>;
 	getUserIdByCredentialId(credentialId: string): Promise<UserID | null>;
 	deleteAllWebAuthnCredentials(userId: UserID): Promise<void>;

@@ -49,8 +49,11 @@ message SyncedPreferences {
   KeybindSettings keybinds = 111;
   ChatInputSettings chat_input = 112;
   optional bool save_camera_uploads_to_device = 113;
+  ReactionEmoji double_tap_reaction = 901114;
+  ChannelFrecencyState channel_frecency = 115;
+  AnnouncementPromptsState announcement_prompts = 116;
 
-	PersonaSettings persona_settings = 114;
+	PersonaSettings persona_settings = 902114;
 }
 
 message SpellcheckSettings {
@@ -150,10 +153,12 @@ message NagbarDismissals {
   bool desktop_download = 10;
   bool guild_membership_cta = 11;
   bool visionary_mfa = 12;
-  bool legacy_phone_unlink = 14;
+  reserved 14;
   map<string, bool> pending_bulk_deletion = 15;
   map<string, bool> invites_disabled = 16;
   map<string, bool> guild_mfa_requirement = 17;
+  map<string, bool> price_announcement = 18;
+  map<string, bool> legacy_price_opt_in = 19;
 }
 
 message DismissedUpsells {
@@ -219,6 +224,10 @@ message VoicePromptsState {
   bool skip_hide_own_screenshare_confirm = 2;
 }
 
+message AnnouncementPromptsState {
+  bool hide_publish_nudge = 1;
+}
+
 message SudoPromptState {
   optional MfaMethod last_used_mfa_method = 1;
 }
@@ -258,6 +267,15 @@ enum MfaMethod {
   MFA_METHOD_WEBAUTHN = 3;
 }
 
+message ChannelFrecencyEntry {
+  uint32 total_uses = 1;
+  repeated int64 recent_uses_ms = 2;
+}
+
+message ChannelFrecencyState {
+  map<string, ChannelFrecencyEntry> usage = 1;
+}
+
 message ChatInputSettings {
   optional bool convert_emoticons = 1;
 }
@@ -283,4 +301,9 @@ message PersonaSettings {
 	repeated int64 locked_contexts = 3;
 	repeated FrecencyEntry recent_personas = 4;
 	LatchMode latch_mode_global = 5;
+}
+
+message ReactionEmoji {
+  optional string id = 1;
+  string name = 2;
 }

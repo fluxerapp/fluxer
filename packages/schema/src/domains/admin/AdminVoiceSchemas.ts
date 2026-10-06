@@ -21,6 +21,8 @@ function areServerCoordinatesPaired(
 	return latitudeIsNull === longitudeIsNull;
 }
 
+const SoftConnectionLimitType = z.number().int().min(1).max(2147483647).nullable();
+
 export const VoiceRegionAdminResponse = z.object({
 	id: z.string().describe('Unique identifier for the voice region'),
 	name: z.string().describe('Display name of the voice region'),
@@ -45,6 +47,9 @@ export const VoiceServerAdminResponse = z.object({
 	latitude: z.number().nullable().describe('Optional geographic latitude override for this server'),
 	longitude: z.number().nullable().describe('Optional geographic longitude override for this server'),
 	is_active: z.boolean().describe('Whether the server is currently active'),
+	soft_connection_limit: SoftConnectionLimitType.describe(
+		'Connection count above which placement prefers another server, or null when the server has no limit',
+	),
 	vip_only: z.boolean().describe('Whether this server is restricted to VIP users'),
 	required_guild_features: z.array(z.string()).max(100).describe('Guild features required to use this server'),
 	allowed_guild_ids: z.array(SnowflakeStringType).max(1000).describe('Guild IDs explicitly allowed to use this server'),
@@ -112,15 +117,16 @@ export const UpdateVoiceRegionRequest = z.object({
 
 export type UpdateVoiceRegionRequest = z.infer<typeof UpdateVoiceRegionRequest>;
 
+export const UpdateVoiceRegionRequestBody = UpdateVoiceRegionRequest.omit({id: true});
+
 export const DeleteVoiceRegionRequest = z.object({
 	id: createStringType(1, 64).describe('ID of the voice region to delete'),
 });
 
 export type DeleteVoiceRegionRequest = z.infer<typeof DeleteVoiceRegionRequest>;
 
-export const CreateVoiceServerRequest = z
+export const CreateVoiceServerRequestBody = z
 	.object({
-		region_id: createStringType(1, 64).describe('ID of the region this server belongs to'),
 		server_id: createStringType(1, 64).describe('Unique identifier for the voice server'),
 		endpoint: z.url().describe('Client signal WebSocket endpoint URL for the voice server'),
 		api_key: createStringType(1, 256).describe('API key for authenticating with the voice server'),
@@ -128,6 +134,9 @@ export const CreateVoiceServerRequest = z
 		latitude: z.number().nullable().optional().describe('Optional geographic latitude override for this server'),
 		longitude: z.number().nullable().optional().describe('Optional geographic longitude override for this server'),
 		is_active: z.boolean().optional().default(true).describe('Whether the server is currently active'),
+		soft_connection_limit: SoftConnectionLimitType.optional()
+			.default(null)
+			.describe('Connection count above which placement prefers another server, or null for no limit'),
 		vip_only: z.boolean().optional().default(false).describe('Whether this server is restricted to VIP users'),
 		required_guild_features: z
 			.array(createStringType(1, 64))
@@ -149,22 +158,27 @@ export const CreateVoiceServerRequest = z
 			.describe('User IDs explicitly allowed to use this server'),
 	})
 	.refine((data) => areServerCoordinatesPaired(data.latitude, data.longitude), {
-		message: 'Latitude and longitude must both be provided or both be omitted',
+		error: 'Latitude and longitude must both be provided or both be omitted',
 		path: ['latitude'],
 	});
 
+export const CreateVoiceServerRequest = CreateVoiceServerRequestBody.safeExtend({
+	region_id: createStringType(1, 64).describe('ID of the region this server belongs to'),
+});
+
 export type CreateVoiceServerRequest = z.infer<typeof CreateVoiceServerRequest>;
 
-export const UpdateVoiceServerRequest = z
+export const UpdateVoiceServerRequestBody = z
 	.object({
-		region_id: createStringType(1, 64).describe('ID of the region this server belongs to'),
-		server_id: createStringType(1, 64).describe('Unique identifier for the voice server'),
 		endpoint: z.url().optional().describe('Client signal WebSocket endpoint URL for the voice server'),
 		api_key: createStringType(1, 256).optional().describe('API key for authenticating with the voice server'),
 		api_secret: createStringType(1, 256).optional().describe('API secret for authenticating with the voice server'),
 		latitude: z.number().nullable().optional().describe('Optional geographic latitude override for this server'),
 		longitude: z.number().nullable().optional().describe('Optional geographic longitude override for this server'),
 		is_active: z.boolean().optional().describe('Whether the server is currently active'),
+		soft_connection_limit: SoftConnectionLimitType.optional().describe(
+			'Connection count above which placement prefers another server, or null for no limit',
+		),
 		vip_only: z.boolean().optional().describe('Whether this server is restricted to VIP users'),
 		required_guild_features: z
 			.array(createStringType(1, 64))
@@ -183,9 +197,14 @@ export const UpdateVoiceServerRequest = z
 			.describe('User IDs explicitly allowed to use this server'),
 	})
 	.refine((data) => areServerCoordinatesPaired(data.latitude, data.longitude), {
-		message: 'Latitude and longitude must both be provided or both be omitted',
+		error: 'Latitude and longitude must both be provided or both be omitted',
 		path: ['latitude'],
 	});
+
+export const UpdateVoiceServerRequest = UpdateVoiceServerRequestBody.safeExtend({
+	region_id: createStringType(1, 64).describe('ID of the region this server belongs to'),
+	server_id: createStringType(1, 64).describe('Unique identifier for the voice server'),
+});
 
 export type UpdateVoiceServerRequest = z.infer<typeof UpdateVoiceServerRequest>;
 

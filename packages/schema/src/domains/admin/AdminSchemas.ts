@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	GIFT_CODE_DURATION_TYPE_DEFINITIONS,
-	MAX_GIFT_CODES_PER_REQUEST,
-	MAX_GIFT_DURATION_QUANTITY,
-} from '@fluxer/constants/src/GiftCodeConstants';
+import {MAX_GIFT_CODES_PER_REQUEST, MAX_GIFT_DURATION_QUANTITY} from '@fluxer/constants/src/GiftCodeConstants';
 import {
 	CONTENT_WARNING_TEXT_MAX_LENGTH,
 	SystemChannelFlags,
@@ -12,14 +8,39 @@ import {
 } from '@fluxer/constants/src/GuildConstants';
 import {LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
 import {ADMIN_ACL_COUNT, AdminAclType} from '@fluxer/schema/src/domains/admin/AdminAclType';
+import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {UserAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import {CaptchaConfigResponse, CaptchaConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/CaptchaSchemas';
+import {
+	DomainMigrationConfigResponse,
+	DomainMigrationConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {
 	GatewayRolloutConfigResponse,
 	GatewayRolloutConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
+import {
+	InstanceBillingResponse,
+	InstanceBillingUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
+import {
+	PlutoniumPageConfigResponse,
+	PlutoniumPageConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/PlutoniumPageSchemas';
+import {PushRelayConfigResponse, PushRelayConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
+import {
+	ExperimentDeliveryConfigResponse,
+	ExperimentDeliveryConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import {
+	AccountIdentityModeSchema,
+	InstanceRegistrationModeSchema,
+	TagStyleSchema,
+} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {GiftCodeDurationTypeSchema} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
 import {ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {
 	ContentWarningLevelSchema,
@@ -43,7 +64,8 @@ import {
 	SnowflakeType,
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
+import {EmailBlocklistEntryType} from '@fluxer/schema/src/primitives/UserValidators';
+import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 const ReportStatusSchema = withOpenApiType(
@@ -83,6 +105,14 @@ const AuditLogSortByEnum = createNamedStringLiteralUnion(
 	],
 	'Field to sort audit logs by',
 );
+const AdminAuditAccessEnum = createNamedStringLiteralUnion(
+	[
+		['read', 'read', 'An entry recorded by an operation that only reads data'],
+		['write', 'write', 'An entry recorded by an operation that changes data or triggers work'],
+	],
+	'Whether the recorded operation read data or changed it',
+);
+export type AdminAuditAccess = z.infer<typeof AdminAuditAccessEnum>;
 const ReportSortByEnum = createNamedStringLiteralUnion(
 	[
 		['createdAt', 'createdAt', 'Sort by creation timestamp'],
@@ -123,6 +153,9 @@ export const ListAdminAuditLogsQuery = z.object({
 	admin_user_id: SnowflakeType.optional().describe('Filter by admin user who performed the action'),
 	target_type: createStringType(1, 64).optional().describe('Filter by target entity type'),
 	target_id: z.string().optional().describe('Filter by target entity ID (user, channel, role, invite code, etc.)'),
+	access: AdminAuditAccessEnum.optional().describe(
+		'Only return entries recorded by reads or only entries recorded by writes',
+	),
 	sort_by: AuditLogSortByEnum.default('createdAt'),
 	sort_order: SortOrderEnum.default('desc'),
 	limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 200}).describe(
@@ -199,9 +232,20 @@ export const ListReportsQuery = z.object({
 
 export type ListReportsQuery = z.infer<typeof ListReportsQuery>;
 
+const ReportResolutionEnum = createNamedStringLiteralUnion(
+	[
+		['actioned', 'actioned', 'The report was valid and action was taken'],
+		['no_violation', 'no_violation', 'The report was reviewed and no violation was found'],
+		['duplicate', 'duplicate', 'The report repeats one that was already handled'],
+	],
+	'How the report was resolved',
+);
+
 export const UpdateReportRequest = z.object({
 	status: z.literal('resolved').describe('The status to move the report to'),
 	public_comment: createStringType(0, 512).optional().describe('Public comment to include with the resolution'),
+	notify_reporter: z.boolean().default(true).describe('Whether to notify the reporter by system DM and email'),
+	resolution: ReportResolutionEnum.optional().describe('How the report was resolved'),
 });
 
 export type UpdateReportRequest = z.infer<typeof UpdateReportRequest>;
@@ -259,33 +303,29 @@ export const ListArchivesQuery = z
 
 export type ListArchivesQuery = z.infer<typeof ListArchivesQuery>;
 
-const IP_OR_CIDR_REGEX = /^(?:(?:\d{1,3}\.){3}\d{1,3}(?:\/\d{1,2})?|(?:[a-fA-F0-9:]+)(?:\/\d{1,3})?)$/;
+const IpOrCidrType = z.union([z.ipv4(), z.ipv6(), z.cidrv4(), z.cidrv6()]);
 export const BanIpRequest = z.object({
 	ip: createStringType(1, 45)
-		.refine((value) => IP_OR_CIDR_REGEX.test(value), 'Must be a valid IPv4/IPv6 address or CIDR range')
+		.refine((value) => IpOrCidrType.safeParse(value).success, 'Must be a valid IPv4/IPv6 address or CIDR range')
 		.describe('IPv4/IPv6 address or CIDR range to ban'),
+	duration_hours: z
+		.number()
+		.int()
+		.min(0)
+		.max(8760)
+		.optional()
+		.describe('Hours until the ban expires and its entry is removed. Omit it or use 0 for a permanent ban.'),
 });
 
 export type BanIpRequest = z.infer<typeof BanIpRequest>;
 
 export const BanEmailRequest = z.object({
-	email: EmailType.describe('Email address to ban'),
+	email: EmailBlocklistEntryType.describe(
+		'Email address to ban, or a domain written as @example.com to ban every address at it and its subdomains',
+	),
 });
 
 export type BanEmailRequest = z.infer<typeof BanEmailRequest>;
-
-export const SuspiciousEmailDomainRequest = z.object({
-	domain: z
-		.string()
-		.min(1)
-		.max(253)
-		.regex(/^[a-zA-Z0-9][a-zA-Z0-9\-.]*\.[a-zA-Z]{2,}$/, 'Must be a valid domain name (e.g. example.com)')
-		.describe(
-			'Email domain to flag as suspicious (e.g. mail.ru). Registrants from this domain will be required to verify a phone number.',
-		),
-});
-
-export type SuspiciousEmailDomainRequest = z.infer<typeof SuspiciousEmailDomainRequest>;
 
 export const BanPhraseRequest = z.object({
 	phrase: createStringType(1, 500).describe(
@@ -314,13 +354,13 @@ export const BanUrlRequest = z.object({
 export type BanUrlRequest = z.infer<typeof BanUrlRequest>;
 
 export const BanUrlDomainRequest = z.object({
-	domain: createStringType(1, 253)
-		.refine(
-			(v) => /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/i.test(v),
-			'Must be a valid domain',
-		)
-		.describe('Domain to ban (e.g. example.com)'),
-	match_subdomains: z.boolean().default(true).describe('If true, any subdomain rooted at this domain is also banned'),
+	domain: createStringType(1, 253).describe(
+		'Domain to ban (e.g. example.com), or a pattern whose leftmost label contains * under a registrable domain (e.g. *shop*.example.com). Internationalized names are stored in ASCII form.',
+	),
+	match_subdomains: z
+		.boolean()
+		.default(true)
+		.describe('If true, any subdomain rooted at this domain, or at a host the pattern matches, is also banned'),
 	category: createStringType(1, 64).optional().describe('Category / source slug (defaults to "manual")'),
 	severity: z
 		.number()
@@ -390,14 +430,9 @@ export const BanProfileSubstringRequest = z.object({
 
 export type BanProfileSubstringRequest = z.infer<typeof BanProfileSubstringRequest>;
 
-const GiftCodeDurationTypeEnum = createNamedStringLiteralUnion(
-	GIFT_CODE_DURATION_TYPE_DEFINITIONS,
-	'Gift code duration unit',
-);
-
 export const GenerateGiftCodesRequest = z.object({
 	count: z.number().int().min(1).max(MAX_GIFT_CODES_PER_REQUEST).describe('Number of gift codes to generate'),
-	duration_type: GiftCodeDurationTypeEnum.describe('Duration unit for the generated gift codes'),
+	duration_type: GiftCodeDurationTypeSchema.describe('Duration unit for the generated gift codes'),
 	duration_quantity: z
 		.number()
 		.int()
@@ -407,6 +442,8 @@ export const GenerateGiftCodesRequest = z.object({
 });
 
 export type GenerateGiftCodesRequest = z.infer<typeof GenerateGiftCodesRequest>;
+
+const SsoAllowedDomainsSchema = z.array(z.string()).max(100);
 
 const SsoConfigResponse = z.object({
 	enabled: z.boolean(),
@@ -420,22 +457,13 @@ const SsoConfigResponse = z.object({
 	client_id: z.string().nullable(),
 	client_secret_set: z.boolean(),
 	scope: z.string().nullable(),
-	allowed_domains: z.array(z.string()).max(100),
+	allowed_domains: SsoAllowedDomainsSchema,
 	auto_provision: z.boolean(),
 	redirect_uri: z.string().nullable(),
 });
 
-const RegistrationModeSchema = createNamedStringLiteralUnion(
-	[
-		['open', 'open', 'Anyone can register'],
-		['approval', 'approval', 'Anyone can register, but admins must approve new accounts'],
-		['closed', 'closed', 'Public registration is closed'],
-	],
-	'Registration mode',
-);
-
 const InstanceRegistrationConfigResponse = z.object({
-	mode: RegistrationModeSchema,
+	mode: InstanceRegistrationModeSchema,
 	admin_registration_urls_enabled: z.boolean(),
 });
 
@@ -452,6 +480,7 @@ const RegistrationUrlResponse = z.object({
 	last_used_at: z.iso.datetime().nullable(),
 	last_used_by_user_id: SnowflakeStringType.nullable(),
 });
+export type RegistrationUrlResponse = z.infer<typeof RegistrationUrlResponse>;
 
 const PendingRegistrationResponse = z.object({
 	user_id: SnowflakeStringType,
@@ -463,6 +492,7 @@ const PendingRegistrationResponse = z.object({
 	registration_url_id: createStringType(1, 128).nullable(),
 	client_ip: z.string().nullable(),
 });
+export type PendingRegistrationResponse = z.infer<typeof PendingRegistrationResponse>;
 
 const InstanceRegistrationResponse = InstanceRegistrationConfigResponse.extend({
 	urls: z.array(RegistrationUrlResponse),
@@ -478,6 +508,10 @@ const AppPublicConfigResponse = z.object({
 		wordmark_url: z.string().nullable(),
 		favicon_url: z.string().nullable(),
 		theme_color: z.string().nullable(),
+		status_page_url: z.string().nullable(),
+		status_page_incident_history_url: z.string().nullable(),
+		premium_product_name: z.string(),
+		premium_info_url: z.string().nullable(),
 	}),
 	setup: z.object({
 		configured: z.boolean(),
@@ -491,6 +525,15 @@ const AppPublicConfigResponse = z.object({
 	}),
 });
 
+function isAbsoluteHttpUrl(value: string): boolean {
+	try {
+		const url = new URL(value);
+		return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.length > 0;
+	} catch {
+		return false;
+	}
+}
+
 const AppPublicConfigUpdateRequest = z.object({
 	branding: z
 		.object({
@@ -501,7 +544,12 @@ const AppPublicConfigUpdateRequest = z.object({
 			wordmark_url: z.string().trim().max(2048).nullish(),
 			favicon_url: z.string().trim().max(2048).nullish(),
 			theme_color: z.string().trim().max(64).nullish(),
+			status_page_url: z.string().trim().max(2048).nullish(),
+			status_page_incident_history_url: z.string().trim().max(2048).nullish(),
+			premium_product_name: z.string().trim().min(1).max(40).nullable().optional(),
+			premium_info_url: z.string().trim().max(2048).refine(isAbsoluteHttpUrl).nullish(),
 		})
+		.register(schemaMetadata, {preserveNullFields: true})
 		.nullish(),
 	setup: z
 		.object({
@@ -526,6 +574,7 @@ const InstancePolicyResponse = z.object({
 	single_community_guild_id: z.string().nullable(),
 	direct_messages_disabled: z.boolean(),
 	direct_messages_locked: z.boolean(),
+	guild_create_access: z.boolean(),
 	premium_mode: z.enum(['mirror', 'everyone']),
 	services: z.object({
 		gif_enabled: z.boolean().nullable(),
@@ -542,14 +591,8 @@ const InstancePolicyResponse = z.object({
 		youtube: z.boolean(),
 		bluesky: z.boolean(),
 	}),
-	deferred_phone_gate: z.object({
-		enabled: z.boolean(),
-		window_hours: z.number(),
-		member_threshold: z.number(),
-	}),
 });
 
-const CaptchaProviderSchema = z.enum(['hcaptcha', 'turnstile', 'none']);
 const EmailProviderSchema = z.enum(['smtp', 'none']);
 
 const AttachmentDecayEffectiveResponse = z.object({
@@ -588,15 +631,6 @@ const InstanceIntegrationsResponse = z.object({
 		api_key_set: z.boolean(),
 		effective_available: z.boolean(),
 	}),
-	captcha: z.object({
-		provider: CaptchaProviderSchema.nullable(),
-		effective_provider: CaptchaProviderSchema,
-		hcaptcha_site_key: z.string().nullable(),
-		hcaptcha_secret_key_set: z.boolean(),
-		turnstile_site_key: z.string().nullable(),
-		turnstile_secret_key_set: z.boolean(),
-		effective_enabled: z.boolean(),
-	}),
 	email: z.object({
 		enabled: z.boolean().nullable(),
 		effective_enabled: z.boolean(),
@@ -626,24 +660,58 @@ const InstanceIntegrationsResponse = z.object({
 	}),
 });
 
+const InstanceAccountIdentityConfigResponse = z.object({
+	mode: AccountIdentityModeSchema.describe('Sign-in method in effect on this instance'),
+	locked: z.boolean().describe('Whether the sign-in method can no longer change'),
+	tag_style: TagStyleSchema.describe('How usernames are tagged'),
+});
+
 export const InstanceConfigResponse = z.object({
 	sso: SsoConfigResponse,
 	gateway_rollout: GatewayRolloutConfigResponse,
+	push_relay: PushRelayConfigResponse,
+	domain_migration: DomainMigrationConfigResponse,
+	plutonium_page: PlutoniumPageConfigResponse,
+	captcha: CaptchaConfigResponse,
+	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
+	account_identity: InstanceAccountIdentityConfigResponse,
 	app_public: AppPublicConfigResponse,
 	policy: InstancePolicyResponse,
 	integrations: InstanceIntegrationsResponse,
 	media: InstanceMediaResponse,
+	billing: InstanceBillingResponse,
 });
 
 export type InstanceConfigResponse = z.infer<typeof InstanceConfigResponse>;
 
+const InstancePolicyUpdateSchema = z.object({
+	single_community_enabled: z.boolean().optional(),
+	single_community_name: z.string().trim().min(1).max(100).optional(),
+	direct_messages_disabled: z.boolean().optional(),
+	direct_messages_locked: z.literal(false).optional(),
+	premium_mode: z.enum(['mirror', 'everyone']).optional(),
+	guild_create_access: z.boolean().optional(),
+	services: z
+		.object({
+			gif_enabled: z.boolean().nullish(),
+			youtube_enabled: z.boolean().nullish(),
+			bluesky_enabled: z.boolean().nullish(),
+		})
+		.nullish(),
+});
+
 export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
+	push_relay: PushRelayConfigUpdateRequest.nullish(),
+	domain_migration: DomainMigrationConfigUpdateRequest.nullish(),
+	plutonium_page: PlutoniumPageConfigUpdateRequest.nullish(),
+	captcha: CaptchaConfigUpdateRequest.nullish(),
+	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
-			mode: RegistrationModeSchema.optional(),
+			mode: InstanceRegistrationModeSchema.optional(),
 			admin_registration_urls_enabled: z.boolean().optional(),
 		})
 		.nullish(),
@@ -660,7 +728,7 @@ export const InstanceConfigUpdateRequest = z.object({
 			client_id: z.string().nullish(),
 			client_secret: z.string().nullish(),
 			scope: z.string().nullish(),
-			allowed_domains: z.array(z.string()).max(100).optional(),
+			allowed_domains: SsoAllowedDomainsSchema.optional(),
 			auto_provision: z.boolean().optional(),
 		})
 		.nullish(),
@@ -675,15 +743,6 @@ export const InstanceConfigUpdateRequest = z.object({
 			youtube: z
 				.object({
 					api_key: z.string().trim().max(4096).nullish(),
-				})
-				.nullish(),
-			captcha: z
-				.object({
-					provider: CaptchaProviderSchema.nullish(),
-					hcaptcha_site_key: z.string().trim().max(4096).nullish(),
-					hcaptcha_secret_key: z.string().trim().max(4096).nullish(),
-					turnstile_site_key: z.string().trim().max(4096).nullish(),
-					turnstile_secret_key: z.string().trim().max(4096).nullish(),
 				})
 				.nullish(),
 			email: z
@@ -742,29 +801,8 @@ export const InstanceConfigUpdateRequest = z.object({
 				.nullish(),
 		})
 		.nullish(),
-	policy: z
-		.object({
-			single_community_enabled: z.boolean().optional(),
-			single_community_name: z.string().trim().min(1).max(100).optional(),
-			direct_messages_disabled: z.boolean().optional(),
-			direct_messages_locked: z.literal(false).optional(),
-			premium_mode: z.enum(['mirror', 'everyone']).optional(),
-			services: z
-				.object({
-					gif_enabled: z.boolean().nullish(),
-					youtube_enabled: z.boolean().nullish(),
-					bluesky_enabled: z.boolean().nullish(),
-				})
-				.nullish(),
-			deferred_phone_gate: z
-				.object({
-					enabled: z.boolean().optional(),
-					window_hours: z.number().positive().max(8760).optional(),
-					member_threshold: z.number().int().positive().max(1_000_000).optional(),
-				})
-				.nullish(),
-		})
-		.nullish(),
+	policy: InstancePolicyUpdateSchema.nullish(),
+	billing: InstanceBillingUpdateRequest.nullish(),
 });
 
 export type InstanceConfigUpdateRequest = z.infer<typeof InstanceConfigUpdateRequest>;
@@ -845,7 +883,7 @@ const LimitRuleSchema = z.object({
 				const limitKeys = Object.keys(limits);
 				return limitKeys.every((key) => (LIMIT_KEYS as ReadonlyArray<string>).includes(key));
 			},
-			{message: 'Invalid limit key detected'},
+			{error: 'Invalid limit key detected'},
 		)
 		.describe('Per-limit key values'),
 });
@@ -859,19 +897,31 @@ export const LimitConfigUpdateRequest = z.object({
 
 export type LimitConfigUpdateRequest = z.infer<typeof LimitConfigUpdateRequest>;
 
-export const SendSystemDmRequest = z.object({
-	content: z.string().min(1).max(4000).describe('Message content to send to each recipient'),
-	user_ids: z
-		.array(SnowflakeType)
-		.min(1)
-		.max(10000)
-		.describe('Recipient user IDs. Each receives the same content as a system DM.'),
-});
+export const SendSystemDmRequest = z
+	.object({
+		content: z.string().min(1).max(4000).describe('Message content to send to each recipient'),
+		user_ids: z
+			.array(SnowflakeType)
+			.min(1)
+			.max(10000)
+			.optional()
+			.describe('Recipient user IDs. Each receives the same content as a system DM.'),
+		all_users: z
+			.boolean()
+			.optional()
+			.describe('Send to every user account, skipping bots, system accounts, and deleted or disabled accounts'),
+	})
+	.refine((value) => (value.all_users === true) !== (value.user_ids !== undefined), {
+		error: 'Provide either user_ids or all_users, not both',
+		path: ['user_ids'],
+	});
 
 export type SendSystemDmRequest = z.infer<typeof SendSystemDmRequest>;
 
 export const SendSystemDmResponse = z.object({
-	recipient_count: Int32Type.describe('Number of recipients the worker job was queued to deliver to'),
+	recipient_count: Int32Type.nullable().describe(
+		'Number of recipients the worker job was queued to deliver to, or null when sending to all users',
+	),
 });
 
 export type SendSystemDmResponse = z.infer<typeof SendSystemDmResponse>;
@@ -900,29 +950,16 @@ export const CreateAdminApiKeyResponse = z.object({
 
 export type CreateAdminApiKeyResponse = z.infer<typeof CreateAdminApiKeyResponse>;
 
-export const ListAdminApiKeyResponse = z.object({
-	key_id: z.string().describe('Unique identifier for the API key'),
-	name: z.string().describe('Display name for the API key'),
-	created_at: z.string().describe('ISO 8601 timestamp when the key was created'),
+export const ListAdminApiKeyResponse = CreateAdminApiKeyResponse.omit({key: true}).extend({
 	last_used_at: z.string().nullable().describe('ISO 8601 timestamp when the key was last used, or null if never used'),
-	expires_at: z.string().nullable().describe('ISO 8601 timestamp when the key expires, or null if no expiration'),
 	created_by_user_id: SnowflakeStringType.describe('User ID of the admin who created this key'),
-	acls: z.array(z.string()).max(ADMIN_ACL_COUNT).describe('List of access control permissions for the key'),
 });
 
 export type ListAdminApiKeyResponse = z.infer<typeof ListAdminApiKeyResponse>;
 
 export const UpdateAdminApiKeyRequest = z.object({
-	name: z
-		.string()
-		.min(1)
-		.max(100)
-		.refine((value) => value.trim().length > 0, 'Name cannot be empty')
-		.optional()
-		.describe('New display name for the API key'),
-	acls: z
-		.array(AdminAclType)
-		.max(ADMIN_ACL_COUNT)
+	name: CreateAdminApiKeyRequest.shape.name.optional().describe('New display name for the API key'),
+	acls: CreateAdminApiKeyRequest.shape.acls
 		.optional()
 		.describe('Replacement list of access control permissions for the key'),
 });
@@ -976,29 +1013,6 @@ export const IndexRefreshStatusResponse = z.union([
 
 export type IndexRefreshStatusResponse = z.infer<typeof IndexRefreshStatusResponse>;
 
-const AdminArchiveSubjectTypeSchema = createNamedStringLiteralUnion(
-	[
-		['user', 'user', 'User data archive'],
-		['guild', 'guild', 'Guild data archive'],
-	],
-	'Type of subject being archived',
-);
-export const AdminArchiveResponseSchema = z.object({
-	archive_id: SnowflakeStringType,
-	subject_type: AdminArchiveSubjectTypeSchema,
-	subject_id: SnowflakeStringType,
-	requested_by: SnowflakeStringType,
-	requested_at: z.string(),
-	started_at: z.string().nullable(),
-	completed_at: z.string().nullable(),
-	failed_at: z.string().nullable(),
-	file_size: createStringType(1, 64).nullable(),
-	progress_percent: z.number(),
-	progress_step: createStringType(1, 256).nullable(),
-	error_message: createStringType(1, 4000).nullable(),
-	download_url_expires_at: z.string().nullable(),
-	expires_at: z.string().nullable(),
-});
 export const ListArchivesResponseSchema = z.object({
 	archives: z.array(AdminArchiveResponseSchema),
 });
@@ -1047,16 +1061,19 @@ const AdminAuditLogUserSummarySchema = z.object({
 	discriminator: z.string(),
 	global_name: z.string().nullable(),
 });
+export type AdminAuditLogUserSummary = z.infer<typeof AdminAuditLogUserSummarySchema>;
 const AdminAuditLogGuildSummarySchema = z.object({
 	id: SnowflakeStringType,
 	name: z.string(),
 });
+export type AdminAuditLogGuildSummary = z.infer<typeof AdminAuditLogGuildSummarySchema>;
 const AdminAuditLogChannelSummarySchema = z.object({
 	id: SnowflakeStringType,
 	name: z.string().nullable(),
 	type: ChannelTypeSchema,
 	guild_id: SnowflakeStringType.nullable(),
 });
+export type AdminAuditLogChannelSummary = z.infer<typeof AdminAuditLogChannelSummarySchema>;
 export const AdminAuditLogResponseSchema = z.object({
 	log_id: SnowflakeStringType,
 	admin_user_id: SnowflakeStringType,
@@ -1070,16 +1087,25 @@ export const AdminAuditLogResponseSchema = z.object({
 	related_guilds: z.record(SnowflakeStringType, AdminAuditLogGuildSummarySchema),
 	related_channels: z.record(SnowflakeStringType, AdminAuditLogChannelSummarySchema),
 	action: createStringType(1, 256),
+	access: AdminAuditAccessEnum,
 	audit_log_reason: createStringType(1, 4000).nullable(),
 	metadata: z.record(createStringType(1, 256), createStringType(0, 4000)),
 	created_at: z.string(),
 });
+export type AdminAuditLogResponse = z.infer<typeof AdminAuditLogResponseSchema>;
 export const AuditLogsListResponseSchema = z.object({
 	logs: z.array(AdminAuditLogResponseSchema),
 	total: z.number(),
 });
+export type AuditLogsListResponse = z.infer<typeof AuditLogsListResponseSchema>;
 export const BanCheckResponseSchema = z.object({
 	banned: z.boolean(),
+	expires_at: z
+		.string()
+		.nullable()
+		.describe(
+			'ISO 8601 timestamp when the matching ban expires. Null when the ban is permanent, when nothing matches, and on every blocklist other than ip.',
+		),
 });
 export const BulkJobResponse = z.object({
 	job_id: SnowflakeStringType,
@@ -1093,11 +1119,13 @@ export type BulkBanFileShasRequest = z.infer<typeof BulkBanFileShasRequest>;
 const NcmecSubmissionStatusEnum = createNamedStringLiteralUnion(
 	[
 		['not_submitted', 'not_submitted', 'Report has not been submitted to NCMEC'],
+		['submitting', 'submitting', 'Report submission to NCMEC is in progress'],
 		['submitted', 'submitted', 'Report has been submitted to NCMEC'],
 		['failed', 'failed', 'Report submission to NCMEC failed'],
 	],
 	'NCMEC submission status',
 );
+export type NcmecSubmissionStatus = z.infer<typeof NcmecSubmissionStatusEnum>;
 export const NcmecAttachmentSubmitResultResponse = z.object({
 	success: z.literal(true),
 	ncmec_report_id: createStringType(1, 256),
@@ -1141,6 +1169,9 @@ export type ReloadAllGuildsResponse = z.infer<typeof ReloadAllGuildsResponse>;
 export const NodeStatsResponse = z.object({
 	status: createStringType(1, 256),
 	sessions: Int32Type,
+	session_resumes_total: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+	websocket_dispatches_total: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+	websocket_dispatch_drops_total: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
 	guilds: Int32Type,
 	presences: Int32Type,
 	calls: Int32Type,
@@ -1159,6 +1190,9 @@ export const NodeStatsResponse = z.object({
 				node_id: createStringType(1, 256),
 				status: createStringType(1, 256),
 				sessions: Int32Type,
+				session_resumes_total: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).nullable(),
+				websocket_dispatches_total: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).nullable(),
+				websocket_dispatch_drops_total: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).nullable(),
 				guilds: Int32Type,
 				presences: Int32Type,
 				calls: Int32Type,
@@ -1170,6 +1204,20 @@ export const NodeStatsResponse = z.object({
 				process_count: Int32Type,
 				process_limit: Int32Type,
 				uptime_seconds: Int32Type,
+				cluster_metrics: z
+					.object({
+						gateway_cluster_member_count: Int32Type,
+						gateway_cluster_discovery_resolve_failures_total: Int32Type,
+						gateway_cluster_membership_transitions_total: z.object({
+							up: Int32Type,
+							down: Int32Type,
+						}),
+						gateway_node_router_owner_resolutions_total: z.object({
+							self: Int32Type,
+							peer: Int32Type,
+						}),
+					})
+					.optional(),
 			}),
 		)
 		.max(1000),
@@ -1199,9 +1247,6 @@ export const GatewayVoiceStateCountsResponse = z.object({
 
 export type GatewayVoiceStateCountsResponse = z.infer<typeof GatewayVoiceStateCountsResponse>;
 
-export const SuccessResponse = z.object({
-	success: z.boolean(),
-});
 const AdminGuildResponseSchema = z.object({
 	id: SnowflakeStringType,
 	name: createStringType(1, 100),
@@ -1232,7 +1277,7 @@ const AdminGuildRoleSummarySchema = z.object({
 	name: createStringType(1, 100),
 	color: Int32Type,
 	position: Int32Type,
-	permissions: PermissionStringType.describe('fluxer:PermissionStringType The role permissions bitfield'),
+	permissions: PermissionStringType.describe('The role permissions bitfield'),
 	hoist: z.boolean(),
 	mentionable: z.boolean(),
 });
@@ -1488,8 +1533,5 @@ export const LimitConfigGetResponse = z.object({
 export const DeleteApiKeyResponse = z.object({
 	success: z.literal(true),
 });
-export const HeapSnapshotResponse = z.object({
-	success: z.literal(true),
-	filename: z.string().describe('Name of the heap snapshot file'),
-	size_bytes: z.number().describe('Size of the heap snapshot in bytes'),
-});
+
+export const AdminApiKeyListResponse = z.array(ListAdminApiKeyResponse);

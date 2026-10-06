@@ -26,7 +26,6 @@ interface RestRequestOptionsBase {
 	retries?: number;
 	signal?: AbortSignal;
 	onProgress?: (event: ProgressEvent) => void;
-	intercept?: RestInterceptor;
 	suppressContentBlockedModal?: boolean;
 }
 
@@ -44,8 +43,7 @@ export interface RestResponse<T = unknown> {
 export type RestInterceptor = (
 	reply: RestResponse,
 	retry: (extraHeaders: Record<string, string>) => Promise<RestResponse>,
-	reject: (error: Error) => void,
-) => boolean | undefined | Promise<RestResponse>;
+) => Promise<RestResponse | undefined> | undefined;
 
 export interface SudoBindings {
 	tokenProvider: () => string | null;
@@ -56,7 +54,6 @@ export interface SudoBindings {
 }
 
 export interface RestClientHooks {
-	prepareRequest?: (handle: RestRequestHandle) => void;
 	intercept?: RestInterceptor;
 }
 

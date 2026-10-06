@@ -4,6 +4,7 @@ use super::{ResolveContext, Resolver, ResolverResult};
 use crate::http_fetch;
 use crate::media_proxy::{MediaMetadata, embed_media_flags};
 use crate::types::{EmbedMedia, EmbedProvider, MessageEmbed};
+use fluxer_svc::config::optional_env;
 use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
@@ -136,14 +137,7 @@ fn klipy_resource(kind: &str) -> &'static str {
 }
 
 fn klipy_api_key() -> Option<String> {
-    std::env::var("FLUXER_KLIPY_API_KEY")
-        .ok()
-        .filter(|key| !key.is_empty())
-        .or_else(|| {
-            std::env::var("KLIPY_API_KEY")
-                .ok()
-                .filter(|key| !key.is_empty())
-        })
+    optional_env("FLUXER_KLIPY_API_KEY").or_else(|| optional_env("KLIPY_API_KEY"))
 }
 
 async fn resolve_media_via_api(

@@ -1,47 +1,62 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import {Config} from '@app/api/Config';
+import type {
+	BillingInvoiceRow,
+	BillingPaymentMethodRow,
+	BillingRefundRow,
+	BillingSubscriptionRow,
+} from '@app/api/database/types/BillingTypes';
+import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {
+	mapPremiumStoreSubscriptionState,
+	resolveStoreAccessEnd,
+	selectActiveStoreSubscription,
+} from '@app/api/store_billing/StoreBillingMappers';
+import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
+import {isStripeSubscriptionActive} from '@app/api/store_billing/StoreEntitlementWriter';
+import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
+import {getProductRegistry, type RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
+import {getStripeClient} from '@app/api/stripe/StripeClient';
+import {getCachedStripePriceSummary} from '@app/api/stripe/StripePriceSummaryCache';
+import {getPrimarySubscriptionItem} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {
+	SELF_SERVE_REFUND_COOLDOWN_DAYS,
+	SELF_SERVE_REFUND_WINDOW_DAYS,
+} from '@app/api/stripe/services/StripeRefundService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {checkHasActivePaidPremium} from '@app/api/user/UserHelpers';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {
+	type Currency,
+	getCurrencyPreferences,
+	getGiftCurrencyPreferences,
+	normalizeCatalogCurrency,
+} from '@app/api/utils/CurrencyUtils';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
 	CurrentSubscriptionPriceResponse,
+	ListPriceSwitchState,
+	PendingSubscriptionChangeKind,
 	PendingSubscriptionChangeResponse,
 	PremiumBillingInvoiceResponse,
 	PremiumBillingPaymentMethodResponse,
 	PremiumBillingSubscriptionResponse,
 	PremiumPricingState,
 	PremiumStateResponse,
+	PremiumSubscriptionProvider,
 	PriceIdsResponse,
-	PricingMode,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundIneligibilityReason,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import type {BillingRepository} from '../../billing/repositories/BillingRepository';
-import {Config} from '../../Config';
-import type {
-	BillingInvoiceRow,
-	BillingPaymentMethodRow,
-	BillingRefundRow,
-	BillingSubscriptionRow,
-} from '../../database/types/BillingTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {checkHasActivePaidPremium} from '../../user/UserHelpers';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import {
-	type Currency,
-	getBaseCurrencyPreferences,
-	getBaseGiftCurrencyPreferences,
-	getCurrencyPreferences,
-	getGiftCurrencyPreferences,
-} from '../../utils/CurrencyUtils';
-import type {RecurringBillingCycle} from '../ProductRegistry';
-import {ProductRegistry} from '../ProductRegistry';
-import {getPrimarySubscriptionItem} from '../StripeSubscriptionPeriod';
-import {SELF_SERVE_REFUND_COOLDOWN_DAYS, SELF_SERVE_REFUND_WINDOW_DAYS} from './StripeRefundService';
 
 const INVOICE_LIMIT = 12;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -55,7 +70,7 @@ interface ResolvedPriceIds {
 	gift_1_month: string | null;
 	gift_1_year: string | null;
 	currency: Currency;
-	gift_currency: Currency;
+	gift_currency: Currency | null;
 }
 
 interface InvoiceResult {
@@ -104,18 +119,7 @@ function billingCycleFromInterval(value: string | null | undefined): RecurringBi
 }
 
 function normalizeCurrency(value: string | null | undefined): Currency | null {
-	const currency = value?.toUpperCase();
-	if (
-		currency === 'USD' ||
-		currency === 'EUR' ||
-		currency === 'BRL' ||
-		currency === 'INR' ||
-		currency === 'PLN' ||
-		currency === 'TRY'
-	) {
-		return currency;
-	}
-	return null;
+	return normalizeCatalogCurrency(value);
 }
 
 function compareNullableDatesDesc(left: Date | null | undefined, right: Date | null | undefined): number {
@@ -181,6 +185,23 @@ function refundEligibility({
 	};
 }
 
+function resolveSubscriptionProvider(
+	user: User,
+	stripeSubscription: BillingSubscriptionRow | null,
+	storeRow: StorePurchaseRow | null,
+	now: Date,
+): PremiumSubscriptionProvider | null {
+	if (user.premiumType === UserPremiumTypes.LIFETIME) return null;
+	const stripePeriodEnd =
+		stripeSubscription?.provider_id === user.stripeSubscriptionId ? stripeSubscription?.current_period_end : null;
+	const stripeEnd = isStripeSubscriptionActive(user, now) ? (stripePeriodEnd ?? user.premiumUntil) : null;
+	const storeEnd = storeRow ? resolveStoreAccessEnd(storeRow) : null;
+	if (storeRow && storeEnd && (!stripeEnd || storeEnd.getTime() >= stripeEnd.getTime())) {
+		return storeRow.provider;
+	}
+	return stripeEnd ? 'stripe' : null;
+}
+
 function mapInvoice(row: BillingInvoiceRow): PremiumBillingInvoiceResponse {
 	return {
 		id: row.provider_id,
@@ -211,13 +232,15 @@ function mapPaymentMethod(row: BillingPaymentMethodRow): PremiumBillingPaymentMe
 }
 
 export class PremiumStateService {
-	private readonly productRegistry = new ProductRegistry();
+	private readonly productRegistry = getProductRegistry();
 
 	constructor(
 		private readonly userRepository: IUserRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly billingRepository: BillingRepository,
 		private readonly stripe: Stripe | null = null,
+		private readonly cacheService: ICacheService | null = null,
+		private readonly storeBillingRepository: StoreBillingRepository | null = null,
 	) {}
 
 	async getState(userId: UserID, countryCode?: string): Promise<PremiumStateResponse> {
@@ -263,7 +286,12 @@ export class PremiumStateService {
 			this.resolvePendingSubscriptionChange(user),
 			this.resolvePricing(countryCode),
 		]);
+		const storeRow = await this.resolveActiveStoreSubscription(user);
+		const store = storeRow ? mapPremiumStoreSubscriptionState(storeRow) : null;
 		const refundEligibilityState = await this.resolveRefundEligibility(user, invoices.allRows);
+		const listPriceSwitch = this.resolveListPriceSwitch(subscription, subscriptionPrice, pendingSubscriptionChange);
+		const pendingBillingCycleChange =
+			pendingSubscriptionChange?.change_kind === 'billing_cycle' ? pendingSubscriptionChange : null;
 		const activePaidPremium = checkHasActivePaidPremium(user);
 		const isEffectivePremium = user.isPremium();
 		const actualPremiumEndAt = user.effectivePremiumUntil;
@@ -290,7 +318,7 @@ export class PremiumStateService {
 				premium_lifetime_sequence: user.premiumLifetimeSequence,
 				premium_grace_ends_at: toIso(user.premiumGraceEndsAt),
 				premium_enabled_override: (user.premiumFlags & PremiumFlags.ENABLED_OVERRIDE) !== 0,
-				premium_purchase_disabled: (user.premiumFlags & PremiumFlags.PURCHASE_DISABLED) !== 0,
+				premium_purchase_disabled: (user.premiumFlags & PremiumFlags.PURCHASE_DISABLED) !== 0 || !isBillingActive(),
 				premium_perks_disabled: (user.premiumFlags & PremiumFlags.PERKS_DISABLED) !== 0,
 				self_hosted: Config.instance.selfHosted,
 				bot: user.isBot,
@@ -298,7 +326,8 @@ export class PremiumStateService {
 			billing: {
 				stripe_customer_id: customerIds[0] ?? user.stripeCustomerId ?? null,
 				current_subscription_price: subscriptionPrice,
-				pending_subscription_change: pendingSubscriptionChange,
+				pending_subscription_change: pendingBillingCycleChange,
+				list_price_switch: listPriceSwitch,
 				subscription: subscription ? await this.mapSubscription(subscription) : null,
 				invoices: invoices.rows.map(mapInvoice),
 				invoices_has_more: invoices.hasMore,
@@ -306,7 +335,17 @@ export class PremiumStateService {
 				refund_eligibility: refundEligibilityState,
 			},
 			pricing,
+			store,
+			subscription_provider: resolveSubscriptionProvider(user, subscription, store ? storeRow : null, new Date()),
 		};
+	}
+
+	private async resolveActiveStoreSubscription(user: User): Promise<StorePurchaseRow | null> {
+		if (!this.storeBillingRepository || Config.instance.selfHosted) {
+			return null;
+		}
+		const rows = await this.storeBillingRepository.listPurchasesForUser(user.id);
+		return selectActiveStoreSubscription(rows, new Date());
 	}
 
 	private async resolveCustomerIds(user: User): Promise<Array<string>> {
@@ -576,8 +615,16 @@ export class PremiumStateService {
 		const targetItem = futurePhase.items[0] ?? null;
 		const targetPriceDetails = await this.resolveStripePriceDetails(targetItem?.price ?? null);
 		const metadataTargetBillingCycle = normalizeBillingCycle(schedule.metadata?.pending_billing_cycle);
-		const targetBillingCycle = targetPriceDetails.billingCycle ?? metadataTargetBillingCycle;
-		if (!targetBillingCycle || targetBillingCycle === currentBillingCycle) {
+		const targetBillingCycle = targetPriceDetails.billingCycle ?? metadataTargetBillingCycle ?? currentBillingCycle;
+		if (!targetBillingCycle) {
+			return null;
+		}
+		const changeKind: PendingSubscriptionChangeKind =
+			targetBillingCycle === currentBillingCycle ? 'price' : 'billing_cycle';
+		if (
+			changeKind === 'price' &&
+			(targetPriceDetails.priceId == null || targetPriceDetails.priceId === currentPriceDetails.priceId)
+		) {
 			return null;
 		}
 		const quantity = targetItem?.quantity ?? currentItem?.quantity ?? 1;
@@ -598,16 +645,74 @@ export class PremiumStateService {
 		const creditAmountMinor = firstInvoiceAdjustmentTotal < 0 ? -firstInvoiceAdjustmentTotal : null;
 		return {
 			schedule_id: schedule.id,
+			change_kind: changeKind,
 			current_billing_cycle: currentBillingCycle,
 			target_billing_cycle: targetBillingCycle,
 			effective_at: new Date(futurePhase.start_date * 1000).toISOString(),
 			current_price_id: currentPriceDetails.priceId,
 			target_price_id: targetPriceDetails.priceId,
+			target_amount_minor: targetPriceDetails.amountMinor,
 			currency: targetPriceDetails.currency,
 			initial_amount_minor: initialAmountMinor,
 			recurring_amount_minor: recurringAmountMinor,
 			credit_amount_minor: creditAmountMinor,
 		};
+	}
+
+	private resolveListPriceSwitch(
+		subscription: BillingSubscriptionRow | null,
+		subscriptionPrice: CurrentSubscriptionPriceResponse,
+		pendingChange: PendingSubscriptionChangeResponse,
+	): ListPriceSwitchState {
+		const base = {
+			pending: false,
+			current_price_id: subscriptionPrice?.price_id ?? null,
+			current_amount_minor: subscriptionPrice?.amount_minor ?? null,
+			list_price_id: subscriptionPrice?.list_price_id ?? null,
+			list_amount_minor: subscriptionPrice?.list_amount_minor ?? null,
+			currency: subscriptionPrice?.currency ?? null,
+			billing_cycle: subscriptionPrice?.billing_cycle ?? null,
+			effective_at: toIso(subscription?.current_period_end),
+		};
+		if (Config.instance.selfHosted || !isBillingActive()) {
+			return {...base, available: false, reason: 'feature_unavailable'};
+		}
+		if (!subscription) {
+			return {...base, available: false, reason: 'no_active_subscription'};
+		}
+		if (!subscriptionPrice) {
+			return {...base, available: false, reason: 'unsupported_subscription'};
+		}
+		if (!subscription.status || !ACTIVE_SUBSCRIPTION_STATUSES.has(subscription.status)) {
+			return {...base, available: false, reason: 'subscription_not_chargeable'};
+		}
+		if (subscription.cancel_at != null || subscription.cancel_at_period_end === true) {
+			return {...base, available: false, reason: 'subscription_cancelling'};
+		}
+		if (pendingChange) {
+			const targetsListPrice =
+				subscriptionPrice.list_price_id != null && pendingChange.target_price_id === subscriptionPrice.list_price_id;
+			return {
+				...base,
+				available: false,
+				reason: targetsListPrice ? null : 'conflicting_pending_change',
+				pending: targetsListPrice,
+				effective_at: pendingChange.effective_at,
+			};
+		}
+		if (subscriptionPrice.list_price_id == null || subscriptionPrice.list_amount_minor == null) {
+			return {...base, available: false, reason: 'no_list_price'};
+		}
+		if (subscriptionPrice.list_price_id === subscriptionPrice.price_id) {
+			return {...base, available: false, reason: 'already_on_list_price'};
+		}
+		if (subscriptionPrice.list_amount_minor >= subscriptionPrice.amount_minor) {
+			return {...base, available: false, reason: 'not_a_price_decrease'};
+		}
+		if (base.effective_at == null) {
+			return {...base, available: false, reason: 'missing_period_end'};
+		}
+		return {...base, available: true, reason: null};
 	}
 
 	private async resolveStripePriceDetails(
@@ -671,53 +776,65 @@ export class PremiumStateService {
 
 	private async resolvePricing(countryCode: string | null | undefined): Promise<PremiumPricingState> {
 		const normalizedCountryCode = normalizeCountryCode(countryCode);
-		const [localized, base] = await Promise.all([
-			this.resolvePriceIds(normalizedCountryCode, 'localized'),
-			this.resolvePriceIds(normalizedCountryCode, 'base'),
-		]);
+		const localized = await this.resolvePriceIds(normalizedCountryCode);
 		return {
 			country_code: normalizedCountryCode,
 			localized,
-			base,
 		};
 	}
 
-	private async resolvePriceIds(
-		countryCode: string | null,
-		pricingMode: PricingMode,
-	): Promise<PriceIdsResponse | null> {
-		const resolved = this.resolveConfiguredPriceIds(countryCode, pricingMode);
+	private async resolvePriceIds(countryCode: string | null): Promise<PriceIdsResponse | null> {
+		const resolved = this.resolveConfiguredPriceIds(countryCode);
 		if (!resolved) return null;
-		const [monthlyPrice, yearlyPrice, gift1MonthPrice, gift1YearPrice] = await Promise.all([
-			resolved.monthly ? this.billingRepository.prices.findById(resolved.monthly) : null,
-			resolved.yearly ? this.billingRepository.prices.findById(resolved.yearly) : null,
-			resolved.gift_1_month ? this.billingRepository.prices.findById(resolved.gift_1_month) : null,
-			resolved.gift_1_year ? this.billingRepository.prices.findById(resolved.gift_1_year) : null,
+		const [monthlyAmount, yearlyAmount, gift1MonthAmount, gift1YearAmount] = await Promise.all([
+			this.resolvePriceAmountMinor(resolved.monthly),
+			this.resolvePriceAmountMinor(resolved.yearly),
+			this.resolvePriceAmountMinor(resolved.gift_1_month),
+			this.resolvePriceAmountMinor(resolved.gift_1_year),
 		]);
 		return {
 			...resolved,
-			monthly_amount_minor: nullableNumber(monthlyPrice?.unit_amount),
-			yearly_amount_minor: nullableNumber(yearlyPrice?.unit_amount),
-			gift_1_month_amount_minor: nullableNumber(gift1MonthPrice?.unit_amount),
-			gift_1_year_amount_minor: nullableNumber(gift1YearPrice?.unit_amount),
+			monthly_amount_minor: monthlyAmount,
+			yearly_amount_minor: yearlyAmount,
+			gift_1_month_amount_minor: gift1MonthAmount,
+			gift_1_year_amount_minor: gift1YearAmount,
 		};
 	}
 
-	private resolveConfiguredPriceIds(countryCode: string | null, pricingMode: PricingMode): ResolvedPriceIds | null {
-		const recurringCurrencyPreferences =
-			pricingMode === 'base' ? getBaseCurrencyPreferences(countryCode) : getCurrencyPreferences(countryCode);
-		const giftCurrencyPreferences =
-			pricingMode === 'base' ? getBaseGiftCurrencyPreferences(countryCode) : getGiftCurrencyPreferences(countryCode);
+	private async resolvePriceAmountMinor(priceId: string | null): Promise<number | null> {
+		if (!priceId) {
+			return null;
+		}
+		const mirrored = await this.billingRepository.prices.findById(priceId);
+		if (mirrored) {
+			return nullableNumber(mirrored.unit_amount);
+		}
+		if (!Config.instance.selfHosted || !this.cacheService) {
+			return null;
+		}
+		const summary = await getCachedStripePriceSummary({
+			stripe: this.stripe,
+			cacheService: this.cacheService,
+			priceId,
+			mirror: this.billingRepository,
+		});
+		return summary?.unitAmountMinor ?? null;
+	}
+
+	private resolveConfiguredPriceIds(countryCode: string | null): ResolvedPriceIds | null {
+		const recurringCurrencyPreferences = getCurrencyPreferences(countryCode);
+		const giftCurrencyPreferences = getGiftCurrencyPreferences(countryCode);
 		const recurringPrices = this.resolveRecurringPriceIds(recurringCurrencyPreferences);
 		const giftPrices = this.resolveGiftPriceIds(giftCurrencyPreferences);
-		if (!recurringPrices || !giftPrices) return null;
+		if (!recurringPrices) return null;
+		if (!giftPrices && !Config.instance.selfHosted) return null;
 		return {
 			monthly: recurringPrices.monthly,
 			yearly: recurringPrices.yearly,
-			gift_1_month: giftPrices.gift_1_month,
-			gift_1_year: giftPrices.gift_1_year,
+			gift_1_month: giftPrices?.gift_1_month ?? null,
+			gift_1_year: giftPrices?.gift_1_year ?? null,
 			currency: recurringPrices.currency,
-			gift_currency: giftPrices.gift_currency,
+			gift_currency: giftPrices?.gift_currency ?? null,
 		};
 	}
 
@@ -764,7 +881,7 @@ export class PremiumStateService {
 		user: User,
 		invoices: Array<BillingInvoiceRow>,
 	): Promise<SelfServeRefundEligibilityResponse> {
-		if (Config.instance.selfHosted || !Config.stripe.enabled || !Config.stripe.secretKey) {
+		if (Config.instance.selfHosted || !getStripeClient()) {
 			return refundEligibility({reason: 'feature_unavailable'});
 		}
 		const cooldownExpiresAt = this.cooldownExpiresAt(user);

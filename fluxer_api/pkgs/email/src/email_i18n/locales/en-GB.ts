@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
+import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
-	"account_disabled_suspicious": {
-		"subject": "Your {product_name} account has been temporarily disabled",
-		"body": "Hello {username},\n\nWe temporarily disabled your {product_name} account because we detected suspicious activity.\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nTo regain access to your account, you'll need to reset your password:\n\n{forgotUrl}\n\nAfter you reset your password, you'll be able to log in again.\n\nIf you believe this was done in error, please contact our support team.\n\n– {product_name} Safety Team"
+	"account_deletion_cancelled": {
+		"subject": "Your {product_name} account is no longer scheduled for deletion",
+		"body": "Hello {username},\n\nThe scheduled deletion of your {product_name} account has been cancelled. Your account will not be deleted.\n\nIf you have any questions, contact {safety_email}.\n\n– {product_name} Team"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Your {product_name} account will be deleted due to inactivity",
+		"body": "Hello {username},\n\nYour {product_name} account has been inactive for a long time, so it is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\nIf you want to keep your account, contact {safety_email} from this email address before that date.\n\n– {product_name} Team"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Your {product_name} account deletion is scheduled",
+		"body": "Hello {username},\n\nAs you requested, your {product_name} account is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\nYour account is locked until then. If you didn't request this, or you want to keep your account, contact {safety_email} from this email address before that date.\n\n– {product_name} Team"
 	},
 	"account_scheduled_deletion": {
 		"subject": "Your {product_name} account will be permanently deleted",
@@ -17,7 +25,7 @@ const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"donation_confirmation": {
 		"subject": "Thank you for your {product_name} donation",
-		"body": "Hello,\n\nThank you for your donation to {product_name}! Your {interval, select,\n  month {recurring donation}\n  year {recurring donation}\n  other {one-time donation}\n} has been {interval, select,\n  month {set up}\n  year {set up}\n  other {processed}\n} successfully.\n\nDonation details:\nAmount: {amount} {currency} {interval, select,\n  month {per month}\n  year {per year}\n  other {}\n}\n\nStripe will email you a separate receipt with your invoice PDF shortly. This includes all payment details and can be used for tax purposes.\n\nYou can view your donation history, download invoices, {interval, select,\n  month {and manage or cancel your subscription}\n  year {and manage or cancel your subscription}\n  other {and manage future donations}\n} at any time using this link:\n\n{manageUrl}\n\nYour support helps keep {product_name} running. Thank you!\n\n– {product_name} Team"
+		"body": "Hello,\n\nThank you for your donation to {product_name}! Your {interval, select,\n  month {recurring donation}\n  year {recurring donation}\n  other {one-time donation}\n} has been {interval, select,\n  month {set up}\n  year {set up}\n  other {processed}\n} successfully.\n\nDonation details:\nAmount: {amount} {interval, select,\n  month {per month}\n  year {per year}\n  other {}\n}\n\nStripe will email you a separate receipt with your invoice PDF shortly. This includes all payment details and can be used for tax purposes.\n\nYou can view your donation history, download invoices, {interval, select,\n  month {and manage or cancel your subscription}\n  year {and manage or cancel your subscription}\n  other {and manage future donations}\n} at any time using this link:\n\n{manageUrl}\n\nYour support helps keep {product_name} running. Thank you!\n\n– {product_name} Team"
 	},
 	"donation_magic_link": {
 		"subject": "Manage your {product_name} donations",
@@ -37,7 +45,7 @@ const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_revert": {
 		"subject": "Your {product_name} email was changed",
-		"body": "Hello {username},\n\nThe email address on your {product_name} account was changed to {newEmail}.\n\nIf you made this change, no action is needed. If you didn't, you can revert the change and secure your account using this link:\n\n{revertUrl}\n\nThis will restore your previous email, sign you out everywhere, remove linked phone numbers, disable MFA, and require you to set a new password.\n\n– {product_name} Safety Team"
+		"body": "Hello {username},\n\nThe email address on your {product_name} account was changed to {newEmail}.\n\nIf you made this change, no action is needed. If you didn't, you can revert the change and secure your account using this link:\n\n{revertUrl}\n\nThis will restore your previous email, sign you out everywhere, disable MFA, and require you to set a new password.\n\n– {product_name} Safety Team"
 	},
 	"email_verification": {
 		"subject": "Verify your {product_name} email address",
@@ -56,8 +64,8 @@ const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
 		"body": "Hello {username},\n\nWe haven't seen any activity on your {product_name} account since {lastActiveDate, date, full}.\n\nIf you don't log in by {deletionDate, date, full} at {deletionDate, time, short}, your account will be permanently deleted due to inactivity.\n\nLog in here:\n{loginUrl}\n\nIf you've used {product_name} recently, please contact our support team right away.\n\n– {product_name} Team"
 	},
 	"ip_authorization": {
-		"subject": "Authorize login from a new IP address",
-		"body": "Hello {username},\n\nWe detected a login attempt to your {product_name} account from a new IP address:\n\nIP address: {ipAddress}\nLocation: {location}\n\nIf this was you, please authorize this IP address by clicking the link below:\n\n{authUrl}\n\nIf you didn't attempt to log in, please change your password right away.\n\nThis link is valid for 30 minutes.\n\n– {product_name} Team"
+		"subject": "Authorise login from a new IP address",
+		"body": "Hello {username},\n\nWe detected a login attempt to your {product_name} account from a new IP address:\n\nIP address: {ipAddress}\nLocation: {location}\n\nIf this was you, please authorise this IP address by clicking the link below:\n\n{authUrl}\n\nIf you didn't attempt to log in, please change your password right away.\n\nThis link is valid for 30 minutes.\n\n– {product_name} Team"
 	},
 	"mfa_backup_codes_view": {
 		"subject": "Confirm access to your {product_name} backup codes",
@@ -65,7 +73,7 @@ const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Confirm your {product_name} password change",
-		"body": "Hello {username},\n\nWe received a request to change the password on your {product_name} account.\n\nTo confirm this change, enter this code in the app:\n\n{code}\n\nThis code expires at {expiresAt}.\n\nIf you didn't request this, someone may have access to your account. Change your password immediately and enable two-factor authentication.\n\n– {product_name} Team"
+		"body": "Hello {username},\n\nWe received a request to change the password on your {product_name} account.\n\nTo confirm this change, enter this code in the app:\n\n{code}\n\nThis code expires on {expiresAt, date, full} at {expiresAt, time, short}.\n\nIf you didn't request this, someone may have access to your account. Change your password immediately and enable two-factor authentication.\n\n– {product_name} Team"
 	},
 	"password_reset": {
 		"subject": "Reset your {product_name} password",

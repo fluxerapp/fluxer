@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {
+	IAssetDeletionQueue,
+	QueuedAssetDeletion,
+	QueuedAssetReference,
+} from '@app/api/infrastructure/IAssetDeletionQueue';
+import {Logger} from '@app/api/Logger';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {isValidTimestamp} from '@app/api/utils/TimestampUtils';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
-import type {IAssetDeletionQueue, QueuedAssetDeletion, QueuedAssetReference} from './IAssetDeletionQueue';
 
 const QUEUE_KEY = 'asset:deletion:queue';
 const MAX_RETRIES = 5;
@@ -30,8 +35,12 @@ function isQueuedAssetDeletion(value: unknown): value is QueuedAssetDeletion {
 		(typeof value.cdnUrl === 'string' || value.cdnUrl === null) &&
 		typeof value.reason === 'string' &&
 		(value.staleReference === undefined || isQueuedAssetReference(value.staleReference)) &&
-		(value.queuedAt === undefined || typeof value.queuedAt === 'number') &&
-		(value.retryCount === undefined || typeof value.retryCount === 'number')
+		(value.queuedAt === undefined || isValidTimestamp(value.queuedAt)) &&
+		(value.retryCount === undefined ||
+			(typeof value.retryCount === 'number' &&
+				Number.isInteger(value.retryCount) &&
+				value.retryCount >= 0 &&
+				value.retryCount <= MAX_RETRIES))
 	);
 }
 
@@ -54,20 +63,11 @@ export class AssetDeletionQueue implements IAssetDeletionQueue {
 	}
 
 	async queueCdnPurge(cdnUrl: string): Promise<void> {
-		const item: QueuedAssetDeletion = {
+		await this.queueDeletion({
 			s3Key: '',
 			cdnUrl,
 			reason: 'cdn_purge_only',
-			queuedAt: Date.now(),
-			retryCount: 0,
-		};
-		try {
-			await this.kvClient.rpush(QUEUE_KEY, JSON.stringify(item));
-			Logger.debug({cdnUrl}, 'Queued CDN URL for purge');
-		} catch (error) {
-			Logger.error({error, cdnUrl}, 'Failed to queue CDN URL for purge');
-			throw error;
-		}
+		});
 	}
 
 	async getBatch(count: number): Promise<Array<QueuedAssetDeletion>> {
@@ -76,9 +76,6 @@ export class AssetDeletionQueue implements IAssetDeletionQueue {
 		}
 		try {
 			const items = await this.kvClient.lpop(QUEUE_KEY, count);
-			if (items.length === 0) {
-				return [];
-			}
 			const parsed: Array<QueuedAssetDeletion> = [];
 			for (const item of items) {
 				const queuedItem = parseJsonWithGuard(item, isQueuedAssetDeletion);

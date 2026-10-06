@@ -1,38 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {existsSync, readFileSync, rmSync, statSync} from 'node:fs';
+import {readFileSync, rmSync} from 'node:fs';
 import {isBuiltin} from 'node:module';
 import {dirname, join, resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {build} from 'esbuild';
 
 const API_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const REPO_ROOT = resolve(API_ROOT, '..');
 const OUT_DIR = join(API_ROOT, 'dist');
-const CANDIDATE_SUFFIXES = ['', '.ts', '.tsx', '.js', '.mjs', '/index.ts', '/index.tsx', '/index.js', '/src/index.ts'];
-
-const WORKSPACE_ROOTS = {
-	'@app/': join(API_ROOT, 'src'),
-	'@pkgs/': join(API_ROOT, 'pkgs'),
-	'@fluxer/': join(REPO_ROOT, 'packages'),
-};
-
-function resolveWorkspacePath(specifier) {
-	for (const [prefix, root] of Object.entries(WORKSPACE_ROOTS)) {
-		if (!specifier.startsWith(prefix)) {
-			continue;
-		}
-		const base = join(root, specifier.slice(prefix.length));
-		for (const suffix of CANDIDATE_SUFFIXES) {
-			const candidate = `${base}${suffix}`;
-			if (existsSync(candidate) && statSync(candidate).isFile()) {
-				return candidate;
-			}
-		}
-		throw new Error(`Unable to resolve workspace import ${specifier}`);
-	}
-	return null;
-}
+const WORKSPACE_PREFIXES = ['@app/', '@pkgs/', '@fluxer/'];
 
 function packageNameOf(specifier) {
 	const segments = specifier.split('/');
@@ -48,9 +24,8 @@ const workspacePlugin = {
 	name: 'fluxer-workspace',
 	setup(pluginBuild) {
 		pluginBuild.onResolve({filter: /^[^./]/}, (args) => {
-			const workspacePath = resolveWorkspacePath(args.path);
-			if (workspacePath) {
-				return {path: workspacePath};
+			if (WORKSPACE_PREFIXES.some((prefix) => args.path.startsWith(prefix))) {
+				return undefined;
 			}
 			const packageName = packageNameOf(args.path);
 			if (!isBuiltin(args.path) && !declaredDependencies.has(packageName)) {

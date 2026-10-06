@@ -24,6 +24,7 @@ import {EmojiRenderer} from '@app/features/messaging/components/markdown/rendere
 import {LinkRenderer} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
 import {MentionRenderer} from '@app/features/messaging/components/markdown/renderers/MentionRenderer';
 import {
+	isRestrictedInlineContext,
 	MarkdownContext,
 	type MarkdownParseOptions,
 	type MarkdownRenderOptions,
@@ -77,8 +78,10 @@ function renderNode(node: Node, id: string, options: MarkdownRenderOptions): Rea
 		logger.warn(`No renderer found for node type: ${node.type}`);
 		return null;
 	}
-	const renderChildrenFn = (children: Array<Node>) =>
-		children.map((child, i) => renderNode(child, `${id}-${i}`, options));
+	const renderChildrenFn = (children: Array<Node>, optionOverrides?: Partial<MarkdownRenderOptions>) => {
+		const childOptions = optionOverrides ? {...options, ...optionOverrides} : options;
+		return children.map((child, i) => renderNode(child, `${id}-${i}`, childOptions));
+	};
 	return React.createElement(renderer, {
 		node,
 		id,
@@ -99,7 +102,7 @@ export function render(nodes: Array<Node>, options: MarkdownParseOptions): React
 }
 
 export function wrapRenderedContent(content: React.ReactNode, context: MarkdownContext): React.ReactNode {
-	if (context === MarkdownContext.RESTRICTED_INLINE_REPLY) {
+	if (isRestrictedInlineContext(context)) {
 		return (
 			<div className={markupStyles.inlineFormat} data-flx="messaging.markdown.renderers.wrap-rendered-content.div">
 				{content}

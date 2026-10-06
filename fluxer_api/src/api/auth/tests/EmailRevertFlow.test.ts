@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	clearTestEmails,
 	createAuthHarness,
@@ -11,7 +8,10 @@ import {
 	listTestEmails,
 	loginUser,
 	type TestAccount,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface EmailChangeStartResponse {
 	ticket: string;
@@ -39,7 +39,6 @@ interface EmailChangeVerifyNewResponse {
 interface UserPrivateResponse {
 	id: string;
 	email: string;
-	has_verified_phone: boolean;
 	username: string;
 	discriminator: string;
 	global_name: string;
@@ -192,7 +191,6 @@ describe('Email revert flow', () => {
 		expect(user.email).toBe(account.email);
 		expect(user.mfa_enabled).toBe(false);
 		expect(user.authenticator_types?.length ?? 0).toBe(0);
-		expect(user.has_verified_phone).toBe(false);
 		expect(user.password_last_changed_at).toBeDefined();
 		const login = await loginUser(harness, {email: account.email, password: newPassword});
 		expect('mfa' in login).toBe(false);

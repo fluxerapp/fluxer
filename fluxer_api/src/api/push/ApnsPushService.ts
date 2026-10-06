@@ -3,10 +3,10 @@
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {type ClientHttp2Session, connect, constants} from 'node:http2';
-import {importPKCS8, SignJWT} from 'jose';
-import {Config} from '../Config';
-import type {PushProviderEnvironment} from '../config/APIConfig';
-import {Logger} from '../Logger';
+import {Config} from '@app/api/Config';
+import type {PushProviderEnvironment} from '@app/api/config/APIConfig';
+import {Logger} from '@app/api/Logger';
+import {type CryptoKey, importPKCS8, SignJWT} from 'jose';
 
 const APNS_PROVIDER_TOKEN_TTL_SECONDS = 50 * 60;
 const APNS_REQUEST_TIMEOUT_MS = 5000;
@@ -45,7 +45,7 @@ interface Http2Response {
 }
 
 const providerTokenCache = new Map<string, CachedProviderToken>();
-const apnsSigningKeys = new Map<string, ReturnType<typeof importPKCS8>>();
+const apnsSigningKeys = new Map<string, Promise<CryptoKey>>();
 const apnsSessions = new Map<string, ClientHttp2Session>();
 
 export async function sendApnsPush(params: SendApnsPushParams): Promise<SendApnsPushResult> {
@@ -134,7 +134,7 @@ export async function ensureApnsSigningKey(): Promise<void> {
 	Logger.info('APNs signing key loaded');
 }
 
-async function apnsSigningKey(privateKey: string): Promise<Awaited<ReturnType<typeof importPKCS8>>> {
+async function apnsSigningKey(privateKey: string): Promise<CryptoKey> {
 	const cached = apnsSigningKeys.get(privateKey);
 	if (cached) return await cached;
 	const pending = importPKCS8(privateKey, 'ES256');
@@ -204,9 +204,7 @@ function buildApnsPayload(payload: Record<string, unknown>): Record<string, unkn
 	if (badge !== undefined) {
 		aps.badge = badge;
 	}
-	if (imageUrl) {
-		aps['mutable-content'] = 1;
-	}
+	aps['mutable-content'] = 1;
 	return {
 		...data,
 		title,

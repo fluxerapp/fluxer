@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use fluxer_admin::api::generated::types as generated_types;
 use fluxer_admin::api::types;
 
 #[test]
@@ -22,7 +23,6 @@ fn deserialize_admin_users_me_response() {
             "email": "hampus@fluxer.com",
             "email_verified": true,
             "email_bounced": false,
-            "has_verified_phone": true,
             "date_of_birth": "2003-02-25",
             "locale": "en-US",
             "premium_type": 2,
@@ -30,12 +30,14 @@ fn deserialize_admin_users_me_response() {
             "premium_until": null,
             "premium_grace_ends_at": null,
             "premium_lifetime_sequence": 1,
-            "suspicious_activity_flags": 0,
             "temp_banned_until": null,
             "pending_deletion_at": null,
             "pending_bulk_message_deletion_at": null,
             "deletion_reason_code": null,
             "deletion_public_reason": null,
+            "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null,
+            "deletion_scheduled_at": null,
             "acls": ["super_admin"],
             "traits": ["beta_tester"],
             "has_totp": true,
@@ -60,9 +62,7 @@ fn deserialize_admin_users_me_response() {
     assert_eq!(user.acls, vec!["super_admin"]);
     assert_eq!(user.traits, vec!["beta_tester"]);
     assert_eq!(user.premium_type, Some(2));
-    assert_eq!(user.suspicious_activity_flags, 0);
     assert!(user.has_totp);
-    assert!(user.has_verified_phone);
     assert_eq!(user.last_active_ip.as_deref(), Some("1.2.3.4"));
 }
 
@@ -75,12 +75,13 @@ fn deserialize_flags_as_string_and_number() {
             "premium_flags": 0, "avatar": null, "banner": null, "bio": null,
             "pronouns": null, "accent_color": null, "email": null,
             "email_verified": false, "email_bounced": false,
-            "has_verified_phone": false, "date_of_birth": null, "locale": null,
+            "date_of_birth": null, "locale": null,
             "premium_type": null, "premium_since": null, "premium_until": null,
             "premium_grace_ends_at": null, "premium_lifetime_sequence": null,
-            "suspicious_activity_flags": 0, "temp_banned_until": null,
+            "temp_banned_until": null,
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
-            "deletion_reason_code": null, "deletion_public_reason": null,
+            "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null,
             "acls": [], "traits": [], "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -106,13 +107,14 @@ fn deserialize_discriminator_int_and_string() {
             "bot": true, "system": false, "flags": "0", "premium_flags": 0,
             "avatar": null, "banner": null, "bio": null, "pronouns": null,
             "accent_color": null, "email": null, "email_verified": false,
-            "email_bounced": false, "has_verified_phone": false, "date_of_birth": null,
+            "email_bounced": false, "date_of_birth": null,
             "locale": null, "premium_type": null, "premium_since": null,
             "premium_until": null, "premium_grace_ends_at": null,
-            "premium_lifetime_sequence": null, "suspicious_activity_flags": 0,
+            "premium_lifetime_sequence": null,
             "temp_banned_until": null, "pending_deletion_at": null,
             "pending_bulk_message_deletion_at": null, "deletion_reason_code": null,
-            "deletion_public_reason": null, "acls": [], "traits": [],
+            "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null, "acls": [], "traits": [],
             "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -155,7 +157,6 @@ fn deserialize_search_users_response() {
                 "email": null,
                 "email_verified": false,
                 "email_bounced": false,
-                "has_verified_phone": false,
                 "date_of_birth": null,
                 "locale": null,
                 "premium_type": null,
@@ -163,12 +164,14 @@ fn deserialize_search_users_response() {
                 "premium_until": null,
                 "premium_grace_ends_at": null,
                 "premium_lifetime_sequence": null,
-                "suspicious_activity_flags": 0,
                 "temp_banned_until": null,
                 "pending_deletion_at": null,
                 "pending_bulk_message_deletion_at": null,
                 "deletion_reason_code": null,
                 "deletion_public_reason": null,
+                "deletion_audit_log_reason": null,
+                "deletion_scheduled_by": null,
+                "deletion_scheduled_at": null,
                 "acls": [],
                 "traits": [],
                 "has_totp": false,
@@ -229,6 +232,7 @@ fn deserialize_audit_logs_response() {
                 "target_type": "user",
                 "target_id": "1130958221824557056",
                 "action": "list_user_sessions",
+                "access": "read",
                 "audit_log_reason": null,
                 "metadata": {"session_count": "3"},
                 "created_at": "2026-05-26T13:21:47.138Z"
@@ -242,9 +246,465 @@ fn deserialize_audit_logs_response() {
     assert_eq!(resp.logs.len(), 1);
     assert_eq!(resp.logs[0].log_id, "1508822460457747580");
     assert_eq!(resp.logs[0].action, "list_user_sessions");
+    assert_eq!(resp.logs[0].access.as_deref(), Some("read"));
     assert_eq!(resp.logs[0].target_type, "user");
     assert!(resp.logs[0].audit_log_reason.is_none());
     assert_eq!(resp.logs[0].metadata.get("session_count").unwrap(), "3");
+}
+
+#[test]
+fn deserialize_guild_audit_logs_with_unknown_keys() {
+    let json = r#"{
+        "audit_log_entries": [
+            {
+                "id": "1508822460457747581",
+                "action_type": 22,
+                "user_id": "1130650140672000000",
+                "target_id": "1130958221824557056",
+                "reason": "spam",
+                "options": {
+                    "delete_message_seconds": 3600,
+                    "future_option": {"nested": true}
+                },
+                "changes": [
+                    {"key": "future_change", "future_field": 1}
+                ],
+                "future_entry_field": "ignored"
+            },
+            {
+                "id": "1508822460457747580",
+                "action_type": 31,
+                "user_id": "1130650140672000000",
+                "target_id": "1130958221824557057",
+                "options": {
+                    "id": "1130958221824557057",
+                    "type": 0,
+                    "channel_id": "1130958221824557058",
+                    "role_name": "Moderators"
+                },
+                "changes": [
+                    {"key": "permissions_diff", "new_value": {"added": ["SEND_MESSAGES"], "removed": []}}
+                ]
+            },
+            {
+                "id": "1508822460457747579",
+                "action_type": 11,
+                "user_id": "1130650140672000000",
+                "target_id": "1130958221824557059",
+                "options": {"type": 998},
+                "changes": [
+                    {"key": "name", "old_value": "old-name", "new_value": "new-name"},
+                    {"key": "position", "old_value": 3, "new_value": 4},
+                    {"key": "nsfw", "new_value": true},
+                    {"key": "roles", "new_value": ["1130958221824557060", "1130958221824557061"]}
+                ]
+            }
+        ],
+        "users": [],
+        "webhooks": []
+    }"#;
+
+    let resp: generated_types::ListGuildAuditLogsResponse = serde_json::from_str(json).unwrap();
+    assert_eq!(resp.audit_log_entries.len(), 3);
+
+    let ban = &resp.audit_log_entries[0];
+    assert_eq!(*ban.action_type, 22);
+    assert_eq!(ban.reason.as_deref(), Some("spam"));
+    assert!(ban.options.is_some());
+    assert_eq!(ban.changes.len(), 1);
+    assert_eq!(ban.changes[0].key, "future_change");
+    assert!(ban.changes[0].new_value.is_none());
+
+    let role_update = &resp.audit_log_entries[1];
+    let options = role_update.options.as_ref().unwrap();
+    assert_eq!(options.role_name.as_deref(), Some("Moderators"));
+    assert_eq!(options.channel_id.as_deref(), Some("1130958221824557058"));
+    assert_eq!(options.type_, Some(0.0));
+    assert_eq!(role_update.changes[0].key, "permissions_diff");
+    assert!(role_update.changes[0].new_value.is_some());
+
+    let channel_update = &resp.audit_log_entries[2];
+    assert_eq!(channel_update.changes.len(), 4);
+    assert_eq!(
+        channel_update.changes[0]
+            .old_value
+            .as_ref()
+            .and_then(|value| value.as_str()),
+        Some("old-name")
+    );
+    assert_eq!(
+        channel_update.changes[0]
+            .new_value
+            .as_ref()
+            .and_then(|value| value.as_str()),
+        Some("new-name")
+    );
+    assert_eq!(
+        channel_update.changes[1]
+            .new_value
+            .as_ref()
+            .and_then(|value| value.as_i64()),
+        Some(4)
+    );
+    assert_eq!(
+        channel_update.changes[2]
+            .new_value
+            .as_ref()
+            .and_then(|value| value.as_bool()),
+        Some(true)
+    );
+    assert_eq!(
+        channel_update.changes[3]
+            .new_value
+            .as_ref()
+            .and_then(|value| value.as_array())
+            .map(|value| value.len()),
+        Some(2)
+    );
+}
+
+#[test]
+fn deserialize_instance_config_response_with_unknown_keys() {
+    let json = r##"{
+        "sso": {
+            "enabled": true,
+            "enforced": false,
+            "display_name": "Fluxer SSO",
+            "issuer": "https://id.example.com",
+            "authorization_url": "https://id.example.com/authorize",
+            "token_url": "https://id.example.com/token",
+            "userinfo_url": "https://id.example.com/userinfo",
+            "jwks_url": "https://id.example.com/jwks.json",
+            "client_id": "fluxer-admin",
+            "client_secret_set": true,
+            "scope": "openid profile email",
+            "allowed_domains": ["fluxer.com"],
+            "auto_provision": true,
+            "redirect_uri": "https://fluxer.com/sso/callback"
+        },
+        "gateway_rollout": {
+            "session_rollout_percentage": 100,
+            "session_rollout_mode": "modulo",
+            "guild_rollout_percentage": 100,
+            "rpc_request_timeout_ms": 10000,
+            "max_concurrent_session_starts": 512,
+            "max_concurrent_guild_starts": 256,
+            "gateway_dispatch_relay_shards": 32,
+            "gateway_dispatch_relay_max_queue": 50000,
+            "voice_e2ee_scope": "guild_feature_only",
+            "future_rollout_knob": 3
+        },
+        "push_relay": {
+            "relay_consent_accepted": true,
+            "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
+            "relay_consent_accepted_by": "1130650140672000000"
+        },
+        "domain_migration": {
+            "enabled": true,
+            "config_version": 2,
+            "rollout_basis_points": 2500,
+            "rollout_salt": "domain-migration-v1",
+            "included_user_ids": ["1500000000000000001"],
+            "excluded_user_ids": [],
+            "included_guild_ids": [],
+            "include_premium_users": false,
+            "future_migration_knob": 9,
+            "future_presentation_knob": "verbose",
+            "future_knob": 7,
+            "future_object_knob": {"nested": true},
+            "future_list_knob": ["a", "b"],
+            "anonymous_rollout_basis_points": 100,
+            "standalone_forwarding": true
+        },
+        "plutonium_page": {
+            "enabled": true,
+            "config_version": 3,
+            "rollout_basis_points": 500,
+            "rollout_salt": "plutonium-page-v1",
+            "included_user_ids": ["1500000000000000001"],
+            "excluded_user_ids": ["1500000000000000002"],
+            "included_guild_ids": ["1500000000000000005"],
+            "include_premium_users": true,
+            "future_plutonium_page_knob": true
+        },
+        "captcha": {
+            "enabled": true,
+            "cost": 5000,
+            "max_counter": 1000,
+            "future_captcha_knob": 1
+        },
+        "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
+        "registration": {
+            "mode": "open",
+            "admin_registration_urls_enabled": false,
+            "urls": [],
+            "pending_registrations": []
+        },
+        "self_hosted": false,
+        "account_identity": {"mode": "username", "locked": true, "tag_style": "none"},
+        "app_public": {
+            "branding": {
+                "product_name": "Fluxer",
+                "icon_url": "https://cdn.example.com/icon.png",
+                "symbol_url": "https://cdn.example.com/symbol.svg",
+                "logo_url": "https://cdn.example.com/logo.svg",
+                "wordmark_url": "https://cdn.example.com/wordmark.svg",
+                "favicon_url": "https://cdn.example.com/favicon.ico",
+                "theme_color": "#5865f2",
+                "future_asset_url": "https://cdn.example.com/future.png",
+                "premium_product_name": "Gold",
+                "premium_info_url": "https://example.com/gold"
+            },
+            "setup": {"configured": true},
+            "legal": {
+                "terms_url": "https://fluxer.com/terms",
+                "privacy_url": "https://fluxer.com/privacy"
+            },
+            "registration": {"collect_date_of_birth": true}
+        },
+        "policy": {
+            "single_community_enabled": false,
+            "single_community_guild_id": null,
+            "direct_messages_disabled": false,
+            "direct_messages_locked": false,
+            "guild_create_access": false,
+            "premium_mode": "mirror",
+            "services": {
+                "gif_enabled": true,
+                "youtube_enabled": true,
+                "bluesky_enabled": false,
+                "future_service_enabled": true
+            },
+            "services_resolved": {
+                "gif_enabled": true,
+                "youtube_enabled": true,
+                "bluesky_enabled": false
+            },
+            "services_available": {"gif": true, "youtube": true, "bluesky": false}
+        },
+        "integrations": {
+            "gif": {"klipy_api_key_set": true, "effective_available": true},
+            "youtube": {"api_key_set": true, "effective_available": true},
+            "email": {
+                "enabled": true,
+                "effective_enabled": true,
+                "provider": "smtp",
+                "effective_provider": "smtp",
+                "from_email": "noreply@fluxer.com",
+                "from_name": "Fluxer",
+                "smtp": {
+                    "host": "smtp.example.com",
+                    "port": 587,
+                    "username": "fluxer",
+                    "password_set": true,
+                    "secure": true
+                },
+                "disable_new_ip_authorization": false,
+                "effective_disable_new_ip_authorization": false
+            },
+            "bluesky": {
+                "enabled": false,
+                "effective_enabled": false,
+                "client_name": "Fluxer",
+                "client_uri": "https://fluxer.com",
+                "logo_uri": "https://cdn.example.com/logo.svg",
+                "tos_uri": "https://fluxer.com/terms",
+                "policy_uri": "https://fluxer.com/privacy",
+                "key_count": 0
+            }
+        },
+        "media": {
+            "attachment_decay": {
+                "enabled": true,
+                "min_size_mb": 10,
+                "max_size_mb": 500,
+                "max_eligible_size_mb": 500,
+                "min_lifetime_days": 30,
+                "max_lifetime_days": 365,
+                "curve": 2,
+                "renew_threshold_days": 7,
+                "renew_window_days": 14,
+                "effective": {
+                    "enabled": true,
+                    "min_size_mb": 10,
+                    "max_size_mb": 500,
+                    "max_eligible_size_mb": 500,
+                    "min_lifetime_days": 30,
+                    "max_lifetime_days": 365,
+                    "curve": 2,
+                    "renew_threshold_days": 7,
+                    "renew_window_days": 14,
+                    "future_curve": 1.5
+                }
+            }
+        },
+        "billing": {
+            "enabled": true,
+            "effective_enabled": true,
+            "stripe_secret_key_set": true,
+            "stripe_webhook_secret_set": false,
+            "stripe_secret_key_stored": true,
+            "stripe_webhook_secret_stored": false,
+            "automatic_tax": null,
+            "tax_id_collection": true,
+            "terms_consent_required": false,
+            "effective_automatic_tax": false,
+            "effective_tax_id_collection": true,
+            "effective_terms_consent_required": false,
+            "default_currency": "GBP",
+            "prices": {
+                "GBP": {
+                    "monthly": "price_1GbpM",
+                    "yearly": "price_1GbpY",
+                    "gift_1_month": null,
+                    "gift_1_year": "price_1GbpG"
+                }
+            },
+            "country_currencies": {"GB": "GBP"},
+            "legacy_prices": {"monthly_GBP": ["price_1OldA"]},
+            "billing_active": true,
+            "stripe_serviceable": true,
+            "catalog_mode": "operator",
+            "webhook_url": "https://api.example.com/stripe/webhook",
+            "future_billing_knob": 1
+        },
+        "future_section": {"enabled": true, "rollout_basis_points": 10000},
+        "future_flag": 3
+    }"##;
+
+    let resp: generated_types::InstanceConfigResponse = serde_json::from_str(json).expect(
+        "the build.rs relaxation must keep unknown response keys from failing the whole response",
+    );
+
+    assert!(!resp.self_hosted);
+    assert!(resp.domain_migration.enabled);
+    assert_eq!(resp.domain_migration.config_version, 2);
+    assert_eq!(resp.domain_migration.rollout_basis_points, 2500);
+    assert_eq!(*resp.domain_migration.rollout_salt, "domain-migration-v1");
+    assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
+    assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
+    assert!(resp.domain_migration.standalone_forwarding);
+    assert!(resp.plutonium_page.enabled);
+    assert_eq!(resp.plutonium_page.config_version, 3);
+    assert_eq!(resp.plutonium_page.rollout_basis_points, 500);
+    assert_eq!(*resp.plutonium_page.rollout_salt, "plutonium-page-v1");
+    assert_eq!(resp.plutonium_page.included_user_ids.len(), 1);
+    assert_eq!(resp.plutonium_page.excluded_user_ids.len(), 1);
+    assert_eq!(resp.plutonium_page.included_guild_ids.len(), 1);
+    assert!(resp.plutonium_page.include_premium_users);
+    assert!(resp.push_relay.relay_consent_accepted);
+    assert!(resp.captcha.enabled);
+    assert_eq!(resp.captcha.max_counter, 1000);
+    assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
+    assert!(resp.policy.single_community_guild_id.is_none());
+    assert_eq!(resp.policy.services.gif_enabled, Some(true));
+    assert_eq!(resp.app_public.branding.product_name, "Fluxer");
+    assert_eq!(resp.app_public.branding.premium_product_name, "Gold");
+    assert!(resp.billing.billing_active);
+    assert!(resp.media.attachment_decay.effective.enabled);
+    assert!(resp.account_identity.locked);
+
+    let ours: types::InstanceConfigResponse =
+        serde_json::from_str(json).expect("hand-written instance config");
+    assert_eq!(
+        ours.account_identity.mode,
+        types::AccountIdentityMode::Username
+    );
+    assert_eq!(ours.account_identity.locked, Some(true));
+    assert_eq!(ours.app_public.branding.premium_product_name, "Gold");
+    assert!(ours.billing.stripe_secret_key_stored);
+    assert_eq!(ours.billing.tax_id_collection, Some(true));
+    assert!(ours.billing.effective_tax_id_collection);
+    assert_eq!(
+        ours.app_public.branding.premium_info_url.as_deref(),
+        Some("https://example.com/gold")
+    );
+    assert!(ours.billing.billing_active);
+    assert!(ours.billing.stripe_serviceable);
+    assert!(!ours.billing.stripe_webhook_secret_set);
+    assert_eq!(
+        ours.billing.catalog_mode,
+        types::BillingCatalogMode::Operator
+    );
+    assert_eq!(ours.billing.default_currency.as_deref(), Some("GBP"));
+    let gbp = &ours.billing.prices.as_ref().expect("prices")["GBP"];
+    assert_eq!(gbp.gift_1_year.as_deref(), Some("price_1GbpG"));
+    assert_eq!(gbp.gift_1_month, None);
+    assert_eq!(
+        ours.billing.legacy_prices.as_ref().expect("legacy")["monthly_GBP"],
+        vec!["price_1OldA".to_owned()]
+    );
+
+    let without_unknown_keys = json
+        .replace("\"future_rollout_knob\": 3,", "")
+        .replace("\"future_presentation_knob\": \"verbose\",", "")
+        .replace("\"future_knob\": 7,", "")
+        .replace("\"future_migration_knob\": 9,", "")
+        .replace("\"future_object_knob\": {\"nested\": true},", "")
+        .replace("\"future_list_knob\": [\"a\", \"b\"],", "")
+        .replace(
+            "\"future_asset_url\": \"https://cdn.example.com/future.png\",",
+            "",
+        )
+        .replace("\"future_service_enabled\": true,", "")
+        .replace("\"future_curve\": 1.5,", "")
+        .replace(",\n            \"future_billing_knob\": 1", "")
+        .replace(
+            "\"future_section\": {\"enabled\": true, \"rollout_basis_points\": 10000},",
+            "",
+        )
+        .replace("\"future_flag\": 3,", "");
+    let baseline: generated_types::InstanceConfigResponse =
+        serde_json::from_str(&without_unknown_keys).expect("known keys alone still deserialize");
+    assert_eq!(
+        serde_json::to_value(&baseline).unwrap(),
+        serde_json::to_value(&resp).unwrap()
+    );
+}
+
+#[test]
+fn deserialize_push_relay_config() {
+    let accepted: types::PushRelayConfigResponse = serde_json::from_str(
+        r#"{
+        "relay_consent_accepted": true,
+        "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
+        "relay_consent_accepted_by": "1130650140672000000"
+    }"#,
+    )
+    .expect("an accepted relay consent must deserialize");
+
+    assert!(accepted.relay_consent_accepted);
+    assert_eq!(
+        accepted.relay_consent_accepted_at.as_deref(),
+        Some("2026-09-27T10:11:12.000Z")
+    );
+    assert_eq!(
+        accepted.relay_consent_accepted_by.as_deref(),
+        Some("1130650140672000000")
+    );
+
+    let empty: types::PushRelayConfigResponse =
+        serde_json::from_str("{}").expect("an empty push relay config must deserialize");
+
+    assert!(!empty.relay_consent_accepted);
+    assert!(empty.relay_consent_accepted_at.is_none());
+    assert!(empty.relay_consent_accepted_by.is_none());
+}
+
+#[test]
+fn serialize_push_relay_update_omits_an_unset_consent() {
+    assert_eq!(
+        serde_json::to_value(types::PushRelayConfigUpdateRequest::default()).unwrap(),
+        serde_json::json!({})
+    );
+
+    let with = types::PushRelayConfigUpdateRequest {
+        relay_consent_accepted: Some(true),
+    };
+    assert_eq!(
+        serde_json::to_value(&with).unwrap(),
+        serde_json::json!({"relay_consent_accepted": true})
+    );
 }
 
 #[test]
@@ -407,6 +867,14 @@ fn deserialize_ban_check_response() {
 }
 
 #[test]
+fn deserialize_ban_check_response_with_expiry() {
+    let json = r#"{"banned": true, "expires_at": "2026-10-04T12:00:00.000Z"}"#;
+    let resp: types::BanCheckResult = serde_json::from_str(json).unwrap();
+    assert!(resp.banned);
+    assert_eq!(resp.expires_at.as_deref(), Some("2026-10-04T12:00:00.000Z"));
+}
+
+#[test]
 fn deserialize_codes_response() {
     let json = r#"{"codes": ["ABC-DEF", "GHI-JKL"]}"#;
     let resp: types::CodesResponse = serde_json::from_str(json).unwrap();
@@ -422,12 +890,13 @@ fn deserialize_user_mutation_response() {
             "flags": "1", "premium_flags": 0, "avatar": null, "banner": null,
             "bio": null, "pronouns": null, "accent_color": null, "email": null,
             "email_verified": false, "email_bounced": false,
-            "has_verified_phone": false, "date_of_birth": null, "locale": null,
+            "date_of_birth": null, "locale": null,
             "premium_type": null, "premium_since": null, "premium_until": null,
             "premium_grace_ends_at": null, "premium_lifetime_sequence": null,
-            "suspicious_activity_flags": 0, "temp_banned_until": null,
+            "temp_banned_until": null,
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
-            "deletion_reason_code": null, "deletion_public_reason": null,
+            "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null,
             "acls": [], "traits": [], "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -521,7 +990,8 @@ fn deserialize_webauthn_credentials_response() {
             "id": "credential-a",
             "name": "YubiKey",
             "created_at": "2026-05-26T12:00:00.000Z",
-            "last_used_at": null
+            "last_used_at": null,
+            "rp_id": "fluxer.com"
         },
         {
             "id": "credential-b",
@@ -605,4 +1075,12 @@ fn deserialize_list_admin_api_key_entry() {
     assert_eq!(resp.key_id, "k_123");
     assert_eq!(resp.created_by_user_id, "1130650140672000000");
     assert_eq!(resp.acls.len(), 2);
+}
+
+#[test]
+fn account_identity_lock_is_unknown_when_the_api_omits_it() {
+    let identity: types::AccountIdentityConfigResponse =
+        serde_json::from_str("{}").expect("empty account identity");
+    assert_eq!(identity.mode, types::AccountIdentityMode::Email);
+    assert_eq!(identity.locked, None);
 }

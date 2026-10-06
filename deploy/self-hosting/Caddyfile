@@ -6,7 +6,7 @@
 }
 
 {$FLUXER_EDGE_SITE_ADDRESS} {
-	encode zstd gzip
+	encode {$FLUXER_EDGE_ENCODE:zstd gzip}
 
 	handle /_health {
 		respond "OK" 200
@@ -33,16 +33,16 @@
 		reverse_proxy livekit:7880
 	}
 
-	handle /admin {
+	handle {$FLUXER_ADMIN_BASE_PATH:/admin} {
 		rewrite * /
 		reverse_proxy admin:8080
 	}
 
-	handle_path /admin/* {
+	handle_path {$FLUXER_ADMIN_BASE_PATH:/admin}/* {
 		reverse_proxy admin:8080
 	}
 
-	@staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/* /embeds/*
+	@staticAssets path /web/* /emoji/* /libs/* /avatars/* /badges/* /desktop/*
 	handle @staticAssets {
 		reverse_proxy static-proxy:8080
 	}

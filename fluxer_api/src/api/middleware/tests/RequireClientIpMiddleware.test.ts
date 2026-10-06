@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {RequireClientIpMiddleware} from '@app/api/middleware/RequireClientIpMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import type {ClientIpResolution} from '@app/api/utils/RequestClientIp';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {Hono} from 'hono';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {Config} from '../../Config';
-import type {HonoEnv} from '../../types/HonoEnv';
-import type {ClientIpResolution} from '../../utils/RequestClientIp';
-import {RequireClientIpMiddleware} from '../RequireClientIpMiddleware';
 
 interface Harness {
 	request: (headers: Record<string, string>) => Promise<Response>;
@@ -22,6 +22,7 @@ function createHarness(path = 'http://localhost/v1/messages'): Harness {
 		return ctx.text('ok');
 	});
 	app.get('/_health', (ctx) => ctx.text('OK'));
+	app.get('/internal/rpc', (ctx) => ctx.text('OK'));
 	app.onError(AppErrorHandler);
 	return {
 		request: async (headers) => app.request(path, {headers}),
@@ -76,6 +77,12 @@ describe('RequireClientIpMiddleware', () => {
 
 	it('leaves exempt paths alone', async () => {
 		const harness = createHarness('http://localhost/_health');
+		const response = await harness.request({});
+		expect(response.status).toBe(200);
+	});
+
+	it('leaves internal service to service calls alone', async () => {
+		const harness = createHarness('http://localhost/internal/rpc');
 		const response = await harness.request({});
 		expect(response.status).toBe(200);
 	});

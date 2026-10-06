@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
+import type {UserID} from '@app/api/BrandedTypes';
+import {parseDeletionQueueMember, parseDeletionQueueUserId} from '@app/api/infrastructure/DeletionQueueMember';
+import {Logger} from '@app/api/Logger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {getValidTimestamp, parseStoredTimestamp} from '@app/api/utils/TimestampUtils';
 import {generateLockToken} from '@pkgs/cache/src/CacheLockValidation';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {ms, seconds} from 'itty-time';
-import type {UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {UserRepository} from '../user/repositories/UserRepository';
 
 interface QueuedBulkMessageDeletion {
 	userId: bigint;
@@ -29,32 +32,34 @@ export class KVBulkMessageDeletionQueueService {
 	}
 
 	private serializeQueueItem(item: QueuedBulkMessageDeletion): string {
-		return `${item.userId}|${item.scheduledAt}`;
+		const userId = parseDeletionQueueUserId(item.userId.toString());
+		return `${userId}|${item.scheduledAt}`;
 	}
 
 	private deserializeQueueItem(value: string): QueuedBulkMessageDeletion {
-		const [userIdStr, scheduledAtStr] = value.split('|');
+		const {userId, payload} = parseDeletionQueueMember(value);
+		const scheduledAt = parseStoredTimestamp(payload, 'Bulk message deletion queue timestamp');
+		assert(scheduledAt !== null, 'A non-null bulk message deletion timestamp must not parse as null');
 		return {
-			userId: BigInt(userIdStr),
-			scheduledAt: Number.parseInt(scheduledAtStr, 10),
+			userId,
+			scheduledAt,
 		};
 	}
 
 	async needsRebuild(): Promise<boolean> {
 		try {
-			const versionExists = await this.kvClient.exists(STATE_VERSION_KEY);
-			if (!versionExists) {
+			const stateVersion = parseStoredTimestamp(
+				await this.kvClient.get(STATE_VERSION_KEY),
+				'Bulk message deletion queue state version',
+			);
+			if (stateVersion === null) {
 				Logger.debug('Bulk message deletion queue needs rebuild: no state version');
 				return true;
 			}
-			const stateVersionStr = await this.kvClient.get(STATE_VERSION_KEY);
-			if (stateVersionStr) {
-				const stateVersion = Number.parseInt(stateVersionStr, 10);
-				const ageMs = Date.now() - stateVersion;
-				if (ageMs > ms('1 day')) {
-					Logger.debug({ageMs, maxAgeMs: ms('1 day')}, 'Bulk message deletion queue needs rebuild: state too old');
-					return true;
-				}
+			const ageMs = Date.now() - stateVersion;
+			if (ageMs > ms('1 day')) {
+				Logger.debug({ageMs, maxAgeMs: ms('1 day')}, 'Bulk message deletion queue needs rebuild: state too old');
+				return true;
 			}
 			return false;
 		} catch (error) {
@@ -72,27 +77,21 @@ export class KVBulkMessageDeletionQueueService {
 			let totalProcessed = 0;
 			let totalQueued = 0;
 			const batchSize = 1000;
-			while (true) {
+			do {
 				const page = await this.userRepository.scanAllUsersPage(batchSize, pageState);
+				pageState = page.pageState;
 				const users = page.users;
-				if (users.length === 0) {
-					break;
-				}
+				if (users.length === 0) continue;
 				for (const user of users) {
-					if (user.pendingBulkMessageDeletionAt) {
-						await this.scheduleDeletion(user.id, user.pendingBulkMessageDeletionAt);
-						totalQueued++;
-					}
+					if (!user.pendingBulkMessageDeletionAt) continue;
+					await this.scheduleDeletion(user.id, user.pendingBulkMessageDeletionAt);
+					totalQueued++;
 				}
 				totalProcessed += users.length;
-				pageState = page.pageState;
 				if (totalProcessed % 10000 === 0) {
 					Logger.debug({totalProcessed, totalQueued}, 'Bulk message deletion queue rebuild progress');
 				}
-				if (!pageState) {
-					break;
-				}
-			}
+			} while (pageState);
 			await this.kvClient.set(STATE_VERSION_KEY, Date.now().toString());
 			Logger.info({totalProcessed, totalQueued}, 'Bulk message deletion queue rebuild completed');
 		} catch (error) {
@@ -105,7 +104,7 @@ export class KVBulkMessageDeletionQueueService {
 		try {
 			const entry: QueuedBulkMessageDeletion = {
 				userId,
-				scheduledAt: scheduledAt.getTime(),
+				scheduledAt: getValidTimestamp(scheduledAt, `Pending bulk message deletion timestamp for user ${userId}`),
 			};
 			const value = this.serializeQueueItem(entry);
 			const secondaryKey = this.getSecondaryKey(userId);
@@ -136,12 +135,23 @@ export class KVBulkMessageDeletionQueueService {
 		try {
 			const results = await this.kvClient.zrangebyscore(QUEUE_KEY, '-inf', nowMs, 'LIMIT', 0, limit);
 			const deletions: Array<QueuedBulkMessageDeletion> = [];
+			const unparseable: Array<string> = [];
 			for (const result of results) {
 				try {
-					const deletion = this.deserializeQueueItem(result);
-					deletions.push(deletion);
+					deletions.push(this.deserializeQueueItem(result));
+				} catch {
+					unparseable.push(result);
+				}
+			}
+			if (unparseable.length > 0) {
+				Logger.error({unparseableCount: unparseable.length}, 'Dropped unparseable bulk message deletion queue members');
+				try {
+					await this.kvClient.zrem(QUEUE_KEY, ...unparseable);
 				} catch (error) {
-					Logger.error({error, result}, 'Failed to parse queued bulk message deletion entry');
+					Logger.error(
+						{error, unparseableCount: unparseable.length},
+						'Failed to remove unparseable bulk message deletion queue members',
+					);
 				}
 			}
 			return deletions;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {assertNoUndefinedParams} from '@app/api/database/CassandraTypes';
 import {describe, expect, it} from 'vitest';
-import {assertNoUndefinedParams} from './CassandraTypes';
 
 function messageFor(path: string): string {
 	return `Undefined value at "${path}". This project forbids undefined in Cassandra params; use null explicitly or omit the column via PATCH.`;

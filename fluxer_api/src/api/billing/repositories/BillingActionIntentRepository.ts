@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
+import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	BillingActionIntentRow,
 	BillingActionIntentStatus,
 	BillingActionType,
-} from '../../database/types/BillingTypes';
-import {BILLING_ACTION_INTENT_COLUMNS} from '../../database/types/BillingTypes';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import {BillingActionIntents} from '../../Tables';
+} from '@app/api/database/types/BillingTypes';
+import {BILLING_ACTION_INTENT_COLUMNS} from '@app/api/database/types/BillingTypes';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {BillingActionIntents} from '@app/api/Tables';
 
 const FETCH_BY_ID = BillingActionIntents.selectCql({
 	where: BillingActionIntents.where.eq('intent_id'),

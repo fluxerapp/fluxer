@@ -4,6 +4,7 @@ use crate::{
     api::types::{GuildInfo, ReportEntry},
     config::AdminConfig,
     templates::components::{page_container::card_with_header, table::data_table},
+    utils::user_tag::user_tag,
 };
 use maud::{Markup, html};
 
@@ -17,8 +18,9 @@ pub fn reports_tab(
     let base = &config.base_path;
     let page_size: u64 = 25;
     let has_previous = page > 0;
-    let has_next = (page as u64) * page_size + reports.len() as u64 > 0
-        && (page as u64 + 1) * page_size < total;
+    let next_page = page.checked_add(1).filter(|next_page| {
+        (page > 0 || !reports.is_empty()) && u64::from(*next_page) * page_size < total
+    });
     html! {
         div class="space-y-4" {
             div class="flex items-center justify-between" {
@@ -48,7 +50,7 @@ pub fn reports_tab(
                 ))
             }
 
-            @if has_previous || has_next {
+            @if has_previous || next_page.is_some() {
                 div class="flex justify-center gap-2" {
                     @if has_previous {
                         a href={(base) "/guilds/" (guild.id) "?tab=reports&reports_page=" (page - 1)}
@@ -58,8 +60,8 @@ pub fn reports_tab(
                             "\u{2190} Newer"
                         }
                     }
-                    @if has_next {
-                        a href={(base) "/guilds/" (guild.id) "?tab=reports&reports_page=" (page + 1)}
+                    @if let Some(next_page) = next_page {
+                        a href={(base) "/guilds/" (guild.id) "?tab=reports&reports_page=" (next_page)}
                             class="inline-flex items-center rounded-md border border-neutral-300 \
                                    bg-white px-3 py-2 text-sm font-medium text-neutral-700 \
                                    hover:bg-neutral-50" {
@@ -92,7 +94,7 @@ fn format_status(status: i32) -> &'static str {
 fn format_reporter(report: &ReportEntry) -> String {
     if let Some(ref username) = report.reporter_username {
         let disc = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        let tag = format!("{username}#{disc}");
+        let tag = user_tag(username, disc, false);
         if let Some(ref gn) = report.reporter_global_name {
             let trimmed = gn.trim();
             if !trimmed.is_empty() {

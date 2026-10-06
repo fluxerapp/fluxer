@@ -8,7 +8,7 @@ export function getPopoutFocusManagerInsideElements(
 ): Array<Element> {
 	const insideElements: Array<Element> = [];
 	const addElement = (element: Element | null | undefined): void => {
-		if (!element || !element.isConnected || insideElements.includes(element)) {
+		if (!element?.isConnected || insideElements.includes(element)) {
 			return;
 		}
 		insideElements.push(element);

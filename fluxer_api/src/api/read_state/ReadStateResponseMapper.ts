@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ReadState} from '@app/api/models/ReadState';
 import type {ReadStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
-import type {ReadState} from '../models/ReadState';
 
 export function mapReadStateResponse(readState: ReadState): ReadStateResponse {
 	return {

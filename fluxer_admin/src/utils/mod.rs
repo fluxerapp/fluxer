@@ -3,3 +3,4 @@
 pub mod bigint;
 pub mod forms;
 pub mod timestamps;
+pub mod user_tag;

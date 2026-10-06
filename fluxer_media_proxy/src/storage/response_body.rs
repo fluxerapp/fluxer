@@ -80,22 +80,17 @@ pub(super) async fn read_response_bytes(
     body.try_reserve_exact(expected_length)
         .map_err(|_| StorageError::BufferAllocationFailed)?;
     buffer_budget.grow_to(body.capacity())?;
-    let mut chunks_read = 0_u64;
-    let chunks_max = response_body_limit::response_body_chunk_limit(expected_length as u64);
+    let mut empty_chunks_remaining =
+        response_body_limit::response_body_chunk_limit(expected_length as u64);
     while let Some(chunk) = response.chunk().await? {
-        if chunk.len() > response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX {
-            return Err(StorageError::ObjectStorage(anyhow::anyhow!(
-                "object storage response transport chunk exceeded its byte bound"
-            )));
-        }
-        chunks_read = chunks_read
-            .checked_add(1)
-            .filter(|chunks| *chunks <= chunks_max)
-            .ok_or_else(|| {
+        if chunk.is_empty() {
+            empty_chunks_remaining = empty_chunks_remaining.checked_sub(1).ok_or_else(|| {
                 StorageError::ObjectStorage(anyhow::anyhow!(
-                    "object storage response exceeded its chunk limit"
+                    "object storage response exceeded its empty chunk limit"
                 ))
             })?;
+            continue;
+        }
         let next_length = body
             .len()
             .checked_add(chunk.len())
@@ -559,7 +554,7 @@ fn exact_stream(
     expected_length: u64,
     end: ExactStreamEnd,
 ) -> impl Stream<Item = Result<Bytes, std::io::Error>> + Send + 'static {
-    // Only a chunk that carries no bytes needs a count bound. The byte accounting below already
+    // Only a chunk with no bytes needs a count bound. The byte accounting below already
     // bounds every other chunk, and counting them all aborts a legitimate transfer whenever the
     // transport hands over reads smaller than the assumed average chunk size.
     let empty_chunks_remaining = response_body_limit::response_body_chunk_limit(expected_length);

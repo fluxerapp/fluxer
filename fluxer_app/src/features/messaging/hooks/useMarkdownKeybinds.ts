@@ -184,7 +184,7 @@ export const useMarkdownFormattingShortcut = ({
 	value: string;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	handleTextChange: (newValue: string, oldValue: string) => void;
-	previousValueRef: React.MutableRefObject<string>;
+	previousValueRef: React.RefObject<string>;
 }): ((event: KeyboardEvent<HTMLTextAreaElement>) => void) => {
 	return useCallback(
 		(event: KeyboardEvent<HTMLTextAreaElement>) => {

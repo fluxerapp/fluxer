@@ -41,7 +41,6 @@ type IpAuthorizationTicket = Brand<string, 'IpAuthorizationTicket'>;
 type MfaTicket = Brand<string, 'MfaTicket'>;
 export type WebhookToken = Brand<string, 'WebhookToken'>;
 export type MfaBackupCode = Brand<string, 'MfaBackupCode'>;
-export type PhoneVerificationToken = Brand<string, 'PhoneVerificationToken'>;
 
 export function createUserID<T extends bigint>(id: T extends BrandedValue ? never : T): UserID {
 	return brand<T, 'UserID'>(id);

@@ -77,8 +77,6 @@ pub enum CatalogLayout {
 pub enum CatalogName {
     #[value(name = "app")]
     App,
-    #[value(name = "marketing")]
-    Marketing,
     #[value(name = "errors")]
     Errors,
     #[value(name = "api-content", alias = "content")]
@@ -91,7 +89,6 @@ impl CatalogName {
     fn label(self) -> &'static str {
         match self {
             CatalogName::App => "app",
-            CatalogName::Marketing => "marketing",
             CatalogName::Errors => "errors",
             CatalogName::ApiContent => "api-content",
             CatalogName::Email => "email",
@@ -123,10 +120,6 @@ impl RuntimeConfig {
             .unwrap_or_else(|| PathBuf::from("."));
         let (locales_dir, catalog_layout) = match catalog {
             CatalogName::App => (locales_dir(&app_dir), CatalogLayout::NestedMessages),
-            CatalogName::Marketing => (
-                repo_root.join("packages/i18n/marketing"),
-                CatalogLayout::FlatPo,
-            ),
             CatalogName::Errors => (
                 repo_root
                     .join("packages")
@@ -277,14 +270,9 @@ struct RawTranslateArgs {
     #[arg(
         long,
         value_enum,
-        help = "Catalog target to translate: app, marketing, errors, api-content, or email"
+        help = "Catalog target to translate: app, errors, api-content, or email"
     )]
     catalog: Option<CatalogName>,
-    #[arg(
-        long,
-        help = "Deprecated alias for --catalog marketing; use packages/i18n/marketing flat gettext catalogs"
-    )]
-    marketing: bool,
     #[arg(
         long = "msgctxt",
         help = "Only translate entries with this PO msgctxt or static catalog key; repeatable. Email fields use <template>.<subject|body>."
@@ -368,15 +356,7 @@ fn normalize_args(raw: RawTranslateArgs, env_overrides: &EnvOverlay) -> Result<T
         reset = true;
         all = true;
     }
-    let catalog = match (raw.catalog, raw.marketing) {
-        (Some(CatalogName::Marketing), true) | (None, true) => CatalogName::Marketing,
-        (Some(catalog), false) => catalog,
-        (None, false) => CatalogName::App,
-        (Some(catalog), true) => bail!(
-            "--marketing cannot be combined with --catalog {}; use --catalog marketing",
-            catalog.label()
-        ),
-    };
+    let catalog = raw.catalog.unwrap_or(CatalogName::App);
     if !all && raw.locales.is_empty() {
         all = true;
     }

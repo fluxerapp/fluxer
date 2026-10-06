@@ -11,8 +11,10 @@ import {
 	selectEffectiveGifAutoPlay,
 } from '@app/features/accessibility/state/MotionPreferencesMachine';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence, {setLocalPresenceUserSettings} from '@app/features/presence/state/LocalPresence';
 import Theme from '@app/features/theme/state/Theme';
@@ -53,7 +55,7 @@ import camelCase from 'lodash/camelCase';
 import isEqual from 'lodash/isEqual';
 import isPlainObject from 'lodash/isPlainObject';
 import snakeCase from 'lodash/snakeCase';
-import {action, makeAutoObservable, reaction, runInAction} from 'mobx';
+import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 function restoreSettingValue<K extends keyof UserSettings>(target: UserSettings, source: UserSettings, key: K): void {
 	target[key] = source[key];
@@ -556,12 +558,10 @@ class UserSettingsState {
 		return this.hydrated;
 	}
 
-	@action
 	markSessionChanging(): void {
 		this.hydrated = false;
 	}
 
-	@action
 	handleAccountTransition(): void {
 		this.accountEpoch += 1;
 		this.hydrated = false;
@@ -588,7 +588,6 @@ class UserSettingsState {
 		}
 	}
 
-	@action
 	setStatus(status: StatusType): void {
 		this.status = status;
 		LocalPresence.updatePresence();
@@ -1020,7 +1019,7 @@ class UserSettingsState {
 			}
 			if (this.isRateLimitError(error)) {
 				this.syncConsecutive429s += 1;
-				const retryAfterMs = this.extractRetryAfterMs(error) ?? this.syncBackoffMs();
+				const retryAfterMs = this.syncRetryDelayMs(error);
 				logger.warn(
 					`synced_preferences PATCH rate-limited; retry in ${Math.round(retryAfterMs / 1000)}s ` +
 						`(attempt ${this.syncConsecutive429s})`,
@@ -1055,23 +1054,9 @@ class UserSettingsState {
 		return status === 429;
 	}
 
-	private extractRetryAfterMs(error: unknown): number | null {
-		if (error == null || typeof error !== 'object') return null;
-		const candidate =
-			(
-				error as {
-					retryAfter?: unknown;
-				}
-			).retryAfter ??
-			(
-				error as {
-					body?: {
-						retry_after?: unknown;
-					};
-				}
-			).body?.retry_after;
-		if (typeof candidate !== 'number' || !Number.isFinite(candidate) || candidate < 0) return null;
-		return Math.min(60000, Math.max(250, candidate * 1000));
+	private syncRetryDelayMs(error: unknown): number {
+		const advertisedMs = error instanceof HttpError ? resolveRetryAfterMs(error) : null;
+		return Math.min(60000, Math.max(advertisedMs ?? 0, this.syncBackoffMs()));
 	}
 
 	async saveSettings(settings: Partial<UserSettings>): Promise<void> {

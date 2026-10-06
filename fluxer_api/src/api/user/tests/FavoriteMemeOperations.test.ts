@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {createAttachmentID, createMemeID, createUserID} from '../../BrandedTypes';
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import {createAttachmentID, createMemeID, createUserID} from '@app/api/BrandedTypes';
 import {
 	createTestAccountForAttachmentTests,
 	sendMessageWithAttachments,
 	setupTestGuildAndChannel,
-} from '../../channel/tests/AttachmentTestUtils';
-import {fetchOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import {FavoriteMemes} from '../../Tables';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {getExpiryBucket} from '../../utils/AttachmentDecay';
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import {fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import {FavoriteMemes} from '@app/api/Tables';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	createFavoriteMemeFromMessage,
 	createMessageWithImageAttachment,
@@ -23,7 +20,10 @@ import {
 	getFavoriteMeme,
 	listFavoriteMemes,
 	updateFavoriteMeme,
-} from './FavoriteMemeTestUtils';
+} from '@app/api/user/tests/FavoriteMemeTestUtils';
+import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
+import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 function animatedWebpProbeFixture(): Buffer {
 	const buffer = Buffer.alloc(48);
@@ -132,7 +132,7 @@ describe('Favorite Meme Operations', () => {
 		expect(sent.attachments[0].filename).toBe(filename);
 		expect(sent.attachments[0].flags & MessageAttachmentFlags.IS_ANIMATED).toBe(MessageAttachmentFlags.IS_ANIMATED);
 	});
-	test('should carry the saved placeholder onto the sent attachment', async () => {
+	test('should copy the saved placeholder onto the sent attachment', async () => {
 		const account = await createTestAccountForAttachmentTests(harness);
 		const {channel} = await setupTestGuildAndChannel(harness, account);
 		const message = await createMessageWithImageAttachment(harness, account.token, channel.id);
@@ -244,7 +244,7 @@ describe('Favorite Meme Operations', () => {
 			attachment_id: message1.attachments[0].id,
 			name: 'First Meme',
 		});
-		const message2 = await createMessageWithImageAttachment(harness, account.token, channel.id, 'thisisfine.gif');
+		const message2 = await createMessageWithImageAttachment(harness, account.token, channel.id, 'animated.gif');
 		await createFavoriteMemeFromMessage(harness, account.token, channel.id, message2.id, {
 			attachment_id: message2.attachments[0].id,
 			name: 'Second Meme',

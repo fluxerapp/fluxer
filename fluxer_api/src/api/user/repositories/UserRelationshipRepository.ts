@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, executeGroupedBatches, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, nextVersion} from '@app/api/database/CassandraTypes';
+import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {NoteRow, RelationshipRow} from '@app/api/database/types/UserTypes';
+import {Relationship} from '@app/api/models/Relationship';
+import {UserNote} from '@app/api/models/UserNote';
+import {Notes, Relationships, RelationshipsByTarget} from '@app/api/Tables';
+import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import {Db, nextVersion} from '../../database/CassandraTypes';
-import {executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
-import type {NoteRow, RelationshipRow} from '../../database/types/UserTypes';
-import {Relationship} from '../../models/Relationship';
-import {UserNote} from '../../models/UserNote';
-import {Notes, Relationships, RelationshipsByTarget} from '../../Tables';
-import type {IUserRelationshipRepository} from './IUserRelationshipRepository';
 
 const FETCH_ALL_NOTES_CQL = Notes.selectCql({
 	where: Notes.where.eq('source_user_id'),
@@ -62,20 +62,16 @@ export class UserRelationshipRepository implements IUserRelationshipRepository {
 			source_user_id: bigint;
 			target_user_id: bigint;
 		}>(FETCH_ALL_NOTES_FOR_DELETE_QUERY, {});
-		const batch = new BatchBuilder();
-		for (const note of allNotes) {
-			if (note.target_user_id === BigInt(userId)) {
-				batch.addPrepared(
+		await executeGroupedBatches(
+			allNotes
+				.filter((note) => note.target_user_id === BigInt(userId))
+				.map((note) => [
 					Notes.deleteByPk({
 						source_user_id: createUserID(note.source_user_id),
 						target_user_id: createUserID(note.target_user_id),
 					}),
-				);
-			}
-		}
-		if (batch) {
-			await batch.execute();
-		}
+				]),
+		);
 	}
 
 	async deleteAllRelationships(userId: UserID): Promise<void> {
@@ -83,40 +79,20 @@ export class UserRelationshipRepository implements IUserRelationshipRepository {
 			fetchMany<RelationshipRow>(FETCH_RELATIONSHIPS_CQL, {source_user_id: userId}),
 			fetchMany<RelationshipRow>(FETCH_RELATIONSHIPS_BY_TARGET_CQL, {target_user_id: userId}),
 		]);
-		const batch = new BatchBuilder();
-		for (const rel of relationshipsFromUser) {
-			batch.addPrepared(
+		await executeGroupedBatches(
+			[...relationshipsFromUser, ...relationshipsPointingToUser].map((rel) => [
 				Relationships.deleteByPk({
 					source_user_id: rel.source_user_id,
 					target_user_id: rel.target_user_id,
 					type: rel.type,
 				}),
-			);
-			batch.addPrepared(
 				RelationshipsByTarget.deleteByPk({
 					target_user_id: rel.target_user_id,
 					source_user_id: rel.source_user_id,
 					type: rel.type,
 				}),
-			);
-		}
-		for (const rel of relationshipsPointingToUser) {
-			batch.addPrepared(
-				Relationships.deleteByPk({
-					source_user_id: rel.source_user_id,
-					target_user_id: rel.target_user_id,
-					type: rel.type,
-				}),
-			);
-			batch.addPrepared(
-				RelationshipsByTarget.deleteByPk({
-					target_user_id: rel.target_user_id,
-					source_user_id: rel.source_user_id,
-					type: rel.type,
-				}),
-			);
-		}
-		await batch.execute();
+			]),
+		);
 	}
 
 	async deleteRelationship(sourceUserId: UserID, targetUserId: UserID, type: number): Promise<void> {

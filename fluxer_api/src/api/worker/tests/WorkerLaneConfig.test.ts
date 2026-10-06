@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	resolveCronSchedulerEnabled,
 	resolveWorkerLanes,
 	validateLaneCompleteness,
 	WORKER_LANES,
-} from '../WorkerLaneConfig';
+} from '@app/api/worker/WorkerLaneConfig';
+import {describe, expect, it} from 'vitest';
 
 describe('WorkerLaneConfig', () => {
 	it('returns all lanes in all_lanes mode', () => {
@@ -61,16 +61,21 @@ describe('WorkerLaneConfig', () => {
 		expect(embedLane[0]!.name).toBe('unfurl');
 		expect(embedLane[0]!.taskTypes).toEqual(['extractEmbeds']);
 	});
-	it('keeps the retired scheduled message subject on the lifecycle lane only', () => {
+	it('keeps each retired subject on the lane that used to run it', () => {
 		const lanes = resolveWorkerLanes({
 			mode: 'all_lanes',
 			laneConcurrencyOverrides: {},
 		});
-		const lifecycleLane = lanes.find((lane) => lane.name === 'lifecycle');
-		expect(lifecycleLane?.retiredTaskTypes).toEqual(['sendScheduledMessage']);
-		expect(lifecycleLane?.taskTypes).not.toContain('sendScheduledMessage');
-		for (const lane of lanes.filter((lane) => lane.name !== 'lifecycle')) {
-			expect(lane.retiredTaskTypes).toEqual([]);
+		const retired = Object.fromEntries(lanes.map((lane) => [lane.name, lane.retiredTaskTypes]));
+		expect(retired).toEqual({
+			realtime: [],
+			unfurl: [],
+			lifecycle: ['sendScheduledMessage'],
+			batch: [],
+			crosspost: [],
+		});
+		for (const lane of lanes) {
+			for (const task of lane.retiredTaskTypes) expect(lane.taskTypes).not.toContain(task);
 		}
 	});
 	it('never claims a retired subject from a single_task lane', () => {

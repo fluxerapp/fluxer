@@ -1,23 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import type {UserDeletionEligibilityService} from '@app/api/user/services/UserDeletionEligibilityService';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {TestEmailService} from '@pkgs/email/src/TestEmailService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import type {KVActivityTracker} from '../../infrastructure/KVActivityTracker';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import {reschedulePendingDeletion} from '../../user/services/PendingDeletionCoordinator';
-import type {UserDeletionEligibilityService} from '../../user/services/UserDeletionEligibilityService';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const BATCH_SIZE = 100;
 const USER_PROCESSING_CONCURRENCY = 8;
@@ -31,20 +35,19 @@ interface InactivityCheckResult {
 async function scheduleDeletion(
 	userRepository: UserRepository,
 	deletionQueueService: KVAccountDeletionQueueService,
+	gatewayService: IGatewayService,
 	user: User,
 	userId: UserID,
 ): Promise<void> {
 	const gracePeriodMs = Config.deletionGracePeriodHours * ms('1 hour');
 	const pendingDeletionAt = new Date(Date.now() + gracePeriodMs);
-	await userRepository.patchUpsert(
-		userId,
-		{
-			flags: user.flags | UserFlags.SELF_DELETED,
-			pending_deletion_at: pendingDeletionAt,
-			deletion_reason_code: DeletionReasons.INACTIVITY,
-		},
-		user.toRow(),
-	);
+	await userRepository.updateDeletionSchedule(user, {
+		flags: user.flags | UserFlags.SELF_DELETED,
+		pending_deletion_at: pendingDeletionAt,
+		deletion_reason_code: DeletionReasons.INACTIVITY,
+		deletion_scheduled_by: SYSTEM_USER_ID,
+		deletion_scheduled_at: new Date(),
+	});
 	await reschedulePendingDeletion({
 		userId,
 		currentPendingDeletionAt: user.pendingDeletionAt,
@@ -53,12 +56,14 @@ async function scheduleDeletion(
 		userRepository,
 		deletionQueue: deletionQueueService,
 	});
+	await revokeAllAuthSessions({users: userRepository, gateway: gatewayService}, userId);
 	Logger.debug({userId, pendingDeletionAt, reason: 'INACTIVITY'}, 'Scheduled inactive user for deletion');
 }
 
 interface ProcessUserDeps {
 	userRepository: UserRepository;
 	deletionQueueService: KVAccountDeletionQueueService;
+	gatewayService: IGatewayService;
 	emailService: IEmailService;
 	isEmailEnabled: () => Promise<boolean>;
 	activityTracker: KVActivityTracker;
@@ -86,6 +91,7 @@ async function processUser(
 	const {
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		isEmailEnabled,
 		activityTracker,
@@ -122,7 +128,7 @@ async function processUser(
 		const hasGracePeriodExpired = await deletionEligibilityService.hasWarningGracePeriodExpired(userId);
 		if (hasGracePeriodExpired) {
 			Logger.debug({userId}, 'Warning grace period expired, scheduling deletion');
-			await scheduleDeletion(userRepository, deletionQueueService, user, userId);
+			await scheduleDeletion(userRepository, deletionQueueService, gatewayService, user, userId);
 			result.deletionsScheduled++;
 		} else {
 			Logger.debug({userId}, 'Warning grace period still active, skipping (idempotency check)');
@@ -141,7 +147,7 @@ async function processUser(
 			user.email,
 			user.username,
 			deletionDate,
-			lastActivity || new Date(0),
+			lastActivity ?? snowflakeToDate(BigInt(userId)),
 			user.locale,
 		);
 		if (sent) {
@@ -159,6 +165,7 @@ interface ProcessInactivityDeletionsDeps {
 	kvClient: IKVProvider;
 	userRepository: UserRepository;
 	deletionQueueService: KVAccountDeletionQueueService;
+	gatewayService: IGatewayService;
 	emailService: IEmailService;
 	isEmailEnabled: () => Promise<boolean>;
 	activityTracker: KVActivityTracker;
@@ -171,6 +178,7 @@ export async function processInactivityDeletionsCore(
 	const {
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		isEmailEnabled,
 		activityTracker,
@@ -190,6 +198,7 @@ export async function processInactivityDeletionsCore(
 	const userDeps: ProcessUserDeps = {
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		isEmailEnabled,
 		activityTracker,
@@ -197,12 +206,11 @@ export async function processInactivityDeletionsCore(
 	};
 	let pageState: string | null = null;
 	let processedUsers = 0;
-	while (true) {
+	do {
 		const page = await userRepository.scanAllUsersPage(BATCH_SIZE, pageState);
+		pageState = page.pageState;
 		const users = page.users;
-		if (users.length === 0) {
-			break;
-		}
+		if (users.length === 0) continue;
 		const pageActivities = await loadPageActivities(activityTracker, users);
 		await mapWithConcurrency(users, USER_PROCESSING_CONCURRENCY, async (user) => {
 			try {
@@ -213,17 +221,13 @@ export async function processInactivityDeletionsCore(
 			}
 		});
 		processedUsers += users.length;
-		pageState = page.pageState;
 		if (processedUsers % 1000 === 0) {
 			Logger.debug(
 				{processedUsers, warningsSent: result.warningsSent, deletionsScheduled: result.deletionsScheduled},
 				'Inactivity deletion progress',
 			);
 		}
-		if (!pageState) {
-			break;
-		}
-	}
+	} while (pageState);
 	Logger.info(
 		{
 			processedUsers,
@@ -242,6 +246,7 @@ const processInactivityDeletions: WorkerTaskHandler = async (_payload, helpers) 
 		kvClient,
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		instanceConfigRepository,
 		activityTracker,
@@ -251,6 +256,7 @@ const processInactivityDeletions: WorkerTaskHandler = async (_payload, helpers) 
 		kvClient,
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		isEmailEnabled: () => instanceConfigRepository.isEmailEnabled(),
 		activityTracker,

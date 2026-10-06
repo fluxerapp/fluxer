@@ -14,19 +14,19 @@ import type {
 	VirtmicNode,
 	VirtmicRoutingGraph,
 } from '@electron/common/Types';
+import {buildFluxerAudioExcludePatterns, isKnownFluxerAudioProcessPid} from '@electron/main/FluxerAudioIdentity';
 import {getNativeAudioMode} from '@electron/main/LaunchOptions';
-import {ipcMain} from 'electron';
-import {buildFluxerAudioExcludePatterns, isKnownFluxerAudioProcessPid} from './FluxerAudioIdentity';
-import {resolveVirtmicWindowPid} from './LinuxAudioCapture';
-import {parseWindowSourceToken as parseDesktopWindowSourceToken} from './LinuxAudioCaptureHelpers';
-import {getTccStatus} from './MacTcc';
+import {resolveVirtmicWindowPid} from '@electron/main/LinuxAudioCapture';
+import {parseWindowSourceToken as parseDesktopWindowSourceToken} from '@electron/main/LinuxAudioCaptureHelpers';
+import {getTccStatus} from '@electron/main/MacTcc';
 import {
 	audioFrameDebugDetails,
 	isValidAudioFrame,
 	isValidLinuxRule,
 	isValidTargetPid,
 	normalizeTimestampUs,
-} from './NativeAudioValidation';
+} from '@electron/main/NativeAudioValidation';
+import {ipcMain} from 'electron';
 
 const logger = createChildLogger('NativeAudio');
 const requireModule = createRequire(import.meta.url);

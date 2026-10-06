@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import {User} from '@app/api/models/User';
 import {describe, expect, it} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import {EMPTY_USER_ROW, type UserRow} from '../../database/types/UserTypes';
-import {User} from '../User';
 
 function createUserRow(overrides: Partial<UserRow> = {}): UserRow {
 	return {

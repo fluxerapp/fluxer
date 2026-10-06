@@ -1,23 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {CrosspostSourceService} from '@app/api/channel/services/message/CrosspostSourceService';
+import {isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {UnclaimedAccountCannotSendMessagesError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotSendMessagesError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import type {CrosspostSourceResponse} from '@fluxer/schema/src/domains/message/CrosspostSourceSchemas';
 import type {
 	BulkMessageFetchResponse,
 	MessageResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import type {ChannelID, MessageID, UserID} from '../../../BrandedTypes';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {User} from '../../../models/User';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import type {ChannelService} from '../ChannelService';
-import {isPersonalNotesChannel} from './MessageHelpers';
-import type {MessageResponseDataService} from './MessageResponseDataService';
 
 export class MessageRequestService {
 	constructor(
 		private readonly channelService: ChannelService,
 		private readonly responseDataService: MessageResponseDataService,
+		private readonly crosspostSourceService: CrosspostSourceService,
 	) {}
 
 	async listMessages(params: {
@@ -94,6 +98,16 @@ export class MessageRequestService {
 		return response;
 	}
 
+	async getCrosspostSource(params: {
+		userId: UserID;
+		channelId: ChannelID;
+		messageId: MessageID;
+		requestCache: RequestCache;
+	}): Promise<CrosspostSourceResponse> {
+		const message = await this.getMessage(params);
+		return this.crosspostSourceService.getSource(message);
+	}
+
 	async sendMessage(params: {
 		user: User;
 		channelId: ChannelID;
@@ -126,6 +140,26 @@ export class MessageRequestService {
 		});
 	}
 
+	async crosspostMessage(params: {
+		userId: UserID;
+		channelId: ChannelID;
+		messageId: MessageID;
+		requestCache: RequestCache;
+	}): Promise<MessageResponse> {
+		const {message, authChannel} = await this.channelService.messages.crosspost.crosspostMessage(params);
+		const access = await this.channelService.messages.retrieval.getResponseAccessContext({
+			userId: params.userId,
+			channelId: params.channelId,
+			messageId: message.id,
+			authChannel,
+		});
+		return this.responseDataService.buildMessage({
+			userId: params.userId,
+			message,
+			access,
+		});
+	}
+
 	async editMessage(params: {
 		userId: UserID;
 		channelId: ChannelID;
@@ -152,22 +186,4 @@ export class MessageRequestService {
 			access,
 		});
 	}
-}
-
-async function mapWithConcurrency<T, TResult>(
-	items: ReadonlyArray<T>,
-	concurrency: number,
-	mapper: (item: T, index: number) => Promise<TResult>,
-): Promise<Array<TResult>> {
-	const results = new Array<TResult>(items.length);
-	let nextIndex = 0;
-	async function worker(): Promise<void> {
-		for (;;) {
-			const index = nextIndex++;
-			if (index >= items.length) return;
-			results[index] = await mapper(items[index], index);
-		}
-	}
-	await Promise.all(Array.from({length: Math.min(concurrency, items.length)}, () => worker()));
-	return results;
 }

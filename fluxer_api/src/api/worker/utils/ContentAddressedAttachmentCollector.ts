@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import type {AttachmentID, ChannelID} from '../../BrandedTypes';
-import {makeAttachmentCdnKey} from '../../channel/services/message/MessageHelpers';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import {Logger} from '../../Logger';
-import {streamCdnAssetIfExists} from './AssetArchiveHelpers';
+import type {AttachmentID, ChannelID} from '@app/api/BrandedTypes';
+import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {ArchiveEntryWriter} from '@app/api/worker/utils/ArchiveFile';
+import {streamCdnAssetIfExists} from '@app/api/worker/utils/AssetArchiveHelpers';
 
 interface CollectedAttachment {
 	archivePath: string;
@@ -25,13 +26,9 @@ interface AttachmentManifestEntry {
 	size: number;
 }
 
-interface AttachmentArchiveWriter {
-	append(input: Buffer | NodeJS.ReadableStream | string, options: {name: string}): void;
-}
-
 interface CollectParams {
 	storageService: IStorageService;
-	archive: AttachmentArchiveWriter;
+	archive: ArchiveEntryWriter;
 	channelId: ChannelID;
 	attachmentId: AttachmentID | bigint;
 	filename: string;
@@ -44,6 +41,9 @@ export class ContentAddressedAttachmentCollector {
 		const {storageService, archive, channelId, attachmentId, filename} = params;
 		const storageKey = makeAttachmentCdnKey(channelId, attachmentId, filename);
 		const STREAM_THRESHOLD = 10 * 1024 * 1024;
+		const keyHash = crypto.createHash('sha256').update(storageKey).digest('hex');
+		const existingStream = this.hashIndex.get(keyHash);
+		if (existingStream) return {hash: keyHash, archivePath: existingStream.archivePath};
 		const streamed = await streamCdnAssetIfExists(storageService, storageKey);
 		if (!streamed) {
 			Logger.warn(
@@ -53,14 +53,8 @@ export class ContentAddressedAttachmentCollector {
 			return null;
 		}
 		if (streamed.contentLength > STREAM_THRESHOLD) {
-			const keyHash = crypto.createHash('sha256').update(storageKey).digest('hex');
-			const existing = this.hashIndex.get(keyHash);
-			if (existing) {
-				streamed.body.resume();
-				return {hash: keyHash, archivePath: existing.archivePath};
-			}
 			const archivePath = `attachments/${keyHash.slice(0, 16)}/${filename}`;
-			archive.append(streamed.body, {name: archivePath});
+			await archive.append(streamed.body, {name: archivePath});
 			this.hashIndex.set(keyHash, {archivePath, filename, size: streamed.contentLength});
 			return {hash: keyHash, archivePath};
 		}
@@ -75,7 +69,7 @@ export class ContentAddressedAttachmentCollector {
 			return {hash, archivePath: existing.archivePath};
 		}
 		const archivePath = `attachments/${hash.slice(0, 16)}/${filename}`;
-		archive.append(buffer, {name: archivePath});
+		await archive.append(buffer, {name: archivePath});
 		this.hashIndex.set(hash, {archivePath, filename, size: buffer.length});
 		return {hash, archivePath};
 	}

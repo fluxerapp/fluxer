@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {STICKERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
-import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	ACCESSIBILITY_DESCRIPTOR,
 	CALL_DESCRIPTOR,
@@ -26,7 +24,9 @@ import {
 	STRIKETHROUGH_DESCRIPTOR,
 	TEXT_TO_SPEECH_3_DESCRIPTOR,
 	TTS_DESCRIPTOR,
-} from './SharedDescriptors';
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {VOICE_CALL_DESCRIPTOR} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {msg} from '@lingui/core/macro';
 
 const CONTRAST_DESCRIPTOR = msg({
 	message: 'Contrast',
@@ -229,11 +229,11 @@ const CONTEXT_MENU_SHORTCUTS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const RIGHT_CLICK_MENU_DESCRIPTOR = msg({
-	message: 'Right click menu',
+	message: 'Right-click menu',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TEXTAREA_DESCRIPTOR = msg({
-	message: 'Textarea',
+	message: 'Text area',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MESSAGE_INPUT_DESCRIPTOR = msg({
@@ -245,7 +245,7 @@ const COMPOSER_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TEXTAREA_FOCUS_RING_DESCRIPTOR = msg({
-	message: 'Textarea focus ring',
+	message: 'Text area focus ring',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const ANIMATION_2_DESCRIPTOR = msg({
@@ -265,7 +265,7 @@ const AUTOPLAY_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const AUTO_PLAY_DESCRIPTOR = msg({
-	message: 'Auto play',
+	message: 'Autoplay',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MOTION_2_DESCRIPTOR = msg({

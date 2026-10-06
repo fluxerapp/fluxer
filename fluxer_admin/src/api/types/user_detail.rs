@@ -232,3 +232,9 @@ pub struct WebAuthnCredential {
 }
 
 pub type WebAuthnCredentialListResponse = Vec<WebAuthnCredential>;
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct PasswordResetLinkResponse {
+    pub url: String,
+    pub expires_at: String,
+}

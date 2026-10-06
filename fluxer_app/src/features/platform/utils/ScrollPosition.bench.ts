@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
-import {evaluateScrollPinning} from './ScrollPosition';
+import {evaluateScrollPinning} from '@app/features/platform/utils/ScrollPosition';
+import {test} from 'vitest';
 
 const SCROLL_METRICS = Array.from({length: 100_000}, (_value, index) => ({
 	scrollTop: (index * 37) % 200_000,
@@ -9,8 +9,8 @@ const SCROLL_METRICS = Array.from({length: 100_000}, (_value, index) => ({
 	offsetHeight: 800 + (index % 200),
 }));
 
-describe('ScrollPosition benchmarks', () => {
-	bench('evaluate 100k message-list scroll pinning states', () => {
+test('ScrollPosition benchmarks', async ({bench}) => {
+	await bench('evaluate 100k message-list scroll pinning states', () => {
 		let pinned = 0;
 		for (let index = 0; index < SCROLL_METRICS.length; index += 1) {
 			if (
@@ -23,5 +23,5 @@ describe('ScrollPosition benchmarks', () => {
 			}
 		}
 		(globalThis as {__scrollPositionBenchSink?: number}).__scrollPositionBenchSink = pinned;
-	});
+	}).run();
 });

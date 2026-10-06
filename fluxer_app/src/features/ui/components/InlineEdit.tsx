@@ -113,7 +113,7 @@ export const InlineEdit: React.FC<InlineEditProps> = observer((props) => {
 			setMode('editing');
 		}
 	};
-	const handleEditableInput: React.FormEventHandler<HTMLDivElement> = (e) => {
+	const handleEditableInput: React.InputEventHandler<HTMLDivElement> = (e) => {
 		const el = e.currentTarget;
 		const raw = el.textContent ?? '';
 		let next = sanitizeDraft(raw);

@@ -48,6 +48,9 @@ export function isNewMessageGroup(
 	if (currentMessage.type === MessageTypes.REPLY) {
 		return true;
 	}
+	if (currentMessage.isCrosspostCopy) {
+		return true;
+	}
 	const currentIsDisplaySystem =
 		currentMessage.type !== MessageTypes.DEFAULT && currentMessage.type !== MessageTypes.REPLY;
 	const prevIsDisplaySystem = prevMessage.type !== MessageTypes.DEFAULT && prevMessage.type !== MessageTypes.REPLY;

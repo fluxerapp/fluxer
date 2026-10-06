@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {z} from 'zod';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import {createChannelID, createGuildID, createUserID} from '../BrandedTypes';
 
 interface DMRoomContext {
 	readonly type: 'dm';
@@ -133,29 +133,4 @@ export function parseParticipantMetadataWithRaw(metadata: string): {
 
 export function isDMRoom(context: VoiceRoomContext): context is DMRoomContext {
 	return context.type === 'dm';
-}
-
-const PARTICIPANT_IDENTITY_PREFIX = 'user_';
-
-interface ParticipantIdentity {
-	readonly userId: UserID;
-	readonly connectionId: string;
-}
-
-export function parseParticipantIdentity(identity: string): ParticipantIdentity | null {
-	if (!identity.startsWith(PARTICIPANT_IDENTITY_PREFIX)) {
-		return null;
-	}
-	const parts = identity.split('_');
-	if (parts.length !== 3 || parts[0] !== 'user') {
-		return null;
-	}
-	try {
-		return {
-			userId: createUserID(BigInt(parts[1])),
-			connectionId: parts[2],
-		};
-	} catch {
-		return null;
-	}
 }

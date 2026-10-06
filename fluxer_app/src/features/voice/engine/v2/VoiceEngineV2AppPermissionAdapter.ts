@@ -22,7 +22,6 @@ import {
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
 import {asVoiceTrackSource, VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import {clearCameraVideoProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
-import {removeVoiceInputProcessor} from '@app/features/voice/utils/VoiceInputProcessor';
 import {getVoiceChannelPermissions, type VoiceChannelPermissions} from '@app/features/voice/utils/VoicePermissionUtils';
 import type {LocalAudioTrack, LocalVideoTrack, Room} from 'livekit-client';
 
@@ -30,7 +29,7 @@ export {
 	createVoiceEngineV2AppSystemPermissionAdapter,
 	VoiceEngineV2AppSystemPermissionAdapter,
 	type VoiceEngineV2SystemPermissionsApi,
-} from './VoiceEngineV2AppSystemPermissionAdapter';
+} from '@app/features/voice/engine/v2/VoiceEngineV2AppSystemPermissionAdapter';
 
 const logger = new Logger('VoiceEngineV2AppPermissionAdapter');
 
@@ -322,7 +321,6 @@ class VoiceEngineV2AppPermissionAdapter extends Store {
 						.map((pub) => pub.track)
 						.filter((track): track is LocalAudioTrack => Boolean(track));
 					if (tracks.length > 0) {
-						await removeVoiceInputProcessor();
 						await Promise.allSettled(tracks.map((track) => localParticipant.unpublishTrack(track)));
 					}
 					break;

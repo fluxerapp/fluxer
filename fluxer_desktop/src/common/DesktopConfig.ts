@@ -3,7 +3,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import {CANARY_APP_URL, STABLE_APP_URL} from '@electron/common/Constants';
+import {
+	CANARY_APP_URL,
+	CANARY_MIGRATED_APP_ORIGIN,
+	MIGRATED_APP_ENTRY_PATH,
+	STABLE_APP_URL,
+	STABLE_MIGRATED_APP_ORIGIN,
+} from '@electron/common/Constants';
+import {
+	GLOBAL_SHORTCUT_DESCRIPTION_MAX_LENGTH,
+	type GlobalShortcutAction,
+	isGlobalShortcutAction,
+} from '@electron/common/GlobalShortcutActions';
 import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
 import log from 'electron-log';
 
@@ -18,6 +29,30 @@ interface DesktopConfig extends Record<string, unknown> {
 	window_behavior?: PersistedDesktopWindowBehaviorSettings;
 	troubleshooting?: PersistedDesktopTroubleshootingSettings;
 	theme_allowed_local_files?: Array<string>;
+	app_origin?: string;
+	global_shortcuts?: PersistedGlobalShortcutsSettings;
+}
+
+export type GlobalShortcutsPortalConsent = 'unset' | 'granted' | 'declined';
+
+export interface PersistedGlobalShortcutAction {
+	action: GlobalShortcutAction;
+	description: string;
+	preferredTrigger: string | null;
+}
+
+interface PersistedGlobalShortcutsSettings {
+	portal_consent?: GlobalShortcutsPortalConsent;
+	direct_input_enabled?: boolean;
+	migrated?: boolean;
+	last_actions?: Array<PersistedGlobalShortcutAction>;
+}
+
+export interface GlobalShortcutsSettings {
+	portalConsent: GlobalShortcutsPortalConsent;
+	directInputEnabled: boolean;
+	migrated: boolean;
+	lastActions: Array<PersistedGlobalShortcutAction>;
 }
 
 export type ChromiumSwitchesSetting = ReadonlyArray<string> | Record<string, unknown>;
@@ -27,6 +62,7 @@ interface PersistedDesktopWindowBehaviorSettings {
 	useNativeTitleBar?: boolean;
 	minimizeToTrayV2?: boolean;
 	closeToTrayV2?: boolean;
+	startMinimized?: boolean;
 	rememberWindowState?: boolean;
 	allowTransparency?: boolean;
 	smoothScrolling?: boolean;
@@ -52,6 +88,7 @@ function getDefaultDesktopWindowBehaviorSettings(): DesktopWindowBehaviorSetting
 		showTrayIcon: true,
 		minimizeToTray: false,
 		closeToTray: true,
+		startMinimized: false,
 		useNativeTitleBar: false,
 		activeUseNativeTitleBar: false,
 		rememberWindowState: true,
@@ -93,6 +130,9 @@ function sanitizePersistedDesktopWindowBehaviorSettings(
 	if (typeof value.middleClickAutoscroll === 'boolean') {
 		settings.middleClickAutoscroll = value.middleClickAutoscroll;
 	}
+	if (typeof value.startMinimized === 'boolean') {
+		settings.startMinimized = value.startMinimized;
+	}
 	const minimizeToTrayV2 = value[MINIMIZE_TO_TRAY_STORAGE_KEY_V2];
 	if (typeof minimizeToTrayV2 === 'boolean') {
 		settings.minimizeToTrayV2 = minimizeToTrayV2;
@@ -133,12 +173,98 @@ function sanitizeChromiumSwitchesSetting(value: unknown): ChromiumSwitchesSettin
 	return undefined;
 }
 
+const PREFERRED_TRIGGER_MAX_LENGTH = 100;
+
+function sanitizePersistedGlobalShortcutActions(value: unknown): Array<PersistedGlobalShortcutAction> | undefined {
+	if (!Array.isArray(value)) {
+		return undefined;
+	}
+	const actions: Array<PersistedGlobalShortcutAction> = [];
+	const seen = new Set<string>();
+	for (const item of value) {
+		if (!isRecord(item) || !isGlobalShortcutAction(item.action) || seen.has(item.action)) continue;
+		if (typeof item.description !== 'string') continue;
+		const description = item.description.trim();
+		if (description.length === 0 || description.length > GLOBAL_SHORTCUT_DESCRIPTION_MAX_LENGTH) continue;
+		const preferredTrigger =
+			typeof item.preferredTrigger === 'string' &&
+			item.preferredTrigger.length > 0 &&
+			item.preferredTrigger.length <= PREFERRED_TRIGGER_MAX_LENGTH
+				? item.preferredTrigger
+				: null;
+		seen.add(item.action);
+		actions.push({action: item.action, description, preferredTrigger});
+	}
+	return actions.length > 0 ? actions : undefined;
+}
+
+export function sanitizePersistedGlobalShortcutsSettings(value: unknown): PersistedGlobalShortcutsSettings | undefined {
+	if (!isRecord(value)) {
+		return undefined;
+	}
+	const settings: PersistedGlobalShortcutsSettings = {};
+	if (value.portal_consent === 'unset' || value.portal_consent === 'granted' || value.portal_consent === 'declined') {
+		settings.portal_consent = value.portal_consent;
+	}
+	if (typeof value.direct_input_enabled === 'boolean') {
+		settings.direct_input_enabled = value.direct_input_enabled;
+	}
+	if (typeof value.migrated === 'boolean') {
+		settings.migrated = value.migrated;
+	}
+	const lastActions = sanitizePersistedGlobalShortcutActions(value.last_actions);
+	if (lastActions) {
+		settings.last_actions = lastActions;
+	}
+	return Object.keys(settings).length > 0 ? settings : undefined;
+}
+
+function normalizeGlobalShortcutsSettings(settings?: PersistedGlobalShortcutsSettings): GlobalShortcutsSettings {
+	return {
+		portalConsent: settings?.portal_consent ?? 'unset',
+		directInputEnabled: settings?.direct_input_enabled ?? false,
+		migrated: settings?.migrated ?? false,
+		lastActions: settings?.last_actions ? settings.last_actions.map((entry) => ({...entry})) : [],
+	};
+}
+
+function serializeGlobalShortcutsSettings(settings: GlobalShortcutsSettings): PersistedGlobalShortcutsSettings {
+	return {
+		portal_consent: settings.portalConsent,
+		direct_input_enabled: settings.directInputEnabled,
+		migrated: settings.migrated,
+		...(settings.lastActions.length > 0 ? {last_actions: settings.lastActions.map((entry) => ({...entry}))} : {}),
+	};
+}
+
+function getLegacyAppUrl(): string {
+	return BUILD_CHANNEL === 'canary' ? CANARY_APP_URL : STABLE_APP_URL;
+}
+
+function getMigratedAppOrigin(): string {
+	return BUILD_CHANNEL === 'canary' ? CANARY_MIGRATED_APP_ORIGIN : STABLE_MIGRATED_APP_ORIGIN;
+}
+
+export function getOfficialAppOrigins(): Array<string> {
+	return [new URL(getLegacyAppUrl()).origin, getMigratedAppOrigin()];
+}
+
+function sanitizeAppOrigin(value: unknown): string | undefined {
+	return typeof value === 'string' && getOfficialAppOrigins().includes(value) ? value : undefined;
+}
+
 function sanitizeDesktopConfig(value: unknown): DesktopConfig {
 	if (!isRecord(value)) {
 		return {};
 	}
 	const nextConfig: DesktopConfig = {...value};
 	delete nextConfig.app_url;
+	const appOrigin = sanitizeAppOrigin(value.app_origin);
+	if (appOrigin) {
+		nextConfig.app_origin = appOrigin;
+	} else {
+		delete nextConfig.app_origin;
+	}
 	const chromiumSwitches = sanitizeChromiumSwitchesSetting(value.chromiumSwitches);
 	if (chromiumSwitches) {
 		nextConfig.chromiumSwitches = chromiumSwitches;
@@ -156,6 +282,12 @@ function sanitizeDesktopConfig(value: unknown): DesktopConfig {
 		nextConfig.troubleshooting = troubleshooting;
 	} else {
 		delete nextConfig.troubleshooting;
+	}
+	const globalShortcuts = sanitizePersistedGlobalShortcutsSettings(value.global_shortcuts);
+	if (globalShortcuts) {
+		nextConfig.global_shortcuts = globalShortcuts;
+	} else {
+		delete nextConfig.global_shortcuts;
 	}
 	if (Array.isArray(value.theme_allowed_local_files)) {
 		nextConfig.theme_allowed_local_files = value.theme_allowed_local_files.filter(
@@ -189,6 +321,10 @@ function normalizeDesktopWindowBehaviorSettings(
 				: typeof normalizedSettings?.closeToTrayV2 === 'boolean'
 					? normalizedSettings.closeToTrayV2
 					: defaults.closeToTray,
+		startMinimized:
+			typeof normalizedSettings?.startMinimized === 'boolean'
+				? normalizedSettings.startMinimized
+				: defaults.startMinimized,
 		useNativeTitleBar:
 			typeof normalizedSettings?.useNativeTitleBar === 'boolean'
 				? normalizedSettings.useNativeTitleBar
@@ -237,6 +373,7 @@ function normalizeDesktopWindowBehaviorSettings(
 	if (!normalized.showTrayIcon) {
 		normalized.minimizeToTray = false;
 		normalized.closeToTray = false;
+		normalized.startMinimized = false;
 	}
 	return normalized;
 }
@@ -251,6 +388,7 @@ function serializeDesktopWindowBehaviorSettings(
 		allowTransparency: settings.allowTransparency,
 		smoothScrolling: settings.smoothScrolling,
 		middleClickAutoscroll: settings.middleClickAutoscroll,
+		startMinimized: settings.startMinimized,
 		[MINIMIZE_TO_TRAY_STORAGE_KEY_V2]: settings.minimizeToTray,
 		[CLOSE_TO_TRAY_STORAGE_KEY_V2]: settings.closeToTray,
 	};
@@ -311,7 +449,29 @@ export function getAppUrl(): string {
 	if (runtimeAppUrlOverride) {
 		return runtimeAppUrlOverride;
 	}
-	return BUILD_CHANNEL === 'canary' ? CANARY_APP_URL : STABLE_APP_URL;
+	const migratedAppOrigin = getMigratedAppOrigin();
+	if (config.app_origin === migratedAppOrigin) {
+		return `${migratedAppOrigin}${MIGRATED_APP_ENTRY_PATH}`;
+	}
+	return getLegacyAppUrl();
+}
+
+export function getAppUrlFallback(url: string): string | null {
+	try {
+		return new URL(url).origin === getMigratedAppOrigin() ? getLegacyAppUrl() : null;
+	} catch {
+		return null;
+	}
+}
+
+export function setAppOrigin(origin: string): boolean {
+	const appOrigin = sanitizeAppOrigin(origin);
+	if (appOrigin === undefined) {
+		return false;
+	}
+	config.app_origin = appOrigin;
+	saveDesktopConfig();
+	return true;
 }
 
 export function getCustomAppUrl(): string | null {
@@ -358,6 +518,19 @@ export function setDesktopTroubleshootingSettings(
 	);
 	saveDesktopConfig();
 	return getDesktopTroubleshootingSettings();
+}
+
+export function getGlobalShortcutsSettings(): GlobalShortcutsSettings {
+	return normalizeGlobalShortcutsSettings(config.global_shortcuts);
+}
+
+export function setGlobalShortcutsSettings(settings: Partial<GlobalShortcutsSettings>): GlobalShortcutsSettings {
+	config.global_shortcuts = serializeGlobalShortcutsSettings({
+		...getGlobalShortcutsSettings(),
+		...settings,
+	});
+	saveDesktopConfig();
+	return getGlobalShortcutsSettings();
 }
 
 export function getAllowedThemeLocalFiles(): Array<string> {

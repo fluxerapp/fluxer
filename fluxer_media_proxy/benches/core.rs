@@ -109,7 +109,7 @@ fn bench_transform_cache_key(c: &mut Criterion) {
 
 fn bench_thumbhash(c: &mut Criterion) {
     let mut pixels = vec![0u8; 64 * 64 * 4];
-    for (i, px) in pixels.chunks_exact_mut(4).enumerate() {
+    for (i, px) in pixels.as_chunks_mut::<4>().0.iter_mut().enumerate() {
         px[0] = (i % 64) as u8;
         px[1] = (i / 64) as u8;
         px[2] = 128;

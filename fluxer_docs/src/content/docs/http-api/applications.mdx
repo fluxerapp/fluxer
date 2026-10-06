@@ -10,17 +10,17 @@ An application is an OAuth2 client owned by one user account, and every bot acco
 
 ## Access rules
 
-Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`. Fluxer accepts an account with an outstanding required action everywhere here.
+Every route except [Get public application](#get-public-application) requires a credential. A user-only route rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`.
 
-The three sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid proof for the authenticated account satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) on its own, and Fluxer echoes it back in the response header. Fluxer issues no token to an account with no authenticator, so that account proves sudo mode with `password` in the body.
+The sudo-gated routes read `X-Fluxer-Sudo-Mode-JWT`. A valid sudo token in that header, issued to the authenticated account, satisfies [sudo mode](/http-api/users/mfa/#sudo-mode) with no body proof. Fluxer returns the same token in the `X-Fluxer-Sudo-Mode-JWT` response header. Fluxer issues no token to an account holding neither a TOTP secret nor a registered WebAuthn credential, so that account proves sudo mode with `password` in the body.
 
 :::caution[Credentials are shown once]
-A client secret is returned only by [Create application](#create-application) and [Reset client secret](#reset-client-secret), and a [bot token](/authentication/#token-formats) only by [Create application](#create-application) and [Reset bot token](#reset-bot-token). Both are stored as one-way hashes.
+A client secret is returned only by [Create application](#create-application) and [Reset client secret](#reset-client-secret), and a [bot token](/authentication/#token-formats) only by [Create application](#create-application) and [Reset bot token](#reset-bot-token).
 :::
 
 ## Rate limits
 
-A bucket name ending in `::client_id` still counts one allowance for the authenticated user across every application that user owns. [List owned applications](#list-owned-applications), [Get current application](#get-current-application), [Get application](#get-application), [Get public application](#get-public-application), and [List OAuth2 authorisations](/http-api/oauth2/#list-oauth2-authorisations) all draw on one `oauth_dev:clients:list` allowance. [Get bot application](#get-bot-application) draws on the same bucket, keyed by the bot account the token names. That allowance is separate from the owner's.
+A bucket whose name ends in `::client_id` gives the authenticated user one allowance. Requests for every application that user owns count against that one allowance. [List owned applications](#list-owned-applications), [Get current application](#get-current-application), [Get application](#get-application), [Get public application](#get-public-application), and [List OAuth2 authorisations](/http-api/oauth2/#list-oauth2-authorisations) all draw on one `oauth_dev:clients:list` allowance. [Get bot application](#get-bot-application) draws on the same bucket, keyed by the bot account the token names. That allowance is separate from the owner's.
 
 ## Application object
 
@@ -42,7 +42,7 @@ The application record as its owner sees it.
 
 <sup>2</sup> Present only in the response to [Create application](#create-application) and [Reset client secret](#reset-client-secret), which are the only operations that issue one
 
-<sup>3</sup> Present only when the operation resolved the bot account, which excludes [Reset client secret](#reset-client-secret), an application that owns no bot account, and an application whose bot account record can no longer be read
+<sup>3</sup> Present in every response except [Reset client secret](#reset-client-secret), and absent for an application that owns no bot account or whose bot account record can no longer be read
 
 ### Example
 
@@ -83,13 +83,13 @@ The bot account an application owns. [Create application](#create-application) c
 
 <sup>4</sup> Declared optional by the schema and always emitted, except on the [public application](#public-application-object) object, which omits both. `authenticator_types` is an empty array when the account has no authenticator, and `mfa_enabled` is true exactly when that array is not empty
 
-<sup>5</sup> The bitfield is the account's [public user flags](/http-api/users/#public-user-flags), and [Update bot profile](#update-bot-profile) sets only the two [bot flags](#bot-flags) in it
+<sup>5</sup> The bitfield is the account's [public user flags](/http-api/users/#public-user-flags), and [Update bot profile](#update-bot-profile) sets only the [bot flags](#bot-flags) in it
 
 :::note[Bot token format]
 A bot token is the application ID, a full stop, and an opaque secret of 32 random bytes encoded as base64url.
 :::
 
-Fluxer identifies the application from the token itself and rejects an invalid secret without saying whether the application exists. The built-in `Fluxer Admin` application owns no bot account, so a token bearing its ID is always rejected.
+An invalid bot token returns the same error whether or not its application exists.
 
 ## Public application object
 
@@ -109,7 +109,7 @@ The application as any caller sees it, including a caller that presents no crede
 | bot<sup>4</sup> | ?[application bot](#application-bot-object) object | The bot account the application owns |
 | current_user?<sup>5</sup> | ?[partial user](/http-api/users/#partial-user-object) object | The requesting account |
 
-<sup>1</sup> Null when the application has no bot account or that account has no avatar, and the stored hash is reported unchanged
+<sup>1</sup> Null when the application has no bot account or that account has no avatar. Otherwise it is the bot account's stored avatar hash, and an animated hash keeps its `a_` prefix
 
 <sup>2</sup> Contains `bot` when the application owns a bot account, and is otherwise empty
 
@@ -121,7 +121,7 @@ The application as any caller sees it, including a caller that presents no crede
 
 ## Current bot application object
 
-The application as the bot token that application issued sees it.
+The application that issued the requesting bot token, as returned to that token.
 
 ### Structure
 
@@ -140,7 +140,7 @@ The application as the bot token that application issued sees it.
 
 <sup>1</sup> Read from the bot account, so it changes with [Update bot profile](#update-bot-profile), and it is null when the application has no bot account
 
-<sup>2</sup> Fluxer stores no application signing key
+<sup>2</sup> Always 64 `0` characters, because no application signing key is available
 
 <sup>3</sup> The request fails with 401 `INVALID_TOKEN` when the owning account no longer exists
 
@@ -150,7 +150,7 @@ The application as the bot token that application issued sees it.
 
 ## Bot profile object
 
-The bot account's profile fields after an update. [Update bot profile](#update-bot-profile) is the only operation that returns this shape, and it has no bot token.
+The bot account's profile fields after an update. [Update bot profile](#update-bot-profile) is the only operation that returns this shape. The object has no `token` field.
 
 ### Structure
 
@@ -285,18 +285,15 @@ This representation exposes the full registered redirect URI list and the bot pr
 
 Creates an application together with its bot account. Returns the [application](#application-object) object with the initial client secret and bot token.
 
-An unclaimed account cannot create an application. An account is unclaimed while it holds no password credential, is not a bot, and does not have the single sign-on trait.
+An unclaimed account cannot create an application. An account is unclaimed while it holds no password credential, is not a bot, and has not been linked to a single sign-on identity.
 
 ### Request headers
 
 | Field | Type | Description |
 | --- | --- | --- |
-| X-Captcha-Token?<sup>1</sup> | string | The CAPTCHA proof for the request |
-| X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider to verify against, either `hcaptcha` or `turnstile` |
+| X-Captcha-Token?<sup>1</sup> | string | The solved ALTCHA challenge, see [CAPTCHA handling](/topics/captcha/) |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Fluxer skips verification when CAPTCHA is disabled for the instance, when the account has the CAPTCHA exemption flag, or when the caller's contact has the CAPTCHA exemption capability, as described by [CAPTCHA handling](/topics/captcha/)
-
-<sup>2</sup> Fluxer verifies against the instance's configured provider when the header is absent
+<sup>1</sup> A missing token returns 400 `CAPTCHA_REQUIRED` and a rejected token returns 400 `INVALID_CAPTCHA`, each with a new challenge. Fluxer skips verification when the check is off for the instance, when the account has the CAPTCHA exemption flag, or when the caller's email address is on an exempt domain
 
 ### JSON body
 
@@ -359,7 +356,7 @@ Returns one [application](#application-object) object. Only the owner can read i
 | 403 | [error response](/http-api/#error-response) | The credential is a bot or bearer token, or the caller does not own the application (`ACCESS_DENIED`) |
 | 404 | [error response](/http-api/#error-response) | The application does not exist (`UNKNOWN_APPLICATION`) |
 
-Fluxer reports existence before ownership, so an application the caller does not own returns 403 `ACCESS_DENIED` and never 404.
+An existing application owned by another account returns 403 `ACCESS_DENIED`.
 
 ### Rate limit
 
@@ -405,7 +402,7 @@ Removing a redirect URI takes effect immediately for new authorisation requests.
 
 ### Side effects
 
-The submitted fields replace the matching application configuration. Neither credential is rotated, and no Gateway Dispatch is emitted.
+Each submitted field replaces the stored value of that field. Neither credential is rotated, and no Gateway Dispatch is emitted.
 
 ### Rate limit
 
@@ -442,9 +439,9 @@ Updates the bot account an application owns and returns the resulting [bot profi
 
 <sup>4</sup> Rejected with 403 `CONTENT_BLOCKED` when content moderation or the profile substring blocklist blocks the value
 
-<sup>5</sup> Fluxer reads only the two [bot flags](#bot-flags) from the supplied bitfield and sets or clears each to match. It ignores every other bit
+<sup>5</sup> Fluxer reads only the [bot flags](#bot-flags) from the supplied bitfield and sets or clears each to match. It ignores every other bit
 
-Fluxer checks the decoded bytes of `avatar` and `banner` against the instance's avatar byte ceiling, which applies to both fields and defaults to 10 MiB. Each image also passes the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are never checked.
+Fluxer checks the decoded bytes of `avatar` and `banner` against the instance's avatar byte ceiling, which applies to both fields and defaults to 10 MiB. An image in a format the field does not accept, an animated image on a field that accepts no animation, and any animated AVIF return the field code `INVALID_IMAGE_FORMAT`. Pixel dimensions are never checked.
 
 ### Response
 
@@ -586,11 +583,9 @@ A 204 response means the removal has finished. Repeating the request afterwards 
 
 ### Side effects
 
-Fluxer reassigns every message the bot authored to a newly created placeholder account with the deleted-account representation. It creates that placeholder only when the bot authored at least one message. The bot's tag is released for reuse.
+The bot's messages remain attributed to a deleted account, and its tag becomes available for reuse. The bot is removed from every guild and its profile is anonymised as `DeletedUser#0000`, with the global name `Deleted User`.
 
-The bot is removed from every guild it is a member of. The bot account record is retained and rewritten to the deleted-account representation. That representation has the username `DeletedUser`, the global name `Deleted User`, and the discriminator `0000`. It has no email, no password, no authenticators, no avatar, banner, biography, pronouns, accent colour, timezone, or date of birth, and only the deleted flag is set. Fluxer then deletes the application record.
-
-The bot token and the client secret stop authenticating as soon as the application record is gone. No further token exchange, refresh, introspection, or revocation succeeds for the application. Access and refresh tokens already issued to it are not deleted, and an outstanding access token keeps authenticating a scope-gated route until it expires. [Get current OAuth2 authorisation](/http-api/oauth2/#get-current-oauth2-authorisation) and [Get OAuth2 user information](/http-api/oauth2/#get-oauth2-user-information) resolve the application as well, so both return 401 `INVALID_TOKEN` for that token.
+The bot token and client secret stop working. Token exchange, refresh, introspection, and revocation also fail. An existing access token can still authenticate a scope-gated route until it expires, but [Get current OAuth2 authorisation](/http-api/oauth2/#get-current-oauth2-authorisation) and [Get OAuth2 user information](/http-api/oauth2/#get-oauth2-user-information) return 401 `INVALID_TOKEN`.
 
 ### Rate limit
 

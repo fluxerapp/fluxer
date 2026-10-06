@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EntranceSoundID, UserID} from '../BrandedTypes';
-import type {UserEntranceSoundRow, UserEntranceSoundSelectionRow} from '../database/types/UserTypes';
+import type {EntranceSoundID, UserID} from '@app/api/BrandedTypes';
+import type {UserEntranceSoundRow, UserEntranceSoundSelectionRow} from '@app/api/database/types/UserTypes';
 
 export class EntranceSound {
 	readonly userId: UserID;

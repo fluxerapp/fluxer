@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import deviceHotswapFixtureJson from '../../fixtures/event_logs/device_hotswap.json';
-import localMediaFixtureJson from '../../fixtures/event_logs/local_media.json';
-import microphoneFailureRecoveryFixtureJson from '../../fixtures/event_logs/microphone_failure_recovery.json';
-import permissionsRecoveryFixtureJson from '../../fixtures/event_logs/permissions_recovery.json';
-import pttPtmFixtureJson from '../../fixtures/event_logs/ptt_ptm.json';
-import type {VoiceEngineV2Command, VoiceEngineV2Event} from '../protocol';
-import {transitionVoiceEngineV2} from './reducer';
+import deviceHotswapFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/device_hotswap.json';
+import localMediaFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/local_media.json';
+import microphoneFailureRecoveryFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/microphone_failure_recovery.json';
+import permissionsRecoveryFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/permissions_recovery.json';
+import pttPtmFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/ptt_ptm.json';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
-} from './state';
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command, VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol';
+import {describe, expect, it} from 'vitest';
 
 interface LocalMediaSnapshotExpectation {
 	nextOperationId?: number;

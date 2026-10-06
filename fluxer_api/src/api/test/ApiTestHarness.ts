@@ -1,21 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import {createAPIApp} from '../App';
-import {Config} from '../Config';
-import {resetApiServicesForTesting} from '../CreateApiContext';
+import {createAPIApp} from '@app/api/App';
+import {Config} from '@app/api/Config';
+import {resetApiServicesForTesting} from '@app/api/CreateApiContext';
 import {
 	resetCassandraQueryExecutorForTesting,
 	setCassandraQueryExecutorForTesting,
-} from '../database/CassandraQueryExecution';
-import {NullSearchProvider} from '../infrastructure/NullSearchProvider';
-import {resetAbuseTrackingForTests} from '../middleware/AbusiveIpAutoBanner';
-import {ipBanCache} from '../middleware/IpBanMiddleware';
-import {
-	setInjectedAccountPolicyEvaluator,
-	setInjectedIpInfoService,
-	setInjectedRegistrationRiskEvaluator,
-} from '../middleware/ServiceMiddleware';
+} from '@app/api/database/CassandraQueryExecution';
+import {resetSharedListsForTests} from '@app/api/infrastructure/activity/SharedLists';
+import {NullSearchProvider} from '@app/api/infrastructure/NullSearchProvider';
+import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
 import {
 	setInjectedBlueskyOAuthService,
 	setInjectedGatewayService,
@@ -23,28 +17,27 @@ import {
 	setInjectedMediaService,
 	setInjectedSearchProviderService,
 	setInjectedWorkerService,
-} from '../middleware/ServiceRegistry';
+} from '@app/api/middleware/ServiceRegistry';
 import {
 	getInstanceConfigRepository,
 	setInjectedStorageService,
 	setInjectedUnfurlerService,
-} from '../middleware/ServiceSingletons';
-import {torExitListCache} from '../middleware/TorExitListCache';
-import type {ISearchProvider} from '../search/ISearchProvider';
-import {drainSearchTasks} from '../search/SearchTaskTracker';
-import type {HonoApp} from '../types/HonoEnv';
-import {createCurrentBehaviorTestAccountPolicyEvaluator} from './AccountPolicyTestEvaluator';
-import {InMemoryCassandraQueryExecutor} from './InMemoryCassandraQueryExecutor';
-import {MockBlueskyOAuthService} from './mocks/MockBlueskyOAuthService';
-import {MockKVProvider} from './mocks/MockKVProvider';
-import {MockStorageService} from './mocks/MockStorageService';
-import {NoopLogger} from './mocks/NoopLogger';
-import {NoopUnfurlerService} from './mocks/NoopUnfurlerService';
-import {NoopGatewayService} from './NoopGatewayService';
-import {NoopWorkerService} from './NoopWorkerService';
-import {resetServiceStateForTesting} from './ResetServiceState';
-import {InMemorySearchProvider} from './search/InMemorySearchProvider';
-import {TestMediaService} from './TestMediaService';
+} from '@app/api/middleware/ServiceSingletons';
+import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import {drainSearchTasks} from '@app/api/search/SearchTaskTracker';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {MockBlueskyOAuthService} from '@app/api/test/mocks/MockBlueskyOAuthService';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {MockStorageService} from '@app/api/test/mocks/MockStorageService';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import {NoopUnfurlerService} from '@app/api/test/mocks/NoopUnfurlerService';
+import {NoopGatewayService} from '@app/api/test/NoopGatewayService';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {resetServiceStateForTesting} from '@app/api/test/ResetServiceState';
+import {InMemorySearchProvider} from '@app/api/test/search/InMemorySearchProvider';
+import {TestMediaService} from '@app/api/test/TestMediaService';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 export interface ApiTestHarness {
 	app: HonoApp;
@@ -91,8 +84,7 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 	setInjectedUnfurlerService(new NoopUnfurlerService());
 	const mockBlueskyOAuthService = new MockBlueskyOAuthService();
 	setInjectedBlueskyOAuthService(mockBlueskyOAuthService);
-	setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
-	resetServiceStateForTesting();
+	await resetServiceStateForTesting();
 	const {
 		app,
 		initialize: initializeApp,
@@ -113,12 +105,8 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 		getInstanceConfigRepository().clearCacheForTesting();
 		kvProvider.reset();
 		mockBlueskyOAuthService.reset();
-		setInjectedIpInfoService(undefined);
-		setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
-		setInjectedRegistrationRiskEvaluator(undefined);
 		setInjectedUnfurlerService(undefined);
-		resetAbuseTrackingForTests();
-		torExitListCache.clearForTesting();
+		resetSharedListsForTests();
 	}
 	async function resetData(): Promise<void> {
 		resetApiServicesForTesting();
@@ -144,17 +132,14 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 		setInjectedWorkerService(new NoopWorkerService());
 		setInjectedGatewayService(new NoopGatewayService());
 		setInjectedKVProvider(new MockKVProvider());
-		setInjectedIpInfoService(undefined);
-		setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
-		setInjectedRegistrationRiskEvaluator(undefined);
 		setInjectedUnfurlerService(undefined);
-		resetAbuseTrackingForTests();
+		resetSharedListsForTests();
 		const fallbackStorageService = new MockStorageService();
 		setInjectedStorageService(fallbackStorageService);
 		setInjectedMediaService(new TestMediaService(fallbackStorageService));
 		setInjectedSearchProviderService(new NullSearchProvider());
 		setInjectedBlueskyOAuthService(new MockBlueskyOAuthService());
-		resetServiceStateForTesting();
+		await resetServiceStateForTesting();
 		resetApiServicesForTesting();
 	}
 	async function requestJson(params: {
@@ -202,5 +187,5 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 
 async function clearBannedIpsState(): Promise<void> {
 	ipBanCache.resetCaches();
-	resetAbuseTrackingForTests();
+	resetSharedListsForTests();
 }

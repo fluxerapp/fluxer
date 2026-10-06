@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createDefaultLimitConfig, mergeWithCurrentDefaults} from '@app/api/constants/LimitConfig';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
 import type {LimitConfigSnapshot, LimitRule} from '@fluxer/limits/src/LimitTypes';
 import {describe, expect, test} from 'vitest';
-import {createDefaultLimitConfig, mergeWithCurrentDefaults} from '../../constants/LimitConfig';
 
 interface LegacyLimitRule extends LimitRule {
 	unlockedFeatures?: Array<string>;

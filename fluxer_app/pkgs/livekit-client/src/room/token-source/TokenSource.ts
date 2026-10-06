@@ -17,6 +17,12 @@ abstract class TokenSourceCached extends TokenSourceConfigurable {
 	private cachedResponse: TokenSourceResponse | null = null;
 
 	private fetchMutex = new Mutex();
+	private isSameAsCachedFetchOptions(options: TokenSourceFetchOptions) {
+		if (!this.cachedFetchOptions) {
+			return false;
+		}
+		return areTokenSourceFetchOptionsEqual(options, this.cachedFetchOptions);
+	}
 
 	private shouldReturnCachedValueFromFetch(fetchOptions: TokenSourceFetchOptions) {
 		if (!this.cachedResponse) {
@@ -25,7 +31,10 @@ abstract class TokenSourceCached extends TokenSourceConfigurable {
 		if (!isResponseTokenValid(this.cachedResponse)) {
 			return false;
 		}
-		return this.cachedFetchOptions !== null && areTokenSourceFetchOptionsEqual(this.cachedFetchOptions, fetchOptions);
+		if (!this.isSameAsCachedFetchOptions(fetchOptions)) {
+			return false;
+		}
+		return true;
 	}
 
 	getCachedResponseJwtPayload() {
@@ -35,9 +44,12 @@ abstract class TokenSourceCached extends TokenSourceConfigurable {
 		return decodeTokenPayload(this.cachedResponse.participantToken);
 	}
 
-	async fetch(options: TokenSourceFetchOptions): Promise<TokenSourceResponseObject> {
+	async fetch(options: TokenSourceFetchOptions, force?: boolean): Promise<TokenSourceResponseObject> {
 		const unlock = await this.fetchMutex.lock();
 		try {
+			if (force) {
+				this.cachedResponse = null;
+			}
 			if (this.shouldReturnCachedValueFromFetch(options)) {
 				return this.cachedResponse!.toJson() as TokenSourceResponseObject;
 			}
@@ -135,6 +147,14 @@ class TokenSourceEndpoint extends TokenSourceCached {
 					request.roomConfig.agents[0].metadata = options.agentMetadata!;
 					break;
 
+				case 'deployment':
+					request.roomConfig = request.roomConfig ?? new RoomConfiguration();
+					if (request.roomConfig.agents.length === 0) {
+						request.roomConfig.agents.push(new RoomAgentDispatch());
+					}
+					request.roomConfig.agents[0].deployment = options.deployment!;
+					break;
+
 				default: {
 					const exhaustiveCheckedKey: never = key;
 					throw new Error(`Options key ${exhaustiveCheckedKey} not being included in forming request!`);
@@ -173,30 +193,34 @@ class TokenSourceEndpoint extends TokenSourceCached {
 	}
 }
 
-export type SandboxTokenServerOptions = {
+export type DevelopmentTokenServerOptions = {
 	baseUrl?: string;
 };
-
-class TokenSourceSandboxTokenServer extends TokenSourceEndpoint {
-	constructor(sandboxId: string, options: SandboxTokenServerOptions) {
+class TokenSourceDevelopmentTokenServer extends TokenSourceEndpoint {
+	constructor(tokenServerId: string, options: DevelopmentTokenServerOptions) {
 		const {baseUrl = 'https://cloud-api.livekit.io', ...rest} = options;
 
 		super(`${baseUrl}/api/v2/sandbox/connection-details`, {
 			...rest,
 			headers: {
-				'X-Sandbox-ID': sandboxId,
+				'X-Sandbox-ID': tokenServerId,
 			},
 		});
 	}
 }
 
+export type SandboxTokenServerOptions = DevelopmentTokenServerOptions;
+
+class TokenSourceSandboxTokenServer extends TokenSourceDevelopmentTokenServer {}
+
 export {
-	type TokenSourceLiteral,
-	type TokenSourceCustom,
-	type TokenSourceEndpoint,
-	type TokenSourceSandboxTokenServer,
-	decodeTokenPayload,
 	areTokenSourceFetchOptionsEqual,
+	decodeTokenPayload,
+	type TokenSourceCustom,
+	type TokenSourceDevelopmentTokenServer,
+	type TokenSourceEndpoint,
+	type TokenSourceLiteral,
+	type TokenSourceSandboxTokenServer,
 };
 
 export const TokenSource = {
@@ -214,5 +238,9 @@ export const TokenSource = {
 
 	sandboxTokenServer(sandboxId: string, options: SandboxTokenServerOptions = {}) {
 		return new TokenSourceSandboxTokenServer(sandboxId, options);
+	},
+
+	developmentTokenServer(tokenServerId: string, options: DevelopmentTokenServerOptions = {}) {
+		return new TokenSourceDevelopmentTokenServer(tokenServerId, options);
 	},
 };

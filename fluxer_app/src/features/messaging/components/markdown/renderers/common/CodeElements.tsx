@@ -11,7 +11,10 @@ import {
 	MarkdownBlock,
 	markdownBlockProps,
 } from '@app/features/messaging/components/markdown/renderers/common/MarkdownBlockAttributes';
-import {MarkdownContext, type RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {
+	isRestrictedInlineContext,
+	type RendererProps,
+} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import type {CodeBlockNode, InlineCodeNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import codeElementsStyles from '@app/features/theme/styles/CodeElements.module.css';
@@ -102,7 +105,7 @@ function shouldRenderKatexSource(content: string): boolean {
 
 export function CodeBlockRenderer({node, id, options}: RendererProps<CodeBlockNode>): React.ReactElement {
 	const {content} = node;
-	if (options.context === MarkdownContext.RESTRICTED_INLINE_REPLY) {
+	if (isRestrictedInlineContext(options.context)) {
 		return (
 			<code
 				key={id}

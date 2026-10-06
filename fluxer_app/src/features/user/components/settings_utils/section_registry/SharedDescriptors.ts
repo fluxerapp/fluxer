@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {msg} from '@lingui/core/macro';
 
 export const COLORS_DESCRIPTOR = msg({
@@ -58,6 +59,14 @@ export const ENABLE_FAVORITES_DESCRIPTOR = msg({
 	message: 'Enable favorites',
 	comment: 'Toggle label and settings search entry for controlling whether favorites are visible throughout the app.',
 });
+export const SHOW_HELP_CENTER_BUTTON_DESCRIPTOR = msg({
+	message: 'Show help center button',
+	comment: 'Toggle label and settings search entry for showing the help center button in the sidebar.',
+});
+export const SHOW_DOWNLOAD_BUTTON_DESCRIPTOR = msg({
+	message: 'Show download button',
+	comment: 'Toggle label and settings search entry for showing the download app button in the sidebar.',
+});
 export const NEKO_DESCRIPTOR = msg({
 	message: 'Neko',
 	comment: 'Settings search synonym. Proper name of the optional cat sprite that chases the cursor.',
@@ -99,7 +108,7 @@ export const DIM_STRIKETHROUGH_TEXT_DESCRIPTOR = msg({
 	comment: 'Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.',
 });
 export const SHOW_STRIKETHROUGH_MARKDOWN_TEXT_IN_A_SLIGHTLY_MUTED_COLOR_DESCRIPTOR = msg({
-	message: 'Show strikethrough markdown text in a slightly muted color.',
+	message: 'Show strikethrough Markdown text in a slightly muted color.',
 	comment:
 		'Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.',
 });
@@ -136,7 +145,7 @@ export const TTS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 export const TEXT_TO_SPEECH_3_DESCRIPTOR = msg({
-	message: 'Text to speech',
+	message: 'Text-to-speech',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 export const SPEECH_DESCRIPTOR = msg({
@@ -175,10 +184,7 @@ export const VOLUME_DESCRIPTOR = msg({
 	message: 'Volume',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-export const PLUTONIUM_DESCRIPTOR = msg({
-	message: 'Plutonium',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
+export const PREMIUM_PRODUCT_NAME_KEYWORD = PREMIUM_PRODUCT_NAME;
 export const DM_DESCRIPTOR = msg({
 	message: 'DM',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',

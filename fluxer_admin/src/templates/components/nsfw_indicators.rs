@@ -19,7 +19,7 @@ pub fn adult_content_badge(is_adult: bool, label: Option<&str>) -> Markup {
 }
 
 fn truncate(text: &str, max: usize) -> String {
-    if text.len() <= max {
+    if text.chars().nth(max).is_none() {
         text.to_owned()
     } else {
         let boundary = max.saturating_sub(1);
@@ -29,10 +29,7 @@ fn truncate(text: &str, max: usize) -> String {
 }
 
 pub fn content_warning_badge(level: Option<i32>, text: Option<&str>, inline_text: bool) -> Markup {
-    let Some(lvl) = level else {
-        return html! {};
-    };
-    if lvl != CONTENT_WARNING_LEVEL {
+    if level != Some(CONTENT_WARNING_LEVEL) {
         return html! {};
     }
     let default_text = "This contains sensitive content.";
@@ -82,13 +79,8 @@ fn resolve_nsfw_source(
 
 fn source_label(source: NsfwSource, explicit: Option<bool>) -> &'static str {
     match source {
-        NsfwSource::Channel => {
-            if explicit == Some(true) {
-                "(override on)"
-            } else {
-                "(override off)"
-            }
-        }
+        NsfwSource::Channel if explicit == Some(true) => "(override on)",
+        NsfwSource::Channel => "(override off)",
         NsfwSource::Category => "(from category)",
         NsfwSource::Community => "(from community)",
         NsfwSource::None => "",
@@ -110,11 +102,7 @@ pub fn channel_nsfw_state_badge(
     }
     let has_context =
         nsfw_override.is_some() || category_override.is_some() || guild_nsfw.is_some();
-    let (source, explicit) = if has_context {
-        resolve_nsfw_source(nsfw_override, category_override, guild_nsfw)
-    } else {
-        (NsfwSource::None, None)
-    };
+    let (source, explicit) = resolve_nsfw_source(nsfw_override, category_override, guild_nsfw);
     html! {
         span class="inline-flex flex-wrap items-center gap-1" {
             @if is_nsfw {

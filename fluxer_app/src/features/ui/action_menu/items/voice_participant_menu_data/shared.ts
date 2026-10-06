@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export {BLOCKED_USER_DM_WARNING_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-
 import {msg} from '@lingui/core/macro';
+
+export {BLOCKED_USER_DM_WARNING_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 
 export const COPY_DEVICE_ID_DESCRIPTOR = msg({
 	message: 'Copy device ID',
@@ -33,10 +33,15 @@ export const SCREEN_SHARE_PRIVACY_DESCRIPTOR = msg({
 	message: 'Screen share privacy',
 	comment: 'Voice screen share menu action that opens the screen share preview privacy controls.',
 });
-export const MUTE_DESCRIPTOR = msg({
+export const MUTE_MICROPHONE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'voice-control-action',
 	comment:
 		'Voice menu toggle label. Mutes the current user microphone or, for a stream, mutes that stream audio locally.',
+});
+export const MUTE_PLAYBACK_DESCRIPTOR = msg({
+	message: 'Mute',
+	context: 'playback-control-action',
 });
 export const UNFOCUS_DESCRIPTOR = msg({
 	message: 'Unfocus',
@@ -72,6 +77,7 @@ export const MENTION_DESCRIPTOR = msg({
 });
 export const MESSAGE_DESCRIPTOR = msg({
 	message: 'Message',
+	context: 'message-action',
 	comment: 'Voice participant menu action that opens a DM conversation with the selected user.',
 });
 export const MUTE_DEVICE_DESCRIPTOR = msg({

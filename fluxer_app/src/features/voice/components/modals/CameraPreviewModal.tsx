@@ -2,6 +2,7 @@
 
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {isPendingMigratedDeviceId} from '@app/features/app/domain_migration/DomainMigrationDeviceRemap';
 import {CAMERA_DESCRIPTOR, SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -66,6 +67,7 @@ const CAMERA_PREVIEW_DESCRIPTOR = msg({
 });
 const DEFAULT_CAMERA_DESCRIPTOR = msg({
 	message: 'Default',
+	context: 'device-option',
 	comment: 'Default camera device option.',
 });
 const MIRROR_CAMERA_DESCRIPTOR = msg({
@@ -256,8 +258,8 @@ interface CameraPreviewTrackSetupArgs {
 	cameraResolution: 'low' | 'medium' | 'high';
 	videoFrameRate: number;
 	isCurrentInitialization: () => boolean;
-	trackRef: React.MutableRefObject<LocalVideoTrack | null>;
-	processorRef: React.MutableRefObject<CameraPreviewProcessor | null>;
+	trackRef: React.RefObject<LocalVideoTrack | null>;
+	processorRef: React.RefObject<CameraPreviewProcessor | null>;
 	onResolutionNegotiated: (resolution: {width: number; height: number} | null) => void;
 }
 
@@ -331,6 +333,11 @@ interface CameraEffectStrengthSliderProps {
 }
 
 const CameraEffectStrengthSlider = ({label, value, onChange, resetLabel, dataFlx}: CameraEffectStrengthSliderProps) => {
+	const {i18n} = useLingui();
+	const formatPercentage = useCallback(
+		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		[i18n, i18n.locale],
+	);
 	const [draftValue, setDraftValueState] = useState(value);
 	const draftValueRef = useRef(value);
 	const committedValueRef = useRef(value);
@@ -388,7 +395,7 @@ const CameraEffectStrengthSlider = ({label, value, onChange, resetLabel, dataFlx
 				minValue={CAMERA_EFFECT_STRENGTH_MIN}
 				maxValue={CAMERA_EFFECT_STRENGTH_MAX}
 				step={1}
-				onValueRender={formatRoundedPercentage}
+				onValueRender={formatPercentage}
 				asValueChanges={setDraftValue}
 				onValueChange={commitValue}
 				onPointerInteractionChange={handlePointerInteractionChange}
@@ -436,7 +443,7 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 		const currentDeviceId = voiceSettings.videoDeviceId;
 		const currentDeviceExists =
 			currentDeviceId === 'default' || videoInputs.some((device) => device.deviceId === currentDeviceId);
-		if (videoInputs.length > 0 && !currentDeviceExists) {
+		if (videoInputs.length > 0 && !currentDeviceExists && !isPendingMigratedDeviceId(currentDeviceId)) {
 			VoiceSettingsCommands.update({videoDeviceId: 'default'});
 		}
 	}, []);

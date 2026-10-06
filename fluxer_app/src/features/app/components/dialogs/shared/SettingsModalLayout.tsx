@@ -129,7 +129,7 @@ export const SettingsModalDesktopScroll: React.FC<SettingsModalDesktopScrollProp
 			if (typeof scrollerRef === 'function') {
 				scrollerRef(node);
 			} else {
-				(scrollerRef as React.MutableRefObject<HTMLElement | null>).current = node;
+				scrollerRef.current = node;
 			}
 		});
 		return (

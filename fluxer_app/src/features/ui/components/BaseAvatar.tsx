@@ -175,7 +175,7 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 		const maskIsMobileOnline = shouldShowCustomStatusBadge ? false : isMobileOnline;
 		const reducedMotion = Accessibility.useReducedMotion;
 		const candidateUrl = animatedMediaPlaybackEnabled ? hoverAvatarUrl || '' : avatarUrl;
-		const [imgError, setImgError] = useState(false);
+		const [imgError, setImgError] = useState(() => ImageCacheUtils.hasFailedImage(candidateUrl));
 		const [imgRetryCount, setImgRetryCount] = useState(0);
 		const [wasCachedAtMount] = useState(() => ImageCacheUtils.hasImage(candidateUrl));
 		const [mountedAt] = useState(() => Date.now());
@@ -183,7 +183,7 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 			wasCachedAtMount ? {url: candidateUrl, fade: 'instant'} : null,
 		);
 		useEffect(() => {
-			setImgError(false);
+			setImgError(ImageCacheUtils.hasFailedImage(candidateUrl));
 			setImgRetryCount(0);
 		}, [candidateUrl]);
 		useEffect(() => {

@@ -140,7 +140,7 @@ const PIN_MESSAGES_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 		'Permission description in the role/permission editor for the Pin Messages permission at community scope. Covers messages from anyone, not only their own.',
 });
 const EMBED_LINKS_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Show embedded previews for links they send.',
+	message: 'Show embedded previews for links sent.',
 	comment:
 		'Permission description in the role/permission editor for the Embed Links permission at community scope. The preview is the card rendered under a message that contains a link.',
 });
@@ -150,7 +150,7 @@ const ATTACH_FILES_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 });
 const READ_MESSAGE_HISTORY_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		'Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open.',
+		'Read messages sent before opening a channel. Without this permission, members only see messages that arrive while they have the channel open.',
 	comment:
 		'Permission description in the role/permission editor for the Read Message History permission at community scope. Without the permission the member sees only messages that arrive while the channel is open in front of them.',
 });
@@ -164,7 +164,8 @@ const CONNECT_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	comment: 'Permission description in the role/permission editor for the Connect permission at community scope.',
 });
 const SPEAK_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Talk in voice channels. Without it, members stay muted until someone with Mute members unmutes them.',
+	message:
+		'Talk in voice channels. Without this permission, members stay muted until someone with the "Mute members" permission unmutes them.',
 	comment:
 		'Permission description in the role/permission editor for the Speak permission at community scope. "Mute members" is another permission in this same editor, so match the wording used for its name.',
 });
@@ -237,7 +238,7 @@ const PIN_MESSAGES_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 		'Permission description in the channel-scoped permissions editor for the Pin Messages permission. Covers messages from anyone, not only their own.',
 });
 const EMBED_LINKS_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Show embedded previews for links they send in this channel.',
+	message: 'Show embedded previews for links sent in this channel.',
 	comment:
 		'Permission description in the channel-scoped permissions editor for the Embed Links permission. The preview is the card rendered under a message that contains a link.',
 });
@@ -247,7 +248,7 @@ const ATTACH_FILES_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 });
 const READ_MESSAGE_HISTORY_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	message:
-		'Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open.',
+		'Read messages sent in this channel before opening it. Without this permission, members only see messages that arrive while they have it open.',
 	comment:
 		'Permission description in the channel-scoped permissions editor for the Read Message History permission. Without the permission the member sees only messages that arrive while the channel is open in front of them.',
 });
@@ -283,7 +284,8 @@ const CONNECT_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 		'Permission description in the channel-scoped permissions editor for the Connect permission. "View channel" is another permission in this same editor, so match the wording used for its name. The placeholder renders the literal @everyone role name and must not be translated.',
 });
 const SPEAK_CHANNEL_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Talk in this voice channel. Without it, members stay muted until someone with Mute members unmutes them.',
+	message:
+		'Talk in this voice channel. Without this permission, members stay muted until someone with the "Mute members" permission unmutes them.',
 	comment:
 		'Permission description in the channel-scoped permissions editor for the Speak permission. "Mute members" is another permission in this same editor, so match the wording used for its name.',
 });

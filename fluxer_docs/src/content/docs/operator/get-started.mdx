@@ -27,7 +27,7 @@ By the end you have a Fluxer instance on a hostname you own, running the web app
 | Outbound | Working DNS resolution from inside the containers |
 | Host tools | `curl` and `openssl` on Linux. macOS ships both. The Windows installer needs neither |
 
-Those memory limits are ceilings that reserve nothing, so the host never needs their total free. On a 4 GB host, lower the `api` and `worker` limits first, because those two size their JavaScript heap from whatever limit they are given. Under Docker Desktop the figure to compare against is the RAM you have given its Linux virtual machine, which starts well below what the hardware has.
+Memory limits are ceilings, not reservations. On a 4 GB host, lower the `api` and `worker` limits first. With Docker Desktop, check the RAM assigned to its Linux virtual machine rather than the host's total.
 
 The stack is one Compose project. The edge and LiveKit are the only services that publish ports.
 
@@ -102,7 +102,7 @@ curl -fsSLO https://fluxer.dev/install.sh.sha256
 sha256sum -c install.sh.sha256
 ```
 
-On macOS, the same two downloads and:
+On macOS, the same downloads and:
 
 ```bash
 shasum -a 256 -c install.sh.sha256
@@ -122,25 +122,25 @@ Read the script before you run it. It writes `.env`, and that file holds every s
 
 The run below uses the bundled TLS. Add `--tls proxy` when something else terminates TLS, and read [Behind your own reverse proxy](/operator/reverse-proxy/) first.
 
-Then run it, with the hostname from Step 2. `--email` becomes the contact address on outgoing web push:
+Then run it with the hostname from Step 2. `--email` is optional and sets the contact address on outgoing web push. It defaults to `admin@` and the hostname.
 
 ```bash
-sh install.sh --domain chat.example.com --email you@example.com
+sh install.sh --domain chat.example.com
 ```
 
 On Windows:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\install.ps1 -Domain chat.example.com -Email you@example.com
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Domain chat.example.com
 ```
 
 The run prints one line per phase and ends with the URL to open.
 
-`~/fluxer` then holds `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `Caddyfile` and `.env.example`, plus a `.env` readable only by you. Every value that ships as `CHANGE_ME` in `.env.example` is a fresh random value. Every command from here on runs in that directory.
+`~/fluxer` then holds `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `external-object-store.compose.yml`, `Caddyfile` and `.env.example`, plus a `.env` readable only by you. Every value that ships as `CHANGE_ME` in `.env.example` is a fresh random value. Every command from here on runs in that directory.
 
 ### Serving on another port
 
-The installer writes an `.env` for `https` on `443` and has no flag for another port. Two lines change it, the port of the public address and the publish that answers on it:
+The installer writes an `.env` for `https` on `443` and has no flag for another port. The two lines below in `.env` move the instance to another port. `FLUXER_PUBLIC_PORT` sets the port of the public address, and `FLUXER_HTTPS_PORT` sets the host port the edge publishes HTTPS on:
 
 ```ini
 FLUXER_PUBLIC_PORT=8443
@@ -155,14 +155,14 @@ docker compose up -d
 
 Host 80 stays published on the `https` recipe and still answers the ACME challenge. Let's Encrypt only ever connects to the public 80 or 443, so the certificate is issued if a router in front forwards public 80 to this host. Serve your own certificate from the `Caddyfile` when it cannot.
 
-Leave `FLUXER_PUBLIC_ORIGIN` commented out. It states that same address as one string, so an `.env` that sets it without the port `FLUXER_PUBLIC_PORT` names holds two addresses. Part of the instance then answers on one and part on the other, the web app sends no `Authorization` header to an API that is not on its own origin, the API answers 401, and the setup wizard reads that 401 as an expired session and returns to the account form. [The public origin](/operator/configuration/#the-public-origin) has the rest.
+Leave `FLUXER_PUBLIC_ORIGIN` commented out, or keep it consistent with the public scheme, domain and port. Conflicting addresses can cause sign-in failures and setup loops. See [The public origin](/operator/configuration/#the-public-origin).
 
 ### Installer flags
 
 | Flag | Meaning |
 | --- | --- |
 | `--domain <host>` | Hostname the instance answers on. Prompted when absent |
-| `--email <address>` | Contact address written as `FLUXER_VAPID_EMAIL`. Prompted when absent |
+| `--email <address>` | Contact address on outgoing web push, written as `FLUXER_VAPID_EMAIL`. Default `admin@` and the hostname |
 | `--dir <path>` | Working directory. Default `~/fluxer`, or the current directory when it holds an instance |
 | `--ref <git ref>` | Ref the stack files come from. Defaults to the image tag, and to `main` when that tag is `v1` or `latest` |
 | `--image-tag <tag>` | Image tag the stack runs. Default `v1` |
@@ -172,7 +172,7 @@ Leave `FLUXER_PUBLIC_ORIGIN` commented out. It states that same address as one s
 | `--dry-run` | Print the plan. Write nothing and start nothing |
 | `--no-start` | Write everything and skip `docker compose up -d` |
 | `--update` | Upgrade: record, back up, refresh, pull, recreate, verify |
-| `--rollback` | Put back the images and stack files of the newest record |
+| `--rollback` | Restore the images and stack files that the newest `--update` run recorded |
 | `--allow-root` | Permit running as root |
 | `--engine <command>` | Container engine to drive. Default `docker`, or `podman` when `docker` is absent |
 
@@ -180,7 +180,7 @@ Run `--dry-run` first to see what a set of flags does. The PowerShell script tak
 
 ### The script is the reference
 
-Every step in the script has a comment beside it with the command that does that step alone and why it exists: where each stack file comes from, how `.env` is built from `.env.example`, what each `CHANGE_ME` takes, and how the VAPID pair is derived. Read it at [https://fluxer.dev/install.sh](https://fluxer.dev/install.sh), or the Windows script at [https://fluxer.dev/install.ps1](https://fluxer.dev/install.ps1).
+Read the [Linux and macOS installer](https://fluxer.dev/install.sh) or [Windows installer](https://fluxer.dev/install.ps1) before running it.
 
 ## Step 5: Check that it works
 
@@ -220,30 +220,40 @@ Every path returns 200. `/.well-known/fluxer` lists the endpoints clients use, w
 
 Open the hostname in a browser. A fresh instance is unconfigured, so it serves the setup wizard.
 
-The wizard runs in two halves. The first is a welcome, a theme choice, an admin introduction and an account form. Once that account exists, the second covers branding, registration mode, community policy, media expiry, the integrations, the service toggles and the premium model. Finishing marks the instance configured and takes the wizard down.
+The wizard first asks how members sign in. Usernames is the default and needs no email setup at all. Email suits an instance that sends mail through SMTP. The choice is fixed once the owner account exists. [Sign-in methods](/operator/sign-in/) explains both.
 
-Create the owner account with an email address at a domain you control. The first registration that supplies one receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
+Then create the owner account, and choose branding, registration mode, community policy, media expiry, integrations and premium settings. Completing the wizard closes setup access.
+
+The first registration receives the wildcard admin ACL, which is full access to the admin dashboard, unless registration is set to hold new accounts for approval. On a username instance that is the first registration with a password. On an email instance it is the first registration that includes an email address. Finishing the wizard grants that same ACL to whichever account completes it, when that account holds none.
+
+On a username instance the wizard shows the owner's [recovery kit](/operator/sign-in/#recovery-kits) next. Store it somewhere safe. Without the kit, a forgotten owner password needs another admin to issue a [reset link](/operator/sign-in/#admin-reset-links). Register a passkey or a second admin account before you open registration.
+
+### On an email instance
+
+Create the owner account with an email address at a domain you control. Email delivery is optional, and [Email](/operator/configuration/#email) sets it up at any time.
 
 Once email is on, the address goes through a DNS check before the account exists. Email counts as on when the switch is set and the provider is `smtp` with a complete SMTP configuration, so `FLUXER_EMAIL_ENABLED=true` on its own does not turn the check on. The address domain has to publish an `MX` record, or an `A` or `AAAA` record as a fallback. A name that resolves on your own network alone, such as a `.lan`, `.internal` or `home.arpa` name, publishes neither, and the account form answers `That email domain cannot receive mail.` whatever the address looks like. Use a domain with public records, or leave email off.
 
 `.env.example` ships `FLUXER_EMAIL_ENABLED=false`, which marks every address verified at creation and sends no mail at all. A forgotten owner password therefore has no email reset. Record it, and register a passkey or a second admin account before you open registration.
 
-Then sign in to the admin dashboard at `https://chat.example.com/admin` with the account holding the wildcard ACL. The **Instance Config** page has everything the wizard asked, plus registration mode, approvals and integration keys. **Limit Config** holds the instance limits published to clients. **Voice Regions** and **Voice Servers** come seeded, so voice needs no setup there.
+### The admin dashboard
 
-The desktop client opens the hosted web app for its release channel, so reach your own instance in a browser. [Issue #1088](https://github.com/fluxerapp/fluxer/issues/1088) tracks that, and is being worked on.
+Sign in to the admin dashboard at `https://chat.example.com/admin` with the account holding the wildcard ACL. The **Instance Config** page has everything the wizard asked, plus registration mode, approvals and integration keys. **Limit Config** holds the instance limits published to clients. **Voice Regions** and **Voice Servers** come seeded, so voice needs no setup there.
+
+The desktop client opens the hosted web app for its release channel, so reach your own instance in a browser. [This feedback post](https://feedback.fluxer.com/p/641) tracks that, and is being worked on.
 
 [Configuration](/operator/configuration/) lists every runtime setting and the environment variable each one overrides. [Deployment availability](/http-api/deployment-availability/) lists the routes that exist only on the hosted deployment.
 
 ## Backups
 
-An instance comes back from two artifacts and its `.env`: a dump of the database, which covers `postgres-data`, and a tarball of `seaweedfs-data`, which holds every upload, avatar, report and harvest. [Volumes and buckets](/operator/configuration/#volumes-and-buckets) lists every volume and what it holds.
+Recovery requires `.env`, a database dump and a backup of `seaweedfs-data`, which holds uploads, avatars, reports and harvests. See [Volumes and buckets](/operator/configuration/#volumes-and-buckets) for everything that needs backing up.
 
-The dump costs no downtime, so run it on a schedule while the stack serves:
+The dump costs no downtime, so run it on a schedule while the stack serves. It runs inside the `postgres` container and takes the role and database from that container's environment, which follows `FLUXER_POSTGRES_USERNAME` and `FLUXER_POSTGRES_DATABASE`. It is for the bundled database. A database outside the stack is backed up with its own tools:
 
 ```bash
 cd ~/fluxer
 mkdir -p backups
-docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom \
+docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom' \
   > "backups/fluxer-$(date -u +%Y%m%dT%H%M%SZ).dump"
 ```
 
@@ -251,7 +261,7 @@ PowerShell writes UTF-16 through `>`, which corrupts a binary dump. On Windows, 
 
 ```powershell
 mkdir -Force backups
-docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom -f /tmp/fluxer.dump
+docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom -f /tmp/fluxer.dump'
 docker compose cp postgres:/tmp/fluxer.dump backups/fluxer.dump
 docker compose exec -T postgres rm /tmp/fluxer.dump
 ```
@@ -269,7 +279,7 @@ In PowerShell write `${PWD}` in place of `$PWD`.
 
 You are done when `backups` holds a dump and a tarball and every service reads `running` again.
 
-`sh install.sh --update` takes both artifacts before every upgrade. [What the backup covers](/operator/upgrading/#what-the-backup-covers) puts the dump on a nightly timer, and [Restore a backup](/operator/upgrading/#restore-a-backup) puts either artifact back.
+`sh install.sh --update` takes both backups before upgrading. See [What the backup covers](/operator/upgrading/#what-the-backup-covers) for scheduled backups and [Restore a backup](/operator/upgrading/#restore-a-backup) for recovery.
 
 ### Remove the instance
 

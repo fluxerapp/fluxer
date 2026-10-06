@@ -16,6 +16,7 @@ import FavoriteGif from '@app/features/expressions/state/FavoriteGif';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import * as GifSlugUtils from '@app/features/expressions/utils/GifSlugUtils';
 import {FAVORITES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -57,6 +58,7 @@ export const GifPickerGrid = observer(
 		const favoriteGifs = FavoriteGif.favoriteGifs;
 		const favoriteGifsVersion = favoriteGifs.length;
 		const useSavedMediaForGifFavorites = FavoriteGif.saveGifFavoritesAsSavedMedia;
+		const attachmentUrlRevision = AttachmentUrlRefresher.revision;
 		const data: Array<GifPickerGridItemData> = useMemo(() => {
 			return buildGifPickerGridData({
 				surface: store.isShowingFavorites ? 'favorites' : store.isShowingFeatured ? 'featured' : 'results',
@@ -88,6 +90,7 @@ export const GifPickerGrid = observer(
 			selectGif,
 			store.featuredFavoritePreviewSeed,
 			i18n.locale,
+			attachmentUrlRevision,
 		]);
 		const itemKeys = useMemo(() => data.filter((item) => item.type !== 'skeleton').map((item) => item.key), [data]);
 		const itemByKey = useMemo(() => new Map(data.map((item) => [item.key, item])), [data]);

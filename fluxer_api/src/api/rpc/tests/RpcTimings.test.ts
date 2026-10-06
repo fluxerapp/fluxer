@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {RpcTimingRecorder} from '@app/api/rpc/RpcTimings';
 import {afterEach, describe, expect, test} from 'vitest';
-import {RpcTimingRecorder} from '../RpcTimings';
 
 const ORIGINAL_ENV = {
 	POD_NAME: process.env.POD_NAME,

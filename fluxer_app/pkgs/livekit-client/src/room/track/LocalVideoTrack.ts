@@ -11,13 +11,14 @@ import {
 import type {SignalClient} from '../../api/SignalClient.ts';
 import type {StructuredLogger} from '../../logger.ts';
 import {TrackEvent} from '../events.ts';
-import {ScalabilityMode} from '../participant/publishUtils.ts';
+import {computeTrackBackupEncodings, computeVideoEncodings, ScalabilityMode} from '../participant/publishUtils.ts';
 import type {VideoSenderStats} from '../stats.ts';
 import {computeBitrate, monitorFrequency} from '../stats.ts';
 import type {LoggerOptions} from '../types.ts';
-import {isFireFox, isMobile, isSVCCodec, isWeb} from '../utils.ts';
+import {isFireFox, isMobile, isSVCCodec, isSVCSimulcast, isWeb} from '../utils.ts';
 import LocalTrack from './LocalTrack.ts';
-import type {VideoCaptureOptions, VideoCodec} from './options.ts';
+import type {TrackPublishOptions, VideoCaptureOptions, VideoCodec} from './options.ts';
+import {isBackupVideoCodec} from './options.ts';
 import type {TrackProcessor} from './processor/types.ts';
 import {Track, VideoQuality} from './Track.ts';
 import {constraintsForOptions} from './utils.ts';
@@ -84,7 +85,8 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 	private isCpuConstrained: boolean = false;
 
 	private optimizeForPerformance: boolean = false;
-
+	publishOptions?: TrackPublishOptions;
+	lastEncodedDimensions?: Track.Dimensions;
 	override get sender(): RTCRtpSender | undefined {
 		return this._sender;
 	}
@@ -182,7 +184,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 
 			if (this.source === Track.Source.Camera && !this.isUserProvided) {
 				this.log.debug('reacquiring camera track', this.logContext);
-				await this.restartTrack();
+				await this.restart(undefined, true);
 			}
 			await super.unmute();
 			return this;
@@ -252,6 +254,10 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		return items;
 	}
 
+	private isSvcPublish(codec?: string): boolean {
+		return isSVCCodec(codec) && !isSVCSimulcast(codec, this.publishOptions);
+	}
+
 	setPublishingQuality(maxQuality: VideoQuality) {
 		const qualities: Array<SubscribedQuality> = [];
 		for (let q = VideoQuality.LOW; q <= VideoQuality.HIGH; q += 1) {
@@ -263,7 +269,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 			);
 		}
 		this.log.debug(`setting publishing quality. max quality ${maxQuality}`, this.logContext);
-		this.setPublishingLayers(isSVCCodec(this.codec), qualities);
+		this.setPublishingLayers(this.isSvcPublish(this.codec), qualities);
 	}
 
 	async restartTrack(options?: VideoCaptureOptions) {
@@ -279,6 +285,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		this.isCpuConstrained = false;
 
 		const processedTrack = this.processor?.processedTrack;
+
 		for await (const sc of this.simulcastCodecs.values()) {
 			if (sc.sender && sc.sender.transport?.state !== 'closed') {
 				const previousTrack = sc.mediaStreamTrack;
@@ -293,6 +300,102 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 				}
 			}
 		}
+
+		await this.onSenderTrackSwapped();
+	}
+
+	protected override async onSenderTrackSwapped(): Promise<void> {
+		await this.refreshSenderEncodings();
+	}
+
+	private async refreshSenderEncodings() {
+		if (!this.sender || !this.publishOptions || this.optimizeForPerformance) {
+			return;
+		}
+		const unlock = await this.senderLock.lock();
+		try {
+			let dims: Track.Dimensions;
+			try {
+				dims = await this.waitForDimensions();
+			} catch (e) {
+				this.log.warn('could not determine new track dimensions, skipping encoding recompute', {
+					...this.logContext,
+					error: e,
+				});
+				return;
+			}
+
+			if (
+				this.lastEncodedDimensions &&
+				this.lastEncodedDimensions.width === dims.width &&
+				this.lastEncodedDimensions.height === dims.height
+			) {
+				return;
+			}
+
+			const isScreenShare = this.source === Track.Source.ScreenShare;
+			const newEncodings = computeVideoEncodings(isScreenShare, dims.width, dims.height, {
+				...this.publishOptions,
+			});
+
+			await this.applyEncodingsToSender(this.sender, newEncodings);
+			this.encodings = newEncodings;
+			this.lastEncodedDimensions = dims;
+
+			for (const [codec, sc] of this.simulcastCodecs) {
+				if (!sc.sender || sc.sender.transport?.state === 'closed') {
+					continue;
+				}
+				if (!isBackupVideoCodec(codec)) {
+					continue;
+				}
+				const backupOpts: TrackPublishOptions = {...this.publishOptions};
+				const backupEncodings = computeTrackBackupEncodings(this, codec, backupOpts);
+				if (!backupEncodings) {
+					continue;
+				}
+				await this.applyEncodingsToSender(sc.sender, backupEncodings);
+				sc.encodings = backupEncodings;
+			}
+		} catch (e) {
+			this.log.warn('failed to apply recomputed encodings', {
+				...this.logContext,
+				error: e,
+			});
+		} finally {
+			unlock();
+		}
+	}
+
+	private async applyEncodingsToSender(sender: RTCRtpSender, encodings: Array<RTCRtpEncodingParameters>) {
+		const params = sender.getParameters();
+		if (!params.encodings || params.encodings.length !== encodings.length) {
+			return;
+		}
+		params.encodings.forEach((existing, idx) => {
+			if (existing.active === false) {
+				return;
+			}
+			const next = encodings[idx];
+			if (next.scaleResolutionDownBy !== undefined) {
+				existing.scaleResolutionDownBy = next.scaleResolutionDownBy;
+			}
+			if (next.maxBitrate !== undefined) {
+				existing.maxBitrate = next.maxBitrate;
+			}
+			if (next.maxFramerate !== undefined) {
+				existing.maxFramerate = next.maxFramerate;
+			}
+			if (next.priority !== undefined) {
+				existing.priority = next.priority;
+				existing.networkPriority = next.priority;
+			}
+		});
+		this.log.debug('updating sender encodings after track restart', {
+			...this.logContext,
+			encodings: params.encodings,
+		});
+		await sender.setParameters(params);
 	}
 
 	override async setProcessor(processor: TrackProcessor<Track.Kind.Video>, showProcessedStreamLocally = true) {
@@ -363,15 +466,23 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 
 	async setDegradationPreference(preference: RTCDegradationPreference) {
 		this.degradationPreference = preference;
-		if (this.sender) {
-			try {
-				this.log.debug(`setting degradationPreference to ${preference}`, this.logContext);
-				const params = this.sender.getParameters();
-				params.degradationPreference = preference;
-				await this.sender.setParameters(params);
-			} catch (e: unknown) {
-				this.log.warn(`failed to set degradationPreference`, {error: e, ...this.logContext});
-			}
+		await this.applyDegradationPreference(this.sender);
+		for (const sc of this.simulcastCodecs.values()) {
+			await this.applyDegradationPreference(sc.sender);
+		}
+	}
+
+	private async applyDegradationPreference(sender?: RTCRtpSender) {
+		if (!sender) {
+			return;
+		}
+		try {
+			this.log.debug(`setting degradationPreference to ${this.degradationPreference}`, this.logContext);
+			const params = sender.getParameters();
+			params.degradationPreference = this.degradationPreference;
+			await sender.setParameters(params);
+		} catch (e: unknown) {
+			this.log.warn(`failed to set degradationPreference`, {error: e, ...this.logContext});
 		}
 	}
 
@@ -390,7 +501,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		return simulcastCodecInfo;
 	}
 
-	setSimulcastTrackSender(codec: VideoCodec, sender: RTCRtpSender) {
+	async setSimulcastTrackSender(codec: VideoCodec, sender: RTCRtpSender) {
 		const simulcastCodecInfo = this.simulcastCodecs.get(codec);
 		if (!simulcastCodecInfo) {
 			return;
@@ -402,6 +513,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 				this.log.warn('failed to route processed track to secondary sender', {...this.logContext, error});
 			});
 		}
+		await this.applyDegradationPreference(sender);
 
 		setTimeout(() => {
 			if (this.subscribedCodecs) {
@@ -417,7 +529,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 			currentCodec: this.codec,
 		});
 		if (!this.codec && codecs.length > 0) {
-			await this.setPublishingLayers(isSVCCodec(codecs[0].codec), codecs[0].qualities);
+			await this.setPublishingLayers(this.isSvcPublish(codecs[0].codec), codecs[0].qualities);
 
 			return [];
 		}
@@ -427,14 +539,14 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 		const newCodecs: Array<VideoCodec> = [];
 		for await (const codec of codecs) {
 			if (!this.codec || this.codec === codec.codec) {
-				await this.setPublishingLayers(isSVCCodec(codec.codec), codec.qualities);
+				await this.setPublishingLayers(this.isSvcPublish(codec.codec), codec.qualities);
 			} else {
 				const simulcastCodecInfo = this.simulcastCodecs.get(codec.codec as VideoCodec);
 				this.log.debug(`try setPublishingCodec for ${codec.codec}`, {
 					...this.logContext,
 					simulcastCodecInfo,
 				});
-				if (!simulcastCodecInfo || !simulcastCodecInfo.sender) {
+				if (!simulcastCodecInfo?.sender) {
 					for (const q of codec.qualities) {
 						if (q.enabled) {
 							newCodecs.push(codec.codec as VideoCodec);
@@ -448,7 +560,7 @@ export default class LocalVideoTrack extends LocalTrack<Track.Kind.Video> {
 						simulcastCodecInfo.encodings!,
 						codec.qualities,
 						this.senderLock,
-						isSVCCodec(codec.codec),
+						this.isSvcPublish(codec.codec),
 						this.log,
 						this.logContext,
 					);

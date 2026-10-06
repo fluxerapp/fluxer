@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Stripe from 'stripe';
-import {createTestAccount, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
+import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {
 	getBillingRepository,
 	getGatewayService,
 	getSnowflakeService,
 	setInjectedWorkerService,
-} from '../../middleware/ServiceRegistry';
+} from '@app/api/middleware/ServiceRegistry';
 import {
 	createUserCacheService,
 	getAdminRepository,
@@ -20,14 +19,15 @@ import {
 	getKVAccountDeletionQueue,
 	getPremiumStateReconciliationQueueService,
 	getUserRepository,
-} from '../../middleware/ServiceSingletons';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {SyncTaskWorkerService} from '../../test/SyncTaskWorkerService';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {PaymentRepository} from '../../user/repositories/PaymentRepository';
-import processStripeWebhook from '../../worker/tasks/ProcessStripeWebhook';
-import {setWorkerDependenciesForTest} from '../../worker/WorkerContext';
-import {STRIPE_API_VERSION} from '../StripeApiVersion';
+} from '@app/api/middleware/ServiceSingletons';
+import {STRIPE_API_VERSION} from '@app/api/stripe/StripeApiVersion';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {SyncTaskWorkerService} from '@app/api/test/SyncTaskWorkerService';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
+import {setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import Stripe from 'stripe';
 
 export async function createTestUserWithPremium(
 	harness: ApiTestHarness,
@@ -113,7 +113,10 @@ export function setupSyncStripeWebhookWorker(): void {
 	setInjectedWorkerService(new SyncTaskWorkerService({processStripeWebhook}));
 }
 
+let originalWebhookSecretDescriptor: PropertyDescriptor | undefined;
+
 export function mockStripeWebhookSecret(secret = 'whsec_test'): void {
+	originalWebhookSecretDescriptor ??= Object.getOwnPropertyDescriptor(Config.stripe, 'webhookSecret');
 	Object.defineProperty(Config.stripe, 'webhookSecret', {
 		get: () => secret,
 		configurable: true,
@@ -121,6 +124,11 @@ export function mockStripeWebhookSecret(secret = 'whsec_test'): void {
 }
 
 export function restoreStripeWebhookSecret(): void {
+	if (originalWebhookSecretDescriptor) {
+		Object.defineProperty(Config.stripe, 'webhookSecret', originalWebhookSecretDescriptor);
+		originalWebhookSecretDescriptor = undefined;
+		return;
+	}
 	delete (
 		Config.stripe as {
 			webhookSecret?: string;
@@ -128,4 +136,4 @@ export function restoreStripeWebhookSecret(): void {
 	).webhookSecret;
 }
 
-export {} from '../../test/msw/handlers/StripeApiHandlers';
+export {} from '@app/api/test/msw/handlers/StripeApiHandlers';

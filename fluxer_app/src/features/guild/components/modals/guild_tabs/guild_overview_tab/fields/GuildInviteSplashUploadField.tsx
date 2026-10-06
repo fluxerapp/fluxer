@@ -2,7 +2,7 @@
 
 import {ImagePreviewField} from '@app/features/app/components/shared/ImagePreviewField';
 import {
-	IMAGE_MAX_SIZE_LABEL,
+	IMAGE_MAX_SIZE_BYTES,
 	STATIC_IMAGE_WITH_AVIF_FORMATS,
 	WIDE_IMAGE_ASPECT_RATIO_LABEL,
 } from '@app/features/app/config/I18nDisplayConstants';
@@ -14,6 +14,7 @@ import styles from '@app/features/guild/components/modals/guild_tabs/guild_overv
 import type {GuildLike} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTypes';
 import {useGuildImageAssetField} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField';
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {msg} from '@lingui/core/macro';
@@ -81,7 +82,7 @@ export const GuildInviteSplashUploadField: React.FC<{
 		sourceModalTitle: i18n._(CHANGE_INVITE_BACKGROUND_DESCRIPTOR),
 		uploadHint: formatImageUploadMinimumHint(i18n, {
 			formats: STATIC_IMAGE_WITH_AVIF_FORMATS,
-			maxSize: IMAGE_MAX_SIZE_LABEL,
+			maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 			minimumSize: splashMinimumSize,
 			aspectRatio: WIDE_IMAGE_ASPECT_RATIO_LABEL,
 		}),

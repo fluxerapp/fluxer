@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import styles from '@app/features/theme_studio/ui/StudioPanel.module.css';
 import {clsx} from 'clsx';
 import type React from 'react';
 import type {ReactNode} from 'react';
-import styles from './StudioPanel.module.css';
 
 interface StudioPanelProps {
 	title?: ReactNode;

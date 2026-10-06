@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createRoleID} from '@app/api/BrandedTypes';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {CLIENT_FEATURES_HEADER, parseClientFeaturesHeader} from '@app/api/utils/featureUtils';
+import {Validator} from '@app/api/Validator';
 import {GuildIdParam, GuildIdRoleIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	GuildRoleCreateRequest,
@@ -7,17 +16,7 @@ import {
 	GuildRolePositionsRequest,
 	GuildRoleUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
-import {z} from 'zod';
-import {createGuildID, createRoleID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {requireOAuth2ScopeForBearer} from '../../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {CLIENT_FEATURES_HEADER, parseClientFeaturesHeader} from '../../utils/featureUtils';
-import {Validator} from '../../Validator';
+import {GuildRoleListResponse, GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 
 export function GuildRoleController(app: HonoApp) {
 	app.get(
@@ -29,7 +28,7 @@ export function GuildRoleController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_guild_roles',
 			summary: 'List guild roles',
-			responseSchema: z.array(GuildRoleResponse),
+			responseSchema: GuildRoleListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],

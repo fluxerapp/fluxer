@@ -2,15 +2,16 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import {User} from '@app/features/user/models/User';
+import {shouldShowDiscriminator} from '@app/features/user/utils/UserTagUtils';
 import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {action, makeAutoObservable, reaction, runInAction} from 'mobx';
+import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'is_staff',
 	'email',
 	'email_bounced',
+	'account_limited',
 	'mfa_enabled',
-	'phone',
 	'authenticator_types',
 	'verified',
 	'premium_type',
@@ -30,7 +31,6 @@ const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'premium_perks_disabled',
 	'password_last_changed_at',
 	'last_voice_activity_sharing_change_at',
-	'required_actions',
 	'nsfw_allowed',
 	'pending_bulk_message_deletion',
 	'has_dismissed_premium_onboarding',
@@ -46,9 +46,6 @@ const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 ] as const;
 
 function isPublicOnlyCurrentUserPayload(user: WireUser): boolean {
-	if (typeof user.mention_flags === 'number') {
-		return false;
-	}
 	return !CURRENT_USER_PRIVATE_WIRE_KEYS.some((key) => key in user);
 }
 
@@ -85,14 +82,19 @@ class Users {
 	}
 
 	getUserByTag(tag: string): User | undefined {
-		return this.usersList.find((user) => user.tag === tag);
+		const bareName = tag.toLowerCase();
+		return this.usersList.find(
+			(user) =>
+				user.tag === tag ||
+				`${user.username}#${user.discriminator}` === tag ||
+				(!shouldShowDiscriminator(user) && user.username.toLowerCase() === bareName),
+		);
 	}
 
 	getUsers(): ReadonlyArray<User> {
 		return this.usersList;
 	}
 
-	@action
 	handleGatewayReady(currentUser: UserPrivate): void {
 		const userRecord = new User(currentUser);
 		this.users = {
@@ -107,7 +109,6 @@ class Users {
 		}
 	}
 
-	@action
 	handleUserUpdate(
 		user: WireUser,
 		options?: {

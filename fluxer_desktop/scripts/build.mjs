@@ -33,46 +33,6 @@ const electronExternals = [
 	'@fluxer/webauthn',
 	'hunspell-asm',
 ];
-const pathAliasPlugin = {
-	name: 'path-alias',
-	setup(build) {
-		build.onResolve({filter: /^@electron\//}, (args) => {
-			const relativePath = args.path.replace(/^@electron\//, '');
-			const absolutePath = path.join(SRC_DIR, relativePath);
-			const extensions = ['.tsx', '.ts', '.js', '.jsx'];
-			for (const ext of extensions) {
-				const fullPath = absolutePath + ext;
-				if (fs.existsSync(fullPath)) {
-					return {path: fullPath};
-				}
-			}
-			for (const ext of extensions) {
-				const indexPath = path.join(absolutePath, `index${ext}`);
-				if (fs.existsSync(indexPath)) {
-					return {path: indexPath};
-				}
-			}
-			return {path: `${absolutePath}.tsx`};
-		});
-		build.onResolve({filter: /^@fluxer\/voice_engine_v2(?:\/.*)?$/}, (args) => {
-			const packageSrcDir = path.join(ROOT_DIR, '..', 'packages', 'voice_engine_v2', 'src');
-			if (args.path === '@fluxer/voice_engine_v2') {
-				return {path: path.join(packageSrcDir, 'index.ts')};
-			}
-			const relativePath = args.path.replace(/^@fluxer\/voice_engine_v2\//, '');
-			const directTsPath = path.join(packageSrcDir, `${relativePath}.ts`);
-			if (fs.existsSync(directTsPath)) {
-				return {path: directTsPath};
-			}
-			const indexTsPath = path.join(packageSrcDir, relativePath, 'index.ts');
-			if (fs.existsSync(indexTsPath)) {
-				return {path: indexTsPath};
-			}
-			return {path: path.join(packageSrcDir, relativePath)};
-		});
-	},
-};
-
 function findNodeBinary(rootDir) {
 	const matches = [];
 	for (const entry of fs.readdirSync(rootDir)) {
@@ -609,7 +569,6 @@ async function buildMain() {
 			minify: isProduction,
 			sourcemap: true,
 			external: electronExternals,
-			plugins: [pathAliasPlugin],
 			define: {
 				'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
 				...publicBuildDefines,
@@ -628,7 +587,6 @@ async function buildMain() {
 			minify: isProduction,
 			sourcemap: true,
 			external: electronExternals,
-			plugins: [pathAliasPlugin],
 			define: {
 				'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
 				...publicBuildDefines,
@@ -653,7 +611,6 @@ async function buildPreload() {
 		minify: isProduction,
 		sourcemap: true,
 		external: electronExternals,
-		plugins: [pathAliasPlugin],
 		define: {
 			'process.env.NODE_ENV': JSON.stringify(isProduction ? 'production' : 'development'),
 			...publicBuildDefines,

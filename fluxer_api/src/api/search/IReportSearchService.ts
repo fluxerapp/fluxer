@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import type {IARSubmission} from '@app/api/report/IReportRepository';
 import type {
 	ISearchAdapter as SchemaISearchAdapter,
 	SearchResult as SchemaSearchResult,
 } from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {ReportSearchFilters, SearchableReport} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import type {GuildID, MessageID, ReportID, UserID} from '../BrandedTypes';
-import type {IARSubmission} from '../report/IReportRepository';
 
 export interface IReportSearchService extends SchemaISearchAdapter<ReportSearchFilters, SearchableReport> {
 	indexReport(report: IARSubmission): Promise<void>;

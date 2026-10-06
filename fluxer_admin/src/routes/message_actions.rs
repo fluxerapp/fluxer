@@ -59,53 +59,51 @@ pub(crate) async fn messages_post(
     match action {
         "lookup" => {
             let context_limit = parse_context_limit(form.first("context_limit"));
-            return Redirect::to(&format!(
+            Redirect::to(&format!(
                 "{base}/messages?channel_id={}&message_id={}&context_limit={context_limit}",
                 encode_opt(&channel_id),
                 encode_opt(&message_id)
             ))
-            .into_response();
+            .into_response()
         }
         "lookup-by-attachment" => {
             let attachment_id = form.clean("attachment_id");
             let filename = form.clean("filename");
             let context_limit = parse_context_limit(form.first("context_limit"));
-            return Redirect::to(&format!(
+            Redirect::to(&format!(
                 "{base}/messages?channel_id={}&attachment_id={}&filename={}&context_limit={context_limit}",
                 encode_opt(&channel_id),
                 encode_opt(&attachment_id),
                 encode_opt(&filename)
             ))
-            .into_response();
+            .into_response()
         }
-        "browse" => {
-            return Redirect::to(&format!(
-                "{base}/messages?channel_id={}",
-                encode_opt(&channel_id)
-            ))
-            .into_response();
-        }
+        "browse" => Redirect::to(&format!(
+            "{base}/messages?channel_id={}",
+            encode_opt(&channel_id)
+        ))
+        .into_response(),
         "search" => {
             let search = form.clean("search");
-            return Redirect::to(&format!(
+            Redirect::to(&format!(
                 "{base}/messages?channel_id={}&search={}",
                 encode_opt(&channel_id),
                 encode_opt(&search)
             ))
-            .into_response();
+            .into_response()
         }
         "delete" => {
             let (Some(cid), Some(mid)) = (&channel_id, &message_id) else {
                 return json_error(StatusCode::BAD_REQUEST, "Missing channel_id or message_id");
             };
             let audit_log_reason = form.clean("audit_log_reason");
-            return match client
+            match client
                 .delete_message(cid, mid, audit_log_reason.as_deref())
                 .await
             {
                 Ok(()) => Json(serde_json::json!({"success": true})).into_response(),
                 Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
-            };
+            }
         }
         "report-to-ncmec" => {
             let attachment_id = form.clean("attachment_id");
@@ -131,7 +129,7 @@ pub(crate) async fn messages_post(
                     "Missing required NCMEC report fields",
                 );
             }
-            return match client
+            match client
                 .report_attachment_to_ncmec(
                     cid,
                     mid,
@@ -144,11 +142,10 @@ pub(crate) async fn messages_post(
             {
                 Ok(resp) => Json(resp.data).into_response(),
                 Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
-            };
+            }
         }
-        _ => {}
+        _ => Redirect::to(&format!("{base}/messages")).into_response(),
     }
-    Redirect::to(&format!("{base}/messages")).into_response()
 }
 
 pub(crate) async fn system_dms_post(
@@ -174,7 +171,8 @@ pub(crate) async fn system_dms_post(
     let flash = if let Some(content) = content.as_deref()
         && !user_ids.is_empty()
     {
-        match client.send_system_dm(&user_ids, content).await {
+        let recipients = (user_ids != ["*"]).then_some(user_ids.as_slice());
+        match client.send_system_dm(recipients, content).await {
             Ok(_) => FlashData::success("System DM sent"),
             Err(error) => {
                 tracing::warn!(%error, "admin API request failed: send system DM");
@@ -221,19 +219,6 @@ pub(crate) async fn bulk_actions_post(
                 .bulk_update_user_flags(&user_ids, &add, &remove, audit_log_reason.as_deref())
                 .await
         }
-        "bulk-update-suspicious-activity-flags" => {
-            let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
-            let add = form.list_values_any(&["add_flags[]", "add_flags"]);
-            let remove = form.list_values_any(&["remove_flags[]", "remove_flags"]);
-            client
-                .bulk_update_suspicious_activity_flags(
-                    &user_ids,
-                    &add,
-                    &remove,
-                    audit_log_reason.as_deref(),
-                )
-                .await
-        }
         "bulk-update-guild-features" => {
             let guild_ids = form.list_values_any(&["guild_ids[]", "guild_ids"]);
             let mut add = form.list_values_any(&["add_features[]", "add_features"]);
@@ -253,15 +238,25 @@ pub(crate) async fn bulk_actions_post(
         }
         "bulk-schedule-user-deletion" | "bulk_delete_users" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
-            let reason_code = form.parse_u32("reason_code").unwrap_or(2);
-            let days = form.parse_u32("days_until_deletion").unwrap_or(14);
+            let (Ok(reason_code), Ok(days)) = (
+                form.parse_value::<u32>("reason_code"),
+                form.parse_value::<u32>("days_until_deletion"),
+            ) else {
+                return flash::redirect_with_flash(
+                    &format!("{base}/bulk-actions"),
+                    FlashData::error("Invalid deletion reason code or delay"),
+                    config.secure_cookies(),
+                );
+            };
             let public_reason = form.clean("public_reason");
+            let notify_user = form.opt_out_value("notify_user");
             client
                 .bulk_schedule_user_deletion(
                     &user_ids,
-                    reason_code,
-                    days,
+                    reason_code.unwrap_or(2),
+                    days.unwrap_or(14),
                     public_reason.as_deref(),
+                    notify_user,
                     audit_log_reason.as_deref(),
                 )
                 .await
@@ -357,7 +352,7 @@ pub(crate) async fn messages_browse_fragment(
     }
 }
 
-fn parse_context_limit(value: Option<&str>) -> u32 {
+pub(super) fn parse_context_limit(value: Option<&str>) -> u32 {
     value
         .and_then(|s| s.parse::<u32>().ok())
         .filter(|n| *n > 0)

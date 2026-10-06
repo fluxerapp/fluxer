@@ -238,3 +238,28 @@ input:disabled + .checkbox-custom {
   border: 2px solid transparent;
   background-clip: content-box;
 }
+
+:target {
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  scroll-margin-top: 6rem;
+  animation: target-pulse 700ms ease-in-out 3;
+}
+
+@keyframes target-pulse {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+
+  50% {
+    background-color: hsl(242 70% 55% / 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :target {
+    background-color: hsl(242 70% 55% / 0.12);
+    animation: none;
+  }
+}

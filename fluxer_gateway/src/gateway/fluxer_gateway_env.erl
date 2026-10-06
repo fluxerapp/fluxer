@@ -60,36 +60,16 @@ build_config() ->
 
 -spec apply_system_config(config()) -> ok.
 apply_system_config(Config) ->
-    apply_logger_config(Config),
-    store_environment(Config).
-
--spec apply_logger_config(config()) -> ok.
-apply_logger_config(Config) ->
     LoggerLevel = resolve_logger_level(Config),
     _ = logger:set_primary_config(level, LoggerLevel),
     _ = logger:set_handler_config(default, level, LoggerLevel),
     ok.
 
--spec store_environment(config()) -> ok.
-store_environment(Config) ->
-    Telemetry = maps:get(telemetry, Config, #{}),
-    Environment = maps:get(environment, Telemetry, <<"unknown">>),
-    EnvBin = ensure_binary(Environment),
-    persistent_term:put({fluxer_config, environment}, EnvBin),
-    ok.
-
--spec ensure_binary(term()) -> binary().
-ensure_binary(Value) when is_binary(Value) -> Value;
-ensure_binary(Value) when is_list(Value) -> characters_to_binary_or_unknown(Value);
-ensure_binary(Value) when is_atom(Value) -> atom_to_binary(Value, utf8);
-ensure_binary(_) -> <<"unknown">>.
-
 -spec resolve_logger_level(config()) -> logger_level().
 resolve_logger_level(Config) ->
     Default = normalize_logger_level(maps:get(logger_level, Config, info)),
-    case os:getenv("LOGGER_LEVEL") of
-        false -> Default;
-        "" -> Default;
+    case fluxer_gateway_config:env_value("LOGGER_LEVEL") of
+        undefined -> Default;
         Value -> parse_logger_level(Value, Default)
     end.
 
@@ -117,7 +97,3 @@ normalize_logger_level(critical) -> critical;
 normalize_logger_level(alert) -> alert;
 normalize_logger_level(emergency) -> emergency;
 normalize_logger_level(_) -> info.
-
--spec characters_to_binary_or_unknown(term()) -> binary().
-characters_to_binary_or_unknown(Value) ->
-    type_conv:ensure_binary(Value, <<"unknown">>).

@@ -62,9 +62,7 @@ export const DeviceRevokeModal = observer(({sessionIdHashes}: DeviceRevokeModalP
 						<Trans comment="Security warning explaining that selected saved login sessions will be signed out.">
 							This will sign out the selected{' '}
 							<Plural value={sessionCount} one="device" other="devices" data-flx="auth.device-revoke-modal.plural" />{' '}
-							from your account. You will need to sign in again on those{' '}
-							<Plural value={sessionCount} one="device" other="devices" data-flx="auth.device-revoke-modal.plural--2" />
-							.
+							from your account. You will need to sign in again on each device.
 						</Trans>
 					</Modal.Description>
 				</Modal.ContentLayout>

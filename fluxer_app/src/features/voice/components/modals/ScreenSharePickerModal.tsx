@@ -62,7 +62,10 @@ import {
 	StreamSettingsMenuContent,
 	useHasHigherVideoQuality,
 } from '@app/features/voice/components/StreamSettingsMenuContent';
-import {selectStreamSettingsAudioMenuState} from '@app/features/voice/components/StreamSettingsMenuContentStateMachine';
+import {
+	offeredScreenShareResolution,
+	selectStreamSettingsAudioMenuState,
+} from '@app/features/voice/components/StreamSettingsMenuContentStateMachine';
 import MediaEngine, {useVoiceEngineV2Model} from '@app/features/voice/engine/MediaEngineFacade';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {selectVoiceEngineV2AppConnection} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
@@ -72,23 +75,21 @@ import VoiceSettings, {
 	type LastScreenShareSource,
 	type LastScreenShareSourceKind,
 	type ScreenshareResolution,
-	type StreamingMode,
 } from '@app/features/voice/state/VoiceSettings';
 import {filterRoutableLinuxAudioSources} from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {getNativeAudioAvailabilityCached} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {isScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
-import {formatScreenShareAudioSummary} from '@app/features/voice/utils/ScreenShareAudioSummary';
+import {
+	formatScreenShareAudioSummary,
+	resolveDeviceShareAudioPairing,
+} from '@app/features/voice/utils/ScreenShareAudioSummary';
 import {
 	getDisplayShareEnvironment,
 	shouldShowDesktopDownloadCta,
 	supportsDeviceScreenShare,
 	usesNativeDisplaySharePicker,
 } from '@app/features/voice/utils/ScreenShareEnvironment';
-import {
-	normaliseResolutionForContext,
-	normaliseStreamingModeForContext,
-	resolveStreamingModeSettings,
-} from '@app/features/voice/utils/ScreenShareOptions';
+import {resolveScreenShareTarget} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	startConfiguredDeviceScreenShare,
 	startConfiguredDisplayScreenShare,
@@ -145,6 +146,7 @@ const APP_WINDOW_DESCRIPTOR = msg({
 });
 const DISPLAY_DESCRIPTOR = msg({
 	message: 'Display',
+	context: 'display-screen',
 	comment:
 		'Fallback label for a display / monitor card in the screen-share picker when the OS does not give us a display name.',
 });
@@ -230,7 +232,7 @@ const GAMING_DESCRIPTOR = msg({
 	comment: 'Footer summary label for the gaming screen-share quality preset.',
 });
 const SCREENSHARE_DESCRIPTOR = msg({
-	message: 'Screenshare',
+	message: 'Screen share',
 	comment: 'Footer summary label for the text-focused screen-share quality preset.',
 });
 const CUSTOM_DESCRIPTOR = msg({
@@ -248,6 +250,11 @@ const CLEARER_TEXT_DESCRIPTOR = msg({
 const SOURCE_DESCRIPTOR = msg({
 	message: 'Source',
 	comment: 'Footer summary resolution label for native source resolution.',
+});
+const FPS_DESCRIPTOR = msg({
+	message: '{fps} FPS',
+	comment:
+		'Footer summary frame-rate label in the screen share picker. {fps} is the integer frame rate. FPS is a technical token.',
 });
 const DEVICE_AUDIO_MUTED_DESCRIPTOR = msg({
 	message: 'Audio muted',
@@ -596,38 +603,12 @@ function useScreenSharePickerTabState(initialTab: ScreenSharePickerTab | undefin
 	};
 }
 
-interface EffectiveStreamSummary {
-	mode: StreamingMode;
-	resolution: ScreenshareResolution;
-	frameRate: number;
-}
-
-function resolveEffectiveStreamSummary(
-	activeTab: ScreenSharePickerTab,
-	hasHigherVideoQuality: boolean,
-): EffectiveStreamSummary {
-	const context = activeTab === 'devices' ? 'device' : 'display';
-	const mode = normaliseStreamingModeForContext(VoiceSettings.getStreamingMode(), context);
-	const resolution = normaliseResolutionForContext(
-		VoiceSettings.getScreenshareResolution(),
-		context,
-		hasHigherVideoQuality,
-	);
-	const effective = resolveStreamingModeSettings(
-		mode,
-		resolution,
-		VoiceSettings.getVideoFrameRate(),
-		hasHigherVideoQuality,
-	);
-	return {mode, resolution: effective.resolution, frameRate: effective.frameRate};
-}
-
 function getStreamSummaryResolutionLabel(resolution: ScreenshareResolution, sourceLabel: string): string {
-	if (resolution === 'low_240p') return '240p';
-	if (resolution === 'low_480p') return '480p';
-	if (resolution === 'medium') return '720p';
-	if (resolution === 'high') return '1080p';
-	if (resolution === 'ultra') return '1440p';
+	const offered = offeredScreenShareResolution(resolution);
+	if (offered === 'low_480p') return '480p';
+	if (offered === 'medium') return '720p';
+	if (offered === 'high') return '1080p';
+	if (offered === 'ultra') return '1440p';
 	return sourceLabel;
 }
 
@@ -1438,7 +1419,16 @@ const ScreenSharePickerModalLoadedContent = observer(
 		const emptyStateCopy = activeTab === 'devices' ? deviceEmptyStateCopy : desktopEmptyStateCopy;
 		const emptyStateIcon =
 			activeTab === 'apps' ? AppWindowIcon : activeTab === 'displays' ? MonitorIcon : VideoCameraIcon;
-		const streamSummary = resolveEffectiveStreamSummary(activeTab, hasHigherVideoQuality);
+		const shareContext = activeTab === 'devices' ? 'device' : activeTab === 'apps' ? 'app' : 'display';
+		const streamSummary = resolveScreenShareTarget({
+			mode: VoiceSettings.getStreamingMode(),
+			storedResolution: VoiceSettings.getScreenshareResolution(),
+			storedFrameRate: VoiceSettings.getVideoFrameRate(),
+			entitled: hasHigherVideoQuality,
+			context: shareContext,
+			sourceDimensions: null,
+			hintSetting: VoiceSettings.getScreenShareContentHint(),
+		});
 		const streamSummaryTitle =
 			streamSummary.mode === 'gaming'
 				? i18n._(GAMING_DESCRIPTOR)
@@ -1451,7 +1441,6 @@ const ScreenSharePickerModalLoadedContent = observer(
 				: streamSummary.mode === 'screenshare'
 					? i18n._(CLEARER_TEXT_DESCRIPTOR)
 					: null;
-		const shareContext = activeTab === 'devices' ? 'device' : activeTab === 'apps' ? 'app' : 'display';
 		const configuredCaptureAudioEnabled =
 			activeTab === 'devices'
 				? VoiceSettings.getShareDeviceAudio()
@@ -1490,6 +1479,11 @@ const ScreenSharePickerModalLoadedContent = observer(
 					includeSources: audioIncludeSources,
 					shareContext,
 					microphoneLabel,
+					chosenAudioDeviceId: VoiceSettings.getScreenShareAudioDeviceId(),
+					deviceAudioPairing: resolveDeviceShareAudioPairing(
+						[...videoDevices, ...inputDevices],
+						selectedDeviceId ?? '',
+					),
 					displayShareEnvironment,
 					windowAudioScope,
 					usesDeviceMicrophone: VoiceSettings.getScreenShareDeviceAudioUsesMicrophone(),
@@ -1501,7 +1495,7 @@ const ScreenSharePickerModalLoadedContent = observer(
 			activeTab === 'devices' ? deviceSelectionError : null,
 			streamSummaryDescription,
 			getStreamSummaryResolutionLabel(streamSummary.resolution, i18n._(SOURCE_DESCRIPTOR)),
-			`${streamSummary.frameRate}fps`,
+			i18n._(FPS_DESCRIPTOR, {fps: i18n.number(streamSummary.frameRate)}),
 			audioSummary,
 		].filter((detail): detail is string => detail != null);
 		return (

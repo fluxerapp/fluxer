@@ -4,9 +4,12 @@ import {
 	MARKDOWN_BLOCK_ATTRIBUTE,
 	MarkdownBlock,
 	type MarkdownBlockName,
-} from '../../messaging/components/markdown/renderers/common/MarkdownBlockAttributes';
-import {COMPACT_MARKDOWN_ATTRIBUTE, COMPACT_MESSAGE_PREFIX_ATTRIBUTE} from './MessageLayoutAttributes';
-import {getMessageLayoutCssVariables} from './MessageLayoutSpec';
+} from '@app/features/messaging/components/markdown/renderers/common/MarkdownBlockAttributes';
+import {
+	COMPACT_MARKDOWN_ATTRIBUTE,
+	COMPACT_MESSAGE_PREFIX_ATTRIBUTE,
+} from '@app/features/theme/layout/MessageLayoutAttributes';
+import {getMessageLayoutCssVariables} from '@app/features/theme/layout/MessageLayoutSpec';
 
 function renderRule(selector: string, declarations: ReadonlyArray<string>): string {
 	return `${selector} {\n${declarations.map((declaration) => `\t${declaration}`).join('\n')}\n}`;

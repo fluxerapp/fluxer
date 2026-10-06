@@ -23,7 +23,7 @@ import type {
 	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2TimerOptions,
-} from './types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export type VoiceEngineV2Command =
 	| {type: 'implementation.prewarm'; operationId: VoiceEngineV2OperationId}

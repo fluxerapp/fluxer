@@ -8,6 +8,7 @@ import Accessibility, {
 } from '@app/features/accessibility/state/Accessibility';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {APP_ZOOM_LEVEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
@@ -20,7 +21,7 @@ import {msg, ph} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useEffect, useMemo} from 'react';
+import {useCallback, useEffect, useMemo} from 'react';
 
 const CHAT_FONT_SIZE_DESCRIPTOR = msg({
 	message: 'Chat font size',
@@ -98,8 +99,8 @@ export const FontSizeTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const fontSize = Accessibility.fontSize;
 	const options: ReadonlyArray<ComboboxOption<number>> = useMemo(
-		() => FONT_SIZE_OPTIONS.map((value) => ({value, label: `${value}px`})),
-		[],
+		() => FONT_SIZE_OPTIONS.map((value) => ({value, label: `${getCachedNumberFormat(i18n.locale).format(value)}px`})),
+		[i18n.locale],
 	);
 	const selectedFontSize = getNearestFontSize(fontSize);
 	useEffect(() => {
@@ -149,6 +150,10 @@ export const AppZoomLevelTabContent: React.FC = observer(() => {
 	const zoomPercent = roundPercentage(zoomLevel * 100);
 	const markers = ZOOM_LEVEL_MARKERS.map((step) => roundPercentage(step * 100));
 	const {i18n} = useLingui();
+	const formatPercentage = useCallback(
+		(value: number) => formatRoundedPercentage(i18n.locale, value),
+		[i18n, i18n.locale],
+	);
 	return (
 		<Slider
 			defaultValue={zoomPercent}
@@ -156,14 +161,16 @@ export const AppZoomLevelTabContent: React.FC = observer(() => {
 			minValue={Math.round(ZOOM_LEVEL_MIN * 100)}
 			maxValue={Math.round(ZOOM_LEVEL_MAX * 100)}
 			ariaLabel={i18n._(APP_ZOOM_LEVEL_DESCRIPTOR)}
-			ariaValueText={i18n._(PERCENT_DESCRIPTOR, {zoomPercent})}
+			ariaValueText={i18n._(PERCENT_DESCRIPTOR, {zoomPercent: getCachedNumberFormat(i18n.locale).format(zoomPercent)})}
 			step={1}
 			markers={markers}
 			stickToMarkers={false}
 			asValueChanges={() => {}}
 			onValueChange={(value) => AccessibilityCommands.update({zoomLevel: value / 100})}
-			onMarkerRender={formatRoundedPercentage}
-			onValueRender={(value) => <Trans>{ph({zoomPercent: roundPercentage(value)})}%</Trans>}
+			onMarkerRender={formatPercentage}
+			onValueRender={(value) => (
+				<Trans>{ph({zoomPercent: getCachedNumberFormat(i18n.locale).format(roundPercentage(value))})}%</Trans>
+			)}
 			data-flx="user.appearance-tab.scaling-tab.app-zoom-level-tab-content.slider"
 		/>
 	);
@@ -175,8 +182,8 @@ export function useAppZoomLevelDescription(): string {
 		if (shouldWarnAboutFirefoxWebZoomShortcuts()) {
 			return i18n._(ADJUST_THE_OVERALL_ZOOM_LEVEL_OF_THE_APP_DESCRIPTOR, {productName: PRODUCT_NAME});
 		}
-		const zoomIn = formatKeyCombo(Keybind.getByAction('system_zoom_in').combo);
-		const zoomOut = formatKeyCombo(Keybind.getByAction('system_zoom_out').combo);
+		const zoomIn = formatKeyCombo(i18n, Keybind.getByAction('system_zoom_in').combo);
+		const zoomOut = formatKeyCombo(i18n, Keybind.getByAction('system_zoom_out').combo);
 		return i18n._(ADJUST_THE_OVERALL_ZOOM_LEVEL_OF_THE_APP_2_DESCRIPTOR, {zoomIn, zoomOut});
 	}, [i18n.locale]);
 }

@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {enqueueCrosspostSourceRemoval} from '@app/api/channel/services/message/CrosspostPropagation';
+import {purgeMessageAttachments} from '@app/api/channel/services/message/MessageHelpers';
+import type {Message} from '@app/api/models/Message';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import {chunkArray} from '@app/api/utils/ArrayUtils';
+import {createBulkDeleteDispatcher} from '@app/api/worker/tasks/utils/MessageDeletion';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {seconds} from 'itty-time';
 import {z} from 'zod';
-import type {ChannelID, MessageID} from '../../BrandedTypes';
-import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
-import {purgeMessageAttachments} from '../../channel/services/message/MessageHelpers';
-import type {Message} from '../../models/Message';
-import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
-import {getWorkerDependencies} from '../WorkerContext';
-import {chunkArray, createBulkDeleteDispatcher} from './utils/MessageDeletion';
 
 const PayloadSchema = z.object({
 	job_id: z.string().min(1),
@@ -29,7 +31,8 @@ const STATUS_TTL_SECONDS = seconds('1 hour');
 const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 	const data = PayloadSchema.parse(payload);
 	helpers.logger.debug({payload: data}, 'Processing messageShred task');
-	const {kvClient, channelRepository, gatewayService, storageService, purgeQueue} = getWorkerDependencies();
+	const {kvClient, channelRepository, gatewayService, storageService, purgeQueue, workerService} =
+		getWorkerDependencies();
 	const progressKey = `message_shred_status:${data.job_id}`;
 	const requestedEntries = data.entries.length;
 	const startedAt = new Date().toISOString();
@@ -126,9 +129,7 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 				await Promise.all(
 					deletionChunk.map(
 						async ({channelId, messageId, message}: {channelId: ChannelID; messageId: MessageID; message: Message}) => {
-							if (message.attachments.length > 0) {
-								await purgeMessageAttachments(message, storageService, purgeQueue);
-							}
+							await purgeMessageAttachments(message, storageService, purgeQueue);
 							return channelRepository.deleteMessage(channelId, messageId, authorId);
 						},
 					),
@@ -138,6 +139,10 @@ const messageShredTask: WorkerTaskHandler = async (payload, helpers) => {
 					deletionChunk.map(({messageId}) => messageId),
 					{context: {source: 'message_shred', jobId: data.job_id}},
 				);
+				await enqueueCrosspostSourceRemoval(workerService, {
+					messages: deletionChunk.map(({message}) => message),
+					mode: 'purge',
+				});
 				await persistStatus('in_progress');
 				for (const {channelId, messageId} of deletionChunk) {
 					bulkDeleteDispatcher.track(channelId, messageId);

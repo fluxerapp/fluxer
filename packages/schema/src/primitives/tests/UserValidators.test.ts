@@ -6,7 +6,6 @@ import {
 	EmailType,
 	GlobalNameType,
 	PasswordType,
-	PhoneNumberType,
 	UsernameType,
 	WebhookNameType,
 } from '@fluxer/schema/src/primitives/UserValidators';
@@ -14,11 +13,8 @@ import {describe, expect, it} from 'vitest';
 
 describe('EmailType', () => {
 	it('accepts valid email addresses', () => {
-		const result = EmailType.safeParse('user@example.com');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('user@example.com');
-		}
+		const result = EmailType.parse('user@example.com');
+		expect(result).toBe('user@example.com');
 	});
 	it('accepts emails with subdomains', () => {
 		const result = EmailType.safeParse('user@mail.example.com');
@@ -46,42 +42,27 @@ describe('EmailType', () => {
 		expect(result.success).toBe(false);
 	});
 	it('trims emails with leading/trailing whitespace', () => {
-		const result = EmailType.safeParse('  user@example.com  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('user@example.com');
-		}
+		const result = EmailType.parse('  user@example.com  ');
+		expect(result).toBe('user@example.com');
 	});
 });
 
 describe('DiscriminatorType', () => {
 	it('accepts valid single digit discriminators', () => {
-		const result = DiscriminatorType.safeParse('1');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(1);
-		}
+		const result = DiscriminatorType.parse('1');
+		expect(result).toBe(1);
 	});
 	it('accepts valid four digit discriminators', () => {
-		const result = DiscriminatorType.safeParse('1234');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(1234);
-		}
+		const result = DiscriminatorType.parse('1234');
+		expect(result).toBe(1234);
 	});
 	it('accepts zero as discriminator', () => {
-		const result = DiscriminatorType.safeParse('0');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(0);
-		}
+		const result = DiscriminatorType.parse('0');
+		expect(result).toBe(0);
 	});
 	it('accepts discriminators with leading zeros', () => {
-		const result = DiscriminatorType.safeParse('0001');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe(1);
-		}
+		const result = DiscriminatorType.parse('0001');
+		expect(result).toBe(1);
 	});
 	it('rejects discriminators with more than 4 digits', () => {
 		const result = DiscriminatorType.safeParse('12345');
@@ -102,11 +83,8 @@ describe('DiscriminatorType', () => {
 
 describe('UsernameType', () => {
 	it('accepts valid alphanumeric usernames', () => {
-		const result = UsernameType.safeParse('testuser');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('testuser');
-		}
+		const result = UsernameType.parse('testuser');
+		expect(result).toBe('testuser');
 	});
 	it('accepts usernames with underscores', () => {
 		const result = UsernameType.safeParse('test_user');
@@ -117,11 +95,8 @@ describe('UsernameType', () => {
 		expect(result.success).toBe(true);
 	});
 	it('trims whitespace', () => {
-		const result = UsernameType.safeParse('  testuser  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('testuser');
-		}
+		const result = UsernameType.parse('  testuser  ');
+		expect(result).toBe('testuser');
 	});
 	it('rejects empty usernames', () => {
 		const result = UsernameType.safeParse('');
@@ -170,22 +145,16 @@ describe('UsernameType', () => {
 
 describe('GlobalNameType', () => {
 	it('accepts valid display names', () => {
-		const result = GlobalNameType.safeParse('Test User');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('Test User');
-		}
+		const result = GlobalNameType.parse('Test User');
+		expect(result).toBe('Test User');
 	});
 	it('accepts names with unicode characters', () => {
 		const result = GlobalNameType.safeParse('Test User');
 		expect(result.success).toBe(true);
 	});
 	it('sanitizes and normalizes input', () => {
-		const result = GlobalNameType.safeParse('  Test  User  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('Test User');
-		}
+		const result = GlobalNameType.parse('  Test  User  ');
+		expect(result).toBe('Test User');
 	});
 	it('rejects empty names', () => {
 		const result = GlobalNameType.safeParse('');
@@ -223,11 +192,8 @@ describe('GlobalNameType', () => {
 
 describe('PasswordType', () => {
 	it('accepts valid passwords', () => {
-		const result = PasswordType.safeParse('securepassword123');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('securepassword123');
-		}
+		const result = PasswordType.parse('securepassword123');
+		expect(result).toBe('securepassword123');
 	});
 	it('accepts passwords at minimum length', () => {
 		const result = PasswordType.safeParse('12345678');
@@ -245,58 +211,15 @@ describe('PasswordType', () => {
 		expect(result.success).toBe(false);
 	});
 	it('trims and normalizes password', () => {
-		const result = PasswordType.safeParse('  password123  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('password123');
-		}
-	});
-});
-
-describe('PhoneNumberType', () => {
-	it('accepts valid E.164 phone numbers', () => {
-		const result = PhoneNumberType.safeParse('+14155551234');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('+14155551234');
-		}
-	});
-	it('accepts international phone numbers', () => {
-		const result = PhoneNumberType.safeParse('+442071234567');
-		expect(result.success).toBe(true);
-	});
-	it('rejects phone numbers without plus prefix', () => {
-		const result = PhoneNumberType.safeParse('14155551234');
-		expect(result.success).toBe(false);
-		if (!result.success) {
-			expect(result.error.issues[0].message).toBe(ValidationErrorCodes.PHONE_NUMBER_INVALID_FORMAT);
-		}
-	});
-	it('rejects phone numbers starting with +0', () => {
-		const result = PhoneNumberType.safeParse('+04155551234');
-		expect(result.success).toBe(false);
-	});
-	it('rejects phone numbers with invalid characters', () => {
-		const result = PhoneNumberType.safeParse('+1-415-555-1234');
-		expect(result.success).toBe(false);
-	});
-	it('rejects phone numbers that are too short', () => {
-		const result = PhoneNumberType.safeParse('+1');
-		expect(result.success).toBe(false);
-	});
-	it('rejects phone numbers that are too long', () => {
-		const result = PhoneNumberType.safeParse('+1234567890123456');
-		expect(result.success).toBe(false);
+		const result = PasswordType.parse('  password123  ');
+		expect(result).toBe('password123');
 	});
 });
 
 describe('WebhookNameType', () => {
 	it('accepts valid webhook names', () => {
-		const result = WebhookNameType.safeParse('My Webhook');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('My Webhook');
-		}
+		const result = WebhookNameType.parse('My Webhook');
+		expect(result).toBe('My Webhook');
 	});
 	it('accepts single character names', () => {
 		const result = WebhookNameType.safeParse('A');
@@ -318,10 +241,7 @@ describe('WebhookNameType', () => {
 		}
 	});
 	it('trims and normalizes webhook names', () => {
-		const result = WebhookNameType.safeParse('  My Webhook  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('My Webhook');
-		}
+		const result = WebhookNameType.parse('  My Webhook  ');
+		expect(result).toBe('My Webhook');
 	});
 });

@@ -12,7 +12,7 @@ Decode the string before reading any preference, and encode a valid `SyncedPrefe
 
 The empty string in a response means nothing is stored. Sending null or the empty string clears it. A stored snapshot reaches the account's other sessions through [User Settings Update](/gateway/events/#user-settings-update).
 
-Fluxer decodes every submitted snapshot and re-encodes it in canonical form before storing it, so a read can return a different string from the one submitted. Known fields are emitted in ascending field number order, and an unrecognised field number is preserved and re-emitted after them. Enums here are open, and an unassigned numeric value survives the round trip. When every known field holds its zero value and no unrecognised field is present, the snapshot encodes to zero bytes and is stored as the empty string.
+A returned snapshot can have a different encoding from the submitted one. Unknown fields and enum values survive the round trip. A snapshot containing only default values is returned as the empty string.
 
 A submission may use either the standard or the URL-safe base64 alphabet, with or without padding. Fluxer always returns the standard alphabet with padding.
 
@@ -30,23 +30,23 @@ Fluxer reports every entry in the resulting `errors` array against the path `syn
 
 | Condition | Status and code | Element codes |
 | --- | --- | --- |
-| Encoded string longer than 349528 characters | 400 `INVALID_FORM_BODY` | `CONTENT_EXCEEDS_MAX_LENGTH` and `INVALID_FORMAT` |
+| Encoded string longer than 699052 characters | 400 `INVALID_FORM_BODY` | `CONTENT_EXCEEDS_MAX_LENGTH` and `INVALID_FORMAT` |
 | Encoded string outside the base64 alphabet | 400 `INVALID_FORM_BODY` | `INVALID_FORMAT` |
-| Decoded message above 262144 bytes | 400 `INVALID_FORM_BODY` | `TOO_LARGE` |
-| Bytes that do not decode as `SyncedPreferences` | 400 `INVALID_FORM_BODY` | `INVALID_FORMAT` |
+| Decoded message above 524288 bytes | 400 `VALIDATION_ERROR` | `TOO_LARGE` |
+| Bytes that do not decode as `SyncedPreferences` | 400 `VALIDATION_ERROR` | `INVALID_FORMAT` |
 
 An over-length string draws two entries for the one path.
 
 ## Synced preferences object
 
-The `SyncedPreferences` message is the root of the snapshot. Every field is a preference group defined in its own section, except `sanitize_urls` and `save_camera_uploads_to_device`, which are bools. Field numbers are allocated in blocks: 1 to 3, 20 to 25, 40 to 45, 60 to 63, 80 to 82, and 100 to 113. Never derive a field number from a field's position in this table.
+`SyncedPreferences` is the root message. Most fields are preference groups. Use the Protobuf schema for field numbers, not their position in this table.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
 | accessibility? | [accessibility settings](#accessibility-settings-object) object | Accessibility, display, motion, media, and interaction preferences |
-| accessibility_overrides? | [accessibility overrides](#accessibility-overrides-object) object | Dirty flags for three media settings, with no live consumer |
+| accessibility_overrides? | [accessibility overrides](#accessibility-overrides-object) object | Dirty flags for media settings, with no live consumer |
 | textual_preview? | [textual preview settings](#textual-preview-settings-object) object | Textual preview wrapping preferences |
 | emoji_picker? | [emoji picker state](#emoji-picker-state-object) object | Emoji picker usage, favourites, and collapsed categories |
 | sticker_picker? | [sticker picker state](#sticker-picker-state-object) object | Sticker picker usage, favourites, and collapsed categories |
@@ -81,6 +81,8 @@ The `SyncedPreferences` message is the root of the snapshot. Every field is a pr
 | keybinds? | [keybind settings](#keybind-settings-object) object | Custom keybinds and transmit mode preferences |
 | chat_input? | [chat input settings](#chat-input-settings-object) object | Chat composer behaviour preferences |
 | save_camera_uploads_to_device?<sup>4</sup> | bool | Whether a camera upload is also written to the device |
+| double_tap_reaction? | [reaction emoji](#reaction-emoji-object) object | Emoji a double tap on a message adds as a reaction |
+| announcement_prompts? | [announcement prompts state](#announcement-prompts-state-object) object | Hidden announcement channel prompt state |
 
 <sup>1</sup> The entries live inside the snapshot, and the account [memes](/http-api/memes/) collection holds none of them
 
@@ -173,7 +175,7 @@ The `accessibility` field has display, motion, message, media, voice, and intera
 
 <sup>6</sup> The complete CSS of the account's synced custom theme, stored inline. A client that has opted out of syncing its theme applies a local one instead and re-emits this value unchanged, so it does not overwrite the value on the devices that do sync
 
-<sup>7</sup> A multiplier, where 1 is unscaled. The first-party client keeps its zoom level in browser storage and does not read or write this field
+<sup>7</sup> A multiplier, where 1 is unscaled. Unused by the first-party client
 
 <sup>8</sup> A multiplier, where 1 is the unmodified speaking rate
 
@@ -203,11 +205,11 @@ Field numbers 42 and 43 are reserved, together with the names `attachment_media_
 | --- | --- | --- |
 | 0 | HDR_DISPLAY_MODE_UNSPECIFIED | No explicit mode is selected |
 | 1 | HDR_DISPLAY_MODE_FULL | Display HDR media without limiting its range |
-| 2 | HDR_DISPLAY_MODE_STANDARD | Display HDR media using the standard presentation |
+| 2 | HDR_DISPLAY_MODE_STANDARD | Limit HDR media to standard dynamic range |
 
 ## Accessibility overrides object
 
-The `accessibility_overrides` field holds three dirty flags that no live surface reads or writes. The settings they name also appear in [accessibility settings](#accessibility-settings-object) as a `mobile_*_overridden` flag with a matching `mobile_*_value`.
+The `accessibility_overrides` field is unused by the first-party client. Use the `mobile_*_overridden` and matching `mobile_*_value` fields in [accessibility settings](#accessibility-settings-object).
 
 ### Structure
 
@@ -418,7 +420,7 @@ One entry names one grouping in the favourites view. The client chooses the iden
 
 ## Recent mentions settings object
 
-The `recent_mentions` field controls which mentions appear in the recent mentions view. The three filters combine, and `include_guilds` selects by channel.
+The `recent_mentions` field controls which mentions appear in the recent mentions view. Each filter set to false removes its mentions, and a mention appears only when no filter removes it. `include_guilds` tests the channel the mention is in.
 
 ### Structure
 
@@ -468,7 +470,7 @@ The `unread_channels` field stores which channels are collapsed in the unread vi
 
 ## Mention frecency state object
 
-The `mention_frecency` field records how often and how recently the account mentioned each user, one record set per guild, so a client can rank mention autocomplete without a server call. It nests two messages, `MentionFrecencyState.Scope` and `MentionFrecencyState.Entry`.
+The `mention_frecency` field records how often and how recently the account mentioned each user, one record set per guild, so a client can rank mention autocomplete without a server call. It nests the messages `MentionFrecencyState.Scope` and `MentionFrecencyState.Entry`.
 
 ### Structure
 
@@ -521,7 +523,6 @@ The `nagbars` field stores dismissed account-wide notices as bools and dismissed
 | desktop_download | bool | Whether the desktop download notice is dismissed |
 | guild_membership_cta | bool | Whether the guild membership call to action notice is dismissed |
 | visionary_mfa<sup>1</sup> | bool | Whether the lifetime premium MFA notice is dismissed |
-| legacy_phone_unlink | bool | Whether the legacy phone unlink notice is dismissed |
 | pending_bulk_deletion | map[string, bool] | Dismissal state keyed by pending bulk deletion identifier |
 | invites_disabled<sup>2</sup> | map[string, bool] | Dismissal state keyed by guild ID for disabled-invite notices |
 | guild_mfa_requirement<sup>2</sup> | map[string, bool] | Dismissal state keyed by guild ID for MFA requirement notices |
@@ -608,7 +609,7 @@ The `sound` field controls sound playback, master volume, and per-sound override
 
 ### Sound identifiers
 
-Both maps are keyed by an arbitrary string, and Fluxer stores and returns any key unchanged. The first-party client uses the identifiers below, and a key outside this set has no defined playback effect.
+Both maps are keyed by an arbitrary string, and Fluxer stores and returns any key unchanged. The first-party client uses the identifiers below, and the first-party client ignores a key outside this set.
 
 | Value | Description |
 | --- | --- |
@@ -760,6 +761,16 @@ The `voice_prompts` field stores which voice confirmation prompts the account ha
 | skip_hide_own_camera_confirm | bool | Whether hiding the caller's own camera skips confirmation |
 | skip_hide_own_screenshare_confirm | bool | Whether hiding the caller's own screen share skips confirmation |
 
+## Announcement prompts state object
+
+The `announcement_prompts` field stores which announcement channel prompts the account has hidden.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| hide_publish_nudge | bool | Whether the prompt to publish a new message in an [announcement channel](/topics/announcement-channels/) is hidden |
+
 ## Sudo prompt state object
 
 The `sudo_prompt` field stores the verification method the account used most recently, so a client can preselect it the next time [sudo mode](/http-api/users/mfa/#sudo-mode) is required.
@@ -770,7 +781,7 @@ The `sudo_prompt` field stores the verification method the account used most rec
 | --- | --- | --- |
 | last_used_mfa_method?<sup>1</sup> | int32 | [MFA method](#mfa-methods) most recently used for sudo verification |
 
-<sup>1</sup> The two assigned values correspond to `totp` and `webauthn` in `mfa_method` of the [sudo verification object](/http-api/users/mfa/#sudo-verification-object)
+<sup>1</sup> The assigned values correspond to `totp` and `webauthn` in `mfa_method` of the [sudo verification object](/http-api/users/mfa/#sudo-verification-object)
 
 ### MFA methods
 
@@ -850,3 +861,16 @@ The `chat_input` field controls message composer behaviour.
 | Field | Type | Description |
 | --- | --- | --- |
 | convert_emoticons? | bool | Whether emoticons are converted to emoji |
+
+## Reaction emoji object
+
+The `double_tap_reaction` field stores the emoji that a double tap on a message adds as a reaction. It has the same shape as the [reaction emoji object](/gateway/events/#reaction-emoji-object). A Unicode emoji sets only `name`, and a custom emoji sets both `id` and `name`.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id?<sup>1</sup> | string | Custom emoji ID, absent for a Unicode emoji |
+| name | string | Unicode emoji, or the custom emoji's name |
+
+<sup>1</sup> The decimal form of a [snowflake](/snowflakes/). Fluxer never resolves it, so it can name a custom emoji the account can no longer use

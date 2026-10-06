@@ -34,7 +34,7 @@ const AFK_TIMEOUT_DESCRIPTOR = msg({
 	comment: 'Short label in the idle settings section. Keep it concise.',
 });
 const SECONDS_DESCRIPTOR = msg({
-	message: '{seconds} seconds',
+	message: '{seconds, plural, one {# second} other {# seconds}}',
 	comment: 'AFK timeout label for a stored custom duration shown in the idle settings section.',
 });
 export const IdleSettingsSection: React.FC<{

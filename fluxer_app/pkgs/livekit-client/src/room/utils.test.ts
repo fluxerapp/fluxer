@@ -3,7 +3,14 @@
 // SPDX-License-Identifier: Apache-2.0
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {screenCaptureToDisplayMediaStreamOptions} from './track/utils.ts';
-import {selectPreferredVideoCodec, supportsAV1, supportsH265, supportsVideoCodec, supportsVP9} from './utils.ts';
+import {
+	selectPreferredVideoCodec,
+	stopTransceiversForSender,
+	supportsAV1,
+	supportsH265,
+	supportsVideoCodec,
+	supportsVP9,
+} from './utils.ts';
 
 const originalNavigator = globalThis.navigator;
 const originalSender = globalThis.RTCRtpSender;
@@ -89,5 +96,48 @@ describe('screenCaptureToDisplayMediaStreamOptions', () => {
 		}) as DisplayMediaStreamOptions & {systemAudio?: string};
 		expect(options.audio).toMatchObject({restrictOwnAudio: true});
 		expect(options.systemAudio).toBe('exclude');
+	});
+});
+
+describe('stopTransceiversForSender', () => {
+	type FakeTransceiver = {sender: RTCRtpSender; direction: string; stopCalls: number; stop?: () => void};
+
+	function fakeTransceiver(sender: RTCRtpSender, canStop = true): FakeTransceiver {
+		const transceiver: FakeTransceiver = {sender, direction: 'sendonly', stopCalls: 0};
+		if (canStop) {
+			transceiver.stop = () => {
+				transceiver.stopCalls += 1;
+				transceiver.direction = 'stopped';
+			};
+		}
+		return transceiver;
+	}
+
+	function asTransceivers(list: Array<FakeTransceiver>): ReadonlyArray<RTCRtpTransceiver> {
+		return list as unknown as ReadonlyArray<RTCRtpTransceiver>;
+	}
+
+	it('stops the transceiver holding the sender so the m-section can be recycled', () => {
+		const sender = {} as RTCRtpSender;
+		const mine = fakeTransceiver(sender);
+		const theirs = fakeTransceiver({} as RTCRtpSender);
+		expect(stopTransceiversForSender(asTransceivers([theirs, mine]), sender)).toBe(true);
+		expect(mine.stopCalls).toBe(1);
+		expect(mine.direction).toBe('stopped');
+		expect(theirs.stopCalls).toBe(0);
+		expect(theirs.direction).toBe('sendonly');
+	});
+
+	it('reports no match when the sender is not on the connection', () => {
+		const mine = fakeTransceiver({} as RTCRtpSender);
+		expect(stopTransceiversForSender(asTransceivers([mine]), {} as RTCRtpSender)).toBe(false);
+		expect(mine.stopCalls).toBe(0);
+	});
+
+	it('falls back to inactive where stop is unavailable', () => {
+		const sender = {} as RTCRtpSender;
+		const mine = fakeTransceiver(sender, false);
+		expect(stopTransceiversForSender(asTransceivers([mine]), sender)).toBe(true);
+		expect(mine.direction).toBe('inactive');
 	});
 });

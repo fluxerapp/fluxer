@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, unclaimAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount, unclaimAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	acceptFriendRequest,
 	assertRelationshipId,
@@ -16,8 +14,10 @@ import {
 	removeRelationship,
 	sendFriendRequest,
 	sendFriendRequestByTag,
-} from './RelationshipTestUtils';
-import {fetchUserMe} from './UserTestUtils';
+} from '@app/api/user/tests/RelationshipTestUtils';
+import {fetchUserMe} from '@app/api/user/tests/UserTestUtils';
+import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 async function markUserScheduledForDeletion(harness: ApiTestHarness, userId: string): Promise<void> {
 	const pendingDeletionAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -228,7 +228,7 @@ describe('UserRelationshipStateTransitions', () => {
 			await markUserDeleted(harness, alice.userId);
 			await createBuilder(harness, alice.token)
 				.post(`/users/@me/relationships/${bob.userId}`)
-				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
+				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
 		test('can accept a friend request from a user scheduled for deletion', async () => {
@@ -337,7 +337,7 @@ describe('UserRelationshipStateTransitions', () => {
 			await createBuilder(harness, bob.token)
 				.put(`/users/@me/relationships/${alice.userId}`)
 				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
+				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
 	});

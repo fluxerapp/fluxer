@@ -64,6 +64,7 @@ export const ChannelTopicSection: React.FC<ChannelTopicSectionProps> = ({channel
 						options={{
 							context: MarkdownContext.RESTRICTED_INLINE_REPLY,
 							channelId,
+							disableEmojiInfoCard: true,
 						}}
 						data-flx="channel.channel-details-bottom-sheet.safe-markdown"
 					/>

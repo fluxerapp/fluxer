@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {VoiceEngineV2DiagnosticEntry} from '../protocol/types';
-import {transitionVoiceEngineV2} from './reducer';
-import {VOICE_ENGINE_V2_TERMINAL_OPERATIONS_KEPT_MAX} from './reducers/_helpers';
-import {selectVoiceEngineV2FailedSourceIds, selectVoiceEngineV2SourceLifecycle} from './selectors';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
+import {VOICE_ENGINE_V2_TERMINAL_OPERATIONS_KEPT_MAX} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import {
+	selectVoiceEngineV2FailedSourceIds,
+	selectVoiceEngineV2SourceLifecycle,
+} from '@fluxer/voice_engine_v2/src/core/selectors';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	unavailableVoiceEngineV2Capabilities,
 	type VoiceEngineV2Snapshot,
-} from './state';
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {VoiceEngineV2DiagnosticEntry} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {describe, expect, it} from 'vitest';
 
 function initialSnapshot(): VoiceEngineV2Snapshot {
 	return createVoiceEngineV2InitialSnapshot(availableVoiceEngineV2Capabilities());

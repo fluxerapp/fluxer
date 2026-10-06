@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type SteppedCarouselHeight = number | 'auto';
 
@@ -136,7 +136,7 @@ export type SteppedCarouselSnapshot = SnapshotFrom<typeof steppedCarouselStateMa
 export type SteppedCarouselStateValue = 'unmeasured' | 'ready';
 
 export function createSteppedCarouselSnapshot(input: SteppedCarouselMachineInput): SteppedCarouselSnapshot {
-	return getInitialSnapshot(steppedCarouselStateMachine, input);
+	return initialTransition(steppedCarouselStateMachine, input)[0];
 }
 
 export function transitionSteppedCarouselSnapshot(

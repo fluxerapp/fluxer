@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../../BrandedTypes';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {GuildMember} from '../../../models/GuildMember';
-import {mapGuildMemberToResponse} from '../../GuildModel';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GuildMember} from '@app/api/models/GuildMember';
 
 export class GuildMemberEventService {
 	constructor(

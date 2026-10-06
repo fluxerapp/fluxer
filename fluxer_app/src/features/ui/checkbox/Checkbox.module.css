@@ -27,9 +27,14 @@
 	justify-content: center;
 	width: 1.5rem;
 	height: 1.5rem;
-	border: 0.0625rem solid var(--checkbox-border-color, var(--background-header-secondary));
+	--checkbox-default-border-color: color-mix(in srgb, var(--border-color) 70%, #fff 30%);
+	border: 0.0625rem solid var(--checkbox-border-color, var(--checkbox-default-border-color));
 	box-sizing: border-box;
 	cursor: pointer;
+}
+
+:global(.theme-light) .checkbox {
+	--checkbox-default-border-color: color-mix(in srgb, var(--text-secondary) 70%, #000 30%);
 }
 
 .box {

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {Guild} from '@app/api/models/Guild';
+import type {User} from '@app/api/models/User';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {isBugHunterBotUser} from '@app/api/user/UserHelpers';
+import {checkGuildVerificationWithGuildModel} from '@app/api/utils/GuildVerificationUtils';
+import {getMutualGuildsForDmAccess} from '@app/api/utils/MutualGuildDmAccess';
 import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/CannotSendMessagesToUserError';
 import {UnclaimedAccountCannotSendDirectMessagesError} from '@fluxer/errors/src/domains/channel/UnclaimedAccountCannotSendDirectMessagesError';
-import type {UserID} from '../../BrandedTypes';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {Guild} from '../../models/Guild';
-import type {User} from '../../models/User';
-import type {UserSettings} from '../../models/UserSettings';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {isBugHunterBotUser} from '../../user/UserHelpers';
-import {checkGuildVerificationWithGuildModel} from '../../utils/GuildVerificationUtils';
-import {getMutualGuildsForDmAccess} from '../../utils/MutualGuildDmAccess';
 
 interface DMPermissionValidatorDeps {
 	userRepository: IUserRepository;

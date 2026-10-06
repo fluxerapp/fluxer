@@ -16,6 +16,9 @@ export_state(State) ->
         ringing => maps:get(ringing, State, []),
         pending_ringing => maps:get(pending_ringing, State, []),
         recipients => maps:get(recipients, State, []),
+        caller_id => maps:get(caller_id, State, undefined),
+        caller_name => maps:get(caller_name, State, undefined),
+        caller_avatar => maps:get(caller_avatar, State, undefined),
         voice_states => maps:get(voice_states, State, #{}),
         sessions => export_sessions(maps:get(sessions, State, #{})),
         pending_connections => maps:get(pending_connections, State, #{}),
@@ -40,6 +43,9 @@ restore_state(TransferState) ->
         ringing => maps:get(ringing, TransferState, []),
         pending_ringing => maps:get(pending_ringing, TransferState, []),
         recipients => maps:get(recipients, TransferState, []),
+        caller_id => maps:get(caller_id, TransferState, undefined),
+        caller_name => maps:get(caller_name, TransferState, undefined),
+        caller_avatar => maps:get(caller_avatar, TransferState, undefined),
         voice_states => VoiceStates,
         sessions => Sessions,
         pending_connections => maps:get(pending_connections, TransferState, #{}),
@@ -191,5 +197,26 @@ restore_state_remonitors_live_sessions_test() ->
     ),
     ?assertEqual(#{1 => VoiceState}, maps:get(voice_states, Restored)),
     SessionPid ! stop.
+
+export_and_restore_round_trips_the_caller_test() ->
+    State = #{
+        channel_id => 123,
+        message_id => 456,
+        caller_id => 7,
+        caller_name => <<"Ada">>,
+        caller_avatar => <<"a1b2c3d4">>
+    },
+    Restored = restore_state(export_state(State)),
+    ?assertEqual(
+        #{caller_id => 7, caller_name => <<"Ada">>, caller_avatar => <<"a1b2c3d4">>},
+        call_state:caller_from_state(Restored)
+    ).
+
+restore_state_reads_a_transfer_without_a_caller_as_undefined_test() ->
+    Restored = restore_state(#{channel_id => 123, message_id => 456}),
+    ?assertEqual(
+        #{caller_id => undefined, caller_name => undefined, caller_avatar => undefined},
+        call_state:caller_from_state(Restored)
+    ).
 
 -endif.

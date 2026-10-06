@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	addMemberRole,
 	createGuild,
@@ -16,7 +9,14 @@ import {
 	updateGuild,
 	updateMember,
 	updateRolePositions,
-} from './GuildTestUtils';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface AuditLogEntry {
 	id: string;
@@ -197,6 +197,41 @@ describe('Guild Features', () => {
 			expect(updatedGuild.features).toContain(GuildFeatures.ANIMATED_ICON);
 			expect(updatedGuild.features).toContain(GuildFeatures.BANNER);
 			expect(updatedGuild.features).toContain(GuildFeatures.INVITES_DISABLED);
+		});
+		test('should allow toggling CLONE_EMOJI_ENABLED and CLONE_STICKER_ENABLED features', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Clone Opt In Test');
+			const updatedGuild = await updateGuild(harness, account.token, guild.id, {
+				features: [...guild.features, GuildFeatures.CLONE_EMOJI_ENABLED, GuildFeatures.CLONE_STICKER_ENABLED],
+			});
+			expect(updatedGuild.features).toContain(GuildFeatures.CLONE_EMOJI_ENABLED);
+			expect(updatedGuild.features).toContain(GuildFeatures.CLONE_STICKER_ENABLED);
+			const optedOut = await updateGuild(harness, account.token, guild.id, {
+				features: updatedGuild.features.filter(
+					(feature: string) =>
+						feature !== GuildFeatures.CLONE_EMOJI_ENABLED && feature !== GuildFeatures.CLONE_STICKER_ENABLED,
+				),
+			});
+			expect(optedOut.features).not.toContain(GuildFeatures.CLONE_EMOJI_ENABLED);
+			expect(optedOut.features).not.toContain(GuildFeatures.CLONE_STICKER_ENABLED);
+		});
+		test('should reject toggling the deprecated CLONE_EMOJI_DISABLED feature', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Deprecated Clone Emoji Test');
+			await createBuilder(harness, account.token)
+				.patch(`/guilds/${guild.id}`)
+				.body({features: [...guild.features, GuildFeatures.CLONE_EMOJI_DISABLED]})
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
+		});
+		test('should reject toggling the deprecated CLONE_STICKER_DISABLED feature', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Deprecated Clone Sticker Test');
+			await createBuilder(harness, account.token)
+				.patch(`/guilds/${guild.id}`)
+				.body({features: [...guild.features, GuildFeatures.CLONE_STICKER_DISABLED]})
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
 		});
 		test('should reject toggling non-toggleable features', async () => {
 			const account = await createTestAccount(harness);

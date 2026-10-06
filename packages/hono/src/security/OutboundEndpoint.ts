@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {isIP} from 'node:net';
+import {isIPv4} from 'node:net';
+import {getIpNetworkKey} from '@fluxer/ip_utils/src/IpAddress';
 
 interface ValidateOutboundEndpointOptions {
 	name: string;
@@ -65,14 +66,14 @@ function isLocalhostHostname(hostname: string): boolean {
 }
 
 function isPrivateOrSpecialIpLiteral(hostname: string): boolean {
-	const ipVersion = isIP(hostname);
-	if (!ipVersion) {
+	const address = getIpNetworkKey(hostname, {ipv4PrefixLength: 'exact', ipv6PrefixLength: 'exact'});
+	if (address === null) {
 		return false;
 	}
-	if (ipVersion === 4) {
-		return isPrivateOrSpecialIPv4(hostname);
+	if (isIPv4(address)) {
+		return isPrivateOrSpecialIPv4(address);
 	}
-	return isPrivateOrSpecialIPv6(hostname);
+	return isPrivateOrSpecialIPv6(address);
 }
 
 function isPrivateOrSpecialIPv4(hostname: string): boolean {
@@ -91,17 +92,10 @@ function isPrivateOrSpecialIPv4(hostname: string): boolean {
 	return false;
 }
 
-function isPrivateOrSpecialIPv6(hostname: string): boolean {
-	const lower = hostname.toLowerCase();
-	if (lower === '::' || lower === '::1') {
+function isPrivateOrSpecialIPv6(address: string): boolean {
+	if (address === '::' || address === '::1') {
 		return true;
 	}
-	if (lower.startsWith('::ffff:')) {
-		const mapped = lower.slice('::ffff:'.length);
-		return isPrivateOrSpecialIPv4(mapped);
-	}
-	if (lower.startsWith('fe80:')) return true;
-	if (lower.startsWith('fc') || lower.startsWith('fd')) return true;
-	if (lower.startsWith('ff')) return true;
-	return false;
+	const firstGroup = Number.parseInt(address.split(':', 1)[0] || '0', 16);
+	return (firstGroup & 0xffc0) === 0xfe80 || (firstGroup & 0xfe00) === 0xfc00 || (firstGroup & 0xff00) === 0xff00;
 }

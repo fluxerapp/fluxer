@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {msg} from '@lingui/core/macro';
 
@@ -106,22 +105,6 @@ const HEVC_KEYWORD_DESCRIPTOR = msg({
 	message: 'HEVC',
 	comment: 'Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.',
 });
-const OPENH264_VIDEO_CODEC_DESCRIPTOR = msg({
-	message: 'OpenH264 video codec',
-	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
-});
-const H264_DESCRIPTOR = msg({
-	message: 'H.264',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const CISCO_DESCRIPTOR = msg({
-	message: 'Cisco',
-	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
-});
-const ENABLE_OPENH264_SOFTWARE_ENCODING_AND_DECODING_ON_LINUX_DESCRIPTOR = msg({
-	message: 'OpenH264 software codec on Linux',
-	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
-});
 const SCREEN_SHARE_PREVIEW_BEHAVIOR_DESCRIPTOR = msg({
 	message: 'Screen share preview behavior',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
@@ -131,7 +114,7 @@ const SCREEN_SHARE_PREVIEW_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const PICTURE_IN_PICTURE_DESCRIPTOR = msg({
-	message: 'Picture in picture',
+	message: 'Picture-in-picture',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const PIP_DESCRIPTOR = msg({
@@ -171,7 +154,7 @@ const BITRATE_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TUNE_LOW_LEVEL_SCREEN_SHARE_ENCODER_BEHAVIOR_FOR_THE_NEXT_STREAM_DESCRIPTOR = msg({
-	message: 'Encoder, SVC, backup stream, and bitrate presets',
+	message: 'Encoder, SVC, and bitrate presets',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 
@@ -235,17 +218,6 @@ export const voiceVideoIndex: Array<SearchableSettingDescriptor> = [
 		description: ADVANCED_CODEC_COMPATIBILITY_NOTE_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['media', 'voice'],
-	},
-	{
-		id: 'voice-video-openh264-codec',
-		tabType: 'voice_video',
-		sectionId: 'video',
-		label: OPENH264_VIDEO_CODEC_DESCRIPTOR,
-		keywords: [H264_DESCRIPTOR, CODEC_DESCRIPTOR, CISCO_DESCRIPTOR],
-		description: ENABLE_OPENH264_SOFTWARE_ENCODING_AND_DECODING_ON_LINUX_DESCRIPTOR,
-		audience: 'advanced',
-		tags: ['media', 'voice'],
-		isVisible: () => isDesktop() && getElectronAPI()?.platform === 'linux',
 	},
 	{
 		id: 'voice-video-screen-share-preview-behavior',

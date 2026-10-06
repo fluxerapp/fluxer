@@ -75,10 +75,13 @@ impl DownloadStreamPolicy {
             total_deadline: Instant::now().checked_add(total_timeout),
             overruns: self.overruns,
         };
-        Body::from_stream(futures_util::stream::unfold(
-            Some(stream),
-            |stream: Option<ActiveDownloadStream>| async move { stream?.next().await },
-        ))
+        Body::from_stream(
+            futures_util::stream::unfold(
+                Some(stream),
+                |stream: Option<ActiveDownloadStream>| async move { stream?.next().await },
+            )
+            .fuse(),
+        )
     }
 }
 

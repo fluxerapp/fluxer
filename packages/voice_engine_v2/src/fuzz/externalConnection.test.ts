@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import {FuzzPrng} from './FuzzPrng';
+import {FuzzPrng} from '@fluxer/voice_engine_v2/src/fuzz/FuzzPrng';
 import {
 	EXTERNAL_CONNECTION_EVENT_KINDS,
 	FUZZ_REDUCER_ARBITRARY_ITERATIONS,
 	FUZZ_REDUCER_EXTERNAL_CONNECTION_ITERATIONS,
 	ReducerFuzzer,
-} from './ReducerFuzzer';
+} from '@fluxer/voice_engine_v2/src/fuzz/ReducerFuzzer';
+import {describe, expect, it} from 'vitest';
 
 const SEEDS: ReadonlyArray<number> = [1, 2, 7, 13, 99];
 

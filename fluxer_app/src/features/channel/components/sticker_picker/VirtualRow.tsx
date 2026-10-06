@@ -32,7 +32,7 @@ interface VirtualRowRendererProps {
 	selectedColumn: number;
 	stickerRowIndex: number;
 	shouldScrollOnSelection?: boolean;
-	stickerRefs: React.MutableRefObject<Map<string, HTMLButtonElement>>;
+	stickerRefs: React.RefObject<Map<string, HTMLButtonElement>>;
 	channel?: Channel | null;
 }
 
@@ -40,7 +40,7 @@ interface StickerButtonProps {
 	sticker: GuildSticker;
 	stickerKey: string;
 	isSelected: boolean;
-	stickerRefs: React.MutableRefObject<Map<string, HTMLButtonElement>>;
+	stickerRefs: React.RefObject<Map<string, HTMLButtonElement>>;
 	shouldScrollOnSelection?: boolean;
 	handleStickerClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
 	handleContextMenu: (event: React.MouseEvent<HTMLButtonElement>) => void;
@@ -296,7 +296,7 @@ interface VirtualRowWrapperProps {
 	selectedColumn: number;
 	stickerRowIndex: number;
 	shouldScrollOnSelection?: boolean;
-	stickerRefs: React.MutableRefObject<Map<string, HTMLButtonElement>>;
+	stickerRefs: React.RefObject<Map<string, HTMLButtonElement>>;
 	channel?: Channel | null;
 }
 

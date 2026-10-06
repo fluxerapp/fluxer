@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveFavoriteGifEntry} from '@app/api/favorite_gif/FavoriteGifResolver';
+import {resolveGifRequestCountry} from '@app/api/gif/GifRequestCountry';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {getUnfurlerService} from '@app/api/middleware/ServiceSingletons';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {ResolveGifUrlsBodySchema, ResolveGifUrlsResponse} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
 import type {Context} from 'hono';
-import {resolveGifRequestCountry} from '../gif/GifRequestCountry';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {getUnfurlerService} from '../middleware/ServiceSingletons';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp, HonoEnv} from '../types/HonoEnv';
-import {Validator} from '../Validator';
-import {resolveFavoriteGifEntry} from './FavoriteGifResolver';
 
 async function getCountry(ctx: Context<HonoEnv>): Promise<string> {
 	return resolveGifRequestCountry(ctx.req.raw);

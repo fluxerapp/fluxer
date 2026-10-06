@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ErrorResponse} from '@fluxer/schema/src/domains/common/ErrorSchemas';
 import {HTTPException} from 'hono/http-exception';
 
 export type FluxerErrorData = Record<string, unknown>;
@@ -36,23 +37,16 @@ export class FluxerError extends HTTPException {
 	}
 
 	override getResponse(): Response {
-		return new Response(
-			JSON.stringify({
-				code: this.code,
-				message: this.message,
-				...this.data,
-			}),
-			{
-				status: this.status,
-				headers: {
-					'Content-Type': 'application/json',
-					...this.headers,
-				},
+		return new Response(JSON.stringify(this.toJSON()), {
+			status: this.status,
+			headers: {
+				'Content-Type': 'application/json',
+				...this.headers,
 			},
-		);
+		});
 	}
 
-	toJSON(): Record<string, unknown> {
+	toJSON(): ErrorResponse {
 		return {
 			code: this.code,
 			message: this.message,

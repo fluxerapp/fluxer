@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {selectVoiceEngineV2Model, type VoiceEngineV2Snapshot} from '../core';
+import {selectVoiceEngineV2Model, type VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core';
 import type {
 	VoiceEngineV2AudioControlsPatch,
 	VoiceEngineV2CameraEncodingOptions,
@@ -28,9 +28,12 @@ import type {
 	VoiceEngineV2TimerOptions,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from '../protocol';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {VoiceEngineV2Runtime, VoiceEngineV2RuntimeListener} from './VoiceEngineV2Runtime';
+} from '@fluxer/voice_engine_v2/src/protocol';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2Runtime,
+	VoiceEngineV2RuntimeListener,
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 
 export class VoiceEngineV2Controller {
 	constructor(private readonly runtime: VoiceEngineV2Runtime) {}

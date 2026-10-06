@@ -12,14 +12,14 @@ export const BAN_DELETE_MESSAGE_OPTIONS: ReadonlyArray<BanDeleteMessageOption> =
 	{
 		seconds: 0,
 		label: msg({
-			message: "Don't Delete Any",
+			message: "Don't delete any",
 			comment: "Message-history-deletion option when banning a member. Keeps all of the member's messages.",
 		}),
 	},
 	{
 		seconds: 3600,
 		label: msg({
-			message: 'Previous Hour',
+			message: 'Previous hour',
 			comment:
 				"Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.",
 		}),
@@ -27,7 +27,7 @@ export const BAN_DELETE_MESSAGE_OPTIONS: ReadonlyArray<BanDeleteMessageOption> =
 	{
 		seconds: 21600,
 		label: msg({
-			message: 'Previous 6 Hours',
+			message: 'Previous 6 hours',
 			comment:
 				"Message-history-deletion option when banning a member. Deletes the member's messages from the last 6 hours.",
 		}),
@@ -35,7 +35,7 @@ export const BAN_DELETE_MESSAGE_OPTIONS: ReadonlyArray<BanDeleteMessageOption> =
 	{
 		seconds: 43200,
 		label: msg({
-			message: 'Previous 12 Hours',
+			message: 'Previous 12 hours',
 			comment:
 				"Message-history-deletion option when banning a member. Deletes the member's messages from the last 12 hours.",
 		}),
@@ -43,7 +43,7 @@ export const BAN_DELETE_MESSAGE_OPTIONS: ReadonlyArray<BanDeleteMessageOption> =
 	{
 		seconds: 86400,
 		label: msg({
-			message: 'Previous 24 Hours',
+			message: 'Previous 24 hours',
 			comment:
 				"Message-history-deletion option when banning a member. Deletes the member's messages from the last 24 hours.",
 		}),
@@ -51,7 +51,7 @@ export const BAN_DELETE_MESSAGE_OPTIONS: ReadonlyArray<BanDeleteMessageOption> =
 	{
 		seconds: 259200,
 		label: msg({
-			message: 'Previous 3 Days',
+			message: 'Previous 3 days',
 			comment:
 				"Message-history-deletion option when banning a member. Deletes the member's messages from the last 3 days.",
 		}),
@@ -59,7 +59,7 @@ export const BAN_DELETE_MESSAGE_OPTIONS: ReadonlyArray<BanDeleteMessageOption> =
 	{
 		seconds: 604800,
 		label: msg({
-			message: 'Previous 7 Days',
+			message: 'Previous 7 days',
 			comment:
 				"Message-history-deletion option when banning a member. Deletes the member's messages from the last 7 days.",
 		}),

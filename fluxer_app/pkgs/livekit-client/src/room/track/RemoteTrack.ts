@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
-import {EventEmitter} from 'events';
+import type {EventEmitter} from 'events';
 import {TrackEvent} from '../events.ts';
 import {monitorFrequency} from '../stats.ts';
 import type {LoggerOptions} from '../types.ts';
@@ -10,8 +10,6 @@ import {supportsSynchronizationSources} from './utils.ts';
 
 export default abstract class RemoteTrack<TrackKind extends Track.Kind = Track.Kind> extends Track<TrackKind> {
 	receiver: RTCRtpReceiver | undefined;
-
-	private _monitorStarted: boolean = false;
 
 	constructor(
 		mediaTrack: MediaStreamTrack,
@@ -24,17 +22,6 @@ export default abstract class RemoteTrack<TrackKind extends Track.Kind = Track.K
 
 		this.sid = sid;
 		this.receiver = receiver;
-
-		EventEmitter.prototype.on.call(this, 'newListener', (event: string | symbol) => {
-			if (
-				event === TrackEvent.TimeSyncUpdate &&
-				this._monitorStarted &&
-				this.timeSyncHandle === undefined &&
-				supportsSynchronizationSources()
-			) {
-				this.registerTimeSyncUpdate();
-			}
-		});
 	}
 
 	get isLocal() {
@@ -71,7 +58,6 @@ export default abstract class RemoteTrack<TrackKind extends Track.Kind = Track.K
 	}
 
 	override stop() {
-		this._monitorStarted = false;
 		this.stopMonitor();
 		super.disable();
 	}
@@ -110,32 +96,49 @@ export default abstract class RemoteTrack<TrackKind extends Track.Kind = Track.K
 	}
 
 	startMonitor() {
-		this._monitorStarted = true;
 		if (!this.monitorInterval) {
 			this.monitorInterval = setInterval(() => this.runMonitor(this.monitorReceiver), monitorFrequency);
 		}
-		if (supportsSynchronizationSources() && this.listenerCount(TrackEvent.TimeSyncUpdate) > 0) {
+		if (supportsSynchronizationSources()) {
 			this.registerTimeSyncUpdate();
 		}
 	}
 
+	override stopMonitor() {
+		super.stopMonitor();
+		(this as unknown as EventEmitter).off('newListener', this.onTimeSyncListenerAdded);
+	}
+
 	protected abstract monitorReceiver(): void;
 
-	registerTimeSyncUpdate() {
-		if (this.timeSyncHandle !== undefined) {
+	private timeSyncLoop = () => {
+		if (this.listenerCount(TrackEvent.TimeSyncUpdate) === 0) {
+			this.timeSyncHandle = undefined;
 			return;
 		}
-		const loop = () => {
-			this.timeSyncHandle = requestAnimationFrame(() => loop());
-			const sources = this.receiver?.getSynchronizationSources()[0];
-			if (sources) {
-				const {timestamp, rtpTimestamp} = sources;
-				if (rtpTimestamp && this.rtpTimestamp !== rtpTimestamp) {
-					this.emit(TrackEvent.TimeSyncUpdate, {timestamp, rtpTimestamp});
-					this.rtpTimestamp = rtpTimestamp;
-				}
+		this.timeSyncHandle = requestAnimationFrame(this.timeSyncLoop);
+		const sources = this.receiver?.getSynchronizationSources()[0];
+		if (sources) {
+			const {timestamp, rtpTimestamp} = sources;
+			if (rtpTimestamp && this.rtpTimestamp !== rtpTimestamp) {
+				this.emit(TrackEvent.TimeSyncUpdate, {timestamp, rtpTimestamp});
+				this.rtpTimestamp = rtpTimestamp;
 			}
-		};
-		loop();
+		}
+	};
+
+	private onTimeSyncListenerAdded = (event: string) => {
+		if (event === TrackEvent.TimeSyncUpdate && this.timeSyncHandle === undefined) {
+			this.timeSyncHandle = requestAnimationFrame(this.timeSyncLoop);
+		}
+	};
+
+	registerTimeSyncUpdate() {
+		const emitter = this as unknown as EventEmitter;
+		emitter.off('newListener', this.onTimeSyncListenerAdded);
+		emitter.on('newListener', this.onTimeSyncListenerAdded);
+		if (this.timeSyncHandle === undefined) {
+			this.timeSyncLoop();
+		}
 	}
 }

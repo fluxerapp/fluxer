@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createMessageID, type MessageID, type UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import type {RecentMentionRow} from '@app/api/database/types/UserTypes';
+import {RecentMention} from '@app/api/models/RecentMention';
+import {RecentMentions, RecentMentionsByGuild} from '@app/api/Tables';
 import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
-import {createMessageID, type MessageID, type UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import type {RecentMentionRow} from '../../database/types/UserTypes';
-import {RecentMention} from '../../models/RecentMention';
-import {RecentMentions, RecentMentionsByGuild} from '../../Tables';
 
 const FETCH_RECENT_MENTION_CQL = RecentMentions.selectCql({
 	where: [RecentMentions.where.eq('user_id'), RecentMentions.where.eq('message_id')],

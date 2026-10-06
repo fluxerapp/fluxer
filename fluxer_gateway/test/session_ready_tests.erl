@@ -32,6 +32,118 @@ process_guild_state_available_dispatches_guild_create_test() ->
     ?assertEqual(guild_create, FirstEvent),
     ok.
 
+process_guild_state_bot_guild_create_marks_guild_available_test() ->
+    drain_mailbox(),
+    State0 = (base_state_for_guild_dispatch_test())#{bot => true, socket_pid => self()},
+    GuildState = #{<<"id">> => <<"123">>, <<"channels">> => [], <<"members">> => []},
+    {noreply, _State1} = session_ready:process_guild_state(GuildState, State0),
+    receive
+        {dispatch, guild_create, GuildCreateData, 1} ->
+            ?assertEqual(<<"123">>, maps:get(<<"id">>, GuildCreateData)),
+            ?assertEqual(false, maps:get(<<"unavailable">>, GuildCreateData))
+    after 1000 ->
+        ?assert(false, guild_create_not_dispatched)
+    end.
+
+process_guild_state_bot_guild_create_after_join_omits_unavailable_test() ->
+    drain_mailbox(),
+    State0 = (base_state_for_guild_dispatch_test())#{bot => true, socket_pid => self()},
+    {noreply, State1} = session:handle_cast({guild_join, 123}, State0),
+    GuildState = #{<<"id">> => <<"123">>, <<"channels">> => [], <<"members">> => []},
+    {noreply, State2} = session_ready:process_guild_state(GuildState, State1),
+    receive
+        {dispatch, guild_create, JoinCreateData, 1} ->
+            ?assertEqual(<<"123">>, maps:get(<<"id">>, JoinCreateData)),
+            ?assertNot(maps:is_key(<<"unavailable">>, JoinCreateData))
+    after 1000 ->
+        ?assert(false, guild_create_not_dispatched)
+    end,
+    {noreply, _State3} = session_ready:process_guild_state(GuildState, State2),
+    receive
+        {dispatch, guild_create, LaterCreateData, 2} ->
+            ?assertEqual(false, maps:get(<<"unavailable">>, LaterCreateData))
+    after 1000 ->
+        ?assert(false, second_guild_create_not_dispatched)
+    end,
+    drain_mailbox().
+
+process_guild_state_bot_guild_create_after_join_and_outage_omits_unavailable_test() ->
+    drain_mailbox(),
+    State0 = (base_state_for_guild_dispatch_test())#{bot => true, socket_pid => self()},
+    {noreply, State1} = session:handle_cast({guild_join, 123}, State0),
+    {noreply, State2} = session_ready:mark_guild_unavailable(123, State1),
+    receive
+        {dispatch, guild_delete, GuildDeleteData, 1} ->
+            ?assertEqual(<<"123">>, maps:get(<<"id">>, GuildDeleteData)),
+            ?assertEqual(true, maps:get(<<"unavailable">>, GuildDeleteData))
+    after 1000 ->
+        ?assert(false, guild_delete_not_dispatched)
+    end,
+    GuildState = #{<<"id">> => <<"123">>, <<"channels">> => [], <<"members">> => []},
+    {noreply, _State3} = session_ready:process_guild_state(GuildState, State2),
+    receive
+        {dispatch, guild_create, GuildCreateData, 2} ->
+            ?assertEqual(<<"123">>, maps:get(<<"id">>, GuildCreateData)),
+            ?assertNot(maps:is_key(<<"unavailable">>, GuildCreateData))
+    after 1000 ->
+        ?assert(false, guild_create_not_dispatched)
+    end,
+    drain_mailbox().
+
+process_guild_state_bot_guild_create_after_join_and_removal_marks_guild_available_test() ->
+    drain_mailbox(),
+    State0 = (base_state_for_guild_dispatch_test())#{
+        bot => true,
+        socket_pid => self(),
+        user_id => 1
+    },
+    {noreply, State1} = session:handle_cast({guild_join, 123}, State0),
+    {noreply, State2} = session_connection_guild:handle_result_internal(
+        123, 3, {error, not_member}, State1
+    ),
+    receive
+        {dispatch, guild_delete, GuildDeleteData, 1} ->
+            ?assertEqual(<<"123">>, maps:get(<<"id">>, GuildDeleteData)),
+            ?assertNot(maps:is_key(<<"unavailable">>, GuildDeleteData))
+    after 1000 ->
+        ?assert(false, guild_delete_not_dispatched)
+    end,
+    GuildState = #{<<"id">> => <<"123">>, <<"channels">> => [], <<"members">> => []},
+    {noreply, _State3} = session_ready:process_guild_state(GuildState, State2),
+    receive
+        {dispatch, guild_create, GuildCreateData, 2} ->
+            ?assertEqual(false, maps:get(<<"unavailable">>, GuildCreateData))
+    after 1000 ->
+        ?assert(false, guild_create_not_dispatched)
+    end,
+    drain_mailbox().
+
+relayed_guild_create_to_bot_marks_guild_available_test() ->
+    drain_mailbox(),
+    State0 = (base_state_for_guild_dispatch_test())#{bot => true, socket_pid => self()},
+    GuildState = #{<<"id">> => <<"123">>, <<"channels">> => [], <<"members">> => []},
+    {noreply, _State1} = session:handle_cast({dispatch, guild_create, GuildState}, State0),
+    receive
+        {dispatch, guild_create, GuildCreateData, 1} ->
+            ?assertEqual(<<"123">>, maps:get(<<"id">>, GuildCreateData)),
+            ?assertEqual(false, maps:get(<<"unavailable">>, GuildCreateData))
+    after 1000 ->
+        ?assert(false, guild_create_not_dispatched)
+    end.
+
+process_guild_state_user_guild_create_omits_unavailable_test() ->
+    drain_mailbox(),
+    State0 = (base_state_for_guild_dispatch_test())#{bot => false, socket_pid => self()},
+    GuildState = #{<<"id">> => <<"123">>, <<"channels">> => [], <<"members">> => []},
+    {noreply, _State1} = session_ready:process_guild_state(GuildState, State0),
+    receive
+        {dispatch, guild_create, GuildCreateData, 1} ->
+            ?assertEqual(<<"123">>, maps:get(<<"id">>, GuildCreateData)),
+            ?assertNot(maps:is_key(<<"unavailable">>, GuildCreateData))
+    after 1000 ->
+        ?assert(false, guild_create_not_dispatched)
+    end.
+
 mark_guild_unavailable_hidden_includes_flag_test() ->
     State0 = #{
         collected_guild_states => [],
@@ -88,15 +200,20 @@ dispatch_ready_data_bot_unavailable_dispatches_guild_delete_test() ->
     ),
     {noreply, _State1} = session_ready:dispatch_ready_data(State0),
     receive
-        {dispatch, ready, ReadyData, _ReadySeq} ->
-            ?assertEqual([], maps:get(<<"guilds">>, ReadyData, []));
+        {dispatch, ready, ReadyData, ReadySeq} ->
+            ?assertEqual(1, ReadySeq),
+            ?assertEqual(
+                [#{<<"id">> => <<"987">>, <<"unavailable">> => true}],
+                maps:get(<<"guilds">>, ReadyData)
+            );
         OtherReady ->
             ?assert(false, {unexpected_ready_message, OtherReady})
     after 1000 ->
         ?assert(false, ready_not_dispatched)
     end,
     receive
-        {dispatch, guild_delete, GuildDeleteData, _GuildDeleteSeq} ->
+        {dispatch, guild_delete, GuildDeleteData, GuildDeleteSeq} ->
+            ?assertEqual(2, GuildDeleteSeq),
             ?assertEqual(<<"987">>, maps:get(<<"id">>, GuildDeleteData)),
             ?assertEqual(true, maps:get(<<"unavailable">>, GuildDeleteData));
         OtherDelete ->
@@ -206,30 +323,153 @@ dispatch_ready_data_nonbot_replaces_unavailable_placeholder_with_collected_guild
         ?assert(false, ready_not_dispatched)
     end.
 
-dispatch_ready_data_bot_does_not_synthesize_unavailable_placeholders_test() ->
+dispatch_ready_data_bot_lists_every_guild_as_unavailable_test() ->
     drain_mailbox(),
     State0 = base_ready_state(
         <<"session-ready-bot-placeholder-test">>,
         47,
         true,
-        #{111 => undefined, 222 => cached_unavailable},
+        #{
+            111 => undefined,
+            222 => cached_unavailable,
+            333 => unavailable,
+            444 => {self(), make_ref()}
+        },
         []
     ),
     {noreply, _State1} = session_ready:dispatch_ready_data(State0),
     receive
-        {dispatch, ready, ReadyData, _ReadySeq} ->
-            ?assertEqual([], maps:get(<<"guilds">>, ReadyData, []));
+        {dispatch, ready, ReadyData, ReadySeq} ->
+            ?assertEqual(1, ReadySeq),
+            ?assertEqual(
+                [
+                    #{<<"id">> => <<"111">>, <<"unavailable">> => true},
+                    #{<<"id">> => <<"222">>, <<"unavailable">> => true},
+                    #{<<"id">> => <<"333">>, <<"unavailable">> => true},
+                    #{<<"id">> => <<"444">>, <<"unavailable">> => true}
+                ],
+                lists:sort(maps:get(<<"guilds">>, ReadyData))
+            );
         OtherReady ->
             ?assert(false, {unexpected_ready_message, OtherReady})
     after 1000 ->
         ?assert(false, ready_not_dispatched)
     end,
     receive
+        {dispatch, guild_create, _GuildCreateData, _GuildCreateSeq} ->
+            ?assert(false, unexpected_guild_create_for_bot_ready);
         {dispatch, guild_delete, _GuildDeleteData, _GuildDeleteSeq} ->
-            ?assert(false, unexpected_synthesized_unavailable_guild)
+            ?assert(false, unexpected_guild_delete_for_bot_ready)
     after 100 ->
         ok
     end.
+
+dispatch_ready_data_bot_lists_collected_guild_as_unavailable_stub_test() ->
+    drain_mailbox(),
+    CollectedGuild = #{
+        <<"id">> => <<"111">>,
+        <<"name">> => <<"guild-111">>,
+        <<"members">> => [
+            #{<<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"member-1">>}}
+        ],
+        <<"channels">> => []
+    },
+    State0 = base_ready_state(
+        <<"session-ready-bot-collected-test">>,
+        50,
+        true,
+        #{111 => undefined, 222 => undefined},
+        [CollectedGuild]
+    ),
+    {noreply, _State1} = session_ready:dispatch_ready_data(State0),
+    receive
+        {dispatch, ready, ReadyData, ReadySeq} ->
+            ?assertEqual(1, ReadySeq),
+            ?assertEqual(
+                [
+                    #{<<"id">> => <<"111">>, <<"unavailable">> => true},
+                    #{<<"id">> => <<"222">>, <<"unavailable">> => true}
+                ],
+                lists:sort(maps:get(<<"guilds">>, ReadyData))
+            );
+        OtherReady ->
+            ?assert(false, {unexpected_ready_message, OtherReady})
+    after 1000 ->
+        ?assert(false, ready_not_dispatched)
+    end,
+    receive
+        {dispatch, guild_create, GuildCreateData, GuildCreateSeq} ->
+            ?assertEqual(2, GuildCreateSeq),
+            ?assertEqual(<<"111">>, maps:get(<<"id">>, GuildCreateData)),
+            ?assertEqual(<<"guild-111">>, maps:get(<<"name">>, GuildCreateData)),
+            ?assertEqual(false, maps:get(<<"unavailable">>, GuildCreateData)),
+            ?assertEqual(
+                [#{<<"user">> => #{<<"id">> => <<"1">>}}],
+                maps:get(<<"members">>, GuildCreateData)
+            );
+        OtherGuild ->
+            ?assert(false, {unexpected_guild_event, OtherGuild})
+    after 1000 ->
+        ?assert(false, guild_create_not_dispatched)
+    end,
+    receive
+        {dispatch, OtherEvent, _OtherData, _OtherSeq} ->
+            ?assert(false, {unexpected_dispatch_after_burst, OtherEvent})
+    after 100 ->
+        ok
+    end.
+
+dispatch_ready_data_bot_marks_guilds_joined_before_ready_available_test() ->
+    drain_mailbox(),
+    CollectedGuild = #{<<"id">> => <<"111">>, <<"channels">> => [], <<"members">> => []},
+    UnavailableGuild = #{<<"id">> => <<"222">>, <<"unavailable">> => true},
+    State0 = base_ready_state(
+        <<"session-ready-bot-join-test">>,
+        51,
+        true,
+        #{111 => {self(), make_ref()}, 222 => unavailable},
+        [UnavailableGuild, CollectedGuild]
+    ),
+    {noreply, State1} = session:handle_cast({guild_join, 111}, State0),
+    {noreply, State2} = session:handle_cast({guild_join, 222}, State1),
+    drain_mailbox(),
+    {noreply, State3} = session_ready:dispatch_ready_data(State2),
+    receive
+        {dispatch, ready, ReadyData, 1} ->
+            ?assertEqual(
+                [
+                    #{<<"id">> => <<"111">>, <<"unavailable">> => true},
+                    #{<<"id">> => <<"222">>, <<"unavailable">> => true}
+                ],
+                lists:sort(maps:get(<<"guilds">>, ReadyData))
+            )
+    after 1000 ->
+        ?assert(false, ready_not_dispatched)
+    end,
+    receive
+        {dispatch, guild_create, BurstCreateData, 2} ->
+            ?assertEqual(<<"111">>, maps:get(<<"id">>, BurstCreateData)),
+            ?assertEqual(false, maps:get(<<"unavailable">>, BurstCreateData))
+    after 1000 ->
+        ?assert(false, guild_create_not_dispatched)
+    end,
+    receive
+        {dispatch, guild_delete, BurstDeleteData, 3} ->
+            ?assertEqual(<<"222">>, maps:get(<<"id">>, BurstDeleteData)),
+            ?assertEqual(true, maps:get(<<"unavailable">>, BurstDeleteData))
+    after 1000 ->
+        ?assert(false, guild_delete_not_dispatched)
+    end,
+    RecoveredGuild = #{<<"id">> => <<"222">>, <<"channels">> => [], <<"members">> => []},
+    {noreply, _State4} = session_ready:process_guild_state(RecoveredGuild, State3),
+    receive
+        {dispatch, guild_create, RecoveredCreateData, 4} ->
+            ?assertEqual(<<"222">>, maps:get(<<"id">>, RecoveredCreateData)),
+            ?assertEqual(false, maps:get(<<"unavailable">>, RecoveredCreateData))
+    after 1000 ->
+        ?assert(false, recovered_guild_create_not_dispatched)
+    end,
+    drain_mailbox().
 
 dispatch_ready_data_includes_shard_metadata_test() ->
     drain_mailbox(),

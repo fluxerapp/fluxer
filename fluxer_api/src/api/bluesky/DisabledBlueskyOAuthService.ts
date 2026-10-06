@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import {BlueskyOAuthNotEnabledError} from '../connection/errors/BlueskyOAuthNotEnabledError';
-import type {BlueskyAuthorizeResult, BlueskyCallbackResult, IBlueskyOAuthService} from './IBlueskyOAuthService';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {
+	BlueskyAuthorizeResult,
+	BlueskyCallbackResult,
+	IBlueskyOAuthService,
+} from '@app/api/bluesky/IBlueskyOAuthService';
+import {BlueskyOAuthNotEnabledError} from '@app/api/connection/errors/BlueskyOAuthNotEnabledError';
 
 export class DisabledBlueskyOAuthService implements IBlueskyOAuthService {
 	readonly clientMetadata: Record<string, unknown> = {};
@@ -13,16 +17,6 @@ export class DisabledBlueskyOAuthService implements IBlueskyOAuthService {
 	}
 
 	async callback(_params: URLSearchParams): Promise<BlueskyCallbackResult> {
-		throw new BlueskyOAuthNotEnabledError();
-	}
-
-	async restoreAndVerify(_did: string): Promise<{
-		handle: string;
-	} | null> {
-		throw new BlueskyOAuthNotEnabledError();
-	}
-
-	async revoke(_did: string): Promise<void> {
 		throw new BlueskyOAuthNotEnabledError();
 	}
 }

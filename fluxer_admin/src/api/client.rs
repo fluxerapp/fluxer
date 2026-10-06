@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::generated::GeneratedClient;
 use crate::{config::AdminConfig, session::Session};
+use progenitor_client::ClientInfo;
 use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderName, HeaderValue};
 use reqwest::{Method, RequestBuilder};
 use serde::Serialize;
@@ -34,46 +36,39 @@ impl<T> ApiResultExt<T> for ApiResult<T> {
 }
 
 pub struct AdminApiClient {
-    http_client: reqwest::Client,
-    generated: crate::api::generated::GeneratedClient,
-    base_url: String,
-    access_token: String,
-    proxy_client_ip_headers: HeaderMap,
+    generated: GeneratedClient,
 }
 
 impl AdminApiClient {
     pub fn new(http_client: &reqwest::Client, config: &AdminConfig, session: &Session) -> Self {
-        let generated_http_client = build_generated_http_client(config, session);
-        let generated = crate::api::generated::GeneratedClient::new_with_client(
+        let generated = GeneratedClient::new_with_client(
             &config.api_endpoint,
-            generated_http_client,
+            http_client.clone(),
+            build_session_headers(config, session),
         );
-        Self {
-            http_client: http_client.clone(),
-            generated,
-            base_url: config.api_endpoint.clone(),
-            access_token: session.access_token.clone(),
-            proxy_client_ip_headers: build_proxy_client_ip_headers(config),
-        }
+        Self { generated }
     }
 
     fn build_url(&self, path: &str, query_params: Option<&[(&str, &str)]>) -> String {
-        let base = format!("{}{}", self.base_url, path);
-        match query_params {
-            None => base,
-            Some(params) => {
-                let filtered: Vec<_> = params.iter().filter(|(_, v)| !v.is_empty()).collect();
-                if filtered.is_empty() {
-                    return base;
-                }
-                let query = filtered
-                    .iter()
-                    .map(|(k, v)| format!("{}={}", urlencoding::encode(k), urlencoding::encode(v)))
-                    .collect::<Vec<_>>()
-                    .join("&");
-                format!("{base}?{query}")
-            }
+        let mut url = format!("{}{}", self.generated.baseurl(), path);
+        let query = query_params
+            .unwrap_or_default()
+            .iter()
+            .filter(|(_, value)| !value.is_empty())
+            .map(|(key, value)| {
+                format!(
+                    "{}={}",
+                    urlencoding::encode(key),
+                    urlencoding::encode(value)
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("&");
+        if !query.is_empty() {
+            url.push('?');
+            url.push_str(&query);
         }
+        url
     }
 
     fn request(
@@ -81,30 +76,23 @@ impl AdminApiClient {
         method: Method,
         path: &str,
         query_params: Option<&[(&str, &str)]>,
-    ) -> RequestBuilder {
-        let url = self.build_url(path, query_params);
-        self.http_client
-            .request(method, &url)
-            .header("Authorization", format!("Bearer {}", self.access_token))
-            .header("Content-Type", "application/json")
-            .headers(self.proxy_client_ip_headers.clone())
-    }
-
-    fn with_audit_log_reason(
-        builder: RequestBuilder,
         audit_log_reason: Option<&str>,
-    ) -> RequestBuilder {
-        match audit_log_reason {
-            Some(reason) => builder.header("X-Audit-Log-Reason", reason),
-            None => builder,
-        }
+    ) -> ApiResult<RequestBuilder> {
+        let url = self.build_url(path, query_params);
+        Ok(self
+            .generated
+            .client()
+            .request(method, &url)
+            .header("Content-Type", "application/json")
+            .headers(self.headers_with_reason(audit_log_reason)?))
     }
 
-    fn with_json_body(builder: RequestBuilder, body: Option<&serde_json::Value>) -> RequestBuilder {
-        match body {
-            Some(body) => builder.json(body),
-            None => builder,
+    fn headers_with_reason(&self, audit_log_reason: Option<&str>) -> ApiResult<HeaderMap> {
+        let mut headers = self.generated.inner().clone();
+        if let Some(reason) = audit_log_reason {
+            headers.insert("x-audit-log-reason", audit_log_reason_header(reason)?);
         }
+        Ok(headers)
     }
 
     async fn send_request(builder: RequestBuilder) -> ApiResult<reqwest::Response> {
@@ -114,13 +102,29 @@ impl AdminApiClient {
             .map_err(|e| ApiError::Network(e.to_string()))
     }
 
+    async fn send_json<B: Serialize + ?Sized>(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<&B>,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<reqwest::Response> {
+        let builder = self.request(method, path, None, audit_log_reason)?;
+        let builder = match body {
+            Some(body) => builder.json(body),
+            None => builder,
+        };
+        Self::send_request(builder).await
+    }
+
     pub async fn get<T: DeserializeOwned>(
         &self,
         path: &str,
         query_params: Option<&[(&str, &str)]>,
     ) -> ApiResult<T> {
-        let response = Self::send_request(self.request(Method::GET, path, query_params)).await?;
-        self.parse_response(response).await
+        let response =
+            Self::send_request(self.request(Method::GET, path, query_params, None)?).await?;
+        Self::parse_response(response).await
     }
 
     pub async fn post<T: DeserializeOwned>(
@@ -149,10 +153,10 @@ impl AdminApiClient {
         T: DeserializeOwned,
         B: Serialize + ?Sized,
     {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::POST, path, None), audit_log_reason);
-        let response = Self::send_request(builder.json(body)).await?;
-        self.parse_response(response).await
+        let response = self
+            .send_json(Method::POST, path, Some(body), audit_log_reason)
+            .await?;
+        Self::parse_response(response).await
     }
 
     pub async fn post_with_reason<T: DeserializeOwned>(
@@ -161,10 +165,10 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::POST, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
-        self.parse_response(response).await
+        let response = self
+            .send_json(Method::POST, path, body, audit_log_reason)
+            .await?;
+        Self::parse_response(response).await
     }
 
     pub async fn post_void(&self, path: &str, body: Option<&serde_json::Value>) -> ApiResult<()> {
@@ -177,9 +181,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::POST, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::POST, path, body, audit_log_reason)
+            .await?;
         Self::parse_void_response(response).await
     }
 
@@ -197,10 +201,10 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PATCH, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
-        self.parse_response(response).await
+        let response = self
+            .send_json(Method::PATCH, path, body, audit_log_reason)
+            .await?;
+        Self::parse_response(response).await
     }
 
     pub async fn patch_typed_with_reason<T, B>(
@@ -213,10 +217,10 @@ impl AdminApiClient {
         T: DeserializeOwned,
         B: Serialize + ?Sized,
     {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PATCH, path, None), audit_log_reason);
-        let response = Self::send_request(builder.json(body)).await?;
-        self.parse_response(response).await
+        let response = self
+            .send_json(Method::PATCH, path, Some(body), audit_log_reason)
+            .await?;
+        Self::parse_response(response).await
     }
 
     pub async fn put_with_reason<T: DeserializeOwned>(
@@ -225,10 +229,10 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
-        self.parse_response(response).await
+        let response = self
+            .send_json(Method::PUT, path, body, audit_log_reason)
+            .await?;
+        Self::parse_response(response).await
     }
 
     pub async fn put_typed_with_reason<T, B>(
@@ -241,10 +245,10 @@ impl AdminApiClient {
         T: DeserializeOwned,
         B: Serialize + ?Sized,
     {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
-        let response = Self::send_request(builder.json(body)).await?;
-        self.parse_response(response).await
+        let response = self
+            .send_json(Method::PUT, path, Some(body), audit_log_reason)
+            .await?;
+        Self::parse_response(response).await
     }
 
     pub async fn put_void_with_reason(
@@ -253,9 +257,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::PUT, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::PUT, path, body, audit_log_reason)
+            .await?;
         Self::parse_void_response(response).await
     }
 
@@ -269,9 +273,9 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<()> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::DELETE, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
+        let response = self
+            .send_json(Method::DELETE, path, body, audit_log_reason)
+            .await?;
         Self::parse_void_response(response).await
     }
 
@@ -281,29 +285,40 @@ impl AdminApiClient {
         body: Option<&serde_json::Value>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<T> {
-        let builder =
-            Self::with_audit_log_reason(self.request(Method::DELETE, path, None), audit_log_reason);
-        let response = Self::send_request(Self::with_json_body(builder, body)).await?;
-        self.parse_response(response).await
+        let response = self
+            .send_json(Method::DELETE, path, body, audit_log_reason)
+            .await?;
+        Self::parse_response(response).await
     }
 
     async fn parse_void_response(response: reqwest::Response) -> ApiResult<()> {
-        if response.status().is_success() {
-            Ok(())
-        } else {
-            let status = response.status().as_u16();
-            let text = response.text().await.map_err(|error| {
-                ApiError::Network(format!("failed to read error response body: {error}"))
-            })?;
-            Err(ApiError::Http {
-                status,
-                message: text,
-            })
-        }
+        Self::check_response_status(response).await.map(drop)
     }
 
-    pub(crate) fn generated(&self) -> &crate::api::generated::GeneratedClient {
+    async fn check_response_status(response: reqwest::Response) -> ApiResult<reqwest::Response> {
+        if response.status().is_success() {
+            return Ok(response);
+        }
+        let status = response.status().as_u16();
+        let message = response.text().await.map_err(|error| {
+            ApiError::Network(format!("failed to read error response body: {error}"))
+        })?;
+        Err(ApiError::Http { status, message })
+    }
+
+    pub(crate) fn generated(&self) -> &GeneratedClient {
         &self.generated
+    }
+
+    pub(crate) fn generated_with_reason(
+        &self,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<GeneratedClient> {
+        Ok(GeneratedClient::new_with_client(
+            self.generated.baseurl(),
+            self.generated.client().clone(),
+            self.headers_with_reason(audit_log_reason)?,
+        ))
     }
 
     pub(crate) fn generated_value<T, U>(&self, value: U) -> ApiResult<T>
@@ -328,28 +343,16 @@ impl AdminApiClient {
         }
     }
 
-    async fn parse_response<T: DeserializeOwned>(
-        &self,
-        response: reqwest::Response,
-    ) -> ApiResult<T> {
-        let status = response.status();
-        if status.as_u16() == 204 {
-            return serde_json::from_value(serde_json::Value::Null)
-                .map_err(|e| ApiError::Parse(e.to_string()));
-        }
-        if !status.is_success() {
-            let text = response.text().await.map_err(|error| {
-                ApiError::Network(format!("failed to read error response body: {error}"))
-            })?;
-            return Err(ApiError::Http {
-                status: status.as_u16(),
-                message: text,
-            });
-        }
-        let text = response
-            .text()
-            .await
-            .map_err(|e| ApiError::Network(e.to_string()))?;
+    async fn parse_response<T: DeserializeOwned>(response: reqwest::Response) -> ApiResult<T> {
+        let response = Self::check_response_status(response).await?;
+        let text = if response.status() == reqwest::StatusCode::NO_CONTENT {
+            String::new()
+        } else {
+            response
+                .text()
+                .await
+                .map_err(|e| ApiError::Network(e.to_string()))?
+        };
         if text.is_empty() {
             return serde_json::from_value(serde_json::Value::Null)
                 .map_err(|e| ApiError::Parse(e.to_string()));
@@ -358,17 +361,14 @@ impl AdminApiClient {
     }
 }
 
-fn build_generated_http_client(config: &AdminConfig, session: &Session) -> reqwest::Client {
+fn build_session_headers(config: &AdminConfig, session: &Session) -> HeaderMap {
     let mut headers = HeaderMap::new();
-    let auth_value = HeaderValue::from_str(&format!("Bearer {}", session.access_token))
+    let mut auth_value = HeaderValue::from_str(&format!("Bearer {}", session.access_token))
         .expect("failed to build generated API Authorization header");
+    auth_value.set_sensitive(true);
     headers.insert(AUTHORIZATION, auth_value);
     headers.extend(build_proxy_client_ip_headers(config));
-    reqwest::Client::builder()
-        .user_agent(format!("FluxerAdmin/{} (Rust)", config.build_version))
-        .default_headers(headers)
-        .build()
-        .expect("failed to create generated API HTTP client")
+    headers
 }
 
 pub(crate) fn with_proxy_client_ip_header(
@@ -415,6 +415,103 @@ impl std::fmt::Display for ApiError {
             Self::Network(msg) => write!(f, "network error: {msg}"),
             Self::Http { status, message } => write!(f, "HTTP {status}: {message}"),
             Self::Parse(msg) => write!(f, "parse error: {msg}"),
+        }
+    }
+}
+
+fn audit_log_reason_header(reason: &str) -> ApiResult<HeaderValue> {
+    let mut value = HeaderValue::from_bytes(reason.as_bytes())
+        .map_err(|_| ApiError::Parse("invalid audit log reason header".to_owned()))?;
+    value.set_sensitive(true);
+    Ok(value)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{Value, json};
+
+    #[test]
+    fn audit_log_reason_header_keeps_utf8_bytes() {
+        let reason = "§ 3 Regel – wiederholt 日本";
+        let value = audit_log_reason_header(reason).expect("valid reason header");
+        assert_eq!(value.as_bytes(), reason.as_bytes());
+        assert!(value.is_sensitive());
+        assert!(audit_log_reason_header("line one\nline two").is_err());
+    }
+
+    fn response(status: u16, body: &'static str) -> reqwest::Response {
+        axum::http::Response::builder()
+            .status(status)
+            .body(body)
+            .expect("valid response")
+            .into()
+    }
+
+    #[tokio::test]
+    async fn parses_successful_json_and_empty_responses() {
+        for (status, body, expected) in [
+            (200, r#"{"value":1}"#, json!({"value": 1})),
+            (201, "[1,2]", json!([1, 2])),
+            (202, "null", Value::Null),
+            (200, "", Value::Null),
+            (204, "ignored body", Value::Null),
+        ] {
+            let actual: Value = AdminApiClient::parse_response(response(status, body))
+                .await
+                .expect("valid response body");
+            assert_eq!(actual, expected, "HTTP {status}: {body}");
+        }
+    }
+
+    #[tokio::test]
+    async fn empty_responses_preserve_null_deserialization_errors() {
+        let expected = serde_json::from_value::<Vec<String>>(Value::Null)
+            .expect_err("null is not a list")
+            .to_string();
+        for (status, body) in [(200, ""), (204, "ignored body")] {
+            let error = AdminApiClient::parse_response::<Vec<String>>(response(status, body))
+                .await
+                .expect_err("missing list");
+            assert_eq!(error.to_string(), format!("parse error: {expected}"));
+        }
+    }
+
+    #[tokio::test]
+    async fn malformed_json_preserves_deserialization_errors() {
+        for body in [" ", "{", "not JSON"] {
+            let expected = serde_json::from_str::<Value>(body)
+                .expect_err("malformed JSON")
+                .to_string();
+            let error = AdminApiClient::parse_response::<Value>(response(200, body))
+                .await
+                .expect_err("malformed response");
+            assert_eq!(error.to_string(), format!("parse error: {expected}"));
+        }
+    }
+
+    #[tokio::test]
+    async fn void_responses_do_not_parse_successful_bodies() {
+        for status in [200, 201, 202, 204] {
+            AdminApiClient::parse_void_response(response(status, "not JSON"))
+                .await
+                .expect("successful void response");
+        }
+    }
+
+    #[tokio::test]
+    async fn typed_and_void_responses_preserve_http_errors() {
+        for status in [302, 400, 403, 404, 500] {
+            for body in ["", "plain error", r#"{"code":"FORBIDDEN"}"#] {
+                let typed = AdminApiClient::parse_response::<Value>(response(status, body))
+                    .await
+                    .map(drop);
+                let empty = AdminApiClient::parse_void_response(response(status, body)).await;
+                for result in [typed, empty] {
+                    let error = result.expect_err("unsuccessful response");
+                    assert_eq!(error.to_string(), format!("HTTP {status}: {body}"));
+                }
+            }
         }
     }
 }

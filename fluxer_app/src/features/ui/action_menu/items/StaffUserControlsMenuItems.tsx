@@ -14,7 +14,7 @@ import type React from 'react';
 import {useCallback} from 'react';
 
 const STAFF_DM_ACCESS_FAILED_TITLE_DESCRIPTOR = msg({
-	message: "Couldn't update staff DM access",
+	message: "Couldn't update direct message permission",
 	comment: 'Title of the error modal shown when toggling staff DM access fails.',
 });
 const STAFF_DM_ACCESS_FAILED_MESSAGE_DESCRIPTOR = msg({
@@ -33,9 +33,9 @@ const MENTION_BYPASS_FAILED_MESSAGE_DESCRIPTOR = msg({
 function showStaffControlErrorModal(title: string, message: string, flxKey: string): void {
 	ModalCommands.push(modal(() => <GenericErrorModal title={title} message={message} data-flx={flxKey} />));
 }
-const ALLOW_STAFF_DM_ACCESS_DESCRIPTOR = msg({
-	message: 'Allow staff DM access',
-	comment: 'Staff setting that allows the Fluxer staff to message the selected user.',
+const ALLOW_DIRECT_MESSAGES_WITH_THIS_USER_DESCRIPTOR = msg({
+	message: 'Allow direct messages with this user',
+	comment: 'Staff-only setting that allows the current staff member and selected user to exchange direct messages.',
 });
 const BYPASS_MENTION_SUPPRESSION_DESCRIPTOR = msg({
 	message: 'Bypass mention suppression',
@@ -106,7 +106,7 @@ export const StaffUserControlsMenuItems: React.FC<StaffUserControlsMenuItemsProp
 				onCheckedChange={handleStaffDmAccessChange}
 				data-flx="ui.action-menu.items.staff-user-controls-menu-items.checkbox-item"
 			>
-				{i18n._(ALLOW_STAFF_DM_ACCESS_DESCRIPTOR)}
+				{i18n._(ALLOW_DIRECT_MESSAGES_WITH_THIS_USER_DESCRIPTOR)}
 			</CheckboxItem>
 			<CheckboxItem
 				checked={mentionBypassUserIds.includes(user.id)}

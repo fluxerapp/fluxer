@@ -13,7 +13,7 @@ import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHo
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import Keybind from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import {getPushToTalkHoldLabel} from '@app/features/input/utils/PushToTalkHint';
 import Presence from '@app/features/presence/state/Presence';
 import {SettingsContextMenu} from '@app/features/ui/action_menu/SettingsContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -205,8 +205,6 @@ const UserAreaInner = observer(
 			};
 		}, [hasVoiceConnection]);
 		const wrapperClassName = styles.userAreaInnerWrapper;
-		const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
-		const pushToTalkHint = formatKeyCombo(pushToTalkCombo);
 		const isPushToTalkEffective = Keybind.isPushToTalkEffective();
 		const microphoneState = selectUserAreaMicrophoneState({
 			effectiveAudioMuted: isMuted,
@@ -226,7 +224,7 @@ const UserAreaInner = observer(
 			if (isGuildDeafened) return getVoiceDeafenedByModeratorsStatusLabel(i18n, true);
 			if (isGuildMuted) return i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
 			if (isPermissionMuted || muteReason === 'permission') return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
-			if (isPushToTalkEffective) return i18n._(PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR, {pushToTalkHint});
+			if (isPushToTalkEffective) return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
 			if (effectiveMuted) return i18n._(UNMUTE_MICROPHONE_DESCRIPTOR);
 			return i18n._(MUTE_MICROPHONE_DESCRIPTOR);
 		})();
@@ -234,7 +232,7 @@ const UserAreaInner = observer(
 			if (isGuildDeafened) return getVoiceDeafenedByModeratorsStatusLabel(i18n, true);
 			if (isGuildMuted) return i18n._(VOICE_MUTED_BY_MODERATORS_DESCRIPTOR);
 			if (isPermissionMuted || muteReason === 'permission') return i18n._(VOICE_NO_SPEAK_PERMISSION_DESCRIPTOR);
-			if (isPushToTalkEffective) return i18n._(PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR, {pushToTalkHint});
+			if (isPushToTalkEffective) return getPushToTalkHoldLabel(i18n, PUSH_TO_TALK_IS_ON_HOLD_TO_SPEAK_DESCRIPTOR);
 			if (effectiveMuted) return i18n._(UNMUTE_MICROPHONE_DESCRIPTOR);
 			return i18n._(MUTE_MICROPHONE_DESCRIPTOR);
 		})();

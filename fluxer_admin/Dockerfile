@@ -1,15 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-FROM rust:1-bookworm AS builder
+FROM rust:1-trixie AS builder
 
-ARG BUILD_VERSION=""
 ARG TARGETARCH
 
 WORKDIR /usr/src/app
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates nodejs npm pkg-config \
-	&& npm install -g pnpm@10.29.3 \
+	&& npm install -g pnpm@11.27.0 \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN npm install --no-audit --no-fund @tailwindcss/cli@4.2.1 tailwindcss@4.2.1
@@ -45,8 +44,6 @@ RUN printf '%s\n' \
 	'strip = "symbols"' \
 	> Cargo.toml
 
-ENV FLUXER_BUILD_VERSION="${BUILD_VERSION}"
-
 RUN cargo build --release -p fluxer_admin \
 	&& cp target/release/fluxer_admin /usr/local/bin/fluxer-admin
 
@@ -57,7 +54,7 @@ RUN test "$(ls target/release/build/fluxer_admin-*/out/static/fonts/*.woff2 | wc
 	&& ls target/release/build/fluxer_admin-*/out/static/fonts/fonts.*.css \
 	&& echo "Latin-core fonts bundled successfully"
 
-FROM debian:bookworm-slim AS runtime
+FROM debian:trixie-slim AS runtime
 
 ARG BUILD_VERSION=""
 ARG SOURCE_SHA=""

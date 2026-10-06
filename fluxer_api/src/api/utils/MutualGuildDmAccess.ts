@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {Guild} from '../models/Guild';
+import type {Guild} from '@app/api/models/Guild';
 
 export const DISQUALIFIED_MUTUAL_GUILD_DM_ACCESS_GUILD_IDS = [
 	1427764882469228556n,

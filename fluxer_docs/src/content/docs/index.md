@@ -1,63 +1,51 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Fluxer API
-description: The four Fluxer protocol surfaces and the contracts they share.
+description: Start using the Fluxer API.
 ---
 
-Fluxer is a self-hostable chat platform. Its API has four surfaces, and all four share one identifier space.
+Fluxer is a self-hostable chat platform.
 
 - To build a client or a bot, start with the [HTTP API](/http-api/) and the [Gateway](/gateway/overview/).
-- For voice or a screen share, read [Voice](/voice/).
+- For voice and screen sharing, read [Voice](/voice/).
 - To run an instance, start with [Get started](/operator/get-started/).
-- To look up one route, use the sidebar or the [Protocol surfaces](#protocol-surfaces) table.
 
 ## Protocol surfaces
 
-| Surface | What it is | Reference |
-| --- | --- | --- |
-| HTTP API | Resource reads and mutations below `/v1` | [HTTP API](/http-api/) |
-| Gateway | A persistent WebSocket for session state and real-time events | [Gateway](/gateway/overview/) |
-| Media Proxy | Attachments, image assets, themes, entrance sound audio, and the upload relay | [Media Proxy](/media-proxy/overview/) |
-| Admin API | The privileged namespace below `/v1/admin` | [Admin API](/admin-api/) |
-
-A client mutates a resource over the HTTP API and receives the resulting update as a Gateway [Dispatch](/gateway/events/). Each operation states the Dispatches it fires, and [Events](/gateway/events/) defines each payload and its recipient scope.
-
-A [snowflake](/snowflakes/) is the identifier all four surfaces share. Voice runs on LiveKit, and [Voice](/voice/) defines the placement protocol and the media transport.
+Use the HTTP API to read and change resources, and Gateway [events](/gateway/events/) to receive updates. The [Media Proxy](/media-proxy/overview/) serves media and uploads. The [Admin API](/admin-api/) provides privileged instance management.
 
 ## Shared contracts
 
-| Read this | For |
-| --- | --- |
-| [Conventions](/conventions/) | Wire table notation, footnotes, omission and `null` |
-| [Authentication](/authentication/) | The `Authorization` grammar and the four credential kinds |
-| [Snowflakes](/snowflakes/) | Identifiers, ordering, and pagination cursors |
-| [Errors](/http-api/errors/) | The error envelope and the code registries |
-| [Rate limits](/topics/rate-limits/) | Buckets, the 429 body, and the `X-RateLimit-*` headers |
-| [Locales](/topics/locales/) | The locale registry and `Accept-Language` negotiation |
+See [Authentication](/authentication/), [Errors](/http-api/errors/), [Rate limits](/topics/rate-limits/) and [Locales](/topics/locales/) for shared behaviour. Most resource identifiers are [snowflakes](/snowflakes/). Each resource page states where it differs from this shared behaviour.
+
+## Field notation
+
+In field tables, `?` after a field name means optional. Before a type, it means nullable.
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| `name` | `string` | Required and cannot be `null` |
+| `name?` | `string` | Optional, but cannot be `null` when present |
+| `name` | `?string` | Required, but can be `null` |
+| `name?` | `?string` | Nullish, so it can be omitted or set to `null` |
+
+An omitted field is different from a field set to `null`. Each operation explains how these values affect the resource.
+
+In the type column, `array[type]` is an array of the named type, and `map[key, value]` is a JSON object keyed by the first type with values of the second.
 
 ## Endpoint discovery
 
-A client that knows only a Fluxer origin sends `GET /.well-known/fluxer` first. The route is unversioned, accepts no credential, and is readable from any origin.
+Start with `GET /.well-known/fluxer` on the instance origin. It requires no authentication and allows cross-origin requests.
 
 ```text
 GET https://example.com/.well-known/fluxer
 ```
 
-The instance Fluxer hosts answers discovery at `https://fluxer.app/.well-known/fluxer`. That origin is the one thing a client is given.
+For the hosted instance, use `https://fluxer.app/.well-known/fluxer`.
 
-The response is the [instance discovery object](/http-api/instance/#instance-discovery-object). Every base URL a client uses comes from the [instance endpoints object](/http-api/instance/#instance-endpoints-object) inside it. A client MUST read every base URL from that response, and it MUST NOT derive one from the origin it was given or assume an official Fluxer domain.
+Read base URLs from the response's [endpoints](/http-api/instance/#instance-endpoints-object). Do not derive them from the origin or hard-code Fluxer domains.
 
-The base URL a client takes depends on its kind.
+- Bots, libraries and third-party clients use `endpoints.api_public`.
+- The first-party web application uses `endpoints.api_client`. `endpoints.api` is an alias for it.
 
-- `endpoints.api_public` is the endpoint a bot, a library, or any other third-party client uses.
-- `endpoints.api_client` is the endpoint the first-party web application uses.
-- `endpoints.api` repeats `endpoints.api_client`.
-
-A credential goes in the `Authorization` header.
-
-```text
-GET https://api.example.com/v1/users/@me
-Authorization: flx_ZDb1GURItsMuYl1zvrgxv2qLBxyNmgNSEaWT
-```
-
-That credential is a user session token. [Log in with a password](/http-api/authentication/#log-in-with-a-password) issues one. A bot sends a bot token with the `Bot` prefix, issued by [Create application](/http-api/applications/#create-application). [Authentication](/authentication/) gives the exact form of all four kinds.
+Use `/v1` paths and send credentials in the `Authorization` header as described in [Authentication](/authentication/).

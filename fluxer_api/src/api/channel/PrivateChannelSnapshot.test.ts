@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {describe, expect, test} from 'vitest';
-import {createChannelID, createMessageID, createUserID} from '../BrandedTypes';
-import type {ChannelRow, PrivateChannelRow} from '../database/types/ChannelTypes';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
 import {
 	channelRowFromPrivateChannelSnapshot,
 	isPrivateChannelType,
@@ -11,7 +8,10 @@ import {
 	privateChannelHydrationPatch,
 	privateChannelLastMessageIdPatch,
 	privateChannelMetadataPatch,
-} from './PrivateChannelSnapshot';
+} from '@app/api/channel/PrivateChannelSnapshot';
+import type {ChannelRow, PrivateChannelRow} from '@app/api/database/types/ChannelTypes';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {describe, expect, test} from 'vitest';
 
 const OWNER = createUserID(1n);
 const MEMBER_A = createUserID(2n);

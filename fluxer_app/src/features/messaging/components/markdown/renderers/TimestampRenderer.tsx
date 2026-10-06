@@ -31,7 +31,7 @@ export const TimestampRenderer = observer(function TimestampRenderer({
 	const relativeDisplayTime = useMemo(() => {
 		return isValidTimestamp ? formatTimestamp(timestamp, style, i18n) : '';
 	}, [tick, isValidTimestamp, timestamp, style, i18n.locale]);
-	const relativeTime = date !== null ? DateTime.fromJSDate(date).toRelative() : null;
+	const relativeTime = date !== null ? DateTime.fromJSDate(date).setLocale(locale).toRelative() : null;
 	if (date === null || fullDateTime === null) {
 		return React.createElement('span', {className: markupStyles.timestamp}, String(timestamp));
 	}

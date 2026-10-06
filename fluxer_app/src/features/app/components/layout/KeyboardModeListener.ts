@@ -11,7 +11,7 @@ import {
 	recordPointerActivationFocusTarget,
 } from '@app/features/ui/utils/PointerActivationFocus';
 import {observer} from 'mobx-react-lite';
-import {useEffect, useMemo} from 'react';
+import {useEffect, useLayoutEffect, useMemo} from 'react';
 
 const FOCUS_TRAPPING_OVERLAY_SELECTOR = [
 	'[role="dialog"]',
@@ -42,6 +42,7 @@ export const KeyboardModeListener = observer(() => {
 			path.startsWith(Routes.REGISTER) ||
 			path.startsWith(Routes.FORGOT_PASSWORD) ||
 			path.startsWith(Routes.RESET_PASSWORD) ||
+			path.startsWith(Routes.RECOVER_ACCOUNT) ||
 			path.startsWith(Routes.VERIFY_EMAIL) ||
 			path.startsWith(Routes.AUTHORIZE_IP) ||
 			path.startsWith(Routes.OAUTH_AUTHORIZE) ||
@@ -86,7 +87,7 @@ export const KeyboardModeListener = observer(() => {
 			window.removeEventListener('pointerdown', handlePointer, true);
 		};
 	}, [isAuthRoute]);
-	useEffect(() => {
+	useLayoutEffect(() => {
 		FocusRingManager.setRingsEnabled(keyboardModeEnabled);
 	}, [keyboardModeEnabled]);
 	useEffect(() => {

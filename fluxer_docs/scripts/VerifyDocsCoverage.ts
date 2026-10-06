@@ -7,18 +7,19 @@ import {mkdir, mkdtemp, readdir, readFile, rm, writeFile} from 'node:fs/promises
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {parseArgs} from 'node:util';
 import {extractRoutesFromControllers} from '@fluxer/openapi/src/extractors/RouteExtractor';
-import {installerChecksumLine} from '../src/installer/InstallerDigest.ts';
+import type {OpenAPIDocument} from '@fluxer/openapi/src/OpenAPITypes';
+import {installerChecksumLine} from '@/installer/InstallerDigest.ts';
+import {type DocsRouteHeader, readRouteHeaders} from './DocsRouteHeaders.ts';
+import {DOCS_ROOT, HTTP_METHODS, type MarkdownPage, readMarkdownPages, routeShape} from './DocsSource.ts';
 
-const DOCS_ROOT = fileURLToPath(new URL('../src/content/docs/', import.meta.url));
+const {values: options} = parseArgs({options: {'source-only': {type: 'boolean', default: false}}});
+
 const REPO_ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const MAIN_SPEC = path.join(REPO_ROOT, 'fluxer_api/src/api/openapi/openapi.json');
 const ADMIN_SPEC = path.join(REPO_ROOT, 'fluxer_admin/openapi-admin.json');
 const MEDIA_PROXY_SERVER_DIR = path.join(REPO_ROOT, 'fluxer_media_proxy/src/server');
-
-const ROUTE_HEADER_PATTERN = /<RouteHeader\s+([^>]*?)\/>/gu;
-const ATTRIBUTE_PATTERN = /(\w+)\s*=\s*"([^"]*)"/gu;
-const HTTP_METHODS = new Set(['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS']);
 
 const BLUESKY_OAUTH_CONTROLLER = 'fluxer_api/src/api/bluesky/BlueskyOAuthController.ts';
 const DOWNLOAD_CONTROLLER = 'fluxer_api/src/api/download/DownloadController.ts';
@@ -37,7 +38,7 @@ const MAIN_SPEC_EXEMPT = new Map<string, {file: string; anchor: string; reason: 
 		{
 			file: 'fluxer_api/src/api/openapi/OpenAPIController.ts',
 			anchor: "app.get('/openapi.json'",
-			reason: 'the handler serves the spec file itself and carries no OpenAPI({...}) block',
+			reason: 'the handler serves the spec file itself and has no OpenAPI({...}) block',
 		},
 	],
 	[
@@ -74,6 +75,22 @@ const MAIN_SPEC_EXEMPT = new Map<string, {file: string; anchor: string; reason: 
 		},
 	],
 	[
+		'GET /dl/desktop/{}/{}/{}/latest/{}.zsync',
+		{
+			file: DOWNLOAD_CONTROLLER,
+			anchor: '`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/latest/:format{[a-z_]+\\\\.zsync}`,',
+			reason: 'the path constrains :format by regex and has no OpenAPI path template',
+		},
+	],
+	[
+		'GET /dl/desktop/{}/{}/{}/{}/{}.zsync',
+		{
+			file: DOWNLOAD_CONTROLLER,
+			anchor: '`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/:version/:format{[a-z_]+\\\\.zsync}`,',
+			reason: 'the path constrains :format by regex and has no OpenAPI path template',
+		},
+	],
+	[
 		'GET /dl/{}',
 		{
 			file: DOWNLOAD_CONTROLLER,
@@ -85,8 +102,6 @@ const MAIN_SPEC_EXEMPT = new Map<string, {file: string; anchor: string; reason: 
 
 const DELIBERATELY_UNDOCUMENTED = new Map([
 	['GET /users/@me/mobile-devices', 'mobile notifications, backported separately'],
-	['POST /users/@me/mobile-devices', 'mobile notifications, backported separately'],
-	['POST /users/@me/mobile-devices/unregister', 'mobile notifications, backported separately'],
 	['DELETE /users/@me/mobile-devices/{}', 'mobile notifications, backported separately'],
 	['GET /users/@me/push/subscriptions', 'push API, backported separately'],
 	['POST /users/@me/push/subscribe', 'push API, backported separately'],
@@ -108,14 +123,6 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 		},
 	],
 	[
-		'POST /webhooks/twilio/sms',
-		{
-			reason:
-				'installed only when config.sms.enabled, and then only when the inbound webhook token and public URL are both set, so a default or self-hosted instance never registers it',
-			documentedIn: null,
-		},
-	],
-	[
 		'POST /webhooks/livekit',
 		{
 			reason: 'a LiveKit-signed callback whose shipped target is the internal address http://api:8080/webhooks/livekit',
@@ -128,6 +135,22 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 			reason:
 				'a Standard Webhooks delivery signed with FLUXER_EMAIL_WEBHOOK_SECRET, which answers 404 Email not enabled while email is off',
 			documentedIn: {file: 'operator/configuration.mdx', anchor: 'POST /webhooks/sweego'},
+		},
+	],
+	[
+		'POST /webhooks/app-store',
+		{
+			reason:
+				'an App Store Server Notification whose signedPayload must verify against the pinned Apple root before it is queued. The route is hosted-only',
+			documentedIn: {file: 'http-api/in-app-purchases.mdx', anchor: 'POST /webhooks/app-store'},
+		},
+	],
+	[
+		'POST /webhooks/google-play',
+		{
+			reason:
+				'a Pub/Sub push whose Google-signed OIDC token must match the configured audience and service account before it is queued. The route is hosted-only',
+			documentedIn: {file: 'http-api/in-app-purchases.mdx', anchor: 'POST /webhooks/google-play'},
 		},
 	],
 	[
@@ -164,6 +187,18 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 		covers: (_shape, routePath) => routePath.startsWith('/test/'),
 	},
 	{
+		name: 'deprecated desktop download redirect',
+		justification:
+			'every /dl route is an undocumented deprecated redirect onto pkgs.fluxer.com, kept only for desktop clients already in the field. Nothing current calls one, so documenting them would advertise a path new callers must not use',
+		anchors: [
+			{
+				file: 'fluxer_api/src/api/download/DownloadController.ts',
+				anchor: 'function redirectToPackageOrigin',
+			},
+		],
+		covers: (_shape, routePath) => routePath === '/dl' || routePath.startsWith('/dl/'),
+	},
+	{
 		name: 'backported separately',
 		justification:
 			'part of a system this backport does not ship. Each shape is listed with its system, and a page that documents one fails the run below',
@@ -180,8 +215,8 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 	{
 		name: 'out-of-band credential',
 		justification:
-			'no ordinary client holds the credential. Each entry states its guard, and three are covered in prose',
-		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'if (config.sms.enabled) {'}],
+			'no ordinary client holds the credential. Each entry states its guard, and five are covered in prose',
+		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'InternalRpcController(routes);'}],
 		covers: (shape) => OUT_OF_BAND_CREDENTIAL.has(shape),
 	},
 ];
@@ -191,6 +226,7 @@ const MEDIA_PROXY_ROUTES = new Map([
 	['HEAD /_health', '.route("/_health", get(routes::ops::health))'],
 	['GET /_metrics', '.route("/_metrics", get(routes::ops::metrics_handler))'],
 	['POST /_metadata', '.route("/_metadata", post(routes::internal::metadata_handler))'],
+	['POST /_sniff', '.route("/_sniff", post(routes::internal::sniff_handler))'],
 	['POST /_thumbnail', '.route("/_thumbnail", post(routes::internal::thumbnail_handler))'],
 	['POST /_frames', '.route("/_frames", post(routes::internal::frames_handler))'],
 	[
@@ -221,15 +257,6 @@ const MEDIA_PROXY_ASSET_PREFIXES = new Map([
 	['guilds', 'fn parse_guild_member_asset_path'],
 ]);
 
-interface DocumentedRoute {
-	readonly method: string;
-	readonly path: string;
-	readonly file: string;
-	readonly bot: boolean;
-	readonly unauthenticated: boolean;
-	readonly oauth2: string | null;
-}
-
 interface SpecOperation {
 	readonly method: string;
 	readonly path: string;
@@ -237,20 +264,9 @@ interface SpecOperation {
 	readonly security: ReadonlyArray<Record<string, Array<string>>> | null;
 }
 
-async function walk(directory: string): Promise<Array<string>> {
-	const entries = await readdir(directory, {withFileTypes: true});
-	const files: Array<string> = [];
-	for (const entry of entries) {
-		const resolved = path.join(directory, entry.name);
-		if (entry.isDirectory()) {
-			files.push(...(await walk(resolved)));
-			continue;
-		}
-		if (entry.name.endsWith('.mdx') || entry.name.endsWith('.md')) {
-			files.push(resolved);
-		}
-	}
-	return files;
+interface EffectiveSpecSecurity {
+	readonly schemes: ReadonlySet<string>;
+	readonly allowsAnonymous: boolean;
 }
 
 function stripVersionPrefix(routePath: string): string {
@@ -263,62 +279,35 @@ function stripVersionPrefix(routePath: string): string {
 	return routePath;
 }
 
-function shapeOf(method: string, routePath: string): string {
-	const withoutQuery = routePath.split('?')[0];
-	return `${method} ${withoutQuery.replace(/\{[^}]*\}/gu, '{}')}`;
-}
-
-async function documentedRoutes(): Promise<Array<DocumentedRoute>> {
-	const files = await walk(DOCS_ROOT);
-	const routes: Array<DocumentedRoute> = [];
-	for (const file of files) {
-		const source = await readFile(file, 'utf8');
-		for (const match of source.matchAll(ROUTE_HEADER_PATTERN)) {
-			const attributes = new Map<string, string>();
-			for (const attribute of match[1].matchAll(ATTRIBUTE_PATTERN)) {
-				attributes.set(attribute[1], attribute[2]);
-			}
-			const method = attributes.get('method');
-			const routePath = attributes.get('path');
-			if (method == null || routePath == null) {
-				continue;
-			}
-			const bareFlags = new Set(
-				match[1]
-					.replace(/\w+\s*=\s*"[^"]*"/gu, ' ')
-					.split(/\s+/u)
-					.filter((token) => token.length > 0),
+function indexDocumentedRoutes(routes: ReadonlyArray<DocsRouteHeader>): Map<string, DocsRouteHeader> {
+	const index = new Map<string, DocsRouteHeader>();
+	for (const route of routes) {
+		const key = routeShape(route.method, stripVersionPrefix(route.path));
+		const existing = index.get(key);
+		if (existing !== undefined) {
+			throw new Error(
+				`Duplicate documented route ${key}: ${existing.file}:${existing.line} and ${route.file}:${route.line}`,
 			);
-			routes.push({
-				method,
-				path: routePath,
-				file: path.relative(DOCS_ROOT, file),
-				bot: bareFlags.has('bot'),
-				unauthenticated: bareFlags.has('unauthenticated'),
-				oauth2: attributes.get('oauth2') ?? null,
-			});
 		}
+		index.set(key, route);
 	}
-	return routes;
+	return index;
 }
 
 interface AliasRoute {
 	readonly shape: string;
 	readonly file: string;
-	readonly successor: string;
 }
 
 const ALIAS_TABLE_HEADER = '| Method | Deprecated path | Successor |';
 const ALIAS_ROW_PATTERN =
-	/^\|\s*(GET|HEAD|POST|PATCH|PUT|DELETE|OPTIONS)\s*\|\s*`(\/[^`]+)`\s*\|\s*\[([^\]]+)\]\([^)]+\)\s*\|\s*$/u;
+	/^\|\s*(GET|HEAD|POST|PATCH|PUT|DELETE|OPTIONS)\s*\|\s*`(\/[^`]+)`\s*\|\s*\[[^\]]+\]\([^)]+\)\s*\|\s*$/u;
 
-async function aliasDocumentedRoutes(): Promise<Array<AliasRoute>> {
-	const files = await walk(DOCS_ROOT);
+function aliasDocumentedRoutes(pages: ReadonlyArray<MarkdownPage>): Array<AliasRoute> {
 	const aliases: Array<AliasRoute> = [];
-	for (const file of files) {
-		const source = await readFile(file, 'utf8');
+	for (const {relativePath: file, lines} of pages) {
 		let inTable = false;
-		for (const line of source.split('\n')) {
+		for (const line of lines) {
 			if (line.trim() === ALIAS_TABLE_HEADER) {
 				inTable = true;
 				continue;
@@ -332,9 +321,8 @@ async function aliasDocumentedRoutes(): Promise<Array<AliasRoute>> {
 				continue;
 			}
 			aliases.push({
-				shape: shapeOf(row[1], stripVersionPrefix(row[2])),
-				file: path.relative(DOCS_ROOT, file),
-				successor: row[3],
+				shape: routeShape(row[1], stripVersionPrefix(row[2])),
+				file,
 			});
 		}
 	}
@@ -346,13 +334,9 @@ async function specOperations(specPath: string): Promise<Array<SpecOperation>> {
 	if (typeof spec !== 'object' || spec == null || !('paths' in spec)) {
 		throw new Error(`Spec has no paths: ${specPath}`);
 	}
-	const paths = (
-		spec as {
-			paths: Record<string, Record<string, {tags?: Array<string>; security?: Array<Record<string, Array<string>>>}>>;
-		}
-	).paths;
+	const document = spec as OpenAPIDocument;
 	const operations: Array<SpecOperation> = [];
-	for (const [routePath, item] of Object.entries(paths)) {
+	for (const [routePath, item] of Object.entries(document.paths)) {
 		for (const [method, operation] of Object.entries(item)) {
 			const upper = method.toUpperCase();
 			if (!HTTP_METHODS.has(upper)) {
@@ -362,7 +346,7 @@ async function specOperations(specPath: string): Promise<Array<SpecOperation>> {
 				method: upper,
 				path: stripVersionPrefix(routePath),
 				tags: operation.tags ?? [],
-				security: operation.security ?? null,
+				security: operation.security === undefined ? (document.security ?? null) : operation.security,
 			});
 		}
 	}
@@ -419,18 +403,19 @@ const astRoute = (route: {method: string; path: string}): string => {
 				`{${name}}${constraint == null ? '' : constraintTail(constraint)}`,
 		)
 		.replace(/\*/gu, '{wildcard}');
-	return shapeOf(route.method.toUpperCase(), stripVersionPrefix(templated));
+	return routeShape(route.method.toUpperCase(), stripVersionPrefix(templated));
 };
 
-const documented = await documentedRoutes();
-const aliasDocumented = await aliasDocumentedRoutes();
-const aliasShapes = new Map(aliasDocumented.map((alias) => [alias.shape, alias]));
-const documentedFlags = new Map<string, {bot: boolean; unauthenticated: boolean}>();
-for (const route of documented) {
-	documentedFlags.set(shapeOf(route.method, stripVersionPrefix(route.path)), {
-		bot: route.bot,
-		unauthenticated: route.unauthenticated,
-	});
+const pages = await readMarkdownPages(DOCS_ROOT);
+const documented = pages.flatMap(readRouteHeaders);
+const aliasDocumented = aliasDocumentedRoutes(pages);
+const aliasShapes = new Map<string, AliasRoute>();
+for (const alias of aliasDocumented) {
+	const existing = aliasShapes.get(alias.shape);
+	if (existing !== undefined) {
+		throw new Error(`Duplicate deprecated alias ${alias.shape}: ${existing.file} and ${alias.file}`);
+	}
+	aliasShapes.set(alias.shape, alias);
 }
 const mediaProxySource = await (async () => {
 	const sources: Array<string> = [];
@@ -489,6 +474,25 @@ for (const [route, {documentedIn}] of OUT_OF_BAND_CREDENTIAL) {
 }
 failures += section('stale anchors (the code moved, update this script)', staleAnchors);
 
+const mediaProxyRouterSource = await readFile(path.join(MEDIA_PROXY_SERVER_DIR, 'runtime.rs'), 'utf8');
+const mediaProxyRegisteredPaths = [...mediaProxyRouterSource.matchAll(/\.route\(\s*"([^"]+)"/gu)].map((match) =>
+	match[1].replace(/\{[^}]*\}/gu, '{}'),
+);
+const mediaProxyListedPaths = new Set([...MEDIA_PROXY_ROUTES.keys()].map((shape) => shape.split(' ')[1]));
+const unlistedMediaProxyPaths = [...new Set(mediaProxyRegisteredPaths)]
+	.filter((routePath) => !mediaProxyListedPaths.has(routePath))
+	.map((routePath) => `${routePath}: build_router registers it and MEDIA_PROXY_ROUTES does not name it`)
+	.sort();
+if (mediaProxyRegisteredPaths.length === 0) {
+	unlistedMediaProxyPaths.push(
+		'fluxer_media_proxy/src/server/runtime.rs registers no route, so this check has gone blind',
+	);
+}
+failures += section('registered by fluxer_media_proxy but absent from this script', unlistedMediaProxyPaths);
+console.log(
+	`  routes registered in fluxer_media_proxy/src/server/runtime.rs: ${mediaProxyRegisteredPaths.length.toString()}`,
+);
+
 const mediaProxyDocumented = documented.filter((route) => route.file.startsWith('media-proxy/'));
 const adminDocumented = documented.filter(
 	(route) => !route.file.startsWith('media-proxy/') && stripVersionPrefix(route.path).startsWith('/admin'),
@@ -499,17 +503,11 @@ const mainDocumented = documented.filter(
 
 const main = await specOperations(MAIN_SPEC);
 const admin = await specOperations(ADMIN_SPEC);
-const mainShapes = new Set(main.map((operation) => shapeOf(operation.method, operation.path)));
-const adminShapes = new Set(admin.map((operation) => shapeOf(operation.method, operation.path)));
+const mainShapes = new Set(main.map((operation) => routeShape(operation.method, operation.path)));
+const adminShapes = new Set(admin.map((operation) => routeShape(operation.method, operation.path)));
 
-const documentedMain = new Map<string, DocumentedRoute>();
-for (const route of mainDocumented) {
-	documentedMain.set(shapeOf(route.method, stripVersionPrefix(route.path)), route);
-}
-const documentedAdmin = new Map<string, DocumentedRoute>();
-for (const route of adminDocumented) {
-	documentedAdmin.set(shapeOf(route.method, stripVersionPrefix(route.path)), route);
-}
+const documentedMain = indexDocumentedRoutes(mainDocumented);
+const documentedAdmin = indexDocumentedRoutes(adminDocumented);
 
 const registered = new Map<string, string>();
 for (const route of controllerRoutes) {
@@ -587,7 +585,7 @@ failures += section(
 	'present in the live spec but undocumented',
 	main
 		.filter((operation) => {
-			const shape = shapeOf(operation.method, operation.path);
+			const shape = routeShape(operation.method, operation.path);
 			if (documentedMain.has(shape)) {
 				return false;
 			}
@@ -613,7 +611,7 @@ failures += section(
 		.map((shape) => `${shape}  is an alias row and a RouteHeader, which double counts it`)
 		.sort(),
 );
-console.log(`  documented as a deprecated alias of a documented route: ${aliasShapes.size.toString()}`);
+console.log(`  documented in deprecated alias tables: ${aliasShapes.size.toString()}`);
 const wronglyDocumented = [...DELIBERATELY_UNDOCUMENTED.entries()]
 	.filter(([shape]) => documentedMain.has(shape))
 	.map(([shape, reason]) => `${shape}  must not be documented: ${reason}`);
@@ -631,7 +629,7 @@ for (const [shape, {reason}] of MAIN_SPEC_EXEMPT) {
 console.log('media proxy');
 const mediaProxyProblems: Array<string> = [];
 for (const route of mediaProxyDocumented) {
-	const shape = shapeOf(route.method, route.path);
+	const shape = routeShape(route.method, route.path);
 	if (MEDIA_PROXY_ROUTES.has(shape)) {
 		continue;
 	}
@@ -796,9 +794,7 @@ console.log('enum names and error codes');
 
 	const enumRows: Array<{file: string; line: number; name: string}> = [];
 	const codeRows: Array<{file: string; line: number; code: string}> = [];
-	for (const file of await walk(DOCS_ROOT)) {
-		const relative = path.relative(DOCS_ROOT, file);
-		const lines = (await readFile(file, 'utf8')).split('\n');
+	for (const {relativePath: relative, lines} of pages) {
 		let inEnumTable = false;
 		for (let i = 0; i < lines.length; i += 1) {
 			const line = lines[i];
@@ -978,9 +974,7 @@ console.log('rate limit buckets, limits and windows');
 		/([\d,]+) requests? per ([a-z0-9 ]+?)(?:,| for [^.]*?,) on the (?:shared )?`([a-z0-9_:@{}]+)` bucket/gu;
 	const problems: Array<string> = [];
 	let claims = 0;
-	for (const file of await walk(DOCS_ROOT)) {
-		const relative = path.relative(DOCS_ROOT, file);
-		const lines = (await readFile(file, 'utf8')).split('\n');
+	for (const {relativePath: relative, lines} of pages) {
 		for (let i = 0; i < lines.length; i += 1) {
 			for (const claim of lines[i].matchAll(claimPattern)) {
 				claims += 1;
@@ -1160,7 +1154,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		for (const row of shellRows(fn, 'KEYS', label)) {
 			const parsed = row.match(/^([A-Z][A-Z0-9_]*) ([a-z0-9_]+)(?: .*)?$/u);
 			if (parsed == null) {
-				problems.push(`${label} carries the row \`${row}\`, which is not "NAME kind"`);
+				problems.push(`${label} has the row \`${row}\`, which is not "NAME kind"`);
 				continue;
 			}
 			keys.set(parsed[1], parsed[2]);
@@ -1173,7 +1167,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		for (const row of powershellRows(variable, label)) {
 			const parsed = row.match(/^\s*@\{Name = '([A-Z][A-Z0-9_]*)'; Kind = '([a-z0-9_]+)'/u);
 			if (parsed == null) {
-				problems.push(`${label} carries the row \`${row.trim()}\`, which is not an @{Name; Kind} entry`);
+				problems.push(`${label} has the row \`${row.trim()}\`, which is not an @{Name; Kind} entry`);
 				continue;
 			}
 			keys.set(parsed[1], parsed[2]);
@@ -1297,7 +1291,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	for (const row of powershellRows('FluxerStackFiles', 'the install.ps1 download list')) {
 		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
 		if (parsed == null) {
-			problems.push(`the install.ps1 download list carries \`${row.trim()}\`, which is not a quoted file name`);
+			problems.push(`the install.ps1 download list has \`${row.trim()}\`, which is not a quoted file name`);
 			continue;
 		}
 		powershellStackFiles.push(parsed[1]);
@@ -1314,17 +1308,43 @@ console.log('self-hosting guide against deploy/self-hosting');
 		}
 	}
 
+	const COMPOSE_DEFAULT_NAMES = ['compose.yaml', 'compose.yml', 'docker-compose.yml', 'docker-compose.yaml'];
+	const shellComposeNames = shellRows('fluxer_compose_names', 'NAMES', 'the install.sh compose name list');
+	const powershellComposeNames: Array<string> = [];
+	for (const row of powershellRows('FluxerComposeNames', 'the install.ps1 compose name list')) {
+		const parsed = row.match(/^\s*'([^']+)'\s*$/u);
+		if (parsed == null) {
+			problems.push(`the install.ps1 compose name list has \`${row.trim()}\`, which is not a quoted file name`);
+			continue;
+		}
+		powershellComposeNames.push(parsed[1]);
+	}
+	for (const [script, list] of [
+		['install.sh', shellComposeNames],
+		['install.ps1', powershellComposeNames],
+	] as const) {
+		if (list.join(', ') !== COMPOSE_DEFAULT_NAMES.join(', ')) {
+			problems.push(
+				`${script} resolves compose files as [${list.join(', ')}] and Compose resolves them as [${COMPOSE_DEFAULT_NAMES.join(', ')}]`,
+			);
+		}
+	}
+	if (!shellStackFiles.includes('docker-compose.yml') || !COMPOSE_DEFAULT_NAMES.includes('docker-compose.yml')) {
+		problems.push(
+			'the installers no longer download docker-compose.yml, so the name they map onto an instance is unclear',
+		);
+	}
+
 	const PIPE_TO_SHELL =
 		/(?:curl|wget|iwr|Invoke-WebRequest)[^\n|]*\|\s*(?:sudo\s+)?(?:sh|bash|zsh|iex|Invoke-Expression)\b/iu;
-	const docsPages = await walk(DOCS_ROOT);
 	for (const [name, source] of installers) {
 		if (PIPE_TO_SHELL.test(source)) {
 			problems.push(`${name} pipes a download into a shell`);
 		}
 	}
-	for (const page of docsPages) {
-		if (PIPE_TO_SHELL.test(await readFile(page, 'utf8'))) {
-			problems.push(`${path.relative(DOCS_ROOT, page)} pipes a download into a shell`);
+	for (const {relativePath, source} of pages) {
+		if (PIPE_TO_SHELL.test(source)) {
+			problems.push(`${relativePath} pipes a download into a shell`);
 		}
 	}
 
@@ -1354,7 +1374,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 	const digestBearing: Array<[string, string]> = [];
 	for (const endpoint of INSTALLER_ENDPOINTS) {
 		const source = await readFile(fileURLToPath(new URL(`../src/pages/${endpoint}`, import.meta.url)), 'utf8');
-		if (!source.includes("from '../installer/Installer'")) {
+		if (!source.includes("from '@/installer/Installer'")) {
 			problems.push(`src/pages/${endpoint} no longer serves the script through src/installer/Installer`);
 		}
 		digestBearing.push([`src/pages/${endpoint}`, source]);
@@ -1363,117 +1383,23 @@ console.log('self-hosting guide against deploy/self-hosting');
 		'src/components/InstallerChecksum.astro',
 		await readFile(fileURLToPath(new URL('../src/components/InstallerChecksum.astro', import.meta.url)), 'utf8'),
 	]);
-	for (const page of docsPages) {
-		const text = await readFile(page, 'utf8');
-		if (text.includes('install.sh') || text.includes('install.ps1')) {
-			digestBearing.push([path.relative(DOCS_ROOT, page), text]);
+	for (const {relativePath, source} of pages) {
+		if (source.includes('install.sh') || source.includes('install.ps1')) {
+			digestBearing.push([relativePath, source]);
 		}
 	}
 	for (const [where, text] of digestBearing) {
 		if (/\b[0-9a-f]{64}\b/u.test(text)) {
 			problems.push(
-				`${where} carries a literal 64-character hex digest, which goes stale the next time a script changes`,
+				`${where} contains a literal 64-character hex digest, which goes stale the next time a script changes`,
 			);
 		}
 	}
 
-	const shellParse = spawnSync('sh', ['-n', path.join(INSTALLER_ROOT, 'install.sh')], {encoding: 'utf8'});
-	if (shellParse.error != null) {
-		problems.push(`sh -n could not run against install.sh: ${shellParse.error.message}`);
-	} else if (shellParse.status !== 0) {
-		problems.push(`sh -n rejects install.sh: ${shellParse.stderr.trim()}`);
-	}
-
-	const DOCKER_STUB = [
-		'#!/bin/sh',
-		'case "$1 $2" in',
-		"	'--version ') echo 'Docker version 27.1.1, build stub' ;;",
-		"	'compose version') if [ \"$3\" = '--short' ]; then echo '2.30.3'; else echo 'v2.30.3'; fi ;;",
-		"	'compose config') echo 'ghcr.io/fluxerapp/fluxer-api:v1' ;;",
-		'esac',
-		'exit 0',
-		'',
-	].join('\n');
-	const CURL_STUB = [
-		'#!/bin/sh',
-		"out=''",
-		"prev=''",
-		'for arg in "$@"; do',
-		'	if [ "$prev" = \'-o\' ]; then out=$arg; fi',
-		'	prev=$arg',
-		'done',
-		'[ -z "$out" ] || printf \'name: fluxer\\nservices:\\n  api:\\n    image: stub\\n\' > "$out"',
-		'',
-	].join('\n');
-
-	const sandbox = await mkdtemp(path.join(tmpdir(), 'fluxer-installer-'));
-	try {
-		const stubBin = path.join(sandbox, 'bin');
-		await mkdir(stubBin, {recursive: true});
-		await writeFile(path.join(stubBin, 'docker'), DOCKER_STUB, {mode: 0o755});
-		await writeFile(path.join(stubBin, 'curl'), CURL_STUB, {mode: 0o755});
-		await writeFile(path.join(stubBin, 'openssl'), '#!/bin/sh\nexit 0\n', {mode: 0o755});
-
-		const instance = path.join(sandbox, 'instance');
-		await mkdir(instance, {recursive: true});
-		await writeFile(path.join(instance, '.env'), 'FLUXER_DOMAIN=x.example\nFLUXER_IMAGE_TAG=2026.813.205040\n');
-		await writeFile(path.join(instance, 'docker-compose.yml'), 'name: fluxer\nservices:\n  api:\n    image: stub\n');
-
-		const plannedRef = (label: string, args: ReadonlyArray<string>): string | null => {
-			const run = spawnSync('sh', [path.join(INSTALLER_ROOT, 'install.sh'), ...args], {
-				encoding: 'utf8',
-				env: {...process.env, PATH: `${stubBin}${path.delimiter}${process.env.PATH ?? ''}`},
-			});
-			if (run.error != null) {
-				problems.push(`install.sh ${label} could not run: ${run.error.message}`);
-				return null;
-			}
-			if (run.status !== 0) {
-				problems.push(`install.sh ${label} exited ${String(run.status)}: ${run.stderr.trim()}`);
-				return null;
-			}
-			const line = run.stdout.match(/^ {2}ref\s+(\S+)$/mu);
-			if (line == null) {
-				problems.push(`install.sh ${label} printed no ref line`);
-				return null;
-			}
-			return line[1];
-		};
-
-		const INSTALL_ARGS = [
-			'--dry-run',
-			'--non-interactive',
-			'--allow-root',
-			'--domain',
-			'x.example',
-			'--email',
-			'a@x.example',
-			'--dir',
-			path.join(sandbox, 'target'),
-		];
-		const REF_CASES: ReadonlyArray<readonly [string, ReadonlyArray<string>, string]> = [
-			['on the default image tag', INSTALL_ARGS, 'main'],
-			['under --image-tag latest', [...INSTALL_ARGS, '--image-tag', 'latest'], 'main'],
-			['under --image-tag 2026.813.205040', [...INSTALL_ARGS, '--image-tag', '2026.813.205040'], '2026.813.205040'],
-			[
-				'under --ref feature/x --image-tag 2026.813.205040',
-				[...INSTALL_ARGS, '--ref', 'feature/x', '--image-tag', '2026.813.205040'],
-				'feature/x',
-			],
-			[
-				'under --update against a pinned .env',
-				['--update', '--dry-run', '--allow-root', '--dir', instance],
-				'2026.813.205040',
-			],
-		];
-		for (const [label, args, expected] of REF_CASES) {
-			const resolved = plannedRef(label, args);
-			if (resolved != null && resolved !== expected) {
-				problems.push(`install.sh ${label} plans ref ${resolved}, and the image tag it pairs with wants ${expected}`);
-			}
-		}
-	} finally {
-		await rm(sandbox, {recursive: true, force: true});
+	if (options['source-only']) {
+		console.log('  installer execution skipped (--source-only)');
+	} else {
+		problems.push(...(await verifyInstallerExecution(INSTALLER_ROOT)));
 	}
 
 	const covered = new Set<string>(
@@ -1595,7 +1521,7 @@ console.log('self-hosting guide against deploy/self-hosting');
 		}
 	}
 
-	const ENV_VALUE_FLOOR = 19;
+	const ENV_VALUE_FLOOR = 17;
 	const ENV_VALUE_UNSET = 'unset';
 	let inEnvValueTable = false;
 	let envEntry: string | null = null;
@@ -1734,10 +1660,10 @@ console.log('unthrottled routes and global bucket claims');
 			admin: route.path.startsWith('/admin'),
 		}));
 
-	const publicShapes = new Set(main.map((operation) => shapeOf(operation.method, operation.path)));
+	const publicShapes = new Set(main.map((operation) => routeShape(operation.method, operation.path)));
 	const publicUnthrottled = unthrottled
 		.filter((entry) => !entry.admin)
-		.map((entry) => shapeOf(entry.method, stripVersionPrefix(entry.route.replace(/:([a-zA-Z_]+)/gu, '{$1}'))))
+		.map((entry) => routeShape(entry.method, stripVersionPrefix(entry.route.replace(/:([a-zA-Z_]+)/gu, '{$1}'))))
 		.filter((shape) => publicShapes.has(shape));
 	const adminUnthrottled = unthrottled.filter((entry) => entry.admin);
 
@@ -1745,27 +1671,15 @@ console.log('unthrottled routes and global bucket claims');
 	const problems: Array<string> = [];
 	const uniquePublic = [...new Set(publicUnthrottled)].sort();
 
-	const unthrottledByDesign = new Set([
-		'GET /dl/desktop/{}/{}/{}/latest',
-		'GET /dl/desktop/{}/{}/{}/latest/{}',
-		'GET /dl/desktop/{}/{}/{}/versions',
-		'GET /dl/desktop/{}/{}/{}/{}/{}',
-	]);
-	const unexpected = uniquePublic.filter((shape) => !unthrottledByDesign.has(shape));
-	const nowThrottled = [...unthrottledByDesign].filter((shape) => !uniquePublic.includes(shape)).sort();
+	const unexpected = uniquePublic;
 
 	if (unexpected.length > 0) {
 		problems.push(
-			`rate-limits.md says every HTTP API operation outside the desktop downloads declares a bucket, but ${unexpected.length.toString()} more declare none: ${unexpected.join(', ')}`,
+			`rate-limits.md says every HTTP API operation declares a bucket, but ${unexpected.length.toString()} declare none: ${unexpected.join(', ')}`,
 		);
 	}
-	if (nowThrottled.length > 0) {
-		problems.push(
-			`rate-limits.md names the desktop downloads as the only operations with no bucket, but ${nowThrottled.length.toString()} now declare one: ${nowThrottled.join(', ')}`,
-		);
-	}
-	if (!page.includes('[desktop download](/http-api/downloads/)')) {
-		problems.push('rate-limits.md no longer names the desktop downloads as the operations with no bucket');
+	if (!page.includes('Every HTTP API and Admin API operation declares a bucket')) {
+		problems.push('rate-limits.md no longer states that every operation declares a bucket');
 	}
 	if (adminUnthrottled.length > 0) {
 		const named = adminUnthrottled.map((entry) => `${entry.method} ${entry.route}`).sort();
@@ -1793,7 +1707,7 @@ console.log('unthrottled routes and global bucket claims');
 	failures += section('rate limit prose disagreements', problems);
 }
 
-console.log('error registry and abuse signal weights');
+console.log('error registry');
 {
 	const errorsPage = await readFile(path.join(DOCS_ROOT, 'http-api/errors.md'), 'utf8');
 	const documentedCodes = new Set<string>();
@@ -1811,6 +1725,14 @@ console.log('error registry and abuse signal weights');
 	for (const entry of registrySource.matchAll(/^\t([A-Z][A-Z0-9_]*):/gmu)) {
 		registryCodes.add(entry[1]);
 	}
+	const validationSource = await readFile(
+		path.join(REPO_ROOT, 'packages/constants/src/ValidationErrorCodes.ts'),
+		'utf8',
+	);
+	const validationCodes = new Set<string>();
+	for (const entry of validationSource.matchAll(/^\t([A-Z][A-Z0-9_]*):/gmu)) {
+		validationCodes.add(entry[1]);
+	}
 	const problems: Array<string> = [];
 	for (const code of registryCodes) {
 		if (!documentedCodes.has(code)) {
@@ -1818,25 +1740,18 @@ console.log('error registry and abuse signal weights');
 		}
 	}
 
-	const banner = await readFile(path.join(REPO_ROOT, 'fluxer_api/src/api/middleware/AbusiveIpAutoBanner.ts'), 'utf8');
-	const weights = new Map<string, string>();
-	for (const rule of banner.matchAll(/if \(status === (\d{3})\) return ([\d.]+);/gu)) {
-		weights.set(rule[1], rule[2]);
-	}
-	for (const [status, weight] of weights) {
-		if (status === '404') {
-			continue;
-		}
-		if (!errorsPage.includes(`A ${status} weighs ${weight}`) && !errorsPage.includes(`a ${status} weighs ${weight}`)) {
-			problems.push(`errors.md does not state that a ${status} weighs ${weight}`);
-		}
-	}
-
 	const documentedRegistryCodes = [...registryCodes].filter((c) => documentedCodes.has(c)).length;
-	if (documentedEntries < 491) {
+	const UNDOCUMENTED_VALIDATION_CODES = new Set(['EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL']);
+	const expectedEntries = registryCodes.size + validationCodes.size - UNDOCUMENTED_VALIDATION_CODES.size;
+	if (documentedEntries < expectedEntries) {
 		problems.push(
-			`errors.md code entries parsed fell to ${documentedEntries.toString()}, floor is 491, the 255 API codes plus the 236 validation codes. The registry parser reads a \`| CODE |\` table row and a \`### \`CODE\`\` or \`#### \`CODE\`\` heading, and one of those shapes has stopped matching`,
+			`errors.md code entries parsed fell to ${documentedEntries.toString()}, expected ${expectedEntries.toString()}, the ${registryCodes.size.toString()} API codes plus the ${validationCodes.size.toString()} validation codes less the ${UNDOCUMENTED_VALIDATION_CODES.size.toString()} named as undocumented. Either a code lost its entry, or the registry parser stopped matching one of the \`| CODE |\` table row and \`### \`CODE\`\` or \`#### \`CODE\`\` heading shapes it reads`,
 		);
+	}
+	for (const code of documentedCodes) {
+		if (!registryCodes.has(code) && !validationCodes.has(code)) {
+			problems.push(`errors.md documents ${code}, which is in neither code registry`);
+		}
 	}
 	if (documentedRegistryCodes < registryCodes.size) {
 		problems.push(
@@ -1844,7 +1759,6 @@ console.log('error registry and abuse signal weights');
 		);
 	}
 	console.log(`  registry codes: ${registryCodes.size.toString()}, documented: ${documentedRegistryCodes.toString()}`);
-	console.log(`  abuse signal weights compared: ${weights.size.toString()}`);
 	failures += section('error registry disagreements', problems);
 }
 
@@ -1928,7 +1842,7 @@ console.log('snowflake layout');
 		if (!page.includes(String(epoch))) {
 			problems.push(`snowflakes.md does not state the epoch ${epoch.toString()}`);
 		}
-		const epochIso = new Date(epoch).toISOString().replace('.000Z', '.000Z');
+		const epochIso = new Date(epoch).toISOString();
 		if (!page.includes(epochIso.slice(0, 10))) {
 			problems.push(`snowflakes.md does not state the epoch date ${epochIso}`);
 		}
@@ -1940,7 +1854,7 @@ console.log('snowflake layout');
 		}
 		const timestampBits = 63 - shift;
 		const lastMs = epoch + 2 ** timestampBits - 1;
-		const lastIso = new Date(lastMs).toISOString().replace('Z', 'Z');
+		const lastIso = new Date(lastMs).toISOString();
 		if (!page.includes(lastIso.slice(0, 19))) {
 			problems.push(`snowflakes.md does not state the last representable instant ${lastIso}`);
 		}
@@ -1955,7 +1869,6 @@ console.log('snowflake layout');
 console.log('attachment upload geometry');
 {
 	const limits = await readFile(path.join(REPO_ROOT, 'packages/constants/src/LimitConstants.ts'), 'utf8');
-	const page = await readFile(path.join(DOCS_ROOT, 'topics/uploads.md'), 'utf8');
 	const problems: Array<string> = [];
 	const readConst = (name: string): number | null => {
 		const found = limits.match(new RegExp(`${name} = ([^;]+);`, 'u'));
@@ -1972,22 +1885,16 @@ console.log('attachment upload geometry');
 			.reduce((a, b) => a + b, 0);
 	};
 
-	const constants: Array<[string, string]> = [
-		['ATTACHMENT_UPLOAD_CHUNK_THRESHOLD', 'singlepart threshold'],
-		['ATTACHMENT_UPLOAD_MIN_CHUNK_SIZE', 'minimum part size'],
-		['ATTACHMENT_UPLOAD_MAX_CHUNKS', 'maximum part count'],
-		['ATTACHMENT_MAX_SIZE_NON_PREMIUM', 'non-premium attachment ceiling'],
-		['ATTACHMENT_MAX_SIZE_PREMIUM', 'premium attachment ceiling'],
-		['ATTACHMENT_MAX_SIZE_BOT', 'bot attachment ceiling'],
+	const constants: Array<[string, string, string]> = [
+		['ATTACHMENT_UPLOAD_CHUNK_THRESHOLD', 'singlepart threshold', 'topics/uploads.md'],
+		['ATTACHMENT_MAX_SIZE_NON_PREMIUM', 'non-premium attachment ceiling', 'http-api/messages.mdx'],
+		['ATTACHMENT_MAX_SIZE_PREMIUM', 'premium attachment ceiling', 'http-api/messages.mdx'],
+		['ATTACHMENT_MAX_SIZE_BOT', 'bot attachment ceiling', 'http-api/messages.mdx'],
 	];
-	const divisor = readConst('ATTACHMENT_UPLOAD_TARGET_PART_COUNT');
-	if (divisor == null) {
-		problems.push('could not read ATTACHMENT_UPLOAD_TARGET_PART_COUNT from LimitConstants.ts');
-	} else if (!page.includes(`divided by ${divisor.toString()}`)) {
-		problems.push(`uploads.md does not say the part size is the declared size divided by ${divisor.toString()}`);
-	}
 	let compared = 0;
-	for (const [name, label] of constants) {
+	for (const [name, label, file] of constants) {
+		const page = pages.find((entry) => entry.relativePath === file);
+		if (!page) throw new Error(`Missing upload documentation: ${file}`);
 		const value = readConst(name);
 		if (value == null) {
 			problems.push(`could not read ${name} from LimitConstants.ts`);
@@ -1995,9 +1902,9 @@ console.log('attachment upload geometry');
 		}
 		compared += 1;
 		const bare = new RegExp(`(?<![\\d,.])${value.toString()}(?![\\d,.])`, 'u');
-		const grouped = new RegExp(`(?<![\\d,.])${value.toLocaleString('en-US').replace(/,/gu, ',')}(?![\\d,.])`, 'u');
-		if (!bare.test(page) && !grouped.test(page)) {
-			problems.push(`uploads.md does not state the ${label} of ${value.toString()}`);
+		const grouped = new RegExp(`(?<![\\d,.])${value.toLocaleString('en-US')}(?![\\d,.])`, 'u');
+		if (!bare.test(page.source) && !grouped.test(page.source)) {
+			problems.push(`${file} does not state the ${label} of ${value.toString()}`);
 		}
 	}
 	console.log(`  upload constants compared: ${compared.toString()}`);
@@ -2010,7 +1917,7 @@ console.log('captcha gated operations');
 	const documented = new Set<string>();
 	const documentedLabels = new Map<string, string>();
 	for (const row of page.matchAll(/^\|\s*(GET|POST|PUT|PATCH|DELETE)\s*\|\s*(\/v1\/\S+?)\s*\|/gmu)) {
-		const normalised = shapeOf(row[1], stripVersionPrefix(row[2]));
+		const normalised = routeShape(row[1], stripVersionPrefix(row[2]));
 		documented.add(normalised);
 		documentedLabels.set(normalised, `${row[1]} ${row[2]}`);
 	}
@@ -2054,11 +1961,11 @@ console.log('bot capability flag (from the middleware chain)');
 		if (key.startsWith('GET /admin') || key.includes(' /admin/')) {
 			continue;
 		}
-		const documented = documentedFlags.get(key);
+		const documented = documentedMain.get(key);
 		if (documented == null) {
 			continue;
 		}
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
+		const anyLogin = route.hasLoginRequired;
 		const sourceAcceptsBot = anyLogin && !route.hasDefaultUserOnly;
 		const exemption = BOT_EXEMPT.get(key);
 		if (exemption != null) {
@@ -2114,11 +2021,11 @@ console.log('unauthenticated capability flag (from the middleware chain)');
 		if (key.startsWith('GET /admin') || key.includes(' /admin/')) {
 			continue;
 		}
-		const documented = documentedFlags.get(key);
+		const documented = documentedMain.get(key);
 		if (documented == null) {
 			continue;
 		}
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
+		const anyLogin = route.hasLoginRequired;
 		const sourceIsOpen = !anyLogin && !route.middlewares.some((name) => /OAuth2Scope/u.test(name));
 		const exemption = UNAUTHENTICATED_EXEMPT.get(key);
 		if (exemption != null) {
@@ -2150,27 +2057,40 @@ console.log('spec security field against the middleware chain');
 			'LoginRequired admits a bot token, but GuildOperationsService rejects every bot with 400 BOTS_CANNOT_CREATE_GUILDS, so the spec must not advertise botToken',
 		],
 	]);
-	const specSecurity = new Map<string, Set<string>>();
+	const specSecurity = new Map<string, EffectiveSpecSecurity>();
 	for (const operation of main) {
+		const security = operation.security ?? [];
 		const schemes = new Set<string>();
-		for (const entry of operation.security ?? []) {
+		for (const entry of security) {
 			for (const scheme of Object.keys(entry)) {
 				schemes.add(scheme);
 			}
 		}
-		specSecurity.set(shapeOf(operation.method, operation.path), schemes);
+		specSecurity.set(routeShape(operation.method, operation.path), {
+			schemes,
+			allowsAnonymous: security.length === 0 || security.some((entry) => Object.keys(entry).length === 0),
+		});
 	}
 	const specBugs: Array<string> = [];
 	let compared = 0;
 	for (const route of controllerRoutes) {
 		const key = astRoute(route);
-		const declaredSchemes = specSecurity.get(key);
-		if (declaredSchemes == null || MANUAL_CREDENTIAL.has(key)) {
+		const declaredSecurity = specSecurity.get(key);
+		if (declaredSecurity == null || MANUAL_CREDENTIAL.has(key)) {
 			continue;
 		}
+		const declaredSchemes = declaredSecurity.schemes;
 		compared += 1;
-		const anyLogin = route.hasLoginRequired || route.hasLoginRequiredAllowSuspicious;
+		const anyLogin = route.hasLoginRequired;
 		const acceptsBot = anyLogin && !route.hasDefaultUserOnly;
+		const requiresAuthentication =
+			anyLogin ||
+			route.hasDefaultUserOnly ||
+			route.oauth2BearerTokenRequired ||
+			route.middlewares.includes('requireOAuth2Scope');
+		if (requiresAuthentication && declaredSecurity.allowsAnonymous) {
+			specBugs.push(`${key} allows unauthenticated requests, but the middleware chain requires authentication`);
+		}
 		const exemption = BOT_SCHEME_EXEMPT.get(key);
 		if (exemption != null) {
 			if (declaredSchemes.has('botToken')) {
@@ -2204,7 +2124,7 @@ const adminTargetOnly = [...documentedAdmin.entries()]
 	.map(([, route]) => `${route.method} ${route.path}  (${route.file})`)
 	.sort();
 const adminLiveOnly = admin
-	.filter((operation) => !documentedAdmin.has(shapeOf(operation.method, operation.path)))
+	.filter((operation) => !documentedAdmin.has(routeShape(operation.method, operation.path)))
 	.map((operation) => `${operation.method} ${operation.path}`)
 	.sort();
 console.log(`  live admin operations: ${admin.length.toString()}`);
@@ -2226,3 +2146,160 @@ if (failures > 0) {
 }
 console.log('OK: every registered fluxer_api route is documented or covered by an exemption rule, and the');
 console.log('documented routes match the live main API, media proxy, and admin target shape');
+
+async function verifyInstallerExecution(installerRoot: string): Promise<Array<string>> {
+	const problems: Array<string> = [];
+	const shellParse = spawnSync('sh', ['-n', path.join(installerRoot, 'install.sh')], {encoding: 'utf8'});
+	if (shellParse.error != null) {
+		problems.push(`sh -n could not run against install.sh: ${shellParse.error.message}`);
+	} else if (shellParse.status !== 0) {
+		problems.push(`sh -n rejects install.sh: ${shellParse.stderr.trim()}`);
+	}
+
+	const DOCKER_STUB = [
+		'#!/bin/sh',
+		'case "$1 $2" in',
+		"	'--version ') echo 'Docker version 27.1.1, build stub' ;;",
+		"	'compose version') if [ \"$3\" = '--short' ]; then echo '2.30.3'; else echo 'v2.30.3'; fi ;;",
+		"	'compose config') echo 'ghcr.io/fluxerapp/fluxer-api:v1' ;;",
+		'esac',
+		'exit 0',
+		'',
+	].join('\n');
+	const CURL_STUB = [
+		'#!/bin/sh',
+		"out=''",
+		"prev=''",
+		'for arg in "$@"; do',
+		'	if [ "$prev" = \'-o\' ]; then out=$arg; fi',
+		'	prev=$arg',
+		'done',
+		'[ -z "$out" ] || printf \'name: fluxer\\nservices:\\n  api:\\n    image: stub\\n\' > "$out"',
+		'',
+	].join('\n');
+
+	const sandbox = await mkdtemp(path.join(tmpdir(), 'fluxer-installer-'));
+	try {
+		const stubBin = path.join(sandbox, 'bin');
+		await mkdir(stubBin, {recursive: true});
+		await writeFile(path.join(stubBin, 'docker'), DOCKER_STUB, {mode: 0o755});
+		await writeFile(path.join(stubBin, 'curl'), CURL_STUB, {mode: 0o755});
+		await writeFile(path.join(stubBin, 'openssl'), '#!/bin/sh\nexit 0\n', {mode: 0o755});
+
+		const instance = path.join(sandbox, 'instance');
+		await mkdir(instance, {recursive: true});
+		await writeFile(path.join(instance, '.env'), 'FLUXER_DOMAIN=x.example\nFLUXER_IMAGE_TAG=2026.813.205040\n');
+		await writeFile(path.join(instance, 'docker-compose.yml'), 'name: fluxer\nservices:\n  api:\n    image: stub\n');
+
+		const planned = (label: string, args: ReadonlyArray<string>, cwd?: string): string | null => {
+			const run = spawnSync('sh', [path.join(installerRoot, 'install.sh'), ...args], {
+				cwd,
+				encoding: 'utf8',
+				env: {
+					...process.env,
+					PATH: `${stubBin}${path.delimiter}${process.env.PATH ?? ''}`,
+					FLUXER_INSTALLER_REFRESHED: '1',
+					...(cwd == null ? {} : {PWD: cwd}),
+				},
+			});
+			if (run.error != null) {
+				problems.push(`install.sh ${label} could not run: ${run.error.message}`);
+				return null;
+			}
+			if (run.status !== 0) {
+				problems.push(`install.sh ${label} exited ${String(run.status)}: ${run.stderr.trim()}`);
+				return null;
+			}
+			return run.stdout;
+		};
+
+		const plannedRef = (label: string, args: ReadonlyArray<string>): string | null => {
+			const stdout = planned(label, args);
+			if (stdout == null) {
+				return null;
+			}
+			const line = stdout.match(/^ {2}ref\s+(\S+)$/mu);
+			if (line == null) {
+				problems.push(`install.sh ${label} printed no ref line`);
+				return null;
+			}
+			return line[1];
+		};
+
+		const INSTALL_ARGS = [
+			'--dry-run',
+			'--non-interactive',
+			'--allow-root',
+			'--domain',
+			'x.example',
+			'--email',
+			'a@x.example',
+			'--dir',
+			path.join(sandbox, 'target'),
+		];
+		const REF_CASES: ReadonlyArray<readonly [string, ReadonlyArray<string>, string]> = [
+			['on the default image tag', INSTALL_ARGS, 'main'],
+			['under --image-tag latest', [...INSTALL_ARGS, '--image-tag', 'latest'], 'main'],
+			['under --image-tag 2026.813.205040', [...INSTALL_ARGS, '--image-tag', '2026.813.205040'], '2026.813.205040'],
+			[
+				'under --ref feature/x --image-tag 2026.813.205040',
+				[...INSTALL_ARGS, '--ref', 'feature/x', '--image-tag', '2026.813.205040'],
+				'feature/x',
+			],
+			[
+				'under --update against a pinned .env',
+				['--update', '--dry-run', '--allow-root', '--dir', instance],
+				'2026.813.205040',
+			],
+		];
+		for (const [label, args, expected] of REF_CASES) {
+			const resolved = plannedRef(label, args);
+			if (resolved != null && resolved !== expected) {
+				problems.push(`install.sh ${label} plans ref ${resolved}, and the image tag it pairs with wants ${expected}`);
+			}
+		}
+
+		const withoutEmail = INSTALL_ARGS.filter(
+			(arg, index) => arg !== '--email' && INSTALL_ARGS[index - 1] !== '--email',
+		);
+		const withoutEmailPlan = planned('without --email', withoutEmail);
+		if (withoutEmailPlan != null && !/^ {2}email\s+admin@x\.example, derived by compose$/mu.test(withoutEmailPlan)) {
+			problems.push('install.sh without --email does not plan the admin@FLUXER_DOMAIN contact that compose derives');
+		}
+
+		const composeYmlInstance = path.join(sandbox, 'compose-yml-instance');
+		await mkdir(composeYmlInstance, {recursive: true});
+		await writeFile(
+			path.join(composeYmlInstance, '.env'),
+			'FLUXER_DOMAIN=x.example\nFLUXER_IMAGE_TAG=2026.813.205040\n',
+		);
+		await writeFile(path.join(composeYmlInstance, 'compose.yml'), 'name: fluxer\nservices:\n  api:\n    image: stub\n');
+		const COMPOSE_NAME_CASES: ReadonlyArray<readonly [string, ReadonlyArray<string>, string | undefined]> = [
+			[
+				'under --update against a compose.yml instance',
+				['--update', '--dry-run', '--allow-root', '--dir', composeYmlInstance],
+				undefined,
+			],
+			[
+				'under --update standing in a compose.yml instance',
+				['--update', '--dry-run', '--allow-root'],
+				composeYmlInstance,
+			],
+		];
+		for (const [label, args, cwd] of COMPOSE_NAME_CASES) {
+			const stdout = planned(label, args, cwd);
+			if (stdout == null) {
+				continue;
+			}
+			if (!/^ {4}compose\.yml is unchanged$/mu.test(stdout)) {
+				problems.push(`install.sh ${label} does not plan the refreshed stack file onto compose.yml`);
+			}
+			if (/^ {4}docker-compose\.yml is new$/mu.test(stdout)) {
+				problems.push(`install.sh ${label} plans a docker-compose.yml that Compose would never load there`);
+			}
+		}
+	} finally {
+		await rm(sandbox, {recursive: true, force: true});
+	}
+	return problems;
+}

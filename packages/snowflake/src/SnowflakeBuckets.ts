@@ -26,7 +26,7 @@ function createBucketRange(startBucket: number, endBucket: number): Array<number
 
 export function makeBucket(snowflake: bigint | null): number {
 	const timestamp = getRelativeTimestampForBucket(snowflake);
-	return Math.floor(Number(timestamp / SNOWFLAKE_BUCKET_SIZE_MS));
+	return Number(timestamp / SNOWFLAKE_BUCKET_SIZE_MS);
 }
 
 export function makeBucketString(snowflake: string | null): number {

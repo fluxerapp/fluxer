@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {resolveFavoriteGifEntry} from '@app/api/favorite_gif/FavoriteGifResolver';
+import {GifService} from '@app/api/gif/GifService';
+import type {IGifProvider} from '@app/api/gif/IGifProvider';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
 import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
 import type {GifResponse} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import {describe, expect, it, vi} from 'vitest';
-import {GifService} from '../gif/GifService';
-import type {IGifProvider} from '../gif/IGifProvider';
-import type {IMediaService} from '../infrastructure/IMediaService';
-import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
-import {resolveFavoriteGifEntry} from './FavoriteGifResolver';
 
 function createProvider(gif: GifResponse, slug: string | null = gif.slug): IGifProvider {
 	return {

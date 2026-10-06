@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {Relationship} from '@app/api/models/Relationship';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
@@ -11,10 +15,6 @@ import type {
 	RemoveUserRelationshipsByCategoryRequest,
 	RemoveUserRelationshipsResponse,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import type {Relationship} from '../../models/Relationship';
-import type {AdminAuditService} from './AdminAuditService';
 
 interface AdminUserRelationshipServiceDeps {
 	apiContext: ApiContext;

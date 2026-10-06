@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import {createVoiceEngineV2EmptyFaultPlan, createVoiceEngineV2FaultPlan} from './FaultInjector';
-import {VoiceEngineV2Simulator} from './Simulator';
+import {
+	createVoiceEngineV2EmptyFaultPlan,
+	createVoiceEngineV2FaultPlan,
+} from '@fluxer/voice_engine_v2/src/simulation/FaultInjector';
+import {VoiceEngineV2Simulator} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
 import {
 	createVoiceEngineV2ExternalEstablishmentCycleWorkload,
 	SIMULATOR_EXTERNAL_ESTABLISH_CYCLES,
 	VoiceEngineV2WorkloadBuilder,
-} from './Workload';
+} from '@fluxer/voice_engine_v2/src/simulation/Workload';
+import {describe, expect, it} from 'vitest';
 
 describe('external establishment workload shape', () => {
 	it('emits an establish and a remote disconnect for every cycle', () => {

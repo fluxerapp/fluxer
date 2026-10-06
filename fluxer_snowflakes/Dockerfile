@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-FROM rust:1-bookworm AS builder
+FROM rust:1-trixie AS builder
 
 WORKDIR /usr/src/app
 
@@ -8,7 +8,7 @@ COPY . .
 
 RUN cargo build --release -p fluxer-snowflakes
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG BUILD_VERSION=""
 ARG SOURCE_SHA=""

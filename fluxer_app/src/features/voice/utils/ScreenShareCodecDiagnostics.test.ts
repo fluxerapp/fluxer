@@ -1,136 +1,84 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
-	findSoftwareVideoDecoder,
+	computeInboundVideoDecodeHealth,
+	findInboundVideoDecodeSample,
 	findStalledVideoDecoder,
-	isSoftwareVideoImplementation,
-} from './ScreenShareCodecDiagnostics';
+} from '@app/features/voice/utils/ScreenShareCodecDiagnostics';
+import {
+	markScreenShareDecodeFailure,
+	resetVideoDecoderExclusions,
+} from '@app/features/voice/utils/VideoDecoderCapabilities';
+import {afterEach, describe, expect, it} from 'vitest';
 
-function createStatsReport(entries: Array<Record<string, unknown>>): RTCStatsReport {
-	return new Map(entries.map((entry) => [entry.id as string, entry])) as unknown as RTCStatsReport;
+function buildStats(inbound: Record<string, unknown>): RTCStatsReport {
+	return new Map<string, unknown>([
+		['codec-1', {type: 'codec', id: 'codec-1', mimeType: 'video/H264'}],
+		['inbound-1', {type: 'inbound-rtp', id: 'inbound-1', kind: 'video', codecId: 'codec-1', ...inbound}],
+	]) as unknown as RTCStatsReport;
 }
 
-describe('isSoftwareVideoImplementation', () => {
-	it('detects common software encoder and decoder implementations', () => {
-		expect(isSoftwareVideoImplementation('libvpx')).toBe(true);
-		expect(isSoftwareVideoImplementation('FFmpegVideoDecoder')).toBe(true);
-		expect(isSoftwareVideoImplementation('Dav1dVideoDecoder')).toBe(true);
-		expect(isSoftwareVideoImplementation('D3D11VideoDecoder')).toBe(false);
+function buildSample(inbound: Record<string, unknown>) {
+	const sample = findInboundVideoDecodeSample(buildStats(inbound));
+	if (!sample) throw new Error('expected an inbound video sample');
+	return sample;
+}
+
+describe('the screen share decode stall detector', () => {
+	it('calls a stream that never decoded a keyframe a stall', () => {
+		const stall = findStalledVideoDecoder(
+			buildSample({framesDecoded: 0, keyFramesDecoded: 0, framesReceived: 6, framesDropped: 6}),
+		);
+		expect(stall?.codec).toBe('h264');
+	});
+
+	it('refuses to call a stream that decoded and then froze a stall', () => {
+		expect(
+			findStalledVideoDecoder(
+				buildSample({framesDecoded: 240, keyFramesDecoded: 2, framesReceived: 260, framesDropped: 20}),
+			),
+		).toBeNull();
+	});
+
+	it('refuses to call anything a stall when the stats report no keyframe counter', () => {
+		expect(findStalledVideoDecoder(buildSample({framesDecoded: 0, framesReceived: 6, framesDropped: 6}))).toBeNull();
 	});
 });
 
-describe('findSoftwareVideoDecoder', () => {
-	it('finds a software decoder from the decoder implementation', () => {
-		const stats = createStatsReport([
-			{id: 'codec-1', type: 'codec', mimeType: 'video/AV1'},
-			{
-				id: 'inbound-1',
-				type: 'inbound-rtp',
-				kind: 'video',
-				codecId: 'codec-1',
-				decoderImplementation: 'Dav1dVideoDecoder',
-				powerEfficientDecoder: false,
-			},
-		]);
-		expect(findSoftwareVideoDecoder(stats)).toEqual({
-			codec: 'AV1',
-			implementation: 'Dav1dVideoDecoder',
-			powerEfficientDecoder: false,
-		});
+describe('the baseline decode floor', () => {
+	afterEach(() => {
+		resetVideoDecoderExclusions();
 	});
-	it('finds a software decoder from power efficiency when implementation is hidden', () => {
-		const stats = createStatsReport([
-			{id: 'codec-1', type: 'codec', mimeType: 'video/H264'},
-			{
-				id: 'inbound-1',
-				type: 'inbound-rtp',
-				codecId: 'codec-1',
-				powerEfficientDecoder: false,
-			},
-		]);
-		expect(findSoftwareVideoDecoder(stats)).toEqual({
-			codec: 'H264',
-			implementation: 'software decoder',
-			powerEfficientDecoder: false,
-		});
+
+	it('never withdraws a codec every WebRTC endpoint is required to decode', () => {
+		expect(markScreenShareDecodeFailure('h264', 'test')).toBe(false);
+		expect(markScreenShareDecodeFailure('vp8', 'test')).toBe(false);
 	});
-	it('does not flag a named hardware decoder only because power efficiency is false', () => {
-		const stats = createStatsReport([
-			{id: 'codec-1', type: 'codec', mimeType: 'video/H264'},
-			{
-				id: 'inbound-1',
-				type: 'inbound-rtp',
-				kind: 'video',
-				codecId: 'codec-1',
-				decoderImplementation: 'VideoToolboxVideoDecoder',
-				powerEfficientDecoder: false,
-			},
-		]);
-		expect(findSoftwareVideoDecoder(stats)).toBeNull();
-	});
-	it('ignores hardware and non-video inbound stats', () => {
-		const stats = createStatsReport([
-			{id: 'codec-1', type: 'codec', mimeType: 'video/H264'},
-			{id: 'codec-2', type: 'codec', mimeType: 'audio/opus'},
-			{
-				id: 'inbound-1',
-				type: 'inbound-rtp',
-				kind: 'video',
-				codecId: 'codec-1',
-				decoderImplementation: 'D3D11VideoDecoder',
-				powerEfficientDecoder: true,
-			},
-			{
-				id: 'inbound-2',
-				type: 'inbound-rtp',
-				kind: 'audio',
-				codecId: 'codec-2',
-				decoderImplementation: 'FFmpegAudioDecoder',
-				powerEfficientDecoder: false,
-			},
-		]);
-		expect(findSoftwareVideoDecoder(stats)).toBeNull();
+
+	it('still withdraws an optional codec', () => {
+		expect(markScreenShareDecodeFailure('av1', 'test')).toBe(true);
 	});
 });
 
-describe('findStalledVideoDecoder', () => {
-	it('detects received video packets that never decode into frames', () => {
-		const stats = createStatsReport([
-			{id: 'codec-1', type: 'codec', mimeType: 'video/VP9'},
-			{
-				id: 'inbound-1',
-				type: 'inbound-rtp',
-				kind: 'video',
-				codecId: 'codec-1',
-				packetsReceived: 42,
-				bytesReceived: 32000,
-				framesDecoded: 0,
-				framesReceived: 8,
-			},
-		]);
-		expect(findStalledVideoDecoder(stats)).toMatchObject({
-			codec: 'vp9',
-			mimeType: 'video/VP9',
-			packetsReceived: 42,
-			bytesReceived: 32000,
-			framesDecoded: 0,
-			framesReceived: 8,
+describe('inbound video smoothness', () => {
+	it('reports decoded frame rate and mean inter-frame delay in milliseconds', () => {
+		const previous = buildSample({
+			timestamp: 1000,
+			framesDecoded: 100,
+			totalInterFrameDelay: 2,
+			totalSquaredInterFrameDelay: 0.04,
+			freezeCount: 1,
 		});
-	});
-	it('does not treat an idle track as a decoder stall', () => {
-		const stats = createStatsReport([
-			{id: 'codec-1', type: 'codec', mimeType: 'video/AV1'},
-			{
-				id: 'inbound-1',
-				type: 'inbound-rtp',
-				kind: 'video',
-				codecId: 'codec-1',
-				packetsReceived: 0,
-				bytesReceived: 0,
-				framesDecoded: 0,
-			},
-		]);
-		expect(findStalledVideoDecoder(stats)).toBeNull();
+		const current = buildSample({
+			timestamp: 3000,
+			framesDecoded: 160,
+			totalInterFrameDelay: 4,
+			totalSquaredInterFrameDelay: 0.08,
+			freezeCount: 3,
+		});
+		const health = computeInboundVideoDecodeHealth(previous, current);
+		expect(health?.decodedFps).toBe(30);
+		expect(health?.meanInterFrameDelayMs).toBe(33.3);
+		expect(health?.freezes).toBe(2);
 	});
 });

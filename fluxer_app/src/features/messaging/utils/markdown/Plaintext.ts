@@ -97,6 +97,7 @@ const BLOCK_NODE_TYPES = new Set<NodeType>([
 ]);
 const COPYABLE_CHANNEL_MENTION_TYPES = new Set<number>([
 	ChannelTypes.GUILD_TEXT,
+	ChannelTypes.GUILD_ANNOUNCEMENT,
 	ChannelTypes.GUILD_VOICE,
 	ChannelTypes.GUILD_LINK,
 	ChannelTypes.GUILD_CATEGORY,

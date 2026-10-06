@@ -57,6 +57,10 @@ export interface MediaProxyMetadataResponse {
 	nsfw_probability?: number;
 }
 
+export interface MediaProxySniffResponse {
+	content_type: string | null;
+}
+
 export type MediaProxyFrameRequest =
 	| {
 			type: 'upload';
@@ -84,6 +88,8 @@ export abstract class IMediaService {
 	abstract getExternalMediaProxyURL(url: string): string;
 
 	abstract getThumbnail(uploadFilename: string): Promise<Buffer | null>;
+
+	abstract sniffUpload(uploadFilename: string): Promise<MediaProxySniffResponse | null>;
 
 	abstract extractFrames(request: MediaProxyFrameRequest): Promise<MediaProxyFrameResponse>;
 }

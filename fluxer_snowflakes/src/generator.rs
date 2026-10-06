@@ -66,20 +66,15 @@ where
 
     pub async fn generate(&mut self) -> anyhow::Result<u64> {
         let mut timestamp = self.current_relative_timestamp()?;
-        if let Some(last_timestamp) = self.last_timestamp {
-            if timestamp < last_timestamp {
+        match self.last_timestamp {
+            Some(last_timestamp) if timestamp <= last_timestamp => {
                 timestamp = last_timestamp;
-            }
-            if timestamp == last_timestamp {
                 self.sequence = (self.sequence + 1) & MAX_SEQUENCE;
                 if self.sequence == 0 {
                     timestamp = self.wait_until_next_timestamp(last_timestamp).await?;
                 }
-            } else {
-                self.sequence = 0;
             }
-        } else {
-            self.sequence = 0;
+            _ => self.sequence = 0,
         }
         self.last_timestamp = Some(timestamp);
         Ok(create_snowflake_from_relative_timestamp(

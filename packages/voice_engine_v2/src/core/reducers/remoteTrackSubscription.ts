@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Event} from '../../protocol/events';
+import {appendTransition, commandIfConnected} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2RemoteTrackSubscriptionOptions,
 	VoiceEngineV2Track,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from '../../protocol/types';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
-import {appendTransition, commandIfConnected} from './_helpers';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 type VoiceEngineV2RemoteTrackSubscriptionEvent = Extract<
 	VoiceEngineV2Event,

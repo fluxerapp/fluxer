@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
-import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '../../../BrandedTypes';
+import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '@app/api/BrandedTypes';
+import {MessageDataRepository} from '@app/api/channel/repositories/message/MessageDataRepository';
 import {
 	deleteOneOrMany,
 	fetchMany,
 	fetchOne,
 	setCassandraQueryExecutorForTesting,
-} from '../../../database/CassandraQueryExecution';
-import type {CassandraParams, KvQueryMeta, PreparedQuery} from '../../../database/CassandraTypes';
+} from '@app/api/database/CassandraQueryExecution';
+import type {CassandraParams, KvQueryMeta, PreparedQuery} from '@app/api/database/CassandraTypes';
 import type {
 	ChannelEmptyBucketRow,
 	ChannelMessageBucketRow,
 	ChannelStateRow,
 	MessageRow,
-} from '../../../database/types/MessageTypes';
-import {ChannelEmptyBuckets, ChannelMessageBuckets, ChannelState, Messages} from '../../../Tables';
-import {InMemoryCassandraQueryExecutor} from '../../../test/InMemoryCassandraQueryExecutor';
-import {MessageDataRepository} from './MessageDataRepository';
+} from '@app/api/database/types/MessageTypes';
+import {ChannelEmptyBuckets, ChannelMessageBuckets, ChannelState, Messages} from '@app/api/Tables';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
+import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 const FETCH_CHANNEL_STATE = ChannelState.select({where: ChannelState.where.eq('channel_id'), limit: 1});
 const FETCH_MESSAGE_BUCKETS = ChannelMessageBuckets.select({

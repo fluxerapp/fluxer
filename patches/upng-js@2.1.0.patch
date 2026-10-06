@@ -1,0 +1,80 @@
+diff --git a/UPNG.js b/UPNG.js
+index 020127a1dab3c599592a56c203fed1708b23507e..a463e9da2504fd5125f97f586ebadf4fcdb4b180 100644
+--- a/UPNG.js
++++ b/UPNG.js
+@@ -87,10 +87,10 @@ UPNG.toRGBA8.decodeImage = function(data, w, h, out)
+ 		if(depth==16)  for(var i=0; i<area; i++) {  var qi=i<<2, di=i<<2, gr=data[di];  bf[qi]=gr;  bf[qi+1]=gr;  bf[qi+2]=gr;  bf[qi+3]=data[di+2];  }
+ 	}
+ 	else if(ctype==0) {	// gray
+-		var tr = out.tabs["tRNS"] ? out.tabs["tRNS"] : -1;
+-		if(depth== 1) for(var i=0; i<area; i++) {  var gr=255*((data[i>>3]>>(7 -((i&7)   )))& 1), al=(gr==tr*255)?0:255;  bf32[i]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+-		if(depth== 2) for(var i=0; i<area; i++) {  var gr= 85*((data[i>>2]>>(6 -((i&3)<<1)))& 3), al=(gr==tr* 85)?0:255;  bf32[i]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+-		if(depth== 4) for(var i=0; i<area; i++) {  var gr= 17*((data[i>>1]>>(4 -((i&1)<<2)))&15), al=(gr==tr* 17)?0:255;  bf32[i]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
++		var tr = out.tabs["tRNS"] != null ? out.tabs["tRNS"] : -1;
++		if(depth== 1) for(var i=0; i<area; i++) {  var x=i%w, s0=((i-x)/w)*bpl, gr=255*((data[s0+(x>>3)]>>(7 -((x&7)   )))& 1), al=(gr==tr*255)?0:255;  bf32[i]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
++		if(depth== 2) for(var i=0; i<area; i++) {  var x=i%w, s0=((i-x)/w)*bpl, gr= 85*((data[s0+(x>>2)]>>(6 -((x&3)<<1)))& 3), al=(gr==tr* 85)?0:255;  bf32[i]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
++		if(depth== 4) for(var i=0; i<area; i++) {  var x=i%w, s0=((i-x)/w)*bpl, gr= 17*((data[s0+(x>>1)]>>(4 -((x&1)<<2)))&15), al=(gr==tr* 17)?0:255;  bf32[i]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+ 		if(depth== 8) for(var i=0; i<area; i++) {  var gr=data[i  ] , al=(gr           ==tr)?0:255;  bf32[i]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+ 		if(depth==16) for(var i=0; i<area; i++) {  var gr=data[i<<1], al=(rs(data,i<<1)==tr)?0:255;  bf32[i]=(al<<24)|(gr<<16)|(gr<<8)|gr;  }
+ 	}
+@@ -99,11 +99,11 @@ UPNG.toRGBA8.decodeImage = function(data, w, h, out)
+ 
+ 
+ 
+-UPNG.decode = function(buff)
++UPNG.decode = function(buff, inflated)
+ {
+ 	var data = new Uint8Array(buff), offset = 8, bin = UPNG._bin, rUs = bin.readUshort, rUi = bin.readUint;
+ 	var out = {tabs:{}, frames:[]};
+-	var dd = new Uint8Array(data.length), doff = 0;	 // put all IDAT data into it
++	var dd = inflated ? null : new Uint8Array(data.length), doff = 0;	 // put all IDAT data into it
+ 	var fd, foff = 0;	// frames
+ 	
+ 	var mgck = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+@@ -116,7 +116,7 @@ UPNG.decode = function(buff)
+ 		//log(type,len);
+ 		
+ 		if     (type=="IHDR")  {  UPNG.decode._IHDR(data, offset, out);  }
+-		else if(type=="IDAT") {
++		else if(type=="IDAT" && dd) {
+ 			for(var i=0; i<len; i++) dd[doff+i] = data[offset+i];
+ 			doff += len;
+ 		}
+@@ -190,7 +190,7 @@ UPNG.decode = function(buff)
+ 			if(foff!=0) {  var fr = out.frames[out.frames.length-1];
+ 				fr.data = UPNG.decode._decompress(out, fd.slice(0,foff), fr.rect.width, fr.rect.height);  foff=0;
+ 			}	
+-			out.data = UPNG.decode._decompress(out, dd, out.width, out.height);  break;
++			out.data = UPNG.decode._decompress(out, inflated || dd, out.width, out.height, inflated != null);  break;
+ 		}
+ 		//else {  log("unknown chunk type", type, len);  }
+ 		offset += len;
+@@ -200,8 +200,8 @@ UPNG.decode = function(buff)
+ 	return out;
+ }
+ 
+-UPNG.decode._decompress = function(out, dd, w, h) {
+-	if(out.compress ==0) dd = UPNG.decode._inflate(dd);
++UPNG.decode._decompress = function(out, dd, w, h, isInflated) {
++	if(out.compress ==0 && !isInflated) dd = UPNG.decode._inflate(dd);
+ 
+ 	if     (out.interlace==0) dd = UPNG.decode._filterZero(dd, out, 0, w, h);
+ 	else if(out.interlace==1) dd = UPNG.decode._readInterlace(dd, out);
+@@ -230,7 +230,7 @@ UPNG.decode._readInterlace = function(data, out)
+ 		var cr = starting_row[pass];  while(cr<h) {  cr+=ri;  sh++;  }
+ 		var cc = starting_col[pass];  while(cc<w) {  cc+=ci;  sw++;  }
+ 		var bpll = Math.ceil(sw*bpp/8);
+-		UPNG.decode._filterZero(data, out, di, sw, sh);
++		if(sw*sh!=0) UPNG.decode._filterZero(data, out, di, sw, sh);
+ 
+ 		var y=0, row = starting_row[pass];
+ 		while(row<h)
+@@ -242,7 +242,7 @@ UPNG.decode._readInterlace = function(data, out)
+ 			{
+ 				if(bpp==1) {
+ 					var val = data[cdi>>3];  val = (val>>(7-(cdi&7)))&1;
+-					img[row*bpl + (col>>3)] |= (val << (7-((col&3)<<0)));
++					img[row*bpl + (col>>3)] |= (val << (7-((col&7)<<0)));
+ 				}
+ 				if(bpp==2) {
+ 					var val = data[cdi>>3];  val = (val>>(6-(cdi&7)))&3;

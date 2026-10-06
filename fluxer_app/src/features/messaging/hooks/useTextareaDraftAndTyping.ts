@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
-import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
 import type {MentionSegment, TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
 import {useEffect, useRef} from 'react';
@@ -13,9 +12,8 @@ interface UseTextareaDraftAndTypingOptions {
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	draft: string | null;
 	draftSegments?: ReadonlyArray<MentionSegment> | null;
-	previousValueRef: React.MutableRefObject<string>;
-	segmentManagerRef?: React.MutableRefObject<TextareaSegmentManager>;
-	isAutocompleteAttached: boolean;
+	previousValueRef: React.RefObject<string>;
+	segmentManagerRef?: React.RefObject<TextareaSegmentManager>;
 	enabled: boolean;
 	typingEnabled?: boolean;
 	isEditingMessageInComposer: boolean;
@@ -53,12 +51,13 @@ export const useTextareaDraftAndTyping = ({
 	draftSegments,
 	previousValueRef,
 	segmentManagerRef,
-	isAutocompleteAttached,
 	enabled,
 	typingEnabled = enabled,
 	isEditingMessageInComposer,
 }: UseTextareaDraftAndTypingOptions) => {
 	const isRestoringDraftRef = useRef(false);
+	const isEditingMessageInComposerRef = useRef(isEditingMessageInComposer);
+	const typingPreviousValueRef = useRef<{channelId: string; value: string} | null>(null);
 	const currentDraftRef = useRef(draft);
 	const currentDraftSegmentsRef = useRef<ReadonlyArray<MentionSegment>>(draftSegments ?? []);
 	const pendingDraftRef = useRef<{
@@ -71,10 +70,8 @@ export const useTextareaDraftAndTyping = ({
 		currentDraftSegmentsRef.current = draftSegments ?? [];
 	}, [draft, draftSegments]);
 	useEffect(() => {
-		return () => {
-			TypingUtils.clear(channelId);
-		};
-	}, [channelId]);
+		isEditingMessageInComposerRef.current = isEditingMessageInComposer;
+	}, [isEditingMessageInComposer]);
 	useEffect(() => {
 		if (enabled) {
 			return;
@@ -165,20 +162,18 @@ export const useTextareaDraftAndTyping = ({
 		};
 	}, [channelId, isEditingMessageInComposer]);
 	useEffect(() => {
+		const typingPreviousValue = typingPreviousValueRef.current;
+		typingPreviousValueRef.current = {channelId, value};
 		if (isRestoringDraftRef.current) {
 			return;
 		}
-		if (!enabled || !typingEnabled) {
-			TypingUtils.clear(channelId);
-			return;
-		}
-		const content = value.trim();
-		const isInReplaceMode = ReplaceCommandUtils.isReplaceCommand(content);
-		const isSlashCommand = content.startsWith('/');
-		if (content && !isAutocompleteAttached && !isInReplaceMode && !isSlashCommand) {
-			TypingUtils.typing(channelId, personaId);
-		} else {
-			TypingUtils.clear(channelId);
-		}
-	}, [channelId, personaId, value, isAutocompleteAttached, enabled, typingEnabled]);
+		TypingUtils.handleComposerChange({
+			channelId,
+			value,
+			previousValue: typingPreviousValue?.channelId === channelId ? typingPreviousValue.value : null,
+			enabled,
+			typingEnabled,
+			isEditingMessageInComposer: isEditingMessageInComposerRef.current,
+		});
+	}, [channelId, personaId, value, enabled, typingEnabled]);
 };

@@ -90,7 +90,9 @@ export function claimMessageAttachments(
 	const allowedMentions: AllowedMentions = {replied_user: replyMentioning ?? true};
 	return CloudUpload.claimAttachmentsForMessage(channelId, nonce, undefined, {
 		content: normalized.content,
-		messageReference,
+		messageReference: messageReference?.message_id
+			? {...messageReference, message_id: messageReference.message_id}
+			: undefined,
 		allowedMentions,
 		flags: normalized.flags,
 	});

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {tryExtractGifProviderSlug} from '@app/api/gif/GifProviderUtils';
+import type {IGifProvider} from '@app/api/gif/IGifProvider';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {describe, expect, it} from 'vitest';
-import {tryExtractGifProviderSlug} from './GifProviderUtils';
-import type {IGifProvider} from './IGifProvider';
 
 function createProvider(overrides: Partial<IGifProvider> = {}): IGifProvider {
 	return {

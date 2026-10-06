@@ -1,7 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {
+	CHANNEL_RATE_LIMIT_PER_USER_MAX,
+	CHANNEL_RATE_LIMIT_PER_USER_MIN,
+	CHANNEL_TOPIC_MAX_LENGTH,
+	VOICE_CHANNEL_CONNECTION_LIMIT_MAX,
+	VOICE_CHANNEL_CONNECTION_LIMIT_MIN,
+	VOICE_CHANNEL_USER_LIMIT_MIN,
+} from '@fluxer/constants/src/LimitConstants';
+import {ColorType, createStringType, Int32Type} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
+
+const TEMPLATE_NAME_MAX_LENGTH = 100;
 
 const TemplateEntityId = z
 	.union([
@@ -22,6 +32,7 @@ const TemplateOverwriteType = z
 		}
 		return value;
 	})
+	.pipe(z.number())
 	.describe('The type of overwrite (0/role = role, 1/member = member)');
 const TemplatePermissionOverwrite = z.object({
 	id: TemplateEntityId.describe('The ID of the role or user for this overwrite'),
@@ -35,17 +46,35 @@ export const TemplateChannel = z.object({
 	type: z.number().describe('The channel type (0 = text, 2 = voice, 4 = category)'),
 	name: z
 		.string()
+		.max(TEMPLATE_NAME_MAX_LENGTH)
 		.nullish()
 		.transform((value) => value ?? '')
 		.describe('The name of the channel'),
-	topic: z.string().nullish().describe('The channel topic'),
-	position: z.number().describe('The position of the channel'),
+	topic: z.string().max(CHANNEL_TOPIC_MAX_LENGTH).nullish().describe('The channel topic'),
+	position: Int32Type.describe('The position of the channel'),
 	parent_id: TemplateEntityId.nullish().describe('The template-local ID of the parent category'),
-	bitrate: z.number().nullish().describe('The bitrate for voice channels'),
-	user_limit: z.number().nullish().describe('The user limit for voice channels'),
-	voice_connection_limit: z.number().nullish().describe('The per-user voice connection limit for voice channels'),
+	bitrate: z.number().int().nonnegative().nullish().describe('The bitrate for voice channels'),
+	user_limit: z
+		.number()
+		.int()
+		.min(VOICE_CHANNEL_USER_LIMIT_MIN)
+		.nullish()
+		.describe('The user limit for voice channels'),
+	voice_connection_limit: z
+		.number()
+		.int()
+		.min(VOICE_CHANNEL_CONNECTION_LIMIT_MIN)
+		.max(VOICE_CHANNEL_CONNECTION_LIMIT_MAX)
+		.nullish()
+		.describe('The per-user voice connection limit for voice channels'),
 	nsfw: z.boolean().optional().describe('Whether the channel is NSFW'),
-	rate_limit_per_user: z.number().optional().describe('Slowmode rate limit in seconds'),
+	rate_limit_per_user: z
+		.number()
+		.int()
+		.min(CHANNEL_RATE_LIMIT_PER_USER_MIN)
+		.max(CHANNEL_RATE_LIMIT_PER_USER_MAX)
+		.optional()
+		.describe('Slowmode rate limit in seconds'),
 	permission_overwrites: z
 		.array(TemplatePermissionOverwrite)
 		.optional()
@@ -58,12 +87,13 @@ export const TemplateRole = z.object({
 	id: TemplateEntityId.describe('The template-local role ID'),
 	name: z
 		.string()
+		.max(TEMPLATE_NAME_MAX_LENGTH)
 		.nullish()
 		.transform((value) => value ?? '')
 		.describe('The name of the role'),
 	permissions: TemplatePermissionBitfield.optional().describe('The permissions bitfield as a string (legacy)'),
 	permissions_new: TemplatePermissionBitfield.optional().describe('The permissions bitfield as a string (preferred)'),
-	color: z.number().optional().describe('The colour of the role as an integer'),
+	color: ColorType.optional().describe('The colour of the role as an integer'),
 	hoist: z.boolean().optional().describe('Whether the role is hoisted'),
 	mentionable: z.boolean().optional().describe('Whether the role is mentionable'),
 	unicode_emoji: z.string().nullish().describe('The unicode emoji for the role icon'),

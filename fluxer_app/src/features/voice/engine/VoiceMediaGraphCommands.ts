@@ -4,8 +4,8 @@ import assert from 'node:assert/strict';
 import type {
 	VoiceMediaGraphRemoteSubscriptionCommand,
 	VoiceMediaGraphVideoQuality,
-} from './VoiceMediaGraphSubscriptionTypes';
-import {VoiceTrackSource} from './VoiceTrackSource';
+} from '@app/features/voice/engine/VoiceMediaGraphSubscriptionTypes';
+import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 
 export function buildVoiceMediaGraphNativeScreenShareSubscriptionCommands(args: {
 	participantIdentity: string;

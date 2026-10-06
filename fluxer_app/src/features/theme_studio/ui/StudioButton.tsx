@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import styles from '@app/features/theme_studio/ui/StudioButton.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {clsx} from 'clsx';
 import {type ButtonHTMLAttributes, forwardRef, type ReactNode} from 'react';
-import styles from './StudioButton.module.css';
 
 type StudioButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'dangerSolid' | 'successSolid';
 

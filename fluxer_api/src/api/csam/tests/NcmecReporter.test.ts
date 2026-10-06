@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	buildNcmecFileDetailsXml,
+	buildNcmecReportXml,
+	createNcmecApiConfig,
+	NcmecReporter,
+} from '@app/api/csam/NcmecReporter';
+import {INVALID_REPORT_XML, MALFORMED_REPORT_XML} from '@app/api/test/fixtures/ncmec/NcmecXmlFixtures';
+import {fakeNcmecServer} from '@app/api/test/Setup';
 import {describe, expect, test} from 'vitest';
-import {INVALID_REPORT_XML, MALFORMED_REPORT_XML} from '../../test/fixtures/ncmec/NcmecXmlFixtures';
-import {fakeNcmecServer} from '../../test/Setup';
-import {buildNcmecFileDetailsXml, buildNcmecReportXml, createNcmecApiConfig, NcmecReporter} from '../NcmecReporter';
 
 function reporter(): NcmecReporter {
 	return new NcmecReporter({config: createNcmecApiConfig(), fetch});

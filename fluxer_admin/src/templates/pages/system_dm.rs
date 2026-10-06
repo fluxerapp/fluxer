@@ -58,7 +58,7 @@ pub fn system_dm_page(
                         (form_field_group(
                             "Recipient user IDs", "system-dm-user-ids",
                             true, None,
-                            Some("One per line. Snowflake IDs only."),
+                            Some("One per line. Snowflake IDs only, or a single * to send to every user."),
                             html! {
                                 textarea id="system-dm-user-ids" name="user_ids"
                                     required rows="10"

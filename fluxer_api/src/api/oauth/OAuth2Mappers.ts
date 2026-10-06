@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {stripBannerForUser} from '@app/api/infrastructure/AssetEntitlementUtils';
+import type {Application} from '@app/api/models/Application';
+import type {User} from '@app/api/models/User';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {type UserAuthenticatorType, UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
-import {stripBannerForUser} from '../infrastructure/AssetEntitlementUtils';
-import type {Application} from '../models/Application';
-import type {User} from '../models/User';
-import {mapUserToPartialResponse} from '../user/UserMappers';
-import type {ApplicationBotResponse, ApplicationResponse} from './OAuth2Types';
+import type {
+	ApplicationBotResponse,
+	ApplicationResponse,
+	BotProfileResponse,
+	BotTokenResetResponse,
+} from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
 
 function getActiveAuthenticatorTypes(user: User): Array<UserAuthenticatorType> {
 	return Array.from(user.authenticatorTypes ?? []).filter(
@@ -63,14 +68,14 @@ export function mapApplicationToResponse(
 	return baseResponse;
 }
 
-export function mapBotTokenResetResponse(user: User, token: string) {
+export function mapBotTokenResetResponse(user: User, token: string): BotTokenResetResponse {
 	return {
 		token,
 		bot: mapBotUserToResponse(user),
 	};
 }
 
-export function mapBotProfileToResponse(user: User) {
+export function mapBotProfileToResponse(user: User): BotProfileResponse {
 	const partial = mapUserToPartialResponse(user);
 	return {
 		id: partial.id,

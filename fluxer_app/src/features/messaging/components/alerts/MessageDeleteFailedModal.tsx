@@ -6,7 +6,7 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
 const THAT_MESSAGE_DIDN_T_DELETE_DESCRIPTOR = msg({
-	message: "That message didn't delete",
+	message: "That message couldn't be deleted",
 	comment: 'Label in the message delete failed modal. Keep the tone plain and specific.',
 });
 const TRY_DELETING_THAT_MESSAGE_AGAIN_DESCRIPTOR = msg({

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {DonorMagicLinkTokenRow} from '../../database/types/DonationTypes';
+import type {DonorMagicLinkTokenRow} from '@app/api/database/types/DonationTypes';
 
 export class DonorMagicLinkToken {
 	readonly token: string;

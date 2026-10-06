@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {getRequestClientIp, requireRequestClientIp, resolveClientIpWithOptions} from '@app/api/utils/RequestClientIp';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
 import {MissingClientIpError} from '@fluxer/ip_utils/src/ClientIp';
 import {Hono} from 'hono';
 import {describe, expect, it} from 'vitest';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {getRequestClientIp, requireRequestClientIp, resolveClientIpWithOptions} from '../RequestClientIp';
 
 interface CountingRequest {
 	request: Request;

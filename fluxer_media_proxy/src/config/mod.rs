@@ -6,12 +6,14 @@ mod tests;
 
 use crate::constants;
 use crate::secret::{SecretBytes, SecretString};
+use http::HeaderValue;
 use parse::{
-    EnvMap, decode_upload_relay_secret, default_native_transform_concurrency, non_empty,
-    parse_bool, parse_bucket_style, parse_f32, parse_ip_list_env, parse_mode_env,
-    parse_storage_backend, parse_u16, parse_u64, parse_usize, validate_read_endpoint,
+    EnvMap, decode_upload_relay_secret, default_native_transform_concurrency,
+    parse_allowed_origins, parse_attachment_url_secrets, parse_bool, parse_bucket_style, parse_f32,
+    parse_mode_env, parse_policy_mode, parse_storage_backend, parse_u16, parse_u64, parse_usize,
+    validate_read_endpoint,
 };
-use std::{env, net::IpAddr, path::PathBuf};
+use std::{env, path::PathBuf};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum StorageBackend {
@@ -31,6 +33,52 @@ pub enum DeploymentMode {
     Mp,
     Static,
     Upload,
+    Relay,
+}
+
+impl DeploymentMode {
+    pub fn serves_upload_relay(self) -> bool {
+        matches!(self, Self::Upload | Self::Relay)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PolicyMode {
+    Off,
+    Report,
+    Enforce,
+}
+
+impl PolicyMode {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Off => "off",
+            Self::Report => "report",
+            Self::Enforce => "enforce",
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CorsConfig {
+    pub mode: PolicyMode,
+    pub allowed_origins: Vec<HeaderValue>,
+}
+
+#[derive(Clone, Debug)]
+pub struct AttachmentSignatureConfig {
+    pub mode: PolicyMode,
+    pub(crate) secrets: Vec<SecretBytes>,
+}
+
+impl AttachmentSignatureConfig {
+    pub(crate) fn secret_count(&self) -> usize {
+        self.secrets.len()
+    }
+
+    pub(crate) fn secrets(&self) -> Vec<&[u8]> {
+        self.secrets.iter().map(SecretBytes::expose).collect()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -80,7 +128,6 @@ pub struct UploadRelayConfig {
 
 #[derive(Clone, Debug)]
 pub struct Config {
-    pub node_env: String,
     pub bind_host: String,
     pub port: u16,
     pub(crate) secret_key: SecretString,
@@ -92,9 +139,8 @@ pub struct Config {
     pub storage: StorageConfig,
     pub media: MediaServingConfig,
     pub upload_relay: UploadRelayConfig,
-    pub bunny_ip_gate_enabled: bool,
-    pub bunny_ip_gate_trusted_proxies: Vec<IpAddr>,
-    pub bunny_ip_gate_refresh_secs: u64,
+    pub cors: CorsConfig,
+    pub attachment_signature: AttachmentSignatureConfig,
 }
 
 impl Config {
@@ -127,7 +173,6 @@ impl Config {
             })?;
 
         Ok(Self {
-            node_env: env.get("NODE_ENV").unwrap_or("development").to_owned(),
             bind_host: env
                 .get("FLUXER_MEDIA_PROXY_HOST")
                 .unwrap_or("0.0.0.0")
@@ -138,15 +183,16 @@ impl Config {
                 8080,
             )?,
             secret_key,
-            public_endpoint: non_empty(env.get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")).map(
-                |endpoint| {
+            public_endpoint: env
+                .get("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
+                .map(str::trim)
+                .map(|endpoint| {
                     fluxer_common::config::normalize_public_endpoint(
                         endpoint.trim_end_matches('/'),
                         &public_base_domain,
                         public_port,
                     )
-                },
-            ),
+                }),
             mode,
             read_only: parse_bool(
                 "FLUXER_MEDIA_PROXY_READ_ONLY",
@@ -170,22 +216,8 @@ impl Config {
             storage: StorageConfig::load(&env)?,
             media: MediaServingConfig::load(&env)?,
             upload_relay: UploadRelayConfig::load(&env, mode)?,
-            bunny_ip_gate_enabled: parse_bool(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_ENABLED"),
-            )?
-            .unwrap_or(false),
-            bunny_ip_gate_trusted_proxies: parse_ip_list_env(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_TRUSTED_PROXIES"),
-            )?,
-            bunny_ip_gate_refresh_secs: parse_u64(
-                "FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_REFRESH_SECS",
-                env.get("FLUXER_MEDIA_PROXY_BUNNY_IP_GATE_REFRESH_SECS"),
-                3_600,
-                60,
-                24 * 60 * 60,
-            )?,
+            cors: CorsConfig::load(&env, mode)?,
+            attachment_signature: AttachmentSignatureConfig::load(&env, mode)?,
         })
     }
 }
@@ -201,12 +233,16 @@ impl StorageConfig {
             .get("FLUXER_S3_BUCKET_CDN")
             .map(ToOwned::to_owned)
             .unwrap_or_else(|| "cdn".to_owned());
-        let s3_read_endpoint = non_empty(env.get("FLUXER_S3_READ_ENDPOINT"));
+        let s3_read_endpoint = env
+            .get("FLUXER_S3_READ_ENDPOINT")
+            .map(|v| v.trim().to_owned());
         if let Some(endpoint) = s3_read_endpoint.as_deref() {
             validate_read_endpoint(endpoint)?;
         }
-        let s3_read_bucket =
-            non_empty(env.get("FLUXER_S3_READ_BUCKET")).unwrap_or_else(|| bucket_cdn.clone());
+        let s3_read_bucket = env
+            .get("FLUXER_S3_READ_BUCKET")
+            .map(|v| v.trim().to_owned())
+            .unwrap_or_else(|| bucket_cdn.clone());
         let s3_read_bucket_style = parse_bucket_style(env.get("FLUXER_S3_READ_BUCKET_STYLE"))?
             .unwrap_or(if s3_force_path_style {
                 BucketStyle::Path
@@ -215,7 +251,7 @@ impl StorageConfig {
             });
         let s3_read_signed = parse_bool(
             "FLUXER_S3_READ_SIGNED",
-            non_empty(env.get("FLUXER_S3_READ_SIGNED")).as_deref(),
+            env.get("FLUXER_S3_READ_SIGNED").map(str::trim),
         )?
         .unwrap_or(false);
         Ok(Self {
@@ -396,6 +432,60 @@ impl UploadRelayConfig {
                 64 * 1024 * 1024,
             )?,
             spool_max_total_bytes,
+        })
+    }
+}
+
+impl CorsConfig {
+    fn load(env: &EnvMap, mode: DeploymentMode) -> anyhow::Result<Self> {
+        if matches!(mode, DeploymentMode::Static | DeploymentMode::Relay) {
+            return Ok(Self {
+                mode: PolicyMode::Off,
+                allowed_origins: Vec::new(),
+            });
+        }
+        let cors_mode = parse_policy_mode(
+            "FLUXER_MEDIA_PROXY_CORS_MODE",
+            env.get("FLUXER_MEDIA_PROXY_CORS_MODE"),
+        )?;
+        let allowed_origins = parse_allowed_origins(
+            "FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS",
+            env.get("FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS"),
+        )?;
+        anyhow::ensure!(
+            cors_mode == PolicyMode::Off || !allowed_origins.is_empty(),
+            "FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS is required when FLUXER_MEDIA_PROXY_CORS_MODE is report or enforce"
+        );
+        Ok(Self {
+            mode: cors_mode,
+            allowed_origins,
+        })
+    }
+}
+
+impl AttachmentSignatureConfig {
+    fn load(env: &EnvMap, mode: DeploymentMode) -> anyhow::Result<Self> {
+        if matches!(mode, DeploymentMode::Static | DeploymentMode::Relay) {
+            return Ok(Self {
+                mode: PolicyMode::Off,
+                secrets: Vec::new(),
+            });
+        }
+        let signature_mode = parse_policy_mode(
+            "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE",
+            env.get("FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE"),
+        )?;
+        let secrets = parse_attachment_url_secrets(
+            "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64",
+            env.get("FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64"),
+        )?;
+        anyhow::ensure!(
+            signature_mode == PolicyMode::Off || !secrets.is_empty(),
+            "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64 is required when FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE is report or enforce"
+        );
+        Ok(Self {
+            mode: signature_mode,
+            secrets,
         })
     }
 }

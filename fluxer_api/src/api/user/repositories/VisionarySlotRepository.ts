@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {VisionarySlotRow} from '@app/api/database/types/PaymentTypes';
+import {VisionarySlot} from '@app/api/models/VisionarySlot';
+import {VisionarySlots} from '@app/api/Tables';
 import {CannotShrinkReservedSlotsError} from '@fluxer/errors/src/domains/core/CannotShrinkReservedSlotsError';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import type {VisionarySlotRow} from '../../database/types/PaymentTypes';
-import {VisionarySlot} from '../../models/VisionarySlot';
-import {VisionarySlots} from '../../Tables';
 
 const FETCH_ALL_VISIONARY_SLOTS_QUERY = VisionarySlots.selectCql();
 const FETCH_VISIONARY_SLOT_QUERY = VisionarySlots.selectCql({

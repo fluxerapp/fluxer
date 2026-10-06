@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface GuildReadStateContributionInput {
 	isEligibleTextChannel: boolean;
@@ -110,7 +110,7 @@ export type GuildReadStateContributionSnapshot = SnapshotFrom<typeof guildReadSt
 export function createGuildReadStateContributionSnapshot(
 	input: GuildReadStateContributionInput,
 ): GuildReadStateContributionSnapshot {
-	return getInitialSnapshot(guildReadStateContributionMachine, input);
+	return initialTransition(guildReadStateContributionMachine, input)[0];
 }
 
 export function transitionGuildReadStateContributionSnapshot(

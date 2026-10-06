@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getInitialSnapshot, setup, transition} from 'xstate';
+import {initialTransition, setup, transition} from 'xstate';
 
 export type LocalParticipantMediaControl = 'camera' | 'screenShare';
 export type LocalParticipantMediaControlStateValue =
@@ -120,7 +120,7 @@ export function selectLocalParticipantMediaControlState(
 ): LocalParticipantMediaControlStateValue {
 	const [snapshot] = transition(
 		localParticipantMediaControlStateMachine,
-		getInitialSnapshot(localParticipantMediaControlStateMachine),
+		initialTransition(localParticipantMediaControlStateMachine)[0],
 		{
 			type: 'controls.evaluate',
 			control,

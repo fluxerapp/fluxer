@@ -30,7 +30,7 @@ const ENABLE_TWO_FACTOR_AUTHENTICATION_FORM_DESCRIPTOR = msg({
 	comment: 'Accessible label for the form that adds an authenticator app.',
 });
 const SETUP_AUTHENTICATOR_APP_DESCRIPTOR = msg({
-	message: 'Setup authenticator app',
+	message: 'Set up authenticator app',
 	comment: 'Security modal title for adding a TOTP authenticator app.',
 });
 const CODE_DESCRIPTOR = msg({
@@ -114,7 +114,7 @@ export const MfaTotpEnableModal = observer(({user}: MfaTotpEnableModalProps) => 
 							{!isMobileExperience && (
 								<div className={styles.qrCode} data-flx="auth.mfa-totp-enable-modal.qr-code">
 									<QRCodeCanvas
-										data={MfaUtils.encodeTotpSecretAsURL(user.email!, secret)}
+										data={MfaUtils.encodeTotpSecretAsURL(user.email ?? user.tag, secret)}
 										data-flx="auth.mfa-totp-enable-modal.qr-code-canvas"
 									/>
 								</div>

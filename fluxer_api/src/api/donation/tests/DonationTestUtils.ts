@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilderWithoutAuth, type TestRequestBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	DONATION_CURRENCIES,
 	type DonationCurrency,
 	getDonationAmountConstraints,
 } from '@fluxer/schema/src/domains/donation/DonationAmountUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilderWithoutAuth, type TestRequestBuilder} from '../../test/TestRequestBuilder';
 
 interface DonationTestEmailRecord {
 	to: string;
@@ -52,6 +52,9 @@ export const DONATION_CURRENCY_VALUES = {
 	INR: DONATION_CURRENCIES[3],
 	PLN: DONATION_CURRENCIES[4],
 	TRY: DONATION_CURRENCIES[5],
+	SEK: DONATION_CURRENCIES[6],
+	DKK: DONATION_CURRENCIES[7],
+	NOK: DONATION_CURRENCIES[8],
 } as const;
 export const DONATION_INTERVALS = {
 	MONTH: 'month',

@@ -1,22 +1,22 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Instance
-description: Instance discovery, client geolocation, the limit key registry, and the served OpenAPI document.
+description: Instance discovery, client geolocation, the limit key registry, the served OpenAPI document, and the setup sign-in method.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-The Instance resource describes how one Fluxer deployment is set up. It publishes the discovery document, the client geolocation lookup, and the served OpenAPI document, and it owns the [limit key](#limit-keys) registry.
+Discover a deployment's endpoints, available features, and [limits](#limit-keys), look up the client's approximate location, download its OpenAPI document, or choose how members of a new deployment sign in.
 
 [Get instance discovery](#get-instance-discovery) is the entry point of the API. A client that knows only a Fluxer origin reads `/.well-known/fluxer` first, and that one unauthenticated response has every field of the [instance discovery object](#instance-discovery-object). Those values include the API base URLs, the [main Gateway](/gateway/overview/) WebSocket URL, and the [Media Proxy](/media-proxy/overview/) base URL. They override the [endpoint path defaults](#instance-endpoints-object) a deployment would otherwise serve from its canonical public origin.
 
 Every route here is unauthenticated. A credential changes no response body. One that resolves to an account moves the [rate limit bucket](/topics/rate-limits/) from the client IP address onto that account.
 
-Each of the three routes answers with `Access-Control-Allow-Origin: *`, replaced by the request `Origin` when the deployment-wide [cross-origin policy](/http-api/#cross-origin-requests) allows that origin. The [Admin Instance API](/admin-api/instance/) defines the operator side of the same configuration.
+Each `GET` route answers with `Access-Control-Allow-Origin: *`, replaced by the request `Origin` when the deployment-wide [cross-origin policy](/http-api/#cross-origin-requests) allows that origin. The [Admin Instance API](/admin-api/instance/) defines the operator side of the same configuration.
 
 ## Instance discovery object
 
-The discovery document is the complete public description of one deployment. Every field is always present.
+The discovery document is the complete public description of one deployment. Every field is always present. The one optional field, `domain_migration`, is absent only from a server older than this version.
 
 ### Structure
 
@@ -34,6 +34,7 @@ The discovery document is the complete public description of one deployment. Eve
 | limits | [limit configuration](#limit-configuration-object) object | Ordered limit rules and the trait names the deployment declares |
 | push | [push configuration](#push-configuration-object) object | Public Web Push identity |
 | app_public | [public application configuration](#public-application-configuration-object) object | Public client configuration |
+| domain_migration? | [domain migration](#domain-migration-object) object | Web domain migration switch and logged-out rollout |
 
 <sup>1</sup> The value is a plain integer that increases when the API introduces a change a client is expected to notice, and the current value is `1`
 
@@ -61,7 +62,7 @@ Each value is an absolute URL supplied by the operator. A value can be a bare or
 
 <sup>2</sup> The value is the configured Gateway endpoint and its scheme is `ws` or `wss` as the operator configured it
 
-<sup>3</sup> A deployment that configures a separate static asset domain derives that value over `https` on the configured domain and without the port the other endpoints have
+<sup>3</sup> When a deployment configures a separate static asset domain, the value is `https://` followed by that domain, with no port
 
 Every value is the exact origin the deployment advertises, including its scheme and any explicit port, and a deliberately plain HTTP deployment publishes `http` and `ws` values here.
 
@@ -105,29 +106,22 @@ A client MUST NOT upgrade a published `http` value to `https`, downgrade a publi
 
 ## CAPTCHA configuration object
 
-Which CAPTCHA provider this deployment uses, and the site keys a client needs to render its challenge.
+Whether this deployment asks for a CAPTCHA on gated operations.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| provider<sup>1</sup> | string | The selected [CAPTCHA provider](#captcha-providers) |
-| hcaptcha_site_key<sup>2</sup> | ?string | The configured hCaptcha site key, or null when none is configured |
-| turnstile_site_key<sup>2</sup> | ?string | The configured Turnstile site key, or null when none is configured |
-
-<sup>1</sup> The value is `none` when the configured provider's site key or secret key is missing
-
-<sup>2</sup> Only the key that matches `provider` is non-null, so both are null while `provider` is `none`
+| provider | string | The [CAPTCHA provider](#captcha-providers) in use |
 
 ### CAPTCHA providers
 
 | Value | Description |
 | --- | --- |
+| altcha | An ALTCHA proof-of-work challenge gates the operations that require one |
 | none | The deployment requires no CAPTCHA |
-| hcaptcha | hCaptcha challenges gate the operations that require one |
-| turnstile | Cloudflare Turnstile challenges gate the operations that require one |
 
-The complete challenge handshake, including the `X-Captcha-Token` and `X-Captcha-Type` request headers, is defined in [CAPTCHA handling](/topics/captcha/).
+The complete challenge handshake, including the `X-Captcha-Token` request header, is defined in [CAPTCHA handling](/topics/captcha/).
 
 ## Instance features object
 
@@ -138,14 +132,45 @@ Deployment-wide switches a client reads before it offers a feature, plus whether
 | Field | Type | Description |
 | --- | --- | --- |
 | voice_enabled | boolean | Whether voice and video calling is enabled |
-| stripe_enabled | boolean | Whether Stripe [billing](/http-api/billing/) is enabled |
+| stripe_enabled<sup>2</sup> | boolean | Whether premium purchases through Stripe [billing](/http-api/billing/) are available |
+| premium_enabled<sup>3</sup> | boolean | Whether the deployment has a premium tier, so premium state, gifts and perks apply |
+| stripe_serviceable<sup>4</sup> | boolean | Whether existing Stripe subscriptions can be managed, cancelled and billed |
 | self_hosted | boolean | Whether this deployment identifies itself as self-hosted |
 | presigned_attachment_uploads | boolean | Whether a client can request presigned attachment upload URLs |
 | emails_enabled<sup>1</sup> | boolean | Whether the deployment sends email |
+| phone_verification_enabled | boolean | Deprecated. Always false |
+| account_identity<sup>5</sup> | string | How members sign in, one of the [account identity modes](#account-identity-modes) |
+| tag_style<sup>6</sup> | string | How usernames are tagged, one of the [tag styles](#tag-styles) |
 
-<sup>1</sup> The value is true only when email is switched on and the transport is completely configured
+<sup>1</sup> The value is true only when email is switched on and the transport is completely configured. It is always false on a `username` deployment
+
+<sup>2</sup> True only when billing is switched on, a Stripe secret key is set, at least one currency has both a monthly and a yearly price, and `premium_enabled` is true. It is computed on each request
+
+<sup>3</sup> Always true on a hosted deployment. A self-hosted deployment reports true only while its [premium mode](/admin-api/instance/#premium-modes) is `mirror`
+
+<sup>4</sup> On a hosted deployment, true while billing is switched on and a Stripe secret key is set. A self-hosted deployment reports true while a Stripe secret key is set and `premium_enabled` is true, even after billing is switched off
+
+<sup>5</sup> Always `email` on a hosted deployment. A client treats a missing value as `email`, which is what a deployment from before the field existed means
+
+<sup>6</sup> Always `none` on a `username` deployment. Always `random` on a hosted deployment and on an instance that existed before the field. A client treats a missing value as `random`
 
 A deployment that reports `emails_enabled` as false sends no verification, password recovery, or IP authorisation message, and the flows that depend on one are unusable there. [Deployment availability](/http-api/deployment-availability/) states which routes a self-hosted deployment does not serve at all.
+
+### Account identity modes
+
+| Value | Description |
+| --- | --- |
+| email | Members register and sign in with an email address |
+| username | Members register and sign in with a username, and the deployment collects no email address |
+
+### Tag styles
+
+| Value | Description |
+| --- | --- |
+| none | Usernames are unique and shown without a tag. Every account that is not a bot has the discriminator `0000` |
+| random | Every account gets a random tag. Tags are shown and can be changed |
+
+A `username` deployment answers its email routes with 400 `EMAIL_UNAVAILABLE_ON_INSTANCE`. [Authentication](/http-api/authentication/#shared-behaviour) and [Email and password changes](/http-api/users/email-and-password/) list them. Routes that exist only for username sign-in, such as [recover an account](/http-api/authentication/#recover-an-account), answer 400 `USERNAME_SIGN_IN_ONLY` on an `email` deployment.
 
 ## GIF provider object
 
@@ -193,10 +218,11 @@ Whether this deployment runs as one community, and whether direct messages exist
 | Field | Type | Description |
 | --- | --- | --- |
 | single_community | boolean | Whether this deployment runs as one community that every account joins |
-| single_community_guild_id<sup>1</sup> | ?snowflake | The stock community guild ID, or null |
+| single_community_guild_id<sup>1</sup> | ?snowflake | The ID of the guild every account joins in single-community mode, or null |
 | direct_messages_disabled | boolean | Whether direct messages and friend requests are disabled for the whole deployment |
+| guild_create_access | boolean | Whether every account can create communities, or only admins and holders of the `feature_guild_create` limit |
 
-<sup>1</sup> The identifier is published only while `single_community` is true and a stock community has been chosen
+<sup>1</sup> The identifier is published only while `single_community` is true and the deployment has designated a community guild
 
 ## Service availability object
 
@@ -245,7 +271,7 @@ The client starts from the default value of every key. It evaluates the rules fr
 
 A rule that names no trait and no guild feature replaces the current value for each key it has. A rule that names at least one raises the current value to its own value when that is higher. Because a rebuilt rule has every key, an unfiltered rule returns each key it did not override to the default. A matching filtered rule raises each key it did not override to at least the default.
 
-Two evaluation contexts exist. A client reads the key's scope and the rule's filters to decide which keys an evaluation applies. The [limit key](#limit-keys) registry states the scope of each key.
+The evaluation contexts are listed below. A client reads the key's scope and the rule's filters to decide which keys an evaluation applies. The [limit key](#limit-keys) registry states the scope of each key.
 
 | Scope | User evaluation | Guild evaluation |
 | --- | --- | --- |
@@ -258,10 +284,10 @@ The document lets a client present the correct bounds before it attempts an oper
 :::
 
 :::caution[An unauthenticated reader resolves only the unfiltered outcome]
-The document publishes neither the requesting account's traits nor any guild feature set. A client supplies that context from its own authenticated state.
+The document publishes neither the requesting account's traits nor any guild feature set. A client supplies the account's traits and the guild's feature names itself, from data it received while authenticated.
 :::
 
-Nothing validates a rule's `traits` filter against `traitDefinitions`, so a rule can filter on a name that collection omits. A self-hosted deployment whose premium mode grants every account the stock limits publishes an empty collection and has no rule that filters on `premium`.
+Nothing validates a rule's `traits` filter against `traitDefinitions`, so a rule can filter on a name that collection omits. A self-hosted deployment whose [premium mode](/admin-api/instance/#premium-modes) is `everyone` publishes an empty collection and has no rule that filters on `premium`.
 
 ## Limit rule object
 
@@ -313,10 +339,11 @@ Each key names one limit. A key whose name begins with `feature_` is a feature g
 | emoji_max_size | Maximum file size for emoji uploads in bytes, in guild scope |
 | feature_animated_avatar | Allow animated avatar uploads, in user scope |
 | feature_animated_banner | Allow animated banner uploads, in user scope |
-| feature_custom_discriminator | Allow custom discriminator selection, in user scope |
+| feature_custom_discriminator | Allow custom discriminator selection, in user scope. Ignored for people on an instance with the `none` tag style |
 | feature_custom_notification_sounds | Allow custom notification sounds, in user scope |
 | feature_early_access | Access to beta features, in user scope |
 | feature_global_expressions | Use expressions across all guilds, in user scope |
+| feature_guild_create | Create communities while the instance restricts community creation, in user scope |
 | feature_higher_video_quality | Access to higher video streaming quality, in user scope |
 | feature_per_guild_profiles | Different profile per guild, in user scope |
 | feature_voice_entrance_sounds | Play a sound when joining voice, in user scope |
@@ -353,7 +380,7 @@ Each key names one limit. A key whose name begins with `feature_` is a feature g
 | max_webhooks_per_guild | Maximum webhooks per guild, in guild scope |
 | sticker_max_size | Maximum file size for sticker uploads in bytes, in guild scope |
 
-<sup>1</sup> Emoji limits are enforced as one shared total against `max_guild_emojis`, and the aliases exist only so an older client reads a plausible value
+<sup>1</sup> Emoji limits are enforced as one shared total against `max_guild_emojis`, and the aliases exist only for older clients. The default of each alias equals the `max_guild_emojis` default
 
 <sup>2</sup> Sticker limits are enforced as one shared total against `max_guild_stickers`
 
@@ -374,7 +401,7 @@ Branding, setup state, legal documents, and registration fields a client reads b
 
 ## Public branding object
 
-The instance identity a client renders: its name, its images, and its theme colour. The image URLs customise browser metadata, install metadata, and link previews.
+The instance identity a client renders: its name, its images, its theme colour, its status page links, and the name of its premium tier. The image URLs customise browser metadata, install metadata, and link previews.
 
 ### Structure
 
@@ -387,6 +414,10 @@ The instance identity a client renders: its name, its images, and its theme colo
 | wordmark_url | ?string | Application wordmark URL, or null |
 | favicon_url | ?string | Browser favicon URL, or null |
 | theme_color | ?string | Browser theme colour, or null |
+| status_page_url | ?string | Public status page URL, or null |
+| status_page_incident_history_url | ?string | Status page incident history URL, or null |
+| premium_product_name | string | Name of the premium tier a client displays. A self-hosted deployment reports `Premium` until the operator sets a name |
+| premium_info_url | ?string | Absolute URL of a page describing the premium tier, or null |
 
 ## Public setup state object
 
@@ -398,8 +429,11 @@ Whether the deployment has finished its initial configuration, and where an oper
 | --- | --- | --- |
 | configured | boolean | Whether initial deployment configuration is complete |
 | admin_url<sup>1</sup> | ?string | The admin application URL used to continue setup, or null |
+| account_identity_locked? | boolean | Whether the sign-in method can no longer change, sent only while a self-hosted deployment is not configured |
 
 <sup>1</sup> The value is the deployment's configured admin endpoint, and it is null when no admin endpoint is configured
+
+`account_identity_locked` is true once the first account exists, and on a deployment stored as already in use. [Set the setup sign-in method](#set-the-setup-sign-in-method) returns 409 there.
 
 ## Public legal configuration object
 
@@ -422,6 +456,25 @@ Which extra fields public registration collects.
 | --- | --- | --- |
 | collect_date_of_birth | boolean | Whether public registration collects and validates a date of birth |
 
+## Domain migration object
+
+The public part of the instance [domain migration configuration](/admin-api/instance/#domain-migration-configuration-object). The official web client reads it before sign-in to decide whether its legacy origin forwards to the new one. Every instance publishes it, and only the official web client acts on it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the migration runs at all |
+| anonymous_rollout_basis_points | integer | Share of logged-out devices moved to the new origin, in basis points (0-10000) |
+| rollout_salt | string | Salt of the sampling hash, shared by accounts and devices |
+| standalone_forwarding | boolean | Whether installed desktop web apps forward to the new origin once their data has moved |
+
+`enabled` is the instance-wide switch. While it is false, no client starts a migration and a client that already migrated stops forwarding from the legacy origin. No [passkey update](/http-api/users/mfa/#passkey-updates) opens, and the [passkey bridge](/http-api/authentication/#passkey-bridge) keeps working for people already on a new origin.
+
+A logged-out device draws its own random ID once and keeps it. The device moves when its bucket over that ID and `rollout_salt` falls below `anonymous_rollout_basis_points`. Signed-in accounts use the [domain migration assignment](/http-api/experiments/#domain-migration-assignment-object) instead.
+
+While `standalone_forwarding` is false, an installed desktop web app moves its data and stays on the legacy origin. Browser tabs forward either way.
+
 ## Geolocation object
 
 The approximate location Fluxer resolved for the request, together with the regions where mature content is gated behind an age check or is unavailable.
@@ -437,7 +490,7 @@ The approximate location Fluxer resolved for the request, together with the regi
 | ageRestrictedGeos | array[[geo entry](#geo-entry-object) object] | Locations where mature content requires an age check |
 | ageBlockedGeos | array[[geo entry](#geo-entry-object) object] | Locations where mature content is unavailable |
 
-<sup>1</sup> Every detected field is null when the deployment has configured no geolocation database, when the client address is not a valid IP address, when the database holds no record for it, or when the lookup fails. A record that resolves can still omit the subdivision code or the coordinate pair
+<sup>1</sup> All detected fields are null when the location is unknown. A known location can still omit the subdivision code or coordinates
 
 <sup>2</sup> The value is upper case
 
@@ -469,6 +522,17 @@ A geo entry names a whole country when its `regionCode` is null and names one su
 | countryCode | string | The ISO 3166-1 alpha-2 country code |
 | regionCode | ?string | The ISO 3166-2 subdivision code within the country, or null when the entry covers the whole country |
 
+## Account identity object
+
+The sign-in method a new deployment uses after [set the setup sign-in method](#set-the-setup-sign-in-method).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mode | string | The [account identity mode](#account-identity-modes) now in effect |
+| tag_style | string | How usernames are tagged, one of the [tag styles](#tag-styles) |
+
 ## Get instance discovery
 
 <RouteHeader method="GET" path="/.well-known/fluxer" unauthenticated />
@@ -493,9 +557,7 @@ The path has no `/v1` prefix.
 
 Returns the [geolocation object](#geolocation-object) for the request's client address.
 
-The client address is the first hop of the deployment's configured client IP header, which defaults to `x-forwarded-for`. A lookup that resolves nothing still returns 200 with `countryCode`, `regionCode`, `latitude`, and `longitude` all null. A client MUST treat an all-null result as an unknown location.
-
-A resolved result is cached for ten minutes against the address. An IPv4 address is cached individually and an IPv6 address is cached by its `/64`.
+A lookup that resolves nothing still returns 200 with `countryCode`, `regionCode`, `latitude`, and `longitude` all null. Treat this as an unknown location.
 
 ### Response
 
@@ -507,13 +569,52 @@ A resolved result is cached for ten minutes against the address. An IPv4 address
 
 30 requests per minute for each authenticated user, or for each client IP address when the request has no credential, on the `ip:geo_lookup` bucket.
 
+## Set the setup sign-in method
+
+<RouteHeader method="PUT" path="/v1/instance/setup/account-identity" unauthenticated />
+
+Chooses how members sign in on a new self-hosted deployment, and on an `email` deployment whether usernames have tags. Returns an [account identity](#account-identity-object) object with the choice now in effect.
+
+The setup wizard calls this before the owner account exists. The choice stays open on a self-hosted deployment until setup is complete or the first account exists. After that, on a deployment that was already in use before username sign-in existed, and on every hosted deployment, the route returns 409 `ACCOUNT_IDENTITY_LOCKED`. The choice and the first registration take turns, so a choice never lands after the first account exists. A repeated call while the choice is open replaces the earlier one.
+
+:::caution[Anyone can call this before the first account exists]
+The route needs no credential, the same as the rule that makes the first registration the instance admin. An operator finishes setup in the same sitting that brings the deployment up.
+:::
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| mode | string | The [account identity mode](#account-identity-modes) to use |
+| tag_style?<sup>1</sup> | string | How usernames are tagged, one of the [tag styles](#tag-styles). Defaults to `none` |
+
+<sup>1</sup> A `username` instance always uses `none`. Sending `random` with `username` returns the field code `TAG_STYLE_REQUIRES_EMAIL_SIGN_IN` on `tag_style`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [account identity](#account-identity-object) object | The mode was stored |
+| 400 | [error response](/http-api/#error-response) | The body is invalid, or `random` tags were requested with `username` |
+| 409 | [error response](/http-api/#error-response) | `ACCOUNT_IDENTITY_LOCKED`, because the sign-in method can no longer change |
+| 423 | [error response](/http-api/#error-response) | `GENERAL_ERROR`, because a registration or another choice held the turn for more than 15 seconds |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+
+### Side effects
+
+The deployment stores the choice, and [instance discovery](#get-instance-discovery) reports it as `account_identity` and `tag_style` from then on. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, or for each client IP address when the request has no credential, on the `instance:setup:account_identity` bucket.
+
 ## Get OpenAPI document
 
 <RouteHeader method="GET" path="/v1/openapi.json" unauthenticated />
 
 Returns the deployment's OpenAPI 3.1 document as JSON with `Content-Type: application/json; charset=utf-8`.
 
-The document has no `ETag`. It declares one server entry, the deployment's `api_client` value from the [instance endpoints object](#instance-endpoints-object) followed by `/v1`. Every path key is relative to that entry. The server entry is the only part that varies by deployment, and the rest is fixed when the document is generated.
+The document has no `ETag`. Its server URL is the deployment's `api_client` [endpoint](#instance-endpoints-object) followed by `/v1`. Every path is relative to that URL.
 
 ### Response
 

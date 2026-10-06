@@ -3,6 +3,7 @@
 import MediaPermission from '@app/features/permissions/system/state/MediaPermission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
+import {scheduleDeepFilterPrefetch} from '@app/features/voice/utils/noise_suppression/DeepFilter';
 import type {VoiceMediaPermissionType} from '@app/features/voice/utils/VoiceDeviceManager';
 
 const logger = new Logger('MediaDeviceStartupPreload');
@@ -10,11 +11,15 @@ const logger = new Logger('MediaDeviceStartupPreload');
 export function startMediaDeviceStartupPreload(): () => void {
 	let stopped = false;
 	let lastPermissionStateKey: string | null = null;
+	let cancelDeepFilterPrefetch: (() => void) | null = null;
 	const preloadDevices = () => {
 		if (stopped) return;
-		const requestPermissionTypes: Array<VoiceMediaPermissionType> = [];
-		if (MediaPermission.isMicrophoneGranted()) requestPermissionTypes.push('audio');
-		if (MediaPermission.isCameraGranted()) requestPermissionTypes.push('video');
+		const grantedPermissionTypes: Array<VoiceMediaPermissionType> = [];
+		if (MediaPermission.isMicrophoneGranted()) {
+			grantedPermissionTypes.push('audio');
+			cancelDeepFilterPrefetch ??= scheduleDeepFilterPrefetch();
+		}
+		if (MediaPermission.isCameraGranted()) grantedPermissionTypes.push('video');
 		const permissionStateKey = [
 			MediaPermission.isInitialized() ? 'initialized' : 'pending',
 			MediaPermission.getMicrophonePermissionState() ?? 'unknown',
@@ -22,20 +27,23 @@ export function startMediaDeviceStartupPreload(): () => void {
 		].join(':');
 		const deviceState = VoiceDevicePermissionState.getState();
 		const forceRefresh = lastPermissionStateKey !== null && lastPermissionStateKey !== permissionStateKey;
-		const requestedPermissionStatesSettled = requestPermissionTypes.every(
+		const grantedPermissionStatesSettled = grantedPermissionTypes.every(
 			(type) => deviceState.permissionStatus[type] !== 'idle',
 		);
-		if (!forceRefresh && lastPermissionStateKey === permissionStateKey && requestedPermissionStatesSettled) {
+		if (!forceRefresh && lastPermissionStateKey === permissionStateKey && grantedPermissionStatesSettled) {
 			return;
 		}
 		lastPermissionStateKey = permissionStateKey;
-		void VoiceDevicePermissionState.ensureDevices({forceRefresh, requestPermissionTypes}).catch((error) => {
-			logger.debug('Failed to preload media devices', {error});
-		});
+		void VoiceDevicePermissionState.ensureDevices({forceRefresh, confirmPermissionTypes: grantedPermissionTypes}).catch(
+			(error) => {
+				logger.debug('Failed to preload media devices', {error});
+			},
+		);
 	};
 	const disposePermissionListener = MediaPermission.addChangeListener(preloadDevices);
 	return () => {
 		stopped = true;
 		disposePermissionListener();
+		cancelDeepFilterPrefetch?.();
 	};
 }

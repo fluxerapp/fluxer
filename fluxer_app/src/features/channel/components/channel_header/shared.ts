@@ -58,7 +58,7 @@ export const ADD_FRIENDS_TO_GROUP_DESCRIPTOR = msg({
 	comment: 'Tooltip on the channel header plus button in a group DM. Opens the add friends to group modal.',
 });
 export const MEMBERS_LIST_UNAVAILABLE_AT_THIS_SCREEN_WIDTH_DESCRIPTOR = msg({
-	message: 'Members list unavailable at this screen width',
+	message: 'Member list unavailable at this screen width',
 	comment:
 		'Tooltip on the disabled members toggle in the channel header when the viewport is too narrow to show the panel.',
 });

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {StickerAnimationOptions} from '@fluxer/constants/src/UserConstants';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type StickerAnimation = number;
 export type AnimatedMediaKind = 'emoji' | 'gif' | 'sticker';
@@ -388,7 +388,7 @@ export type MotionPreferencesSnapshot = SnapshotFrom<typeof motionPreferencesMac
 export type MotionPreferencesStateValue = 'full' | 'reduced';
 
 export function createMotionPreferencesSnapshot(input: MotionPreferencesInput = {}): MotionPreferencesSnapshot {
-	return getInitialSnapshot(motionPreferencesMachine, input);
+	return initialTransition(motionPreferencesMachine, input)[0];
 }
 
 export function transitionMotionPreferencesSnapshot(

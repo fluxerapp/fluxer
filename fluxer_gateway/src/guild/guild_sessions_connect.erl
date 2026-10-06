@@ -6,10 +6,16 @@
 -export([
     handle_session_connect/3,
     resection_connected_user/3,
+    resection_connected_user/4,
     build_initial_last_message_ids/1,
     build_initial_channel_versions/1,
-    handle_session_down/2,
+    handle_session_down/3,
+    find_session_by_ref/2,
+    put_session_ref/3,
+    remove_session_ref/2,
+    build_session_ref_index/1,
     remove_session/2,
+    counts_as_connected/1,
     invalidate_viewable_channels_cache/1
 ]).
 
@@ -33,7 +39,7 @@
     {reply, connect_reply(), guild_state()}.
 handle_session_connect(Request, Pid, State) ->
     #{session_id := SessionId, user_id := UserId} = Request,
-    Sessions = require_sessions(maps:get(sessions, State, #{})),
+    Sessions = maps:get(sessions, State, #{}),
     case maps:is_key(SessionId, Sessions) of
         true ->
             {reply, {ok, guild_data:get_guild_state(UserId, State)}, State};
@@ -46,7 +52,7 @@ handle_session_connect(Request, Pid, State) ->
 ) ->
     {reply, connect_reply(), guild_state()}.
 register_new_session(Request, Pid, UserId, SessionId, State) ->
-    Sessions = require_sessions(maps:get(sessions, State, #{})),
+    Sessions = maps:get(sessions, State, #{}),
     case user_session_count(UserId, State, Sessions) >= ?MAX_SESSIONS_PER_USER_PER_GUILD of
         true ->
             {reply, {error, too_many_sessions}, State};
@@ -104,15 +110,16 @@ register_admitted_session(
     SessionData = build_session_data(Request, Pid, UserId, SessionId, State),
     store_initial_passive_state(SessionId, GuildId, GuildState),
     NewSessions = Sessions#{SessionId => SessionData},
-    StateWithSession = put_session_ref(SessionId, SessionData, State#{
+    StateWithSession = put_session_ref(SessionId, maps:get(mref, SessionData), State#{
         sessions => NewSessions
     }),
     State0a = guild_sessions_connect_cleanup:clear_auto_stop_pending(
         StateWithSession
     ),
     State1 = track_connected_user(UserId, 1, State0a),
+    PresenceBefore = guild_member_list_connected:resolve_presence_for_user(State1, UserId),
     State2 = guild_sessions_presence:subscribe_connected_user_presence(UserId, State1),
-    State3 = resection_connected_user(UserId, State, State2),
+    State3 = resection_connected_user(UserId, PresenceBefore, State, State2),
     InitialGuildId = maps:get(initial_guild_id, Request, undefined),
     finalize_connect(
         SessionId,
@@ -237,14 +244,15 @@ add_channel_version(Channel, Acc) when is_map(Channel) ->
 add_channel_version(_, Acc) ->
     Acc.
 
--spec handle_session_down(reference(), guild_state()) ->
+-spec handle_session_down(
+    reference(), {session_id() | undefined, session_data() | undefined}, guild_state()
+) ->
     {noreply, guild_state()}.
-handle_session_down(Ref, State) ->
-    Sessions = require_sessions(maps:get(sessions, State, #{})),
-    {DisconnectingSessionId, DisconnectingSession} = find_session_by_ref(Ref, Sessions, State),
+handle_session_down(Ref, {DisconnectingSessionId, DisconnectingSession}, State) ->
+    Sessions = maps:get(sessions, State, #{}),
     DisconnectUserId = disconnect_user_id(DisconnectingSession),
     State1 = cleanup_disconnecting_session(DisconnectingSession, State),
-    NewSessions = remove_session_by_ref(DisconnectingSessionId, Ref, Sessions),
+    NewSessions = remove_session_id(DisconnectingSessionId, Sessions),
     NewState0 = remove_session_ref(Ref, State1#{sessions => NewSessions}),
     NewState = track_connected_user(DisconnectUserId, -1, NewState0),
     NewState1 = maybe_resection_on_disconnect(
@@ -256,14 +264,6 @@ handle_session_down(Ref, State) ->
     user_id() | undefined.
 disconnect_user_id(#{user_id := UID}) -> UID;
 disconnect_user_id(_) -> undefined.
-
--spec filter_sessions_by_ref(reference(), sessions_map()) ->
-    sessions_map().
-filter_sessions_by_ref(Ref, Sessions) ->
-    maps:filter(
-        fun(_K, S) -> maps:get(mref, S) =/= Ref end,
-        Sessions
-    ).
 
 -spec finish_session_down(sessions_map(), guild_state()) ->
     {noreply, guild_state()}.
@@ -287,7 +287,7 @@ maybe_resection_on_disconnect(_, _OldState, NewState) ->
 
 -spec remove_session(session_id(), guild_state()) -> guild_state().
 remove_session(SessionId, State) ->
-    Sessions = require_sessions(maps:get(sessions, State, #{})),
+    Sessions = maps:get(sessions, State, #{}),
     case maps:get(SessionId, Sessions, undefined) of
         undefined ->
             State;
@@ -300,16 +300,28 @@ remove_session(SessionId, State) ->
 ) -> guild_state().
 do_remove_session(SessionId, Session, State) ->
     maybe_demonitor_session(Session),
-    UserId = maps:get(user_id, Session, undefined),
-    StateAfterCleanup = cleanup_disconnecting_session(Session, State),
-    SessionsAfterCleanup = require_sessions(
-        maps:get(sessions, StateAfterCleanup, #{})
-    ),
+    StateAfterCleanup = cleanup_removed_session(Session, State),
+    SessionsAfterCleanup = maps:get(sessions, StateAfterCleanup, #{}),
     NewSessions = maps:remove(SessionId, SessionsAfterCleanup),
-    State2 = remove_session_ref(
+    remove_session_ref(
         maps:get(mref, Session, undefined), StateAfterCleanup#{sessions => NewSessions}
-    ),
-    track_connected_user(UserId, -1, State2).
+    ).
+
+-spec cleanup_removed_session(session_data(), guild_state()) -> guild_state().
+cleanup_removed_session(Session, State) ->
+    case counts_as_connected(Session) of
+        true ->
+            UserId = maps:get(user_id, Session, undefined),
+            track_connected_user(UserId, -1, cleanup_disconnecting_session(Session, State));
+        false ->
+            cleanup_session_subscriptions(Session, State)
+    end.
+
+-spec counts_as_connected(session_data()) -> boolean().
+counts_as_connected(#{pending_connect := true} = Session) ->
+    maps:get(owns_connected_tracking, Session, false) =:= true;
+counts_as_connected(_Session) ->
+    true.
 
 -spec maybe_demonitor_session(session_data()) -> ok.
 maybe_demonitor_session(Session) ->
@@ -322,13 +334,14 @@ maybe_demonitor_session(Session) ->
             ok
     end.
 
--spec find_session_by_ref(reference(), sessions_map(), guild_state()) ->
+-spec find_session_by_ref(reference(), guild_state()) ->
     {session_id() | undefined, session_data() | undefined}.
-find_session_by_ref(Ref, Sessions, State) ->
-    Refs = session_ref_index(State, Sessions),
-    case maps:get(Ref, Refs, undefined) of
-        SessionId when is_binary(SessionId) ->
-            {SessionId, maps:get(SessionId, Sessions, undefined)};
+find_session_by_ref(Ref, State) ->
+    Sessions = maps:get(sessions, State, #{}),
+    SessionId = maps:get(Ref, maps:get(guild_session_refs, State, #{}), undefined),
+    case maps:get(SessionId, Sessions, undefined) of
+        #{mref := Ref} = Session ->
+            {SessionId, Session};
         _ ->
             find_session_by_ref_scan(Ref, Sessions)
     end.
@@ -337,65 +350,35 @@ find_session_by_ref(Ref, Sessions, State) ->
     {session_id() | undefined, session_data() | undefined}.
 find_session_by_ref_scan(Ref, Sessions) ->
     maps:fold(
-        fun(SessionId, S, Acc) -> match_ref(SessionId, S, Ref, Acc) end,
+        fun
+            (SessionId, #{mref := MRef} = S, _Acc) when MRef =:= Ref -> {SessionId, S};
+            (_SessionId, _S, Acc) -> Acc
+        end,
         {undefined, undefined},
         Sessions
     ).
 
--spec match_ref(
-    session_id(), session_data(), reference(), {
-        session_id() | undefined, session_data() | undefined
-    }
-) -> {session_id() | undefined, session_data() | undefined}.
-match_ref(SessionId, S, Ref, Acc) ->
-    case maps:get(mref, S) =:= Ref of
-        true -> {SessionId, S};
-        false -> Acc
-    end.
-
--spec remove_session_by_ref(session_id() | undefined, reference(), sessions_map()) ->
-    sessions_map().
-remove_session_by_ref(SessionId, _Ref, Sessions) when is_binary(SessionId) ->
+-spec remove_session_id(session_id() | undefined, sessions_map()) -> sessions_map().
+remove_session_id(SessionId, Sessions) when is_binary(SessionId) ->
     maps:remove(SessionId, Sessions);
-remove_session_by_ref(undefined, Ref, Sessions) ->
-    filter_sessions_by_ref(Ref, Sessions).
+remove_session_id(undefined, Sessions) ->
+    Sessions.
 
--spec put_session_ref(session_id(), session_data(), guild_state()) -> guild_state().
-put_session_ref(SessionId, Session, State) ->
-    case maps:get(mref, Session, undefined) of
-        Ref when is_reference(Ref) ->
-            Refs0 = session_ref_index(State, require_sessions(maps:get(sessions, State, #{}))),
-            State#{guild_session_refs => Refs0#{Ref => SessionId}};
-        _ ->
-            State
-    end.
+-spec put_session_ref(session_id(), term(), guild_state()) -> guild_state().
+put_session_ref(SessionId, Ref, State) when is_reference(Ref) ->
+    ok = guild_health:put_session(SessionId, State),
+    Refs = maps:get(guild_session_refs, State, #{}),
+    State#{guild_session_refs => Refs#{Ref => SessionId}};
+put_session_ref(_SessionId, _Ref, State) ->
+    State.
 
 -spec remove_session_ref(term(), guild_state()) -> guild_state().
 remove_session_ref(Ref, State) when is_reference(Ref) ->
-    Refs0 = session_ref_index(State, require_sessions(maps:get(sessions, State, #{}))),
-    State#{guild_session_refs => maps:remove(Ref, Refs0)};
+    Refs = maps:get(guild_session_refs, State, #{}),
+    ok = guild_health:remove_session(maps:get(Ref, Refs, undefined), State),
+    State#{guild_session_refs => maps:remove(Ref, Refs)};
 remove_session_ref(_Ref, State) ->
     State.
-
--spec session_ref_index(guild_state(), sessions_map()) -> #{reference() => session_id()}.
-session_ref_index(State, Sessions) ->
-    case maps:get(guild_session_refs, State, undefined) of
-        Refs when is_map(Refs) -> normalize_session_ref_index(Refs);
-        _ -> build_session_ref_index(Sessions)
-    end.
-
--spec normalize_session_ref_index(map()) -> #{reference() => session_id()}.
-normalize_session_ref_index(Refs) ->
-    maps:fold(
-        fun
-            (Ref, SessionId, Acc) when is_reference(Ref), is_binary(SessionId) ->
-                Acc#{Ref => SessionId};
-            (_Ref, _SessionId, Acc) ->
-                Acc
-        end,
-        #{},
-        Refs
-    ).
 
 -spec build_session_ref_index(sessions_map()) -> #{reference() => session_id()}.
 build_session_ref_index(Sessions) ->
@@ -425,44 +408,81 @@ cleanup_disconnecting_session(undefined, State) ->
     State;
 cleanup_disconnecting_session(Session, State) ->
     UserId = maps:get(user_id, Session),
+    State1 = guild_sessions_presence:unsubscribe_from_user_presence(UserId, State),
+    cleanup_session_subscriptions(Session, State1).
+
+-spec cleanup_session_subscriptions(session_data(), guild_state()) -> guild_state().
+cleanup_session_subscriptions(Session, State) ->
     SessionId = maps:get(session_id, Session),
     GuildId = require_guild_id(maps:get(id, State)),
     passive_sync_registry:delete(SessionId, GuildId),
-    State1 = guild_sessions_presence:unsubscribe_from_user_presence(UserId, State),
-    State2 = guild_member_list:unsubscribe_session(SessionId, State1),
-    MemberSubs = maps:get(member_subscriptions, State2, guild_subscriptions:init_state()),
+    State1 = guild_member_list:unsubscribe_session(SessionId, State),
+    MemberSubs = maps:get(member_subscriptions, State1, guild_subscriptions:init_state()),
     NewMemberSubs = guild_subscriptions:unsubscribe_session(SessionId, MemberSubs),
-    State3 = State2#{member_subscriptions => NewMemberSubs},
-    guild_sessions_connect_cleanup:cleanup_connect_admission_for_session(SessionId, State3).
+    State2 = State1#{member_subscriptions => NewMemberSubs},
+    guild_sessions_connect_cleanup:cleanup_connect_admission_for_session(SessionId, State2).
 
 -spec maybe_resection_disconnected_user(
     user_id(), guild_state(), guild_state()
 ) -> guild_state().
 maybe_resection_disconnected_user(UserId, OldState, NewState) ->
-    resection_user_after_connection_change(UserId, OldState, NewState).
+    case became_disconnected(UserId, OldState, NewState) of
+        true -> resection_user_after_connection_change(UserId, OldState, NewState);
+        false -> NewState
+    end.
+
+-spec resection_connected_user(user_id() | undefined, guild_state(), guild_state()) ->
+    guild_state().
+resection_connected_user(UserId, OldState, NewState) ->
+    resection_connected_user(UserId, undefined, OldState, NewState).
 
 -spec resection_connected_user(
-    user_id() | undefined, guild_state(), guild_state()
+    user_id() | undefined, map() | undefined, guild_state(), guild_state()
 ) -> guild_state().
-resection_connected_user(UserId, OldState, NewState) when
+resection_connected_user(UserId, PresenceBefore, OldState, NewState) when
     is_integer(UserId), UserId > 0
 ->
     case became_connected(UserId, OldState, NewState) of
         true ->
-            ResectionedState = resection_user_after_connection_change(
-                UserId, OldState, NewState
+            ResectionedState = resection_after_connect(
+                UserId, PresenceBefore, OldState, NewState
             ),
             _ = guild_presence_reconcile:maybe_schedule_user_repair(UserId, ResectionedState),
             ResectionedState;
         false ->
             NewState
     end;
-resection_connected_user(_UserId, _OldState, NewState) ->
+resection_connected_user(_UserId, _PresenceBefore, _OldState, NewState) ->
     NewState.
+
+-spec resection_after_connect(
+    user_id(), map() | undefined, guild_state(), guild_state()
+) -> guild_state().
+resection_after_connect(UserId, PresenceBefore, OldState, NewState) ->
+    case presence_resynced_lists(UserId, PresenceBefore, NewState) of
+        true -> resection_user_already_synced(UserId, NewState);
+        false -> resection_user_after_connection_change(UserId, OldState, NewState)
+    end.
+
+-spec presence_resynced_lists(user_id(), map() | undefined, guild_state()) -> boolean().
+presence_resynced_lists(_UserId, undefined, _State) ->
+    false;
+presence_resynced_lists(UserId, PresenceBefore, State) ->
+    PresenceAfter = guild_member_list_connected:resolve_presence_for_user(State, UserId),
+    guild_member_list_write:presence_change_resyncs_lists(PresenceBefore, PresenceAfter).
+
+-spec resection_user_already_synced(user_id(), guild_state()) -> guild_state().
+resection_user_already_synced(UserId, State) ->
+    _ = guild_presence:sync_online_status(UserId, State),
+    guild_member_list_write:queue_synced_connection_change(UserId, State).
 
 -spec became_connected(user_id(), guild_state(), guild_state()) -> boolean().
 became_connected(UserId, OldState, NewState) ->
     (not user_connected(UserId, OldState)) andalso user_connected(UserId, NewState).
+
+-spec became_disconnected(user_id(), guild_state(), guild_state()) -> boolean().
+became_disconnected(UserId, OldState, NewState) ->
+    user_connected(UserId, OldState) andalso not user_connected(UserId, NewState).
 
 -spec user_connected(user_id(), guild_state()) -> boolean().
 user_connected(UserId, State) ->
@@ -501,7 +521,7 @@ track_connected_user(UserId, _Delta, State) when
     State;
 track_connected_user(UserId, Delta, State) ->
     Counts = require_map(maps:get(user_session_counts, State, #{})),
-    Connected = require_set(maps:get(connected_user_ids, State, sets:new())),
+    Connected = maps:get(connected_user_ids, State, sets:new()),
     OldCount = require_non_neg(maps:get(UserId, Counts, 0)),
     NewCount = max(0, OldCount + Delta),
     {NC, NConn} = apply_count_change(
@@ -566,27 +586,9 @@ viewable_channels_cache_table(_) ->
 require_map(M) when is_map(M) -> M;
 require_map(_) -> #{}.
 
--spec require_sessions(term()) -> sessions_map().
-require_sessions(M) when is_map(M) ->
-    maps:fold(fun require_session_entry/3, #{}, M);
-require_sessions(_) ->
-    #{}.
-
--spec require_session_entry(term(), term(), sessions_map()) -> sessions_map().
-require_session_entry(K, V, Acc) when is_binary(K), is_map(V) ->
-    Acc#{K => V};
-require_session_entry(_, _, Acc) ->
-    Acc.
-
 -spec require_guild_id(term()) -> guild_id().
 require_guild_id(Id) when is_integer(Id), Id > 0 -> Id;
 require_guild_id(_) -> error(badarg).
-
--spec require_set(term()) -> sets:set(integer()).
-require_set(S) when is_map(S) ->
-    sets:from_list([I || I <- maps:keys(S), is_integer(I)]);
-require_set(_) ->
-    sets:new().
 
 -spec require_non_neg(term()) -> non_neg_integer().
 require_non_neg(V) when is_integer(V), V >= 0 -> V;
@@ -645,16 +647,41 @@ resection_connected_user_skips_when_already_connected_test() ->
     Connected = sets:from_list([42]),
     Old = #{connected_user_ids => Connected},
     New = #{connected_user_ids => Connected, marker => updated},
-    ?assertEqual(New, resection_connected_user(42, Old, New)).
+    ?assertEqual(New, resection_connected_user(42, #{}, Old, New)).
 
 resection_connected_user_skips_when_still_disconnected_test() ->
     Old = #{connected_user_ids => sets:new()},
     New = #{connected_user_ids => sets:new(), marker => updated},
-    ?assertEqual(New, resection_connected_user(42, Old, New)).
+    ?assertEqual(New, resection_connected_user(42, #{}, Old, New)).
 
 resection_connected_user_ignores_undefined_user_test() ->
     New = #{connected_user_ids => sets:new()},
-    ?assertEqual(New, resection_connected_user(undefined, New, New)).
+    ?assertEqual(New, resection_connected_user(undefined, #{}, New, New)).
+
+resection_disconnected_user_skips_when_still_connected_test() ->
+    Connected = sets:from_list([42]),
+    Old = #{connected_user_ids => Connected},
+    New = #{connected_user_ids => Connected, marker => updated},
+    ?assertEqual(New, maybe_resection_disconnected_user(42, Old, New)).
+
+resection_disconnected_user_skips_when_already_disconnected_test() ->
+    Old = #{connected_user_ids => sets:new()},
+    New = #{connected_user_ids => sets:new(), marker => updated},
+    ?assertEqual(New, maybe_resection_disconnected_user(42, Old, New)).
+
+became_disconnected_detects_transition_test() ->
+    Old = #{connected_user_ids => sets:from_list([42])},
+    New = #{connected_user_ids => sets:new()},
+    ?assert(became_disconnected(42, Old, New)),
+    ?assertNot(became_disconnected(42, Old, Old)),
+    ?assertNot(became_disconnected(42, New, New)),
+    ?assertNot(became_disconnected(42, New, Old)).
+
+presence_resynced_lists_needs_a_list_visible_change_test() ->
+    State = #{member_presence => #{42 => #{<<"status">> => <<"online">>}}},
+    ?assertNot(presence_resynced_lists(42, undefined, State)),
+    ?assert(presence_resynced_lists(42, #{}, State)),
+    ?assertNot(presence_resynced_lists(42, #{<<"status">> => <<"online">>}, State)).
 
 became_connected_detects_transition_test() ->
     Old = #{connected_user_ids => sets:new()},

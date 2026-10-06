@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import type {User} from '@app/api/models/User';
+import {BatchRecordingKVProvider} from '@app/api/test/mocks/BatchRecordingKVProvider';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {IKVPipeline} from '@pkgs/kv_client/src/IKVProvider';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import type {User} from '../../models/User';
-import {BatchRecordingKVProvider} from '../../test/mocks/BatchRecordingKVProvider';
-import {UserRepository} from '../../user/repositories/UserRepository';
-import {KVActivityTracker} from '../KVActivityTracker';
 
 const REBUILD_KV_BATCH_SIZE = 1000;
 const MAX_CONCURRENT_ROUND_TRIPS = 16;

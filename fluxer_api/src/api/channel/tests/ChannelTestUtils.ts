@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import type {ChannelOverwriteResponse, ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRoleResponse} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
 import type {GuildInviteMetadataResponse} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {createTestAccount, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 export async function createGuild(harness: ApiTestHarness, token: string, name: string): Promise<GuildResponse> {
 	return createBuilder<GuildResponse>(harness, token).post('/guilds').body({name}).execute();

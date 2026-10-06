@@ -1,19 +1,17 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Guild member search
-description: Indexed guild member search filters, sorting, pagination, and join metadata.
+description: Guild member search filters, sorting, pagination and join metadata.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-Guild member search finds the members of a guild by name, role, and join information. One route answers it from a search index and returns a [guild member search result](#guild-member-search-result-object) object for each match.
+Search guild members by name, role and join information. Each match is a [guild member search result](#guild-member-search-result-object) object.
 
 A guild an operator has marked unavailable returns 403 `MISSING_ACCESS` before the route runs.
 
-Results are eventually consistent with direct membership reads. Fluxer logs a failed index write and discards it.
-
-:::caution[A dropped removal is never repaired]
-A rebuild re-upserts every current membership and repairs a dropped create or update. It deletes no document, so an already indexed guild keeps returning a member who has left.
+:::caution[Search results can be stale]
+Results can lag membership changes and can include members who have left. Use [Get guild member](/http-api/guild-members/#get-guild-member) when current membership matters.
 :::
 
 ## Join source types
@@ -33,13 +31,13 @@ The value 5 is not assigned.
 
 ## Guild member search result object
 
-A guild member search result is one matched membership as the search index stored it. It flattens the account fields the [guild member object](/http-api/guild-members/#guild-member-object) nests under `user`.
+A matched membership. Account fields appear at the top level rather than under `user` as in the [guild member object](/http-api/guild-members/#guild-member-object).
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| id<sup>1</sup> | string | The identity of the index document, one per membership |
+| id<sup>1</sup> | string | The search result identifier, one per membership |
 | guild_id | snowflake | The ID of the guild the membership belongs to |
 | user_id | snowflake | The ID of the account the membership belongs to |
 | username | string | The username of the account |
@@ -55,7 +53,7 @@ A guild member search result is one matched membership as the search index store
 
 <sup>2</sup> Left-padded with zeroes to four digits
 
-<sup>3</sup> The [guild member object](/http-api/guild-members/#guild-member-object) names these two fields `nick` and `roles`, so a client reusing a member renderer must map them
+<sup>3</sup> The [guild member object](/http-api/guild-members/#guild-member-object) names these fields `nick` and `roles`, so a client reusing a member renderer must map them
 
 <sup>4</sup> The everyone role is never present
 
@@ -87,7 +85,7 @@ The result has no `avatar`, `banner`, `accent_color`, `mute`, `deaf`, `communica
 
 ## Guild member search supplemental object
 
-A guild member search supplemental object has the join source the [guild member object](/http-api/guild-members/#guild-member-object) never exposes. Only a caller that can already manage the guild reads it.
+A guild member search supplemental object has the join source the [guild member object](/http-api/guild-members/#guild-member-object) never exposes. Only a caller holding [MANAGE_GUILD](/http-api/permissions/) receives its values.
 
 ### Structure
 
@@ -198,7 +196,7 @@ With no `sort_by`, the route sorts by join time and defaults `sort_order` to `de
 Text matching runs over the username, the discriminator, the global display name, the guild nickname, and the user ID. A query can match the middle of a username as well as its start. The search backend defines term matching and typo tolerance. Filter matching is exact in every case.
 
 :::caution[A deep `offset` returns 200 with an empty page]
-Elasticsearch walks past its 10000 document window with an internal cursor and serves an arbitrary `offset`. Meilisearch caps the window at 10000 and returns an empty page beyond it.
+An instance using Meilisearch returns an empty page beyond 10000 results. Instances using Elasticsearch support larger offsets.
 :::
 
 ### Response
@@ -212,15 +210,15 @@ Elasticsearch walks past its 10000 document window with an internal cursor and s
 
 <sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked body string, and `MISSING_PERMISSIONS` otherwise
 
-An index that has never been built, or that predates the instance forced reindex point, returns 200 with an empty page and `indexing` set to true, and the request schedules the rebuild. The same empty body with `indexing` false covers a guild whose record disappeared between the membership check and the index read, an instance with no search backend configured, and an instance still starting up. This operation never returns `FEATURE_TEMPORARILY_DISABLED`.
+When Fluxer is building the guild member index, the response is 200 with an empty page and `indexing` set to true. Retry later. This route has no `FEATURE_TEMPORARILY_DISABLED` response. When the search backend is unavailable, the route returns 200 with an empty page and `indexing` false.
 
 :::note[`indexing` false does not mean zero matches]
-True means the rebuild is scheduled and the page is empty for that reason alone. False covers a genuine zero-match search and every other index that could not answer.
+An empty page with `indexing` false can mean no matches or that search is unavailable.
 :::
 
 ### Side effects
 
-The route queues a rebuild of the guild's member index when the guild has never been indexed or was last indexed before the instance forced reindex point.
+A search in a guild whose member index needs building queues an indexing job and returns `indexing` true. It does not change memberships.
 
 ### Rate limit
 

@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::pseudonym::pseudonym;
+use fluxer_common::user_flags::{AccountStanding, USER_FLAG_STAFF, visible_user_flags};
+#[cfg(test)]
+use fluxer_common::user_flags::{USER_FLAG_PARTNER, USER_FLAG_STAFF_HIDDEN};
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -83,7 +87,6 @@ pub struct User {
     pub stripe_customer_id: Option<String>,
     pub gift_inventory_server_seq: Option<i32>,
     pub gift_inventory_client_seq: Option<i32>,
-    pub suspicious_activity_flags: Option<i32>,
     pub terms_agreed_at: Option<i64>,
     pub privacy_agreed_at: Option<i64>,
     pub last_active_at: Option<i64>,
@@ -100,12 +103,13 @@ pub struct User {
     pub deletion_audit_log_reason: Option<String>,
     pub first_refund_at: Option<i64>,
     pub version: i32,
-    pub has_verified_phone: Option<bool>,
     pub premium_grace_ends_at: Option<i64>,
     pub mention_flags: Option<i32>,
     pub last_voice_activity_sharing_change_at: Option<i64>,
     pub timezone: Option<String>,
     pub timezone_privacy_flags: Option<i32>,
+    #[serde(default)]
+    pub content_hidden_since: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -123,6 +127,8 @@ pub struct UserPartial {
     pub accent_color: Option<i32>,
     pub avatar_color: Option<i32>,
     pub mention_flags: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub content_hidden_since: Option<i64>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -153,26 +159,32 @@ pub struct ApiUserPartial {
     pub mention_flags: Option<i32>,
 }
 
-const USER_FLAG_STAFF: i64 = 1 << 0;
-const USER_FLAG_PARTNER: i64 = 1 << 2;
-const USER_FLAG_BUG_HUNTER: i64 = 1 << 3;
-const USER_FLAG_FRIENDLY_BOT: i64 = 1 << 4;
-const USER_FLAG_FRIENDLY_BOT_MANUAL_APPROVAL: i64 = 1 << 5;
-const USER_FLAG_SPAMMER: i64 = 1 << 6;
-const USER_FLAG_STAFF_HIDDEN: i64 = 1 << 57;
-const PUBLIC_USER_FLAGS: i64 = USER_FLAG_STAFF
-    | USER_FLAG_PARTNER
-    | USER_FLAG_BUG_HUNTER
-    | USER_FLAG_FRIENDLY_BOT
-    | USER_FLAG_FRIENDLY_BOT_MANUAL_APPROVAL
-    | USER_FLAG_SPAMMER;
-const PUBLIC_USER_FLAGS_WITHOUT_STAFF: i64 = PUBLIC_USER_FLAGS & !USER_FLAG_STAFF;
 const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
 
+pub fn now_ms() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis() as i64)
+}
+
 impl User {
+    pub fn standing(&self) -> AccountStanding {
+        AccountStanding {
+            flags: self.flags.unwrap_or_default(),
+            temp_banned_until_ms: self.temp_banned_until,
+            pending_deletion_at_ms: self.pending_deletion_at,
+            deletion_reason_code: self.deletion_reason_code,
+        }
+    }
+
     pub fn to_partial(&self) -> UserPartial {
+        self.to_own_partial()
+            .visible_to_others(&self.standing(), now_ms())
+    }
+
+    fn to_own_partial(&self) -> UserPartial {
         UserPartial {
             user_id: self.user_id,
             username: self.username.clone(),
@@ -187,29 +199,30 @@ impl User {
             accent_color: self.accent_color,
             avatar_color: self.avatar_color,
             mention_flags: self.mention_flags,
-        }
-    }
-
-    pub fn to_api_partial(&self) -> ApiUserPartial {
-        if self.user_id == FLUXER_SYSTEM_USER_ID {
-            return fluxer_system_user();
-        }
-        ApiUserPartial {
-            id: self.user_id.to_string(),
-            username: self.username.clone(),
-            discriminator: format!("{:04}", self.discriminator),
-            global_name: self.global_name.clone(),
-            avatar: self.avatar_hash.clone(),
-            avatar_color: self.avatar_color,
-            bot: self.bot.filter(|bot| *bot),
-            system: self.system.filter(|system| *system),
-            flags: visible_user_flags(self.flags.unwrap_or_default()),
-            mention_flags: self.mention_flags.filter(|flags| *flags != 0),
+            content_hidden_since: self.content_hidden_since,
         }
     }
 }
 
 impl UserPartial {
+    pub fn visible_to_others(self, standing: &AccountStanding, now_ms: i64) -> UserPartial {
+        if self.user_id == FLUXER_SYSTEM_USER_ID || !standing.profile_hidden(now_ms) {
+            return self;
+        }
+        let pseudonym = pseudonym(self.user_id);
+        UserPartial {
+            username: pseudonym.username,
+            discriminator: pseudonym.discriminator,
+            global_name: None,
+            avatar_hash: None,
+            banner_hash: None,
+            banner_color: None,
+            accent_color: None,
+            avatar_color: None,
+            ..self
+        }
+    }
+
     pub fn to_api_partial(&self) -> ApiUserPartial {
         if self.user_id == FLUXER_SYSTEM_USER_ID {
             return fluxer_system_user();
@@ -227,15 +240,6 @@ impl UserPartial {
             mention_flags: self.mention_flags.filter(|flags| *flags != 0),
         }
     }
-}
-
-fn visible_user_flags(flags: i64) -> i32 {
-    let visible_flags = if (flags & USER_FLAG_STAFF_HIDDEN) != 0 {
-        PUBLIC_USER_FLAGS_WITHOUT_STAFF
-    } else {
-        PUBLIC_USER_FLAGS
-    };
-    (flags & visible_flags) as i32
 }
 
 fn fluxer_system_user() -> ApiUserPartial {
@@ -292,6 +296,7 @@ mod tests {
             accent_color: None,
             avatar_color: Some(0x336699),
             mention_flags: Some(0),
+            content_hidden_since: None,
         }
     }
 
@@ -332,7 +337,6 @@ mod tests {
             stripe_customer_id: Some("cus_123".to_owned()),
             gift_inventory_server_seq: Some(3),
             gift_inventory_client_seq: Some(3),
-            suspicious_activity_flags: Some(0),
             terms_agreed_at: Some(1_781_526_896_789),
             privacy_agreed_at: Some(1_781_526_896_789),
             last_active_at: Some(1_781_526_896_789),
@@ -349,40 +353,20 @@ mod tests {
             deletion_audit_log_reason: None,
             first_refund_at: None,
             version: 3,
-            has_verified_phone: Some(true),
             premium_grace_ends_at: None,
             mention_flags: Some(2),
             last_voice_activity_sharing_change_at: None,
             timezone: Some("Europe/London".to_owned()),
             timezone_privacy_flags: Some(1),
+            content_hidden_since: None,
         }
     }
 
     #[test]
-    fn direct_api_partial_matches_the_two_step_conversion() {
-        for user_id in [123, FLUXER_SYSTEM_USER_ID] {
-            for flags in [
-                0,
-                USER_FLAG_STAFF,
-                USER_FLAG_STAFF | USER_FLAG_STAFF_HIDDEN | USER_FLAG_PARTNER,
-                USER_FLAG_DELETED,
-            ] {
-                let user = user_with_flags(user_id, flags);
-
-                assert_eq!(
-                    serde_json::to_value(user.to_api_partial()).unwrap(),
-                    serde_json::to_value(user.to_partial().to_api_partial()).unwrap(),
-                    "user_id {user_id} flags {flags}"
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn direct_api_partial_ignores_fields_outside_the_partial() {
+    fn api_partial_ignores_fields_outside_the_partial() {
         let mut user = user_with_flags(123, USER_FLAG_STAFF);
         user.mention_flags = Some(0);
-        let api_partial = user.to_api_partial();
+        let api_partial = user.to_partial().to_api_partial();
 
         assert_eq!(api_partial.id, "123");
         assert_eq!(api_partial.username, "Ada");

@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminRepository} from '@app/api/admin/AdminRepository';
+import type {BannedIpEntry, BannedIpKind} from '@app/api/admin/IAdminRepository';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
+import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
+import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';
+import {Logger} from '@app/api/Logger';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {readOptionalEnv} from '@app/api/utils/IntegerOptions';
+import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
+import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {IpBannedError} from '@fluxer/errors/src/domains/moderation/IpBannedError';
 import {getSameIpDecisionKey, type IpAddressFamily} from '@fluxer/ip_utils/src/IpAddress';
-import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {createMiddleware} from 'hono/factory';
-import {AdminRepository} from '../admin/AdminRepository';
-import type {BannedIpEntry, BannedIpKind} from '../admin/IAdminRepository';
-import {IP_BAN_REFRESH_CHANNEL} from '../constants/IpBan';
-import {Logger} from '../Logger';
-import {isIpBanExempt} from '../risk/IpBanExemptions';
-import type {HonoEnv} from '../types/HonoEnv';
-import {parseIpBanEntry, tryParseSingleIp} from '../utils/IpRangeUtils';
-import {getRequestClientIp} from '../utils/RequestClientIp';
 
 type FamilyMap<T> = Record<IpAddressFamily, Map<string, T>>;
 
@@ -59,15 +62,32 @@ class IpBanCache {
 	private singleIpBans: FamilyMap<SingleCacheEntry>;
 	private rangeIpBans: FamilyMap<RangeCacheEntry>;
 	private sameIpDecisionBans: Map<string, IpBanCount>;
-	private isInitialized = false;
 	private adminRepository = new AdminRepository();
 	private consecutiveFailures = 0;
-	private maxConsecutiveFailures = 5;
+	private readonly maxConsecutiveFailures = 5;
 	private kvClient: IKVProvider | null = null;
-	private kvSubscription: IKVSubscription | null = null;
-	private subscriberInitialized = false;
-	private messageHandler: ((channel: string) => void) | null = null;
-	private periodicRefreshTimer: NodeJS.Timeout | null = null;
+	private readonly refreshSubscription = new RefreshSubscription({
+		name: 'IP ban cache',
+		channels: [IP_BAN_REFRESH_CHANNEL],
+		refresh: () => this.refresh(),
+		periodicIntervalMs: () => {
+			const intervalMs = Number(readOptionalEnv('FLUXER_IP_BAN_REFRESH_INTERVAL_MS') ?? '300000');
+			return Number.isFinite(intervalMs) && intervalMs > 0 ? intervalMs : null;
+		},
+		onRefreshError: (err, trigger) => {
+			const message = err instanceof Error ? err.message : String(err);
+			if (trigger === 'periodic') {
+				Logger.warn({error: message}, 'Periodic IP ban cache refresh failed');
+				return;
+			}
+			this.consecutiveFailures++;
+			if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+				Logger.error({error: message}, 'Failed to refresh IP ban cache after notification');
+			} else {
+				Logger.warn({error: message}, 'Failed to refresh IP ban cache after notification');
+			}
+		},
+	});
 
 	constructor() {
 		const state = this.createEmptyState();
@@ -80,64 +100,8 @@ class IpBanCache {
 		this.kvClient = kvClient;
 	}
 
-	async initialize(): Promise<void> {
-		if (this.isInitialized) return;
-		await this.refresh();
-		this.isInitialized = true;
-		this.setupSubscriber();
-		this.startPeriodicRefresh();
-	}
-
-	private startPeriodicRefresh(): void {
-		if (this.periodicRefreshTimer) return;
-		const intervalMs = Number(process.env.FLUXER_IP_BAN_REFRESH_INTERVAL_MS ?? '300000');
-		if (!Number.isFinite(intervalMs) || intervalMs <= 0) return;
-		this.periodicRefreshTimer = setInterval(() => {
-			this.refresh().catch((err) => {
-				const message = err instanceof Error ? err.message : String(err);
-				Logger.warn({error: message}, 'Periodic IP ban cache refresh failed');
-			});
-		}, intervalMs);
-		if (
-			typeof this.periodicRefreshTimer === 'object' &&
-			this.periodicRefreshTimer &&
-			'unref' in this.periodicRefreshTimer
-		) {
-			(this.periodicRefreshTimer as {unref(): void}).unref();
-		}
-	}
-
-	private setupSubscriber(): void {
-		if (this.subscriberInitialized || !this.kvClient) {
-			return;
-		}
-		const subscription = this.kvClient.duplicate();
-		this.kvSubscription = subscription;
-		this.messageHandler = (channel: string) => {
-			if (channel === IP_BAN_REFRESH_CHANNEL) {
-				this.refresh().catch((err) => {
-					this.consecutiveFailures++;
-					const message = err instanceof Error ? err.message : String(err);
-					if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-						Logger.error({error: message}, 'Failed to refresh IP ban cache after notification');
-					} else {
-						Logger.warn({error: message}, 'Failed to refresh IP ban cache after notification');
-					}
-				});
-			}
-		};
-		subscription
-			.connect()
-			.then(() => subscription.subscribe(IP_BAN_REFRESH_CHANNEL))
-			.then(() => {
-				if (this.messageHandler) {
-					subscription.on('message', this.messageHandler);
-				}
-			})
-			.catch((error) => {
-				Logger.error({error}, 'Failed to subscribe to IP ban refresh channel');
-			});
-		this.subscriberInitialized = true;
+	initialize(): Promise<void> {
+		return this.refreshSubscription.start(this.kvClient);
 	}
 
 	async refresh(): Promise<void> {
@@ -163,7 +127,7 @@ class IpBanCache {
 		const sameIpDecisionKey = getSameIpDecisionKey(parsed.canonical);
 		if (sameIpDecisionKey) {
 			const decisionCount = this.sameIpDecisionBans.get(sameIpDecisionKey);
-			if (decisionCount) {
+			if (decisionCount && this.isActive(decisionCount)) {
 				return {
 					ipAddress: parsed.canonical,
 					matchedEntry: sameIpDecisionKey,
@@ -173,7 +137,7 @@ class IpBanCache {
 		}
 		const singleMap = this.singleIpBans[parsed.family];
 		const single = singleMap.get(parsed.canonical);
-		if (single) {
+		if (single && this.isActive(single.count)) {
 			return {
 				ipAddress: parsed.canonical,
 				matchedEntry: parsed.canonical,
@@ -182,7 +146,7 @@ class IpBanCache {
 		}
 		const rangeMap = this.rangeIpBans[parsed.family];
 		for (const [canonical, range] of rangeMap.entries()) {
-			if (parsed.value >= range.start && parsed.value <= range.end) {
+			if (parsed.value >= range.start && parsed.value <= range.end && this.isActive(range.count)) {
 				return {
 					ipAddress: parsed.canonical,
 					matchedEntry: canonical,
@@ -268,6 +232,13 @@ class IpBanCache {
 		return count.permanent <= 0 && count.temporary <= 0;
 	}
 
+	private isActive(count: IpBanCount): boolean {
+		if (count.permanent > 0 || !count.temporaryExpiresAt) {
+			return true;
+		}
+		return count.temporaryExpiresAt.getTime() > Date.now();
+	}
+
 	private resolveCount(count: IpBanCount): {
 		kind: BannedIpKind;
 		expiresAt: Date | null;
@@ -350,21 +321,8 @@ class IpBanCache {
 		}
 	}
 
-	shutdown(): void {
-		if (this.periodicRefreshTimer) {
-			clearInterval(this.periodicRefreshTimer);
-			this.periodicRefreshTimer = null;
-		}
-		if (this.kvSubscription && this.messageHandler) {
-			this.kvSubscription.off('message', this.messageHandler);
-		}
-		if (this.kvSubscription) {
-			void this.kvSubscription.disconnect();
-			this.kvSubscription = null;
-		}
-		this.messageHandler = null;
-		this.subscriberInitialized = false;
-		this.isInitialized = false;
+	shutdown(): Promise<void> {
+		return this.refreshSubscription.stop();
 	}
 }
 
@@ -378,6 +336,9 @@ export const IpBanMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 			kind: match.kind,
 			expiresAt: match.expiresAt,
 		});
+	}
+	if (clientIp && !isIpBanExempt(clientIp) && sharedListHas('ip_blocked', clientIp)) {
+		throw new IpBannedError({ipAddress: clientIp, kind: 'permanent'});
 	}
 	await next();
 });

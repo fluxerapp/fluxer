@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/expressions/components/modals/sticker_form/StickerPreview.module.css';
-import {Trans} from '@lingui/react/macro';
+import {msg} from '@lingui/core/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+
+const DARK_THEME_PREVIEW_DESCRIPTOR = msg({message: '{altText} — dark theme preview'});
+const LIGHT_THEME_PREVIEW_DESCRIPTOR = msg({message: '{altText} — light theme preview'});
 
 interface StickerPreviewProps {
 	imageUrl: string;
@@ -10,6 +14,7 @@ interface StickerPreviewProps {
 }
 
 export const StickerPreview = observer(function StickerPreview({imageUrl, altText}: StickerPreviewProps) {
+	const {i18n} = useLingui();
 	return (
 		<div className={styles.container} data-flx="expressions.sticker-form.sticker-preview.container">
 			<div className={styles.title} data-flx="expressions.sticker-form.sticker-preview.title">
@@ -23,7 +28,7 @@ export const StickerPreview = observer(function StickerPreview({imageUrl, altTex
 					>
 						<img
 							src={imageUrl}
-							alt={`${altText} - Dark theme preview`}
+							alt={i18n._(DARK_THEME_PREVIEW_DESCRIPTOR, {altText})}
 							className={styles.previewImage}
 							data-flx="expressions.sticker-form.sticker-preview.preview-image"
 						/>
@@ -39,7 +44,7 @@ export const StickerPreview = observer(function StickerPreview({imageUrl, altTex
 					>
 						<img
 							src={imageUrl}
-							alt={`${altText} - Light theme preview`}
+							alt={i18n._(LIGHT_THEME_PREVIEW_DESCRIPTOR, {altText})}
 							className={styles.previewImage}
 							data-flx="expressions.sticker-form.sticker-preview.preview-image--2"
 						/>

@@ -48,7 +48,12 @@ export function compareChannelOrdering<Id extends string | bigint>(
 }
 
 function channelLayoutRank(channel: {type: number}): number {
-	if (channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_LINK) return 0;
+	if (
+		channel.type === ChannelTypes.GUILD_TEXT ||
+		channel.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+		channel.type === ChannelTypes.GUILD_LINK
+	)
+		return 0;
 	if (channel.type === ChannelTypes.GUILD_VOICE) return 1;
 	return 2;
 }

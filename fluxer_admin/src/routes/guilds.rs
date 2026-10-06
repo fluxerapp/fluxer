@@ -82,23 +82,19 @@ async fn guilds_list(
                 }
             }
         }
-        Some((guilds, Some(params.requested_ids.len() as u64), false))
+        Some((guilds, params.requested_ids.len() as u64))
     } else if params.has_search() {
-        let offset = params.page.saturating_mul(params.limit);
+        let offset = u64::from(params.page) * u64::from(params.limit);
         client
             .search_guilds(params.search_query(), params.limit, offset)
             .await
             .log_error("search guilds")
-            .map(|response| {
-                let has_more = u64::from(offset) + (response.guilds.len() as u64) < response.total;
-                (response.guilds, Some(response.total), has_more)
-            })
+            .map(|response| (response.guilds, response.total))
     } else {
         None
     };
     let result_guilds = results.as_ref().map(|result| result.0.as_slice());
-    let total = results.as_ref().and_then(|result| result.1);
-    let has_more = results.as_ref().is_some_and(|result| result.2);
+    let total = results.as_ref().map(|result| result.1);
 
     let markup = templates::pages::guilds_list::guilds_list_page(
         config,
@@ -106,7 +102,6 @@ async fn guilds_list(
         &params,
         result_guilds,
         total,
-        has_more,
         is_results_fragment,
     );
     Html(markup.into_string()).into_response()
@@ -139,6 +134,7 @@ async fn guild_detail(
         .as_ref()
         .map(|user| user.acls.as_slice())
         .unwrap_or(&[]);
+    let username_sign_in = state.account_identity(&client).await.is_username();
     let tab_body = if let Some(guild) = guild.as_ref() {
         guild_tabs::render(
             &client,
@@ -157,6 +153,7 @@ async fn guild_detail(
                 active_tab,
                 &csrf_token,
                 admin_acls,
+                username_sign_in,
             ))
         })
     } else {
@@ -171,6 +168,7 @@ async fn guild_detail(
         active_tab,
         tab_body,
         is_detail_fragment,
+        username_sign_in,
     );
     Html(markup.into_string()).into_response()
 }
@@ -324,8 +322,12 @@ async fn dispatch_guild_action(
                 "default_message_notifications",
                 "disabled_operations",
             ] {
-                if let Some(v) = form.parse_i64(key) {
-                    settings.insert(key.to_string(), serde_json::json!(v));
+                let value = match form.parse_value::<i64>(key) {
+                    Ok(value) => value,
+                    Err(_) => return FlashData::error(format!("Invalid {key} value")),
+                };
+                if let Some(value) = value {
+                    settings.insert(key.to_string(), serde_json::json!(value));
                 }
             }
             if form.contains_key("nsfw_submitted") {
@@ -356,11 +358,12 @@ async fn dispatch_guild_action(
             )
         }
         "update_disabled_operations" => {
-            let disabled_operations = form
-                .list_values_any(&["disabled_operations[]", "disabled_operations"])
-                .iter()
-                .filter_map(|value| value.parse::<i64>().ok())
-                .fold(0_i64, |acc, value| acc | value);
+            let Ok(operations) =
+                form.parse_list_values::<i64>(&["disabled_operations[]", "disabled_operations"])
+            else {
+                return FlashData::error("Invalid disabled operation value");
+            };
+            let disabled_operations = operations.into_iter().fold(0_i64, |acc, value| acc | value);
             let settings = serde_json::json!({
                 "disabled_operations": disabled_operations,
             });
@@ -508,6 +511,7 @@ async fn guild_tab(
             normalize_guild_tab(&tab),
             &csrf_token,
             admin_acls,
+            state.account_identity(&client).await.is_username(),
         ),
         None => maud::html! {
             div class="p-4 text-red-600 text-sm" {

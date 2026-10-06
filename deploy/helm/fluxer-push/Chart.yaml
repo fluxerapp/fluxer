@@ -1,0 +1,6 @@
+apiVersion: v2
+name: fluxer-push
+description: Fluxer push notification delivery service
+type: application
+version: 0.1.0
+appVersion: "v1"

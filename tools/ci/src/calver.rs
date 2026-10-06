@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{
-    CALVER_SCHEME, CalverEnv, append_github_env, append_github_output, parse_version_instant,
-    resolve_calver, trim_option,
+    CALVER_SCHEME, CalverEnv, append_github_env, append_github_output, micro_segment,
+    month_day_segment, parse_version_instant, resolve_calver, trim_option,
 };
 use anyhow::Result;
 use chrono::{Datelike, Timelike, Utc};
@@ -75,14 +75,10 @@ fn calver_outputs(version: &str) -> Result<CalverOutputs> {
         instant.minute(),
         instant.second()
     );
-    let micro = time
-        .parse::<u32>()
-        .expect("HHMMSS time segment should parse")
-        .to_string();
     Ok(CalverOutputs {
         version: version.to_string(),
         time,
-        micro,
+        micro: micro_segment(instant),
         date: format!(
             "{:04}{:02}{:02}",
             instant.year(),
@@ -92,7 +88,7 @@ fn calver_outputs(version: &str) -> Result<CalverOutputs> {
         year: instant.year().to_string(),
         month: instant.month().to_string(),
         day: format!("{:02}", instant.day()),
-        month_day: format!("{}{:02}", instant.month(), instant.day()),
+        month_day: month_day_segment(instant),
     })
 }
 

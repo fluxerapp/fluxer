@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Message} from '@app/api/models/Message';
+import {UserContentService, UserContentServiceTestHooks} from '@app/api/user/services/UserContentService';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
@@ -12,17 +23,6 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {NsfwContentRequiresAgeVerificationError} from '@fluxer/errors/src/domains/moderation/NsfwContentRequiresAgeVerificationError';
 import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import {describe, expect, it, vi} from 'vitest';
-import type {ApiContext} from '../../ApiContext';
-import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import type {KVBulkMessageDeletionQueueService} from '../../infrastructure/KVBulkMessageDeletionQueueService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import {Message} from '../../models/Message';
-import {UserContentService, UserContentServiceTestHooks} from './UserContentService';
 
 const {isUnreachableEntityError} = UserContentServiceTestHooks;
 

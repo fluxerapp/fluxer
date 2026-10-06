@@ -8,9 +8,7 @@ init_creates_tables_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
     ?assertNotEqual(undefined, ets:whereis(push_user_guild_settings)),
-    ?assertNotEqual(undefined, ets:whereis(push_subscriptions)),
     ?assertNotEqual(undefined, ets:whereis(push_blocked_ids)),
-    ?assertNotEqual(undefined, ets:whereis(push_badge_counts)),
     cleanup_tables().
 
 init_idempotent_test() ->
@@ -30,16 +28,6 @@ user_guild_settings_test() ->
     ?assertEqual(undefined, push_ets_cache:get_user_guild_settings(1, 2)),
     cleanup_tables().
 
-subscriptions_test() ->
-    cleanup_tables(),
-    ok = push_ets_cache:init(),
-    ?assertEqual(undefined, push_ets_cache:get_subscriptions(1)),
-    ok = push_ets_cache:put_subscriptions(1, [sub1, sub2]),
-    ?assertEqual([sub1, sub2], push_ets_cache:get_subscriptions(1)),
-    ok = push_ets_cache:delete_subscriptions(1),
-    ?assertEqual(undefined, push_ets_cache:get_subscriptions(1)),
-    cleanup_tables().
-
 blocked_ids_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
@@ -48,45 +36,28 @@ blocked_ids_test() ->
     ?assertEqual([2, 3], push_ets_cache:get_blocked_ids(1)),
     cleanup_tables().
 
-badge_count_test() ->
-    cleanup_tables(),
-    ok = push_ets_cache:init(),
-    ?assertEqual(undefined, push_ets_cache:get_badge_count(1)),
-    ok = push_ets_cache:put_badge_count(1, 5, 1000),
-    ?assertEqual({5, 1000}, push_ets_cache:get_badge_count(1)),
-    ok = push_ets_cache:delete_badge_count(1),
-    ?assertEqual(undefined, push_ets_cache:get_badge_count(1)),
-    cleanup_tables().
-
-badge_count_keeps_fresher_timestamp_test() ->
-    cleanup_tables(),
-    ok = push_ets_cache:init(),
-    ok = push_ets_cache:put_badge_count(1, 5, 2000),
-    ok = push_ets_cache:put_badge_count(1, 9, 1000),
-    ?assertEqual({5, 2000}, push_ets_cache:get_badge_count(1)),
-    ok = push_ets_cache:put_badge_count(1, 7, 3000),
-    ?assertEqual({7, 3000}, push_ets_cache:get_badge_count(1)),
-    ok = push_ets_cache:put_badge_count(1, 8, 3000),
-    ?assertEqual({8, 3000}, push_ets_cache:get_badge_count(1)),
-    cleanup_tables().
-
 cache_stats_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
-    ok = push_ets_cache:put_subscriptions(1, []),
-    ok = push_ets_cache:put_subscriptions(2, []),
+    ok = push_ets_cache:put_blocked_ids(1, []),
+    ok = push_ets_cache:put_blocked_ids(2, []),
     Stats = push_ets_cache:cache_stats(),
-    ?assertEqual(2, maps:get(push_subscriptions_size, Stats)),
-    ?assertEqual(0, maps:get(user_guild_settings_size, Stats)),
+    ?assertEqual(
+        #{blocked_ids_size => 2, user_guild_settings_size => 0},
+        Stats
+    ),
     cleanup_tables().
 
 evict_tables_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
-    lists:foreach(fun(I) -> push_ets_cache:put_subscriptions(I, []) end, lists:seq(1, 10)),
-    ?assertEqual(10, push_ets_cache:table_size(push_subscriptions)),
-    ok = push_ets_cache:evict_tables(#{subscriptions => 5}),
-    ?assertEqual(5, push_ets_cache:table_size(push_subscriptions)),
+    lists:foreach(
+        fun(I) -> ok = push_ets_cache:put_user_guild_settings(I, 1, #{}) end,
+        lists:seq(1, 10)
+    ),
+    ?assertEqual(10, push_ets_cache:table_size(push_user_guild_settings)),
+    ok = push_ets_cache:evict_tables(#{user_guild_settings => 5}),
+    ?assertEqual(5, push_ets_cache:table_size(push_user_guild_settings)),
     cleanup_tables().
 
 rebalance_evicts_remote_owned_entries_test() ->
@@ -98,13 +69,13 @@ rebalance_evicts_remote_owned_entries_test() ->
     RoleMap = #{push => Members, all => Members},
     persistent_term:put({gateway_cluster_membership, members}, Members),
     persistent_term:put({gateway_cluster_membership, members_by_role}, RoleMap),
-    ok = push_ets_cache:put_subscriptions(LocalUserId, [local]),
-    ok = push_ets_cache:put_subscriptions(RemoteUserId, [remote]),
+    ok = push_ets_cache:put_blocked_ids(LocalUserId, [1]),
+    ok = push_ets_cache:put_blocked_ids(RemoteUserId, [2]),
     ok = push_ets_cache:put_user_guild_settings(LocalUserId, 10, #{local => true}),
     ok = push_ets_cache:put_user_guild_settings(RemoteUserId, 10, #{remote => true}),
     ok = push_ets_cache:rebalance(),
-    ?assertEqual([local], push_ets_cache:get_subscriptions(LocalUserId)),
-    ?assertEqual(undefined, push_ets_cache:get_subscriptions(RemoteUserId)),
+    ?assertEqual([1], push_ets_cache:get_blocked_ids(LocalUserId)),
+    ?assertEqual(undefined, push_ets_cache:get_blocked_ids(RemoteUserId)),
     ?assertEqual(#{local => true}, push_ets_cache:get_user_guild_settings(LocalUserId, 10)),
     ?assertEqual(undefined, push_ets_cache:get_user_guild_settings(RemoteUserId, 10)),
     persistent_term:erase({gateway_cluster_membership, members}),
@@ -128,9 +99,7 @@ find_split_user_ids(Members, RemoteNode) ->
 
 cleanup_tables() ->
     delete_table(push_user_guild_settings),
-    delete_table(push_subscriptions),
     delete_table(push_blocked_ids),
-    delete_table(push_badge_counts),
     ok.
 
 delete_table(Table) ->

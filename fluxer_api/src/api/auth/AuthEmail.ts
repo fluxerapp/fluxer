@@ -1,25 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
+import type {ApiContext} from '@app/api/ApiContext';
+import {createEmailVerificationToken} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import type {VerifyEmailRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {createEmailVerificationToken} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {getUserSearchService} from '../SearchFactory';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import * as RandomUtils from '../utils/RandomUtils';
-
-export const EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS =
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL |
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE;
 
 function assertNonBotUser(user: User): void {
 	if (user.isBot) {
@@ -38,31 +28,15 @@ export async function verifyEmail(ctx: ApiContext, data: VerifyEmailRequest): Pr
 		return false;
 	}
 	assertNonBotUser(user);
-	if (user.flags & UserFlags.DELETED) {
+	if (
+		user.flags & UserFlags.DELETED ||
+		!user.email ||
+		user.email.trim().toLowerCase() !== tokenData.email.trim().toLowerCase()
+	) {
 		return false;
 	}
-	const updates: {
-		email_verified: boolean;
-		email_bounced: boolean;
-		suspicious_activity_flags?: number;
-	} = {
-		email_verified: true,
-		email_bounced: false,
-	};
-	if (user.suspiciousActivityFlags !== null && user.suspiciousActivityFlags !== 0) {
-		const newFlags = user.suspiciousActivityFlags & ~EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS;
-		if (newFlags !== user.suspiciousActivityFlags) {
-			updates.suspicious_activity_flags = newFlags;
-		}
-	}
-	const updatedUser = await users.patchUpsert(user.id, updates, user.toRow());
+	const updatedUser = await users.patchUpsert(user.id, {email_verified: true, email_bounced: false}, user.toRow());
 	await users.deleteEmailVerificationToken(data.token);
-	const userSearchService = getUserSearchService();
-	if (userSearchService && 'updateUser' in userSearchService) {
-		await userSearchService.updateUser(updatedUser).catch((error) => {
-			Logger.error({userId: user.id, error}, 'Failed to update user in search');
-		});
-	}
 	await gateway.dispatchPresence({
 		userId: user.id,
 		event: 'USER_UPDATE',
@@ -74,13 +48,7 @@ export async function verifyEmail(ctx: ApiContext, data: VerifyEmailRequest): Pr
 export async function resendVerificationEmail(ctx: ApiContext, user: User): Promise<void> {
 	const {users, email, rateLimit} = ctx.services;
 	assertNonBotUser(user);
-	const allowReverification =
-		user.suspiciousActivityFlags !== null &&
-		((user.suspiciousActivityFlags & SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL) !== 0 ||
-			(user.suspiciousActivityFlags & SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE) !== 0 ||
-			(user.suspiciousActivityFlags & SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE) !== 0 ||
-			(user.suspiciousActivityFlags & SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE) !== 0);
-	if (user.emailVerified && !allowReverification) {
+	if (user.emailVerified) {
 		return;
 	}
 	const limit = await rateLimit.checkLimit({

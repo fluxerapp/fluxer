@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {sendChannelMessage, setupTestGuildWithMembers} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {sendChannelMessage, setupTestGuildWithMembers} from './ChannelTestUtils';
 
 const EMOJI = encodeURIComponent('👍');
 
@@ -42,7 +42,7 @@ describe('Reaction users pagination', () => {
 		return {token: owner.token, channelId: systemChannel.id, messageId: message.id};
 	}
 
-	it('carries the pagination signal of the page in headers', async () => {
+	it('sends the pagination signal of the page in headers', async () => {
 		const {token, channelId, messageId} = await setupReactedMessage();
 
 		const legacy = await createBuilder<Array<{id: string}>>(harness, token)

@@ -8,7 +8,7 @@ export interface ChannelTopicModalProps {
 
 export function getChannelTopicInfo(channelId: string) {
 	const channel = Channels.getChannel(channelId);
-	if (!channel || !channel.topic) return null;
+	if (!channel?.topic) return null;
 	return {
 		channel,
 		topic: channel.topic,

@@ -26,8 +26,14 @@
 -spec handle_voice_disconnect(
     binary() | undefined, term(), integer(), voice_state_map() | term(), guild_state()
 ) -> voice_reply().
-handle_voice_disconnect(undefined, _SessionId, _UserId, _VoiceStates, State) ->
-    {reply, gateway_errors:error(voice_missing_connection_id), State};
+handle_voice_disconnect(undefined, SessionId, UserId, VoiceStates0, State) ->
+    case normalize_session_id(SessionId) of
+        undefined ->
+            {reply, gateway_errors:error(voice_missing_connection_id), State};
+        RequestSessionId ->
+            VoiceStates = voice_state_utils:ensure_voice_states(VoiceStates0),
+            disconnect_all_user_connections(UserId, RequestSessionId, VoiceStates, State)
+    end;
 handle_voice_disconnect(ConnectionId, _SessionId, UserId, VoiceStates0, State) ->
     VoiceStates = voice_state_utils:ensure_voice_states(VoiceStates0),
     case maps:get(ConnectionId, VoiceStates, undefined) of

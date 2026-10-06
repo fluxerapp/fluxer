@@ -348,7 +348,7 @@ export const UserContextMenu: React.FC<UserContextMenuProps> = observer(
 			);
 		}, [channel, onClose, user.id, userDisplayName, i18n]);
 		const handleCloseDM = useCallback(() => {
-			if (!channel || !channel.isDM()) return;
+			if (!channel?.isDM()) return;
 			onClose();
 			const displayName = dmPartner ? NicknameUtils.getNickname(dmPartner) : NicknameUtils.getNickname(user);
 			ModalCommands.push(

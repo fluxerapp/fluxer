@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {APIWorkerLaneName, APIWorkerMode} from '../config/APIConfig';
+import type {APIWorkerLaneName, APIWorkerMode} from '@app/api/config/APIConfig';
 
 interface LaneSettings {
 	readonly consumerName: string;
@@ -49,14 +49,16 @@ const LANE_CONFIG = {
 			'harvestUserData',
 			'batchGuildAuditLogMessageDeletes',
 			'reconcileUserPayments',
-			'revalidateUserConnections',
+			'processAppStoreNotification',
+			'processGooglePlayNotification',
+			'refreshStorePurchase',
 			'bulkUpdateUserFlags',
-			'bulkUpdateSuspiciousActivityFlags',
 			'bulkScheduleUserDeletion',
 			'bulkUpdateGuildFeatures',
 			'bulkAddGuildMembers',
 			'bulkBanFileShas',
 			'bulkDeleteMessagesForUsers',
+			'drainActivitySpool',
 		] as const,
 		retiredTasks: ['sendScheduledMessage'],
 		concurrency: 8,
@@ -68,18 +70,21 @@ const LANE_CONFIG = {
 		consumerName: 'workers_batch',
 		tasks: [
 			'expireAttachments',
+			'expireStaleJobs',
 			'indexChannelMessages',
 			'indexGuildMembers',
 			'processAssetDeletionQueue',
-			'processBunnyPurgeQueue',
+			'processCachePurgeQueue',
 			'processExpiredPremiumSweep',
 			'processInactivityDeletions',
 			'processPendingBulkMessageDeletions',
 			'processPremiumStateReconciliationQueue',
+			'processStorePurchaseRefreshQueue',
+			'pollGooglePlayVoidedPurchases',
+			'pollAppStoreNotificationHistory',
 			'prunePostgresKvTtl',
 			'refreshSearchIndex',
 			'syncDiscoveryIndex',
-			'syncDisposableEmailDomains',
 			'syncUrlBlocklists',
 			'syncFileShaBlocklists',
 			'flushUserActivityBuffer',
@@ -88,6 +93,21 @@ const LANE_CONFIG = {
 		concurrency: 12,
 		maxAckPending: 100,
 		ackWaitMs: 120000,
+		maxDeliver: 25,
+	},
+	crosspost: {
+		consumerName: 'workers_crosspost',
+		tasks: [
+			'crosspostMessage',
+			'crosspostMessageChunk',
+			'syncCrosspostedMessage',
+			'syncCrosspostCopies',
+			'removeChannelFollowers',
+		] as const,
+		retiredTasks: [],
+		concurrency: 8,
+		maxAckPending: 64,
+		ackWaitMs: 60000,
 		maxDeliver: 25,
 	},
 } satisfies Record<APIWorkerLaneName, LaneSettings>;
@@ -131,6 +151,7 @@ const WORKER_LANES: ReadonlyArray<WorkerLaneDefinition> = [
 	makeLane('unfurl'),
 	makeLane('lifecycle'),
 	makeLane('batch'),
+	makeLane('crosspost'),
 ];
 const WORKER_LANE_MAP = buildWorkerLaneMap();
 const WORKER_LANE_NAMES = Object.freeze(WORKER_LANES.map((lane) => lane.name));

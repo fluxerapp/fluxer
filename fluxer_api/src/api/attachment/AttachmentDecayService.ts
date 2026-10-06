@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ms} from 'itty-time';
-import type {AttachmentID, ChannelID, MessageID} from '../BrandedTypes';
-import type {InstanceAttachmentDecayEffectiveConfig} from '../instance/InstanceConfigRepository';
-import type {AttachmentDecayRow} from '../types/AttachmentDecayTypes';
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import type {AttachmentID, ChannelID, MessageID} from '@app/api/BrandedTypes';
+import type {InstanceAttachmentDecayEffectiveConfig} from '@app/api/instance/InstanceConfigRepository';
+import type {AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
 import {
 	type AttachmentDecayRules,
 	computeCost,
@@ -12,8 +12,8 @@ import {
 	extendExpiry,
 	getExpiryBucket,
 	maybeRenewExpiry,
-} from '../utils/AttachmentDecay';
-import {AttachmentDecayRepository} from './AttachmentDecayRepository';
+} from '@app/api/utils/AttachmentDecay';
+import {ms} from 'itty-time';
 
 interface AttachmentDecayPayload {
 	attachmentId: AttachmentID;
@@ -28,7 +28,7 @@ interface AttachmentDecayPayload {
 type AttachmentDecayConfigResolver = () => Promise<InstanceAttachmentDecayEffectiveConfig>;
 
 async function resolveDefaultAttachmentDecayConfig(): Promise<InstanceAttachmentDecayEffectiveConfig> {
-	const {getInstanceConfigRepository} = await import('../middleware/ServiceSingletons');
+	const {getInstanceConfigRepository} = await import('@app/api/middleware/ServiceSingletons');
 	return getInstanceConfigRepository().getEffectiveAttachmentDecayConfig();
 }
 

@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {fetchUserMe, grantPremium} from '@app/api/user/tests/UserTestUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {UserPrivateResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {fetchUserMe, grantPremium} from './UserTestUtils';
 
 describe('User Premium Onboarding Dismissal', () => {
 	let harness: ApiTestHarness;

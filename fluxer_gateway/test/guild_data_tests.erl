@@ -5,6 +5,153 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+read_model_preserves_query_results_test() ->
+    State = read_model_state(),
+    try
+        ok = guild_read_model:put_state(State),
+        lists:foreach(
+            fun({Tag, Request, Handler}) ->
+                {reply, Expected, _} = Handler(Request, State),
+                ?assertEqual({ok, Expected}, guild_read_model:query(100, {Tag, Request}))
+            end,
+            [
+                {get_guild_data, #{user_id => 200}, fun guild_data:get_guild_data/2},
+                {get_guild_data, #{user_id => 999}, fun guild_data:get_guild_data/2},
+                {get_guild_data, #{user_id => null}, fun guild_data:get_guild_data/2},
+                {get_guild_auth_context, #{user_id => 200, channel_id => 500},
+                    fun guild_data:get_auth_context/2},
+                {get_guild_auth_context, #{user_id => 999, channel_id => null},
+                    fun guild_data:get_auth_context/2},
+                {get_guild_member, #{user_id => 200}, fun guild_data:get_guild_member/2},
+                {get_guild_member, #{user_id => 999}, fun guild_data:get_guild_member/2},
+                {has_member, #{user_id => 200}, fun guild_data:has_member/2}
+            ]
+        )
+    after
+        cleanup_read_model(State)
+    end.
+
+read_model_uses_live_member_rows_without_copying_members_test() ->
+    State = read_model_state(),
+    #{data := #{members_ets := Tab}} = State,
+    try
+        ok = guild_read_model:put_state(State),
+        [{100, _, #{data := SnapshotData}}] = ets:lookup(guild_read_model, 100),
+        ?assertEqual(#{}, maps:get(<<"members">>, SnapshotData)),
+        [{200, Member}] = ets:lookup(Tab, 200),
+        Updated = Member#{
+            <<"nick">> => <<"new nickname">>, <<"communication_disabled_until">> => null
+        },
+        ets:insert(Tab, {200, Updated}),
+        ?assertEqual(
+            {ok, #{success => true, member_data => Updated}},
+            guild_read_model:query(100, {get_guild_member, #{user_id => 200}})
+        ),
+        ets:delete(Tab, 200),
+        ?assertEqual(
+            {ok, #{has_member => false}},
+            guild_read_model:query(100, {has_member, #{user_id => 200}})
+        ),
+        ?assertMatch(
+            {ok, #{guild_data := null}},
+            guild_read_model:query(100, {get_guild_data, #{user_id => 200}})
+        )
+    after
+        cleanup_read_model(State)
+    end.
+
+read_model_observes_role_and_collection_changes_test() ->
+    State = read_model_state(),
+    try
+        ok = guild_read_model:put_state(State),
+        Data = maps:get(data, State),
+        UpdatedData = guild_data_index:normalize_map(Data#{
+            <<"roles">> => [#{<<"id">> => 100, <<"permissions">> => 0}],
+            <<"emojis">> => [#{<<"id">> => 700, <<"name">> => <<"new">>}]
+        }),
+        Updated = State#{data => UpdatedData},
+        ok = guild_read_model:update(State, Updated),
+        {reply, Expected, _} = guild_data:get_guild_data(#{user_id => 200}, Updated),
+        ?assertEqual(
+            {ok, Expected}, guild_read_model:query(100, {get_guild_data, #{user_id => 200}})
+        ),
+        #{guild_data := GuildData} = Expected,
+        ?assertEqual([], maps:get(<<"channels">>, GuildData))
+    after
+        cleanup_read_model(State)
+    end.
+
+read_model_observes_last_message_and_pin_advances_test() ->
+    State = read_model_state(),
+    try
+        ok = guild_read_model:put_state(State),
+        Data = maps:get(data, State),
+        Advanced = guild_state_channels:handle_message_create(
+            #{<<"channel_id">> => <<"500">>, <<"id">> => <<"900">>}, Data
+        ),
+        Pinned = guild_state_channels:handle_channel_pins_update(
+            #{
+                <<"channel_id">> => <<"500">>,
+                <<"last_pin_timestamp">> => <<"2026-10-02T00:00:00Z">>
+            },
+            Advanced
+        ),
+        Updated = State#{data => Pinned},
+        ok = guild_read_model:update(State, Updated),
+        {reply, Expected, _} = guild_data:get_guild_data(#{user_id => 200}, Updated),
+        ?assertEqual(
+            {ok, Expected}, guild_read_model:query(100, {get_guild_data, #{user_id => 200}})
+        ),
+        #{guild_data := #{<<"channels">> := Channels}} = Expected,
+        [Channel] = [C || C <- Channels, maps:get(<<"id">>, C) =:= 500],
+        ?assertEqual(900, maps:get(<<"last_message_id">>, Channel)),
+        ?assertEqual(<<"2026-10-02T00:00:00Z">>, maps:get(<<"last_pin_timestamp">>, Channel))
+    after
+        cleanup_read_model(State)
+    end.
+
+read_model_survives_blocked_owner_and_rejects_dead_tables_test() ->
+    State = read_model_state(),
+    Self = self(),
+    Owner = spawn(fun() ->
+        ok = guild_read_model:put_state(State),
+        Self ! published,
+        receive
+            stop -> ok
+        end
+    end),
+    try
+        receive
+            published -> ok
+        after 1000 -> error(publish_timeout)
+        end,
+        ?assertMatch(
+            {ok, #{auth_context := #{}}},
+            guild_read_model:query(
+                100, {get_guild_auth_context, #{user_id => 200, channel_id => 500}}
+            )
+        ),
+        ?assertEqual({message_queue_len, 0}, process_info(Owner, message_queue_len)),
+        ets:delete(maps:get(members_ets, maps:get(data, State))),
+        ?assertEqual(miss, guild_read_model:query(100, {has_member, #{user_id => 200}}))
+    after
+        Owner ! stop,
+        cleanup_read_model(State)
+    end.
+
+read_model_state() ->
+    State = test_state(),
+    Data = guild_data_index:normalize_map(maps:get(data, State)),
+    Members = guild_data_index:member_map(Data),
+    Tab = ets:new(read_model_members, [set, public]),
+    ets:insert(Tab, maps:to_list(Members)),
+    State#{member_count => map_size(Members), data => Data#{members_ets => Tab}}.
+
+cleanup_read_model(#{data := Data} = State) ->
+    guild_read_model:delete(100),
+    catch ets:delete(maps:get(members_ets, Data)),
+    ets:delete(maps:get(member_presence, State)).
+
 get_guild_data_membership_gate_test() ->
     State = test_state(),
     {reply, Reply1, _} = guild_data:get_guild_data(#{user_id => 999}, State),
@@ -303,6 +450,57 @@ find_everyone_viewable_text_channel_skips_link_channel_test() ->
     ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
     ?assertEqual(null, ChannelId).
 
+find_everyone_viewable_text_channel_accepts_announcement_channel_test() ->
+    GuildId = 100,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"roles">> => [
+                #{
+                    <<"id">> => integer_to_binary(GuildId),
+                    <<"permissions">> => integer_to_binary(ViewPerm)
+                }
+            ]
+        }
+    },
+    Channels = [
+        #{
+            <<"id">> => <<"501">>,
+            <<"type">> => 2,
+            <<"position">> => 0,
+            <<"permission_overwrites">> => []
+        },
+        #{
+            <<"id">> => <<"502">>,
+            <<"type">> => 5,
+            <<"position">> => 1,
+            <<"permission_overwrites">> => []
+        }
+    ],
+    ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
+    ?assertEqual(502, ChannelId).
+
+sort_channels_for_ordering_places_announcement_channels_with_text_test() ->
+    Channels = [
+        #{<<"id">> => <<"1">>, <<"type">> => 2, <<"position">> => 0},
+        #{<<"id">> => <<"2">>, <<"type">> => 5, <<"position">> => 2},
+        #{<<"id">> => <<"3">>, <<"type">> => 0, <<"position">> => 1},
+        #{<<"id">> => <<"4">>, <<"type">> => 4, <<"position">> => 3},
+        #{
+            <<"id">> => <<"5">>,
+            <<"type">> => 2,
+            <<"position">> => 0,
+            <<"parent_id">> => <<"4">>
+        },
+        #{<<"id">> => <<"6">>, <<"type">> => 5, <<"position">> => 1, <<"parent_id">> => <<"4">>}
+    ],
+    Ordered = guild_data_channels:sort_channels_for_ordering(Channels),
+    ?assertEqual(
+        [<<"3">>, <<"2">>, <<"1">>, <<"4">>, <<"6">>, <<"5">>],
+        [maps:get(<<"id">>, C) || C <- Ordered]
+    ).
+
 voice_members_from_states_reads_embedded_member_test() ->
     EmbeddedMember = #{<<"user">> => #{<<"id">> => <<"300">>}, <<"roles">> => []},
     IndexedMember = #{<<"user">> => #{<<"id">> => <<"200">>}, <<"roles">> => []},
@@ -355,6 +553,17 @@ search_guild_members_limits_prefix_matches_without_paginating_all_test() ->
             end,
             Members
         )
+    ).
+
+search_guild_members_matches_username_of_nicknamed_member_test() ->
+    Nicknamed = (member(1, <<"jiralite">>))#{<<"nick">> => <<"Specsaver engineer">>},
+    State = #{data => #{<<"members">> => [Nicknamed, member(2, <<"Bob">>)]}},
+    {reply, Reply, _State} = guild_data:search_guild_members(
+        #{query => <<"jiralite">>, limit => 25}, State
+    ),
+    ?assertEqual(
+        [1],
+        [guild_request_members_search:extract_user_id(M) || M <- maps:get(members, Reply)]
     ).
 
 get_guild_state_includes_parent_category_when_child_channel_is_visible_test() ->

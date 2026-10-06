@@ -24,6 +24,10 @@
 			"import": "./src/MediaProxySigner.ts",
 			"types": "./src/MediaProxySigner.ts"
 		},
+		"./src/AttachmentUrlSignature": {
+			"import": "./src/AttachmentUrlSignature.ts",
+			"types": "./src/AttachmentUrlSignature.ts"
+		},
 		"./*": "./*"
 	},
 	"main": "./src/MediaProxyUtils.ts",
@@ -31,14 +35,13 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@types/node": "catalog:"
 	},
 	"devDependencies": {
-		"@typescript/native-preview": "catalog:",
-		"vitest": "catalog:",
-		"vite-tsconfig-paths": "catalog:"
+		"typescript": "catalog:ts7",
+		"vitest": "catalog:"
 	}
 }

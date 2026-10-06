@@ -14,7 +14,7 @@ import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import type {MessageSearchScope} from '@app/features/search/utils/SearchUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef, observableShallow} from 'mobx';
 
 type ChannelSearchSortMode = 'newest' | 'oldest' | 'relevant';
 
@@ -38,7 +38,7 @@ class ChannelSearchContext {
 
 	constructor() {
 		makeAutoObservable(this, {
-			machineSnapshot: observable.ref,
+			machineSnapshot: observableRef,
 		});
 	}
 
@@ -52,7 +52,7 @@ class ChannelSearch {
 
 	constructor() {
 		makeAutoObservable<this, 'contexts'>(this, {
-			contexts: observable.shallow,
+			contexts: observableShallow,
 		});
 	}
 

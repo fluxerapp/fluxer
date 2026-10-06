@@ -8,7 +8,7 @@ import {
 } from '@app/features/voice/engine/VoiceTrackSource';
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
 import type {Participant, Room} from 'livekit-client';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type LivekitParticipantSnapshot = Readonly<{
 	identity: string;
@@ -516,7 +516,7 @@ export type VoiceParticipantSnapshot = SnapshotFrom<typeof voiceParticipantState
 export type VoiceRemoteSpeakingSnapshot = SnapshotFrom<typeof voiceRemoteSpeakingStateMachine>;
 
 export function createVoiceParticipantSnapshot(): VoiceParticipantSnapshot {
-	return getInitialSnapshot(voiceParticipantStateMachine);
+	return initialTransition(voiceParticipantStateMachine)[0];
 }
 
 export function transitionVoiceParticipantSnapshot(
@@ -527,7 +527,7 @@ export function transitionVoiceParticipantSnapshot(
 }
 
 export function createVoiceRemoteSpeakingSnapshot(): VoiceRemoteSpeakingSnapshot {
-	return getInitialSnapshot(voiceRemoteSpeakingStateMachine);
+	return initialTransition(voiceRemoteSpeakingStateMachine)[0];
 }
 
 export function transitionVoiceRemoteSpeakingSnapshot(

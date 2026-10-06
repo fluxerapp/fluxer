@@ -194,113 +194,103 @@ describe('win-game-capture loader wrapper -- binding-absent fallback path', () =
 		if (hasBindingHook) winGameCapture.__setBindingForTests(null);
 	}
 
-	test(
-		'isSupported() is false when no binding is loaded',
-		{skip: hasBindingHook ? false : 'no __setBindingForTests hook'},
-		() => {
-			forceNoBinding();
-			assert.equal(winGameCapture.isSupported(), false);
-		},
-	);
+	test('isSupported() is false when no binding is loaded', {
+		skip: hasBindingHook ? false : 'no __setBindingForTests hook',
+	}, () => {
+		forceNoBinding();
+		assert.equal(winGameCapture.isSupported(), false);
+	});
 
-	test(
-		'getAvailability() returns the {available:false, ...} shape when no binding is loaded',
-		{skip: hasBindingHook ? false : 'no __setBindingForTests hook'},
-		() => {
-			forceNoBinding();
-			const availability = winGameCapture.getAvailability();
-			assert.equal(availability.available, false);
-			assert.equal(availability.backend, 'windows-game-capture');
-			assert.equal(typeof availability.reason, 'string');
-		},
-	);
+	test('getAvailability() returns the {available:false, ...} shape when no binding is loaded', {
+		skip: hasBindingHook ? false : 'no __setBindingForTests hook',
+	}, () => {
+		forceNoBinding();
+		const availability = winGameCapture.getAvailability();
+		assert.equal(availability.available, false);
+		assert.equal(availability.backend, 'windows-game-capture');
+		assert.equal(typeof availability.reason, 'string');
+	});
 
-	test(
-		'constructing ScreenCapture without a binding throws',
-		{skip: hasBindingHook ? false : 'no __setBindingForTests hook'},
-		() => {
-			forceNoBinding();
-			assert.throws(() => new winGameCapture.ScreenCapture({sourceId: '1'}));
-			try {
-				new winGameCapture.ScreenCapture({sourceId: '1'});
-				assert.fail('expected ScreenCapture constructor to throw without a binding');
-			} catch (error) {
-				assert.ok(error instanceof Error);
-			}
-		},
-	);
+	test('constructing ScreenCapture without a binding throws', {
+		skip: hasBindingHook ? false : 'no __setBindingForTests hook',
+	}, () => {
+		forceNoBinding();
+		assert.throws(() => new winGameCapture.ScreenCapture({sourceId: '1'}));
+		try {
+			new winGameCapture.ScreenCapture({sourceId: '1'});
+			assert.fail('expected ScreenCapture constructor to throw without a binding');
+		} catch (error) {
+			assert.ok(error instanceof Error);
+		}
+	});
 });
 
 describe('win-game-capture loader wrapper -- injected fake binding', () => {
-	test(
-		'listSources() forwards sanitized screen/window sources from the native binding',
-		{skip: injectionSkip},
-		async () => {
-			const {binding} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const sources = await winGameCapture.listSources();
-			assert.deepEqual(sources, [
-				{
-					kind: 'screen',
-					id: 'screen:0:0',
-					name: 'Display 1',
-					width: 2560,
-					height: 1440,
-					targetPid: undefined,
-				},
-				{
-					kind: 'window',
-					id: 'window:5050:0',
-					name: 'Fixture',
-					width: 1280,
-					height: 720,
-					targetPid: 4242,
-				},
-			]);
-		},
-	);
+	test('listSources() forwards sanitized screen/window sources from the native binding', {
+		skip: injectionSkip,
+	}, async () => {
+		const {binding} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const sources = await winGameCapture.listSources();
+		assert.deepEqual(sources, [
+			{
+				kind: 'screen',
+				id: 'screen:0:0',
+				name: 'Display 1',
+				width: 2560,
+				height: 1440,
+				targetPid: undefined,
+			},
+			{
+				kind: 'window',
+				id: 'window:5050:0',
+				name: 'Fixture',
+				width: 1280,
+				height: 720,
+				targetPid: 4242,
+			},
+		]);
+	});
 
-	test(
-		'start() forwards sourceId/kind/dims/frameRate/captureId and the capture options',
-		{skip: injectionSkip},
-		async () => {
-			const {binding, calls} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({
-				sourceId: '987654',
-				sourceKind: 'game',
-				width: 1600,
-				height: 900,
-				frameRate: 60,
-				captureId: 'capture-1',
+	test('start() forwards sourceId/kind/dims/frameRate/captureId and the capture options', {
+		skip: injectionSkip,
+	}, async () => {
+		const {binding, calls} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({
+			sourceId: '987654',
+			sourceKind: 'game',
+			width: 1600,
+			height: 900,
+			frameRate: 60,
+			captureId: 'capture-1',
+			colorRange: 'full',
+			colorSpace: 'rec709',
+			showCursorClicks: true,
+			captureRect: {x: 10, y: 20, width: 300, height: 200},
+		});
+		capture.on('error', () => {});
+		const result = await capture.start();
+		assert.equal(calls.length, 1);
+		assert.deepEqual(calls[0], {
+			sourceId: '987654',
+			sourceKind: 'game',
+			width: 1600,
+			height: 900,
+			frameRate: 60,
+			captureId: 'capture-1',
+			captureOptions: {
 				colorRange: 'full',
 				colorSpace: 'rec709',
 				showCursorClicks: true,
 				captureRect: {x: 10, y: 20, width: 300, height: 200},
-			});
-			capture.on('error', () => {});
-			const result = await capture.start();
-			assert.equal(calls.length, 1);
-			assert.deepEqual(calls[0], {
-				sourceId: '987654',
-				sourceKind: 'game',
-				width: 1600,
-				height: 900,
-				frameRate: 60,
-				captureId: 'capture-1',
-				captureOptions: {
-					colorRange: 'full',
-					colorSpace: 'rec709',
-					showCursorClicks: true,
-					captureRect: {x: 10, y: 20, width: 300, height: 200},
-				},
-			});
-			assert.equal(result.pixelFormat, 'bgra');
-			assert.equal(result.width, 1600);
-			assert.equal(result.height, 900);
-			assert.equal(result.frameRate, 60);
-		},
-	);
+			},
+		});
+		assert.equal(result.pixelFormat, 'bgra');
+		assert.equal(result.width, 1600);
+		assert.equal(result.height, 900);
+		assert.equal(result.frameRate, 60);
+	});
 
 	test('native start() takes no hook or injection arguments', {skip: injectionSkip}, async () => {
 		const {binding, calls} = makeFakeBinding();
@@ -410,41 +400,37 @@ describe('win-game-capture loader wrapper -- injected fake binding', () => {
 		assert.equal(calls.length, 1);
 	});
 
-	test(
-		'fails before native start when a native frame sink is required but missing',
-		{skip: injectionSkip},
-		async () => {
-			const {binding, calls, frameSinkHandleCalls} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({
-				sourceId: '42',
-				sourceKind: 'window',
-				nativeFrameSinkRequired: true,
-			});
-			capture.on('error', () => {});
+	test('fails before native start when a native frame sink is required but missing', {
+		skip: injectionSkip,
+	}, async () => {
+		const {binding, calls, frameSinkHandleCalls} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({
+			sourceId: '42',
+			sourceKind: 'window',
+			nativeFrameSinkRequired: true,
+		});
+		capture.on('error', () => {});
 
-			await assert.rejects(() => capture.start(), /native frame sink handle is required/i);
-			assert.deepEqual(frameSinkHandleCalls, []);
-			assert.deepEqual(calls, []);
-		},
-	);
+		await assert.rejects(() => capture.start(), /native frame sink handle is required/i);
+		assert.deepEqual(frameSinkHandleCalls, []);
+		assert.deepEqual(calls, []);
+	});
 
-	test(
-		'game sourceKind starts without a hook path because capture no longer injects',
-		{skip: injectionSkip},
-		async () => {
-			const {binding, calls} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({
-				sourceId: '7',
-				sourceKind: 'game',
-			});
-			capture.on('error', () => {});
-			await capture.start();
-			assert.equal(calls.length, 1, 'native start must be called for game capture without a hook');
-			assert.equal(calls[0].sourceKind, 'game');
-		},
-	);
+	test('game sourceKind starts without a hook path because capture no longer injects', {
+		skip: injectionSkip,
+	}, async () => {
+		const {binding, calls} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({
+			sourceId: '7',
+			sourceKind: 'game',
+		});
+		capture.on('error', () => {});
+		await capture.start();
+		assert.equal(calls.length, 1, 'native start must be called for game capture without a hook');
+		assert.equal(calls[0].sourceKind, 'game');
+	});
 
 	test('lifecycle "error" emits an Error event', {skip: injectionSkip}, () => {
 		const {binding, natives} = makeFakeBinding();
@@ -489,100 +475,90 @@ describe('win-game-capture loader wrapper -- injected fake binding', () => {
 		assert.equal(closed, 0);
 	});
 
-	test(
-		'non-fatal "diagnostic" lifecycle re-emits as a diagnostic event WITHOUT stopping',
-		{skip: injectionSkip},
-		() => {
-			const {binding, natives} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
-			const diags = [];
-			let closed = 0;
-			capture.on('diagnostic', (message) => diags.push(message));
-			capture.on('closed', () => {
-				closed += 1;
-			});
-			natives[0].lifecycleCallback('diagnostic', 'fell back to CPU readback');
-			assert.deepEqual(diags, ['fell back to CPU readback']);
-			assert.equal(natives[0].stopCount, 0);
-			assert.equal(closed, 0);
-		},
-	);
+	test('non-fatal "diagnostic" lifecycle re-emits as a diagnostic event WITHOUT stopping', {
+		skip: injectionSkip,
+	}, () => {
+		const {binding, natives} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
+		const diags = [];
+		let closed = 0;
+		capture.on('diagnostic', (message) => diags.push(message));
+		capture.on('closed', () => {
+			closed += 1;
+		});
+		natives[0].lifecycleCallback('diagnostic', 'fell back to CPU readback');
+		assert.deepEqual(diags, ['fell back to CPU readback']);
+		assert.equal(natives[0].stopCount, 0);
+		assert.equal(closed, 0);
+	});
 
-	test(
-		'lifecycle "error" in the real napi [type, message] array shape emits an Error event',
-		{skip: injectionSkip},
-		() => {
-			const {binding, natives} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
-			const errors = [];
-			capture.on('error', (err) => errors.push(err));
-			natives[0].lifecycleCallback(['error', 'DXGI device removed']);
-			assert.equal(errors.length, 1);
-			assert.ok(errors[0] instanceof Error);
-			assert.equal(errors[0].message, 'DXGI device removed');
-		},
-	);
+	test('lifecycle "error" in the real napi [type, message] array shape emits an Error event', {
+		skip: injectionSkip,
+	}, () => {
+		const {binding, natives} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
+		const errors = [];
+		capture.on('error', (err) => errors.push(err));
+		natives[0].lifecycleCallback(['error', 'DXGI device removed']);
+		assert.equal(errors.length, 1);
+		assert.ok(errors[0] instanceof Error);
+		assert.equal(errors[0].message, 'DXGI device removed');
+	});
 
-	test(
-		'lifecycle "closed" in the napi array shape stops the native capture and emits closed once',
-		{skip: injectionSkip},
-		async () => {
-			const {binding, natives} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
-			let closed = 0;
-			capture.on('closed', () => {
-				closed += 1;
-			});
-			natives[0].lifecycleCallback(['closed', '']);
-			await Promise.resolve();
-			await capture.stop();
-			assert.equal(closed, 1);
-			assert.equal(natives[0].stopCount, 1);
-		},
-	);
+	test('lifecycle "closed" in the napi array shape stops the native capture and emits closed once', {
+		skip: injectionSkip,
+	}, async () => {
+		const {binding, natives} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
+		let closed = 0;
+		capture.on('closed', () => {
+			closed += 1;
+		});
+		natives[0].lifecycleCallback(['closed', '']);
+		await Promise.resolve();
+		await capture.stop();
+		assert.equal(closed, 1);
+		assert.equal(natives[0].stopCount, 1);
+	});
 
-	test(
-		'lifecycle "stalled" in the napi array shape re-emits as a stalled event WITHOUT stopping',
-		{skip: injectionSkip},
-		() => {
-			const {binding, natives} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
-			const stalls = [];
-			let closed = 0;
-			capture.on('stalled', (message) => stalls.push(message));
-			capture.on('closed', () => {
-				closed += 1;
-			});
-			natives[0].lifecycleCallback(['stalled', 'frame counter frozen while focused']);
-			assert.deepEqual(stalls, ['frame counter frozen while focused']);
-			assert.equal(natives[0].stopCount, 0);
-			assert.equal(closed, 0);
-		},
-	);
+	test('lifecycle "stalled" in the napi array shape re-emits as a stalled event WITHOUT stopping', {
+		skip: injectionSkip,
+	}, () => {
+		const {binding, natives} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
+		const stalls = [];
+		let closed = 0;
+		capture.on('stalled', (message) => stalls.push(message));
+		capture.on('closed', () => {
+			closed += 1;
+		});
+		natives[0].lifecycleCallback(['stalled', 'frame counter frozen while focused']);
+		assert.deepEqual(stalls, ['frame counter frozen while focused']);
+		assert.equal(natives[0].stopCount, 0);
+		assert.equal(closed, 0);
+	});
 
-	test(
-		'lifecycle "diagnostic" (injected via <method>) in the napi array shape re-emits WITHOUT stopping',
-		{skip: injectionSkip},
-		() => {
-			const {binding, natives} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
-			const diags = [];
-			let closed = 0;
-			capture.on('diagnostic', (message) => diags.push(message));
-			capture.on('closed', () => {
-				closed += 1;
-			});
-			natives[0].lifecycleCallback(['diagnostic', 'game capture injected via set-windows-hook']);
-			assert.deepEqual(diags, ['game capture injected via set-windows-hook']);
-			assert.equal(natives[0].stopCount, 0);
-			assert.equal(closed, 0);
-		},
-	);
+	test('lifecycle "diagnostic" (injected via <method>) in the napi array shape re-emits WITHOUT stopping', {
+		skip: injectionSkip,
+	}, () => {
+		const {binding, natives} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
+		const diags = [];
+		let closed = 0;
+		capture.on('diagnostic', (message) => diags.push(message));
+		capture.on('closed', () => {
+			closed += 1;
+		});
+		natives[0].lifecycleCallback(['diagnostic', 'game capture injected via set-windows-hook']);
+		assert.deepEqual(diags, ['game capture injected via set-windows-hook']);
+		assert.equal(natives[0].stopCount, 0);
+		assert.equal(closed, 0);
+	});
 
 	test('getDiagnostics() passes the native snapshot through', {skip: injectionSkip}, () => {
 		const {binding, diagnostics} = makeFakeBinding();
@@ -624,16 +600,14 @@ describe('win-game-capture loader wrapper -- injected fake binding', () => {
 		assert.deepEqual(priorityCalls, [{type: 'elevate', processId: 1234, priorityClass: undefined}]);
 	});
 
-	test(
-		'elevateGpuSchedulingPriority rejects unsupported priority classes before binding calls',
-		{skip: injectionSkip},
-		() => {
-			const {binding, priorityCalls} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			assert.equal(winGameCapture.elevateGpuSchedulingPriority(1234, 'normal'), false);
-			assert.deepEqual(priorityCalls, []);
-		},
-	);
+	test('elevateGpuSchedulingPriority rejects unsupported priority classes before binding calls', {
+		skip: injectionSkip,
+	}, () => {
+		const {binding, priorityCalls} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		assert.equal(winGameCapture.elevateGpuSchedulingPriority(1234, 'normal'), false);
+		assert.deepEqual(priorityCalls, []);
+	});
 
 	test('lifecycle fallback "error" (next-strategy=...) re-emits as a fatal error event', {skip: injectionSkip}, () => {
 		const {binding, natives} = makeFakeBinding();
@@ -650,29 +624,27 @@ describe('win-game-capture loader wrapper -- injected fake binding', () => {
 		assert.equal(winGameCapture.parseFallbackRecommendation(errors[0].message), 'dxgi-duplication');
 	});
 
-	test(
-		'lifecycle fallback "diagnostic" (upgrade, next-strategy=...) re-emits WITHOUT stopping',
-		{skip: injectionSkip},
-		() => {
-			const {binding, natives} = makeFakeBinding();
-			winGameCapture.__setBindingForTests(binding);
-			const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
-			const diags = [];
-			let closed = 0;
-			capture.on('diagnostic', (message) => diags.push(message));
-			capture.on('closed', () => {
-				closed += 1;
-			});
-			natives[0].lifecycleCallback([
-				'diagnostic',
-				'upgrade: window-gdi -> dxgi-duplication (window-gdi has been stable) [next-strategy=dxgi-duplication]',
-			]);
-			assert.equal(diags.length, 1);
-			assert.equal(winGameCapture.parseFallbackRecommendation(diags[0]), 'dxgi-duplication');
-			assert.equal(natives[0].stopCount, 0);
-			assert.equal(closed, 0);
-		},
-	);
+	test('lifecycle fallback "diagnostic" (upgrade, next-strategy=...) re-emits WITHOUT stopping', {
+		skip: injectionSkip,
+	}, () => {
+		const {binding, natives} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		const capture = new winGameCapture.ScreenCapture({sourceId: '1'});
+		const diags = [];
+		let closed = 0;
+		capture.on('diagnostic', (message) => diags.push(message));
+		capture.on('closed', () => {
+			closed += 1;
+		});
+		natives[0].lifecycleCallback([
+			'diagnostic',
+			'upgrade: window-gdi -> dxgi-duplication (window-gdi has been stable) [next-strategy=dxgi-duplication]',
+		]);
+		assert.equal(diags.length, 1);
+		assert.equal(winGameCapture.parseFallbackRecommendation(diags[0]), 'dxgi-duplication');
+		assert.equal(natives[0].stopCount, 0);
+		assert.equal(closed, 0);
+	});
 });
 
 describe('win-game-capture loader wrapper -- parseFallbackRecommendation', () => {

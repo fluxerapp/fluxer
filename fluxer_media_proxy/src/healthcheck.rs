@@ -2,24 +2,20 @@
 
 use anyhow::Context as _;
 use std::{
-    env,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     time::Duration,
 };
 
 pub async fn run() -> anyhow::Result<()> {
     let addr = target(
-        env::var("FLUXER_MEDIA_PROXY_HOST").ok().as_deref(),
-        env::var("FLUXER_MEDIA_PROXY_PORT").ok().as_deref(),
+        fluxer_common::config::env_value("FLUXER_MEDIA_PROXY_HOST").as_deref(),
+        fluxer_common::config::env_value("FLUXER_MEDIA_PROXY_PORT").as_deref(),
     )?;
     probe(addr).await
 }
 
 fn target(host: Option<&str>, port: Option<&str>) -> anyhow::Result<SocketAddr> {
-    let host = host
-        .map(str::trim)
-        .filter(|host| !host.is_empty())
-        .unwrap_or("127.0.0.1");
+    let host = host.map(str::trim).unwrap_or("127.0.0.1");
     let ip = host
         .parse::<IpAddr>()
         .with_context(|| format!("FLUXER_MEDIA_PROXY_HOST is not an IP address: {host}"))?;
@@ -28,7 +24,7 @@ fn target(host: Option<&str>, port: Option<&str>) -> anyhow::Result<SocketAddr> 
         IpAddr::V6(ip) if ip.is_unspecified() => IpAddr::V6(Ipv6Addr::LOCALHOST),
         ip => ip,
     };
-    let port = match port.map(str::trim).filter(|port| !port.is_empty()) {
+    let port = match port.map(str::trim) {
         Some(port) => port
             .parse::<u16>()
             .with_context(|| format!("FLUXER_MEDIA_PROXY_PORT is not a port number: {port}"))?,
@@ -72,7 +68,7 @@ mod tests {
         );
         assert_eq!(
             "[::1]:8080".parse::<SocketAddr>().unwrap(),
-            target(Some("::"), Some("")).unwrap()
+            target(Some("::"), None).unwrap()
         );
         assert!(target(Some("0.0.0.0"), Some("nope")).is_err());
     }

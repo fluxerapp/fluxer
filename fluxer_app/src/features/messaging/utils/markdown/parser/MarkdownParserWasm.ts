@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {flattenAST} from './AstUtils';
-import {getEmojiParserConfig} from './EmojiParsers';
-import {MARKDOWN_PARSER_WASM_BASE64} from './MarkdownParserWasmBytes';
-import type {Node} from './Nodes';
-import * as StringUtils from './StringUtils';
-import * as URLUtils from './UrlUtils';
+import {convertToCodePoints} from '@app/features/expressions/utils/EmojiCodepointUtils';
+import {flattenAST} from '@app/features/messaging/utils/markdown/parser/AstUtils';
+import {getEmojiParserConfig} from '@app/features/messaging/utils/markdown/parser/EmojiParsers';
+import {MARKDOWN_PARSER_WASM_BASE64} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes';
+import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
+import * as StringUtils from '@app/features/messaging/utils/markdown/parser/StringUtils';
+import * as URLUtils from '@app/features/messaging/utils/markdown/parser/UrlUtils';
 
 interface WasmExports {
 	memory: {buffer: ArrayBuffer};
@@ -46,11 +47,19 @@ const lenientTextDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: fal
 
 let textDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: true});
 let wasm: WasmExports | null = null;
+let wasmModule: unknown = null;
 let cachedMemory: Uint8Array | null = null;
+let replacingOversizedInstance = false;
+
+interface WasmInstance {
+	exports: Record<string, unknown>;
+}
 
 declare const WebAssembly: {
 	Module: new (bytes: Uint8Array) => unknown;
-	Instance: new (module: unknown, imports?: Record<string, unknown>) => {exports: Record<string, unknown>};
+	Instance: new (module: unknown, imports?: Record<string, unknown>) => WasmInstance;
+	compile(bytes: Uint8Array): Promise<unknown>;
+	instantiate(module: unknown, imports?: Record<string, unknown>): Promise<WasmInstance>;
 };
 
 function getWasmMemory(exports: Record<string, unknown>): WasmExports['memory'] {
@@ -93,22 +102,39 @@ function decodeBase64(value: string): Uint8Array {
 	return bytes;
 }
 
-function getWasm(): WasmExports {
-	if (!wasm) {
-		const module = new WebAssembly.Module(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
-		const instance = new WebAssembly.Instance(module, {});
-		wasm = createWasmExports(instance.exports);
-		cachedMemory = null;
-	}
+function setWasmInstance(instance: WasmInstance): WasmExports {
+	wasm = createWasmExports(instance.exports);
+	cachedMemory = null;
 	return wasm;
 }
 
+export async function preloadMarkdownParserWasm(): Promise<void> {
+	if (wasm) return;
+	wasmModule ??= await WebAssembly.compile(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
+	const instance = await WebAssembly.instantiate(wasmModule, {});
+	if (!wasm) setWasmInstance(instance);
+}
+
+function getWasm(): WasmExports {
+	if (wasm) return wasm;
+	wasmModule ??= new WebAssembly.Module(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
+	return setWasmInstance(new WebAssembly.Instance(wasmModule, {}));
+}
+
 function releaseOversizedWasmMemory(): void {
-	if ((wasm?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_WASM_MEMORY_BYTES) {
+	if (replacingOversizedInstance || (wasm?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_WASM_MEMORY_BYTES) {
 		return;
 	}
-	wasm = null;
-	cachedMemory = null;
+	const oversized = wasm;
+	replacingOversizedInstance = true;
+	WebAssembly.instantiate(wasmModule, {})
+		.then((instance) => {
+			if (wasm === oversized) setWasmInstance(instance);
+		})
+		.catch(() => {})
+		.finally(() => {
+			replacingOversizedInstance = false;
+		});
 }
 
 function memoryU8(): Uint8Array {
@@ -202,14 +228,6 @@ class Utf8OffsetTracker {
 	}
 }
 
-function defaultCodepoints(emoji: string): string {
-	const containsZwJ = emoji.includes('‍');
-	const processed = containsZwJ ? emoji : emoji.replace(/️/g, '');
-	return Array.from(processed)
-		.map((char) => char.codePointAt(0)?.toString(16).replace(/^0+/, '') || '')
-		.join('-');
-}
-
 const PLAINTEXT_SYMBOLS = new Set(['™', '™️', '©', '©️', '®', '®️']);
 const SPECIAL_SHORTCODES: Record<string, string> = {
 	tm: '™',
@@ -226,29 +244,23 @@ function buildEmojiContext(input: string): string {
 	const provider = config?.emojiProvider;
 	let context = '';
 	if (!provider) return context;
-	const convertToCodePoints = config.convertToCodePoints || defaultCodepoints;
-	const emojiRegex = config.emojiRegex;
-	if (emojiRegex) {
-		const offsetTracker = new Utf8OffsetTracker();
-		emojiRegex.lastIndex = 0;
-		let match: RegExpExecArray | null;
-		while ((match = emojiRegex.exec(input)) !== null) {
-			const candidate = match[0];
-			if (!candidate || PLAINTEXT_SYMBOLS.has(candidate)) continue;
-			const name = provider.getSurrogateName(candidate);
-			if (!name) continue;
-			const candidateBytes = textEncoder.encode(candidate).byteLength;
-			const byteOffset = offsetTracker.offsetFor(input, match.index);
-			context += appendContextLine([
-				'S',
-				String(byteOffset),
-				String(candidateBytes),
-				candidate,
-				name,
-				convertToCodePoints(candidate),
-			]);
-			offsetTracker.advance(candidate.length, candidateBytes);
-		}
+	const offsetTracker = new Utf8OffsetTracker();
+	for (const match of provider.matchEmojiSurrogates(input)) {
+		const candidate = input.slice(match.start, match.end);
+		if (PLAINTEXT_SYMBOLS.has(candidate)) continue;
+		const name = match.name;
+		if (!name) continue;
+		const candidateBytes = textEncoder.encode(candidate).byteLength;
+		const byteOffset = offsetTracker.offsetFor(input, match.start);
+		context += appendContextLine([
+			'S',
+			String(byteOffset),
+			String(candidateBytes),
+			candidate,
+			name,
+			convertToCodePoints(candidate),
+		]);
+		offsetTracker.advance(candidate.length, candidateBytes);
 	}
 	const shortcodeRegex = /:([\p{L}\p{N}_-]+):/gu;
 	const seen = new Set<string>();

@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {createVoiceEngineV2FaultPlan} from '../FaultInjector';
-import type {VoiceEngineV2SimulatorResult} from '../Simulator';
-import type {VoiceEngineV2Workload} from '../Workload';
-import {VoiceEngineV2WorkloadBuilder} from '../Workload';
+import {createVoiceEngineV2FaultPlan} from '@fluxer/voice_engine_v2/src/simulation/FaultInjector';
+import type {VoiceEngineV2SimulatorResult} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
 import {
 	assertSeedWellFormed,
 	combineVerdicts,
@@ -12,7 +10,9 @@ import {
 	passVerdict,
 	type VoiceEngineV2AcceptanceVerdict,
 	type VoiceEngineV2SimulationScenario,
-} from './index';
+} from '@fluxer/voice_engine_v2/src/simulation/scenarios/index';
+import type {VoiceEngineV2Workload} from '@fluxer/voice_engine_v2/src/simulation/Workload';
+import {VoiceEngineV2WorkloadBuilder} from '@fluxer/voice_engine_v2/src/simulation/Workload';
 
 const DEVICE_DISCONNECT_TICK = 100;
 const DEVICE_DISCONNECT_DEVICE_ID = 'mic-1';

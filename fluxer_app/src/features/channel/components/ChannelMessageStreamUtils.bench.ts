@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getUnreadDividerBeforeMessageId} from '@app/features/channel/components/ChannelMessageStreamUtils';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {ChannelStreamItem} from '@app/features/messaging/utils/MessageGroupingUtils';
-import {bench, describe} from 'vitest';
-import {getUnreadDividerBeforeMessageId} from './ChannelMessageStreamUtils';
+import {test} from 'vitest';
 
 const GROUP_ITEMS = Array.from(
 	{length: 100},
@@ -29,8 +29,8 @@ const GROUPS = Array.from({length: 1_000}, (_value, groupIndex) =>
 	),
 );
 
-describe('ChannelMessageStreamUtils benchmarks', () => {
-	bench('find unread divider id across 1k pending render groups', () => {
+test('ChannelMessageStreamUtils benchmarks', async ({bench}) => {
+	await bench('find unread divider id across 1k pending render groups', () => {
 		let hits = 0;
 		for (const group of GROUPS) {
 			if (getUnreadDividerBeforeMessageId(group) !== null) {
@@ -38,5 +38,5 @@ describe('ChannelMessageStreamUtils benchmarks', () => {
 			}
 		}
 		(globalThis as {__channelMessageStreamBenchSink?: number}).__channelMessageStreamBenchSink = hits;
-	});
+	}).run();
 });

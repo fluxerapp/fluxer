@@ -1,5 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
+import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {
+	attachmentStorageChannelId,
+	EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
+	isCrosspostCopy,
+} from '@app/api/channel/services/message/MessageHelpers';
+import {
+	type MessageResponseAccessContext,
+	MessageResponseDataService,
+	messageResponseAccessForChannel,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import {getChannelRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {CallInfo} from '@app/api/models/CallInfo';
+import type {Embed} from '@app/api/models/Embed';
+import type {EmbedAuthor} from '@app/api/models/EmbedAuthor';
+import type {EmbedField} from '@app/api/models/EmbedField';
+import type {EmbedFooter} from '@app/api/models/EmbedFooter';
+import type {EmbedMedia} from '@app/api/models/EmbedMedia';
+import type {EmbedProvider} from '@app/api/models/EmbedProvider';
+import type {Message} from '@app/api/models/Message';
+import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import type {StickerItem} from '@app/api/models/StickerItem';
+import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
+import {assertSafeByteSize} from '@app/api/utils/ByteSizeUtils';
 import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {
 	DELETED_USER_DISCRIMINATOR,
@@ -17,32 +46,8 @@ import type {
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import type {NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import type {NatsConnection} from 'nats';
-import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {AttachmentDecayService} from '../../attachment/AttachmentDecayService';
-import type {ChannelID, GuildID, MessageID, UserID} from '../../BrandedTypes';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {
-	type MessageResponseAccessContext,
-	MessageResponseDataService,
-	messageResponseAccessForChannel,
-} from '../../channel/services/message/MessageResponseDataService';
-import {getChannelRepository, getUserRepository} from '../../middleware/ServiceSingletons';
-import type {Attachment} from '../../models/Attachment';
-import type {CallInfo} from '../../models/CallInfo';
-import type {Embed} from '../../models/Embed';
-import type {EmbedAuthor} from '../../models/EmbedAuthor';
-import type {EmbedField} from '../../models/EmbedField';
-import type {EmbedFooter} from '../../models/EmbedFooter';
-import type {EmbedMedia} from '../../models/EmbedMedia';
-import type {EmbedProvider} from '../../models/EmbedProvider';
-import type {Message} from '../../models/Message';
-import type {MessageSnapshot} from '../../models/MessageSnapshot';
-import type {StickerItem} from '../../models/StickerItem';
-import {mapUserToPartialResponse} from '../../user/UserMappers';
-import {assertSafeByteSize} from '../../utils/ByteSizeUtils';
 
 class NoopNatsConnectionManager implements INatsConnectionManager {
 	async connect(): Promise<void> {}
@@ -56,6 +61,14 @@ class NoopNatsConnectionManager implements INatsConnectionManager {
 	getConnection(): NatsConnection {
 		throw new Error('RepositoryBackedMessageResponseDataService does not use NATS');
 	}
+}
+
+function signOwnUrl(url: string | null | undefined): string | null {
+	return url == null ? null : signAttachmentUrl(url);
+}
+
+function mediaProxyUrl(url: string | null | undefined): string | null {
+	return url?.startsWith('http') ? signAttachmentUrl(url) : null;
 }
 
 export class RepositoryBackedMessageResponseDataService extends MessageResponseDataService {
@@ -259,7 +272,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			message_reference: message.reference
 				? {
 						channel_id: message.reference.channelId.toString(),
-						message_id: message.reference.messageId.toString(),
+						...(message.reference.messageId ? {message_id: message.reference.messageId.toString()} : {}),
 						guild_id: message.reference.guildId?.toString() ?? null,
 						type: message.reference.type,
 					}
@@ -282,6 +295,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			global_name: message.webhookName ?? DELETED_USER_GLOBAL_NAME,
 			avatar: message.webhookAvatarHash,
 			avatar_color: null,
+			...(message.webhookId ? {bot: true} : {}),
 			flags: 0,
 		};
 	}
@@ -325,7 +339,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		message: Message,
 		options: {currentUserId?: UserID; includeReactions: boolean; depth: number},
 	): Promise<MessageResponse | null | undefined> {
-		if (!message.reference || options.depth > 0) {
+		if (!message.reference?.messageId || (message.flags & MessageFlags.IS_CROSSPOST) !== 0 || options.depth > 0) {
 			return undefined;
 		}
 		const referenced = await getChannelRepository().messages.getMessage(
@@ -343,8 +357,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	}
 
 	private mapAttachmentUrl(message: Message, attachment: Attachment): string {
-		const filename = encodeURIComponent(attachment.filename);
-		return `${Config.endpoints.media}/attachments/${message.channelId.toString()}/${message.id.toString()}/${attachment.id.toString()}/${filename}`;
+		return makeSignedAttachmentCdnUrl(attachmentStorageChannelId(message), attachment.id, attachment.filename);
 	}
 
 	private async mapAttachments(
@@ -352,14 +365,15 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		message: Message,
 	): Promise<Array<MessageAttachmentResponse> | null> {
 		if (attachments.length === 0) return null;
+		const ownerMessageId = isCrosspostCopy(message) ? (message.reference?.messageId ?? message.id) : message.id;
 		await this.attachmentDecayService.extendForAttachments(
 			attachments.map((attachment) => ({
 				attachmentId: attachment.id,
-				channelId: message.channelId,
-				messageId: message.id,
+				channelId: attachmentStorageChannelId(message),
+				messageId: ownerMessageId,
 				filename: attachment.filename,
 				sizeBytes: attachment.size,
-				uploadedAt: snowflakeToDate(message.id),
+				uploadedAt: snowflakeToDate(ownerMessageId),
 			})),
 		);
 		return Promise.all(
@@ -399,7 +413,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	private mapEmbed(embed: Embed, message: Message): MessageEmbedResponse {
 		return {
 			type: embed.type ?? 'rich',
-			url: embed.url,
+			url: signOwnUrl(embed.url),
 			title: embed.title,
 			color: embed.color,
 			timestamp: embed.timestamp?.toISOString() ?? null,
@@ -425,9 +439,9 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		const iconUrl = 'iconUrl' in author ? author.iconUrl : null;
 		return {
 			name: author.name,
-			url: author.url,
-			icon_url: iconUrl,
-			proxy_icon_url: iconUrl,
+			url: signOwnUrl(author.url),
+			icon_url: signOwnUrl(iconUrl),
+			proxy_icon_url: mediaProxyUrl(iconUrl),
 		};
 	}
 
@@ -435,8 +449,8 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		if (!footer?.text) return null;
 		return {
 			text: footer.text,
-			icon_url: footer.iconUrl,
-			proxy_icon_url: footer.iconUrl,
+			icon_url: signOwnUrl(footer.iconUrl),
+			proxy_icon_url: mediaProxyUrl(footer.iconUrl),
 		};
 	}
 
@@ -450,10 +464,10 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 
 	private mapEmbedMedia(media: EmbedMedia | null, message: Message) {
 		if (!media?.url) return null;
-		const url = this.resolveAttachmentUrl(media.url, message);
+		const resolved = this.resolveAttachmentUrl(media.url, message);
 		return {
-			url,
-			proxy_url: url.startsWith('http') ? url : null,
+			url: signAttachmentUrl(resolved),
+			proxy_url: mediaProxyUrl(resolved),
 			content_type: media.contentType,
 			content_hash: media.contentHash,
 			width: media.width,
@@ -461,7 +475,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			description: media.description,
 			placeholder: media.placeholder,
 			duration: media.duration,
-			flags: media.flags,
+			flags: media.flags & ~EMBED_MEDIA_OWNED_ATTACHMENT_FLAG,
 		};
 	}
 

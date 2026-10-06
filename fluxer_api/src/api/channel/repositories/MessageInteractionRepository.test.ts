@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '@app/api/BrandedTypes';
+import {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
+import {MessageInteractionRepository} from '@app/api/channel/repositories/MessageInteractionRepository';
+import {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
+import {fetchOne, setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import type {PreparedQuery} from '@app/api/database/CassandraTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import {Messages} from '@app/api/Tables';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '../../BrandedTypes';
-import {fetchOne, setCassandraQueryExecutorForTesting} from '../../database/CassandraQueryExecution';
-import type {PreparedQuery} from '../../database/CassandraTypes';
-import type {MessageRow} from '../../database/types/MessageTypes';
-import {Messages} from '../../Tables';
-import {InMemoryCassandraQueryExecutor} from '../../test/InMemoryCassandraQueryExecutor';
-import {ChannelDataRepository} from './ChannelDataRepository';
-import {MessageInteractionRepository} from './MessageInteractionRepository';
-import {MessageRepository} from './MessageRepository';
 
 const FETCH_MESSAGE_HAS_REACTION = Messages.selectCql({
 	columns: ['has_reaction'],

@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createHash} from 'node:crypto';
+import {createHash, timingSafeEqual} from 'node:crypto';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {Config} from '@app/api/Config';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
+import {readRequestJsonBody} from '@app/api/utils/RequestJsonBody';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
-import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
+import {getSameIpDecisionKey, parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import type {BucketConfig, RateLimitResult, RateLimitScope} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {Context, MiddlewareHandler} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import * as AuthSession from '../auth/AuthSession';
-import {Config} from '../Config';
-import type {HonoEnv} from '../types/HonoEnv';
-import {getRequestClientIp} from '../utils/RequestClientIp';
 
 type AccountType = 'user' | 'bot' | 'webhook';
 
@@ -18,10 +19,18 @@ export interface RouteRateLimitConfig {
 	bucket: string;
 	config: BucketConfig;
 	scope?: RateLimitScope;
+	trustForwardedClientIp?: boolean;
+	emailBucket?: {
+		bucket: string;
+		config: BucketConfig;
+	};
 }
 
 const TEST_ENABLE_RATE_LIMITS_HEADER = 'x-fluxer-test-enable-rate-limits';
 const TEST_GLOBAL_RATE_LIMIT_OVERRIDE_HEADER = 'x-fluxer-test-global-rate-limit';
+const INTERNAL_KEY_HEADER = 'x-fluxer-internal-key';
+const FORWARDED_CLIENT_IP_HEADER = 'x-fluxer-client-ip';
+const LEGACY_FORWARDED_CLIENT_IP_HEADER = 'x-fluxer-donor-ip';
 
 function shouldEnforceRateLimits(ctx: Context<HonoEnv>): boolean {
 	if (!Config.dev.testModeEnabled) {
@@ -49,7 +58,35 @@ function shouldShowHeadersOnSuccess(accountType: AccountType): boolean {
 	return accountType === 'bot' || accountType === 'webhook';
 }
 
-function getClientIdentifier(ctx: Context<HonoEnv>): string {
+function keysMatch(expectedKey: string, providedKey: string): boolean {
+	const expectedBuffer = Buffer.from(expectedKey);
+	const providedBuffer = Buffer.from(providedKey);
+	if (expectedBuffer.length !== providedBuffer.length) return false;
+	return timingSafeEqual(expectedBuffer, providedBuffer);
+}
+
+function isTrustedCallerForBucket(ctx: Context<HonoEnv>, bucket: string): boolean {
+	const providedKey = ctx.req.header(INTERNAL_KEY_HEADER);
+	if (!providedKey) return false;
+	let trusted = false;
+	for (const caller of Config.internal.trustedCallers) {
+		if (!caller.buckets.includes(bucket)) continue;
+		if (keysMatch(caller.key, providedKey)) trusted = true;
+	}
+	return trusted;
+}
+
+function getForwardedClientIdentifier(ctx: Context<HonoEnv>, bucket: string): string | null {
+	if (!isTrustedCallerForBucket(ctx, bucket)) return null;
+	const rawHeader = ctx.req.header(FORWARDED_CLIENT_IP_HEADER) ?? ctx.req.header(LEGACY_FORWARDED_CLIENT_IP_HEADER);
+	const headerValue = rawHeader?.split(',', 1)[0].trim();
+	if (!headerValue) return null;
+	const clientIp = parseIpAddress(headerValue);
+	if (!clientIp) return null;
+	return `ip:${getSameIpDecisionKey(clientIp.normalized) ?? clientIp.normalized}`;
+}
+
+function getClientIdentifier(ctx: Context<HonoEnv>, routeConfig: RouteRateLimitConfig): string {
 	const user = ctx.get('user');
 	if (user?.id) {
 		const tokenType = ctx.get('authTokenType') ?? 'session';
@@ -58,9 +95,23 @@ function getClientIdentifier(ctx: Context<HonoEnv>): string {
 		}
 		return `user:${user.id}:${tokenType}`;
 	}
+	if (routeConfig.trustForwardedClientIp) {
+		const forwardedIdentifier = getForwardedClientIdentifier(ctx, routeConfig.bucket);
+		if (forwardedIdentifier) return forwardedIdentifier;
+	}
 	const ip = getRequestClientIp(ctx);
 	if (!ip) return 'internal';
 	return `ip:${getSameIpDecisionKey(ip) ?? ip}`;
+}
+
+async function getRequestEmailIdentifier(ctx: Context<HonoEnv>): Promise<string | null> {
+	const body = await readRequestJsonBody(ctx.req);
+	if (!body.parsed || typeof body.value !== 'object' || body.value === null) return null;
+	const email = Reflect.get(body.value, 'email');
+	if (typeof email !== 'string') return null;
+	const normalizedEmail = email.trim().toLowerCase();
+	if (!normalizedEmail) return null;
+	return `email:${createHash('sha256').update(normalizedEmail).digest('hex').slice(0, 32)}`;
 }
 
 function getGlobalRateLimit(ctx: Context<HonoEnv>): number {
@@ -131,6 +182,7 @@ async function revokeAuthenticatedSessionOnGlobalRateLimit(ctx: Context<HonoEnv>
 
 export function RateLimitMiddleware(routeConfig: RouteRateLimitConfig): MiddlewareHandler<HonoEnv> {
 	const routeBucketHash = getBucketHash(routeConfig.bucket);
+	const emailBucketHash = routeConfig.emailBucket ? getBucketHash(routeConfig.emailBucket.bucket) : undefined;
 	return createMiddleware<HonoEnv>(async (ctx, next) => {
 		if (!shouldEnforceRateLimits(ctx)) {
 			await next();
@@ -148,7 +200,7 @@ export function RateLimitMiddleware(routeConfig: RouteRateLimitConfig): Middlewa
 		}
 		const accountType = getAccountType(ctx);
 		const showHeaders = shouldShowHeadersOnSuccess(accountType);
-		const clientId = getClientIdentifier(ctx);
+		const clientId = getClientIdentifier(ctx, routeConfig);
 		if (!routeConfig.config.exemptFromGlobal) {
 			const globalLimit = getGlobalRateLimit(ctx);
 			const globalResult = await rateLimitService.checkGlobalLimit(clientId, globalLimit);
@@ -181,6 +233,27 @@ export function RateLimitMiddleware(routeConfig: RouteRateLimitConfig): Middlewa
 				bucketHash: routeBucketHash,
 				scope: routeConfig.scope ?? 'user',
 			});
+		}
+		const emailBucketConfig = routeConfig.emailBucket;
+		if (emailBucketConfig) {
+			const emailIdentifier = await getRequestEmailIdentifier(ctx);
+			if (emailIdentifier) {
+				const emailBucketResult = await rateLimitService.checkBucketLimit(
+					resolveBucket(emailBucketConfig.bucket, emailIdentifier, ctx),
+					{...emailBucketConfig.config, algorithm: 'leaky_bucket'},
+				);
+				if (!emailBucketResult.allowed) {
+					throw new RateLimitError({
+						retryAfter: getRetryAfterSeconds(emailBucketResult),
+						retryAfterDecimal: emailBucketResult.retryAfterDecimal,
+						limit: emailBucketResult.limit,
+						resetTime: emailBucketResult.resetTime,
+						resetAfterDecimal: emailBucketResult.resetAfterDecimal,
+						bucketHash: emailBucketHash,
+						scope: 'shared',
+					});
+				}
+			}
 		}
 		if (showHeaders) {
 			setRateLimitHeaders(ctx, bucketResult, routeBucketHash);

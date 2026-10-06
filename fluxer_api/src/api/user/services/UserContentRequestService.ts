@@ -1,26 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Message} from '@app/api/models/Message';
+import type {SavedMessageEntry, UserContentService} from '@app/api/user/services/UserContentService';
 import type {MessageListResponse, MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {
-	HarvestCreationResponseSchema,
+	HarvestCreationResponse,
 	HarvestDownloadUrlResponse,
-	HarvestStatusResponseSchema,
+	HarvestStatusResponse,
 } from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {HarvestSelfDataRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {
 	SavedMessageEntryListResponse,
 	SavedMessageEntryResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {z} from 'zod';
-import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Message} from '../../models/Message';
-import type {SavedMessageEntry, UserContentService} from './UserContentService';
 
-type HarvestCreationResponse = z.infer<typeof HarvestCreationResponseSchema>;
-type HarvestStatusResponse = z.infer<typeof HarvestStatusResponseSchema>;
 type HarvestLatestResponse = HarvestStatusResponse | null;
 
 interface UserMentionsParams {

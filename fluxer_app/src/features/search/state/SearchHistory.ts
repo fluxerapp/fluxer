@@ -2,7 +2,7 @@
 
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
 import type {SearchHints} from '@app/features/search/utils/SearchQueryParser';
-import {action, makeAutoObservable} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
 export const SEARCH_HISTORY_LIMIT = 10;
 export const SEARCH_HISTORY_DISPLAY_LIMIT = 5;
@@ -37,7 +37,6 @@ class SearchHistory {
 		return entries.filter((e) => e.query.toLowerCase().includes(t));
 	}
 
-	@action
 	add(query: string, channelId?: string, hints?: SearchHints): void {
 		if (!channelId) return;
 		const q = query.trim();
@@ -58,7 +57,6 @@ class SearchHistory {
 		}
 	}
 
-	@action
 	adoptLegacyEntries(targetKey: string | undefined, legacyKeys: ReadonlyArray<string>): void {
 		if (!targetKey) return;
 		if (this.getEntries(targetKey).length > 0) return;
@@ -83,13 +81,11 @@ class SearchHistory {
 		this.entriesByChannel[targetKey] = adopted;
 	}
 
-	@action
 	clear(channelId?: string): void {
 		if (!channelId) return;
 		delete this.entriesByChannel[channelId];
 	}
 
-	@action
 	clearAll(): void {
 		this.entriesByChannel = {};
 	}

@@ -3,7 +3,6 @@
 import {PricingCard} from '@app/features/app/components/dialogs/components/PricingCard';
 import gridStyles from '@app/features/app/components/dialogs/components/PricingGrid.module.css';
 import {PurchaseDisclaimer} from '@app/features/app/components/dialogs/components/PurchaseDisclaimer';
-import {PricingContextPanel} from '@app/features/app/components/dialogs/components/plutonium/PricingContextPanel';
 import styles from '@app/features/app/components/dialogs/components/plutonium/PricingSection.module.css';
 import {PurchaseDisabledWrapper} from '@app/features/app/components/dialogs/components/plutonium/PurchaseDisabledWrapper';
 import {ToggleButton} from '@app/features/app/components/dialogs/components/ToggleButton';
@@ -14,7 +13,6 @@ import {
 	ONE_TIME_PURCHASE_DESCRIPTOR,
 	VIEW_PREMIUM_PERKS_DESCRIPTOR,
 } from '@app/features/premium/utils/PremiumMessageDescriptors';
-import type {PricingMode} from '@app/features/premium/utils/PricingUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowDownIcon} from '@phosphor-icons/react';
@@ -58,7 +56,7 @@ const UPGRADE_NOW_DESCRIPTOR = msg({
 	comment: 'Checkout button for starting a paid subscription.',
 });
 const MESSAGE_1_YEAR_GIFT_DESCRIPTOR = msg({
-	message: '1 year gift',
+	message: '1-year gift',
 	comment: 'Billing plan title for a one-year gift subscription.',
 });
 const SAVE_17_2_DESCRIPTOR = msg({
@@ -66,19 +64,14 @@ const SAVE_17_2_DESCRIPTOR = msg({
 	comment: 'Price badge comparing a one-year gift to monthly gifts.',
 });
 const MESSAGE_1_MONTH_GIFT_DESCRIPTOR = msg({
-	message: '1 month gift',
+	message: '1-month gift',
 	comment: 'Billing plan title for a one-month gift subscription.',
 });
 
 interface PricingSectionProps {
 	isGiftMode: boolean;
+	giftPurchasesAvailable?: boolean;
 	setIsGiftMode: (value: boolean) => void;
-	countryCode: string | null;
-	pricingMode: PricingMode;
-	setPricingMode: (value: PricingMode) => void;
-	hasPricingChoice: boolean;
-	localizedCurrency: string | null;
-	baseCurrency: string | null;
 	monthlyPrice: string;
 	yearlyPrice: string;
 	giftMonthlyPrice: string;
@@ -92,13 +85,8 @@ interface PricingSectionProps {
 export const PricingSection: React.FC<PricingSectionProps> = observer(
 	({
 		isGiftMode,
+		giftPurchasesAvailable = true,
 		setIsGiftMode,
-		countryCode,
-		pricingMode,
-		setPricingMode,
-		hasPricingChoice,
-		localizedCurrency,
-		baseCurrency,
 		monthlyPrice,
 		yearlyPrice,
 		giftMonthlyPrice,
@@ -114,35 +102,27 @@ export const PricingSection: React.FC<PricingSectionProps> = observer(
 			i18n._(CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME});
 		return (
 			<section className={styles.section} data-flx="app.plutonium.pricing-section.section">
-				<div
-					className={styles.toggleContainer}
-					role="group"
-					aria-label={i18n._(PURCHASE_MODE_DESCRIPTOR)}
-					data-flx="app.plutonium.pricing-section.toggle-container"
-				>
-					<ToggleButton
-						active={!isGiftMode}
-						onClick={() => setIsGiftMode(false)}
-						label={i18n._(FOR_ME_DESCRIPTOR)}
-						data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode"
-					/>
-					<ToggleButton
-						active={isGiftMode}
-						onClick={() => setIsGiftMode(true)}
-						label={i18n._(AS_A_GIFT_DESCRIPTOR)}
-						data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode--2"
-					/>
-				</div>
-				<PricingContextPanel
-					countryCode={countryCode}
-					pricingMode={pricingMode}
-					setPricingMode={setPricingMode}
-					hasPricingChoice={hasPricingChoice}
-					localizedCurrency={localizedCurrency}
-					baseCurrency={baseCurrency}
-					isGiftMode={isGiftMode}
-					data-flx="app.plutonium.pricing-section.pricing-context-panel"
-				/>
+				{giftPurchasesAvailable && (
+					<div
+						className={styles.toggleContainer}
+						role="group"
+						aria-label={i18n._(PURCHASE_MODE_DESCRIPTOR)}
+						data-flx="app.plutonium.pricing-section.toggle-container"
+					>
+						<ToggleButton
+							active={!isGiftMode}
+							onClick={() => setIsGiftMode(false)}
+							label={i18n._(FOR_ME_DESCRIPTOR)}
+							data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode"
+						/>
+						<ToggleButton
+							active={isGiftMode}
+							onClick={() => setIsGiftMode(true)}
+							label={i18n._(AS_A_GIFT_DESCRIPTOR)}
+							data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode--2"
+						/>
+					</div>
+				)}
 				<div className={gridStyles.gridWrapper} data-flx="app.plutonium.pricing-section.div">
 					<div className={gridStyles.gridTwoColumns} data-flx="app.plutonium.pricing-section.div--2">
 						{!isGiftMode ? (

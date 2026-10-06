@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const DiscoveryRateLimitConfigs = {
 	DISCOVERY_SEARCH: {
@@ -15,6 +15,10 @@ export const DiscoveryRateLimitConfigs = {
 	DISCOVERY_JOIN: {
 		bucket: 'discovery:join',
 		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	DISCOVERY_CHANNEL_PREVIEW: {
+		bucket: 'discovery:channel_preview',
+		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	DISCOVERY_APPLY: {
 		bucket: 'discovery:apply::guild_id',

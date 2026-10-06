@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ILogger} from '../ILogger';
-import type {IAuditLogSearchService} from '../search/IAuditLogSearchService';
-import type {IGuildMemberSearchService} from '../search/IGuildMemberSearchService';
-import type {IGuildSearchService} from '../search/IGuildSearchService';
-import type {IMessageSearchService} from '../search/IMessageSearchService';
-import type {IReportSearchService} from '../search/IReportSearchService';
-import type {ISearchProvider} from '../search/ISearchProvider';
-import type {IUserSearchService} from '../search/IUserSearchService';
-import {type MeilisearchClientConfig, MeilisearchHttpClient} from '../search/meilisearch/MeilisearchClient';
+import type {ILogger} from '@app/api/ILogger';
+import type {IAuditLogSearchService} from '@app/api/search/IAuditLogSearchService';
+import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import type {IReportSearchService} from '@app/api/search/IReportSearchService';
+import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import type {IUserSearchService} from '@app/api/search/IUserSearchService';
+import {type MeilisearchClientConfig, MeilisearchHttpClient} from '@app/api/search/meilisearch/MeilisearchClient';
 import {
 	MeilisearchAuditLogSearchService,
 	MeilisearchGuildMemberSearchService,
@@ -16,7 +16,7 @@ import {
 	MeilisearchMessageSearchService,
 	MeilisearchReportSearchService,
 	MeilisearchUserSearchService,
-} from '../search/meilisearch/MeilisearchSearchServices';
+} from '@app/api/search/meilisearch/MeilisearchSearchServices';
 
 interface MeilisearchSearchProviderOptions {
 	config: MeilisearchClientConfig;
@@ -41,7 +41,7 @@ export class MeilisearchSearchProvider implements ISearchProvider {
 	async initialize(): Promise<void> {
 		const client = new MeilisearchHttpClient(this.config);
 		this.messageService = new MeilisearchMessageSearchService(client);
-		const {GuildDiscoveryRepository} = await import('../guild/repositories/GuildDiscoveryRepository');
+		const {GuildDiscoveryRepository} = await import('@app/api/guild/repositories/GuildDiscoveryRepository');
 		this.guildService = new MeilisearchGuildSearchService(client, new GuildDiscoveryRepository());
 		this.userService = new MeilisearchUserSearchService(client);
 		this.reportService = new MeilisearchReportSearchService(client);

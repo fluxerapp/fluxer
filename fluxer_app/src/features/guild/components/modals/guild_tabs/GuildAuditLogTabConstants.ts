@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export const DEFAULT_FOR_STRINGS_KEY = '__DEFAULT__';
 export const LOG_PAGE_SIZE = 50;
 
 export enum AuditLogTargetType {

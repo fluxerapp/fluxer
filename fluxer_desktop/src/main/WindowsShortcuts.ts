@@ -141,7 +141,7 @@ async function repairOneShortcut(
 
 async function repairWindowsShortcutsAsync(repairPaths: WindowsShortcutRepairPaths): Promise<void> {
 	const binding = loadWinShell();
-	if (!binding || !binding.createShortcut) {
+	if (!binding?.createShortcut) {
 		console.warn('[WindowsShortcuts] @fluxer/win-shell unavailable; skipping shortcut repair');
 		return;
 	}

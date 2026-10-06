@@ -293,6 +293,7 @@ export const EditingMessageInput = observer(
 									markdown={true}
 									singleLine={!mobileLayout.enabled}
 									size="chat"
+									maxWireLength={maxMessageLength}
 									className={editingStyles.editor}
 									autocompleteAnchor={containerRef.current}
 									ariaLabel={i18n._(EDIT_MESSAGE_DESCRIPTOR)}
@@ -336,7 +337,7 @@ export const EditingMessageInput = observer(
 				<div className={editingStyles.footer} data-flx="channel.editing-message-input.footer">
 					<div data-flx="channel.editing-message-input.hints">
 						<Trans>
-							escape to{' '}
+							Escape to{' '}
 							<FocusRing offset={-2} data-flx="channel.editing-message-input.focus-ring--2">
 								<button
 									type="button"
@@ -355,7 +356,7 @@ export const EditingMessageInput = observer(
 							data-flx="channel.editing-message-input.separator"
 						/>
 						<Trans>
-							enter to{' '}
+							Enter to{' '}
 							<FocusRing offset={-2} enabled={!editingDisabled} data-flx="channel.editing-message-input.focus-ring--3">
 								<button
 									type="button"

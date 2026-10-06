@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GuildOperationsService} from '@app/api/guild/services/data/GuildOperationsService';
+import type {User} from '@app/api/models/User';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {describe, expect, it} from 'vitest';
-import type {User} from '../../models/User';
-import {GuildOperationsService} from '../services/data/GuildOperationsService';
 
 const REACHED_GUILD_COUNT = new Error('reached guild count lookup');
 

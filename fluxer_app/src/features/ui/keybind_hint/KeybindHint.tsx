@@ -4,17 +4,18 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import type {KeybindCommand, KeyCombo} from '@app/features/input/state/InputKeybind';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {
+	formatPrimaryKeySymbol,
 	getPrimaryKeyForComboDisplay,
 	isPrimaryKeyAlreadyRepresentedByModifier,
 } from '@app/features/input/utils/KeybindUtils';
-import {SHIFT_KEY_LABEL} from '@app/features/input/utils/KeyboardUtils';
+import {SHIFT_KEY_DESCRIPTOR} from '@app/features/input/utils/KeyboardUtils';
 import styles from '@app/features/ui/keybind_hint/KeybindHint.module.css';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
-const CTRL_DESCRIPTOR = msg({
+export const CTRL_DESCRIPTOR = msg({
 	message: 'Ctrl',
 	comment: 'Keyboard shortcut keycap label for Control on non-Mac platforms. Keep it short.',
 });
@@ -75,7 +76,7 @@ const formatKeyParts = (i18n: I18n, combo: KeyCombo): Array<KeyPart> => {
 		parts.push(mac ? {label: '⌘', isSymbol: true} : {label: i18n._(WIN_DESCRIPTOR)});
 	}
 	if (combo.shift) {
-		parts.push({label: SHIFT_KEY_LABEL});
+		parts.push({label: i18n._(SHIFT_KEY_DESCRIPTOR)});
 	}
 	if (combo.alt) {
 		parts.push(mac ? {label: '⌥', isSymbol: true} : {label: i18n._(ALT_DESCRIPTOR)});
@@ -109,17 +110,17 @@ const formatKeyParts = (i18n: I18n, combo: KeyCombo): Array<KeyPart> => {
 	} else if (key === 'PageDown') {
 		parts.push({label: i18n._(PGDN_DESCRIPTOR)});
 	} else if (isShiftKeyName(key)) {
-		parts.push({label: SHIFT_KEY_LABEL});
+		parts.push({label: i18n._(SHIFT_KEY_DESCRIPTOR)});
 	} else if (/^Key[A-Z]$/.test(key)) {
 		parts.push({label: key.slice(3)});
 	} else if (/^Digit[0-9]$/.test(key)) {
 		parts.push({label: key.slice(5)});
 	} else if (/^Numpad[0-9]$/.test(key)) {
-		parts.push({label: `Numpad ${key.slice(6)}`});
+		parts.push({label: formatPrimaryKeySymbol(i18n, key)});
 	} else if (key.length === 1) {
 		parts.push({label: key.toUpperCase()});
 	} else if (key) {
-		parts.push({label: key});
+		parts.push({label: formatPrimaryKeySymbol(i18n, key)});
 	}
 	return parts;
 };

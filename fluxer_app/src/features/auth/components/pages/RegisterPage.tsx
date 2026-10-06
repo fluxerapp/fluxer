@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
@@ -19,6 +20,7 @@ const RegisterPageContent = observer(function RegisterPageContent() {
 	const safeRedirect = safeRedirectTarget(rawRedirect);
 	const redirectTo = safeRedirect ?? '/';
 	const loginPath = safeRedirect ? setPathQueryParams('/login', {redirect_to: safeRedirect}) : '/login';
+	const usesUsernameSignIn = RuntimeConfig.usesUsernameSignIn;
 	if (isRuntimeSsoEnforced()) {
 		return (
 			<div className={sharedStyles.container} data-flx="auth.register-page.register-page-content.sso-container">
@@ -38,13 +40,15 @@ const RegisterPageContent = observer(function RegisterPageContent() {
 			<div className={sharedStyles.container} data-flx="auth.register-page.register-page-content.div">
 				<AuthRegisterFormCore
 					fields={{
-						showEmail: true,
+						showEmail: !usesUsernameSignIn,
 						showPassword: true,
 						showPasswordConfirmation: true,
 						showUsernameValidation: true,
+						requireUsername: usesUsernameSignIn,
 					}}
 					submitLabel={<Trans>Create account</Trans>}
 					redirectPath={redirectTo}
+					offerRecoveryKit={usesUsernameSignIn}
 					data-flx="auth.register-page.register-page-content.auth-register-form-core"
 				/>
 				<AuthBottomLink

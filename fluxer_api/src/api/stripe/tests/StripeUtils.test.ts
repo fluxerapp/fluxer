@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {addMonthsClamp} from '@app/api/stripe/StripeUtils';
 import {describe, expect, it} from 'vitest';
-import {addMonthsClamp} from '../StripeUtils';
 
 describe('addMonthsClamp', () => {
 	it('adds months normally when no overflow occurs', () => {

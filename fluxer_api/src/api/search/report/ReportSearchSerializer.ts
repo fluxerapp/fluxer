@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IARSubmission} from '@app/api/report/IReportRepository';
 import type {SearchableReport} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {IARSubmission} from '../../report/IReportRepository';
 
 export function convertToSearchableReport(report: IARSubmission): SearchableReport {
 	const createdAt = Math.floor(snowflakeToDate(BigInt(report.reportId)).getTime() / 1000);

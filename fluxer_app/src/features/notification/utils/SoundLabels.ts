@@ -30,7 +30,7 @@ const USER_LEAVES_CHANNEL_DESCRIPTOR = msg({
 	comment: 'Notification sound setting label. Sound played when another user leaves the voice channel.',
 });
 const USER_MOVED_CHANNEL_DESCRIPTOR = msg({
-	message: 'User moved channel',
+	message: 'User moves channel',
 	comment: 'Notification sound setting label. Sound played when a user is moved between voice channels.',
 });
 const VIEWER_JOINS_STREAM_DESCRIPTOR = msg({

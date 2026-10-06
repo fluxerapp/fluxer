@@ -21,7 +21,7 @@ export const RoleDeleteFailedModal = observer(({roleName}: RoleDeleteFailedModal
 			title={i18n._(FAILED_TO_DELETE_ROLE_DESCRIPTOR)}
 			message={
 				<Trans>
-					<strong data-flx="app.role-delete-failed-modal.strong">"{roleName}"</strong> wouldn't delete. Try again.
+					We couldn't delete <strong data-flx="app.role-delete-failed-modal.strong">"{roleName}"</strong>. Try again.
 				</Trans>
 			}
 			data-flx="app.role-delete-failed-modal.generic-error-modal"

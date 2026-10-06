@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {areOrderedStringArraysEqual} from '@app/features/voice/utils/StringArrayUtils';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface IncomingCallManagerSignals {
 	incomingCallIds: Array<string>;
@@ -85,7 +85,7 @@ export const incomingCallManagerStateMachine = setup({
 export type IncomingCallManagerSnapshot = SnapshotFrom<typeof incomingCallManagerStateMachine>;
 
 export function createIncomingCallManagerSnapshot(): IncomingCallManagerSnapshot {
-	return getInitialSnapshot(incomingCallManagerStateMachine);
+	return initialTransition(incomingCallManagerStateMachine)[0];
 }
 
 export function transitionIncomingCallManagerSnapshot(

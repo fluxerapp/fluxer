@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ensureDeletionQueueState} from '@app/api/app/DeletionQueueStartup';
+import {createUserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
+import type {ILogger} from '@app/api/ILogger';
+import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {User} from '@app/api/models/User';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {describe, expect, it} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import {EMPTY_USER_ROW} from '../../database/types/UserTypes';
-import type {ILogger} from '../../ILogger';
-import {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import {User} from '../../models/User';
-import {MockKVProvider} from '../../test/mocks/MockKVProvider';
-import {NoopLogger} from '../../test/mocks/NoopLogger';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import {ensureDeletionQueueState} from '../DeletionQueueStartup';
 
 const WORKER_PAGE_COUNT = 2;
 
@@ -32,7 +32,7 @@ class RecordingLogger implements ILogger {
 }
 
 class UnreadableStateKVProvider extends MockKVProvider {
-	override async exists(): Promise<number> {
+	override async get(): Promise<string | null> {
 		throw new Error('kv unavailable');
 	}
 }

@@ -2,7 +2,6 @@
 
 import {APP_PROTOCOL} from '@electron/common/Constants';
 import {parseJumpListTaskFromArgv} from '@electron/main/JumpList';
-import {ensureLinuxProtocolDesktopEntry} from '@electron/main/LinuxDesktopEntry';
 import {recordRecentDeepLink} from '@electron/main/RecentDocuments';
 import {getMainWindow, showWindow} from '@electron/main/Window';
 import {app, ipcMain} from 'electron';
@@ -62,7 +61,6 @@ function normalizeDeepLinkForRenderer(rawUrl: string): string | null {
 }
 
 export function initializeDeepLinks(): void {
-	ensureLinuxProtocolDesktopEntry();
 	if (process.platform === 'linux') {
 		registerInitialDeepLinkHandler();
 		return;

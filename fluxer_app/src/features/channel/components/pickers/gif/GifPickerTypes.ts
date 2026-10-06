@@ -10,6 +10,7 @@ export interface FavoriteGifLookup {
 
 export type FavoriteAwareGif = Gif & {
 	favoriteGifLookup?: FavoriteGifLookup;
+	contentType?: string;
 };
 export type GifPickerGridItemData =
 	| {
@@ -20,6 +21,7 @@ export type GifPickerGridItemData =
 			categoryKind: 'favorites' | 'trending' | 'category';
 			previewUrl: string;
 			previewProxySrc: string;
+			previewContentType?: string;
 			width: number;
 			height: number;
 	  }

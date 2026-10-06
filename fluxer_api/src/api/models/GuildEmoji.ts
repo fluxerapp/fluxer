@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EmojiID, GuildID, UserID} from '../BrandedTypes';
-import type {GuildEmojiRow} from '../database/types/GuildTypes';
+import type {EmojiID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildEmojiRow} from '@app/api/database/types/GuildTypes';
 
 export class GuildEmoji {
 	readonly guildId: GuildID;

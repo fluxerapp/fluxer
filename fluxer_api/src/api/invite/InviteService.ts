@@ -1,5 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
+import {createInviteCode, vanityCodeToInviteCode} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import {Invite} from '@app/api/models/Invite';
+import {assertAccountNotLimited} from '@app/api/user/AccountLimit';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ChannelTypes, InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures, GuildOperations, JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
@@ -16,21 +32,8 @@ import type {
 	GroupDmInviteMetadataResponse,
 	GuildInviteMetadataResponse,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import type {ApiContext} from '../ApiContext';
-import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
-import {createInviteCode, vanityCodeToInviteCode} from '../BrandedTypes';
-import type {ChannelService} from '../channel/services/ChannelService';
-import type {GuildAuditLogService} from '../guild/GuildAuditLogService';
-import type {GuildService} from '../guild/services/GuildService';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Channel} from '../models/Channel';
-import {Invite} from '../models/Invite';
-import * as RandomUtils from '../utils/RandomUtils';
-import type {IInviteRepository} from './IInviteRepository';
+
+const INVITE_USE_RESERVATION_EXTRA_ATTEMPTS = 8;
 
 interface GetChannelInvitesParams {
 	userId: UserID;
@@ -260,13 +263,18 @@ export class InviteService {
 			if (channel.recipientIds.has(userId)) {
 				return invite;
 			}
-			await this.channelService.groupDms.addRecipientViaInvite({
-				channelId: invite.channelId,
-				recipientId: userId,
-				inviterId: invite.inviterId,
-				requestCache,
-			});
-			return this.incrementInviteUses(invite, {deleteWhenExhausted: true});
+			if (user) assertAccountNotLimited(user);
+			const channelId = invite.channelId;
+			const reservedInvite = await this.reserveInviteUse(invite);
+			await this.withReservedInviteUse(reservedInvite, () =>
+				this.channelService.groupDms.addRecipientViaInvite({
+					channelId,
+					recipientId: userId,
+					inviterId: invite.inviterId,
+					requestCache,
+				}),
+			);
+			return this.completeInviteUse(reservedInvite, {deleteWhenExhausted: true});
 		}
 		if (!invite.guildId) throw new UnknownInviteError();
 		const guild = await this.guildService.data.getGuildSystem(invite.guildId);
@@ -292,20 +300,24 @@ export class InviteService {
 		}
 		const vanityCode = guild.vanityUrlCode ? vanityCodeToInviteCode(guild.vanityUrlCode) : null;
 		const isVanityInvite = invite.code === vanityCode;
-		await this.guildService.members.addUserToGuild({
-			userId,
-			guildId: invite.guildId,
-			sendJoinMessage: true,
-			requestCache,
-			isTemporary: invite.temporary,
-			joinSourceType: isVanityInvite ? JoinSourceTypes.VANITY_URL : JoinSourceTypes.INSTANT_INVITE,
-			sourceInviteCode: isVanityInvite ? undefined : invite.code,
-			inviterId: isVanityInvite ? undefined : (invite.inviterId ?? undefined),
-		});
+		const guildId = invite.guildId;
+		const reservedInvite = await this.reserveInviteUse(invite);
+		await this.withReservedInviteUse(reservedInvite, () =>
+			this.guildService.members.addUserToGuild({
+				userId,
+				guildId,
+				sendJoinMessage: true,
+				requestCache,
+				isTemporary: invite.temporary,
+				joinSourceType: isVanityInvite ? JoinSourceTypes.VANITY_URL : JoinSourceTypes.INSTANT_INVITE,
+				sourceInviteCode: isVanityInvite ? undefined : invite.code,
+				inviterId: isVanityInvite ? undefined : (invite.inviterId ?? undefined),
+			}),
+		);
 		if (invite.temporary) {
-			await this.apiContext.services.gateway.addTemporaryGuild({userId, guildId: invite.guildId});
+			await this.apiContext.services.gateway.addTemporaryGuild({userId, guildId});
 		}
-		return this.incrementInviteUses(invite, {deleteWhenExhausted: !isVanityInvite});
+		return this.completeInviteUse(reservedInvite, {deleteWhenExhausted: !isVanityInvite});
 	}
 
 	private createRandomInviteCode(): InviteCode {
@@ -324,13 +336,53 @@ export class InviteService {
 		});
 	}
 
-	private async incrementInviteUses(invite: Invite, params: {deleteWhenExhausted: boolean}): Promise<Invite> {
-		const newUses = invite.uses + 1;
-		await this.inviteRepository.updateInviteUses(invite.code, newUses, invite);
-		if (params.deleteWhenExhausted && invite.maxUses > 0 && newUses >= invite.maxUses) {
+	private async reserveInviteUse(invite: Invite): Promise<Invite> {
+		if (invite.maxUses <= 0) return invite;
+		let current: Invite | null = invite;
+		for (let attempt = 0; attempt <= invite.maxUses + INVITE_USE_RESERVATION_EXTRA_ATTEMPTS; attempt++) {
+			if (!current || current.uses >= current.maxUses) break;
+			const reservedUses = current.uses + 1;
+			if (await this.inviteRepository.compareAndSetInviteUses(current, reservedUses)) {
+				return this.cloneInviteWithUses(current, reservedUses);
+			}
+			current = await this.inviteRepository.findUnique(invite.code);
+		}
+		throw new UnknownInviteError();
+	}
+
+	private async withReservedInviteUse(reservedInvite: Invite, join: () => Promise<unknown>): Promise<void> {
+		try {
+			await join();
+		} catch (error) {
+			await this.releaseInviteUse(reservedInvite);
+			throw error;
+		}
+	}
+
+	private async releaseInviteUse(reservedInvite: Invite): Promise<void> {
+		if (reservedInvite.maxUses <= 0) return;
+		try {
+			let current = await this.inviteRepository.findUnique(reservedInvite.code);
+			for (let attempt = 0; attempt <= reservedInvite.maxUses + INVITE_USE_RESERVATION_EXTRA_ATTEMPTS; attempt++) {
+				if (!current || current.uses <= 0) return;
+				if (await this.inviteRepository.compareAndSetInviteUses(current, current.uses - 1)) return;
+				current = await this.inviteRepository.findUnique(reservedInvite.code);
+			}
+		} catch (error) {
+			Logger.error({error, inviteCode: reservedInvite.code}, 'Failed to release reserved invite use');
+		}
+	}
+
+	private async completeInviteUse(invite: Invite, params: {deleteWhenExhausted: boolean}): Promise<Invite> {
+		if (invite.maxUses <= 0) {
+			const newUses = invite.uses + 1;
+			await this.inviteRepository.updateInviteUses(invite.code, newUses, invite);
+			return this.cloneInviteWithUses(invite, newUses);
+		}
+		if (params.deleteWhenExhausted && invite.uses >= invite.maxUses) {
 			await this.inviteRepository.delete(invite.code);
 		}
-		return this.cloneInviteWithUses(invite, newUses);
+		return invite;
 	}
 
 	private async findInviteWithLowercaseFallback(inviteCode: InviteCode): Promise<Invite | null> {

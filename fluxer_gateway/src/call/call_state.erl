@@ -5,6 +5,8 @@
 
 -export([
     build_call_event/1,
+    caller_from_state/1,
+    put_caller/2,
     format_voice_state/1,
     format_voice_states/1,
     format_pending_connections/1,
@@ -27,6 +29,26 @@ build_call_event(State) ->
         ringing => integer_list_to_binaries(maps:get(ringing, State)),
         voice_states => format_voice_states(maps:get(voice_states, State))
     }.
+
+-spec caller_from_state(map()) -> map().
+caller_from_state(State) ->
+    #{
+        caller_id => maps:get(caller_id, State, undefined),
+        caller_name => maps:get(caller_name, State, undefined),
+        caller_avatar => maps:get(caller_avatar, State, undefined)
+    }.
+
+-spec put_caller(map(), map()) -> map().
+put_caller(#{caller_id := Id, caller_name := Name} = Caller, State) when
+    is_integer(Id), is_binary(Name), byte_size(Name) > 0
+->
+    State#{
+        caller_id => Id,
+        caller_name => Name,
+        caller_avatar => maps:get(caller_avatar, Caller, undefined)
+    };
+put_caller(_Caller, State) ->
+    State.
 
 -spec integer_list_to_binaries([integer()]) -> [binary()].
 integer_list_to_binaries(Values) ->
@@ -245,3 +267,39 @@ voice_state_connection_id(VoiceState) ->
         VoiceState,
         maps:get(connection_id, VoiceState, undefined)
     ).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+put_caller_stores_a_resolved_caller_test() ->
+    Caller = #{caller_id => 7, caller_name => <<"Ada">>, caller_avatar => <<"a1b2c3d4">>},
+    ?assertEqual(Caller, caller_from_state(put_caller(Caller, #{}))).
+
+put_caller_overwrites_an_earlier_caller_test() ->
+    First = #{caller_id => 7, caller_name => <<"Ada">>, caller_avatar => <<"a1b2c3d4">>},
+    Second = #{caller_id => 9, caller_name => <<"Bo">>, caller_avatar => undefined},
+    State = put_caller(Second, put_caller(First, #{})),
+    ?assertEqual(Second, caller_from_state(State)).
+
+put_caller_keeps_the_stored_caller_when_the_new_one_is_unresolved_test() ->
+    Caller = #{caller_id => 7, caller_name => <<"Ada">>, caller_avatar => <<"a1b2c3d4">>},
+    State = put_caller(Caller, #{}),
+    Unresolved = #{
+        caller_id => undefined, caller_name => undefined, caller_avatar => undefined
+    },
+    ?assertEqual(Caller, caller_from_state(put_caller(Unresolved, State))).
+
+put_caller_rejects_a_caller_without_a_name_test() ->
+    Caller = #{caller_id => 7, caller_name => <<>>, caller_avatar => undefined},
+    ?assertEqual(
+        #{caller_id => undefined, caller_name => undefined, caller_avatar => undefined},
+        caller_from_state(put_caller(Caller, #{}))
+    ).
+
+caller_from_state_reads_an_absent_caller_as_undefined_test() ->
+    ?assertEqual(
+        #{caller_id => undefined, caller_name => undefined, caller_avatar => undefined},
+        caller_from_state(#{})
+    ).
+
+-endif.

@@ -153,7 +153,7 @@ describe('KVClient script execution', () => {
 				},
 				{
 					name: 'dequeuePurgeBatch',
-					reply: JSON.stringify({urls: ['https://fluxer.test/a.png'], tokens: 1}),
+					reply: JSON.stringify({entries: ['/attachments/1/2/a'], tokens: 1}),
 					keyCount: 2,
 					run: async (client) => client.dequeuePurgeBatch('queue:key', 'bucket:key', 10, 10, 1, 1000),
 				},

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DOMAIN_MIGRATION_STORAGE_KEY_PREFIXES} from '@app/features/app/domain_migration/DomainMigrationCore';
 import {getProtectedLocalStorage, getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
 
 export type StorageChangeSource = 'local' | 'external';
@@ -24,7 +25,7 @@ interface EnhancedStorage {
 	setItem(key: string, value: string): void;
 	removeItem(key: string): void;
 	clear(): void;
-	clearExcept(keysToKeep: ReadonlyArray<string>): void;
+	clearExcept(keysToKeep: ReadonlyArray<string>, prefixesToKeep?: ReadonlyArray<string>): void;
 	key(index: number): string | null;
 	readonly length: number;
 	getJSON<T>(key: string, defaultValue?: T): T | null;
@@ -201,14 +202,14 @@ function createStorage(storageType: 'local' | 'session' | 'memory' = 'local'): E
 			enumerable: false,
 		},
 		clearExcept: {
-			value: (keysToKeep: ReadonlyArray<string>) => {
-				if (keysToKeep.length === 0) {
+			value: (keysToKeep: ReadonlyArray<string>, prefixesToKeep: ReadonlyArray<string> = []) => {
+				if (keysToKeep.length === 0 && prefixesToKeep.length === 0) {
 					clearInternal();
 					return;
 				}
 				const keepSet = new Set(keysToKeep);
 				const removedEntries = getAllKeys()
-					.filter((key) => !keepSet.has(key))
+					.filter((key) => !keepSet.has(key) && !prefixesToKeep.some((prefix) => key.startsWith(prefix)))
 					.map((key) => [key, baseStorage!.getItem(key)] as const)
 					.filter((entry): entry is readonly [string, string] => entry[1] !== null);
 				if (removedEntries.length === 0) {
@@ -292,3 +293,5 @@ const AppStorage = createStorage('local');
 export default AppStorage;
 
 export const PRESERVED_RESET_STORAGE_KEYS = ['Drafts'] as const;
+
+export const PRESERVED_RESET_STORAGE_KEY_PREFIXES = DOMAIN_MIGRATION_STORAGE_KEY_PREFIXES;

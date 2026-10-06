@@ -29,6 +29,7 @@ interface MediaEngineAccess {
 	voiceEngineV2Controller?: VoiceEngineV2Controller;
 	voiceEngineV2Model?: VoiceEngineV2Model;
 	voiceEngineV2Snapshot?: VoiceEngineV2Snapshot;
+	getAllVoiceStates?: () => VoiceMediaEngineVoiceStates;
 	getAllVoiceStatesInChannel?: (
 		guildId: string,
 		channelId: string,
@@ -107,6 +108,14 @@ export function getVoiceConnectionContextFromMediaEngine(): VoiceMediaEngineConn
 		disconnecting: modelConnection?.status === 'disconnecting',
 		reconnecting: store.reconnecting ?? modelConnection?.reconnecting ?? false,
 	};
+}
+
+export type VoiceMediaEngineVoiceStates = Readonly<
+	Record<string, Readonly<Record<string, Readonly<Record<string, VoiceMediaEngineVoiceState>>>>>
+>;
+
+export function getAllVoiceStatesFromMediaEngine(): VoiceMediaEngineVoiceStates {
+	return getMediaEngine()?.getAllVoiceStates?.() ?? {};
 }
 
 export function getAllVoiceStatesInChannelFromMediaEngine(

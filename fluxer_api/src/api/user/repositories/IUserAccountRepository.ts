@@ -1,17 +1,36 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {User} from '../../models/User';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {User} from '@app/api/models/User';
+
+export interface UserDeletionScheduleUpdate {
+	pending_deletion_at: Date | null;
+	flags?: bigint;
+	deletion_reason_code?: number | null;
+	deletion_public_reason?: string | null;
+	deletion_audit_log_reason?: string | null;
+	deletion_scheduled_by?: UserID | null;
+	deletion_scheduled_at?: Date | null;
+	temp_banned_until?: Date | null;
+	first_refund_at?: Date | null;
+}
 
 export interface IUserAccountRepository {
 	create(data: UserRow): Promise<User>;
 	upsert(data: UserRow, oldData?: UserRow | null): Promise<User>;
 	patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User>;
+	compareAndSetFlags(user: User, flags: bigint): Promise<User | null>;
+	updateFlags(userId: UserID, mutate: (flags: bigint) => bigint): Promise<User | null>;
+	updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User>;
+	startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null>;
+	anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User>;
+	completeDeletion(user: User): Promise<void>;
 	findUnique(userId: UserID): Promise<User | null>;
 	findUniqueAssert(userId: UserID): Promise<User>;
 	findByUsernameDiscriminator(username: string, discriminator: number): Promise<User | null>;
 	findDiscriminatorsByUsername(username: string): Promise<Set<number>>;
+	findUsersByUsername(username: string): Promise<Array<User>>;
 	findByEmail(email: string): Promise<User | null>;
 	findByStripeSubscriptionId(stripeSubscriptionId: string): Promise<User | null>;
 	findByStripeCustomerId(stripeCustomerId: string): Promise<User | null>;

@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createChannel,
+	createGuild,
+	loadFixture,
+	sendMessageWithAttachments,
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import type {MediaProxyMetadataRequest} from '@app/api/infrastructure/IMediaService';
+import {setInjectedMediaService} from '@app/api/middleware/ServiceRegistry';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {TestMediaService} from '@app/api/test/TestMediaService';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Logger} from '@fluxer/logger/src/Logger';
 import {beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import type {MediaProxyMetadataRequest} from '../../infrastructure/IMediaService';
-import {setInjectedMediaService} from '../../middleware/ServiceRegistry';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {TestMediaService} from '../../test/TestMediaService';
-import {createChannel, createGuild, loadFixture, sendMessageWithAttachments} from './AttachmentTestUtils';
 
 class NullUploadMetadataService extends TestMediaService {
 	override async getMetadata(request: MediaProxyMetadataRequest) {
@@ -95,7 +100,7 @@ describe('Attachment Upload Validation', () => {
 								status: HTTP_STATUS.SERVICE_UNAVAILABLE,
 							}),
 							method: 'POST',
-							path: `/channels/${channelId}/messages`,
+							path: '/channels/:channel_id/messages',
 							requestId: expect.any(String),
 							status: HTTP_STATUS.SERVICE_UNAVAILABLE,
 						},
@@ -322,17 +327,17 @@ describe('Attachment Upload Validation', () => {
 				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 				const channelId = guild.system_channel_id ?? channel.id;
 				const file1Data = loadFixture('yeah.png');
-				const file2Data = loadFixture('thisisfine.gif');
+				const file2Data = loadFixture('animated.gif');
 				const payload = {
 					content: 'Ordered files test',
 					attachments: [
 						{id: 0, filename: 'yeah.png', description: 'First file', title: 'First'},
-						{id: 1, filename: 'thisisfine.gif', description: 'Second file', title: 'Second'},
+						{id: 1, filename: 'animated.gif', description: 'Second file', title: 'Second'},
 					],
 				};
 				const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
 					{index: 0, filename: 'yeah.png', data: file1Data},
-					{index: 1, filename: 'thisisfine.gif', data: file2Data},
+					{index: 1, filename: 'animated.gif', data: file2Data},
 				]);
 				expect(response.status).toBe(200);
 				expect(json.attachments).toBeDefined();
@@ -341,7 +346,7 @@ describe('Attachment Upload Validation', () => {
 				expect(json.attachments![0].filename).toBe('yeah.png');
 				expect(json.attachments![0].description).toBe('First file');
 				expect(json.attachments![0].title).toBe('First');
-				expect(json.attachments![1].filename).toBe('thisisfine.gif');
+				expect(json.attachments![1].filename).toBe('animated.gif');
 				expect(json.attachments![1].description).toBe('Second file');
 				expect(json.attachments![1].title).toBe('Second');
 			});
@@ -351,17 +356,17 @@ describe('Attachment Upload Validation', () => {
 				const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 				const channelId = guild.system_channel_id ?? channel.id;
 				const file1Data = loadFixture('yeah.png');
-				const file2Data = loadFixture('thisisfine.gif');
+				const file2Data = loadFixture('animated.gif');
 				const payload = {
 					content: 'Sparse IDs test',
 					attachments: [
 						{id: 2, filename: 'yeah.png', description: 'ID is 2', title: 'Two'},
-						{id: 5, filename: 'thisisfine.gif', description: 'ID is 5', title: 'Five'},
+						{id: 5, filename: 'animated.gif', description: 'ID is 5', title: 'Five'},
 					],
 				};
 				const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
 					{index: 2, filename: 'yeah.png', data: file1Data},
-					{index: 5, filename: 'thisisfine.gif', data: file2Data},
+					{index: 5, filename: 'animated.gif', data: file2Data},
 				]);
 				expect(response.status).toBe(200);
 				expect(json.attachments).toBeDefined();
@@ -467,7 +472,7 @@ describe('Attachment Upload Validation', () => {
 			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
 			const channelId = guild.system_channel_id ?? channel.id;
 			const file1Data = loadFixture('yeah.png');
-			const file2Data = loadFixture('thisisfine.gif');
+			const file2Data = loadFixture('animated.gif');
 			const payload = {
 				content: 'Mixed metadata test',
 				attachments: [
@@ -480,13 +485,13 @@ describe('Attachment Upload Validation', () => {
 					},
 					{
 						id: 1,
-						filename: 'thisisfine.gif',
+						filename: 'animated.gif',
 					},
 				],
 			};
 			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
 				{index: 0, filename: 'yeah.png', data: file1Data},
-				{index: 1, filename: 'thisisfine.gif', data: file2Data},
+				{index: 1, filename: 'animated.gif', data: file2Data},
 			]);
 			expect(response.status).toBe(200);
 			expect(json.attachments).toBeDefined();

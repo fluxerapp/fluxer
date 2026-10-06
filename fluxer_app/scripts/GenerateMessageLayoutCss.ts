@@ -2,7 +2,7 @@
 
 import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {dirname, join, relative} from 'node:path';
-import {renderMessageLayoutCss} from '../src/features/theme/layout/MessageLayoutCss';
+import {renderMessageLayoutCss} from '@app/features/theme/layout/MessageLayoutCss';
 
 function main(): void {
 	const scriptDir = import.meta.dirname;

@@ -34,7 +34,7 @@ interface VirtualRowRendererProps {
 	selectedColumnInRow: number;
 	emojiRowIndex: number;
 	shouldScrollOnSelection?: boolean;
-	emojiRefs: React.MutableRefObject<Map<string, HTMLButtonElement>>;
+	emojiRefs: React.RefObject<Map<string, HTMLButtonElement>>;
 }
 
 const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
@@ -208,7 +208,7 @@ interface VirtualizedRowProps {
 	selectedColumn: number;
 	emojiRowIndex: number;
 	shouldScrollOnSelection?: boolean;
-	emojiRefs: React.MutableRefObject<Map<string, HTMLButtonElement>>;
+	emojiRefs: React.RefObject<Map<string, HTMLButtonElement>>;
 }
 
 export const VirtualizedRow: React.FC<VirtualizedRowProps> = observer(

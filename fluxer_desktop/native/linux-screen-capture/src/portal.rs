@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::env;
 use std::os::fd::OwnedFd;
+use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, mpsc};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -27,7 +28,8 @@ pub const REGISTRY_INTERFACE: &str = "org.freedesktop.host.portal.Registry";
 pub const REQUEST_TIMEOUT: Duration = Duration::from_secs(5 * 60);
 const SIGNAL_POLL_INTERVAL: Duration = Duration::from_millis(200);
 const MIN_PORTAL_VERSION: u32 = 4;
-const DESKTOP_ENTRY_ID_ENV: &str = "FLUXER_LINUX_DESKTOP_ENTRY_ID";
+const PORTAL_APP_ID_ENV: &str = "FLUXER_LINUX_PORTAL_APP_ID";
+const FLATPAK_INFO_PATH: &str = "/.flatpak-info";
 
 pub const CURSOR_MODE_HIDDEN: u32 = 1;
 pub const CURSOR_MODE_EMBEDDED: u32 = 2;
@@ -198,14 +200,17 @@ fn normalize_desktop_entry_app_id(value: &str) -> Option<String> {
     valid.then(|| app_id.to_string())
 }
 
-fn configured_desktop_entry_app_id() -> Option<String> {
-    env::var(DESKTOP_ENTRY_ID_ENV)
+fn configured_portal_app_id() -> Option<String> {
+    if Path::new(FLATPAK_INFO_PATH).exists() {
+        return None;
+    }
+    env::var(PORTAL_APP_ID_ENV)
         .ok()
         .and_then(|value| normalize_desktop_entry_app_id(&value))
 }
 
 fn register_portal_app_id(conn: &BlockingConnection) {
-    let Some(app_id) = configured_desktop_entry_app_id() else {
+    let Some(app_id) = configured_portal_app_id() else {
         return;
     };
     let Ok(proxy) = BlockingProxy::new(conn, PORTAL_DESTINATION, PORTAL_PATH, REGISTRY_INTERFACE)

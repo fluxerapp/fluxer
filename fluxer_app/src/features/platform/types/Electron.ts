@@ -67,6 +67,7 @@ export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
 	minimizeToTray: boolean;
 	closeToTray: boolean;
+	startMinimized?: boolean;
 	useNativeTitleBar: boolean;
 	activeUseNativeTitleBar: boolean;
 	rememberWindowState: boolean;
@@ -96,6 +97,14 @@ export interface ThemeDirectoryCssFile {
 	fileName: string;
 	path: string;
 	css: string;
+}
+
+export type ThemeLinkedFileError = 'not_allowed' | 'missing' | 'not_file' | 'too_large' | 'too_many' | 'read_failed';
+
+export interface ThemeLinkedFileChange {
+	path: string;
+	css?: string;
+	error?: ThemeLinkedFileError;
 }
 
 export type VoiceBackgroundMediaKind = 'static' | 'animated' | 'video';
@@ -212,6 +221,7 @@ export interface DownloadFileOptions {
 export interface DownloadFileResult {
 	success: boolean;
 	canceled?: boolean;
+	checksumMismatch?: boolean;
 	path?: string;
 	error?: string;
 }
@@ -318,6 +328,9 @@ export interface ElectronAPI {
 	readThemeLocalFiles: (paths: Array<string>) => Promise<Array<ThemeLocalFileReadResult>>;
 	clearThemeLocalFiles: () => Promise<void>;
 	importThemeDirectory: () => Promise<Array<ThemeDirectoryCssFile>>;
+	pickThemeLinkedFiles: (options?: {multiple?: boolean}) => Promise<Array<ThemeDirectoryCssFile>>;
+	watchThemeLinkedFiles: (paths: Array<string>) => Promise<void>;
+	onThemeLinkedFileChange: (callback: (change: ThemeLinkedFileChange) => void) => () => void;
 	cacheVoiceBackgroundMedia: (options: VoiceBackgroundMediaCacheRequest) => Promise<VoiceBackgroundMediaCacheResult>;
 	readVoiceBackgroundMedia: (id: string) => Promise<VoiceBackgroundMediaReadResult | null>;
 	deleteVoiceBackgroundMedia: (id: string) => Promise<void>;
@@ -357,7 +370,7 @@ export interface ElectronAPI {
 	requestInputMonitoringPermission?: () => Promise<InputMonitoringPermissionStatus>;
 	getScreenRecordingPermissionStatus?: () => Promise<InputMonitoringPermissionStatus>;
 	requestScreenRecordingPermission?: () => Promise<InputMonitoringPermissionStatus>;
-	downloadFile: (url: string, defaultPath: string) => Promise<DownloadFileResult>;
+	downloadFile: (url: string, defaultPath: string, sha256?: string | null) => Promise<DownloadFileResult>;
 	toggleDevTools: () => void;
 	showNotification: (options: NotificationOptions) => Promise<NotificationResult>;
 	shouldPlayNotificationSound?: () => Promise<boolean>;
@@ -401,11 +414,7 @@ export interface ElectronAPI {
 		readableEventDevices: number;
 		inInputGroup: boolean;
 	}>;
-	linuxEvdevGrantAccess: () => Promise<{
-		success: boolean;
-		needsRelogin: boolean;
-		error?: string;
-	}>;
+	globalShortcuts?: GlobalShortcutsApi;
 	onGlobalKeyEvent: (callback: (event: GlobalKeyEvent) => void) => () => void;
 	onGlobalMouseEvent: (callback: (event: GlobalMouseEvent) => void) => () => void;
 	onGlobalKeybindTriggered: (callback: (event: GlobalKeybindTriggeredEvent) => void) => () => void;
@@ -439,6 +448,8 @@ export interface ElectronAPI {
 	virtmic: VirtmicApi;
 	nativeAudio: NativeAudioApi;
 	voiceEngine?: VoiceEngineV2BridgeHardwareEncoderApi;
+	domainMigration?: {version: number; setAppOrigin(origin: string): Promise<void>};
+	passkeyRpIds?: ReadonlyArray<string>;
 }
 
 export type VirtmicUnavailableReason =
@@ -598,6 +609,113 @@ export interface GlobalMouseEvent {
 export interface GlobalKeybindTriggeredEvent {
 	id: string;
 	type: 'keydown' | 'keyup';
+}
+
+export type GlobalShortcutsBackend = 'portal' | 'x11' | 'evdev' | 'windows' | 'macos' | 'none';
+
+export type GlobalShortcutsPortalState =
+	| 'unknown'
+	| 'probing'
+	| 'unsupported'
+	| 'not-set-up'
+	| 'binding'
+	| 'bound'
+	| 'declined'
+	| 'error';
+
+export interface GlobalShortcutsPortalShortcut {
+	action: string;
+	triggerDescription: string | null;
+}
+
+export interface GlobalShortcutsPortalStatus {
+	state: GlobalShortcutsPortalState;
+	version: number | null;
+	canConfigure: boolean;
+	canRecheck: boolean;
+	portalAppId: string | null;
+	shortcuts: Array<GlobalShortcutsPortalShortcut>;
+	error: string | null;
+	recovering: boolean;
+}
+
+export interface GlobalShortcutsLinuxStatus {
+	session: 'wayland' | 'x11' | 'unknown';
+	sandbox: 'flatpak' | 'none';
+	desktop: 'kde' | 'gnome' | 'hyprland' | 'other';
+	portal: GlobalShortcutsPortalStatus | null;
+	directInput: {available: boolean; enabled: boolean; locked: boolean};
+}
+
+export interface GlobalShortcutsStatus {
+	backend: GlobalShortcutsBackend;
+	platform: 'linux' | 'windows' | 'macos';
+	linux: GlobalShortcutsLinuxStatus | null;
+	hooksActive: boolean;
+	hookError: 'permission' | 'start-failed' | null;
+	supportsMouseButtons: boolean;
+	supportsModifierOnly: boolean;
+}
+
+export interface GlobalShortcutCombo {
+	code?: string;
+	key: string;
+	ctrl: boolean;
+	alt: boolean;
+	shift: boolean;
+	meta: boolean;
+	mouseButton?: number;
+	modifierOnly?: boolean;
+	bothSides?: boolean;
+}
+
+export interface GlobalShortcutBinding {
+	sourceId: string;
+	action: string;
+	combo: GlobalShortcutCombo;
+}
+
+export interface GlobalShortcutActionDefinition {
+	action: string;
+	description: string;
+	preferredCombo: GlobalShortcutCombo | null;
+}
+
+export interface GlobalShortcutsSyncPayload {
+	bindings: Array<GlobalShortcutBinding>;
+	actions: Array<GlobalShortcutActionDefinition>;
+}
+
+export interface GlobalShortcutEvent {
+	action: string;
+	sourceId: string;
+	phase: 'press' | 'release';
+}
+
+export interface GlobalShortcutCaptureEvent {
+	type: 'keydown' | 'keyup' | 'mousedown' | 'mouseup';
+	code: string | null;
+	key: string | null;
+	button: number | null;
+	ctrl: boolean;
+	alt: boolean;
+	shift: boolean;
+	meta: boolean;
+}
+
+export interface GlobalShortcutsApi {
+	sync: (payload: GlobalShortcutsSyncPayload) => Promise<void>;
+	setPaused: (paused: boolean) => Promise<void>;
+	getStatus: () => Promise<GlobalShortcutsStatus>;
+	onStatus: (callback: (status: GlobalShortcutsStatus) => void) => () => void;
+	onEvent: (callback: (event: GlobalShortcutEvent) => void) => () => void;
+	setUp: () => Promise<GlobalShortcutsStatus>;
+	configure: () => Promise<void>;
+	setDirectInputEnabled: (enabled: boolean) => Promise<GlobalShortcutsStatus>;
+	recheck: () => Promise<GlobalShortcutsStatus>;
+	startCapture: () => Promise<number | null>;
+	stopCapture: (captureId: number) => Promise<void>;
+	onCapture: (callback: (event: GlobalShortcutCaptureEvent) => void) => () => void;
 }
 
 export type SpellcheckEngine = 'auto' | 'hunspell' | 'system';

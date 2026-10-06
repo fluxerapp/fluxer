@@ -6,8 +6,14 @@ pub fn deserialize_discriminator<'de, D: Deserializer<'de>>(d: D) -> Result<Stri
     let v: serde_json::Value = Deserialize::deserialize(d)?;
     match v {
         serde_json::Value::String(s) => Ok(format!("{:0>4}", s)),
-        serde_json::Value::Number(n) => Ok(format!("{:04}", n.as_u64().unwrap_or(0))),
-        _ => Ok("0000".to_owned()),
+        serde_json::Value::Number(n) => n
+            .as_u64()
+            .map(|value| format!("{value:04}"))
+            .ok_or_else(|| serde::de::Error::custom("expected an unsigned integer discriminator")),
+        serde_json::Value::Null => Ok("0000".to_owned()),
+        _ => Err(serde::de::Error::custom(
+            "expected string or unsigned integer discriminator",
+        )),
     }
 }
 
@@ -15,7 +21,9 @@ pub fn deserialize_string_or_u64<'de, D: Deserializer<'de>>(d: D) -> Result<u64,
     let v: serde_json::Value = Deserialize::deserialize(d)?;
     match v {
         serde_json::Value::String(s) => s.parse::<u64>().map_err(serde::de::Error::custom),
-        serde_json::Value::Number(n) => Ok(n.as_u64().unwrap_or(0)),
+        serde_json::Value::Number(n) => n
+            .as_u64()
+            .ok_or_else(|| serde::de::Error::custom("expected an unsigned 64-bit integer")),
         serde_json::Value::Null => Ok(0),
         _ => Err(serde::de::Error::custom("expected string or number")),
     }
@@ -100,20 +108,20 @@ pub struct AdminUser {
     pub premium_grace_ends_at: Option<String>,
     pub premium_lifetime_sequence: Option<i32>,
     #[serde(default)]
-    pub suspicious_activity_flags: i32,
-    #[serde(default)]
-    pub phone_verification_deferred: bool,
-    #[serde(default)]
     pub has_totp: bool,
     #[serde(default)]
     pub authenticator_types: Vec<i32>,
-    #[serde(default)]
-    pub has_verified_phone: bool,
     pub temp_banned_until: Option<String>,
     pub pending_deletion_at: Option<String>,
     pub pending_bulk_message_deletion_at: Option<String>,
     pub deletion_reason_code: Option<i32>,
     pub deletion_public_reason: Option<String>,
+    #[serde(default)]
+    pub deletion_audit_log_reason: Option<String>,
+    #[serde(default)]
+    pub deletion_scheduled_by: Option<String>,
+    #[serde(default)]
+    pub deletion_scheduled_at: Option<String>,
     pub last_active_at: Option<String>,
     pub last_active_ip: Option<String>,
     pub last_active_ip_reverse: Option<String>,
@@ -247,7 +255,28 @@ pub enum FlashLevel {
 pub struct BanCheckResult {
     pub banned: bool,
     #[serde(default)]
+    pub expires_at: Option<String>,
+    #[serde(default)]
     pub entries: Vec<serde_json::Value>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BlocklistEntry {
+    pub value: String,
+    #[serde(default)]
+    pub match_subdomains: Option<bool>,
+    #[serde(default)]
+    pub category: Option<String>,
+    #[serde(default)]
+    pub created_at: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct BlocklistEntryPage {
+    pub items: Vec<BlocklistEntry>,
+    pub has_more: bool,
+    #[serde(default)]
+    pub next_after: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

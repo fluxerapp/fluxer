@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
+import type {UserID} from '@app/api/BrandedTypes';
 
 type Nullish<T> = T | null;
 export type GiftCodeDurationType = 'days' | 'weeks' | 'months' | 'years';
@@ -18,6 +18,7 @@ export interface GiftCodeRow {
 	visionary_sequence_number: Nullish<number>;
 	checkout_session_id: Nullish<string>;
 	revoked_at?: Nullish<Date>;
+	premium_reversed_seconds?: Nullish<number>;
 	version: number;
 }
 
@@ -105,6 +106,7 @@ export const GIFT_CODE_COLUMNS = [
 	'visionary_sequence_number',
 	'checkout_session_id',
 	'revoked_at',
+	'premium_reversed_seconds',
 	'version',
 ] as const;
 export const GIFT_CODE_BY_CREATOR_COLUMNS = ['created_by_user_id', 'code'] as const;

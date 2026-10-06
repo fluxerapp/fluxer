@@ -227,7 +227,7 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 		},
 		[canManageExpressions, canCreateExpressions, currentUserId],
 	);
-	const stickerMaxSizeLabel = formatFileSize(GlobalLimits.getStickerMaxSize());
+	const stickerMaxSizeLabel = formatFileSize(i18n.locale, GlobalLimits.getStickerMaxSize());
 	return (
 		<div className={styles.container} data-flx="guild.guild-tabs.guild-stickers-tab.container">
 			<CloneAllowedToggle

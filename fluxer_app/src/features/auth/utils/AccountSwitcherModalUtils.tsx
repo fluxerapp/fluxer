@@ -4,6 +4,7 @@ import i18n from '@app/app/I18n';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {getAccountAvatarUrl, getAccountDisplayName} from '@app/features/auth/components/accounts/AccountListItem';
 import {showBrowserLoginHandoffModal} from '@app/features/auth/flow/BrowserLoginHandoffModal';
@@ -18,6 +19,7 @@ import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans} from '@lingui/react/macro';
@@ -81,8 +83,10 @@ export function useAccountSwitcherLogic(options: AccountSwitcherLogicOptions = {
 			showAccountSwitcherErrorModal(WE_COULDN_T_SWITCH_ACCOUNTS_PLEASE_TRY_AGAIN_DESCRIPTOR);
 			return;
 		}
-		const email = account.userData?.email ?? undefined;
-		showBrowserLoginHandoffModal(handleLoginSuccess, email);
+		const prefillLogin = RuntimeConfig.usesUsernameSignIn
+			? account.userData && formatUserTag(account.userData)
+			: (account.userData?.email ?? undefined);
+		showBrowserLoginHandoffModal(handleLoginSuccess, prefillLogin);
 	};
 	const handleSwitchAccount = async (userId: string): Promise<void> => {
 		if (isBusy) {

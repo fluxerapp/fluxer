@@ -25,7 +25,3 @@ export function normalizeRegionCode(regionCode: string): string | undefined {
 	}
 	return upperRegionCode;
 }
-
-export function isRegionCode(value: string): boolean {
-	return normalizeRegionCode(value) !== undefined;
-}

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type JetStreamClient, type JetStreamManager, jetstream, jetstreamManager} from '@nats-io/jetstream';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
-import type {JetStreamClient, JetStreamManager} from 'nats';
 
 export class JetStreamConnectionManager extends NatsConnectionManager {
 	getJetStreamClient(): JetStreamClient {
-		return this.getConnection().jetstream();
+		return jetstream(this.getConnection());
 	}
 
 	async getJetStreamManager(): Promise<JetStreamManager> {
-		return this.getConnection().jetstreamManager();
+		return jetstreamManager(this.getConnection());
 	}
 }

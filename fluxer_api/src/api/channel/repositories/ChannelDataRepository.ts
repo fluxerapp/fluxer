@@ -1,21 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, MessageID, UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import {buildPatchFromData, executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
-import type {ChannelRow} from '../../database/types/ChannelTypes';
-import {CHANNEL_COLUMNS} from '../../database/types/ChannelTypes';
-import {Logger} from '../../Logger';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import {Channel} from '../../models/Channel';
-import {Channels, ChannelsByGuild, PrivateChannels} from '../../Tables';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {
 	privateChannelFanOutTargets,
 	privateChannelLastMessageIdPatch,
 	privateChannelMetadataPatch,
-} from '../PrivateChannelSnapshot';
-import {IChannelDataRepository} from './IChannelDataRepository';
+} from '@app/api/channel/PrivateChannelSnapshot';
+import {IChannelDataRepository} from '@app/api/channel/repositories/IChannelDataRepository';
+import {
+	BatchBuilder,
+	fetchMany,
+	fetchManyInChunks,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import {CHANNEL_COLUMNS} from '@app/api/database/types/ChannelTypes';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Channel} from '@app/api/models/Channel';
+import {Channels, ChannelsByGuild, PrivateChannels} from '@app/api/Tables';
 
 const FETCH_CHANNEL_BY_ID = Channels.select({
 	where: [Channels.where.eq('channel_id'), Channels.where.eq('soft_deleted')],

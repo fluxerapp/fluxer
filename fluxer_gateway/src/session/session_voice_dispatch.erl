@@ -102,14 +102,6 @@ handle_guild_reply_ok(Reply, Ctx, SessionPid) ->
     maybe_dispatch_voice_server_update(
         Reply, GId, ChId, SessionPid
     ),
-    case maps:get(ack, Reply, undefined) of
-        Ack when is_map(Ack) ->
-            dispatch_to_session(
-                SessionPid, voice_state_ack, Ack, GId
-            );
-        _ ->
-            ok
-    end,
     ok.
 
 -spec maybe_dispatch_voice_server_update(
@@ -305,9 +297,9 @@ dispatch_to_session_converts_wire_payload_test() ->
         <<"permissions">> => 8,
         <<"roles">> => [456]
     },
-    ok = dispatch_to_session(self(), voice_state_ack, Payload, 123),
+    ok = dispatch_to_session(self(), voice_state_update, Payload, 123),
     receive
-        {'$gen_cast', {dispatch, voice_state_ack, WirePayload}} ->
+        {'$gen_cast', {dispatch, voice_state_update, WirePayload}} ->
             ?assertEqual(
                 #{
                     <<"id">> => <<"123">>,
@@ -360,26 +352,6 @@ in_channel_update_reply_does_not_dispatch_test() ->
 
 plain_success_reply_does_not_dispatch_test() ->
     ok = handle_guild_reply_ok(#{success => true}, test_voice_ctx(456), self()),
-    assert_no_dispatch().
-
-rejected_mutation_reply_dispatches_ack_only_test() ->
-    Ack = #{<<"status">> => <<"rejected">>, <<"mutation_id">> => <<"m1">>},
-    Reply = #{success => false, ack => Ack},
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    Payload = receive_dispatch(voice_state_ack),
-    ?assertEqual(<<"rejected">>, maps:get(<<"status">>, Payload)),
-    assert_no_dispatch().
-
-in_channel_update_reply_dispatches_ack_test() ->
-    Ack = #{<<"status">> => <<"applied">>, <<"mutation_id">> => <<"m2">>},
-    Reply = #{
-        success => true,
-        voice_state => #{<<"channel_id">> => <<"456">>},
-        ack => Ack
-    },
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    Payload = receive_dispatch(voice_state_ack),
-    ?assertEqual(<<"applied">>, maps:get(<<"status">>, Payload)),
     assert_no_dispatch().
 
 join_reply_dispatches_voice_server_update_test() ->

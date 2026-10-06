@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, MessageID, UserID} from '../BrandedTypes';
-import type {ReadStateRow} from '../database/types/ChannelTypes';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {ReadStateRow} from '@app/api/database/types/ChannelTypes';
 
 type ReadStateSourceRow = ReadStateRow & {version?: bigint | number | null};
 

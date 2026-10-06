@@ -20,7 +20,7 @@ import LanguageTab from '@app/features/user/components/modals/tabs/LanguageTab';
 import LinkedAccountsTab from '@app/features/user/components/modals/tabs/LinkedAccountsTab';
 import MyProfileTab from '@app/features/user/components/modals/tabs/MyProfileTab';
 import {NotificationsInlineContent} from '@app/features/user/components/modals/tabs/notifications_tab/NotificationsTabInline';
-import PlutoniumTab from '@app/features/user/components/modals/tabs/PlutoniumTab';
+import {PlutoniumInlineTab} from '@app/features/user/components/modals/tabs/PlutoniumTab';
 import {PrivacyDashboardContent} from '@app/features/user/components/modals/tabs/privacy_safety_tab/PrivacySafetyTabInline';
 import {VoiceVideoInlineContent} from '@app/features/user/components/modals/tabs/voice_video_tab/VoiceVideoTabInline';
 import {getSettingsTabComponent} from '@app/features/user/components/settings_utils/DesktopSettingsTabs';
@@ -62,7 +62,7 @@ interface SettingsSectionProps {
 const INLINE_TAB_COMPONENTS: Partial<Record<UserSettingsTabType, React.ComponentType<Record<string, unknown>>>> = {
 	my_profile: MyProfileTab,
 	account_security: AccountSecurityInlineTab,
-	plutonium: PlutoniumTab,
+	plutonium: PlutoniumInlineTab,
 	gift_inventory: GiftInventoryTab,
 	privacy_safety: PrivacyDashboardContent,
 	authorized_apps: AccountSecurityInlineTab,
@@ -265,7 +265,8 @@ export const AllSettingsRenderer: React.FC<AllSettingsRendererProps> = observer(
 			>
 				<div className={styles.resultsHeader} data-flx="app.all-settings-renderer.results-header">
 					<Trans>
-						Found {resultCount} results in {categoryCount} categories
+						Found <Plural value={resultCount} one="# result" other="# results" /> in{' '}
+						<Plural value={categoryCount} one="# category" other="# categories" />
 					</Trans>
 				</div>
 				{searchResults.map((result) => (

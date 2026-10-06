@@ -218,7 +218,7 @@ export const getAssetAspectRatioRange = (type: AssetType) => {
 };
 export const clampAssetAspectRatio = (type: AssetType, aspectRatio: number | undefined): number | undefined =>
 	clampAspectRatio(aspectRatio, getAssetAspectRatioRange(type));
-export const canSkipOriginalAssetImage = (type: AssetType, dimensions: ImageDimensions): boolean => {
+const canSkipOriginalAssetImage = (type: AssetType, dimensions: ImageDimensions): boolean => {
 	const config = getAssetConfig(type);
 	return isOriginalImageWithinAssetBounds(
 		dimensions,
@@ -298,20 +298,18 @@ const getErrorMessage = (i18n: I18n, assetType: AssetType): string => {
 
 interface AssetCropModalProps {
 	imageUrl: string;
-	sourceMimeType: string;
 	assetType: AssetType;
 	onCropComplete: (croppedImageBlob: Blob) => void;
 	onSkip?: () => void;
 }
 
 export const AssetCropModal: React.FC<AssetCropModalProps> = observer(
-	({imageUrl, sourceMimeType, assetType, onCropComplete, onSkip}) => {
+	({imageUrl, assetType, onCropComplete, onSkip}) => {
 		const {i18n} = useLingui();
 		const config = getAssetConfig(assetType);
 		return (
 			<ImageCropModal
 				imageUrl={imageUrl}
-				sourceMimeType={sourceMimeType}
 				onCropComplete={onCropComplete}
 				onSkip={onSkip}
 				title={getTitle(i18n, assetType)}

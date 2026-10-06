@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2EventLogEntry} from '../runtime/VoiceEngineV2Runtime';
+import type {VoiceEngineV2EventLogEntry} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 
 const SIMULATOR_INVARIANT_LOG_MAX = 4096;
 

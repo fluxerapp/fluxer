@@ -6,11 +6,8 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 describe('URLType', () => {
 	it('accepts valid HTTPS URLs', () => {
-		const result = URLType.safeParse('https://example.com');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('https://example.com');
-		}
+		const result = URLType.parse('https://example.com');
+		expect(result).toBe('https://example.com');
 	});
 	it('accepts valid HTTP URLs', () => {
 		const result = URLType.safeParse('http://example.com');
@@ -40,11 +37,8 @@ describe('URLType', () => {
 		}
 	});
 	it('accepts URLs with fragments', () => {
-		const result = URLType.safeParse('https://example.com#section');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('https://example.com#section');
-		}
+		const result = URLType.parse('https://example.com#section');
+		expect(result).toBe('https://example.com#section');
 	});
 	it('accepts URLs with complex fragments', () => {
 		const result = URLType.safeParse('https://example.com/page#section-1.2');
@@ -71,11 +65,8 @@ describe('URLType', () => {
 		expect(result.success).toBe(false);
 	});
 	it('trims whitespace', () => {
-		const result = URLType.safeParse('  https://example.com  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('https://example.com');
-		}
+		const result = URLType.parse('  https://example.com  ');
+		expect(result).toBe('https://example.com');
 	});
 });
 
@@ -85,11 +76,8 @@ describe('AttachmentURLType', () => {
 		expect(result.success).toBe(true);
 	});
 	it('accepts valid attachment:// URLs', () => {
-		const result = AttachmentURLType.safeParse('attachment://image.png');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('attachment://image.png');
-		}
+		const result = AttachmentURLType.parse('attachment://image.png');
+		expect(result).toBe('attachment://image.png');
 	});
 	it('accepts attachment URLs with unicode filenames', () => {
 		const result = AttachmentURLType.safeParse('attachment://archivo.png');
@@ -128,11 +116,8 @@ describe('AttachmentURLType', () => {
 		expect(result.success).toBe(false);
 	});
 	it('trims and normalizes input', () => {
-		const result = AttachmentURLType.safeParse('  attachment://file.txt  ');
-		expect(result.success).toBe(true);
-		if (result.success) {
-			expect(result.data).toBe('attachment://file.txt');
-		}
+		const result = AttachmentURLType.parse('  attachment://file.txt  ');
+		expect(result).toBe('attachment://file.txt');
 	});
 });
 

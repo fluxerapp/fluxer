@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createUserID, type UserID} from '../../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, upsertOne} from '../../../database/CassandraQueryExecution';
-import type {User} from '../../../models/User';
-import {UsersPendingDeletion} from '../../../Tables';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {deleteOneOrMany, fetchMany, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {User} from '@app/api/models/User';
+import {UsersPendingDeletion} from '@app/api/Tables';
 
 const FETCH_USERS_PENDING_DELETION_BY_DATE_CQL = UsersPendingDeletion.selectCql({
 	columns: ['user_id', 'pending_deletion_at'],

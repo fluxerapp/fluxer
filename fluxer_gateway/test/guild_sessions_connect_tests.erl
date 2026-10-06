@@ -100,7 +100,11 @@ cleanup_connect_admission_queue_format_test() ->
         #{request => #{session_id => S3}, attempt => 3}
     ]),
     State1 = guild_sessions_connect_cleanup:cleanup_connect_admission_for_session(
-        S1, #{sessions => #{}, session_connect_queue => Queue}
+        S1, #{
+            sessions => #{},
+            session_connect_pending => #{S1 => 2},
+            session_connect_queue => Queue
+        }
     ),
     ResultQueue = queue:to_list(maps:get(session_connect_queue, State1)),
     SessionIds = [

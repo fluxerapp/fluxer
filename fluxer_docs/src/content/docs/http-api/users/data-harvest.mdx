@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A data harvest is a ZIP archive of the current account's data. Fluxer compiles it in the background, reports progress while it runs, and issues a temporary download URL once the archive is written.
 
-Every route except [Download data harvest archive](#download-data-harvest-archive) is user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`, and an account that has suspicious activity flags with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`. No route here requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](/http-api/users/content/#delete-current-users-messages) takes the same filter shape, destroys the messages, and requires it.
+Every route except [Download data harvest archive](#download-data-harvest-archive) is user-only. Fluxer rejects a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`. No route here requires [sudo mode](/http-api/users/mfa/#sudo-mode). [Delete current user's messages](/http-api/users/content/#delete-current-users-messages) takes the same filter shape, destroys the messages, and requires it.
 
 :::caution[A completed archive has a seven day download deadline]
 A completed harvest records a deadline exactly seven days after the archive was written. After it, [Get data harvest download URL](#get-data-harvest-download-url) returns 400 `HARVEST_EXPIRED` and [Download data harvest archive](#download-data-harvest-archive) returns 404, while the record keeps reporting `completed`. Nothing extends or restores it.
@@ -16,7 +16,7 @@ A completed harvest records a deadline exactly seven days after the archive was 
 
 ## Harvest status values
 
-The status is derived from the recorded timestamps in a fixed order, testing `failed_at` first, then `completed_at`, then `started_at`.
+Use `status` to track preparation of the archive.
 
 | Value | Description |
 | --- | --- |
@@ -94,7 +94,7 @@ A short English label describing the current stage. Every value is fixed except 
 | Downloading attachments and creating archive | The ZIP archive is being written, with progress 65 |
 | Completed | The archive is ready, with progress 100 |
 
-<sup>1</sup> Skipped entirely when the harvest collected no message. Its progress is 5 plus the whole part of N divided by 200, capped at 55
+<sup>1</sup> Skipped when no messages are collected
 
 ## Harvest download object
 
@@ -136,7 +136,7 @@ The filter chooses which messages a harvest collects. Every non-message section 
 | start_date?<sup>4</sup> | ?ISO8601 timestamp | Inclusive lower bound on message timestamps, or null for no lower bound |
 | end_date?<sup>4</sup> | ?ISO8601 timestamp | Exclusive upper bound on message timestamps, or null for no upper bound |
 
-<sup>1</sup> The `selected` scope requires at least one of the four include fields to be true, and a body disabling all four is rejected at path `include_dms`
+<sup>1</sup> The `selected` scope requires at least one of the include fields to be true, and a body disabling them all is rejected at path `include_dms`
 
 <sup>2</sup> Independent of `include_dms`, so setting `include_dms` false and `include_dms_closed` true targets closed conversations only
 
@@ -150,7 +150,7 @@ Under the `selected` scope, each context has its own condition:
 - A group DM is collected only while the caller is still a recipient and `include_group_dms` is true.
 - A guild channel is collected only while the caller is still a member, `include_guilds` is true, and the guild is admitted by the configured list mode.
 
-The `inaccessible_only` scope selects messages in guilds the caller has left or been removed from and in group DMs the caller has left. It never selects one-to-one direct messages, and it ignores the four toggles, the guild filter mode, and both guild lists.
+The `inaccessible_only` scope selects messages in guilds the caller has left or been removed from and in group DMs the caller has left. It never selects one-to-one direct messages, and it ignores the toggles, the guild filter mode, and both guild lists.
 
 Both scopes exclude the caller's personal notes channel, and both exclude a message whose channel no longer resolves or is neither a direct message, a group DM, nor a guild channel.
 
@@ -182,16 +182,16 @@ A harvest record is created with a new [snowflake](/snowflakes/), the request ti
 
 Fluxer prepares the archive in the background. It contains:
 
-- `user.json`, the account document
+- `user.json`, the account document, including connections with their identifiers, visibility settings and verification dates but no credentials
 - one `channels/{channel_id}/messages.json` file for each channel that contributed a message, with its messages ordered oldest first
 - `payments/payment_history.json`
 - `integrations/oauth.json`, the [applications](/http-api/applications/) the account owns, with no entry for an application it only authorised
 - `account/security.json`
 - the account avatar and banner under `assets/user/` when present
 
-Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The attachment files themselves are never included.
+Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The CDN URL is a [data package URL](/http-api/messages/#data-package-attachment-urls), so it does not expire and still reads its attachment after the archive's own seven day deadline passes. Removing the secret that signed it is the only thing that ends it. The attachment files themselves are never included.
 
-Every authored message is collected, with no ceiling on the count. Fluxer skips a message it cannot read, and the harvest still succeeds. When the archive completes, Fluxer sends one email containing a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was issued.
+Every authored message is collected, with no ceiling on the count. Messages that no longer exist are omitted. Other read failures fail the attempt. After completion, Fluxer attempts to email a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was issued. Email failure does not prevent downloading a completed archive.
 
 ### Rate limit
 
@@ -234,7 +234,7 @@ The side effects match [Request data harvest](#request-data-harvest), except tha
 
 Returns the account's most recently created [harvest status](#harvest-status-object) object.
 
-The most recent harvest is the one with the highest ID, and because IDs are [Snowflakes](/snowflakes/) that ordering is creation order. The result is the newest record whatever its state, so a completed archive is not preferred over a newer failed one.
+Returns the newest harvest regardless of status, including a failed harvest newer than a completed one.
 
 :::note[An account with no harvest receives 200 and `null`]
 The body is the literal JSON value `null`, so decode it before treating the response as an object.
@@ -283,13 +283,13 @@ Fluxer removes no harvest record, so an ID that once resolved keeps resolving. A
 
 Issues a temporary download URL for one completed harvest. Returns a [harvest download](#harvest-download-object) object on success.
 
-Fluxer evaluates four rejection cases in a fixed order, each with its own code. An unknown or foreign harvest is 404 `UNKNOWN_HARVEST`. A harvest whose latest attempt failed is 400 `HARVEST_FAILED`. A harvest with no recorded completion or no stored archive is 400 `HARVEST_NOT_READY`. A harvest past its download deadline is 400 `HARVEST_EXPIRED`.
+Fluxer evaluates the rejection cases in a fixed order, each with its own code. An unknown or foreign harvest is 404 `UNKNOWN_HARVEST`. A harvest whose latest attempt failed is 400 `HARVEST_FAILED`. A harvest with no recorded completion or no stored archive is 400 `HARVEST_NOT_READY`. A harvest past its download deadline is 400 `HARVEST_EXPIRED`.
 
 :::danger[Each request issues a new bearer URL]
 A URL is created for each call, its stated expiry is seven days later, and a later call revokes nothing. Treat every issued URL as a secret.
 :::
 
-The URL takes one of two forms. When the instance has presigned harvest downloads enabled, which is the default, it is an object storage presigned URL. Otherwise it points at [Download data harvest archive](#download-data-harvest-archive) on this API with a signed `token` query parameter.
+The URL takes one of the forms below. When the instance has presigned harvest downloads enabled, which is the default, it is an object storage presigned URL. Otherwise it points at [Download data harvest archive](#download-data-harvest-archive) on this API with a signed `token` query parameter.
 
 ### Path parameters
 
@@ -316,7 +316,7 @@ The URL takes one of two forms. When the instance has presigned harvest download
 
 Streams the archive of one completed harvest.
 
-The signed `token` query parameter issued by [Get data harvest download URL](#get-data-harvest-download-url) is the whole authorisation, so the link stays usable from the harvest completion email and from a plain browser. It binds the account, the harvest ID, the stored object key, and an expiry.
+The `token` query parameter issued by [Get data harvest download URL](#get-data-harvest-download-url) authorises the download without a session. Use the complete issued URL and keep it secret.
 
 The operation is active only while the instance has presigned harvest downloads disabled. That setting is enabled by default, so a default deployment answers every request here as 404 without inspecting the token.
 

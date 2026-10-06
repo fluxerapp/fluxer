@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import styles from '@app/features/theme_studio/ui/StudioSection.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {CaretRightIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
 import type {ReactNode} from 'react';
 import {useCallback, useId} from 'react';
-import styles from './StudioSection.module.css';
 
 interface StudioSectionProps {
 	title: ReactNode;

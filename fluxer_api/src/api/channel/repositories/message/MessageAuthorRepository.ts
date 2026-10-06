@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import type {MessageDataRepository} from '@app/api/channel/repositories/message/MessageDataRepository';
+import type {MessageDeletionRepository} from '@app/api/channel/repositories/message/MessageDeletionRepository';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import {Messages, MessagesByAuthorV2} from '@app/api/Tables';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {ChannelID, MessageID, UserID} from '../../../BrandedTypes';
-import {createChannelID, createMessageID} from '../../../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
-import {Db} from '../../../database/CassandraTypes';
-import {Messages, MessagesByAuthorV2} from '../../../Tables';
-import type {MessageDataRepository} from './MessageDataRepository';
-import type {MessageDeletionRepository} from './MessageDeletionRepository';
 
 const SELECT_MESSAGE_BY_AUTHOR = MessagesByAuthorV2.select({
 	where: [MessagesByAuthorV2.where.eq('author_id'), MessagesByAuthorV2.where.eq('message_id')],

@@ -117,18 +117,17 @@ export function watchVideoElementRenderedFrame({videoRef, onFrame}: VideoElement
 		onFrame();
 		return () => {};
 	}
+	removeSharedPollTarget = addSharedVideoFramePollTarget({videoRef, onFrame: markReadyIfPossible});
+	video?.addEventListener('loadeddata', markReadyIfPossible);
+	video?.addEventListener('playing', markReadyIfPossible);
+	video?.addEventListener('resize', markReadyIfPossible);
 	if (video?.requestVideoFrameCallback) {
 		frameCallbackHandle = video.requestVideoFrameCallback(() => {
 			frameCallbackHandle = null;
 			markPresentedFrame();
 		});
-	} else {
-		removeSharedPollTarget = addSharedVideoFramePollTarget({videoRef, onFrame: markReadyIfPossible});
-		video?.addEventListener('loadeddata', markReadyIfPossible);
-		video?.addEventListener('playing', markReadyIfPossible);
-		video?.addEventListener('resize', markReadyIfPossible);
-		markReadyIfPossible();
 	}
+	markReadyIfPossible();
 	return () => {
 		disposed = true;
 		clearWatchers();

@@ -7,6 +7,7 @@ import {
 	type RadioMenuOption,
 	translateDescriptor,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {updateOption} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
@@ -22,7 +23,6 @@ import {useLingui} from '@lingui/react/macro';
 import {CrownIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {updateOption} from './ResetOptions';
 
 interface DeveloperOptionCheckboxProps<K extends keyof DeveloperOptionsState> {
 	optionKey: K;

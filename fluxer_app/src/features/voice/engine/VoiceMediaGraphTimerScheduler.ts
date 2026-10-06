@@ -5,8 +5,8 @@ import {
 	VOICE_MEDIA_GRAPH_ENTRY_LIMIT,
 	type VoiceMediaGraphEvent,
 	type VoiceMediaGraphSnapshot,
-} from './VoiceMediaGraph';
-import {voiceMediaGraphStore} from './VoiceMediaGraphStore';
+} from '@app/features/voice/engine/VoiceMediaGraph';
+import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 
 export interface VoiceMediaGraphTimerSchedulerPlatform {
 	setTimeout(callback: () => void, delayMs: number): unknown;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CLOSE_DM_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
 import {
 	type IARReportContextType,
@@ -27,6 +28,10 @@ const FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR = msg({
 const CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR = msg({
 	message: 'Claim your account and verify your email to send reports.',
 	comment: 'IAR modal: body of the account-not-ready notice.',
+});
+const CLAIM_TO_REPORT_DESCRIPTOR = msg({
+	message: 'Claim your account to send reports.',
+	comment: 'IAR modal: body of the account-not-ready notice on an instance where people sign in with a username.',
 });
 const WHICH_AREA_DESCRIPTOR = msg({
 	message: 'What kind of rule was broken?',
@@ -275,7 +280,7 @@ const MALWARE_GUILD_LABEL_DESCRIPTOR = msg({
 	comment: 'IAR modal: rule label.',
 });
 const MALWARE_GUILD_DESC_DESCRIPTOR = msg({
-	message: 'Distributes malware, credential theft, or harmful files.',
+	message: 'Distributes malware, credential-stealing tools, or other harmful files.',
 	comment: 'IAR modal: rule description.',
 });
 const PRIVACY_LABEL_DESCRIPTOR = msg({
@@ -363,7 +368,7 @@ const OTHER_DESC_DESCRIPTOR = msg({
 	comment: 'IAR modal: rule description.',
 });
 const CSAM_SAFETY_NOTE_DESCRIPTOR = msg({
-	message: "If this involves CSAM or exploitation of a minor, send it now and don't reshare the material.",
+	message: "If this involves CSAM or exploitation of a minor, send the report now and don't reshare the material.",
 	comment: 'IAR modal: inline safety note shown for child-safety reports.',
 });
 const SELF_HARM_SAFETY_NOTE_DESCRIPTOR = msg({
@@ -454,7 +459,7 @@ export function getIARModalDescription(i18n: I18n): string {
 export function getIARReportEligibilityCopy(i18n: I18n): IARCopyBlock {
 	return {
 		title: i18n._(FINISH_ACCOUNT_SETUP_FIRST_DESCRIPTOR),
-		body: i18n._(CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR),
+		body: i18n._(RuntimeConfig.usesUsernameSignIn ? CLAIM_TO_REPORT_DESCRIPTOR : CLAIM_AND_VERIFY_TO_REPORT_DESCRIPTOR),
 	};
 }
 

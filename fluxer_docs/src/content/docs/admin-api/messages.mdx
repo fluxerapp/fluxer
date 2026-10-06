@@ -42,7 +42,7 @@ Every operation that returns Admin message objects also returns the matching pub
 | attachments | array[[Admin message attachment](#admin-message-attachment-object) object] | The attachments of the message (at most 10) |
 | user_prior_ncmec_report_ids?<sup>3</sup> | array[string] | The NCMEC report IDs previously filed against the author, ascending (at most 100) |
 
-<sup>1</sup> Every object in one response has the same values, taken from the channel named in the request path or query. All five are null when the channel no longer exists
+<sup>1</sup> Every object in one response has the same values, taken from the channel named in the request path or query. All are null when the channel no longer exists
 
 <sup>2</sup> Always absent from the objects these operations return. The same member is set on the [report message context object](/admin-api/reports/#report-message-context-object)
 
@@ -139,7 +139,7 @@ A job identifier that never existed reports `not_found` too, so the two are indi
 
 ## List channel messages
 
-<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages" />
+<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages" auditReason />
 
 Returns one page of [Admin message](#admin-message-object) objects for one channel. Requires `message:lookup`.
 
@@ -187,13 +187,17 @@ The response has no cursor member. Page further by sending the ID of the oldest 
 
 A channel that does not exist returns an empty `messages` array with `has_more` false, so this operation never answers 404.
 
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_channel_messages`, the target type `channel`, and the channel ID as the target. Its metadata keys are `limit`, `result_count` for the messages in this page, and `has_more`. A supplied `before` or `after` cursor is added under the same key.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
 
 ## Get message
 
-<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages/{message_id}" />
+<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages/{message_id}" auditReason />
 
 Returns the requested message together with the messages surrounding it, as one array of [Admin message](#admin-message-object) objects, oldest first. Requires `message:lookup`.
 
@@ -232,6 +236,10 @@ Returns the requested message together with the messages surrounding it, as one 
 
 An unknown message returns 200 with the window surrounding the position the missing ID would have occupied, so this operation never returns `UNKNOWN_MESSAGE`. An unknown channel returns 200 with an empty `messages` array.
 
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `get_message`, the target type `message`, and the message ID as the target. Its metadata keys are `channel_id`, `context_limit`, `result_count` for the messages returned, and `found`, which is `true` when the requested message is in `messages` and `false` otherwise.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
@@ -269,7 +277,7 @@ There is no grace period and no restore operation.
 
 ### Side effects
 
-The attachments the message owned are purged from storage and from the CDN, the message row is deleted, and its search index document is removed.
+The message and its attachments are permanently removed, including from search results and the CDN.
 
 [Message Delete](/gateway/events/#message-delete) is sent to the guild when the channel belongs to one, and to each recipient when the channel is private. No other Dispatch is emitted, and deleting a pinned message here emits no [Channel Pins Update](/gateway/events/#channel-pins-update).
 
@@ -281,11 +289,11 @@ One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with t
 
 ## Search messages
 
-<RouteHeader method="GET" path="/v1/admin/messages" />
+<RouteHeader method="GET" path="/v1/admin/messages" auditReason />
 
 Searches the message index of one channel, or resolves one message in that channel by message ID or by attachment identity. Requires `message:lookup`.
 
-The three modes return two different response bodies, and the query decides which one arrives.
+A request with `message_id` or `attachment_id` returns the lookup response body. Any other request returns the search response body.
 
 ### Query parameters
 
@@ -339,11 +347,21 @@ Returned when `message_id` or `attachment_id` was supplied. It is the same body 
 
 The result is empty for an unknown channel, for a message that does not exist, and for an attachment whose filename does not match. This operation never answers 404.
 
-With no message search service configured the search mode returns an empty `messages` array and `total` zero. The two lookup modes are unaffected.
+With no message search service configured the search mode returns an empty `messages` array and `total` zero. The lookup modes are unaffected.
 
 :::note[A deleted message never appears in a result]
 A hit whose message no longer exists is dropped from the page and excluded from `total`.
 :::
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `search_messages`. Its metadata key `mode` is `message` for a `message_id` lookup, `attachment` for an attachment lookup, and `search` otherwise, and `result_count` is the number of messages returned.
+
+- A `message_id` lookup has the target type `message` and the message ID as the target. It adds `channel_id`, `context_limit`, and `found`, which is `true` when the message is in `messages`.
+- An attachment lookup has the target type `channel` and the channel ID as the target. It adds `attachment_id`, `context_limit`, and `found`, which is `true` when the attachment resolved. A resolved attachment also adds `message_id`.
+- A search has the target type `channel` and the channel ID as the target. It adds `limit` and `total`, and `has_query` as `true` when `q` is supplied.
+
+The query text and the filename are not recorded. A 400 records nothing.
 
 ### Rate limit
 
@@ -351,7 +369,7 @@ A hit whose message no longer exists is dropped from the page and excluded from 
 
 ## Get message shred job
 
-<RouteHeader method="GET" path="/v1/admin/messages/shreds/{job_id}" />
+<RouteHeader method="GET" path="/v1/admin/messages/shreds/{job_id}" auditReason />
 
 Returns one [message shred status](#message-shred-status-object) object. Requires `message:shred`.
 
@@ -371,6 +389,10 @@ Shred jobs are created by [Shred user messages](/admin-api/users/#shred-user-mes
 | --- | --- | --- |
 | 200 | [message shred status](#message-shred-status-object) object | Job state was returned, including `not_found` for an unknown or expired job |
 
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `get_message_shred_status`, the target type `message_shred`, and the target ID `0`. Its metadata keys are `job_id` and `status`, which is the returned job state.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
@@ -381,7 +403,7 @@ Shred jobs are created by [Shred user messages](/admin-api/users/#shred-user-mes
 
 Submits one image or video attachment to NCMEC and starts the account enforcement workflow for its author. Requires `csam:submit_ncmec`, `message:delete`, `user:delete`, and `archive:trigger:user`.
 
-A caller missing more than one of the four is refused with 403 `MISSING_ACL` naming the first it does not hold, in the order listed. The wildcard satisfies all four.
+A caller missing more than one of the four is refused with 403 `MISSING_ACL` naming the first it does not hold, in the order listed. The wildcard satisfies them all.
 
 This operation ignores `X-Audit-Log-Reason`. The reason on every audit entry the workflow produces is built from the assigned NCMEC report ID and the channel and attachment IDs, and it is returned as `audit_log_reason`.
 
@@ -431,9 +453,9 @@ The request disables the author's account and schedules that account for deletio
 
 Fluxer resolves the attachment from the live message when that message still exists and has an author, and from the frozen evidence named by `source_report_id` otherwise. Fluxer accepts the attachment only when its resolved content type begins with `image/` or `video/`.
 
-Fluxer marks the attachment `submitting`, opens an NCMEC report, uploads the attachment bytes, submits its file details with the viewed flag set, and finishes the report. On success the attachment is marked `submitted` with the assigned report ID. On failure the opened report is retracted, the attachment is marked `failed` with the raw reason, and the request returns `NCMEC_SUBMISSION_FAILED`. A retraction that itself fails is logged and does not change the recorded state.
+The attachment is `submitting` while the request runs, then `submitted` with its report ID on success. A failed submission attempts to retract the opened report, marks the attachment `failed` with the raw reason, and returns `NCMEC_SUBMISSION_FAILED`. A failed retraction is logged without changing that recorded state.
 
-When the resolved attachment has an author who has not already been enforced against, Fluxer sets the account's deleted and disabled flags, clears any temporary ban, and records the deletion reason for child sexual content. It then schedules deletion 60 days ahead, deletes every authentication session, propagates the resulting user update, and triggers a user archive for that account.
+When the resolved attachment has an author whose account an earlier NCMEC submission has not already disabled, Fluxer sets the account's deleted and disabled flags, clears any temporary ban, and records the deletion reason for child sexual content. It then schedules deletion 60 days ahead, deletes every authentication session, sends [User Update](/gateway/events/#user-update) to that account, and triggers a user archive for that account. When the account's public user fields change, Fluxer also sends [Guild Member Update](/gateway/events/#guild-member-update) to each guild the account is in.
 
 Message content is deleted only after that archive completes. The archive is re-checked every 15 seconds by default, for at most 240 attempts. Once the archive is complete the reported message is deleted, its attachments are purged, and [Message Delete](/gateway/events/#message-delete) is sent.
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
@@ -97,7 +98,7 @@ export const UsernameSection = observer(({isClaimed, isEmailVerified, user}: Use
 						<Trans>Change username</Trans>
 					</Button>
 				)}
-				{!hasCustomDiscriminator && shouldShowPremiumFeatures() && (
+				{!RuntimeConfig.usesUniqueUsernames && !hasCustomDiscriminator && shouldShowPremiumFeatures() && (
 					<Tooltip
 						text={i18n._(CUSTOMIZE_YOUR_TAG_TO_YOUR_LIKING_WITH_DESCRIPTOR, {
 							discriminatorLabel,

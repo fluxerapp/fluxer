@@ -17,6 +17,7 @@ import {
 	COPY_TEXT_DESCRIPTOR,
 	OPEN_LINK_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import * as ReactionCommands from '@app/features/messaging/commands/ReactionCommands';
 import {MessageReactionsModal} from '@app/features/messaging/components/modals/MessageReactionsModal';
 import {ReactionImage} from '@app/features/messaging/components/ReactionImage';
@@ -41,6 +42,7 @@ import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
+import {CTRL_DESCRIPTOR} from '@app/features/ui/keybind_hint/KeybindHint';
 import type {MenuGroupType, MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -158,7 +160,7 @@ const RemoveReactionsSubmenuItem = observer(
 				icon={renderEmojiPreview()}
 				onClick={handleSelect}
 				closeOnSelect={false}
-				hint={`${reaction.count}`}
+				hint={getCachedNumberFormat(i18n.locale).format(reaction.count)}
 				data-flx="ui.action-menu.message-context-menu.remove-reactions-submenu-item.menu-item.select"
 			>
 				{label}
@@ -380,8 +382,8 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 			return () => document.removeEventListener('selectionchange', handleSelectionChange);
 		}, [restoreSelection, normalizeSelectionText]);
 		const copyShortcut = useMemo(() => {
-			return /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? '⌘C' : 'Ctrl+C';
-		}, []);
+			return /Mac|iPod|iPhone|iPad/.test(navigator.platform) ? '⌘C' : `${i18n._(CTRL_DESCRIPTOR)}+C`;
+		}, [i18n.locale]);
 		const handleCopySelection = useCallback(async () => {
 			if (!selectionText) return;
 			await TextCopyCommands.copy(i18n, selectionText, true);
@@ -495,6 +497,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 		const changePersonaItem = itemById.get(ids.changePersona);
 		const replyItem = itemById.get(ids.reply);
 		const forwardItem = itemById.get(ids.forward);
+		const crosspostItem = itemById.get(ids.crosspost);
 		const copyMessageItem = itemById.get(ids.copyMessage);
 		const pinMessageItem = itemById.get(ids.pinMessage);
 		const bookmarkMessageItem = itemById.get(ids.bookmarkMessage);
@@ -577,13 +580,14 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 			);
 		};
 		const renderInteractionGroup = () => {
-			if (!editItem && !changePersonaItem && !replyItem && !forwardItem) return null;
+			if (!editItem && !changePersonaItem && !replyItem && !forwardItem && !crosspostItem) return null;
 			return (
 				<MenuGroup data-flx="ui.action-menu.message-context-menu.render-interaction-group.menu-group">
 					{editItem && renderDataMenuItem(editItem, 'edit')}
 					{changePersonaItem && renderDataMenuItem(changePersonaItem, 'change-persona')}
 					{replyItem && renderDataMenuItem(replyItem, 'reply')}
 					{forwardItem && renderDataMenuItem(forwardItem, 'forward')}
+					{crosspostItem && renderDataMenuItem(crosspostItem, 'crosspost')}
 				</MenuGroup>
 			);
 		};

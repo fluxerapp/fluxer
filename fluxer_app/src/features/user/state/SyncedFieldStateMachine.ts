@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type SyncedFieldFailureReason =
 	| 'build-local'
@@ -242,7 +242,7 @@ export const syncedFieldStateMachine = setup({
 });
 
 export function createSyncedFieldMachineSnapshot(): SyncedFieldMachineSnapshot {
-	return getInitialSnapshot(syncedFieldStateMachine);
+	return initialTransition(syncedFieldStateMachine)[0];
 }
 
 export function transitionSyncedFieldMachineSnapshot(

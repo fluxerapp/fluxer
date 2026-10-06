@@ -23,7 +23,11 @@
 -type guild_id() :: integer().
 
 -define(CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, [
-    <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
+    <<"members">>,
+    members_normalized,
+    <<"member_role_index">>,
+    members_sorted_ids,
+    member_list_revision
 ]).
 -define(CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS, [active_guilds, user_roles, viewable_channels]).
 
@@ -153,8 +157,10 @@ get_guild_state(UserId, State) ->
         JoinedAt
     ).
 
--spec build_connect_snapshot(map(), guild_state()) -> map().
-build_connect_snapshot(Item, State) ->
+-spec build_connect_snapshot(map() | [map()], guild_state()) -> map().
+build_connect_snapshot(Item, State) when is_map(Item) ->
+    build_connect_snapshot([Item], State);
+build_connect_snapshot(Items, State) ->
     Base = maps:with(
         [
             id,
@@ -168,17 +174,27 @@ build_connect_snapshot(Item, State) ->
         ],
         State
     ),
-    project_snapshot_sessions(maybe_trim_connect_snapshot(Item, Base, State)).
+    project_snapshot_sessions(maybe_trim_connect_snapshot(Items, Base, State)).
 
 -spec project_snapshot_sessions(map()) -> map().
 project_snapshot_sessions(#{sessions := Sessions} = Snapshot) when is_map(Sessions) ->
-    Projected = maps:map(
-        fun(_SessionId, SessionData) -> project_snapshot_session(SessionData) end,
-        Sessions
-    ),
-    Snapshot#{sessions => Projected};
+    case snapshot_reads_sessions(Snapshot) of
+        true ->
+            Projected = maps:map(
+                fun(_SessionId, SessionData) -> project_snapshot_session(SessionData) end,
+                Sessions
+            ),
+            Snapshot#{sessions => Projected};
+        false ->
+            Snapshot#{sessions => #{}}
+    end;
 project_snapshot_sessions(Snapshot) ->
     Snapshot.
+
+-spec snapshot_reads_sessions(map()) -> boolean().
+snapshot_reads_sessions(Snapshot) ->
+    guild_availability_check:get_unavailability_mode_from_state(Snapshot) =:=
+        unavailable_for_everyone_but_staff.
 
 -spec project_snapshot_session(term()) -> term().
 project_snapshot_session(SessionData) when is_map(SessionData) ->
@@ -186,45 +202,24 @@ project_snapshot_session(SessionData) when is_map(SessionData) ->
 project_snapshot_session(SessionData) ->
     SessionData.
 
--spec maybe_trim_connect_snapshot(map(), map(), guild_state()) -> map().
-maybe_trim_connect_snapshot(Item, Base, State) ->
+-spec maybe_trim_connect_snapshot([map()], map(), guild_state()) -> map().
+maybe_trim_connect_snapshot(Items, Base, State) ->
     case should_trim_connect_snapshot(State) of
-        true -> trim_connect_snapshot(Item, Base);
+        true -> trim_connect_snapshot(Items, Base);
         false -> Base
     end.
 
 -spec should_trim_connect_snapshot(guild_state()) -> boolean().
 should_trim_connect_snapshot(State) ->
-    case connect_snapshot_trim_member_threshold() of
-        undefined ->
-            false;
-        Threshold ->
-            member_count_at_least(Threshold, State) andalso has_members_ets(State)
-    end.
-
--spec member_count_at_least(pos_integer(), guild_state()) -> boolean().
-member_count_at_least(Threshold, State) ->
-    case maps:get(member_count, State, undefined) of
-        Count when is_integer(Count) -> Count >= Threshold;
-        _ -> false
-    end.
-
--spec connect_snapshot_trim_member_threshold() -> pos_integer() | undefined.
-connect_snapshot_trim_member_threshold() ->
-    case
-        application:get_env(fluxer_gateway, connect_snapshot_trim_member_threshold, undefined)
-    of
-        N when is_integer(N), N > 0 -> N;
-        _ -> undefined
-    end.
+    has_members_ets(State).
 
 -spec has_members_ets(guild_state()) -> boolean().
 has_members_ets(#{data := #{members_ets := Tab}}) -> is_reference(Tab);
 has_members_ets(_) -> false.
 
--spec trim_connect_snapshot(map(), map()) -> map().
-trim_connect_snapshot(Item, #{data := Data} = Base) when is_map(Data) ->
-    Retained = retained_member_map(Item, Base, Data),
+-spec trim_connect_snapshot([map()], map()) -> map().
+trim_connect_snapshot(Items, #{data := Data} = Base) when is_map(Data) ->
+    Retained = retained_member_map(Items, Base, Data),
     Trimmed = maps:without(?CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, Data),
     Base#{
         data => Trimmed#{
@@ -234,12 +229,12 @@ trim_connect_snapshot(Item, #{data := Data} = Base) when is_map(Data) ->
                 guild_data_index_members:build_member_role_index(Retained)
         }
     };
-trim_connect_snapshot(_Item, Base) ->
+trim_connect_snapshot(_Items, Base) ->
     Base.
 
--spec retained_member_map(map(), map(), map()) -> #{integer() => map()}.
-retained_member_map(Item, Base, Data) ->
-    UserIds = [connect_user_id(Item) | voice_state_user_ids(Base)],
+-spec retained_member_map([map()], map(), map()) -> #{integer() => map()}.
+retained_member_map(Items, Base, Data) ->
+    UserIds = [connect_user_id(Item) || Item <- Items] ++ voice_state_user_ids(Base),
     lists:foldl(
         fun(UserId, Acc) -> retain_member(UserId, Data, Acc) end,
         #{},
@@ -324,8 +319,8 @@ get_guild_data_for_user(UserId, Data, State) ->
         undefined ->
             {reply, #{guild_data => null, error_reason => <<"forbidden">>}, State};
         Member ->
-            GuildData = build_member_guild_data(UserId, Member, Data, State),
-            {reply, #{guild_data => GuildData}, State}
+            {GuildData, NewState} = build_member_guild_data(UserId, Member, Data, State),
+            {reply, #{guild_data => GuildData}, NewState}
     end.
 
 -spec build_complete_guild_data(map(), guild_state()) -> map().
@@ -334,14 +329,17 @@ build_complete_guild_data(Data, State) ->
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
     maps:merge(GuildProperties, build_guild_collection_data(Data, Channels, State)).
 
--spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> map().
+-spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> {map(), guild_state()}.
 build_member_guild_data(UserId, Member, Data, State) ->
     GuildProperties = maps:get(<<"guild">>, Data, #{}),
     AllChannels = guild_data_channels:channels_from_data(Data),
-    {ViewableChannels, _JoinedAt} = guild_data_channels:derive_member_view(
+    {ViewableChannels, NewState} = guild_data_channels:member_view(
         UserId, Member, State, AllChannels
     ),
-    maps:merge(GuildProperties, build_guild_collection_data(Data, ViewableChannels, State)).
+    GuildData = maps:merge(
+        GuildProperties, build_guild_collection_data(Data, ViewableChannels, State)
+    ),
+    {GuildData, NewState}.
 
 -spec build_guild_collection_data(map(), [map()], guild_state()) -> map().
 build_guild_collection_data(Data, Channels, State) ->
@@ -494,8 +492,12 @@ guild_id_wire_value(GuildId) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
+staff_only_data() ->
+    #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE_BUT_STAFF">>]}}.
+
 projection_snapshot() ->
     #{
+        data => staff_only_data(),
         sessions => #{
             <<"s1">> => #{
                 session_id => <<"s1">>,
@@ -534,8 +536,23 @@ projection_leaves_snapshot_data_untouched_test() ->
     ?assertEqual(Data, maps:get(data, project_snapshot_sessions(Snapshot))).
 
 projection_keeps_non_map_session_entries_test() ->
-    Snapshot = #{sessions => #{<<"broken">> => not_a_map}},
+    Snapshot = #{data => staff_only_data(), sessions => #{<<"broken">> => not_a_map}},
     ?assertEqual(Snapshot, project_snapshot_sessions(Snapshot)).
+
+projection_drops_sessions_unless_staff_only_test() ->
+    Snapshot = projection_snapshot(),
+    lists:foreach(
+        fun(Data) ->
+            Projected = project_snapshot_sessions(Snapshot#{data => Data}),
+            ?assertEqual(#{}, maps:get(sessions, Projected)),
+            ?assertEqual(Data, maps:get(data, Projected))
+        end,
+        [
+            #{},
+            #{<<"guild">> => #{<<"features">> => []}},
+            #{<<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}}
+        ]
+    ).
 
 projection_keeps_snapshot_without_sessions_test() ->
     Snapshot = #{id => 42, member_count => 3},
@@ -544,44 +561,27 @@ projection_keeps_snapshot_without_sessions_test() ->
 trim_state(MemberCount) ->
     #{id => 42, member_count => MemberCount, data => #{members_ets => make_ref()}}.
 
-with_trim_threshold(Threshold, Fun) ->
-    application:set_env(fluxer_gateway, connect_snapshot_trim_member_threshold, Threshold),
+trim_applies_at_every_member_count_test() ->
+    ?assertEqual(true, should_trim_connect_snapshot(trim_state(49435))),
+    ?assertEqual(true, should_trim_connect_snapshot(trim_state(5000))),
+    ?assertEqual(true, should_trim_connect_snapshot(trim_state(1))),
+    ?assertEqual(true, should_trim_connect_snapshot(maps:remove(member_count, trim_state(1)))).
+
+trim_ignores_threshold_env_test() ->
+    application:set_env(fluxer_gateway, connect_snapshot_trim_member_threshold, 20000),
     try
-        Fun()
+        ?assertEqual(true, should_trim_connect_snapshot(trim_state(1)))
     after
         application:unset_env(fluxer_gateway, connect_snapshot_trim_member_threshold)
     end.
 
-trim_is_off_without_threshold_test() ->
-    application:unset_env(fluxer_gateway, connect_snapshot_trim_member_threshold),
-    ?assertEqual(false, should_trim_connect_snapshot(trim_state(49435))).
-
-trim_needs_member_count_at_threshold_test() ->
-    with_trim_threshold(20000, fun() ->
-        ?assertEqual(true, should_trim_connect_snapshot(trim_state(49435))),
-        ?assertEqual(true, should_trim_connect_snapshot(trim_state(20000))),
-        ?assertEqual(false, should_trim_connect_snapshot(trim_state(19999))),
-        NoCount = maps:remove(member_count, trim_state(1)),
-        ?assertEqual(false, should_trim_connect_snapshot(NoCount))
-    end).
-
 trim_needs_members_ets_test() ->
-    with_trim_threshold(1, fun() ->
-        ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10, data => #{}})),
-        ?assertEqual(
-            false,
-            should_trim_connect_snapshot(#{member_count => 10, data => #{members_ets => 7}})
-        ),
-        ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10}))
-    end).
-
-trim_ignores_invalid_threshold_test() ->
-    with_trim_threshold(0, fun() ->
-        ?assertEqual(false, should_trim_connect_snapshot(trim_state(49435)))
-    end),
-    with_trim_threshold(not_an_integer, fun() ->
-        ?assertEqual(false, should_trim_connect_snapshot(trim_state(49435)))
-    end).
+    ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10, data => #{}})),
+    ?assertEqual(
+        false,
+        should_trim_connect_snapshot(#{member_count => 10, data => #{members_ets => 7}})
+    ),
+    ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10})).
 
 trim_and_projection_target_disjoint_keys_test() ->
     ?assertEqual(

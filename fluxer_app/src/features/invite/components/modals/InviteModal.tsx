@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {showDmActionErrorModal} from '@app/features/app/components/alerts/DmActionErrorModal';
 import {showGenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModalCommands';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {CopyLinkSection} from '@app/features/app/components/dialogs/shared/CopyLinkSection';
@@ -32,6 +33,7 @@ import styles from '@app/features/invite/components/modals/InviteModal.module.cs
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -41,6 +43,7 @@ import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
+import {blockIfAccountLimited} from '@app/features/user/utils/AccountLimitUtils';
 import {useCopyLinkHandler} from '@app/lib/copy-link';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {MAX_INVITE_AGE_SECONDS, MAX_INVITE_USES} from '@fluxer/constants/src/LimitConstants';
@@ -104,7 +107,7 @@ const EXPIRE_AFTER_DESCRIPTOR = msg({
 	comment: 'Label above the expiration duration dropdown in the invite link settings.',
 });
 const CUSTOM_EXPIRY_SECONDS_DESCRIPTOR = msg({
-	message: 'Custom expiry (seconds)',
+	message: 'Custom expiration (seconds)',
 	comment:
 		'Label of the numeric input shown after choosing "Custom..." in the invite expiration dropdown. The unit is seconds.',
 });
@@ -146,6 +149,24 @@ const LINK_HIDDEN_WHILE_SHARING_DESCRIPTOR = msg({
 const INVITE_LINK_HIDDEN_LABEL_DESCRIPTOR = msg({
 	message: 'Invite link is hidden while sharing:',
 	comment: 'Label above a masked invite link while streaming privacy is active.',
+});
+const YOUR_INVITE_LINK_EXPIRES_IN_SECONDS_DESCRIPTOR = msg({
+	message:
+		'{seconds, plural, one {Your invite link expires in # second.} other {Your invite link expires in # seconds.}}',
+	comment: 'Text under a generated invite link. {seconds} is how long the link stays valid, in whole seconds.',
+});
+const YOUR_INVITE_LINK_EXPIRES_IN_MINUTES_DESCRIPTOR = msg({
+	message:
+		'{minutes, plural, one {Your invite link expires in # minute.} other {Your invite link expires in # minutes.}}',
+	comment: 'Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.',
+});
+const YOUR_INVITE_LINK_EXPIRES_IN_HOURS_DESCRIPTOR = msg({
+	message: '{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}',
+	comment: 'Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.',
+});
+const YOUR_INVITE_LINK_EXPIRES_IN_DAYS_DESCRIPTOR = msg({
+	message: '{days, plural, one {Your invite link expires in # day.} other {Your invite link expires in # days.}}',
+	comment: 'Text under a generated invite link. {days} is how long the link stays valid, in whole days.',
 });
 const logger = new Logger('InviteModal');
 
@@ -267,15 +288,13 @@ const InviteModalContent = observer(function InviteModalContent({
 	const displayedInviteUrl = hideInviteLinks && inviteUrl ? i18n._(LINK_HIDDEN_WHILE_SHARING_DESCRIPTOR) : inviteUrl;
 	const handleCopy = useCopyLinkHandler(inviteUrl, true);
 	const handleSendInvite = async (item: RecipientItem) => {
+		if (blockIfAccountLimited()) return;
 		const userId = item.type === 'group_dm' ? item.id : item.user.id;
 		setSendingTo((prev) => new Set(prev).add(userId));
-		let targetChannelId: string;
-		if (item.channelId) {
-			targetChannelId = item.channelId;
-		} else {
-			targetChannelId = await PrivateChannelCommands.ensureDMChannel(item.user.id);
-		}
 		try {
+			const targetChannelId = item.channelId
+				? item.channelId
+				: await PrivateChannelCommands.ensureDMChannel(item.user.id);
 			const result = await MessageCommands.send(targetChannelId, {
 				content: inviteUrl,
 				nonce: SnowflakeUtils.fromTimestamp(Date.now()),
@@ -285,6 +304,10 @@ const InviteModalContent = observer(function InviteModalContent({
 			}
 		} catch (error) {
 			logger.error('Failed to send invite:', error);
+			if (failureCode(error)) {
+				showDmActionErrorModal(error);
+				return;
+			}
 			showGenericErrorModal({
 				title: () => i18n._(SOMETHING_WENT_WRONG_DESCRIPTOR),
 				message: () => i18n._(FAILED_TO_SEND_INVITE_DESCRIPTOR),
@@ -307,11 +330,20 @@ const InviteModalContent = observer(function InviteModalContent({
 		setShowAdvanced(false);
 	};
 	const getExpirationText = () => {
-		const option = maxAgeOptions.find((opt) => opt.value === maxAge);
-		if (option) {
-			return option.label;
+		const seconds = Number.parseInt(maxAge, 10);
+		const minutes = seconds / 60;
+		const hours = minutes / 60;
+		const days = hours / 24;
+		if (days >= 1 && days % 1 === 0) {
+			return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_DAYS_DESCRIPTOR, {days});
 		}
-		return maxAge;
+		if (hours >= 1 && hours % 1 === 0) {
+			return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_HOURS_DESCRIPTOR, {hours});
+		}
+		if (minutes >= 1 && minutes % 1 === 0) {
+			return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_MINUTES_DESCRIPTOR, {minutes});
+		}
+		return i18n._(YOUR_INVITE_LINK_EXPIRES_IN_SECONDS_DESCRIPTOR, {seconds});
 	};
 	return (
 		<Modal.Root size="small" centered data-flx="invite.invite-modal.modal-root--2">
@@ -500,7 +532,7 @@ const InviteModalContent = observer(function InviteModalContent({
 							</p>
 						) : (
 							<p className={styles.expirationText} data-flx="invite.invite-modal.expiration-text--2">
-								<Trans>Your invite link expires in {getExpirationText()}.</Trans>{' '}
+								{getExpirationText()}{' '}
 								<FocusRing offset={-2} data-flx="invite.invite-modal.focus-ring--2">
 									<button
 										type="button"

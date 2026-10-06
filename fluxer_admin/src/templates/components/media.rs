@@ -81,20 +81,15 @@ pub fn guild_asset_url(
 }
 
 pub fn initials(name: &str) -> String {
-    let parts = name
-        .split_whitespace()
-        .filter(|part| !part.is_empty())
-        .collect::<Vec<_>>();
-    match parts.as_slice() {
-        [] => "?".to_owned(),
-        [part] => part.chars().next().unwrap_or('?').to_uppercase().collect(),
-        [first, .., last] => {
-            let mut value = String::new();
-            value.extend(first.chars().next().unwrap_or('?').to_uppercase());
-            value.extend(last.chars().next().unwrap_or('?').to_uppercase());
-            value
-        }
-    }
+    let mut parts = name.split_whitespace();
+    let Some(first) = parts.next() else {
+        return "?".to_owned();
+    };
+    std::iter::once(first)
+        .chain(parts.next_back())
+        .flat_map(|part| part.chars().take(1))
+        .flat_map(char::to_uppercase)
+        .collect()
 }
 
 fn media_asset_url(

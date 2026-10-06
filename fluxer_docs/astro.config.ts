@@ -157,17 +157,24 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: 'Reference',
-					items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes', 'conventions'],
+					items: [{label: 'Introduction', link: '/'}, 'authentication', 'snowflakes'],
 				},
 				{
 					label: 'Self-hosting',
-					items: ['operator/get-started', 'operator/configuration', 'operator/reverse-proxy', 'operator/upgrading'],
+					items: [
+						'operator/get-started',
+						'operator/sign-in',
+						'operator/configuration',
+						'operator/reverse-proxy',
+						'operator/upgrading',
+					],
 				},
 				{
 					label: 'Topics',
 					items: [
 						'http-api/errors',
 						'topics/rate-limits',
+						'topics/announcement-channels',
 						'http-api/permissions',
 						'topics/captcha',
 						'topics/uploads',
@@ -196,10 +203,10 @@ export default defineConfig({
 						'http-api/users/settings-protobuf',
 						'http-api/users/email-and-password',
 						'http-api/users/mfa',
-						'http-api/users/phone-verification',
 						'http-api/users/relationships',
 						'http-api/users/notes',
 						'http-api/users/private-channels',
+						'http-api/users/push-notifications',
 						'http-api/users/content',
 						'http-api/users/gifts',
 						'http-api/users/data-harvest',
@@ -236,11 +243,17 @@ export default defineConfig({
 				},
 				{
 					label: 'Commerce',
-					items: ['http-api/billing', 'http-api/premium', 'http-api/gifts', 'http-api/donations'],
+					items: [
+						'http-api/billing',
+						'http-api/premium',
+						'http-api/in-app-purchases',
+						'http-api/gifts',
+						'http-api/donations',
+					],
 				},
 				{
 					label: 'Client surfaces',
-					items: ['http-api/themes', 'http-api/downloads'],
+					items: ['http-api/experiments', 'http-api/themes'],
 				},
 				{
 					label: 'Safety',
@@ -256,6 +269,10 @@ export default defineConfig({
 						'gateway/limits-and-rate-limits',
 						'gateway/opcodes-and-close-codes',
 					],
+				},
+				{
+					label: 'Downloads',
+					items: ['downloads/overview', 'downloads/desktop', 'downloads/linux-repositories'],
 				},
 				{
 					label: 'Media proxy',

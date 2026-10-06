@@ -13,13 +13,20 @@ import {
 	USE_ACTUAL_VALUE_DESCRIPTOR,
 	USE_DEFAULT_DESCRIPTOR,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {formatDurationMs} from '@app/features/channel/components/channel_header_components/developer_tools/FormatHelpers';
+import {
+	getPremiumTypeLabel,
+	LIFETIME_DESCRIPTOR,
+} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
+import {
+	DEVELOPER_OPTION_KEYS,
+	isDeveloperOptionAtDefault,
+	resetDeveloperOption,
+} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {formatDurationMs} from './FormatHelpers';
-import {getPremiumTypeLabel, LIFETIME_DESCRIPTOR} from './OptionPresets';
-import {DEVELOPER_OPTION_KEYS, isDeveloperOptionAtDefault, resetDeveloperOption} from './ResetOptions';
 
 const ACTIVE_DEVELOPER_OPTION_KEYS = DEVELOPER_OPTION_KEYS.filter((key) => key !== 'premiumScenarioOverride');
 export const ATTACHMENT_MOCKS_DESCRIPTOR = msg({
@@ -214,34 +221,6 @@ const GEO_BLOCK_OVERLAY_DESCRIPTOR = msg({
 	message: 'Geo block overlay',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
-const REQUIRED_ACTIONS_OVERLAY_DESCRIPTOR = msg({
-	message: 'Required actions overlay',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_VARIANT_DESCRIPTOR = msg({
-	message: 'Required action variant',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_DEFAULT_TAB_DESCRIPTOR = msg({
-	message: 'Required action default tab',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_PHONE_STEP_DESCRIPTOR = msg({
-	message: 'Required action phone step',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_RESEND_LOADING_DESCRIPTOR = msg({
-	message: 'Required action resend loading',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_RESEND_OUTCOME_DESCRIPTOR = msg({
-	message: 'Required action resend outcome',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
-const REQUIRED_ACTION_REVERIFICATION_TEXT_DESCRIPTOR = msg({
-	message: 'Required action reverification text',
-	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
-});
 const NO_SEND_PERMISSION_DESCRIPTOR = msg({
 	message: 'No {sendMessagesPermission} permission',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
@@ -271,7 +250,7 @@ const GIFT_REDEEMED_DESCRIPTOR = msg({
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const TITLEBAR_PLATFORM_DESCRIPTOR = msg({
-	message: 'Titlebar platform',
+	message: 'Title bar platform',
 	comment: 'Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.',
 });
 const DEVELOPER_OPTION_DESCRIPTOR = msg({
@@ -317,10 +296,6 @@ const formatDeveloperOptionValue = <K extends keyof DeveloperOptionsState>(
 		case 'mockVerificationBarrier':
 		case 'mockMatureContentGateReason':
 		case 'mockMatureMediaGateReason':
-		case 'mockRequiredActionsMode':
-		case 'mockRequiredActionsSelectedTab':
-		case 'mockRequiredActionsPhoneStep':
-		case 'mockRequiredActionsResendOutcome':
 		case 'mockTitlebarPlatformOverride':
 		case 'mockUpdaterState':
 			return String(value).replace(/_/g, ' ');
@@ -441,20 +416,6 @@ export const getDeveloperOptionLabel = (key: keyof DeveloperOptionsState): Messa
 			return UK_GEO_DESCRIPTOR;
 		case 'mockGeoBlocked':
 			return GEO_BLOCK_OVERLAY_DESCRIPTOR;
-		case 'mockRequiredActionsOverlay':
-			return REQUIRED_ACTIONS_OVERLAY_DESCRIPTOR;
-		case 'mockRequiredActionsMode':
-			return REQUIRED_ACTION_VARIANT_DESCRIPTOR;
-		case 'mockRequiredActionsSelectedTab':
-			return REQUIRED_ACTION_DEFAULT_TAB_DESCRIPTOR;
-		case 'mockRequiredActionsPhoneStep':
-			return REQUIRED_ACTION_PHONE_STEP_DESCRIPTOR;
-		case 'mockRequiredActionsResending':
-			return REQUIRED_ACTION_RESEND_LOADING_DESCRIPTOR;
-		case 'mockRequiredActionsResendOutcome':
-			return REQUIRED_ACTION_RESEND_OUTCOME_DESCRIPTOR;
-		case 'mockRequiredActionsReverify':
-			return REQUIRED_ACTION_REVERIFICATION_TEXT_DESCRIPTOR;
 		case 'forceNoSendMessages':
 			return {...NO_SEND_PERMISSION_DESCRIPTOR, values: {sendMessagesPermission: SEND_MESSAGES_PERMISSION}};
 		case 'forceNoAttachFiles':

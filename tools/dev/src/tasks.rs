@@ -42,7 +42,6 @@ fn default_test_nats_url() -> String {
 }
 
 fn run_generators(for_typecheck: bool) -> Result<()> {
-    task_run(&["pnpm", "--filter", "@fluxer/config", "generate"])?;
     task_run(&["pnpm", "--filter", "@fluxer/schema", "generate"])?;
     if for_typecheck {
         return task_run(&["pnpm", "--filter", "@fluxer/i18n", "generate:types"]);
@@ -85,12 +84,7 @@ pub fn run_test() -> Result<i32> {
             ..RunOptions::default()
         },
     )?;
-    task_run(&[
-        "cargo",
-        "test",
-        "--manifest-path",
-        "fluxer_desktop/native/rust/Cargo.toml",
-    ])?;
+    task_run(&["pnpm", "--filter", "fluxer_desktop", "test"])?;
     run_command(
         &["pnpm", "--filter", "fluxer_api", "test"],
         RunOptions {

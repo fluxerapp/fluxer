@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ILogger} from './ILogger';
+import type {ILogger} from '@app/api/ILogger';
 
 let _logger: ILogger | null = null;
 

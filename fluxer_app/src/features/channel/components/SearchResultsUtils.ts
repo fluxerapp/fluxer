@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {SearchMachineState} from '@app/features/channel/components/SearchStateMachine';
 import {Channel} from '@app/features/channel/models/Channel';
 import {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
-import type {SearchMachineState} from './SearchStateMachine';
 
 export type {
 	SearchMachineEvent,
@@ -14,7 +14,7 @@ export type {
 	SearchMachineStateIndexing,
 	SearchMachineStateLoading,
 	SearchMachineStateSuccess,
-} from './SearchStateMachine';
+} from '@app/features/channel/components/SearchStateMachine';
 
 export const cloneMessageRecord = (message: Message): Message => {
 	return new Message(message.toJSON(), {skipUserCache: true});

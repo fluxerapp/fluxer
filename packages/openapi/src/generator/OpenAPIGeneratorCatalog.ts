@@ -1,49 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import {
-	APIErrorCodeSchema,
-	Base64ImageTypeSchema,
-	DiscriminatorTypeSchema,
-	EmailTypeSchema,
-	Int32TypeSchema,
-	Int64StringTypeSchema,
-	Int64TypeSchema,
-	LocaleSchema,
-	NonNegativeSafeIntegerTypeSchema,
-	PasswordTypeSchema,
-	PhoneNumberTypeSchema,
-	SnowflakeTypeSchema,
-	UnsignedInt64TypeSchema,
-	UsernameTypeSchema,
-	ValidationErrorItemSchema,
-} from '@fluxer/openapi/src/converters/BuiltInSchemas';
+import {APIErrorCodeSchema} from '@fluxer/openapi/src/converters/BuiltInSchemas';
 import type {OpenAPISchema, OpenAPISecurityScheme} from '@fluxer/openapi/src/OpenAPITypes';
-import {ERROR_SCHEMA} from '@fluxer/openapi/src/registry/ResponseRegistry';
+import {ERROR_SCHEMA, THROTTLED_ERROR_SCHEMA} from '@fluxer/openapi/src/registry/ResponseRegistry';
 
-const ORDERED_TAG_NAMES = [
-	'Auth',
-	'Users',
-	'Guilds',
-	'Channels',
-	'Invites',
-	'Webhooks',
-	'OAuth2',
-	'Gateway',
-	'Search',
-	'Read States',
-	'KLIPY',
-	'Saved Media',
-	'Themes',
-	'Downloads',
-	'Reports',
-	'Instance',
-	'Admin',
-	'Billing',
-	'Premium',
-	'Gifts',
-	'RPC',
-] as const;
 interface TagDefinition {
-	readonly name: (typeof ORDERED_TAG_NAMES)[number];
+	readonly name: string;
 	readonly description: string;
 }
 const TAG_DEFINITIONS: ReadonlyArray<TagDefinition> = [
@@ -69,13 +30,7 @@ const TAG_DEFINITIONS: ReadonlyArray<TagDefinition> = [
 	{name: 'Gifts', description: 'Gift codes and redemption'},
 	{name: 'RPC', description: 'Remote procedure call endpoints for internal operations'},
 ] as const;
-const TAG_DESCRIPTIONS = TAG_DEFINITIONS.reduce<Record<(typeof ORDERED_TAG_NAMES)[number], string>>(
-	(acc, definition) => {
-		acc[definition.name] = definition.description;
-		return acc;
-	},
-	{} as Record<(typeof ORDERED_TAG_NAMES)[number], string>,
-);
+const TAG_DESCRIPTIONS = Object.fromEntries(TAG_DEFINITIONS.map(({name, description}) => [name, description]));
 const SECURITY_SCHEMES: Record<string, OpenAPISecurityScheme> = {
 	botToken: {
 		type: 'apiKey',
@@ -123,21 +78,8 @@ const SECURITY_SCHEMES: Record<string, OpenAPISecurityScheme> = {
 };
 const BUILT_IN_SCHEMAS: ReadonlyArray<readonly [string, OpenAPISchema]> = [
 	['Error', ERROR_SCHEMA],
+	['ThrottledError', THROTTLED_ERROR_SCHEMA],
 	['APIErrorCode', APIErrorCodeSchema],
-	['SnowflakeType', SnowflakeTypeSchema],
-	['Int32Type', Int32TypeSchema],
-	['NonNegativeSafeIntegerType', NonNegativeSafeIntegerTypeSchema],
-	['Int64Type', Int64TypeSchema],
-	['Int64StringType', Int64StringTypeSchema],
-	['UnsignedInt64Type', UnsignedInt64TypeSchema],
-	['UsernameType', UsernameTypeSchema],
-	['DiscriminatorType', DiscriminatorTypeSchema],
-	['EmailType', EmailTypeSchema],
-	['PasswordType', PasswordTypeSchema],
-	['PhoneNumberType', PhoneNumberTypeSchema],
-	['Base64ImageType', Base64ImageTypeSchema],
-	['Locale', LocaleSchema],
-	['ValidationErrorItem', ValidationErrorItemSchema],
 ];
 interface IOpenAPIGeneratorCatalog {
 	readonly excluded: {
@@ -157,7 +99,7 @@ export const OpenAPIGeneratorCatalog: IOpenAPIGeneratorCatalog = {
 		paths: new Set<string>(['/_rpc', '/oauth2/authorize']),
 	},
 	tags: {
-		order: ORDERED_TAG_NAMES,
+		order: TAG_DEFINITIONS.map(({name}) => name),
 		descriptions: TAG_DESCRIPTIONS,
 	},
 	securitySchemes: SECURITY_SCHEMES,

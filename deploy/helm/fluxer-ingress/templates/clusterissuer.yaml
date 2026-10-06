@@ -1,0 +1,20 @@
+{{- with .Values.clusterIssuer }}
+{{- if .enabled }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ required "clusterIssuer.name is required" .name }}
+  labels:
+    {{- include "fluxer-ingress.labels" $ | nindent 4 }}
+spec:
+  acme:
+    email: {{ required "clusterIssuer.email is required" .email | quote }}
+    privateKeySecretRef:
+      name: {{ required "clusterIssuer.privateKeySecretName is required" .privateKeySecretName }}
+    server: {{ required "clusterIssuer.server is required" .server }}
+    solvers:
+      - http01:
+          ingress:
+            class: {{ required "clusterIssuer.solverIngressClass is required" .solverIngressClass }}
+{{- end }}
+{{- end }}

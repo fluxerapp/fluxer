@@ -166,7 +166,10 @@ export default function VoiceMessageRecorder({channelId, disabled, tooltipAnchor
 		[],
 	);
 	const maxRecordingMs = useMemo(() => maxRecordingSeconds * 1000, [maxRecordingSeconds]);
-	const formattedDuration = useMemo(() => formatDuration(recordingDurationMs / 1000), [recordingDurationMs]);
+	const formattedDuration = useMemo(
+		() => formatDuration(recordingDurationMs / 1000, i18n.locale),
+		[recordingDurationMs, i18n.locale],
+	);
 	const reducedMotion = Accessibility.useReducedMotion;
 	const voiceButtonAnimate = useMemo(() => (isRecording ? {scale: 1.05} : {scale: 1}), [isRecording]);
 	const resolvedVoiceButtonTransition = useMemo(

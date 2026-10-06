@@ -8,6 +8,8 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An archive is a snapshot of one user account or one guild, built in the background and downloaded as a file. [Create user archive](/admin-api/users/#create-user-archive) and [Create guild archive](/admin-api/guilds/#create-guild-archive) request one. The operations here read archive state and issue time-limited download URLs.
 
+While Fluxer builds an archive, it leaves out any stored file that is missing from storage. Any other read or write failure fails that build attempt and sets `failed_at`.
+
 Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject type it touches.
 
 - A user archive needs `archive:view_all` or `archive:trigger:user`.
@@ -15,12 +17,12 @@ Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject 
 - Reading both types at once needs `archive:view_all`, or `archive:trigger:user` and `archive:trigger:guild` together.
 
 :::note[An expired archive stops being readable]
-`expires_at` is 365 days after the archive is requested and is never extended. The archive record is removed at that instant, and no operation reads the stored file afterwards.
+An archive becomes unavailable through these routes at `expires_at`, 365 days after it was requested. Its lifetime is never extended.
 :::
 
 ## Archive object
 
-An archive is in one of three lifecycle states. It is building while `completed_at` and `failed_at` are both null, complete once `completed_at` is set, and failed once `failed_at` is set. A retried attempt clears `failed_at` and `error_message` when it starts, so a failed archive reads as building again while the retry runs.
+An archive is in one of these lifecycle states. It is building while `completed_at` and `failed_at` are both null, complete once `completed_at` is set, and failed once `failed_at` is set. When Fluxer starts a new attempt at a failed archive, it clears `failed_at` and `error_message`, so the archive reads as building again while that attempt runs.
 
 ### Structure
 
@@ -45,9 +47,9 @@ An archive is in one of three lifecycle states. It is building while `completed_
 
 <sup>2</sup> A new archive starts at 0 with the step `Queued`, and completion sets 100 and `Completed`. Failure leaves `progress_percent` where it was and sets the step to `Failed`
 
-<sup>3</sup> Written once, at completion, to one year after the archive file was uploaded. [Create archive download](#create-archive-download) returns a URL with its own expiry, and no operation here updates this field
+<sup>3</sup> Written at completion using the archive's fixed `expires_at`. [Create archive download](#create-archive-download) returns a URL with its own expiry
 
-<sup>4</sup> The value is 365 days after `requested_at`, and every write fills the field in
+<sup>4</sup> The value is 365 days after `requested_at`
 
 ### Example
 
@@ -101,7 +103,7 @@ This object uses camelCase field names, unlike every other Admin response body.
 
 ## List archives
 
-<RouteHeader method="GET" path="/v1/admin/archives" />
+<RouteHeader method="GET" path="/v1/admin/archives" auditReason />
 
 Returns [archive](#archive-object) objects matching the supplied filters, newest first. Requires an ACL covering the requested `subject_type`.
 
@@ -119,11 +121,11 @@ Returns [archive](#archive-object) objects matching the supplied filters, newest
 
 <sup>2</sup> `subject_type` also has to name `user` or `guild`
 
-<sup>3</sup> Ignored when `subject_id` is supplied. When it does apply it runs regardless of `subject_type`
+<sup>3</sup> Ignored when `subject_id` is supplied. When `requested_by` applies, Fluxer ignores `subject_type` and returns that account's archives of both subject types
 
 <sup>4</sup> The listing is not paginated and returns no cursor. Only a narrower filter reaches older records
 
-<sup>5</sup> The value counts as true only for `true`, `True`, or `1`. Expired archives are dropped after `limit` rows have been read, so a response can hold fewer than `limit` archives
+<sup>5</sup> The value counts as true only for `true`, `True`, or `1`. Excluding expired archives can leave fewer than `limit` results
 
 :::note[The default filter narrows to the account's ACLs]
 `all` is the default, and Fluxer resolves it to the subject types the account's ACLs cover. An account holding only `archive:trigger:user` reads user archives, one holding only `archive:trigger:guild` reads guild archives, and one holding `archive:view_all` reads both. An account holding none of the three is refused with 403 `MISSING_ACL`.
@@ -143,13 +145,17 @@ Returns [archive](#archive-object) objects matching the supplied filters, newest
 | 400 | [error response](/admin-api/#error-response) | `subject_id` is supplied while `subject_type` is `all`. `INVALID_FORM_BODY` has `INVALID_FORMAT` on `subject_type` |
 | 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without an ACL covering the requested subject type |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_archives`, target type `archive`, target ID `0`, and metadata keys `subject_type`, `limit`, `include_expired`, and `result_count`. `subject_type` is the value after Fluxer narrows `all` to the account's ACLs. The entry also has `subject_user_id` or `subject_guild_id` when `subject_id` is supplied, and `requested_by_user_id` when `requested_by` is supplied.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get archive
 
-<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}" />
+<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}" auditReason />
 
 Returns one [archive](#archive-object) object. Requires an ACL covering the subject type.
 
@@ -180,13 +186,15 @@ Returns one [archive](#archive-object) object. Requires an ACL covering the subj
 
 The read issues no download grant.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_archive`, target type equal to `subject_type`, target ID equal to `subject_id`, and metadata keys `archive_id` and `found`. `found` is `false` when the response has a null archive.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Create archive download
 
-<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}/download" />
+<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}/download" auditReason />
 
 Issues a temporary download URL for a completed archive. Returns an [archive download](#archive-download-object) object on success. Requires an ACL covering the subject type.
 
@@ -217,7 +225,9 @@ The URL has its own signature and works for seven days for anyone who holds it. 
 
 ### Side effects
 
-The operation creates a presigned download URL valid for seven days and changes no field of the archive, including `download_url_expires_at`. It records no Admin audit entry.
+The operation creates a presigned download URL valid for seven days and changes no field of the archive, including `download_url_expires_at`.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_archive_download_url`, target type equal to `subject_type`, target ID equal to `subject_id`, and metadata key `archive_id`. The entry has no URL. A request that returns 400 or 404 records no entry.
 
 ### Rate limit
 

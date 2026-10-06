@@ -50,7 +50,9 @@ export type MessageAttachmentResponse = z.infer<typeof MessageAttachmentResponse
 
 const MessageReferenceResponse = z.object({
 	channel_id: SnowflakeStringType.describe('The ID of the channel containing the referenced message'),
-	message_id: SnowflakeStringType.describe('The ID of the referenced message'),
+	message_id: SnowflakeStringType.nullish().describe(
+		'The ID of the referenced message, absent on a channel follow system message',
+	),
 	guild_id: SnowflakeStringType.nullish().describe('The ID of the guild containing the referenced message'),
 	type: MessageReferenceTypeSchema,
 });
@@ -166,7 +168,7 @@ export interface MessageResponse extends MessageBaseResponse {
 
 export const MessageResponseSchema = MessageBaseResponseSchema.extend({
 	referenced_message: MessageBaseResponseSchema.nullish().describe(
-		'The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message carries no default reference. Clients must tell null apart from absent by key presence.',
+		'The reply target. Present and populated when the target resolved, present and null when the target is gone, absent when this message has no default reference. Clients must tell null apart from absent by key presence.',
 	),
 });
 const ChannelPinMessageResponse = MessageResponseSchema.omit({
@@ -237,7 +239,7 @@ export const BulkMessageFetchResponse = z.object({
 export type BulkMessageFetchResponse = z.infer<typeof BulkMessageFetchResponse>;
 
 export interface MessageReference {
-	readonly message_id: string;
+	readonly message_id?: string;
 	readonly channel_id: string;
 	readonly guild_id?: string;
 	readonly type?: number;
@@ -303,11 +305,7 @@ export interface MessageSnapshot {
 	readonly timestamp: string;
 }
 
-export interface MessageStickerItem {
-	readonly id: string;
-	readonly name: string;
-	readonly animated: boolean;
-}
+export type MessageStickerItem = Readonly<MessageStickerResponse>;
 
 export interface AllowedMentions {
 	readonly parse?: ReadonlyArray<'roles' | 'users' | 'everyone'>;
@@ -316,11 +314,7 @@ export interface AllowedMentions {
 	readonly replied_user?: boolean;
 }
 
-export interface ChannelMention {
-	readonly id: string;
-	readonly type: number;
-	readonly name: string;
-}
+export type ChannelMention = Readonly<MessageChannelMentionResponse>;
 
 export interface MessageMention extends UserPartial {
 	readonly member?: Omit<GuildMemberData, 'user'>;
@@ -360,3 +354,5 @@ export interface Message {
 	readonly _allowedMentions?: AllowedMentions;
 	readonly _favoriteMemeId?: string;
 }
+
+export const MessagePurgeResponse = z.object({deleted_count: z.number().int().nonnegative()});

@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import type {SourceLifecycleState} from '../source_isolation/SourceLifecycleState';
-
-export type {SourceLifecycleState} from '../source_isolation/SourceLifecycleState';
-
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {
 	VoiceEngineV2AudioControls,
 	VoiceEngineV2CameraOptions,
@@ -41,7 +37,10 @@ import type {
 	VoiceEngineV2Stats,
 	VoiceEngineV2Track,
 	VoiceEngineV2WatchedStream,
-} from '../protocol/types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {SourceLifecycleState} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
+
+export type {SourceLifecycleState} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 
 export interface VoiceEngineV2ConnectionState {
 	status: VoiceEngineV2ConnectionStatus;

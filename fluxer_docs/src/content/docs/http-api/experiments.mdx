@@ -1,0 +1,113 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Experiments
+description: The experiment assignments envelope, the revalidation and polling contract, and the experiments this server defines.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `domain_migration` and `plutonium_page`.
+
+Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
+
+## Experiment assignments object
+
+One resolution of every defined experiment against one account. Every field is present on every response.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| poll_interval_seconds | integer | Seconds to wait before revalidating, from 60 through 86400 |
+| poll_jitter_percent | integer | The largest random offset added to or subtracted from the wait, as a percentage of the wait, from 0 through 50 |
+| assignments | [assignment map](#assignment-map-object) object | One entry for each experiment the server defines |
+
+Every account on the instance receives the same `poll_interval_seconds` and `poll_jitter_percent`. One request refreshes every experiment.
+
+## Assignment map object
+
+One entry per experiment. The envelope reports this object even when it is empty.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| domain_migration? | [domain migration assignment](#domain-migration-assignment-object) object | The caller's web domain migration assignment |
+| plutonium_page? | [Plutonium page assignment](#plutonium-page-assignment-object) object | The caller's Plutonium page assignment |
+
+Ignore unknown experiments and treat a missing experiment as off.
+
+## Domain migration assignment object
+
+One resolution of the instance web domain migration rollout against one account. This server version writes the key on every response.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the caller's web client moves to the new web origin |
+
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+
+Only the official web client acts on this assignment, and only on its legacy origins. Every other client ignores it. The logged-out share and the instance-wide switch are published in the [instance discovery document](/http-api/instance/#domain-migration-object) instead, because a client that holds no credential cannot read this route.
+
+## Plutonium page assignment object
+
+One resolution of the instance Plutonium page rollout against one account. This server version writes the key on every response.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the caller's client shows the full Plutonium page in place of the Plutonium settings tab |
+
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+
+The assignment only changes what the client shows. A selected client replaces the Plutonium settings tab with a full Plutonium page, makes app pages linkable in chat, and uses a minimal gift purchase modal. The server applies no part of it on its own.
+
+## Get experiment assignments
+
+<RouteHeader method="GET" path="/v1/experiments" bot />
+
+Resolves every defined experiment for the caller and returns an [experiment assignments](#experiment-assignments-object) object. The response is derived per account, so it is never shared between accounts.
+
+### Response body
+
+[Experiment assignments](#experiment-assignments-object) object.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The envelope was resolved |
+| 304 | empty | The request sent a matching `If-None-Match` |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| If-None-Match? | string | An `ETag` from an earlier response to this route |
+
+A client sends the `ETag` it last received. Fluxer compares it against the tag of the envelope it just resolved and answers 304 with no body on a match. `*` matches any current tag. A weak comparison is used, so a `W/` prefix on either side does not defeat the match.
+
+### Response headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ETag | string | A strong tag over the envelope body, sent on 200 and on 304 |
+| Cache-Control | string | The literal value `private, no-cache` |
+| Vary | string | The literal value `Authorization`, replaced by `Origin` where the [cross-origin policy](/http-api/#cross-origin-requests) echoed an allowed origin |
+
+The `ETag` changes when the response changes. Treat it as an opaque value.
+
+`ETag` is listed in `Access-Control-Expose-Headers` and `If-None-Match` in `Access-Control-Allow-Headers`, so a cross-origin client reads the tag and revalidates with it.
+
+### Polling
+
+A client reads this route once per session and then again every `poll_interval_seconds`, offset by a random amount up to `poll_jitter_percent` of that interval in either direction. It sends the last `ETag` on every request after the first. A client MUST NOT poll faster than the lower end of that jitter range.
+
+Until the first successful response, use 300 seconds with 15 percent jitter.
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `default` bucket.

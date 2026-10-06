@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {guildIdToRoleId} from '@app/api/BrandedTypes';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -9,15 +15,6 @@ import {IpBannedFromGuildError} from '@fluxer/errors/src/domains/guild/IpBannedF
 import {UnknownGuildRoleError} from '@fluxer/errors/src/domains/guild/UnknownGuildRoleError';
 import {isSameIpDecisionMatch} from '@fluxer/ip_utils/src/IpAddress';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
-import type {GuildID, RoleID, UserID} from '../../../BrandedTypes';
-import {guildIdToRoleId} from '../../../BrandedTypes';
-import {Logger} from '../../../Logger';
-import type {GuildMember} from '../../../models/GuildMember';
-import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '../../../risk/IpBanCgnatGuard';
-import {isIpBanExempt} from '../../../risk/IpBanExemptions';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
 
 function ensureNotEveryoneRole(roleId: RoleID, guildId: GuildID, path: string): void {
 	if (roleId === guildIdToRoleId(guildId)) {
@@ -29,7 +26,6 @@ export class GuildMemberValidationService {
 	constructor(
 		private readonly guildRepository: IGuildRepositoryAggregate,
 		private readonly userRepository: IUserRepository,
-		private readonly ipInfoService: IpInfoService,
 	) {}
 
 	async validateAndGetRoleIds(params: {
@@ -102,38 +98,9 @@ export class GuildMemberValidationService {
 			if (ban.userId === userId) {
 				throw new BannedFromGuildError();
 			}
-			if (isSameIpDecisionMatch(userIp, ban.ipAddress) && (await this.shouldEnforceIpBan(userIp, ban.ipAddress))) {
+			if (isSameIpDecisionMatch(userIp, ban.ipAddress) && !isIpBanExempt(userIp)) {
 				throw new IpBannedFromGuildError();
 			}
-		}
-	}
-
-	private async shouldEnforceIpBan(
-		userIp: string | null | undefined,
-		bannedIp: string | null | undefined,
-	): Promise<boolean> {
-		if (isIpBanExempt(userIp)) {
-			return false;
-		}
-		if (!userIp || !bannedIp || !isSingleIpBanCandidate(bannedIp)) {
-			return true;
-		}
-		try {
-			const {cgnat, sharedAccess} = await getIpBanBlastRadiusVerdict(userIp, this.ipInfoService, {
-				source: 'guild.member_ip_ban',
-				reason: 'join_cgnat_guard',
-			});
-			const highRisk = cgnat || sharedAccess;
-			if (highRisk) {
-				Logger.warn(
-					{userIp, bannedIp},
-					'Skipping guild member IP ban match because IPInfo indicates high shared-network blast-radius risk',
-				);
-			}
-			return !highRisk;
-		} catch (error) {
-			Logger.warn({error, userIp, bannedIp}, 'IPInfo CGNAT guard failed while checking guild member IP ban');
-			return true;
 		}
 	}
 }

@@ -52,12 +52,12 @@ const USE_WHERE_THE_SEARCH_TEXT_SHOULD_BE_INSERTED_DESCRIPTOR = msg({
 	comment: 'Description text in the add custom search engine modal. Preserve {query}; it is inserted by code.',
 });
 const URL_PATTERN_MUST_CONTAIN_PLACEHOLDER_DESCRIPTOR = msg({
-	message: 'URL pattern must contain {url} placeholder.',
+	message: 'URL pattern must contain the {url} placeholder.',
 	comment:
 		'Placeholder text in the add custom search engine modal. Keep it concise. Preserve {url}; it is inserted by code.',
 });
 const URL_PATTERN_MUST_CONTAIN_PLACEHOLDER_2_DESCRIPTOR = msg({
-	message: 'URL pattern must contain {query} placeholder.',
+	message: 'URL pattern must contain the {query} placeholder.',
 	comment:
 		'Placeholder text in the add custom search engine modal. Keep it concise. Preserve {query}; it is inserted by code.',
 });

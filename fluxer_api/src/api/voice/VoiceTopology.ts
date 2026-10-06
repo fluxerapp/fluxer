@@ -1,23 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
-import {Logger} from '../Logger';
-import type {IVoiceRepository} from './IVoiceRepository';
-import {VOICE_CONFIGURATION_CHANNEL} from './VoiceConstants';
-import type {VoiceRegionMetadata, VoiceRegionRecord, VoiceServerRecord} from './VoiceModel';
+import {Logger} from '@app/api/Logger';
+import {RefreshSubscription, RefreshSubscriptionUnavailableError} from '@app/api/utils/RefreshSubscription';
+import type {IVoiceRepository} from '@app/api/voice/IVoiceRepository';
+import {VOICE_CONFIGURATION_CHANNEL} from '@app/api/voice/VoiceConstants';
+import type {VoiceRegionMetadata, VoiceRegionRecord, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 type Subscriber = () => void;
 
 export class VoiceTopology {
-	private initialized = false;
-	private reloadPromise: Promise<void> | null = null;
 	private regions: Map<string, VoiceRegionRecord> = new Map();
 	private serversByRegion: Map<string, Array<VoiceServerRecord>> = new Map();
 	private defaultRegionId: string | null = null;
 	private subscribers: Set<Subscriber> = new Set();
 	private serverRotationIndex: Map<string, number> = new Map();
-	private kvSubscription: IKVSubscription | null = null;
-	private messageHandler: ((channel: string) => void) | null = null;
+	private stopped = false;
+	private readonly refreshSubscription = new RefreshSubscription({
+		name: 'VoiceTopology',
+		channels: [VOICE_CONFIGURATION_CHANNEL],
+		refresh: () => this.reload(),
+		onRefreshError: (error) => {
+			Logger.error({error}, 'Failed to reload voice topology from KV notification');
+		},
+	});
 
 	constructor(
 		private voiceRepository: IVoiceRepository,
@@ -25,29 +31,13 @@ export class VoiceTopology {
 	) {}
 
 	async initialize(): Promise<void> {
-		if (this.initialized) {
-			return;
+		try {
+			await this.refreshSubscription.start(this.kvClient);
+		} catch (error) {
+			if (!(error instanceof RefreshSubscriptionUnavailableError)) throw error;
+			Logger.error({error}, 'Voice configuration subscription unavailable, loading topology without live updates');
+			await this.reload();
 		}
-		await this.reload();
-		if (this.kvClient) {
-			try {
-				const subscription = this.kvClient.duplicate();
-				this.kvSubscription = subscription;
-				await subscription.connect();
-				await subscription.subscribe(VOICE_CONFIGURATION_CHANNEL);
-				this.messageHandler = (channel: string) => {
-					if (channel === VOICE_CONFIGURATION_CHANNEL) {
-						this.reload().catch((error) => {
-							Logger.error({error}, 'Failed to reload voice topology from KV notification');
-						});
-					}
-				};
-				subscription.on('message', this.messageHandler);
-			} catch (error) {
-				Logger.error({error}, 'Failed to subscribe to voice configuration channel');
-			}
-		}
-		this.initialized = true;
 	}
 
 	getDefaultRegion(): VoiceRegionRecord | null {
@@ -114,59 +104,47 @@ export class VoiceTopology {
 	}
 
 	private async reload(): Promise<void> {
-		if (this.reloadPromise) {
-			return this.reloadPromise;
-		}
-		this.reloadPromise = (async () => {
-			const regionsWithServers = await this.voiceRepository.listRegionsWithServers();
-			const newRegions: Map<string, VoiceRegionRecord> = new Map();
-			const newServers: Map<string, Array<VoiceServerRecord>> = new Map();
-			for (const region of regionsWithServers) {
-				const sortedServers = region.servers.slice().sort((a, b) => a.serverId.localeCompare(b.serverId));
-				const regionRecord: VoiceRegionRecord = {
-					id: region.id,
-					name: region.name,
-					emoji: region.emoji,
-					latitude: region.latitude,
-					longitude: region.longitude,
-					isDefault: region.isDefault,
+		const regionsWithServers = await this.voiceRepository.listRegionsWithServers();
+		if (this.stopped) return;
+		const newRegions: Map<string, VoiceRegionRecord> = new Map();
+		const newServers: Map<string, Array<VoiceServerRecord>> = new Map();
+		for (const region of regionsWithServers) {
+			const sortedServers = region.servers.slice().sort((a, b) => a.serverId.localeCompare(b.serverId));
+			const regionRecord: VoiceRegionRecord = {
+				id: region.id,
+				name: region.name,
+				emoji: region.emoji,
+				latitude: region.latitude,
+				longitude: region.longitude,
+				isDefault: region.isDefault,
+				restrictions: {
+					vipOnly: region.restrictions.vipOnly,
+					requiredGuildFeatures: new Set(region.restrictions.requiredGuildFeatures),
+					allowedGuildIds: new Set(region.restrictions.allowedGuildIds),
+					allowedUserIds: new Set(region.restrictions.allowedUserIds),
+				},
+				createdAt: region.createdAt,
+				updatedAt: region.updatedAt,
+			};
+			newRegions.set(region.id, regionRecord);
+			newServers.set(
+				region.id,
+				sortedServers.map((server) => ({
+					...server,
 					restrictions: {
-						vipOnly: region.restrictions.vipOnly,
-						requiredGuildFeatures: new Set(region.restrictions.requiredGuildFeatures),
-						allowedGuildIds: new Set(region.restrictions.allowedGuildIds),
-						allowedUserIds: new Set(region.restrictions.allowedUserIds),
+						vipOnly: server.restrictions.vipOnly,
+						requiredGuildFeatures: new Set(server.restrictions.requiredGuildFeatures),
+						allowedGuildIds: new Set(server.restrictions.allowedGuildIds),
+						allowedUserIds: new Set(server.restrictions.allowedUserIds),
 					},
-					createdAt: region.createdAt,
-					updatedAt: region.updatedAt,
-				};
-				newRegions.set(region.id, regionRecord);
-				newServers.set(
-					region.id,
-					sortedServers.map((server) => ({
-						...server,
-						restrictions: {
-							vipOnly: server.restrictions.vipOnly,
-							requiredGuildFeatures: new Set(server.restrictions.requiredGuildFeatures),
-							allowedGuildIds: new Set(server.restrictions.allowedGuildIds),
-							allowedUserIds: new Set(server.restrictions.allowedUserIds),
-						},
-					})),
-				);
-			}
-			this.regions = newRegions;
-			this.serversByRegion = newServers;
-			this.recalculateServerRotation();
-			this.recalculateDefaultRegion();
-			this.notifySubscribers();
-		})()
-			.catch((error) => {
-				Logger.error({error}, 'Failed to reload voice topology');
-				throw error;
-			})
-			.finally(() => {
-				this.reloadPromise = null;
-			});
-		return this.reloadPromise;
+				})),
+			);
+		}
+		this.regions = newRegions;
+		this.serversByRegion = newServers;
+		this.recalculateServerRotation();
+		this.recalculateDefaultRegion();
+		this.notifySubscribers();
 	}
 
 	private recalculateServerRotation(): void {
@@ -206,14 +184,8 @@ export class VoiceTopology {
 		}
 	}
 
-	shutdown(): void {
-		if (this.kvSubscription && this.messageHandler) {
-			this.kvSubscription.off('message', this.messageHandler);
-		}
-		if (this.kvSubscription) {
-			this.kvSubscription.disconnect();
-			this.kvSubscription = null;
-		}
-		this.messageHandler = null;
+	shutdown(): Promise<void> {
+		this.stopped = true;
+		return this.refreshSubscription.stop();
 	}
 }

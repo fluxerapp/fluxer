@@ -1,19 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::AdminApiClient,
+    api::{client::AdminApiClient, generated::types::GiftCodeDurationTypeSchema},
     middleware::{
         auth::AuthContext,
         csrf::CsrfToken,
         flash::{self, FlashData},
     },
     state::AppState,
-    templates,
+    templates::{
+        self,
+        pages::gift_codes::{GiftCodesPremium, MAX_GIFT_CODES},
+    },
 };
 use axum::{
     Form, Router,
     extract::{FromRequest, Query, Request, State},
-    response::{Html, IntoResponse, Redirect, Response},
+    response::{Html, IntoResponse, Response},
     routing::get,
 };
 use serde::Deserialize;
@@ -28,11 +31,11 @@ struct GiftCodesForm {
     #[serde(default)]
     _csrf: Option<String>,
     #[serde(default)]
-    count: Option<String>,
+    count: Option<u32>,
     #[serde(default)]
-    duration_type: Option<String>,
+    duration_type: Option<GiftCodeDurationTypeSchema>,
     #[serde(default)]
-    duration_quantity: Option<String>,
+    duration_quantity: Option<u32>,
 }
 
 pub fn router() -> Router<AppState> {
@@ -46,10 +49,11 @@ async fn gift_codes_page(
     Query(query): Query<GiftCodesQuery>,
 ) -> Response {
     let config = state.config();
-
-    if config.self_hosted {
-        return Redirect::to(&format!("{}/dashboard", config.base_path)).into_response();
-    }
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let premium = GiftCodesPremium::from_branding(
+        config.self_hosted,
+        state.premium_branding(&client).await.as_ref(),
+    );
 
     let generated_codes: Option<Vec<String>> = query
         .codes
@@ -60,6 +64,7 @@ async fn gift_codes_page(
         config,
         &auth.0,
         &csrf.0.0,
+        &premium,
         generated_codes.as_deref(),
     );
     Html(markup.into_string()).into_response()
@@ -72,9 +77,6 @@ async fn gift_codes_post(
 ) -> Response {
     let config = state.config();
     let base = &config.base_path;
-    if config.self_hosted {
-        return Redirect::to(&format!("{base}/dashboard")).into_response();
-    }
     let form: GiftCodesForm = match Form::from_request(request, &state).await {
         Ok(Form(f)) => f,
         Err(error) => {
@@ -86,21 +88,17 @@ async fn gift_codes_post(
             );
         }
     };
-    let count = form
-        .count
-        .as_deref()
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(1)
-        .clamp(1, 100);
-    let dur_type = form.duration_type.as_deref().unwrap_or("month");
-    let dur_qty = form
-        .duration_quantity
-        .as_deref()
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(1);
+    let count = form.count.unwrap_or(1).clamp(1, MAX_GIFT_CODES);
+    let duration_type = form
+        .duration_type
+        .unwrap_or(GiftCodeDurationTypeSchema::Months);
+    let duration_quantity = form.duration_quantity.unwrap_or(1);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let secure_cookies = config.secure_cookies();
-    match client.generate_gift_codes(count, dur_type, dur_qty).await {
+    match client
+        .generate_gift_codes(count, duration_type, duration_quantity)
+        .await
+    {
         Ok(result) => {
             let codes = result.codes.join(",");
             flash::redirect_with_flash(

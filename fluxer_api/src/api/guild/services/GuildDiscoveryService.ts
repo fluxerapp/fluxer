@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, type GuildID, guildIdToRoleId, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelDataRepository} from '@app/api/channel/repositories/IChannelDataRepository';
+import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {
 	DISCOVERY_DEFAULT_LANGUAGE,
 	DISCOVERY_MAX_TAGS,
@@ -18,16 +30,6 @@ import {DiscoveryInsufficientMembersError} from '@fluxer/errors/src/domains/disc
 import {DiscoveryNotDiscoverableError} from '@fluxer/errors/src/domains/discovery/DiscoveryNotDiscoverableError';
 import type {GuildSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes.jsx';
 import type {DiscoveryApplicationPatchRequest} from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import type {IGuildSearchService} from '../../search/IGuildSearchService';
-import {mapGuildToGuildResponse} from '../GuildModel';
-import type {IGuildDiscoveryRepository} from '../repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
 
 function sanitizeTags(tags: ReadonlyArray<string> | null | undefined): Array<string> {
 	if (!tags || tags.length === 0) return [];
@@ -83,6 +85,8 @@ export abstract class IGuildDiscoveryService {
 
 	abstract listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>>;
 
+	abstract getChannelPreview(guildId: GuildID, channelId: ChannelID): Promise<DiscoveryChannelPreview>;
+
 	abstract searchDiscoverable(params: {
 		query?: string;
 		categoryId?: number;
@@ -118,7 +122,13 @@ interface DiscoveryGuildResult {
 	verification_level: number;
 }
 
+interface DiscoveryChannelPreview {
+	guild: {id: string; name: string; icon: string | null};
+	channel: {id: string; name: string | null; type: number};
+}
+
 const DISCOVERY_CATEGORY_FACET = 'discoveryCategory';
+const PUBLIC_CHANNEL_PERMISSIONS = Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY;
 
 function toDiscoveryCategoryCounts(
 	counts: Readonly<Record<string, number>> | undefined,
@@ -143,6 +153,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		private readonly guildRepository: IGuildRepositoryAggregate,
 		private readonly gatewayService: IGatewayService,
 		private readonly guildSearchService: IGuildSearchService | null,
+		private readonly channelDataRepository: IChannelDataRepository,
 	) {
 		super();
 	}
@@ -380,6 +391,38 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 
 	async listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>> {
 		return this.discoveryRepository.listFullByStatus(params.status);
+	}
+
+	async getChannelPreview(guildId: GuildID, channelId: ChannelID): Promise<DiscoveryChannelPreview> {
+		const [status, guild, channel, everyoneRole] = await Promise.all([
+			this.discoveryRepository.findByGuildId(guildId),
+			this.guildRepository.findUnique(guildId),
+			this.channelDataRepository.findUnique(channelId),
+			this.guildRepository.getRole(guildIdToRoleId(guildId), guildId),
+		]);
+		if (
+			status?.status !== DiscoveryApplicationStatus.APPROVED ||
+			!guild ||
+			guild.features.has(GuildFeatures.INVITES_DISABLED) ||
+			!channel ||
+			channel.guildId !== guildId ||
+			!everyoneRole
+		) {
+			throw new DiscoveryNotDiscoverableError();
+		}
+		if ((everyoneRole.permissions & Permissions.ADMINISTRATOR) === 0n) {
+			const overwrite = channel.permissionOverwrites.get(everyoneRole.id);
+			const permissions = overwrite
+				? (everyoneRole.permissions & ~overwrite.deny) | overwrite.allow
+				: everyoneRole.permissions;
+			if ((permissions & PUBLIC_CHANNEL_PERMISSIONS) !== PUBLIC_CHANNEL_PERMISSIONS) {
+				throw new DiscoveryNotDiscoverableError();
+			}
+		}
+		return {
+			guild: {id: guild.id.toString(), name: guild.name, icon: guild.iconHash},
+			channel: {id: channel.id.toString(), name: channel.name, type: channel.type},
+		};
 	}
 
 	async searchDiscoverable(params: {

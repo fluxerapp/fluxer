@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, StickerID, UserID} from '../BrandedTypes';
-import type {GuildStickerRow} from '../database/types/GuildTypes';
+import type {GuildID, StickerID, UserID} from '@app/api/BrandedTypes';
+import type {GuildStickerRow} from '@app/api/database/types/GuildTypes';
 
 export class GuildSticker {
 	readonly guildId: GuildID;

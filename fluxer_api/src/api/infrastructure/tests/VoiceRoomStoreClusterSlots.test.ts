@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import {VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
+import {BatchRecordingKVProvider} from '@app/api/test/mocks/BatchRecordingKVProvider';
+import {VOICE_OCCUPANCY_REGION_KEY_PREFIX, VOICE_OCCUPANCY_SERVER_KEY_PREFIX} from '@app/api/voice/VoiceConstants';
 import {computeHashSlot} from '@pkgs/kv_client/src/KVHashSlots';
 import {describe, expect, it} from 'vitest';
-import {createChannelID, createGuildID} from '../../BrandedTypes';
-import {BatchRecordingKVProvider} from '../../test/mocks/BatchRecordingKVProvider';
-import {VOICE_OCCUPANCY_REGION_KEY_PREFIX, VOICE_OCCUPANCY_SERVER_KEY_PREFIX} from '../../voice/VoiceConstants';
-import {VoiceRoomStore} from '../VoiceRoomStore';
 
 describe('VoiceRoomStore cluster hash slots', () => {
 	it('keeps occupancy writes off batched commands that span hash slots', async () => {

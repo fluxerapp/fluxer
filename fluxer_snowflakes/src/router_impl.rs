@@ -4,10 +4,10 @@ use crate::types::{SERVICE_NAME, SnowflakeRequest, SnowflakeResponse};
 use fluxer_svc::config::ServiceConfig;
 use fluxer_svc::hash_ring::HashRing;
 use fluxer_svc::metrics::ServiceMetrics;
-use fluxer_svc::transport::{NatsTransport, TransportMessage, TransportSubscriber};
+use fluxer_svc::transport::{NatsMessage, NatsTransport, TransportMessage, TransportSubscriber};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tokio::task::JoinSet;
 use tracing::{debug, info, warn};
 
@@ -61,8 +61,10 @@ pub async fn run_round_robin_router(
     config: &ServiceConfig,
     transport: NatsTransport,
 ) -> anyhow::Result<()> {
-    let request_subject = format!("svc.{SERVICE_NAME}");
-    let queue_group = format!("{SERVICE_NAME}-router");
+    anyhow::ensure!(
+        config.max_concurrent_requests > 0,
+        "snowflake router request concurrency must be positive"
+    );
     let picker = Arc::new(SnowflakeShardPicker::new(config.shard_count));
     let mut tasks = JoinSet::new();
     let health_addr = config.listen_addr;
@@ -82,84 +84,12 @@ pub async fn run_round_robin_router(
             .await
         }
     });
-    let req_transport = transport.clone();
-    tasks.spawn(async move {
-        loop {
-            let mut sub = req_transport
-                .subscribe_queue(&request_subject, &queue_group)
-                .await?;
-            info!(subject = request_subject, "snowflake router listening for requests");
-            loop {
-                let msg = tokio::select! {
-                    msg_opt = sub.next() => {
-                        let Some(msg) = msg_opt else {
-                            warn!("snowflake router request subscription stream ended, will re-subscribe");
-                            break;
-                        };
-                        msg
-                    }
-                    _ = req_transport.wait_for_reconnect() => {
-                        info!("NATS reconnected, re-subscribing snowflake router request listener");
-                        break;
-                    }
-                };
-                let transport = req_transport.clone();
-                let picker = picker.clone();
-                if msg.payload().len() > MAX_ROUTER_REQUEST_BYTES {
-                    warn!(
-                        payload_bytes = msg.payload().len(),
-                        max_payload_bytes = MAX_ROUTER_REQUEST_BYTES,
-                        "rejecting oversized snowflake request"
-                    );
-                    reply_json_error(&msg, &transport, "request_too_large").await;
-                    continue;
-                }
-                let request: SnowflakeRequest = match serde_json::from_slice(msg.payload()) {
-                    Ok(request) => request,
-                    Err(error) => {
-                        warn!(error = %error, "failed to decode snowflake request");
-                        reply_json_error(&msg, &transport, "decode_error").await;
-                        continue;
-                    }
-                };
-                tokio::spawn(async move {
-                    let shard_id = picker.pick_shard(&request);
-                    let shard_subject = format!("svc.{SERVICE_NAME}.shard.{shard_id}");
-                    let payload = match rmp_serde::to_vec(&request) {
-                        Ok(payload) => payload,
-                        Err(error) => {
-                            warn!(error = %error, "failed to encode snowflake shard request");
-                            reply_json_error(&msg, &transport, "encode_error").await;
-                            return;
-                        }
-                    };
-                    let response_bytes = match transport
-                        .request(&shard_subject, &payload, SHARD_REQUEST_TIMEOUT)
-                        .await
-                    {
-                        Ok(response_bytes) => response_bytes,
-                        Err(error) => {
-                            debug!(error = %error, shard_id, "snowflake shard request failed");
-                            reply_json_error(&msg, &transport, "shard_unavailable").await;
-                            return;
-                        }
-                    };
-                    let response: SnowflakeResponse = match rmp_serde::from_slice(&response_bytes) {
-                        Ok(response) => response,
-                        Err(error) => {
-                            debug!(error = %error, shard_id, "failed to decode snowflake shard response");
-                            reply_json_error(&msg, &transport, "shard_decode_error").await;
-                            return;
-                        }
-                    };
-                    if msg.has_reply() {
-                        let response_json = serde_json::to_vec(&response).unwrap_or_default();
-                        let _ = msg.reply(&transport, &response_json).await;
-                    }
-                });
-            }
-        }
-    });
+    tasks.spawn(serve_requests(
+        transport,
+        picker,
+        http_metrics,
+        config.max_concurrent_requests,
+    ));
     tokio::select! {
         result = tasks.join_next() => {
             match result {
@@ -177,15 +107,136 @@ pub async fn run_round_robin_router(
     }
 }
 
-async fn reply_json_error(
-    msg: &fluxer_svc::transport::NatsMessage,
-    transport: &NatsTransport,
-    error: &str,
+async fn serve_requests(
+    transport: NatsTransport,
+    picker: Arc<SnowflakeShardPicker>,
+    metrics: Arc<ServiceMetrics>,
+    max_concurrent_requests: usize,
+) -> anyhow::Result<()> {
+    let request_subject = format!("svc.{SERVICE_NAME}");
+    let queue_group = format!("{SERVICE_NAME}-router");
+    let mut requests = JoinSet::new();
+    loop {
+        let mut sub = transport
+            .subscribe_queue(&request_subject, &queue_group)
+            .await?;
+        info!(
+            subject = request_subject,
+            max_concurrent_requests, "snowflake router listening for requests"
+        );
+        loop {
+            let msg = tokio::select! {
+                result = requests.join_next(), if !requests.is_empty() => {
+                    if let Err(error) = result.expect("nonempty snowflake request set") {
+                        warn!(error = %error, "snowflake request task failed");
+                    }
+                    continue;
+                }
+                msg = sub.next() => {
+                    let Some(msg) = msg else {
+                        warn!("snowflake router request subscription stream ended, will re-subscribe");
+                        break;
+                    };
+                    msg
+                }
+            };
+            while let Some(result) = requests.try_join_next() {
+                if let Err(error) = result {
+                    warn!(error = %error, "snowflake request task failed");
+                }
+            }
+            metrics.record_request();
+            if requests.len() >= max_concurrent_requests {
+                debug!(
+                    max_concurrent_requests,
+                    "shedding overloaded snowflake router request"
+                );
+                metrics.record_request_error();
+                reply_json_error(&msg, &transport, "overloaded").await;
+                continue;
+            }
+            requests.spawn(handle_request(
+                msg,
+                transport.clone(),
+                picker.clone(),
+                metrics.clone(),
+            ));
+        }
+    }
+}
+
+async fn handle_request(
+    msg: NatsMessage,
+    transport: NatsTransport,
+    picker: Arc<SnowflakeShardPicker>,
+    metrics: Arc<ServiceMetrics>,
 ) {
+    let started = Instant::now();
+    match forward_request(msg.payload(), &transport, &picker, &metrics).await {
+        Ok(response) => {
+            if msg.has_reply() {
+                let payload = serde_json::to_vec(&response)
+                    .expect("snowflake responses contain only JSON-serializable strings");
+                reply(&msg, &transport, &payload).await;
+            }
+        }
+        Err(error) => {
+            metrics.record_request_error();
+            reply_json_error(&msg, &transport, error).await;
+        }
+    }
+    metrics.record_request_duration(started.elapsed().as_millis() as u64);
+}
+
+async fn forward_request(
+    payload: &[u8],
+    transport: &NatsTransport,
+    picker: &SnowflakeShardPicker,
+    metrics: &ServiceMetrics,
+) -> Result<SnowflakeResponse, &'static str> {
+    if payload.len() > MAX_ROUTER_REQUEST_BYTES {
+        warn!(
+            payload_bytes = payload.len(),
+            max_payload_bytes = MAX_ROUTER_REQUEST_BYTES,
+            "rejecting oversized snowflake request"
+        );
+        return Err("request_too_large");
+    }
+    let request: SnowflakeRequest = serde_json::from_slice(payload).map_err(|error| {
+        warn!(error = %error, "failed to decode snowflake request");
+        "decode_error"
+    })?;
+    let shard_id = picker.pick_shard(&request);
+    let shard_subject = format!("svc.{SERVICE_NAME}.shard.{shard_id}");
+    let payload = rmp_serde::to_vec(&request).map_err(|error| {
+        warn!(error = %error, "failed to encode snowflake shard request");
+        "encode_error"
+    })?;
+    metrics.record_shard_forward();
+    let response_bytes = transport
+        .request(&shard_subject, &payload, SHARD_REQUEST_TIMEOUT)
+        .await
+        .map_err(|error| {
+            debug!(error = %error, shard_id, "snowflake shard request failed");
+            "shard_unavailable"
+        })?;
+    rmp_serde::from_slice(&response_bytes).map_err(|error| {
+        debug!(error = %error, shard_id, "failed to decode snowflake shard response");
+        "shard_decode_error"
+    })
+}
+
+async fn reply_json_error(msg: &NatsMessage, transport: &NatsTransport, error: &str) {
     if msg.has_reply() {
-        let error_response =
-            serde_json::to_vec(&serde_json::json!({ "error": error })).unwrap_or_default();
-        let _ = msg.reply(transport, &error_response).await;
+        let payload = serde_json::to_vec(&serde_json::json!({ "error": error }))
+            .expect("snowflake error responses contain only a JSON-serializable string");
+        reply(msg, transport, &payload).await;
+    }
+}
+
+async fn reply(msg: &NatsMessage, transport: &NatsTransport, payload: &[u8]) {
+    if let Err(error) = msg.reply(transport, payload).await {
+        warn!(error = %error, "failed to reply to snowflake request");
     }
 }
 

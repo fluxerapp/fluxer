@@ -3,6 +3,7 @@
 mod app_dev_server;
 mod app_proxy;
 mod app_wasm;
+mod appimage;
 mod calver;
 mod ci_workflow;
 mod common;

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    admin_flags, api::client::AdminApiClient, middleware::flash::FlashData,
+    admin_flags,
+    api::client::{AdminApiClient, ApiError},
+    middleware::flash::FlashData,
     utils::forms::MultiValueForm,
 };
 use std::collections::HashSet;
@@ -60,7 +62,9 @@ pub async fn dispatch(
                     "Failed to update user flags",
                 );
             }
-            let submitted = parse_u64_list(form, &["flags[]", "flags"]);
+            let Ok(submitted) = form.parse_list_values::<u64>(&["flags[]", "flags"]) else {
+                return DispatchOutcome::error("Invalid user flag value");
+            };
             let selected = submitted.iter().copied().collect::<HashSet<_>>();
             let user = match client.get_user_by_id(user_id).await {
                 Ok(user) => user,
@@ -89,15 +93,22 @@ pub async fn dispatch(
         }
         "update_premium_flags" => {
             if has_legacy_flag_delta_fields(form) {
-                let add = parse_i32_list(form, &["add_flags[]", "add_flags"]);
-                let remove = parse_i32_list(form, &["remove_flags[]", "remove_flags"]);
+                let Ok(add) = form.parse_list_values::<i32>(&["add_flags[]", "add_flags"]) else {
+                    return DispatchOutcome::error("Invalid premium flag value to add");
+                };
+                let Ok(remove) = form.parse_list_values::<i32>(&["remove_flags[]", "remove_flags"])
+                else {
+                    return DispatchOutcome::error("Invalid premium flag value to remove");
+                };
                 return DispatchOutcome::from_result(
                     client.update_premium_flags(user_id, &add, &remove).await,
                     "Premium flags updated successfully",
                     "Failed to update premium flags",
                 );
             }
-            let submitted = parse_i32_list(form, &["flags[]", "flags"]);
+            let Ok(submitted) = form.parse_list_values::<i32>(&["flags[]", "flags"]) else {
+                return DispatchOutcome::error("Invalid premium flag value");
+            };
             let selected = submitted.iter().copied().collect::<HashSet<_>>();
             let user = match client.get_user_by_id(user_id).await {
                 Ok(user) => user,
@@ -121,16 +132,6 @@ pub async fn dispatch(
                 client.update_premium_flags(user_id, &add, &remove).await,
                 "Premium flags updated successfully",
                 "Failed to update premium flags",
-            )
-        }
-        "update_suspicious_flags" => {
-            let flags = parse_i32_list(form, &["suspicious_flags[]", "suspicious_flags"])
-                .into_iter()
-                .fold(0, |acc, flag| acc | flag);
-            DispatchOutcome::from_result(
-                client.update_suspicious_flags(user_id, flags).await,
-                "Suspicious activity flags updated successfully",
-                "Failed to update suspicious activity flags",
             )
         }
         "update_acls" => {
@@ -164,14 +165,6 @@ pub async fn dispatch(
             "Email verified successfully",
             "Failed to verify email",
         ),
-        "update_has_verified_phone" => {
-            let val = form.bool_value("has_verified_phone");
-            DispatchOutcome::from_result(
-                client.update_has_verified_phone(user_id, val).await,
-                "Phone verification status updated successfully",
-                "Failed to update phone verification status",
-            )
-        }
         "terminate_sessions" => DispatchOutcome::from_result(
             client.terminate_user_sessions(user_id).await,
             "User sessions terminated successfully",
@@ -183,22 +176,6 @@ pub async fn dispatch(
                 client.clear_user_fields(user_id, &f).await,
                 "User fields cleared successfully",
                 "Failed to clear user fields",
-            )
-        }
-        "set_bot_status" => {
-            let val = form.bool_value("bot");
-            DispatchOutcome::from_result(
-                client.set_bot_status(user_id, val).await,
-                "Bot status updated successfully",
-                "Failed to update bot status",
-            )
-        }
-        "set_system_status" => {
-            let val = form.bool_value("system");
-            DispatchOutcome::from_result(
-                client.set_system_status(user_id, val).await,
-                "System status updated successfully",
-                "Failed to update system status",
             )
         }
         "change_username" => {
@@ -225,31 +202,52 @@ pub async fn dispatch(
             )
         }
         "temp_ban" => {
-            let dur = form
-                .parse_u32("duration_hours")
-                .or_else(|| form.parse_u32("duration"))
-                .unwrap_or(24);
+            let Ok(duration) = form.parse_value_any::<u32>(&["duration_hours", "duration"]) else {
+                return DispatchOutcome::error("Invalid ban duration");
+            };
             let reason = get("reason");
             let private = get("private_reason");
+            let notify_user = form.opt_out_value("notify_user");
             DispatchOutcome::from_result(
                 client
-                    .temp_ban_user(user_id, dur, reason.as_deref(), private.as_deref())
+                    .temp_ban_user(
+                        user_id,
+                        duration.unwrap_or(24),
+                        reason.as_deref(),
+                        notify_user,
+                        private.as_deref(),
+                    )
                     .await,
                 "User temporarily banned successfully",
                 "Failed to temporarily ban user",
             )
         }
-        "unban" => DispatchOutcome::from_result(
-            client.unban_user(user_id).await,
-            "User unbanned successfully",
-            "Failed to unban user",
-        ),
+        "unban" => {
+            let public_reason = get("public_reason");
+            let private_reason = get("private_reason");
+            let notify_user = form.opt_out_value("notify_user");
+            DispatchOutcome::from_result(
+                client
+                    .unban_user(
+                        user_id,
+                        public_reason.as_deref(),
+                        notify_user,
+                        private_reason.as_deref(),
+                    )
+                    .await,
+                "User unbanned successfully",
+                "Failed to unban user",
+            )
+        }
         "ban_ip" => {
             let Some(ip) = get("ip") else {
                 return DispatchOutcome::error("IP address is required");
             };
+            let Ok(duration) = form.parse_value::<u32>("duration_hours") else {
+                return DispatchOutcome::error("Invalid ban duration");
+            };
             DispatchOutcome::from_result(
-                client.ban_ip(&ip).await,
+                client.ban_ip(&ip, duration.unwrap_or(0), None).await,
                 "IP banned successfully",
                 "Failed to ban IP",
             )
@@ -259,28 +257,83 @@ pub async fn dispatch(
                 return DispatchOutcome::error("Avatar hash is required");
             };
             DispatchOutcome::from_result(
-                client.ban_avatar_hash(&hash).await,
+                client.ban_avatar_hash(&hash, None).await,
                 "Avatar hash banned successfully",
                 "Failed to ban avatar hash",
             )
         }
         "schedule_deletion" => {
-            let reason_code = form.parse_i32("reason_code").unwrap_or(0);
+            let Ok(reason_code) = form.parse_value::<i32>("reason_code") else {
+                return DispatchOutcome::error("Invalid deletion reason code");
+            };
             let public_reason = get("public_reason");
-            let days = form.parse_u32("days_until_deletion").unwrap_or(60);
+            let private_reason = get("private_reason");
+            let Ok(days) = form.parse_value_any::<u32>(&["days_until_deletion", "days"]) else {
+                return DispatchOutcome::error("Invalid deletion delay");
+            };
+            let notify_user = form.opt_out_value("notify_user");
             DispatchOutcome::from_result(
                 client
-                    .schedule_deletion(user_id, reason_code, public_reason.as_deref(), days)
+                    .schedule_deletion(
+                        user_id,
+                        reason_code.unwrap_or(0),
+                        public_reason.as_deref(),
+                        days.unwrap_or(60),
+                        notify_user,
+                        private_reason.as_deref(),
+                    )
                     .await,
                 "User deletion scheduled successfully",
                 "Failed to schedule user deletion",
             )
         }
-        "cancel_deletion" => DispatchOutcome::from_result(
-            client.cancel_deletion(user_id).await,
-            "User deletion cancelled successfully",
-            "Failed to cancel user deletion",
-        ),
+        "cancel_deletion" => {
+            let Some(expected) = get("expected_pending_deletion_at") else {
+                return DispatchOutcome::error(
+                    "The pending deletion is missing from the form. Reload and review.",
+                );
+            };
+            if !form.bool_value("confirm") {
+                return DispatchOutcome::error(
+                    "Confirm whose deletion you are cancelling before submitting",
+                );
+            }
+            let Some(private_reason) = get("private_reason") else {
+                return DispatchOutcome::error("A private reason is required to cancel a deletion");
+            };
+            let notify_user = form.bool_value("notify_user");
+            match client
+                .cancel_deletion(user_id, &expected, notify_user, Some(&private_reason))
+                .await
+            {
+                Ok(_) => DispatchOutcome::success("User deletion cancelled successfully"),
+                Err(ApiError::Http { status: 409, .. }) => DispatchOutcome::error(
+                    "The pending deletion changed since this page loaded. Reload and review.",
+                ),
+                Err(error) => {
+                    tracing::warn!(%error, user_id, "admin API request failed: cancel user deletion");
+                    DispatchOutcome::error("Failed to cancel user deletion")
+                }
+            }
+        }
+        "annotate_ban" => {
+            let Some(ban_audit_log_id) = get("ban_audit_log_id") else {
+                return DispatchOutcome::error("The ban audit log entry is missing from the form");
+            };
+            let Some(note) = get("note") else {
+                return DispatchOutcome::error("Note is required");
+            };
+            match client.annotate_ban(user_id, &ban_audit_log_id, &note).await {
+                Ok(()) => DispatchOutcome::success("Note added to the ban"),
+                Err(ApiError::Http { status: 409, .. }) => DispatchOutcome::error(
+                    "The ban changed since this page loaded. Reload and review.",
+                ),
+                Err(error) => {
+                    tracing::warn!(%error, user_id, "admin API request failed: annotate ban");
+                    DispatchOutcome::error("Failed to add the note to the ban")
+                }
+            }
+        }
         "change_dob" => {
             let Some(dob) = get("date_of_birth") else {
                 return DispatchOutcome::error("Date of birth is required");
@@ -313,6 +366,11 @@ pub async fn dispatch(
             client.send_password_reset(user_id).await,
             "Password reset sent successfully",
             "Failed to send password reset",
+        ),
+        "revoke_recovery_kit" => DispatchOutcome::from_result(
+            client.revoke_recovery_kit(user_id).await,
+            "Recovery kit revoked",
+            "Failed to revoke recovery kit",
         ),
         "remove_relationship" => {
             let Some(target_id) = get("target_user_id").or_else(|| get("target_id")) else {
@@ -439,20 +497,6 @@ fn is_relationship_category(category: &str) -> bool {
         category,
         "friend" | "incoming_request" | "outgoing_request" | "blocked"
     )
-}
-
-fn parse_u64_list(form: &MultiValueForm, keys: &[&str]) -> Vec<u64> {
-    form.list_values_any(keys)
-        .iter()
-        .filter_map(|value| value.parse().ok())
-        .collect()
-}
-
-fn parse_i32_list(form: &MultiValueForm, keys: &[&str]) -> Vec<i32> {
-    form.list_values_any(keys)
-        .iter()
-        .filter_map(|value| value.parse().ok())
-        .collect()
 }
 
 fn parse_dry_run(value: Option<&str>) -> bool {

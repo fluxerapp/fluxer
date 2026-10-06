@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {describe, expect, it} from 'vitest';
-import {transitionVoiceEngineV2} from '../core/reducer';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
-} from '../core/state';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {VoiceEngineV2InboundVideoFrame} from '../protocol/types';
-import {FakeVoiceEngineV2Driver, VoiceEngineV2TestImplementation} from '../testing';
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {VoiceEngineV2InboundVideoFrame} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {
 	assertEventLogRingInvariants,
 	createVoiceEngineV2MemoryEventLogSpillSink,
@@ -18,12 +16,14 @@ import {
 	type VoiceEngineV2EventLogEntry,
 	VoiceEngineV2EventLogRing,
 	type VoiceEngineV2EventLogSpillSink,
-} from './eventLogRing';
+} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 import {
 	assertEventLogInvariants,
 	type VoiceEngineV2EventLogEntry as RuntimeEventLogEntry,
 	VoiceEngineV2Runtime,
-} from './VoiceEngineV2Runtime';
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
+import {FakeVoiceEngineV2Driver, VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing';
+import {describe, expect, it} from 'vitest';
 
 function makeInboundVideoFrameEvent(timestampUs: number): VoiceEngineV2Event {
 	const frame: VoiceEngineV2InboundVideoFrame = {

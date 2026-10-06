@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createFriendship as channelCreateFriendship} from '@app/api/channel/tests/ChannelTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {RelationshipResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {expect} from 'vitest';
-import {createFriendship as channelCreateFriendship} from '../../channel/tests/ChannelTestUtils';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 export async function sendFriendRequest(
 	harness: ApiTestHarness,

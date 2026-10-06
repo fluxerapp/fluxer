@@ -8,6 +8,8 @@ import {
 	PLAY_DESCRIPTOR,
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -52,12 +54,6 @@ interface InlineAudioPlayerProps {
 	onDownloadClick?: (e: React.MouseEvent) => void;
 	onContextMenu?: (e: React.MouseEvent) => void;
 	className?: string;
-}
-
-function formatFileSize(bytes: number): string {
-	if (bytes < 1024) return `${bytes} B`;
-	if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-	return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function formatTime(time: number): string {
@@ -116,6 +112,7 @@ export function InlineAudioPlayer({
 		mediaRef,
 	});
 	const {escalateToMetadata, sourceAttribute, preloadAttribute} = useMetadataPreload(src, hasStarted);
+	const handleMediaError = useAttachmentRefreshOnError(src);
 	const displayDuration = duration > 0 ? duration : (initialDuration ?? 0);
 	useLayoutEffect(() => {
 		const media = mediaRef.current;
@@ -128,7 +125,7 @@ export function InlineAudioPlayer({
 	const {name: fileName, extension: fileExtension} = extension
 		? {name: title, extension: `.${extension}`}
 		: splitFilename(title);
-	const fileSizeString = fileSize ? formatFileSize(fileSize) : '';
+	const fileSizeString = fileSize ? formatFileSize(i18n.locale, fileSize) : '';
 	useEffect(() => {
 		if (hasStarted && pendingPlayRef.current) {
 			const timer = setTimeout(() => {
@@ -210,6 +207,7 @@ export function InlineAudioPlayer({
 					ref={mediaRef as React.RefObject<HTMLAudioElement>}
 					src={sourceAttribute}
 					preload={preloadAttribute}
+					onError={handleMediaError}
 					data-flx="voice.media-player.inline-audio-player.audio"
 				>
 					<track kind="captions" data-flx="voice.media-player.inline-audio-player.track" />
@@ -337,6 +335,7 @@ export function InlineAudioPlayer({
 				ref={mediaRef as React.RefObject<HTMLAudioElement>}
 				src={sourceAttribute}
 				preload={preloadAttribute}
+				onError={handleMediaError}
 				data-flx="voice.media-player.inline-audio-player.audio--2"
 			>
 				<track kind="captions" data-flx="voice.media-player.inline-audio-player.track--2" />

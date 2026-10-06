@@ -5,7 +5,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
 	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_LABEL,
+	IMAGE_MAX_SIZE_BYTES,
 	PRODUCT_NAME,
 	STATIC_IMAGE_FORMATS,
 	THE_OTHER_PLATFORM_TEMPLATE_EXAMPLE_URL,
@@ -53,6 +53,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -146,7 +147,8 @@ type TemplateImportStep = 'url' | 'json' | 'create';
 
 const TEMPLATE_IMPORT_STEP_ORDER: ReadonlyArray<TemplateImportStep> = ['url', 'json', 'create'];
 const TEMPLATE_STATS_DESCRIPTOR = msg({
-	message: '{textChannelCount} text, {voiceChannelCount} voice, {categoryCount} categories, {roleCount} roles',
+	message:
+		'{textChannelCount, plural, one {# text channel} other {# text channels}}, {voiceChannelCount, plural, one {# voice channel} other {# voice channels}}, {categoryCount, plural, one {# category} other {# categories}}, {roleCount, plural, one {# role} other {# roles}}',
 	comment:
 		'Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.',
 });
@@ -265,7 +267,9 @@ export const TemplateImportForm = observer(() => {
 		const channelTypes = templateData.channels
 			.map((channel) => mapTemplateChannelTypeToFluxer(channel.type))
 			.filter((channelType): channelType is number => channelType !== null);
-		const textChannels = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_TEXT).length;
+		const textChannels = channelTypes.filter(
+			(channelType) => channelType === ChannelTypes.GUILD_TEXT || channelType === ChannelTypes.GUILD_ANNOUNCEMENT,
+		).length;
 		const voiceChannels = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_VOICE).length;
 		const categories = channelTypes.filter((channelType) => channelType === ChannelTypes.GUILD_CATEGORY).length;
 		const roles = templateData.roles.filter((role) => !isTemplateEveryoneRole(role)).length;
@@ -278,7 +282,7 @@ export const TemplateImportForm = observer(() => {
 			if (file.size > 10 * 1024 * 1024) {
 				showIconUploadErrorModal(
 					i18n._(ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-						imageMaxSizeLabel: IMAGE_MAX_SIZE_LABEL,
+						imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 					}),
 				);
 				return;
@@ -295,7 +299,6 @@ export const TemplateImportForm = observer(() => {
 					<AssetCropModal
 						assetType={AssetType.GUILD_ICON}
 						imageUrl={base64}
-						sourceMimeType={svg ? 'image/svg+xml' : file.type}
 						onCropComplete={(croppedBlob) => {
 							const reader = new FileReader();
 							reader.onload = () => {
@@ -329,7 +332,7 @@ export const TemplateImportForm = observer(() => {
 			title: i18n._(CHANGE_ICON_DESCRIPTOR),
 			uploadHint: formatImageUploadRecommendedHint(i18n, {
 				formats: STATIC_IMAGE_FORMATS,
-				maxSize: IMAGE_MAX_SIZE_LABEL,
+				maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 				recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 			}),
 			onPickUpload: handleIconUpload,

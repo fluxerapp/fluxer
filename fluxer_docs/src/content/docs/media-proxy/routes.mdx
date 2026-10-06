@@ -20,8 +20,8 @@ Every media read route can produce these statuses in addition to the ones in its
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 403 | Media access denied | The request address is not permitted by the instance media access policy |
-| 404 | Not found | The path is not a media route or the object does not exist |
+| 403 | Forbidden | The [cross-origin read policy](/media-proxy/overview/#cross-origin-reads) refuses the request `Origin` on an `mp` or `upload` endpoint |
+| 404 | Not found | The path is not a media route, the endpoint runs in `relay` mode, or the object does not exist |
 | 405 | Method not allowed | The method is neither `GET` nor `HEAD` |
 | 413 | Payload too large | The stored object exceeds the 500 MiB media bound |
 | 502 | Bad gateway | The object store could not be read |
@@ -30,10 +30,10 @@ Every media read route can produce these statuses in addition to the ones in its
 
 <RouteHeader method="GET" path="/attachments/{path}" unauthenticated />
 
-Returns the attachment identified by the path, optionally transformed. The path comes from the attachment URL the HTTP API returned.
+Returns the attachment identified by the path, optionally transformed. The path and its signature come from the attachment URL the HTTP API returned. Request that URL as issued. A transformation parameter can be added to its query string.
 
 :::caution[An attachment URL is a bearer capability]
-The path has no signature and no expiry, so anyone holding the URL reads the object from any origin for as long as it exists. Leaving the guild does not revoke a URL a member already holds.
+Anyone holding the URL reads the object from any origin the [cross-origin read policy](/media-proxy/overview/#cross-origin-reads) allows. Under the `enforce` [signed attachment URL policy](/media-proxy/overview/#signed-attachment-urls) it works until `ex`, and otherwise for as long as the object exists. A [data package URL](/http-api/messages/#data-package-attachment-urls) has no `ex` and works until the secret that signed it is removed. Leaving the guild does not revoke a URL a member already holds.
 :::
 
 ### Path parameters
@@ -55,16 +55,22 @@ The path has no signature and no expiry, so anyone holding the URL reads the obj
 | animated? | boolean | Whether animated output is requested |
 | effort?<sup>1</sup> | integer | The WebP encoder effort, clamped to 9 |
 | download? | boolean | Whether attachment disposition is requested |
+| ex?<sup>2</sup> | string | The expiry of the signed URL, as 8 lowercase hexadecimal digits of Unix seconds, or `0` on a data package URL |
+| is?<sup>2</sup> | string | The issue time of the signed URL, as 8 lowercase hexadecimal digits of Unix seconds |
+| hm?<sup>2</sup> | string | The signature, as 64 lowercase hexadecimal digits |
+| uc?<sup>2</sup> | string | The data package marker, always `dp` when present |
 
 <sup>1</sup> Read only on this route, and an empty or unparsable value is ignored. Only lossless animated WebP output uses a value above 6
 
+<sup>2</sup> Read under the `report` or `enforce` [signed attachment URL policy](/media-proxy/overview/#signed-attachment-urls), which also defines how they are parsed. `enforce` requires `ex`, `is`, and `hm`, and reads `uc` on every URL, where its presence selects the [data package URL](/http-api/messages/#data-package-attachment-urls) grammar
+
 [When a transformation runs](/media-proxy/transformations/#when-a-transformation-runs) defines the trigger.
 
-Without a transformation Fluxer streams the object from the store and forwards the range to it. With one it reads the complete object into memory first, and the range applies to the transformed bytes.
+When a transformation is requested, `Range` selects bytes from the transformed result.
 
-An SVG attachment with a transformation parameter is rasterised, and `format` and `quality` select the output as they do for any other source, defaulting to WebP. Without a transformation parameter, only an `mp` endpoint rasterises it, always as lossless WebP. An `upload` endpoint returns the stored SVG bytes.
+An SVG attachment with a transformation parameter is rasterised, and `format` and `quality` select the output as they do for any other source, defaulting to WebP. Without a transformation parameter, only a Media Proxy in [`mp` deployment mode](/media-proxy/overview/#deployment-modes) rasterises it, always as lossless WebP. A Media Proxy in `upload` mode returns the stored SVG bytes.
 
-A video source requires an explicit image `format`. Another transformation parameter without `format` returns 400. A source that is neither an image nor a video returns 400 when `format` is present. Without `format`, Fluxer returns it unchanged.
+A video source requires an explicit image `format`. A video request with `width`, `height`, `quality`, or `animated=true` and no `format` returns 400. A source that is neither an image nor a video returns 400 when `format` is present. Without `format`, Fluxer returns it unchanged.
 
 ### Response
 
@@ -73,7 +79,8 @@ A video source requires an explicit image `format`. Another transformation param
 | 200 | Complete media representation | The object and selected representation are available |
 | 206 | Selected media bytes | One range is satisfiable |
 | 400 | Bad request | The decoded key, a dimension, the format, or the transformation request is invalid, or the transformation failed |
-| 404 | Not found | The attachment object does not exist |
+| 404 | Not found | The attachment object does not exist and the signed attachment URL policy is `off` or `report` |
+| 404 | This content is no longer available. | The signed attachment URL policy refuses the signature, or the object does not exist under `enforce` |
 | 416 | empty | The range is unsatisfiable |
 | 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
@@ -83,7 +90,7 @@ A video source requires an explicit image `format`. Another transformation param
 
 <RouteHeader method="GET" path="/external/{signature}/{target}" />
 
-Returns external media through Fluxer, optionally transformed. Fluxer verifies the signature before it decodes or fetches the target.
+Returns external media through Fluxer, optionally transformed. Use the signed URL supplied by the HTTP API.
 
 Fluxer constructs the signed path and exposes it on these fields:
 
@@ -93,16 +100,14 @@ Fluxer constructs the signed path and exposes it on these fields:
 - `proxy_url` of a [resolved GIF entry](/http-api/memes/#resolved-gif-entry-object)
 - `proxy_src` of a [GIF media format object](/http-api/memes/#gif-media-format-object)
 
-A field holds a signed path only when its source URL is external. A URL already under the Media Proxy endpoint, and any URL the deployment cannot sign, is returned verbatim, so a client MUST request the value exactly as issued and MUST NOT assume it has the signed shape.
+A field holds a signed external path only when its source URL is external. A URL already under the Media Proxy endpoint keeps that endpoint, and gets an [attachment URL signature](/http-api/messages/#signed-attachment-urls) when it names an attachment of this instance. Any URL the deployment cannot sign is returned verbatim, so a client MUST request the value exactly as issued and MUST NOT assume it has the signed shape.
 
 ### Path parameters
 
 | Field | Type | Description |
 | --- | --- | --- |
-| signature | string | The unpadded base64url HMAC-SHA256 of the target component under the deployment secret |
-| target<sup>1</sup> | string | The encoded target component, which can contain `/` separators |
-
-<sup>1</sup> The opaque form is `v2/` followed by the unpadded base64url of the complete URL. The segmented form joins an optional percent-encoded `?query` segment, the scheme, the host and port, and the percent-encoded path segments with `/`
+| signature | string | The signature from the issued URL |
+| target | string | The opaque target from the issued URL |
 
 A client MUST preserve both components exactly as issued and MUST NOT decode or reconstruct either one. The signature covers the target component alone, so adding or changing a query parameter does not invalidate it. A path with no `/` after `/external/` returns 400.
 
@@ -114,7 +119,7 @@ Anyone holding a signed path fetches that external target through Fluxer for as 
 
 Fluxer validates the decoded target before every request and again for every redirect hop. It must be at most 8,192 bytes, must use `http` or `https`, must have a non-zero port when it names one, and must not contain credentials or a control character. A fragment is dropped before the fetch.
 
-The target must resolve to a public address. A hostname must be at most 253 bytes and must contain at least one dot. Its labels use only ASCII letters, digits, and `-`, run to at most 63 bytes, and begin and end alphanumerically. The final label is not digits only. Fluxer rejects a literal address in an unspecified, loopback, private, link-local, carrier-grade NAT, benchmarking, documentation, 6to4 relay, multicast, reserved, broadcast, unique-local, IPv4-mapped, 6to4, or NAT64-embedded range. Fluxer validates every address DNS returns the same way before it opens the connection.
+The target must resolve to a public internet address. Private, local and reserved addresses are rejected, including through redirects.
 
 A hostname whose lookup fails or resolves to no address returns 400.
 
@@ -133,13 +138,11 @@ A redirect beyond the [five-redirect bound](/media-proxy/responses-and-limits/#r
 
 `effort` is read only on [Get attachment](#get-attachment) and is ignored here.
 
-A transformation begins when `width`, `height`, `format`, or `quality` is present, when `animated` resolves to true, when the target filename ends in `.svg`, or when the origin body is SVG by media type or by its first bytes. A transforming request forwards no `Range` to the origin and applies the client range to the transformed bytes, so it still selects 206 or 416.
+A transformation begins when `width`, `height`, `format`, or `quality` is present, when `animated` resolves to true, when the target filename ends in `.svg`, or when the origin body is SVG by media type or by its first bytes. A transforming request forwards no `Range` to the origin and applies the client range to the transformed bytes, so a satisfiable range returns 206 and an unsatisfiable range returns 416.
 
-A non-transforming request forwards the client range to the origin under the filter [byte ranges](/media-proxy/overview/#byte-ranges) defines, and relays an origin 206 with its `Content-Range` and `Content-Length` unchanged. An origin that ignores the range answers 200, and Fluxer streams that whole body through when the origin names an `image/`, `video/`, or `audio/` media type other than `image/svg+xml`. Fluxer buffers a transforming request, an SVG body, and any body whose declared media type is empty, `application/octet-stream`, or outside those categories. A buffered response has the range applied to the bytes the route finally serves, so a client range over a buffered origin 200 produces 206.
+A non-transforming request can forward the range to the origin. Handle both 200 and 206 responses and use their range headers, as described in [Byte ranges](/media-proxy/overview/#byte-ranges).
 
-A body the [external buffer budget](/media-proxy/responses-and-limits/#request-and-media-limits) cannot cover returns 503.
-
-This is the one route whose `HEAD` can answer differently from its `GET`. A `HEAD` with no transformation and no range is served from an origin `HEAD` when that origin returns 200, declares a `Content-Length` of at most 500 MiB, and names a non-SVG media type. Any other `HEAD` runs the `GET` path and returns its headers with an empty body. [Methods](/media-proxy/overview/#methods) defines how that origin `HEAD` resolves the media type.
+Fluxer returns 503 when it cannot reserve or allocate a buffer for the origin body. A `HEAD` with no transformation and no forwarded range can build `Content-Type` and `Content-Length` from the origin's own `HEAD` response, so those headers can differ from a `GET` response.
 
 A video target requires an explicit image `format` to produce a thumbnail. Without one, Fluxer returns the original bytes unchanged, and it does the same for a target that is neither an image nor a video.
 
@@ -153,13 +156,13 @@ A video target requires an explicit image `format` to produce a thumbnail. Witho
 | 401 | Unauthorized | The path signature is invalid |
 | 413 | Payload too large | The origin declared or delivered more than 500 MiB |
 | 416 | empty | A local range is unsatisfiable |
-| 502 | Bad gateway | The origin could not be reached, exceeded the redirect bound, or returned a status outside the retained set |
-| 503 | Service unavailable | The external buffer budget cannot cover the body, or the buffer allocation failed |
+| 502 | Bad gateway | The origin could not be reached, exceeded the redirect bound, or returned an unsuccessful status that the paragraph below this table does not list |
+| 503 | Service unavailable | Fluxer could not reserve or allocate a buffer for the origin body |
 | 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
 <sup>1</sup> A forwarded range relays the origin `Content-Range` and `Content-Length` unchanged and omits either header the origin did not send, so a chunked origin 206 produces a 206 with no `Content-Length`. A local range over buffered or transformed bytes always has both
 
-An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged as an upstream fetch failure, and the origin body and headers are not returned. Any other unsuccessful origin status becomes 502. [Common responses](#common-responses) also apply.
+An origin status of 400, 401, 403, 404, 405, 406, 408, 409, 410, 411, 412, 413, 414, 415, 416, 428, or 429 reaches the client unchanged with the plain-text body `Upstream fetch failed`, and the origin body and headers are not returned. Any other unsuccessful origin status becomes 502. [Common responses](#common-responses) also apply.
 
 ### Side effects
 
@@ -207,7 +210,7 @@ Returns the stored audio of a user entrance sound. The [entrance sounds resource
 
 <sup>1</sup> A non-empty run of ASCII digits. Any other value makes the path unroutable and returns 404
 
-<sup>2</sup> The hash is non-empty and ASCII alphanumeric, and Fluxer issues the first 16 hexadecimal characters of the MD5 digest of the audio. The extension is the exact lowercase `mp3`, `ogg`, `m4a`, or `wav`
+<sup>2</sup> Use the hash returned by the API. The extension is the exact lowercase `mp3`, `ogg`, `m4a`, or `wav`
 
 The route selects no representation, accepts a `Range`, and sends no `Content-Disposition`. A successful response streams the stored bytes with the detected audio media type and the one-year `no-transform` cache policy.
 
@@ -233,11 +236,9 @@ An attachment has its own `url` and `proxy_url`, a signed external media path ha
 
 Fluxer matches an asset path by its shape alone. A path with the wrong number of segments, an empty owner segment, or a filename without exactly one dot is not an asset path and returns 404. A hash containing anything but ASCII letters, digits, and `_` returns 404 as well, as does an extension outside the known image set. The known set is `png`, `jpg`, `jpeg`, `webp`, `gif`, `apng`, `avif`, `heic`, `heif`, `jxl`, and `svg`, matched case-insensitively.
 
-Fluxer issues an eight-character lowercase hexadecimal hash, taken from the MD5 digest of the submitted image before metadata stripping. An owner segment is any non-empty segment, and Fluxer never checks it against a snowflake.
+Use the hash returned by the API. Do not calculate one from the image yourself.
 
-The storage key drops an `a_` prefix from the hash, except on an emoji or sticker path, whose key keeps the filename stem exactly as given. A path whose key is missing is also tried under the canonical name of its extension, so both `.jpg` and `.JPG` resolve an object stored as `.jpeg`.
-
-An owner segment of the literal `.` or `..` parses as an asset path but produces an unsafe storage key and returns 400. So does a hash of the literal `a_` on a path that strips the prefix.
+An owner segment of the literal `.` or `..` parses as an asset path but produces an unsafe storage key and returns 400. So does a hash of the literal `a_` on an avatar, icon, branding, banner, splash, embed splash, or guild member asset path.
 
 ### Query parameters
 
@@ -265,7 +266,7 @@ An owner segment of the literal `.` or `..` parses as an asset path but produces
 | --- | --- | --- |
 | 200 | Complete asset representation | The original or transformed asset is available |
 | 206 | Selected asset bytes | One range is satisfiable |
-| 400 | Bad request | An owner segment of `.` or `..`, or a hash of `a_` on a prefix-stripping path, makes the storage key unsafe |
+| 400 | Bad request | An owner segment of `.` or `..`, or a hash of `a_` on a path other than an emoji or sticker path, makes the storage key unsafe |
 | 404 | Not found | The path is not a valid asset path or the asset does not exist |
 | 416 | empty | The range is unsatisfiable |
 | 500<sup>1</sup> | Transcode failed | A required transcode failed and the source is not directly displayable |
@@ -438,7 +439,7 @@ Returns the emoji image under the emoji size class with a square cover crop.
 
 <sup>2</sup> An extension whose encoder is not enabled for output selects WebP instead
 
-Fluxer issues emoji paths without an `a_` prefix, so an emoji request defaults to static output and needs `animated=true` for animation. The parser still reads a leading `a_` as an animation request and keeps the stem verbatim in the storage key, so `/emojis/a_123.webp` names a different object than `/emojis/123.webp`.
+Emoji requests default to static output. Use `animated=true` for animation, without adding an `a_` prefix to the identifier.
 
 ### Response
 
@@ -459,7 +460,7 @@ Returns the sticker image under the sticker size class with a square cover crop.
 
 <sup>1</sup> Any non-empty run of ASCII letters, digits, and `_`. Fluxer clients request `{sticker_id}.webp`
 
-Fluxer issues sticker paths without an `a_` prefix, so a sticker request defaults to static output and needs `animated=true` for animation. The parser still reads a leading `a_` as an animation request and keeps the stem verbatim in the storage key.
+Sticker requests default to static output. Use `animated=true` for animation, without adding an `a_` prefix to the identifier.
 
 ### Response
 
@@ -494,14 +495,17 @@ The complete request path is the storage key after percent-decoding. The route a
 
 ## Operator and internal endpoints
 
-These paths are not part of the public API surface. They are exempt from the media access allowlist and are not published by instance discovery. A client MUST NOT depend on them.
+These paths are not part of the public API surface and are not published by instance discovery. A client MUST NOT depend on them.
 
 | Path | Method | Description |
 | --- | --- | --- |
 | `/_health` | GET | Returns 200 while the process is running |
-| `/_metrics` | GET | Returns the Prometheus text exposition of the process. Only a loopback address is served, and any other address returns 403 |
+| `/_metrics` | GET | Returns the Prometheus text exposition of the process. A request from a non-loopback address returns 403 |
 | `/_metadata` | POST | Extracts media metadata, a placeholder, and an optional NSFW verdict for the HTTP API |
+| `/_sniff` | POST | Returns the media type detected in the first 8 KiB of a staged upload for the HTTP API |
 | `/_thumbnail` | POST | Produces a WebP thumbnail of a staged upload for the HTTP API |
 | `/_frames` | POST | Extracts one JPEG video frame for the HTTP API |
 
-`/_metadata`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413.
+`/_metadata`, `/_sniff`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413.
+
+`/_sniff` returns 200 with a JSON `content_type`. It is the image, video, or audio media type the Media Proxy detects in the upload, or null when the bytes are SVG or a type it cannot process. An upload key that names no object returns 404.

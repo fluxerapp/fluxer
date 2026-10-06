@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EmojiID} from '../BrandedTypes';
-import type {CustomStatus} from '../database/types/UserTypes';
+import type {EmojiID} from '@app/api/BrandedTypes';
+import type {CustomStatus} from '@app/api/database/types/UserTypes';
 
 export class UserCustomStatus {
 	readonly text: string | null;

@@ -340,7 +340,7 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 			openReportUserModal({i18n, user: displayUser, guildId});
 		};
 		const handleCopyFluxerTag = () => {
-			TextCopyCommands.copy(i18n, `${displayUser.username}#${displayUser.discriminator}`, true);
+			TextCopyCommands.copy(i18n, displayUser.tag, true);
 		};
 		const handleCopyUserId = () => {
 			TextCopyCommands.copy(i18n, displayUser.id, true);
@@ -559,7 +559,7 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 									disabled={true}
 									data-flx="user.user-profile-modal.render-action-buttons.button--2"
 								>
-									<Trans>Message</Trans>
+									<Trans context="message-action">Message</Trans>
 								</Button>
 							</div>
 						</Tooltip>
@@ -767,7 +767,7 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 							onClick={isBlocked ? handleOpenBlockedDm : handleMessage}
 							data-flx="user.user-profile-modal.render-action-buttons.button.open-blocked-dm"
 						>
-							{isBlocked ? i18n._(OPEN_DM_DESCRIPTOR) : <Trans>Message</Trans>}
+							{isBlocked ? i18n._(OPEN_DM_DESCRIPTOR) : <Trans context="message-action">Message</Trans>}
 						</Button>
 					)}
 					{renderPrimaryActionButton()}

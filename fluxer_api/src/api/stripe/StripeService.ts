@@ -1,41 +1,40 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import {Config} from '@app/api/Config';
+import type {GiftCodeDurationType} from '@app/api/database/types/PaymentTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import type {User} from '@app/api/models/User';
+import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {getProductRegistry, type ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getStripeClient} from '@app/api/stripe/StripeClient';
+import {PremiumStateService} from '@app/api/stripe/services/PremiumStateService';
+import type {CreateCheckoutSessionParams} from '@app/api/stripe/services/StripeCheckoutService';
+import {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
+import {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
+import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import {StripeRefundService} from '@app/api/stripe/services/StripeRefundService';
+import {StripeSubscriptionService} from '@app/api/stripe/services/StripeSubscriptionService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {Currency} from '@app/api/utils/CurrencyUtils';
 import {PremiumPurchaseBlockedError} from '@fluxer/errors/src/domains/payment/PremiumPurchaseBlockedError';
 import type {
 	CurrentSubscriptionPriceResponse,
 	PremiumStateResponse,
-	PricingMode,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundResponse,
+	SwitchToListPriceResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import Stripe from 'stripe';
-import type {UserID} from '../BrandedTypes';
-import type {BillingRepository} from '../billing/repositories/BillingRepository';
-import {Config} from '../Config';
-import type {GiftCodeDurationType} from '../database/types/PaymentTypes';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {GuildService} from '../guild/services/GuildService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {GiftCode} from '../models/GiftCode';
-import type {User} from '../models/User';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {Currency} from '../utils/CurrencyUtils';
-import {ProductRegistry} from './ProductRegistry';
-import {STRIPE_API_VERSION} from './StripeApiVersion';
-import {PremiumStateService} from './services/PremiumStateService';
-import type {
-	ContinueLocalizedCardPreapprovalResult,
-	CreateCheckoutSessionParams,
-} from './services/StripeCheckoutService';
-import {StripeCheckoutService} from './services/StripeCheckoutService';
-import {StripeGiftService} from './services/StripeGiftService';
-import {StripePremiumService} from './services/StripePremiumService';
-import {StripeRefundService} from './services/StripeRefundService';
-import {StripeSubscriptionService} from './services/StripeSubscriptionService';
+import type Stripe from 'stripe';
 
 export class StripeService {
-	private stripe: Stripe | null = null;
+	private stripe: Stripe | null;
 	private productRegistry: ProductRegistry;
 	private checkoutService: StripeCheckoutService;
 	private subscriptionService: StripeSubscriptionService;
@@ -51,14 +50,11 @@ export class StripeService {
 		private guildService: GuildService,
 		private cacheService: ICacheService,
 		private billingRepository: BillingRepository,
+		private storeBillingRepository: StoreBillingRepository | null = null,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {
-		this.productRegistry = new ProductRegistry();
-		if (Config.stripe.enabled && Config.stripe.secretKey) {
-			this.stripe = new Stripe(Config.stripe.secretKey, {
-				apiVersion: STRIPE_API_VERSION,
-				httpClient: Config.dev.testModeEnabled ? Stripe.createFetchHttpClient() : undefined,
-			});
-		}
+		this.productRegistry = getProductRegistry();
+		this.stripe = getStripeClient();
 		this.premiumService = new StripePremiumService(
 			this.userRepository,
 			this.gatewayService,
@@ -70,12 +66,15 @@ export class StripeService {
 			this.gatewayService,
 			this.billingRepository,
 			this.stripe,
+			this.cacheService,
+			this.storeBillingRepository,
 		);
 		this.checkoutService = new StripeCheckoutService(
 			this.stripe,
 			this.userRepository,
 			this.productRegistry,
 			this.cacheService,
+			this.storeEntitlementService,
 		);
 		this.subscriptionService = new StripeSubscriptionService(
 			this.stripe,
@@ -83,6 +82,7 @@ export class StripeService {
 			this.productRegistry,
 			this.cacheService,
 			this.gatewayService,
+			this.storeEntitlementService,
 		);
 		this.giftService = new StripeGiftService(
 			this.stripe,
@@ -92,6 +92,7 @@ export class StripeService {
 			this.checkoutService,
 			this.premiumService,
 			this.subscriptionService,
+			this.storeEntitlementService,
 		);
 		this.refundService = new StripeRefundService(this.stripe, this.userRepository, this.subscriptionService);
 	}
@@ -135,46 +136,23 @@ export class StripeService {
 		return `${Config.endpoints.webApp}/premium-callback?status=success`;
 	}
 
-	async createLocalizedCardPreapprovalSession(
-		params: Pick<
-			CreateCheckoutSessionParams,
-			| 'clientGeoipCountryCode'
-			| 'countryCode'
-			| 'euWithdrawalWaiverAccepted'
-			| 'isBusiness'
-			| 'priceId'
-			| 'pricingMode'
-			| 'purchaseGeoipCountryCode'
-			| 'userId'
-		>,
-	): Promise<string> {
-		return this.checkoutService.createLocalizedCardPreapprovalSession(params);
-	}
-
-	async continueLocalizedCardPreapproval(token: string): Promise<ContinueLocalizedCardPreapprovalResult> {
-		return this.checkoutService.continueLocalizedCardPreapproval(token);
-	}
-
 	async createCustomerPortalSession(userId: UserID): Promise<string> {
 		return this.checkoutService.createCustomerPortalSession(userId);
 	}
 
-	async getPriceIds(
-		countryCode?: string,
-		pricingMode: PricingMode = 'localized',
-	): Promise<{
+	async getPriceIds(countryCode?: string): Promise<{
 		monthly: string | null;
 		yearly: string | null;
 		gift_1_month: string | null;
 		gift_1_year: string | null;
 		currency: Currency;
-		gift_currency: Currency;
+		gift_currency: Currency | null;
 		monthly_amount_minor: number | null;
 		yearly_amount_minor: number | null;
 		gift_1_month_amount_minor: number | null;
 		gift_1_year_amount_minor: number | null;
 	}> {
-		return this.checkoutService.getPriceIds(countryCode, pricingMode);
+		return this.checkoutService.getPriceIds(countryCode);
 	}
 
 	async getCurrentSubscriptionPrice(userId: UserID): Promise<CurrentSubscriptionPriceResponse> {
@@ -199,6 +177,10 @@ export class StripeService {
 		effectiveAt: 'now' | 'period_end' = 'now',
 	): Promise<void> {
 		return this.subscriptionService.changeBillingCycle(userId, billingCycle, effectiveAt);
+	}
+
+	async switchSubscriptionToCurrentListPrice(userId: UserID): Promise<SwitchToListPriceResponse> {
+		return this.subscriptionService.switchToCurrentListPrice(userId);
 	}
 
 	async cancelPendingSubscriptionChange(userId: UserID): Promise<void> {

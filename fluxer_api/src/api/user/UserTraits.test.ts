@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isDerivedTrait, isServerManagedTrait, resolveAssignedTraits} from '@app/api/user/UserTraits';
 import {describe, expect, it} from 'vitest';
-import {isDerivedTrait, isServerManagedTrait, resolveAssignedTraits} from './UserTraits';
 
 describe('UserTraits', () => {
 	it('treats premium as derived rather than assignable', () => {

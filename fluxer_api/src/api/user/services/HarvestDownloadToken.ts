@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHmac, timingSafeEqual} from 'node:crypto';
-import {isJsonRecord, parseJsonWithGuard} from '../../utils/JsonBoundaryUtils';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 
 const KEY_DERIVATION_LABEL = 'fluxer.harvest-download.v1';
 

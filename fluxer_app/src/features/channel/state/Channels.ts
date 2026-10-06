@@ -16,7 +16,7 @@ import type {Channel as WireChannel} from '@fluxer/schema/src/domains/channel/Ch
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
-import {action, makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef, observableShallow} from 'mobx';
 
 const EMPTY_CHANNELS: ReadonlyArray<Channel> = Object.freeze([]);
 const sortDMs = (a: Channel, b: Channel) => {
@@ -58,7 +58,7 @@ class Channels {
 	constructor() {
 		makeAutoObservable<this, 'channelsByGuildId' | 'privateChannelList'>(
 			this,
-			{channelsByGuildId: observable.shallow, privateChannelList: observable.ref},
+			{channelsByGuildId: observableShallow, privateChannelList: observableRef},
 			{autoBind: true},
 		);
 	}
@@ -98,7 +98,6 @@ class Channels {
 		return this.privateChannelList;
 	}
 
-	@action
 	removeChannelOptimistically(channelId: string): void {
 		if (this.optimisticChannelBackups.has(channelId)) {
 			return;
@@ -111,7 +110,6 @@ class Channels {
 		this.deleteChannelRecord(channelId);
 	}
 
-	@action
 	rollbackChannelDeletion(channelId: string): void {
 		const channel = this.optimisticChannelBackups.get(channelId);
 		if (!channel) {
@@ -121,18 +119,15 @@ class Channels {
 		this.optimisticChannelBackups.delete(channelId);
 	}
 
-	@action
 	clearOptimisticallyRemovedChannel(channelId: string): void {
 		this.optimisticChannelBackups.delete(channelId);
 	}
 
-	@action
 	private removeChannel(channelId: string): void {
 		this.clearOptimisticallyRemovedChannel(channelId);
 		this.deleteChannelRecord(channelId);
 	}
 
-	@action
 	private deleteChannelRecord(channelId: string): void {
 		const channel = this.channelsById.get(channelId);
 		this.channelsById.delete(channelId);
@@ -142,7 +137,6 @@ class Channels {
 		ChannelDisplayName.removeChannel(channelId);
 	}
 
-	@action
 	private setChannel(channel: Channel | WireChannel): void {
 		const record = channel instanceof Channel ? channel : new Channel(channel);
 		const existing = this.channelsById.get(record.id);
@@ -154,7 +148,6 @@ class Channels {
 		ChannelDisplayName.syncChannel(record);
 	}
 
-	@action
 	private indexChannel(previous: Channel | undefined, next: Channel): void {
 		if (previous && previous.guildId === next.guildId && isPrivateChannel(previous) === isPrivateChannel(next)) {
 			this.replaceChannelInIndex(previous, next);
@@ -166,7 +159,6 @@ class Channels {
 		this.addChannelToIndex(next);
 	}
 
-	@action
 	private addChannelToIndex(channel: Channel): void {
 		if (channel.guildId) {
 			const list = this.channelsByGuildId.get(channel.guildId) ?? EMPTY_CHANNELS;
@@ -178,7 +170,6 @@ class Channels {
 		}
 	}
 
-	@action
 	private removeChannelFromIndex(channel: Channel): void {
 		if (channel.guildId) {
 			const list = this.channelsByGuildId.get(channel.guildId);
@@ -204,7 +195,6 @@ class Channels {
 		}
 	}
 
-	@action
 	private replaceChannelInIndex(previous: Channel, next: Channel): void {
 		if (next.guildId) {
 			const list = this.channelsByGuildId.get(next.guildId);
@@ -234,7 +224,6 @@ class Channels {
 		this.privateChannelList = updated;
 	}
 
-	@action
 	handleGatewayReady({channels}: {channels: ReadonlyArray<WireChannel>}): void {
 		this.channelsById.clear();
 		this.channelsByGuildId.clear();
@@ -270,7 +259,6 @@ class Channels {
 		this.setChannel(personalNotesChannel);
 	}
 
-	@action
 	handleGuildCreate(guild: GuildReadyData): void {
 		if (guild.unavailable) {
 			return;
@@ -287,7 +275,6 @@ class Channels {
 		}
 	}
 
-	@action
 	handleGuildDelete({guildId}: {guildId: string}): void {
 		const guildChannels = this.getGuildChannels(guildId);
 		if (guildChannels.length === 0) return;
@@ -298,12 +285,10 @@ class Channels {
 		}
 	}
 
-	@action
 	handleChannelCreate({channel}: {channel: WireChannel}): void {
 		this.setChannel(channel);
 	}
 
-	@action
 	handlePassiveLastMessageUpdates({guildId, channels}: {guildId: string; channels: Record<string, string>}): boolean {
 		let changed = false;
 		for (const [channelId, lastMessageId] of Object.entries(channels)) {
@@ -325,14 +310,12 @@ class Channels {
 		return changed;
 	}
 
-	@action
 	handleChannelUpdateBulk({channels}: {channels: Array<WireChannel>}): void {
 		for (const channel of channels) {
 			this.setChannel(channel);
 		}
 	}
 
-	@action
 	handleChannelPinsUpdate({channelId, lastPinTimestamp}: {channelId: string; lastPinTimestamp: string}): void {
 		const channel = this.channelsById.get(channelId);
 		if (!channel) {
@@ -346,7 +329,6 @@ class Channels {
 		);
 	}
 
-	@action
 	handleChannelRecipientAdd({channelId, user}: {channelId: string; user: UserPartial}): void {
 		const channel = this.channelsById.get(channelId);
 		if (!channel) {
@@ -361,7 +343,6 @@ class Channels {
 		);
 	}
 
-	@action
 	handleChannelRecipientRemove({channelId, user}: {channelId: string; user: UserPartial}): void {
 		const channel = this.channelsById.get(channelId);
 		if (!channel) {
@@ -385,7 +366,6 @@ class Channels {
 		);
 	}
 
-	@action
 	handleChannelDelete({channel}: {channel: WireChannel}): void {
 		this.removeChannel(channel.id);
 		const history = RouterUtils.getHistory();
@@ -408,7 +388,6 @@ class Channels {
 		}
 	}
 
-	@action
 	handleMessageCreate({message}: {message: WireMessage}): void {
 		const channel = this.channelsById.get(message.channel_id);
 		if (!channel) {
@@ -428,7 +407,6 @@ class Channels {
 		);
 	}
 
-	@action
 	handleGuildRoleDelete({guildId, roleId}: {guildId: string; roleId: string}): void {
 		const guildChannels = this.getGuildChannels(guildId);
 		if (guildChannels.length === 0) return;

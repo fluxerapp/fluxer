@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isValidIpOrRange, parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
 import {describe, expect, it} from 'vitest';
-import {isValidIpOrRange, parseIpBanEntry, tryParseSingleIp} from '../IpRangeUtils';
 
 describe('parseIpBanEntry', () => {
 	describe('single IPv4 addresses', () => {

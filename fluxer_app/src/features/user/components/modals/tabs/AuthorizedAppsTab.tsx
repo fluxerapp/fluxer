@@ -64,7 +64,8 @@ const REVOKE_ALL_APPS_DESCRIPTOR = msg({
 	comment: 'Danger button in the authorized apps management modal. Revokes every authorized application.',
 });
 const SELECTED_APPS_FOR_REVOKE_DESCRIPTOR = msg({
-	message: '{appCount, plural, one {# app selected for revoke} other {# apps selected for revoke}}',
+	message:
+		'{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}',
 	comment: 'Unsaved-changes banner text in the authorized apps tab. Counts selected apps that will be revoked.',
 });
 const APPLICATION_ACCESS_REVOKED_DESCRIPTOR = msg({

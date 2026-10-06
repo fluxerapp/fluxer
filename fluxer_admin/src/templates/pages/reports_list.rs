@@ -15,6 +15,7 @@ use crate::{
         },
         layout::admin_layout,
     },
+    utils::user_tag::user_tag,
 };
 use maud::{Markup, PreEscaped, html};
 
@@ -189,7 +190,7 @@ fn format_category(category: Option<&str>) -> String {
 fn reporter_label(report: &ReportEntry) -> String {
     if let Some(username) = &report.reporter_username {
         let discriminator = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        let tag = format!("{username}#{discriminator}");
+        let tag = user_tag(username, discriminator, false);
         if let Some(display) = report
             .reporter_global_name
             .as_ref()
@@ -214,7 +215,7 @@ fn reported_user_label(report: &ReportEntry) -> String {
             .reported_user_discriminator
             .as_deref()
             .unwrap_or("0000");
-        let tag = format!("{username}#{discriminator}");
+        let tag = user_tag(username, discriminator, false);
         if let Some(display) = report
             .reported_user_global_name
             .as_ref()
@@ -466,7 +467,10 @@ fn reports_pagination(
     limit: u32,
     total: u64,
 ) -> Markup {
-    let total_pages = ((total + u64::from(limit).saturating_sub(1)) / u64::from(limit)).max(1);
+    let total_pages = total.div_ceil(u64::from(limit)).max(1);
+    let next_page = page
+        .checked_add(1)
+        .filter(|page| u64::from(*page) < total_pages);
     html! {
         div class="mt-4 flex items-center justify-between" {
             @if page > 0 {
@@ -478,10 +482,10 @@ fn reports_pagination(
                 span {}
             }
             span class="text-neutral-500 text-sm" {
-                "Page " (page + 1) " of " (total_pages)
+                "Page " (u64::from(page) + 1) " of " (total_pages)
             }
-            @if u64::from(page + 1) < total_pages {
-                a href=(reports_url(config, filters, page + 1, limit))
+            @if let Some(next_page) = next_page {
+                a href=(reports_url(config, filters, next_page, limit))
                     class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
                     (PreEscaped("Next &rarr;"))
                 }

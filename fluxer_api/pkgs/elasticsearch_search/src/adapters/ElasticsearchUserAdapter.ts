@@ -3,7 +3,9 @@
 import type {Client} from '@elastic/elasticsearch';
 import type {SortCombinations} from '@elastic/elasticsearch/lib/api/types';
 import type {SearchableUser, UserSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import type {ElasticsearchFilter} from '../ElasticsearchFilterUtils';
+import type {ElasticsearchDistributedLock} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
+import {ElasticsearchIndexAdapter} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
+import type {ElasticsearchFilter} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
 import {
 	compactFilters,
 	esAndTerms,
@@ -11,10 +13,8 @@ import {
 	esNotExistsFilter,
 	esRangeFilter,
 	esTermFilter,
-} from '../ElasticsearchFilterUtils';
-import {ELASTICSEARCH_INDEX_DEFINITIONS} from '../ElasticsearchIndexDefinitions';
-import type {ElasticsearchDistributedLock} from './ElasticsearchIndexAdapter';
-import {ElasticsearchIndexAdapter} from './ElasticsearchIndexAdapter';
+} from '@pkgs/elasticsearch_search/src/ElasticsearchFilterUtils';
+import {ELASTICSEARCH_INDEX_DEFINITIONS} from '@pkgs/elasticsearch_search/src/ElasticsearchIndexDefinitions';
 
 function buildUserFilters(filters: UserSearchFilters): Array<ElasticsearchFilter | undefined> {
 	const clauses: Array<ElasticsearchFilter | undefined> = [];
@@ -35,9 +35,6 @@ function buildUserFilters(filters: UserSearchFilters): Array<ElasticsearchFilter
 	}
 	if (filters.hasAcl && filters.hasAcl.length > 0) {
 		clauses.push(...esAndTerms('acls', filters.hasAcl));
-	}
-	if (filters.minSuspiciousActivityFlags !== undefined) {
-		clauses.push(esRangeFilter('suspiciousActivityFlags', {gte: filters.minSuspiciousActivityFlags}));
 	}
 	if (filters.createdAtGreaterThanOrEqual !== undefined) {
 		clauses.push(esRangeFilter('createdAt', {gte: filters.createdAtGreaterThanOrEqual}));
@@ -65,7 +62,7 @@ export class ElasticsearchUserAdapter extends ElasticsearchIndexAdapter<UserSear
 		super({
 			client: options.client,
 			index: ELASTICSEARCH_INDEX_DEFINITIONS.users,
-			searchableFields: ['username', 'email', 'phone', 'id'],
+			searchableFields: ['username', 'email', 'id'],
 			buildFilters: buildUserFilters,
 			buildSort: buildUserSort,
 			lock: options.lock,

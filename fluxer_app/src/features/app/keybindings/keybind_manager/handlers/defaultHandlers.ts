@@ -23,6 +23,7 @@ import {KeyboardShortcutsCheatsheetModal} from '@app/features/input/components/m
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
+import {focusChannelTextareaFromKeybind} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
@@ -200,57 +201,45 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		ThemeStudioCommands.openThemeStudioPopout();
 	});
-	host.register('voice_push_to_talk', ({type}) => {
-		if (!Keybind.isPushToTalkEffective()) return;
-		if (type === 'press') {
-			showPushToTalkDeafenedModalIfNeeded(host, i18n);
-			if (host.pttReleaseTimer) {
-				clearTimeout(host.pttReleaseTimer);
-				host.pttReleaseTimer = null;
-			}
-			const shouldUnmute = Keybind.handlePushToTalkPress();
-			if (shouldUnmute) {
-				MediaEngine.applyPushToTalkHold(true);
-			}
-		} else {
-			const shouldMute = Keybind.handlePushToTalkRelease();
-			if (shouldMute) {
-				const delay = Keybind.pushToTalkReleaseDelay;
-				host.pttReleaseTimer = setTimeout(() => {
-					host.pttReleaseTimer = null;
-					MediaEngine.applyPushToTalkHold(false);
-				}, delay);
-			}
+	host.register('voice_push_to_talk', ({type, sourceId}) => {
+		if (type === 'release') {
+			Keybind.releaseHoldSource('voice_push_to_talk', sourceId, () => MediaEngine.applyPushToTalkHold(false));
+			return;
 		}
-	});
-	host.register('voice_push_to_mute', ({type}) => {
-		if (Keybind.isPushToTalkEffective()) return;
-		MediaEngine.applyPushToMuteHold(type === 'press');
-	});
-	host.register('voice_push_to_talk_priority', ({type}) => {
 		if (!Keybind.isPushToTalkEffective()) return;
-		if (type === 'press') {
-			showPushToTalkDeafenedModalIfNeeded(host, i18n);
-			if (host.pttReleaseTimer) {
-				clearTimeout(host.pttReleaseTimer);
-				host.pttReleaseTimer = null;
-			}
-			Keybind.handlePushToTalkPress();
-			Keybind.setPrioritySpeakerHeld(true);
+		showPushToTalkDeafenedModalIfNeeded(host, i18n);
+		if (Keybind.pressHoldSource('voice_push_to_talk', sourceId)) {
 			MediaEngine.applyPushToTalkHold(true);
-		} else {
-			Keybind.handlePushToTalkRelease();
-			Keybind.setPrioritySpeakerHeld(false);
-			const delay = Keybind.pushToTalkReleaseDelay;
-			host.pttReleaseTimer = setTimeout(() => {
-				host.pttReleaseTimer = null;
-				MediaEngine.applyPushToTalkHold(false);
-			}, delay);
 		}
 	});
-	host.register('voice_priority_vad', ({type}) => {
+	host.register('voice_push_to_mute', ({type, sourceId}) => {
+		if (type === 'release') {
+			Keybind.releaseHoldSource('voice_push_to_mute', sourceId, () => MediaEngine.applyPushToMuteHold(false));
+			return;
+		}
 		if (Keybind.isPushToTalkEffective()) return;
-		Keybind.setPrioritySpeakerHeld(type === 'press');
+		if (Keybind.pressHoldSource('voice_push_to_mute', sourceId)) {
+			MediaEngine.applyPushToMuteHold(true);
+		}
+	});
+	host.register('voice_push_to_talk_priority', ({type, sourceId}) => {
+		if (type === 'release') {
+			Keybind.releaseHoldSource('voice_push_to_talk_priority', sourceId, () => MediaEngine.applyPushToTalkHold(false));
+			return;
+		}
+		if (!Keybind.isPushToTalkEffective()) return;
+		showPushToTalkDeafenedModalIfNeeded(host, i18n);
+		if (Keybind.pressHoldSource('voice_push_to_talk_priority', sourceId)) {
+			MediaEngine.applyPushToTalkHold(true);
+		}
+	});
+	host.register('voice_priority_vad', ({type, sourceId}) => {
+		if (type === 'release') {
+			Keybind.releaseHoldSource('voice_priority_vad', sourceId);
+			return;
+		}
+		if (Keybind.isPushToTalkEffective()) return;
+		Keybind.pressHoldSource('voice_priority_vad', sourceId);
 	});
 	host.register('voice_toggle_vad', ({type}) => {
 		if (type !== 'press') return;
@@ -537,7 +526,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId});
+		focusChannelTextareaFromKeybind(channelId);
 	});
 	host.register('chat_upload', ({type}) => {
 		if (type !== 'press') return;

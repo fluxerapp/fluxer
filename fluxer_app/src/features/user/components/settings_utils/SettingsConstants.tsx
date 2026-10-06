@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PREMIUM_PRODUCT_FULL_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {guessPlatform, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {
 	ADVANCED_SETTINGS_TAG_LABELS,
@@ -405,7 +405,7 @@ export const getSettingsTabs = (i18n: I18n): Array<SettingsTab> => {
 		...tab,
 		label: getUserSettingsTabLabel(i18n, tab.type),
 	}));
-	const isSelfHosted = RuntimeConfig.isSelfHosted();
+	const showPremium = shouldShowPremiumFeatures();
 	const showClaimedAccountUi = shouldShowClaimedAccountUi();
 	return allTabs.filter((tab) => {
 		if (!showClaimedAccountUi && (tab.type === 'my_profile' || tab.type === 'linked_accounts')) {
@@ -414,7 +414,7 @@ export const getSettingsTabs = (i18n: I18n): Array<SettingsTab> => {
 		if (ACCOUNT_NESTED_TAB_TYPES.some((tabType) => tabType === tab.type)) {
 			return false;
 		}
-		if (isSelfHosted && (tab.type === 'plutonium' || tab.type === 'gift_inventory')) {
+		if (!showPremium && (tab.type === 'plutonium' || tab.type === 'gift_inventory')) {
 			return false;
 		}
 		if (tab.type === 'desktop_settings' && !isDesktop()) {

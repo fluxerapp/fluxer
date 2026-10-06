@@ -1,34 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {createGuildID} from '@app/api/BrandedTypes';
+import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import {Logger} from '@app/api/Logger';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import type {User} from '@app/api/models/User';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {DiscoveryApplicationStatus, DiscoveryCategoryLabels} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	DiscoveryAdminApplicationUpdateRequest,
 	DiscoveryAdminCategoryListingQuery,
-	DiscoveryAdminListedGuildResponse,
+	DiscoveryAdminListedGuildListResponse,
 	DiscoveryAdminListingBulkCategoryRequest,
 	DiscoveryAdminListingBulkCategoryResponse,
-	DiscoveryAdminPendingApplicationResponse,
+	DiscoveryAdminPendingApplicationListResponse,
 	DiscoveryAdminRemoveRequest,
 	DiscoveryApplicationPatchRequest,
 	DiscoveryApplicationResponse,
 	DiscoveryCategoryIdParam,
 	DiscoveryCategoryListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import {z} from 'zod';
-import {createGuildID} from '../../BrandedTypes';
-import type {GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
-import {mapGuildFeatures} from '../../guild/GuildFeatureUtils';
-import type {GuildService} from '../../guild/services/GuildService';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import type {User} from '../../models/User';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {Validator} from '../../Validator';
+
+const DISCOVERY_LISTING_FIELDS = ['description', 'category_type', 'primary_language', 'custom_tags'] as const;
 
 function mapRowToApplicationResponse(row: GuildDiscoveryRow) {
 	return {
@@ -138,7 +142,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 			summary: 'List discovery applications',
 			description:
 				'Returns every pending discovery application, enriched with guild metadata. No pagination. Requires DISCOVERY_REVIEW permission.',
-			responseSchema: z.array(DiscoveryAdminPendingApplicationResponse),
+			responseSchema: DiscoveryAdminPendingApplicationListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
@@ -149,6 +153,12 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const userRepository = ctx.get('userRepository');
 			const rows = await discoveryService.listByStatus({status: DiscoveryApplicationStatus.PENDING});
 			const enrichment = await enrichGuilds(rows, guildService, userRepository);
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_DISCOVERY_APPLICATIONS,
+				metadata: {result_count: rows.length},
+			});
 			return ctx.json(rows.map((row) => mapPendingResponse(row, enrichment.get(row.guild_id.toString()))));
 		},
 	);
@@ -173,10 +183,16 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const data = ctx.req.valid('json');
 			const adminUserId = ctx.get('adminUserId');
 			const discoveryService = ctx.get('discoveryService');
-			const row =
-				data.status === DiscoveryApplicationStatus.APPROVED
-					? await discoveryService.approve({guildId, adminUserId, reason: data.reason})
-					: await discoveryService.reject({guildId, adminUserId, reason: data.reason});
+			const approved = data.status === DiscoveryApplicationStatus.APPROVED;
+			const row = approved
+				? await discoveryService.approve({guildId, adminUserId, reason: data.reason})
+				: await discoveryService.reject({guildId, adminUserId, reason: data.reason});
+			await recordAdminWrite(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: approved ? 'approve_discovery_application' : 'reject_discovery_application',
+				metadata: {status: data.status},
+			});
 			return ctx.json(mapRowToApplicationResponse(row));
 		},
 	);
@@ -195,12 +211,17 @@ export function DiscoveryAdminController(app: HonoApp) {
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			return ctx.json(
-				Object.entries(DiscoveryCategoryLabels).map(([id, name]) => ({
-					id: Number(id),
-					name,
-				})),
-			);
+			const categories = Object.entries(DiscoveryCategoryLabels).map(([id, name]) => ({
+				id: Number(id),
+				name,
+			}));
+			await recordAdminRead(ctx, {
+				targetType: 'discovery_category',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_DISCOVERY_CATEGORIES,
+				metadata: {result_count: categories.length},
+			});
+			return ctx.json(categories);
 		},
 	);
 	app.get(
@@ -214,7 +235,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 			summary: 'List guilds in a discovery category',
 			description:
 				'Returns an offset page of the guilds listed under one discovery category, most members first, enriched with guild metadata. Requires DISCOVERY_REVIEW permission.',
-			responseSchema: z.array(DiscoveryAdminListedGuildResponse),
+			responseSchema: DiscoveryAdminListedGuildListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
@@ -233,11 +254,20 @@ export function DiscoveryAdminController(app: HonoApp) {
 					(enrichment.get(right.guild_id.toString())?.member_count ?? 0) -
 					(enrichment.get(left.guild_id.toString())?.member_count ?? 0),
 			);
-			return ctx.json(
-				sorted
-					.slice(offset, offset + limit)
-					.map((row) => mapListedResponse(row, enrichment.get(row.guild_id.toString()))),
-			);
+			const page = sorted.slice(offset, offset + limit);
+			await recordAdminRead(ctx, {
+				targetType: 'discovery_category',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_DISCOVERY_CATEGORY_LISTINGS,
+				metadata: {
+					category_id,
+					limit,
+					offset,
+					result_count: page.length,
+					total: inCategory.length,
+				},
+			});
+			return ctx.json(page.map((row) => mapListedResponse(row, enrichment.get(row.guild_id.toString()))));
 		},
 	);
 	app.get(
@@ -249,7 +279,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 			summary: 'List discovery listings',
 			description:
 				'Returns every approved/listed discovery guild, enriched with guild metadata. No pagination. Requires DISCOVERY_REVIEW permission.',
-			responseSchema: z.array(DiscoveryAdminListedGuildResponse),
+			responseSchema: DiscoveryAdminListedGuildListResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
@@ -260,6 +290,12 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const userRepository = ctx.get('userRepository');
 			const rows = await discoveryService.listByStatus({status: DiscoveryApplicationStatus.APPROVED});
 			const enrichment = await enrichGuilds(rows, guildService, userRepository);
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_DISCOVERY_LISTINGS,
+				metadata: {result_count: rows.length},
+			});
 			return ctx.json(rows.map((row) => mapListedResponse(row, enrichment.get(row.guild_id.toString()))));
 		},
 	);
@@ -281,6 +317,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 		async (ctx) => {
 			const data = ctx.req.valid('json');
 			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
 			const discoveryService = ctx.get('discoveryService');
 			const guildIds = [...new Set(data.guild_ids)];
 			const failed: Array<string> = [];
@@ -293,10 +330,27 @@ export function DiscoveryAdminController(app: HonoApp) {
 						data: {category_type: data.category_type},
 					});
 					updated += 1;
-				} catch {
+				} catch (error) {
+					Logger.warn(
+						{err: error, guildId: rawGuildId.toString(), categoryType: data.category_type},
+						'Failed to move discovery listing to category',
+					);
 					failed.push(rawGuildId.toString());
 				}
 			}
+			await ctx.get('adminService').auditService.createAuditLog({
+				adminUserId,
+				targetType: 'guild',
+				targetId: BigInt(0),
+				action: 'update_discovery_categories',
+				auditLogReason,
+				metadata: new Map([
+					['category_type', data.category_type.toString()],
+					['guild_count', guildIds.length.toString()],
+					['updated', updated.toString()],
+					['failed', failed.length.toString()],
+				]),
+			});
 			return ctx.json({updated, failed_guild_ids: failed});
 		},
 	);
@@ -323,6 +377,18 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const discoveryService = ctx.get('discoveryService');
 			const row = await discoveryService.editApplication({guildId, userId: adminUserId, data});
+			const fields = DISCOVERY_LISTING_FIELDS.filter((field) => data[field] !== undefined);
+			await recordAdminWrite(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: 'update_discovery_listing',
+				metadata: {
+					fields: fields.length > 0 ? fields.join(',') : undefined,
+					category_type: data.category_type,
+					primary_language: data.primary_language,
+					status: row.status,
+				},
+			});
 			return ctx.json(mapRowToApplicationResponse(row));
 		},
 	);
@@ -348,6 +414,11 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const discoveryService = ctx.get('discoveryService');
 			const row = await discoveryService.remove({guildId, adminUserId, reason: data.reason});
+			await recordAdminWrite(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: 'remove_discovery_listing',
+			});
 			return ctx.json(mapRowToApplicationResponse(row));
 		},
 	);

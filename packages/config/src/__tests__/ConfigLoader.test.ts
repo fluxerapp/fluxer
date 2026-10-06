@@ -22,12 +22,10 @@ const MINIMAL_ENV: Record<string, string> = {
 	FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
 	FLUXER_ADMIN_SECRET_KEY_BASE: 'test-admin-secret',
 	FLUXER_ADMIN_OAUTH_CLIENT_SECRET: 'test-admin-oauth-secret',
-	FLUXER_MARKETING_SECRET_KEY_BASE: 'test-marketing-secret',
-	FLUXER_APP_PROXY_PORT: '8773',
-	FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: 'http://127.0.0.1:8088/media',
 	FLUXER_GATEWAY_RPC_AUTH_TOKEN: 'test-gateway-token',
 	FLUXER_SUDO_MODE_SECRET: 'test-sudo-secret',
 	FLUXER_CONNECTION_INITIATION_SECRET: 'test-connection-secret',
+	FLUXER_PROFILE_PSEUDONYM_SECRET: 'test-profile-pseudonym-secret',
 	FLUXER_VAPID_PUBLIC_KEY: 'BB76bTFIuoqmxJtTfZX0yGTn1f_qu9H03B_nkj8OyExJFkN7Y-HBZZzShnHZoEhXKc5ZRy3jFu7OkBbnaQG-4aw',
 	FLUXER_VAPID_PRIVATE_KEY: 'Xgi-3P8J-I3Q6U1HlCcXMuc_tKLGAM9nIfznX3Hz68o',
 };
@@ -190,7 +188,7 @@ describe('ConfigLoader', () => {
 	test('normalizes each passkey origin independently', async () => {
 		stubMinimalEnv({
 			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS:
-				'http://localhost,http://localhost:3000,https://desktop.example.net,android:apk-key-hash:abc',
+				'http://localhost,http://localhost:3000,https://desktop.example.net,android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
 		});
 
 		const config = await loadConfig();
@@ -199,25 +197,54 @@ describe('ConfigLoader', () => {
 			'http://localhost:8088',
 			'http://localhost:3000',
 			'https://desktop.example.net',
-			'android:apk-key-hash:abc',
+			'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
 		]);
 	});
 
-	test('leaves the default passkey origins untouched', async () => {
+	test('includes the app origin alongside the default passkey origins', async () => {
 		stubMinimalEnv();
 		const config = await loadConfig();
 		expect(config.auth.passkeys.additional_allowed_origins).toEqual([
 			'https://fluxer.app',
 			'https://web.fluxer.app',
 			'https://web.canary.fluxer.app',
+			'https://fluxer.com',
+			'https://canary.fluxer.com',
 			'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
-			'android:apk-key-hash:zRmCKDKo3uCX2GDZISjJx8Rzo3J-Y3Gbp7s7mAaUH28',
+			'http://localhost:8088',
 		]);
 	});
 
-	test('rejects an empty client API endpoint override', async () => {
+	test('defaults to no app origin aliases', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.services.api.app_origin_aliases).toEqual([]);
+	});
+
+	test('normalizes and deduplicates app origin aliases', async () => {
+		stubMinimalEnv({
+			FLUXER_APP_ORIGIN_ALIASES:
+				'https://Web.Fluxer.App/, https://fluxer.com,https://fluxer.com:443,http://localhost:3000',
+		});
+		const config = await loadConfig();
+		expect(config.services.api.app_origin_aliases).toEqual([
+			'https://web.fluxer.app',
+			'https://fluxer.com',
+			'http://localhost:3000',
+		]);
+	});
+
+	test.each(['fluxer.com', 'https://fluxer.com/app', 'ftp://fluxer.com', 'https://user@fluxer.com'])(
+		'rejects the app origin alias %s',
+		async (alias) => {
+			stubMinimalEnv({FLUXER_APP_ORIGIN_ALIASES: alias});
+			await expect(loadConfig()).rejects.toThrow('FLUXER_APP_ORIGIN_ALIASES entry 1 must be an HTTP(S) origin');
+		},
+	);
+
+	test('an empty client API endpoint override falls back to the derived endpoint', async () => {
 		stubMinimalEnv({FLUXER_API_CLIENT_ENDPOINT: ''});
-		await expect(loadConfig()).rejects.toThrow('FLUXER_API_CLIENT_ENDPOINT is required');
+		expect((await loadConfig()).endpoints.api_client).toBe('http://localhost:8088/api');
 	});
 
 	test('defaults the passkey relying party to the deployment domain', async () => {
@@ -232,18 +259,61 @@ describe('ConfigLoader', () => {
 		expect(config.auth.passkeys.rp_id).toBe('chat.example.com');
 	});
 
-	test('derives the passkey origin only when the operator clears the default list', async () => {
+	test('a blank origin list keeps the built-in origins', async () => {
 		stubMinimalEnv({
 			FLUXER_BASE_DOMAIN: 'chat.example.com',
 			FLUXER_PUBLIC_SCHEME: 'https',
 			FLUXER_PUBLIC_PORT: '443',
-			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: '',
+			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: ' ',
 		});
 
 		const config = await loadConfig();
 
-		expect(config.auth.passkeys.additional_allowed_origins).toEqual(['https://chat.example.com']);
+		expect(config.auth.passkeys.additional_allowed_origins).toContain('https://web.fluxer.app');
+		expect(config.auth.passkeys.additional_allowed_origins).toContain('https://chat.example.com');
 	});
+
+	test('blank values fall back to the code defaults', async () => {
+		stubMinimalEnv({
+			FLUXER_API_PORT: '',
+			FLUXER_EMAIL_FROM_NAME: '',
+			FLUXER_KV_URL: ' ',
+			FLUXER_S3_FORCE_PATH_STYLE: '',
+			FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS: '',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.services.api.port).toBe(8080);
+		expect(config.integrations.email.from_name).toBe('Fluxer');
+		expect(config.internal.kv).toBe('redis://localhost:6379/0');
+		expect(config.s3?.force_path_style).toBe(false);
+		expect(config.services.api.storage_change_feed?.skip_buckets).toBeUndefined();
+	});
+
+	test('reads the email reply-to address', async () => {
+		stubMinimalEnv({FLUXER_EMAIL_REPLY_TO_EMAIL: 'support@example.com'});
+
+		const config = await loadConfig();
+
+		expect(config.integrations.email.reply_to_email).toBe('support@example.com');
+	});
+
+	test('leaves the email reply-to address empty when unset or blank', async () => {
+		stubMinimalEnv({FLUXER_EMAIL_REPLY_TO_EMAIL: ' '});
+
+		const config = await loadConfig();
+
+		expect(config.integrations.email.reply_to_email).toBe('');
+	});
+
+	test.each(['support', 'Support <support@example.com>', 'a@example.com,b@example.com', ' support@example.com'])(
+		'rejects %j as the email reply-to address',
+		async (value) => {
+			stubMinimalEnv({FLUXER_EMAIL_REPLY_TO_EMAIL: value});
+			await expect(loadConfig()).rejects.toThrow('FLUXER_EMAIL_REPLY_TO_EMAIL must be a single email address');
+		},
+	);
 
 	test('keeps explicit passkey relying party values', async () => {
 		stubMinimalEnv({
@@ -271,7 +341,6 @@ describe('ConfigLoader', () => {
 			FLUXER_POSTGRES_PREPARED_STATEMENTS: 'false',
 			FLUXER_API_WORKER_MODE: 'single_task',
 			FLUXER_API_WORKER_TASK: 'processStripeWebhook',
-			FLUXER_ACCOUNT_POLICY_DSL: '{"version":1,"id":"env_policy","rules":[]}',
 			FLUXER_LIVEKIT_ENABLED: 'true',
 			FLUXER_LIVEKIT_DEFAULT_REGION:
 				'{"id":"local","name":"Local","emoji":"LC","latitude":59.3293,"longitude":18.0686}',
@@ -288,11 +357,6 @@ describe('ConfigLoader', () => {
 		expect(config.database.postgres.prepared_statements).toBe(false);
 		expect(config.services.api.worker?.mode).toBe('single_task');
 		expect(config.services.api.worker?.task).toBe('processStripeWebhook');
-		expect(config.integrations.risk_integration.account_policy_dsl).toEqual({
-			version: 1,
-			id: 'env_policy',
-			rules: [],
-		});
 		expect(config.integrations.voice.default_region?.id).toBe('local');
 	});
 
@@ -304,9 +368,53 @@ describe('ConfigLoader', () => {
 		expect(config.services.gateway).not.toHaveProperty('push_enabled');
 	});
 
+	test('accepts the crosspost worker lane', async () => {
+		stubMinimalEnv({
+			FLUXER_API_WORKER_MODE: 'single_lane',
+			FLUXER_API_WORKER_LANE: 'crosspost',
+			FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES: '{"crosspost":4}',
+		});
+		const config = await loadConfig();
+		expect(config.services.api.worker?.lane).toBe('crosspost');
+		expect(config.services.api.worker?.lane_concurrency_overrides?.crosspost).toBe(4);
+	});
+
+	test('rejects an unknown worker lane', async () => {
+		stubMinimalEnv({FLUXER_API_WORKER_MODE: 'single_lane', FLUXER_API_WORKER_LANE: 'publishing'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_WORKER_LANE');
+	});
+
 	test('rejects single task worker mode without task env', async () => {
 		stubMinimalEnv({FLUXER_API_WORKER_MODE: 'single_task'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_API_WORKER_TASK');
+	});
+
+	test('leaves the storage change feed disabled by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.services.api.storage_change_feed).toEqual({enabled: false, stream: 'STORAGE_CHANGES'});
+	});
+
+	test('maps the storage change feed environment variables', async () => {
+		stubMinimalEnv({
+			FLUXER_API_STORAGE_CHANGE_FEED_ENABLED: 'true',
+			FLUXER_API_STORAGE_CHANGE_FEED_STREAM: 'BACKUP_CHANGES',
+			FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS: 'fluxer-uploads, fluxer-harvests',
+		});
+		const config = await loadConfig();
+		expect(config.services.api.storage_change_feed).toEqual({
+			enabled: true,
+			stream: 'BACKUP_CHANGES',
+			skip_buckets: ['fluxer-uploads', 'fluxer-harvests'],
+		});
+	});
+
+	test('rejects a storage change feed stream name that JetStream cannot use', async () => {
+		stubMinimalEnv({
+			FLUXER_API_STORAGE_CHANGE_FEED_ENABLED: 'true',
+			FLUXER_API_STORAGE_CHANGE_FEED_STREAM: 'storage.changes',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_STORAGE_CHANGE_FEED_STREAM');
 	});
 
 	test('rejects invalid Postgres typed environment values', async () => {
@@ -368,6 +476,25 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('Invalid FLUXER_KV_MODE: sentinel');
 	});
 
+	test('reads the profile pseudonym secret and requires it in production', async () => {
+		stubMinimalEnv();
+		expect((await loadConfig()).auth.profile_pseudonym_secret).toBe('test-profile-pseudonym-secret');
+		resetConfig();
+		stubMinimalEnv({FLUXER_PROFILE_PSEUDONYM_SECRET: ''});
+		expect((await loadConfig()).auth.profile_pseudonym_secret).toBe('fluxer-dev-profile-pseudonym-secret');
+		resetConfig();
+		stubMinimalEnv({
+			FLUXER_ENV: 'production',
+			FLUXER_POSTGRES_HOST: 'postgres.internal',
+			FLUXER_POSTGRES_DATABASE: 'fluxer_prod',
+			FLUXER_POSTGRES_USERNAME: 'fluxer_app',
+			FLUXER_POSTGRES_PASSWORD: 'prod-postgres-secret',
+			FLUXER_POSTGRES_SSL: 'true',
+			FLUXER_PROFILE_PSEUDONYM_SECRET: '',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_PROFILE_PSEUDONYM_SECRET is required');
+	});
+
 	test('rejects unsafe production Postgres defaults', async () => {
 		stubMinimalEnv({FLUXER_ENV: 'production'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_HOST');
@@ -406,23 +533,6 @@ describe('ConfigLoader', () => {
 		expect(config.database.postgres.ssl).toBe(false);
 	});
 
-	test('does not require a marketing secret for self-hosted instances', async () => {
-		stubMinimalEnv({FLUXER_SELF_HOSTED: 'true'});
-		vi.stubEnv('FLUXER_MARKETING_SECRET_KEY_BASE', undefined);
-
-		const config = await loadConfig();
-
-		expect(config.instance.self_hosted).toBe(true);
-		expect(config.services.marketing.secret_key_base).toBe('');
-	});
-
-	test('requires a marketing secret for hosted instances', async () => {
-		stubMinimalEnv();
-		vi.stubEnv('FLUXER_MARKETING_SECRET_KEY_BASE', undefined);
-
-		await expect(loadConfig()).rejects.toThrow('FLUXER_MARKETING_SECRET_KEY_BASE');
-	});
-
 	test('still requires TLS for non-self-hosted production Postgres', async () => {
 		stubMinimalEnv({
 			FLUXER_ENV: 'production',
@@ -436,7 +546,7 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_SSL must be true');
 	});
 
-	test('parses self-host branding, setup, abuse policy, and search engine environment variables', async () => {
+	test('parses self-host branding, setup, and search engine environment variables', async () => {
 		stubMinimalEnv({
 			FLUXER_SEARCH_ENGINE: 'meilisearch',
 			FLUXER_SEARCH_URL: 'http://meilisearch:7700',
@@ -449,14 +559,9 @@ describe('ConfigLoader', () => {
 			FLUXER_APP_WORDMARK_URL: 'https://assets.example/wordmark.png',
 			FLUXER_APP_FAVICON_URL: 'https://assets.example/favicon.png',
 			FLUXER_APP_THEME_COLOR: '#123456',
+			FLUXER_APP_STATUS_PAGE_URL: 'https://status.example',
+			FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL: 'https://status.example/history',
 			FLUXER_INSTANCE_SETUP_CONFIGURED: 'true',
-			FLUXER_ABUSE_INBOUND_PHONE_COUNTRY_CODES: 'AA,BB',
-			FLUXER_ABUSE_PHONE_INBOUND_REQUIRED_PREFIXES: '+101,+202',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ENABLED: 'true',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_COUNTRY_CODES: 'AA,BB',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_DISTINCT_TARGET_THRESHOLD: '9',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_TARGET_WINDOW_MS: '12345',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ACTION: 'suppress_delivery',
 		});
 
 		const config = await loadConfig();
@@ -473,61 +578,243 @@ describe('ConfigLoader', () => {
 			wordmark_url: 'https://assets.example/wordmark.png',
 			favicon_url: 'https://assets.example/favicon.png',
 			theme_color: '#123456',
+			status_page_url: 'https://status.example',
+			status_page_incident_history_url: 'https://status.example/history',
 		});
 		expect(config.instance.setup.configured).toBe(true);
-		expect(config.instance.abuse_policy).toEqual({
-			inbound_phone_country_codes: ['AA', 'BB'],
-			phone_verification: {
-				inbound_required_prefixes: ['+101', '+202'],
-			},
-			direct_contact_spam: {
-				enabled: true,
-				country_codes: ['AA', 'BB'],
-				distinct_target_threshold: 9,
-				target_window_ms: 12345,
-				action: 'suppress_delivery',
-			},
+	});
+
+	test('leaves the account identity unset by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.instance.account_identity).toBeNull();
+	});
+
+	test('treats an empty account identity as unset', async () => {
+		stubMinimalEnv({FLUXER_ACCOUNT_IDENTITY: ' '});
+		const config = await loadConfig();
+		expect(config.instance.account_identity).toBeNull();
+	});
+
+	test.each([
+		['email', 'email'],
+		['username', 'username'],
+		[' Username ', 'username'],
+	])('parses FLUXER_ACCOUNT_IDENTITY=%j', async (raw, expected) => {
+		stubMinimalEnv({FLUXER_ACCOUNT_IDENTITY: raw});
+		const config = await loadConfig();
+		expect(config.instance.account_identity).toBe(expected);
+	});
+
+	test.each([
+		['none', 'none'],
+		[' Random ', 'random'],
+		['', null],
+	])('parses FLUXER_TAG_STYLE=%j', async (raw, expected) => {
+		stubMinimalEnv({FLUXER_TAG_STYLE: raw});
+		const config = await loadConfig();
+		expect(config.instance.tag_style).toBe(expected);
+	});
+
+	test.each(['sequential', 'zero_first'])('rejects the tag style %j', async (raw) => {
+		stubMinimalEnv({FLUXER_TAG_STYLE: raw});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_TAG_STYLE must be none or random');
+	});
+
+	test('rejects an unknown account identity', async () => {
+		stubMinimalEnv({FLUXER_ACCOUNT_IDENTITY: 'phone'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_ACCOUNT_IDENTITY must be email or username');
+	});
+
+	test('leaves both stores off with no apps, packages or products by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.integrations.app_store).toEqual({enabled: false, apps: [], products: {}});
+		expect(config.integrations.google_play).toEqual({
+			enabled: false,
+			packages: [],
+			token_uri: 'https://oauth2.googleapis.com/token',
+			products: {},
 		});
+		expect(config.integrations.store_billing).toEqual({sandbox_user_ids: [], sandbox_entitles_all: false});
 	});
 
-	test('rejects an enabled captcha with no keys for the selected provider', async () => {
-		stubMinimalEnv({FLUXER_CAPTCHA_ENABLED: 'true', FLUXER_CAPTCHA_PROVIDER: 'hcaptcha'});
-		await expect(loadConfig()).rejects.toThrow('FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY is required');
-	});
-
-	test('rejects an enabled captcha with a site key but no secret key', async () => {
+	test('loads a valid store catalogue', async () => {
 		stubMinimalEnv({
-			FLUXER_CAPTCHA_ENABLED: 'true',
-			FLUXER_CAPTCHA_PROVIDER: 'turnstile',
-			FLUXER_CAPTCHA_TURNSTILE_SITE_KEY: 'turnstile-site-key',
+			FLUXER_APP_STORE_ENABLED: 'true',
+			FLUXER_APP_STORE_APPS: '[{"bundle_id":"com.fluxer","app_apple_id":1234567890}]',
+			FLUXER_APP_STORE_PRODUCTS: '{"com.fluxer.plutonium.monthly":"monthly","com.fluxer.gift.1month":"gift_1_month"}',
+			FLUXER_GOOGLE_PLAY_ENABLED: 'true',
+			FLUXER_GOOGLE_PLAY_PACKAGES: 'com.fluxer',
+			FLUXER_GOOGLE_PLAY_PRODUCTS: '{"plutonium:yearly":"yearly","gift_1_year":"gift_1_year"}',
+			FLUXER_STORE_BILLING_SANDBOX_USER_IDS: '1234567890123456',
 		});
-		await expect(loadConfig()).rejects.toThrow('FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY is required');
+		const config = await loadConfig();
+		expect(config.integrations.app_store.apps).toEqual([{bundle_id: 'com.fluxer', app_apple_id: 1234567890}]);
+		expect(config.integrations.google_play.products).toEqual({
+			'plutonium:yearly': 'yearly',
+			gift_1_year: 'gift_1_year',
+		});
+		expect(config.integrations.store_billing.sandbox_user_ids).toEqual(['1234567890123456']);
 	});
 
-	test('rejects an enabled captcha with no provider', async () => {
-		stubMinimalEnv({FLUXER_CAPTCHA_ENABLED: 'true'});
+	test('rejects an App Store app without a numeric app_apple_id', async () => {
+		for (const apps of [
+			'[{"bundle_id":"com.fluxer"}]',
+			'[{"bundle_id":"com.fluxer","app_apple_id":"1234567890"}]',
+			'[{"bundle_id":"com.fluxer","app_apple_id":0}]',
+		]) {
+			resetConfig();
+			stubMinimalEnv({FLUXER_APP_STORE_APPS: apps});
+			await expect(loadConfig()).rejects.toThrow('FLUXER_APP_STORE_APPS entry 1 must have a numeric app_apple_id');
+		}
+	});
+
+	test('rejects an App Store app without a bundle id', async () => {
+		stubMinimalEnv({FLUXER_APP_STORE_APPS: '[{"app_apple_id":1234567890}]'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_APP_STORE_APPS entry 1 must have a bundle_id');
+	});
+
+	test('rejects an App Store product mapped to an unknown slot', async () => {
+		stubMinimalEnv({FLUXER_APP_STORE_PRODUCTS: '{"com.fluxer.visionary":"visionary"}'});
 		await expect(loadConfig()).rejects.toThrow(
-			'FLUXER_CAPTCHA_PROVIDER must be hcaptcha or turnstile when FLUXER_CAPTCHA_ENABLED is true',
+			'Invalid FLUXER_APP_STORE_PRODUCTS slot for com.fluxer.visionary: visionary',
 		);
 	});
 
-	test('accepts an enabled captcha with both keys for the selected provider', async () => {
+	test('rejects a Google Play product mapped to an unknown slot', async () => {
+		stubMinimalEnv({FLUXER_GOOGLE_PLAY_PRODUCTS: '{"plutonium:weekly":"weekly"}'});
+		await expect(loadConfig()).rejects.toThrow('Invalid FLUXER_GOOGLE_PLAY_PRODUCTS slot for plutonium:weekly: weekly');
+	});
+
+	test('rejects a Google Play product key that does not fit its slot kind', async () => {
+		stubMinimalEnv({FLUXER_GOOGLE_PLAY_PRODUCTS: '{"plutonium":"monthly"}'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_GOOGLE_PLAY_PRODUCTS key plutonium does not match its monthly slot',
+		);
+		resetConfig();
+		stubMinimalEnv({FLUXER_GOOGLE_PLAY_PRODUCTS: '{"gift:one":"gift_1_month"}'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_GOOGLE_PLAY_PRODUCTS key gift:one does not match its gift_1_month slot',
+		);
+	});
+
+	test('rejects a sandbox user id that is not a snowflake', async () => {
+		stubMinimalEnv({FLUXER_STORE_BILLING_SANDBOX_USER_IDS: '123,abc'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_STORE_BILLING_SANDBOX_USER_IDS must be a comma separated list of user ids',
+		);
+	});
+
+	test('defaults the cache purge adapter to none', async () => {
+		stubMinimalEnv();
+		expect((await loadConfig()).integrations.cache_purge).toEqual({
+			adapter: 'none',
+			http: {endpoint: '', token: '', timeout_ms: 10_000},
+		});
+	});
+
+	test('reads the http cache purge settings from the environment', async () => {
 		stubMinimalEnv({
-			FLUXER_CAPTCHA_ENABLED: 'true',
-			FLUXER_CAPTCHA_PROVIDER: 'hcaptcha',
-			FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY: 'hcaptcha-site-key',
-			FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY: 'hcaptcha-secret-key',
+			FLUXER_CACHE_PURGE_ADAPTER: 'http',
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+			FLUXER_CACHE_PURGE_HTTP_TOKEN: 'purge-token',
+			FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS: '5000',
+		});
+		expect((await loadConfig()).integrations.cache_purge).toEqual({
+			adapter: 'http',
+			http: {endpoint: 'https://purge.internal/purge', token: 'purge-token', timeout_ms: 5000},
+		});
+	});
+
+	test('rejects an unknown cache purge adapter', async () => {
+		stubMinimalEnv({FLUXER_CACHE_PURGE_ADAPTER: 'varnish'});
+		await expect(loadConfig()).rejects.toThrow('Invalid FLUXER_CACHE_PURGE_ADAPTER: varnish');
+	});
+
+	test('rejects the http cache purge adapter without an endpoint', async () => {
+		stubMinimalEnv({FLUXER_CACHE_PURGE_ADAPTER: 'http'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_CACHE_PURGE_HTTP_ENDPOINT is required');
+	});
+
+	test('rejects the http cache purge adapter without a token', async () => {
+		stubMinimalEnv({
+			FLUXER_CACHE_PURGE_ADAPTER: 'http',
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_CACHE_PURGE_HTTP_TOKEN is required');
+	});
+
+	test('rejects a cache purge endpoint that is not an absolute http URL', async () => {
+		for (const endpoint of ['/purge', 'purge.internal/purge', 'ftp://purge.internal/purge']) {
+			stubMinimalEnv({FLUXER_CACHE_PURGE_ADAPTER: 'http', FLUXER_CACHE_PURGE_HTTP_ENDPOINT: endpoint});
+			await expect(loadConfig()).rejects.toThrow(
+				'FLUXER_CACHE_PURGE_HTTP_ENDPOINT must be an absolute http or https URL without credentials',
+			);
+		}
+	});
+
+	test('rejects a cache purge endpoint that contains credentials', async () => {
+		stubMinimalEnv({
+			FLUXER_CACHE_PURGE_ADAPTER: 'http',
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purger:secret@purge.internal/purge',
+		});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_CACHE_PURGE_HTTP_ENDPOINT must be an absolute http or https URL without credentials',
+		);
+	});
+
+	test('rejects a cache purge timeout outside 1000 to 10000', async () => {
+		for (const timeout of ['999', '10001']) {
+			stubMinimalEnv({
+				FLUXER_CACHE_PURGE_ADAPTER: 'http',
+				FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+				FLUXER_CACHE_PURGE_HTTP_TOKEN: 'purge-token',
+				FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS: timeout,
+			});
+			await expect(loadConfig()).rejects.toThrow(
+				'FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS must be an integer between 1000 and 10000',
+			);
+		}
+	});
+
+	test('rejects a cache purge token with spaces or control characters without echoing it', async () => {
+		for (const token of ['secret\nvalue', 'secret\rvalue', 'secret value', 'secret-value\n']) {
+			stubMinimalEnv({
+				FLUXER_CACHE_PURGE_ADAPTER: 'http',
+				FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+				FLUXER_CACHE_PURGE_HTTP_TOKEN: token,
+			});
+			await expect(loadConfig()).rejects.toThrow(
+				/^FLUXER_CACHE_PURGE_HTTP_TOKEN must contain only visible ASCII characters$/,
+			);
+		}
+	});
+
+	test('leaves the cache purge settings unvalidated when the adapter is none', async () => {
+		stubMinimalEnv({
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'ftp://purge.internal/purge',
+			FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS: '1',
+		});
+		expect((await loadConfig()).integrations.cache_purge.adapter).toBe('none');
+	});
+
+	test('leaves the optional outbound lookups unset by default', async () => {
+		stubMinimalEnv();
+
+		const config = await loadConfig();
+
+		expect(config.integrations.breached_password_check.enabled).toBeUndefined();
+	});
+
+	test('reads the optional outbound lookup switches from the environment', async () => {
+		stubMinimalEnv({
+			FLUXER_BREACHED_PASSWORD_CHECK_ENABLED: 'false',
 		});
 
 		const config = await loadConfig();
 
-		expect(config.integrations.captcha.enabled).toBe(true);
-		expect(config.integrations.captcha.hcaptcha?.secret_key).toBe('hcaptcha-secret-key');
-	});
-
-	test('leaves a disabled captcha unvalidated', async () => {
-		stubMinimalEnv({FLUXER_CAPTCHA_PROVIDER: 'hcaptcha'});
-		expect((await loadConfig()).integrations.captcha.enabled).toBe(false);
+		expect(config.integrations.breached_password_check.enabled).toBe(false);
 	});
 
 	test('leaves Bluesky login off with no legal URLs by default', async () => {
@@ -569,13 +856,11 @@ describe('ConfigLoader', () => {
 		expect((await loadConfig()).services.media_proxy.upload_relay.max_body_bytes).toBe(524_288_000);
 	});
 
-	test('rejects a missing upload relay secret in upload mode', async () => {
+	test('rejects a missing upload relay secret', async () => {
 		stubMinimalEnv();
 		vi.stubEnv('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64', '');
 
-		await expect(loadConfig()).rejects.toThrow(
-			'FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload mode',
-		);
+		await expect(loadConfig()).rejects.toThrow('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required');
 	});
 
 	test('rejects a non-base64 upload relay secret', async () => {
@@ -588,15 +873,6 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow(
 			'FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes',
 		);
-	});
-
-	test('leaves the upload relay secret optional outside upload mode', async () => {
-		stubMinimalEnv({FLUXER_MEDIA_PROXY_MODE: 'mp'});
-		vi.stubEnv('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64', '');
-
-		const config = await loadConfig();
-
-		expect(config.services.media_proxy.upload_relay.secret_base64).toBe('');
 	});
 
 	test('rejects a VAPID public key that is not a 65-byte uncompressed point', async () => {
@@ -655,12 +931,10 @@ describe('ConfigLoader', () => {
 		expect(config.integrations.voice.url).toBe('http://localhost:8088/livekit');
 	});
 
-	test('inserts the public port into every other public url the config carries', async () => {
+	test('inserts the public port into every other public url the config contains', async () => {
 		stubMinimalEnv({
-			FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: 'http://localhost/media',
 			FLUXER_S3_PUBLIC_ENDPOINT: 'http://localhost/s3',
 			FLUXER_EMAIL_APP_BASE_URL: 'http://localhost',
-			FLUXER_SMS_INBOUND_WEBHOOK_PUBLIC_URL: 'http://localhost/webhooks/sms',
 			FLUXER_AUTH_BLUESKY_CLIENT_URI: 'http://localhost',
 			FLUXER_AUTH_BLUESKY_TOS_URI: 'http://localhost/terms',
 			FLUXER_APP_ICON_URL: 'http://localhost/icon.png',
@@ -669,10 +943,8 @@ describe('ConfigLoader', () => {
 
 		const config = await loadConfig();
 
-		expect(config.services.gateway.media_proxy_endpoint).toBe('http://localhost:8088/media');
 		expect(config.s3?.presigned_url_base).toBe('http://localhost:8088/s3');
 		expect(config.integrations.email.app_base_url).toBe('http://localhost:8088');
-		expect(config.integrations.sms.inbound_webhook_public_url).toBe('http://localhost:8088/webhooks/sms');
 		expect(config.auth.bluesky.client_uri).toBe('http://localhost:8088');
 		expect(config.auth.bluesky.tos_uri).toBe('http://localhost:8088/terms');
 		expect(config.instance.branding.icon_url).toBe('http://localhost:8088/icon.png');
@@ -817,7 +1089,7 @@ describe('FLUXER_PUBLIC_ORIGIN', () => {
 	test('refuses to boot on an origin that is not a bare origin', async () => {
 		stubMinimalEnv({FLUXER_PUBLIC_ORIGIN: 'https://chat.example.com/app'});
 		await expect(loadConfig()).rejects.toThrow(
-			'FLUXER_PUBLIC_ORIGIN must be a scheme, host and optional port such as https://chat.example.com:8443, got https://chat.example.com/app',
+			'FLUXER_PUBLIC_ORIGIN must be a scheme, host and optional port such as https://chat.example.com:8443',
 		);
 	});
 

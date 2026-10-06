@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import {RootComponent} from '@app/app/router/components/RootComponent';
 import {NotFoundPage} from '@app/features/app/components/pages/NotFoundPage';
 import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
@@ -20,5 +21,11 @@ export const homeRoute = createRoute({
 	getParentRoute: () => rootRoute,
 	id: 'home',
 	path: '/',
+	onEnter: () => new Redirect(getDefaultLandingPath()),
+});
+export const appRoute = createRoute({
+	getParentRoute: () => rootRoute,
+	id: 'app',
+	path: Routes.APP,
 	onEnter: () => new Redirect(getDefaultLandingPath()),
 });

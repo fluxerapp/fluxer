@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import type {VoiceEngineV2GatewayDesiredVoiceState, VoiceEngineV2GatewayVoiceState} from '../../protocol/types';
-import {transitionVoiceEngineV2} from '../reducer';
-import type {VoiceEngineV2GatewayState, VoiceEngineV2Snapshot} from '../state';
-import {availableVoiceEngineV2Capabilities, createVoiceEngineV2InitialSnapshot} from '../state';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	deriveVoiceEngineV2DesiredGatewayVoiceState,
 	gatewayVoiceStateWriteMatchesReported,
 	reconcileGatewayVoiceState,
 	shouldApplyGatewayVoiceStateEcho,
-} from './gateway';
+} from '@fluxer/voice_engine_v2/src/core/reducers/gateway';
+import type {VoiceEngineV2GatewayState, VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import {
+	availableVoiceEngineV2Capabilities,
+	createVoiceEngineV2InitialSnapshot,
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {
+	VoiceEngineV2GatewayDesiredVoiceState,
+	VoiceEngineV2GatewayVoiceState,
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import {describe, expect, it} from 'vitest';
 
 function reported(overrides: Partial<VoiceEngineV2GatewayVoiceState> = {}): VoiceEngineV2GatewayVoiceState {
 	return {

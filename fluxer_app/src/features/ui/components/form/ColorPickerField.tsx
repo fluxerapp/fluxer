@@ -293,7 +293,7 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = observer((props
 							className={clsx(styles.description, descriptionClassName)}
 							data-flx="ui.form.color-picker-field.description"
 						>
-							{description ?? <Trans>Type a color (hex, rgb(), hsl, or name), or use the picker.</Trans>}
+							{description ?? <Trans>Type a color (hex, rgb(), hsl(), or name) or use the picker.</Trans>}
 						</p>
 					)}
 					{showError && (

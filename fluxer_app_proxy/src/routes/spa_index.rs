@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::bootstrap::{build_bootstrap_script, inject_bootstrap};
-use crate::config::HttpEndpoint;
-use crate::csp::{RuntimeCspSources, generate_nonce};
+use crate::bootstrap::{
+    build_bootstrap_script, inject_bootstrap, rewrite_endpoints_for_same_origin_host,
+};
+use crate::config::{AppProxyConfig, HttpEndpoint};
+use crate::csp::{RuntimeCspSources, inline_script_hashes};
 use crate::discovery_cache::{DiscoveryResponse, discovery_endpoint};
-use crate::geoip::build_geoip_response;
 use crate::state::{
     AppProxyBudgets, AppState, MAX_RENDERED_SPA_INDEX_BYTES, MAX_SPA_INDEX_BYTES,
     read_bounded_text_file,
-};
-use crate::time_freeze::{
-    load_time_freeze_config_for_request, should_serve_frozen, time_freeze_debug_header,
 };
 use axum::{
     body::{Body, Bytes},
@@ -19,6 +17,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use std::path::Path;
+use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use super::assets_proxy::serve_local_asset;
@@ -28,6 +27,7 @@ use super::spa_static::{CORS_ALLOW_ANY_VALUE, guess_mime, is_font_mime};
 const ACCEPT_CH_VALUE: &str = "DPR, Sec-CH-DPR, Sec-CH-Width, Save-Data, ECT, Downlink";
 const CRITICAL_CH_VALUE: &str = "Sec-CH-DPR, Sec-CH-Width, Save-Data";
 const DEV_NO_STORE_CACHE_CONTROL: &str = "no-store, no-cache, must-revalidate, max-age=0";
+const SHARED_SHELL_CACHE_CONTROL: &str = "public, max-age=0, s-maxage=1";
 
 pub async fn spa_catch_all(
     State(state): State<AppState>,
@@ -46,7 +46,14 @@ pub async fn spa_catch_all(
         )
         .await;
     }
-    if is_static_asset_path(request_path) {
+    if let Some(prefix) = static_asset_prefix(request_path) {
+        if state
+            .local_asset_prefixes
+            .as_ref()
+            .is_some_and(|present| !present.contains(&prefix))
+        {
+            return StatusCode::NOT_FOUND.into_response();
+        }
         return serve_local_asset(
             &state.budgets,
             &state.config.static_dir,
@@ -67,7 +74,6 @@ const STATIC_ASSET_PREFIXES: &[&str] = &[
     "/avatars/",
     "/badges/",
     "/desktop/",
-    "/embeds/",
     "/emoji/",
     "/libs/",
     "/marketing/",
@@ -81,10 +87,23 @@ fn static_root_file_cache_control(request_path: &str) -> Option<&'static str> {
         .map(|(_, cache_control)| *cache_control)
 }
 
-fn is_static_asset_path(request_path: &str) -> bool {
+fn static_asset_prefix(request_path: &str) -> Option<&'static str> {
     STATIC_ASSET_PREFIXES
         .iter()
-        .any(|prefix| request_path.starts_with(prefix))
+        .copied()
+        .find(|prefix| request_path.starts_with(prefix))
+}
+
+pub fn present_local_asset_prefixes(static_dir: &str) -> Arc<[&'static str]> {
+    STATIC_ASSET_PREFIXES
+        .iter()
+        .copied()
+        .filter(|prefix| {
+            Path::new(static_dir)
+                .join(prefix.trim_matches('/'))
+                .is_dir()
+        })
+        .collect()
 }
 
 async fn serve_static_file(
@@ -142,19 +161,19 @@ async fn serve_static_file(
 }
 
 async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
-    let time_freeze = load_time_freeze_config_for_request(&state.config, headers);
-    let debug_header = time_freeze_debug_header(&time_freeze);
     let should_bust_dev_assets = state.config.index_upstream_url.is_some();
 
-    let discovery = match refresh_discovery_for_spa(state).await {
+    let mut discovery = match refresh_discovery_for_spa(state).await {
         Some(d) => d,
         None => {
             tracing::error!("discovery cache empty, cannot serve SPA");
             return StatusCode::SERVICE_UNAVAILABLE.into_response();
         }
     };
+    if let Some(host) = same_origin_host(&state.config, headers) {
+        rewrite_endpoints_for_same_origin_host(&mut discovery.data, host);
+    }
 
-    let nonce = generate_nonce();
     let runtime_csp_sources = build_runtime_csp_sources(state, &discovery);
     let static_cdn_endpoint = runtime_csp_sources
         .static_cdn_endpoint
@@ -164,23 +183,21 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
         .media_endpoint
         .as_ref()
         .map_or("", HttpEndpoint::as_str);
-    let csp = state.csp.spa_header(&nonce, &runtime_csp_sources);
-    let geoip = build_geoip_response(state.geoip.lookup(headers));
-    let script_tag = build_bootstrap_script(&state.config, &discovery, &geoip, &nonce);
+    let script_tag = build_bootstrap_script(&state.config, &discovery);
 
-    let raw_html = if let Some(snapshot) = should_serve_frozen(&time_freeze) {
-        String::from_utf8_lossy(&snapshot.index_html).into_owned()
+    let raw_html = match load_spa_index_html(state).await {
+        Ok(content) => content,
+        Err(response) => return response,
+    };
+    let raw_html = if is_self_hosted(&discovery) {
+        strip_link_preview_metadata(&raw_html)
     } else {
-        match load_spa_index_html(state).await {
-            Ok(content) => content,
-            Err(response) => return response,
-        }
+        raw_html
     };
 
     let dev_buster = should_bust_dev_assets.then(current_dev_asset_cache_buster);
     let html = match render_spa_document(
         &raw_html,
-        &nonce,
         &script_tag,
         static_cdn_endpoint,
         media_endpoint,
@@ -192,8 +209,33 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
             return StatusCode::INTERNAL_SERVER_ERROR.into_response();
         }
     };
-    let html = html.into_boxed_str();
-    build_spa_response(html, csp, debug_header.as_deref(), should_bust_dev_assets)
+    let csp = state
+        .csp
+        .spa_header(&inline_script_hashes(&html), &runtime_csp_sources);
+    build_spa_response(html.into_boxed_str(), csp, should_bust_dev_assets)
+}
+
+fn same_origin_host<'a>(config: &'a AppProxyConfig, headers: &HeaderMap) -> Option<&'a str> {
+    if config.same_origin_hosts.is_empty() {
+        return None;
+    }
+    let host = request_hostname(headers.get(header::HOST)?.to_str().ok()?)?;
+    config
+        .same_origin_hosts
+        .iter()
+        .find(|candidate| candidate.eq_ignore_ascii_case(host))
+        .map(String::as_str)
+}
+
+fn request_hostname(authority: &str) -> Option<&str> {
+    let authority = authority.trim();
+    let hostname = if authority.starts_with('[') {
+        &authority[..=authority.find(']')?]
+    } else {
+        authority.split(':').next()?
+    };
+    let hostname = hostname.trim_end_matches('.');
+    (!hostname.is_empty()).then_some(hostname)
 }
 
 #[derive(Debug)]
@@ -224,7 +266,6 @@ fn bounded_document(document: String) -> Result<String, SpaDocumentSizeLimitErro
 
 fn render_spa_document(
     html: &str,
-    nonce: &str,
     script_tag: &str,
     static_cdn_endpoint: &str,
     media_endpoint: &str,
@@ -232,7 +273,6 @@ fn render_spa_document(
 ) -> Result<String, SpaDocumentSizeLimitError> {
     let mut document = bounded_document(inject_bootstrap(
         html,
-        nonce,
         script_tag,
         static_cdn_endpoint,
         media_endpoint,
@@ -241,6 +281,36 @@ fn render_spa_document(
         document = bounded_document(append_dev_asset_cache_buster(&document, buster))?;
     }
     Ok(document)
+}
+
+fn is_self_hosted(discovery: &DiscoveryResponse) -> bool {
+    discovery
+        .data
+        .get("features")
+        .and_then(|features| features.get("self_hosted"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
+}
+
+fn strip_link_preview_metadata(html: &str) -> String {
+    let html = remove_elements(html, "<title", "</title>");
+    remove_elements(&html, r#"<meta name="description""#, ">")
+}
+
+fn remove_elements(html: &str, start: &str, end: &str) -> String {
+    let mut rest = html;
+    let mut output = String::with_capacity(html.len());
+
+    while let Some(index) = rest.find(start) {
+        let Some(length) = rest[index..].find(end) else {
+            break;
+        };
+        output.push_str(&rest[..index]);
+        rest = rest[index + length + end.len()..].trim_start_matches('\n');
+    }
+
+    output.push_str(rest);
+    output
 }
 
 async fn refresh_discovery_for_spa(state: &AppState) -> Option<DiscoveryResponse> {
@@ -377,12 +447,7 @@ impl AsRef<[u8]> for SpaDocumentBody {
     }
 }
 
-fn build_spa_response(
-    html: Box<str>,
-    csp: HeaderValue,
-    time_freeze_header: Option<&str>,
-    dev_no_store: bool,
-) -> Response {
+fn build_spa_response(html: Box<str>, csp: HeaderValue, dev_no_store: bool) -> Response {
     let body = Bytes::from_owner(SpaDocumentBody { html });
     let mut response = Response::new(Body::from(body));
     let headers = response.headers_mut();
@@ -408,20 +473,15 @@ fn build_spa_response(
             HeaderValue::from_static("no-store"),
         );
     } else {
-        headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
+        headers.insert(
+            header::CACHE_CONTROL,
+            HeaderValue::from_static(SHARED_SHELL_CACHE_CONTROL),
+        );
     }
+    super::set_security_headers(headers);
     headers.insert(
-        header::STRICT_TRANSPORT_SECURITY,
-        HeaderValue::from_static("max-age=31536000; includeSubDomains; preload"),
-    );
-    headers.insert(
-        header::X_CONTENT_TYPE_OPTIONS,
-        HeaderValue::from_static("nosniff"),
-    );
-    headers.insert(header::X_FRAME_OPTIONS, HeaderValue::from_static("DENY"));
-    headers.insert(
-        header::REFERRER_POLICY,
-        HeaderValue::from_static("strict-origin-when-cross-origin"),
+        HeaderName::from_static("x-fluxer-app-shell"),
+        HeaderValue::from_static("1"),
     );
     headers.insert(
         axum::http::HeaderName::from_static("accept-ch"),
@@ -431,22 +491,6 @@ fn build_spa_response(
         axum::http::HeaderName::from_static("critical-ch"),
         HeaderValue::from_static(CRITICAL_CH_VALUE),
     );
-    headers.insert(
-        axum::http::HeaderName::from_static("permissions-policy"),
-        HeaderValue::from_static(super::PERMISSIONS_POLICY_VALUE),
-    );
-
-    #[cfg(feature = "time-freeze")]
-    {
-        if let Some(tf) = time_freeze_header
-            && let Ok(v) = HeaderValue::from_str(tf)
-        {
-            headers.insert(axum::http::HeaderName::from_static("x-time-freeze"), v);
-        }
-    }
-    #[cfg(not(feature = "time-freeze"))]
-    let _ = time_freeze_header;
-
     response
 }
 
@@ -585,11 +629,11 @@ mod tests {
 
     use crate::config::{AppProxyConfig, ReleaseChannel};
     use crate::discovery_cache::DiscoveryCache;
+    use crate::state::LOCAL_FILE_READS_IN_FLIGHT_MAX;
     use axum::Router;
     use axum::body::Body;
     use fluxer_common::config::GeoipSourceConfig;
     use fluxer_common::geoip::{GeoipConfig, GeoipResolver};
-    use std::sync::Arc;
 
     #[test]
     fn dev_asset_cache_buster_rewrites_script_and_link_assets() {
@@ -639,13 +683,12 @@ mod tests {
         assert!(!is_static_root_file("/users/1.2.3"));
     }
 
-    const SHELL_WITH_A_NONCE_HOLE: &str = r#"<!doctype html><html><head><title>Fluxer</title><script nonce="{{CSP_NONCE_PLACEHOLDER}}"></script><script src="/assets/app.js"></script></head><body></body></html>"#;
+    const SHELL_WITH_AN_INLINE_SCRIPT: &str = r#"<!doctype html><html><head><title>Fluxer</title><script>inline()</script><script src="/assets/app.js"></script></head><body></body></html>"#;
 
     #[test]
-    fn the_rendered_document_always_carries_the_bootstrap_and_a_real_nonce() {
+    fn the_rendered_document_always_includes_the_bootstrap() {
         let rendered = render_spa_document(
-            SHELL_WITH_A_NONCE_HOLE,
-            "reqnonce",
+            SHELL_WITH_AN_INLINE_SCRIPT,
             "<script>booted</script>",
             "https://static.example.test",
             "",
@@ -653,16 +696,15 @@ mod tests {
         )
         .expect("test SPA document must render within its size limit");
 
-        assert!(!rendered.contains("{{CSP_NONCE_PLACEHOLDER}}"));
-        assert!(rendered.contains(r#"nonce="reqnonce""#));
         assert!(rendered.contains("<script>booted</script>"));
+        assert!(rendered.contains("<script>inline()</script>"));
+        assert!(!rendered.contains("nonce"));
     }
 
     #[test]
     fn the_dev_cache_buster_reaches_the_rendered_document_only_when_supplied() {
         let busted = render_spa_document(
-            SHELL_WITH_A_NONCE_HOLE,
-            "reqnonce",
+            SHELL_WITH_AN_INLINE_SCRIPT,
             "<script>booted</script>",
             "",
             "",
@@ -670,8 +712,7 @@ mod tests {
         )
         .expect("test SPA document must render within its size limit");
         let untouched = render_spa_document(
-            SHELL_WITH_A_NONCE_HOLE,
-            "reqnonce",
+            SHELL_WITH_AN_INLINE_SCRIPT,
             "<script>booted</script>",
             "",
             "",
@@ -684,50 +725,15 @@ mod tests {
         assert!(!untouched.contains("_=9911"));
     }
 
-    #[cfg(feature = "time-freeze")]
-    #[test]
-    fn the_frozen_shell_is_never_served_with_an_unfilled_nonce_or_a_missing_bootstrap() {
-        let frozen = String::from_utf8_lossy(&crate::frozen_snapshots::STABLE_SNAPSHOT.index_html)
-            .into_owned();
-        assert!(
-            frozen.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "the captured shell should still carry the hole this test proves we fill"
-        );
-
-        let served = render_spa_document(
-            &frozen,
-            "frozennonce",
-            "<script>frozenboot</script>",
-            "https://fluxerstatic.com",
-            "",
-            None,
-        )
-        .expect("test SPA document must render within its size limit");
-
-        assert!(
-            !served.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "a frozen-served shell shipped a literal nonce placeholder"
-        );
-        assert!(
-            served.contains(r#"nonce="frozennonce""#),
-            "a frozen-served shell lost its per-request nonce"
-        );
-        assert!(
-            served.contains("<script>frozenboot</script>"),
-            "a frozen-served shell shipped without the bootstrap script"
-        );
-    }
-
     const SHELL_WITH_ENDPOINT_HOLES: &str = r#"<!doctype html><html><head><title>Fluxer</title><link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}">
 <link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}" crossorigin>
 <link rel="preconnect" href="{{MEDIA_ENDPOINT}}">
-<link rel="icon" type="image/png" sizes="32x32" href="{{STATIC_CDN_ENDPOINT}}/web/favicon-32x32.png"><link rel="apple-touch-icon" sizes="180x180" href="{{STATIC_CDN_ENDPOINT}}/web/apple-touch-icon.png"><script nonce="{{CSP_NONCE_PLACEHOLDER}}"></script><script src="/assets/app.js"></script></head><body></body></html>"#;
+<link rel="icon" type="image/png" sizes="32x32" href="{{STATIC_CDN_ENDPOINT}}/web/favicon-32x32.png"><link rel="apple-touch-icon" sizes="180x180" href="{{STATIC_CDN_ENDPOINT}}/web/apple-touch-icon.png"><script>inline()</script><script src="/assets/app.js"></script></head><body></body></html>"#;
 
     #[test]
-    fn the_static_cdn_argument_resolves_every_hole_the_shell_carries() {
+    fn the_static_cdn_argument_resolves_every_hole_the_shell_has() {
         let rendered = render_spa_document(
             SHELL_WITH_ENDPOINT_HOLES,
-            "reqnonce",
             "<script>booted</script>",
             "https://cdn.example.test/",
             "https://media.example.test",
@@ -760,7 +766,6 @@ mod tests {
     fn the_media_argument_is_resolved_and_weighed_against_the_static_cdn() {
         let distinct = render_spa_document(
             SHELL_WITH_ENDPOINT_HOLES,
-            "reqnonce",
             "<script>booted</script>",
             "https://cdn.example.test",
             "https://media.example.test/",
@@ -776,7 +781,6 @@ mod tests {
 
         let shared = render_spa_document(
             SHELL_WITH_ENDPOINT_HOLES,
-            "reqnonce",
             "<script>booted</script>",
             "https://cdn.example.test",
             "https://cdn.example.test",
@@ -796,7 +800,133 @@ mod tests {
 
     const DISCOVERY_BODY_WITH_BOTH_ENDPOINTS: &str = r#"{"api_code_version":"proxy-test","endpoints":{"static_cdn":"https://cdn.example.test","media":"https://media.example.test"}}"#;
 
+    const DISCOVERY_BODY_WITH_WEB_APP_ENDPOINTS: &str = r#"{"api_code_version":"proxy-test","endpoints":{"api":"https://web.fluxer.app/api","api_client":"https://web.fluxer.app/api","api_public":"https://api.fluxer.app","webapp":"https://web.fluxer.app","static_cdn":"https://cdn.example.test","media":"https://media.example.test"}}"#;
+
     const DISCOVERY_BODY_WITHOUT_ENDPOINTS: &str = r#"{"api_code_version":"proxy-test"}"#;
+
+    const DISCOVERY_BODY_SELF_HOSTED: &str = r#"{"api_code_version":"proxy-test","endpoints":{"static_cdn":"https://cdn.example.test","media":"https://media.example.test"},"features":{"self_hosted":true}}"#;
+
+    const SHIPPED_APP_SHELL: &str = include_str!("../../../fluxer_app/index.html");
+
+    #[test]
+    fn the_shipped_shell_loses_every_link_preview_field_when_stripped() {
+        assert!(SHIPPED_APP_SHELL.contains("<title>"));
+        assert!(SHIPPED_APP_SHELL.contains(r#"<meta name="description""#));
+
+        let stripped = strip_link_preview_metadata(SHIPPED_APP_SHELL);
+
+        assert!(!stripped.contains("<title"));
+        assert!(!stripped.contains(r#"name="description""#));
+        assert!(!stripped.contains("og:"));
+        assert!(!stripped.contains("twitter:"));
+        assert!(stripped.contains(r#"<meta name="viewport""#));
+        assert!(stripped.contains("<!--{{FLUXER_BOOTSTRAP}}-->"));
+    }
+
+    #[tokio::test]
+    async fn a_self_hosted_instance_serves_no_link_preview_metadata() {
+        let state = assemble_spa_state(
+            ReleaseChannel::Stable,
+            Some(SHIPPED_APP_SHELL),
+            DISCOVERY_BODY_SELF_HOSTED,
+            None,
+            None,
+        )
+        .await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let served = read_document(response).await;
+
+        assert!(!served.contains("<title"));
+        assert!(!served.contains(r#"name="description""#));
+        assert!(served.contains("window.__FLUXER_BOOTSTRAP__"));
+    }
+
+    fn static_dir_with(prefix_dirs: &[&str]) -> std::path::PathBuf {
+        static NEXT_DIR: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let unique = NEXT_DIR.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let root = std::env::temp_dir().join(format!(
+            "fluxer-static-prefixes-{}-{unique}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&root).unwrap();
+        for dir in prefix_dirs {
+            std::fs::create_dir_all(root.join(dir)).unwrap();
+        }
+        root
+    }
+
+    #[test]
+    fn only_prefixes_with_a_directory_on_disk_are_present() {
+        let root = static_dir_with(&["emoji", "web"]);
+        std::fs::write(root.join("badges"), b"a file, not a directory").unwrap();
+
+        let present = present_local_asset_prefixes(root.to_str().unwrap());
+
+        assert_eq!(&*present, &["/emoji/", "/web/"]);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[tokio::test]
+    async fn a_prefix_missing_at_startup_is_refused_without_a_file_read_slot() {
+        let mut state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
+        state.local_asset_prefixes = Some(Arc::from([] as [&str; 0]));
+        let _every_slot = state
+            .budgets
+            .local_read_slots
+            .clone()
+            .try_acquire_many_owned(LOCAL_FILE_READS_IN_FLIGHT_MAX as u32)
+            .unwrap();
+
+        let response = spa_catch_all(
+            State(state),
+            HeaderMap::new(),
+            Request::builder()
+                .uri("/emoji/1f600.svg")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::NOT_FOUND);
+    }
+
+    #[tokio::test]
+    async fn a_prefix_present_at_startup_is_still_served_from_disk() {
+        let root = static_dir_with(&["emoji"]);
+        std::fs::write(root.join("emoji").join("1f600.svg"), b"<svg/>").unwrap();
+        let mut state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
+        let mut config = (*state.config).clone();
+        config.static_dir = root.to_str().unwrap().to_owned();
+        state.local_asset_prefixes = Some(present_local_asset_prefixes(&config.static_dir));
+        state.config = Arc::new(config);
+
+        let response = spa_catch_all(
+            State(state),
+            HeaderMap::new(),
+            Request::builder()
+                .uri("/emoji/1f600.svg")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await;
+
+        assert_eq!(response.status(), StatusCode::OK);
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[tokio::test]
+    async fn the_official_instance_keeps_its_link_preview_metadata() {
+        let state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let served = read_document(response).await;
+
+        assert!(served.contains("<title>Fluxer</title>"));
+        assert!(served.contains(r#"<meta name="description""#));
+    }
 
     async fn spawn_local_origin(payload: &'static str, content_type: &'static str) -> String {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -857,7 +987,6 @@ mod tests {
         let discovery_upstream_url = spawn_local_origin(discovery_body, "application/json").await;
         let mut config = AppProxyConfig::from_env();
         config.release_channel = channel;
-        config.time_freeze_enabled = true;
         config.index_upstream_url = index_upstream_url.map(|url| {
             crate::config::HttpUrl::parse("TEST_INDEX_UPSTREAM_URL", &url)
                 .expect("test index upstream URL must be a valid HTTP URL")
@@ -887,25 +1016,77 @@ mod tests {
                 client_ip_header_name: "x-forwarded-for".to_owned(),
             })),
             index_html: cached_shell.map(Arc::from),
+            local_asset_prefixes: None,
             budgets: crate::state::AppProxyBudgets::default(),
         }
     }
 
-    fn nonce_granted_by(response: &Response) -> String {
-        let policy = response
+    fn policy_of(response: &Response) -> String {
+        response
             .headers()
             .get(header::CONTENT_SECURITY_POLICY)
             .expect("the document was served without a content security policy")
             .to_str()
-            .unwrap();
-        let opening = policy
-            .find("'nonce-")
-            .expect("the content security policy granted no nonce at all");
-        let remainder = &policy[opening + "'nonce-".len()..];
-        let closing = remainder
-            .find('\'')
-            .expect("the content security policy left its nonce source unterminated");
-        remainder[..closing].to_owned()
+            .unwrap()
+            .to_owned()
+    }
+
+    fn script_hashes_granted_by(policy: &str) -> Vec<String> {
+        policy
+            .split("; ")
+            .find(|directive| directive.starts_with("script-src "))
+            .expect("the content security policy has no script-src directive")
+            .split(' ')
+            .filter(|source| source.starts_with("'sha256-"))
+            .map(str::to_owned)
+            .collect()
+    }
+
+    fn bare_inline_scripts_in(document: &str) -> Vec<&str> {
+        document
+            .split("<script>")
+            .skip(1)
+            .map(|rest| {
+                &rest[..rest
+                    .find("</script>")
+                    .expect("an inline script in the served document is never closed")]
+            })
+            .collect()
+    }
+
+    fn sha256_source(text: &str) -> String {
+        use base64::Engine as _;
+        use sha2::Digest as _;
+        format!(
+            "'sha256-{}'",
+            base64::engine::general_purpose::STANDARD.encode(sha2::Sha256::digest(text))
+        )
+    }
+
+    fn assert_every_inline_script_is_granted(document: &str, policy: &str) {
+        for tag in document.split("<script").skip(1) {
+            let tag = &tag[..tag.find('>').unwrap()];
+            assert!(
+                tag.is_empty() || tag.contains(" src="),
+                "the served document has a script tag the test cannot classify: <script{tag}>"
+            );
+        }
+        let inline = bare_inline_scripts_in(document);
+        assert!(
+            !inline.is_empty(),
+            "the served document has no inline script at all"
+        );
+        let mut expected: Vec<String> = inline.iter().map(|script| sha256_source(script)).collect();
+        expected.sort();
+        expected.dedup();
+        let mut granted = script_hashes_granted_by(policy);
+        granted.sort();
+        assert_eq!(
+            granted, expected,
+            "the policy must grant exactly the inline scripts the document contains"
+        );
+        assert!(!document.contains("nonce"));
+        assert!(!policy.contains("nonce"));
     }
 
     async fn read_document(response: Response) -> String {
@@ -915,6 +1096,100 @@ mod tests {
         String::from_utf8(bytes.to_vec()).unwrap()
     }
 
+    async fn spa_state_with_same_origin_hosts(hosts: &[&str]) -> AppState {
+        let mut state = assemble_spa_state(
+            ReleaseChannel::Stable,
+            Some(SHELL_WITH_ENDPOINT_HOLES),
+            DISCOVERY_BODY_WITH_WEB_APP_ENDPOINTS,
+            None,
+            None,
+        )
+        .await;
+        let mut config = (*state.config).clone();
+        config.same_origin_hosts = hosts.iter().map(|host| (*host).to_owned()).collect();
+        state.config = Arc::new(config);
+        state
+    }
+
+    fn request_from_host(host: &str) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert(header::HOST, HeaderValue::from_str(host).unwrap());
+        headers
+    }
+
+    #[test]
+    fn the_request_hostname_drops_its_port_and_trailing_dot() {
+        assert_eq!(request_hostname("fluxer.com"), Some("fluxer.com"));
+        assert_eq!(request_hostname("Fluxer.com:443"), Some("Fluxer.com"));
+        assert_eq!(request_hostname("fluxer.com.:8443"), Some("fluxer.com"));
+        assert_eq!(request_hostname("[::1]:8080"), Some("[::1]"));
+        assert_eq!(request_hostname(":443"), None);
+        assert_eq!(request_hostname("[::1"), None);
+    }
+
+    #[tokio::test]
+    async fn a_listed_host_gets_same_origin_endpoints_in_its_bootstrap() {
+        let state = spa_state_with_same_origin_hosts(&["web.fluxer.app", "fluxer.com"]).await;
+
+        let response = serve_spa_index(&state, &request_from_host("FLUXER.com:443")).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let served = read_document(response).await;
+        assert!(served.contains(r#""api_client":"https://fluxer.com/api""#));
+        assert!(served.contains(r#""api":"https://fluxer.com/api""#));
+        assert!(served.contains(r#""webapp":"https://fluxer.com""#));
+        assert!(served.contains(r#""api_public":"https://api.fluxer.app""#));
+        assert!(!served.contains("https://web.fluxer.app"));
+
+        let cached = state.discovery_cache.get().await.unwrap();
+        assert_eq!(
+            cached.data["endpoints"]["api_client"], "https://web.fluxer.app/api",
+            "the shared discovery snapshot was rewritten for one request"
+        );
+
+        let response = serve_spa_index(&state, &request_from_host("web.fluxer.app")).await;
+        let served = read_document(response).await;
+        assert!(served.contains(r#""api_client":"https://web.fluxer.app/api""#));
+        assert!(!served.contains("https://fluxer.com"));
+    }
+
+    #[tokio::test]
+    async fn an_unlisted_host_keeps_the_discovered_endpoints() {
+        let state = spa_state_with_same_origin_hosts(&["fluxer.com"]).await;
+
+        for headers in [request_from_host("evil.example"), HeaderMap::new()] {
+            let response = serve_spa_index(&state, &headers).await;
+            let served = read_document(response).await;
+            assert!(served.contains(r#""api_client":"https://web.fluxer.app/api""#));
+            assert!(served.contains(r#""webapp":"https://web.fluxer.app""#));
+            assert!(!served.contains("https://fluxer.com"));
+        }
+    }
+
+    #[tokio::test]
+    async fn no_host_is_rewritten_when_none_is_configured() {
+        let state = spa_state_with_same_origin_hosts(&[]).await;
+
+        let response = serve_spa_index(&state, &request_from_host("fluxer.com")).await;
+        let served = read_document(response).await;
+        assert!(served.contains(r#""api_client":"https://web.fluxer.app/api""#));
+    }
+
+    #[tokio::test]
+    async fn the_spa_document_marks_itself_as_the_app_shell() {
+        let state =
+            spa_state_serving(ReleaseChannel::Canary, Some(SHELL_WITH_ENDPOINT_HOLES)).await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response
+                .headers()
+                .get("x-fluxer-app-shell")
+                .and_then(|value| value.to_str().ok()),
+            Some("1")
+        );
+    }
+
     #[tokio::test]
     async fn the_live_branch_serves_a_rendered_document_and_not_the_raw_shell() {
         let state =
@@ -922,26 +1197,14 @@ mod tests {
 
         let response = serve_spa_index(&state, &HeaderMap::new()).await;
         assert_eq!(response.status(), StatusCode::OK);
-        let granted_nonce = nonce_granted_by(&response);
+        let policy = policy_of(&response);
         let served = read_document(response).await;
 
         assert!(
-            !served.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "the live branch shipped an unfilled nonce hole"
+            served.contains("<script>window.__FLUXER_BOOTSTRAP__"),
+            "the live bootstrap is not a bare inline script"
         );
-        assert!(
-            served.contains(&format!(
-                r#"<script nonce="{granted_nonce}">window.__FLUXER_BOOTSTRAP__"#
-            )),
-            "the live bootstrap was not granted the nonce its own policy header carries"
-        );
-        assert_eq!(
-            served
-                .matches(&format!(r#"nonce="{granted_nonce}""#))
-                .count(),
-            served.matches(r#"nonce=""#).count(),
-            "the live document carries a nonce its own policy header never granted"
-        );
+        assert_every_inline_script_is_granted(&served, &policy);
         assert!(
             !served.contains("{{STATIC_CDN_ENDPOINT}}"),
             "the live branch shipped an unresolved static CDN hole"
@@ -962,158 +1225,6 @@ mod tests {
         assert!(
             served.contains(r#"<link rel="preconnect" href="https://media.example.test">"#),
             "the discovered media endpoint never reached the served document"
-        );
-    }
-
-    #[cfg(feature = "time-freeze")]
-    #[tokio::test]
-    async fn the_frozen_document_is_served_with_its_asset_urls_untouched() {
-        let captured =
-            String::from_utf8_lossy(&crate::frozen_snapshots::STABLE_SNAPSHOT.index_html)
-                .into_owned();
-        assert!(
-            captured.contains(
-                r#"<link rel="stylesheet" href="https://fluxerstatic.com/fonts/ibm-plex.css">"#
-            ),
-            "the captured shell no longer carries the asset URL this test proves we leave alone"
-        );
-
-        let state = spa_state_serving(ReleaseChannel::Stable, None).await;
-
-        let response = serve_spa_index(&state, &HeaderMap::new()).await;
-        assert_eq!(response.status(), StatusCode::OK);
-        let served = read_document(response).await;
-
-        assert!(
-            served.contains(
-                r#"<link rel="stylesheet" href="https://fluxerstatic.com/fonts/ibm-plex.css">"#
-            ),
-            "the frozen document's stylesheet URL was rewritten on the primary hosted path"
-        );
-        assert!(
-            served.contains(r#"<link rel="manifest" href="/manifest.json">"#),
-            "the frozen document's manifest URL was rewritten on the primary hosted path"
-        );
-        assert!(
-            !served.contains("?_=") && !served.contains("&_="),
-            "the frozen document was served with a development cache-busting query"
-        );
-    }
-
-    #[cfg(feature = "time-freeze")]
-    #[tokio::test]
-    async fn the_frozen_branch_serves_a_rendered_document_and_not_the_raw_shell() {
-        let captured =
-            String::from_utf8_lossy(&crate::frozen_snapshots::STABLE_SNAPSHOT.index_html)
-                .into_owned();
-        assert!(
-            captured.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "the captured shell no longer carries the nonce hole this test proves we fill"
-        );
-        assert!(
-            !captured.contains("window.__FLUXER_BOOTSTRAP__"),
-            "the captured shell already carries a bootstrap, so this test can no longer tell a rendered document from a raw shell"
-        );
-
-        let state = spa_state_serving(ReleaseChannel::Stable, None).await;
-
-        let response = serve_spa_index(&state, &HeaderMap::new()).await;
-        assert_eq!(response.status(), StatusCode::OK);
-        let granted_nonce = nonce_granted_by(&response);
-        let served = read_document(response).await;
-
-        assert!(
-            !served.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "the primary hosted path shipped a literal nonce placeholder"
-        );
-        assert_eq!(
-            served
-                .matches(&format!(r#"nonce="{granted_nonce}""#))
-                .count(),
-            served.matches(r#"nonce=""#).count(),
-            "the frozen document carries a nonce its own policy header never granted"
-        );
-        assert!(
-            served.contains(&format!(
-                r#"<script nonce="{granted_nonce}">window.__FLUXER_BOOTSTRAP__"#
-            )),
-            "the primary hosted path shipped without a bootstrap script the browser will run"
-        );
-
-        let second = serve_spa_index(&state, &HeaderMap::new()).await;
-        assert_ne!(
-            nonce_granted_by(&second),
-            granted_nonce,
-            "two frozen requests were granted the same nonce"
-        );
-    }
-
-    #[cfg(feature = "time-freeze")]
-    #[tokio::test]
-    async fn every_branch_announces_which_snapshot_decision_it_took() {
-        let frozen_state = spa_state_serving(ReleaseChannel::Stable, None).await;
-        let frozen = serve_spa_index(&frozen_state, &HeaderMap::new()).await;
-        assert_eq!(
-            frozen
-                .headers()
-                .get("x-time-freeze")
-                .expect("the frozen response announced no snapshot decision")
-                .to_str()
-                .unwrap(),
-            format!(
-                "frozen; sha={}",
-                crate::frozen_snapshots::STABLE_SNAPSHOT.sha
-            ),
-            "the frozen response named the wrong snapshot"
-        );
-
-        let live_state =
-            spa_state_serving(ReleaseChannel::Canary, Some(SHELL_WITH_ENDPOINT_HOLES)).await;
-        let live = serve_spa_index(&live_state, &HeaderMap::new()).await;
-        assert_eq!(
-            live.headers()
-                .get("x-time-freeze")
-                .expect("the live response announced no snapshot decision")
-                .to_str()
-                .unwrap(),
-            "no-snapshot",
-            "a channel with no snapshot claimed one anyway"
-        );
-    }
-
-    #[cfg(feature = "time-freeze")]
-    #[tokio::test]
-    async fn the_frozen_shell_is_never_served_with_the_asset_lifetime() {
-        let state = spa_state_serving(ReleaseChannel::Stable, None).await;
-
-        let response = serve_spa_index(&state, &HeaderMap::new()).await;
-
-        assert_eq!(
-            response
-                .headers()
-                .get("x-time-freeze")
-                .expect("the response announced no snapshot decision")
-                .to_str()
-                .unwrap(),
-            format!(
-                "frozen; sha={}",
-                crate::frozen_snapshots::STABLE_SNAPSHOT.sha
-            ),
-            "this test never reached the frozen branch, so it proves nothing about it"
-        );
-        let cache_control = response
-            .headers()
-            .get(header::CACHE_CONTROL)
-            .expect("the frozen shell was served without a cache policy at all")
-            .to_str()
-            .unwrap();
-        assert_eq!(
-            cache_control, "no-cache",
-            "the frozen document naming the hashed bundle must be revalidated on every load"
-        );
-        assert_ne!(
-            cache_control, LONG_LIVED_ASSET_CACHE_CONTROL,
-            "a frozen shell cached for a year pins every returning visitor to the deployed-over bundle"
         );
     }
 
@@ -1174,9 +1285,11 @@ mod tests {
             .to_str()
             .unwrap();
         assert_eq!(
-            cache_control, "no-cache",
-            "the document naming the hashed bundle must be revalidated on every load"
+            cache_control, SHARED_SHELL_CACHE_CONTROL,
+            "the document naming the hashed bundle must be revalidated on every load and held \
+             by a shared cache for one second at most"
         );
+        assert!(response.headers().get(header::SET_COOKIE).is_none());
         assert_ne!(
             cache_control, LONG_LIVED_ASSET_CACHE_CONTROL,
             "a shell cached for a year pins every returning visitor to the deployed-over bundle"
@@ -1267,6 +1380,89 @@ mod tests {
             served.contains(r#"href="/web/favicon-32x32.png""#),
             "an unnamed static CDN left the favicon pointing somewhere other than our own origin"
         );
+    }
+
+    fn request_from_visitor(ip: &str, country: &str, language: &str) -> HeaderMap {
+        let mut headers = request_from_host("web.fluxer.app");
+        for (name, value) in [
+            ("x-forwarded-for", ip),
+            ("cf-connecting-ip", ip),
+            ("cf-ipcountry", country),
+            ("accept-language", language),
+            ("cookie", "session=visitor-specific"),
+        ] {
+            headers.insert(
+                HeaderName::from_static(name),
+                HeaderValue::from_str(value).unwrap(),
+            );
+        }
+        headers
+    }
+
+    #[tokio::test]
+    async fn every_visitor_to_a_host_gets_a_byte_identical_shell_and_policy() {
+        let mut state = assemble_spa_state(
+            ReleaseChannel::Stable,
+            Some(SHIPPED_APP_SHELL),
+            DISCOVERY_BODY_WITH_WEB_APP_ENDPOINTS,
+            None,
+            None,
+        )
+        .await;
+        let mut config = (*state.config).clone();
+        config.same_origin_hosts = vec!["web.fluxer.app".to_owned()];
+        config.trust_client_ip_header = true;
+        state.config = Arc::new(config);
+
+        let stockholm =
+            serve_spa_index(&state, &request_from_visitor("81.234.0.1", "SE", "sv-SE")).await;
+        let sao_paulo =
+            serve_spa_index(&state, &request_from_visitor("177.0.0.1", "BR", "pt-BR")).await;
+        assert_eq!(stockholm.status(), StatusCode::OK);
+        assert_eq!(sao_paulo.status(), StatusCode::OK);
+
+        let stockholm_policy = policy_of(&stockholm);
+        let sao_paulo_policy = policy_of(&sao_paulo);
+        assert_eq!(stockholm_policy, sao_paulo_policy);
+        assert!(stockholm.headers().get(header::SET_COOKIE).is_none());
+        assert!(sao_paulo.headers().get(header::SET_COOKIE).is_none());
+
+        let stockholm_body = read_document(stockholm).await;
+        let sao_paulo_body = read_document(sao_paulo).await;
+        assert_eq!(stockholm_body, sao_paulo_body);
+        assert!(!stockholm_body.contains("geoip"));
+        assert!(!stockholm_body.contains("countryCode"));
+        assert_every_inline_script_is_granted(&stockholm_body, &stockholm_policy);
+    }
+
+    #[tokio::test]
+    async fn the_shipped_shell_runs_every_inline_script_it_contains_under_its_policy() {
+        let state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let policy = policy_of(&response);
+        let served = read_document(response).await;
+
+        assert_eq!(
+            bare_inline_scripts_in(&served).len(),
+            bare_inline_scripts_in(SHIPPED_APP_SHELL).len() + 1,
+            "every inline script of fluxer_app/index.html plus the bootstrap must reach the document"
+        );
+        assert_every_inline_script_is_granted(&served, &policy);
+    }
+
+    #[tokio::test]
+    async fn an_index_upstream_document_is_granted_after_its_dev_cache_buster() {
+        let index_upstream_url = spawn_local_origin(SHIPPED_APP_SHELL, "text/html").await;
+        let state = spa_state_reading_its_shell_from(index_upstream_url).await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let policy = policy_of(&response);
+        let served = read_document(response).await;
+
+        assert_every_inline_script_is_granted(&served, &policy);
     }
 
     #[test]

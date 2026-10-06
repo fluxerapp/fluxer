@@ -16,6 +16,8 @@ const OFFICIAL_INVITE_URL_BASES = Object.freeze([
 	'https://canary.fluxer.app/invite',
 	'https://web.fluxer.app/invite',
 	'https://web.canary.fluxer.app/invite',
+	'https://fluxer.com/invite',
+	'https://canary.fluxer.com/invite',
 	'https://fluxer.gg',
 	'https://fluxer.gg/invite',
 ]);
@@ -29,7 +31,9 @@ const INVITE_CONFIG: CodeLinkUtils.CodeLinkConfig = {
 	},
 };
 const isLayoutTextChannel = (channel: Channel): boolean =>
-	channel.type === ChannelTypes.GUILD_TEXT || channel.type === ChannelTypes.GUILD_LINK;
+	channel.type === ChannelTypes.GUILD_TEXT ||
+	channel.type === ChannelTypes.GUILD_ANNOUNCEMENT ||
+	channel.type === ChannelTypes.GUILD_LINK;
 const isLayoutVoiceChannel = (channel: Channel): boolean => channel.type === ChannelTypes.GUILD_VOICE;
 
 function getChannelsInChannelListGroupOrder(channels: ReadonlyArray<Channel>): Array<Channel> {

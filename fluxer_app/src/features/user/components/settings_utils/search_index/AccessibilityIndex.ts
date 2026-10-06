@@ -231,7 +231,7 @@ const CONTEXT_MENU_SHORTCUTS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const RIGHT_CLICK_MENU_DESCRIPTOR = msg({
-	message: 'Right click menu',
+	message: 'Right-click menu',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MENU_SHORTCUTS_DESCRIPTOR = msg({
@@ -243,7 +243,7 @@ const DISPLAY_KEYBOARD_SHORTCUT_INDICATORS_NEXT_TO_CONTEXT_MENU_DESCRIPTOR = msg
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const SHOW_FOCUS_RING_ON_CHAT_TEXTAREA_DESCRIPTOR = msg({
-	message: 'Show focus ring on chat textarea',
+	message: 'Show focus ring on chat text area',
 	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
 });
 const FOCUS_RING_DESCRIPTOR = msg({
@@ -251,11 +251,11 @@ const FOCUS_RING_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TEXTAREA_DESCRIPTOR = msg({
-	message: 'Textarea',
+	message: 'Text area',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TEXTAREA_FOCUS_RING_DESCRIPTOR = msg({
-	message: 'Textarea focus ring',
+	message: 'Text area focus ring',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MESSAGE_INPUT_DESCRIPTOR = msg({

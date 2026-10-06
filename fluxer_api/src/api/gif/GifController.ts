@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GifProviderHeaderMiddleware} from '@app/api/gif/GifProviderHeaderMiddleware';
+import {resolveGifRequestCountry} from '@app/api/gif/GifRequestCountry';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	GifFeaturedResponse,
+	GifListResponse,
 	GifLocaleQuery,
 	GifRegisterShareRequest,
-	GifResponse,
 	GifSearchQuery,
+	GifSearchSuggestionsResponse,
 } from '@fluxer/schema/src/domains/gif/GifSchemas';
 import type {Context, MiddlewareHandler} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {z} from 'zod';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp, HonoEnv} from '../types/HonoEnv';
-import {Validator} from '../Validator';
-import {GifProviderHeaderMiddleware} from './GifProviderHeaderMiddleware';
-import {resolveGifRequestCountry} from './GifRequestCountry';
 
 const TAGS = ['GIFs'];
 
@@ -61,7 +61,7 @@ function registerRoutes(app: HonoApp, cfg: PrefixConfig) {
 		OpenAPI({
 			operationId: `search_${operationSuffix}`,
 			summary: `Search GIFs${deprecated ? ' (deprecated alias)' : ''}`,
-			responseSchema: z.array(GifResponse),
+			responseSchema: GifListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: [...tags],
@@ -109,7 +109,7 @@ function registerRoutes(app: HonoApp, cfg: PrefixConfig) {
 		OpenAPI({
 			operationId: `get_trending_${operationSuffix}`,
 			summary: `Get trending GIFs${deprecated ? ' (deprecated alias)' : ''}`,
-			responseSchema: z.array(GifResponse),
+			responseSchema: GifListResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: [...tags],
@@ -162,7 +162,7 @@ function registerRoutes(app: HonoApp, cfg: PrefixConfig) {
 		OpenAPI({
 			operationId: `get_${operationSuffix}_search_suggestions`,
 			summary: `Get GIF search suggestions${deprecated ? ' (deprecated alias)' : ''}`,
-			responseSchema: z.array(z.string()),
+			responseSchema: GifSearchSuggestionsResponse,
 			statusCode: 200,
 			security: ['bearerToken', 'sessionToken'],
 			tags: [...tags],

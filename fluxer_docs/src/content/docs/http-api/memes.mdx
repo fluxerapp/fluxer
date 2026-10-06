@@ -6,13 +6,13 @@ description: Saved favourite media and batch GIF URL resolution.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-A meme is an image, video, or audio asset the current account has saved as a favourite. Every meme is a durable Fluxer copy held as an account-owned attachment, so it keeps working after the URL or message it came from disappears.
+A meme is an image, video, or audio asset saved as a favourite. Fluxer stores a copy of the media with the meme. The copy remains available after the source URL or the source message is gone.
 
 The routes here are user-only and operate on the caller's own collection. Fluxer rejects a bot token with 403 `ACCESS_DENIED`. [Create message](/http-api/messages/#create-message) sends a stored meme through its `favorite_meme_id` field, and the [GIF provider API](/http-api/gifs/) searches the configured provider for a GIF to save.
 
 ## Collection limits
 
-Fluxer caps a collection at the instance-configured `max_favorite_memes` [limit](/http-api/instance/#limit-keys), with a fallback of 50. Both creation operations check the count before they touch the channel, the message, or the source URL, so an account at its limit is refused with 400 `MAX_FAVORITE_MEMES` even when the rest of the request would have failed. The error body has `max_favorite_memes` reporting the ceiling reached.
+Fluxer caps a collection at the instance-configured `max_favorite_memes` [limit](/http-api/instance/#limit-keys), with a fallback of 50. Both creation operations check the count before they look up the channel or the message and before they fetch the source URL, so an account at its limit is refused with 400 `MAX_FAVORITE_MEMES` even when the rest of the request would have failed. The error body has `max_favorite_memes` reporting the ceiling reached.
 
 A meme has at most `max_favorite_meme_tags` tags, with a fallback of 10. Fluxer rejects a longer list with 400 `INVALID_FORM_BODY` and the validation code `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path.
 
@@ -54,7 +54,7 @@ One media asset owned by one account. Fluxer resolves every media field at creat
 
 <sup>2</sup> [Save meme from message](#save-meme-from-message) falls back to the selected attachment's own description when the body supplies no non-empty alt text
 
-<sup>3</sup> `url` is the media endpoint followed by `attachments/{user_id}/{attachment_id}/{filename}`
+<sup>3</sup> `url` is the media endpoint followed by `attachments/{user_id}/{attachment_id}/{filename}`, and Fluxer signs it on every read as a [signed attachment URL](/http-api/messages/#signed-attachment-urls)
 
 <sup>4</sup> Set when the source attachment or embed was already animated, and when the Media Proxy reports the stored copy as animated
 
@@ -101,9 +101,9 @@ One descriptor describes one encoding of one provider GIF. A provider returns se
 | width<sup>1</sup> | integer | The width of this format in pixels |
 | height<sup>1</sup> | integer | The height of this format in pixels |
 
-<sup>1</sup> A non-negative value of at most 2147483647. A descriptor with an empty `src` or `proxy_src`, or a zero dimension, is unusable as a preview and is skipped
+<sup>1</sup> A non-negative value of at most 2147483647. A descriptor with an empty `src` or `proxy_src`, or a zero dimension, is skipped when Fluxer picks the [preview format](#resolved-gif-entry-object) for Resolve GIF URLs
 
-A client submitting a format map to [Save meme from URL](#save-meme-from-url) supplies all four members of every descriptor, and a descriptor missing one fails validation with 400 `INVALID_FORM_BODY`.
+A client submitting a format map to [Save meme from URL](#save-meme-from-url) supplies all members of every descriptor, and a descriptor missing one fails validation with 400 `INVALID_FORM_BODY`.
 
 ## GIF media format names
 
@@ -171,7 +171,6 @@ The account's [collection limit](#collection-limits) bounds how many entries the
 | --- | --- | --- |
 | 200 | array[[meme](#meme-object) object] | Collection was returned, possibly as an empty array |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 ### Rate limit
 
@@ -199,13 +198,13 @@ Fetches an absolute media URL, stores a durable Fluxer copy, and returns the cre
 
 <sup>2</sup> An omitted or null value is an empty tag list
 
-<sup>3</sup> Honoured together only when `gif_provider` names the configured provider. Otherwise Fluxer extracts a slug from `url` with the configured provider
+<sup>3</sup> Fluxer uses the supplied pair only when both are present and `gif_provider` names the configured provider. Otherwise Fluxer extracts a slug from `url` with the configured provider
 
 <sup>4</sup> Stored only when the request resolved to a provider GIF and the map is non-empty, and discarded otherwise
 
-The stored filename is the last path segment of `url` after percent-decoding. Fluxer appends an extension inferred from the resolved content type when that segment has no dot. It then normalises the result so whitespace becomes `_` and every character outside letters, digits, combining marks, `_`, `.`, and `-` is dropped. A URL path with no last segment yields `media.{extension}`. Where the segment normalises to nothing, or to only dots and underscores, the filename is `unnamed`. The extension is `bin` when the content type maps to none.
+The filename is derived from the URL and media type. Use the returned `filename` rather than constructing one.
 
-Fluxer fetches the asset and resolves its metadata before it stores anything. A URL that resolves to no usable media fails with 400 `MEDIA_METADATA_ERROR`. When the request resolves to a provider GIF, the provider's canonical share URL is unfurled and the video content hash it reports replaces the fetched hash for [deduplication](#deduplication).
+A URL that resolves to no usable media fails with 400 `MEDIA_METADATA_ERROR`. Saving media already in the collection fails as described under [Deduplication](#deduplication).
 
 ### Response
 
@@ -216,13 +215,10 @@ Fluxer fetches the asset and resolves its metadata before it stores anything. A 
 | 400 | [error response](/http-api/#error-response) | The URL resolves to no usable media with `MEDIA_METADATA_ERROR` |
 | 400 | [error response](/http-api/#error-response) | The collection is at its limit with `MAX_FAVORITE_MEMES` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 <sup>5</sup> Including `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path and `MEDIA_ALREADY_IN_FAVORITE_MEMES` at the `media` path
 
 ### Side effects
-
-The meme is created against a new attachment of its own holding the fetched bytes.
 
 The operation emits one [Favorite Meme Create](/gateway/events/#favorite-meme-create) with the created object to the caller's own sessions.
 
@@ -236,7 +232,7 @@ The operation emits one [Favorite Meme Create](/gateway/events/#favorite-meme-cr
 
 Copies one attachment or one embed asset from a readable message into the caller's own collection and returns the created [meme object](#meme-object). Requires [VIEW_CHANNEL](/http-api/permissions/) in a guild channel. Emits a [Favorite Meme Create](/gateway/events/#favorite-meme-create) Gateway event.
 
-A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can select media only from a message on or after the guild's message history cutoff. Attachments and embeds in the message's forwarded snapshots are selectable alongside its own.
+A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can select media only from a message on or after the guild's [message history cutoff](/http-api/messages/). Attachments and embeds in the message's forwarded snapshots are selectable alongside its own.
 
 ### Path parameters
 
@@ -255,7 +251,7 @@ A guild caller without [READ_MESSAGE_HISTORY](/http-api/permissions/) can select
 | alt_text?<sup>3</sup> | ?string | The accessibility description of the media (0-500 characters) |
 | tags? | ?array[string] | The search tags to store, each 1-30 characters |
 
-<sup>1</sup> At least one of the two keys must be present, and a body with neither fails validation. Both may be present as null, which selects nothing explicitly
+<sup>1</sup> At least one of the keys must be present, and a body with neither fails validation. Both may be present as null, which selects nothing explicitly
 
 <sup>2</sup> `embed_index` takes precedence when both have a value, and an index outside the combined embed list fails with `EMBED_INDEX_OUT_OF_BOUNDS`
 
@@ -265,7 +261,7 @@ When neither key selects anything, Fluxer takes the message's first attachment. 
 
 Only an `image/*`, `video/*`, or `audio/*` asset can be saved. `attachment_id` is matched only when the message or one of its snapshots has at least one attachment. An ID matching none of them fails with `ATTACHMENT_ID_NOT_FOUND_IN_MESSAGE` at the `attachment_id` path. When the message has no attachment at all, Fluxer ignores the ID and takes the first usable embed. Only the selected attachment is tried, so a message whose chosen attachment has an unsupported type falls through to its embeds. A selection that resolves to no supported media fails with `NO_VALID_MEDIA_IN_MESSAGE` at the `media` path.
 
-An embed selection uses the embed's image, video, or thumbnail, in that order. When the URL is one the instance's own media endpoint serves, Fluxer copies the asset without a fetch. Any other URL is fetched over the network, and a fetch that resolves no metadata fails with 400 `MEDIA_METADATA_ERROR`.
+An embed selection uses its image, video, or thumbnail, in that order. Media whose metadata cannot be resolved fails with 400 `MEDIA_METADATA_ERROR`.
 
 ### Response
 
@@ -276,7 +272,6 @@ An embed selection uses the embed's image, video, or thumbnail, in that order. W
 | 400 | [error response](/http-api/#error-response) | External media metadata cannot be resolved with `MEDIA_METADATA_ERROR` |
 | 400 | [error response](/http-api/#error-response) | The collection is at its limit with `MAX_FAVORITE_MEMES` |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 403 | [error response](/http-api/#error-response) | The caller is not a member of the guild or lacks `VIEW_CHANNEL` and the request returns `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The channel requires age verification the account has not completed and the request returns `NSFW_CONTENT_AGE_RESTRICTED` |
 | 404 | [error response](/http-api/#error-response) | Channel is unavailable or the caller is not a recipient of it with `UNKNOWN_CHANNEL` |
@@ -290,7 +285,7 @@ A guild caller that can view the channel but lacks `READ_MESSAGE_HISTORY` receiv
 
 ### Side effects
 
-Fluxer copies the selected asset into the account's own attachment space under a new attachment ID and creates the meme record against that attachment. Reading the source message renews its attachment decay deadline when attachment decay is enabled. The source message, its attachments, and its embeds are untouched.
+The meme gets its own copy of the selected asset. Reading the source message renews its attachment decay deadline when attachment decay is enabled. The source message is otherwise unchanged.
 
 The operation emits one [Favorite Meme Create](/gateway/events/#favorite-meme-create) with the created object to the caller's own sessions.
 
@@ -316,7 +311,6 @@ Returns one [meme object](#meme-object) owned by the current account.
 | --- | --- | --- |
 | 200 | [meme](#meme-object) object | Meme was returned |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 404 | [error response](/http-api/#error-response) | Meme is unknown or belongs to another account with `UNKNOWN_FAVORITE_MEME` |
 
 ### Rate limit
@@ -360,7 +354,6 @@ Fluxer checks the tag allowance against the resulting list, so a request omittin
 | 200 | [meme](#meme-object) object | Meme was updated |
 | 400 | [error response](/http-api/#error-response) | Path, name, alt text, or tag length fails validation with `INVALID_FORM_BODY`<sup>3</sup> |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 404 | [error response](/http-api/#error-response) | Meme is unknown or belongs to another account with `UNKNOWN_FAVORITE_MEME` |
 
 <sup>3</sup> Including `MAX_FAVORITE_MEME_TAGS_EXCEEDED` at the `tags` path
@@ -397,11 +390,10 @@ Every meme owns its stored bytes, so deletion removes them permanently. The meme
 | --- | --- | --- |
 | 204 | empty | Meme was deleted, or no owned meme existed |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 ### Side effects
 
-The operation removes the meme record and permanently deletes its stored copy. A storage failure is logged and does not fail the request, so the record is removed either way.
+The meme is removed from the collection even if its stored copy cannot be deleted.
 
 It emits one [Favorite Meme Delete](/gateway/events/#favorite-meme-delete) with `meme_id` to the caller's own sessions. A request naming a meme the account does not own emits nothing.
 
@@ -423,7 +415,7 @@ A client uses it to turn stored URL-only favourite GIFs into renderable picker e
 | --- | --- | --- |
 | Accept-Language?<sup>1</sup> | string | The preferred locale used for a GIF provider lookup |
 
-<sup>1</sup> Resolved against the [supported locale registry](/topics/locales/#supported-locales), replaced by the account's own stored locale, and defaulting to `en-US`
+<sup>1</sup> Fluxer uses the account's stored locale when it has one. Otherwise it matches this header against the [supported locale registry](/topics/locales/#supported-locales), and it falls back to `en-US`
 
 Fluxer derives a two-letter country from the requesting address by geolocation, with `US` as the fallback.
 
@@ -441,15 +433,14 @@ Fluxer derives a two-letter country from the requesting address by geolocation, 
 
 <sup>1</sup> Exactly one entry per submitted URL, in the submitted order, so a client may index the result by position against its request
 
-Fluxer resolves a URL in three stages. It offers the URL to the configured GIF provider, then reads it as direct external media, and then unfurls it as a page when the direct read produced no renderable image or video. When a stage fails, Fluxer downgrades that URL's entry alone. A URL that none of the three stages resolves still returns an entry, with its signed proxy URL, an empty `media` map, and whatever the direct read reported. Dimensions are zero and `content_type` is the empty string when the direct read reported nothing.
+An unresolved URL still returns an entry with its signed proxy URL and an empty `media` map. Unavailable dimensions are zero and an unknown `content_type` is the empty string. One URL's failure does not fail the batch.
 
 ### Response
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | Every URL was resolved |
+| 200 | response body | One entry was returned for each URL, including URLs that did not resolve |
 | 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED` |
-| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 
 ### Rate limit
 

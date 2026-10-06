@@ -1,14 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuildID} from '../../BrandedTypes';
-import {ChannelRepository} from '../../channel/ChannelRepository';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuildID} from '@app/api/BrandedTypes';
+import {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -19,7 +13,13 @@ import {
 	getChannel,
 	getGuildChannels,
 	updateChannelPositions,
-} from './GuildTestUtils';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Guild Channel Positions', () => {
 	let harness: ApiTestHarness;
@@ -197,7 +197,7 @@ describe('Guild Channel Positions', () => {
 		const channels = await getGuildChannels(harness, account.token, guild.id);
 		const general = channels.find((channel) => channel.type === ChannelTypes.GUILD_TEXT && channel.name === 'general');
 		const voiceCategory = channels.find(
-			(channel) => channel.type === ChannelTypes.GUILD_CATEGORY && channel.name === 'Voice Channels',
+			(channel) => channel.type === ChannelTypes.GUILD_CATEGORY && channel.name === 'Voice channels',
 		);
 		const generalVoice = channels.find(
 			(channel) => channel.type === ChannelTypes.GUILD_VOICE && channel.name === 'General',

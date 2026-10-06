@@ -29,7 +29,7 @@ handle(<<"guild.get_online_counts_batch">>, #{<<"guild_ids">> := GuildIdsBin}) -
 fetch_entries(GuildIds) ->
     case guild_counts_cache_supports_bulk_get() of
         true -> normalize_entries(fetch_bulk(GuildIds));
-        false -> [E || GId <- GuildIds, (E = fetch_single(GId)) =/= undefined]
+        false -> [E || GId <- GuildIds, E <- [fetch_single(GId)], E =/= undefined]
     end.
 
 -spec fetch_single(integer()) -> map() | undefined.
@@ -61,7 +61,7 @@ guild_counts_cache_supports_bulk_get() ->
 
 -spec normalize_entries(term()) -> [map()].
 normalize_entries(Entries) when is_list(Entries) ->
-    [N || E <- Entries, (N = normalize_entry(E)) =/= undefined];
+    [N || E <- Entries, N <- [normalize_entry(E)], N =/= undefined];
 normalize_entries(Entries) when is_map(Entries) ->
     normalize_entries(map_entries(Entries));
 normalize_entries(_) ->

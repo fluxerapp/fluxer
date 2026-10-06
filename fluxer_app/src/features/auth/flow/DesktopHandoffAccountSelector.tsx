@@ -9,11 +9,6 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useState} from 'react';
 
-const SESSION_EXPIRED_PLEASE_SIGN_IN_AGAIN_DESCRIPTOR = msg({
-	message: 'Session expired. Sign in again.',
-	comment:
-		'Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.',
-});
 const FAILED_TO_GENERATE_TOKEN_DESCRIPTOR = msg({
 	message: 'Failed to generate token',
 	comment: 'Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.',
@@ -22,12 +17,14 @@ const FAILED_TO_GENERATE_TOKEN_DESCRIPTOR = msg({
 interface DesktopHandoffAccountSelectorProps {
 	excludeCurrentUser?: boolean;
 	onSelectNewAccount: () => void;
+	onReLoginAccount: (account: Account) => void;
 	onAccountSelected: (payload: {token: string; userId: string}) => void;
 }
 
 const DesktopHandoffAccountSelector = observer(function DesktopHandoffAccountSelector({
 	excludeCurrentUser = false,
 	onSelectNewAccount,
+	onReLoginAccount,
 	onAccountSelected,
 }: DesktopHandoffAccountSelectorProps) {
 	const {i18n} = useLingui();
@@ -38,6 +35,10 @@ const DesktopHandoffAccountSelector = observer(function DesktopHandoffAccountSel
 	const accounts = excludeCurrentUser ? allAccounts.filter((account) => account.userId !== currentUserId) : allAccounts;
 	const handleSelectAccount = useCallback(
 		async (account: Account) => {
+			if (account.isValid === false) {
+				onReLoginAccount(account);
+				return;
+			}
 			setIsLoading(true);
 			setError(null);
 			try {
@@ -48,7 +49,7 @@ const DesktopHandoffAccountSelector = observer(function DesktopHandoffAccountSel
 				onAccountSelected({token, userId});
 			} catch (err) {
 				if (err instanceof SessionExpiredError) {
-					setError(i18n._(SESSION_EXPIRED_PLEASE_SIGN_IN_AGAIN_DESCRIPTOR));
+					onReLoginAccount(AccountManager.accounts.get(account.userId) ?? account);
 				} else {
 					setError(
 						err && typeof err === 'object' && 'body' in err
@@ -60,13 +61,14 @@ const DesktopHandoffAccountSelector = observer(function DesktopHandoffAccountSel
 				setIsLoading(false);
 			}
 		},
-		[onAccountSelected, i18n],
+		[onAccountSelected, onReLoginAccount, i18n],
 	);
 	return (
 		<AccountSelector
 			accounts={accounts}
+			currentAccountId={currentUserId}
 			title={<Trans>Choose an account</Trans>}
-			description={<Trans>Select the account you want to sign in with on the desktop app.</Trans>}
+			description={<Trans>Select the account you want to sign in with on your new device.</Trans>}
 			disabled={isLoading}
 			error={error}
 			clickableRows

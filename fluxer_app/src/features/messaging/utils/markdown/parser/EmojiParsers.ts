@@ -4,17 +4,21 @@ export interface UnicodeEmoji {
 	surrogates: string;
 }
 
+export interface EmojiSurrogateMatch {
+	start: number;
+	end: number;
+	name: string | null;
+}
+
 export interface EmojiProvider {
-	getSurrogateName(surrogate: string): string | null;
+	matchEmojiSurrogates(text: string): Iterable<EmojiSurrogateMatch>;
 	findEmojiByName(name: string): UnicodeEmoji | null;
 	findEmojiWithSkinTone(baseName: string, skinToneSurrogate: string): UnicodeEmoji | null;
 }
 
 export interface EmojiParserConfig {
 	emojiProvider?: EmojiProvider;
-	emojiRegex?: RegExp;
 	skinToneSurrogates?: ReadonlyArray<string>;
-	convertToCodePoints?: (emoji: string) => string;
 }
 
 let globalEmojiConfig: EmojiParserConfig | null = null;

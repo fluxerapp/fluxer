@@ -5,15 +5,23 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
 	CANARY_APP_URL,
+	CANARY_MIGRATED_APP_ORIGIN,
 	DEFAULT_WINDOW_HEIGHT,
 	DEFAULT_WINDOW_WIDTH,
 	MIN_WINDOW_HEIGHT,
 	MIN_WINDOW_WIDTH,
 	STABLE_APP_URL,
+	STABLE_MIGRATED_APP_ORIGIN,
 } from '@electron/common/Constants';
-import {getAppUrl, getCustomAppUrl, getDesktopWindowBehaviorSettings} from '@electron/common/DesktopConfig';
+import {
+	getAppUrl,
+	getAppUrlFallback,
+	getCustomAppUrl,
+	getDesktopWindowBehaviorSettings,
+} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
 import type {DesktopWindowBehaviorSettings} from '@electron/common/Types';
+import {createAppLoadRetry} from '@electron/main/AppLoadRetry';
 import {
 	shouldForwardRendererConsoleToMainLog,
 	shouldIgnoreWindowStateForLaunch,
@@ -22,19 +30,18 @@ import {
 import {hasActiveDesktopTray, refreshDesktopTrayMenu} from '@electron/main/DesktopTray';
 import {drainPendingDisplayMediaRequests, registerDisplayMediaRequestHandler} from '@electron/main/DisplayMedia';
 import {shouldDisableV8CodeCache} from '@electron/main/LaunchOptions';
+import {t} from '@electron/main/MainI18n';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {registerSpellcheck} from '@electron/main/Spellcheck';
 import {resetStreamingPriority} from '@electron/main/StreamingPriority';
 import {getMainWindowRendererGoneAction} from '@electron/main/WindowRendererLifecycle';
 import {refreshWindowsBadgeOverlay} from '@electron/main/WindowsBadge';
-import {app, BrowserWindow, screen} from 'electron';
+import {app, BrowserWindow, dialog, screen} from 'electron';
 import log from 'electron-log';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const logger = createChildLogger('Window');
 const VISIBILITY_MARGIN = 32;
-const INITIAL_APP_LOAD_RETRY_DELAY_MS = 1000;
-const MAX_APP_LOAD_RETRY_DELAY_MS = 30000;
 const RENDERER_GONE_REPEAT_WINDOW_MS = 30000;
 const OPAQUE_WINDOW_BACKGROUND_COLOR = '#1a1a1a';
 const TRANSPARENT_WINDOW_BACKGROUND_COLOR = '#00000000';
@@ -60,7 +67,7 @@ const CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION = {
 	y: Math.round((CUSTOM_TITLEBAR_HEIGHT_MAC - CUSTOM_TITLEBAR_TRAFFIC_LIGHT_DIAMETER) / 2),
 };
 const trustedWebOrigins = new Set(
-	[STABLE_APP_URL, CANARY_APP_URL]
+	[STABLE_APP_URL, CANARY_APP_URL, STABLE_MIGRATED_APP_ORIGIN, CANARY_MIGRATED_APP_ORIGIN]
 		.map((url) => {
 			try {
 				return new URL(url).origin;
@@ -83,18 +90,6 @@ const trustedRendererPermissionTypes = new Set([
 	'clipboard-sanitized-write',
 ]);
 const POPOUT_NAMESPACE = 'fluxer_';
-
-function shouldRetryAppLoadFailure(errorCode: number): boolean {
-	return errorCode < 0 && errorCode !== -3;
-}
-
-function getElectronLoadErrorCode(error: unknown): number | null {
-	const message = error instanceof Error ? error.message : String(error);
-	const match = /\(([-\d]+)\)/.exec(message);
-	if (!match) return null;
-	const value = Number.parseInt(match[1], 10);
-	return Number.isFinite(value) ? value : null;
-}
 
 function getOrigin(url?: string): string | null {
 	if (!url) return null;
@@ -726,7 +721,6 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 	const acceptFirstMouseOnFocus = isMac;
 	initialUseNativeTitleBar = useNativeTitleBar;
 	initialAllowTransparency = allowTransparency;
-	const appUrl = getAppUrl();
 	const windowOptions: Electron.BrowserWindowConstructorOptions = {
 		width: windowWidth,
 		height: windowHeight,
@@ -739,7 +733,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		...getTitleBarWindowOptions(useNativeTitleBar),
 		trafficLightPosition: isMac ? CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION : undefined,
 		acceptFirstMouse: acceptFirstMouseOnFocus,
-		webPreferences: getSharedWebPreferences(allowTransparency, useNativeTitleBar, appUrl),
+		webPreferences: getSharedWebPreferences(allowTransparency, useNativeTitleBar, getAppUrl()),
 	};
 	if (isLinux) {
 		const iconPath = getLinuxWindowIconPath();
@@ -969,60 +963,55 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 	});
 	registerDisplayMediaRequestHandler(session, webContents);
 	logPhase('handlers');
-	let appLoadRetryAttempt = 0;
-	let appLoadRetryTimer: NodeJS.Timeout | null = null;
-	const clearAppLoadRetry = () => {
+	let appLoadFailurePrompt: AbortController | null = null;
+	const dismissAppLoadFailurePrompt = () => {
+		appLoadFailurePrompt?.abort();
+		appLoadFailurePrompt = null;
+	};
+	const appLoadRetry = createAppLoadRetry({
+		webContents,
+		appUrl: getAppUrl(),
+		logger,
+		isTrustedUrl: isTrustedOrigin,
+		getFallbackUrl: getAppUrlFallback,
+		onCommitted: dismissAppLoadFailurePrompt,
+		onRepeatedFailure: (failure) => {
+			const window = mainWindow;
+			if (appLoadFailurePrompt || !isAliveWindow(window) || !window.isVisible()) return;
+			const prompt = new AbortController();
+			appLoadFailurePrompt = prompt;
+			void dialog
+				.showMessageBox(window, {
+					type: 'warning',
+					buttons: [t('desktop.appLoad.retry'), t('desktop.tray.quit')],
+					defaultId: 0,
+					cancelId: 0,
+					title: t('desktop.appLoad.failedTitle'),
+					message: t('desktop.appLoad.failedMessage'),
+					detail: `${failure.errorDescription} (${failure.errorCode})\n${failure.url}`,
+					noLink: true,
+					signal: prompt.signal,
+				})
+				.then(({response}) => {
+					if (appLoadFailurePrompt === prompt) appLoadFailurePrompt = null;
+					if (prompt.signal.aborted || isQuitting) return;
+					if (response === 1) {
+						app.quit();
+						return;
+					}
+					appLoadRetry.retryNow();
+				});
+		},
+	});
+	webContents.on('did-finish-load', () => {
 		rendererGoneReloaded = false;
 		mainWindowRendererGone = false;
-		if (appLoadRetryTimer) {
-			clearTimeout(appLoadRetryTimer);
-			appLoadRetryTimer = null;
-		}
-		appLoadRetryAttempt = 0;
-	};
-	const scheduleAppLoadRetry = (reason: string, detail?: Record<string, unknown>) => {
-		if (!mainWindow || mainWindow.isDestroyed()) return;
-		if (appLoadRetryTimer) return;
-		const delay = Math.min(INITIAL_APP_LOAD_RETRY_DELAY_MS * 2 ** appLoadRetryAttempt, MAX_APP_LOAD_RETRY_DELAY_MS);
-		appLoadRetryAttempt += 1;
-		logger.warn('Scheduling app load retry', {reason, delay, attempt: appLoadRetryAttempt, ...detail});
-		appLoadRetryTimer = setTimeout(() => {
-			appLoadRetryTimer = null;
-			if (!mainWindow || mainWindow.isDestroyed()) return;
-			if (mainWindow.webContents.isLoadingMainFrame()) {
-				scheduleAppLoadRetry('main-frame-still-loading');
-				return;
-			}
-			mainWindow.loadURL(appUrl).catch((error) => {
-				scheduleAppLoadRetry('load-url-rejected', {error});
-			});
-		}, delay);
-	};
-	webContents.on('did-finish-load', clearAppLoadRetry);
-	webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
-		if (isMainFrame) {
-			logger.error('App main-frame load failed', {errorCode, errorDescription, validatedURL});
-		}
-		if (!isMainFrame || !isTrustedOrigin(validatedURL) || !shouldRetryAppLoadFailure(errorCode)) {
-			return;
-		}
-		scheduleAppLoadRetry('did-fail-load', {errorCode, errorDescription, validatedURL});
 	});
-	const loadAppUrl = (): void => {
-		if (!mainWindow || mainWindow.isDestroyed()) return;
-		logger.info('Loading app URL', {appUrl});
-		mainWindow.loadURL(appUrl).catch((error) => {
-			const errorCode = getElectronLoadErrorCode(error);
-			if (errorCode !== null && !shouldRetryAppLoadFailure(errorCode)) {
-				logger.info('Ignoring non-retryable initial app load rejection', {errorCode});
-				return;
-			}
-			logger.error('Failed to load app URL:', error);
-			scheduleAppLoadRetry('initial-load-url-rejected', {error});
-		});
+	void clearStartupRenderingCaches(session).then(() => {
+		if (!isAliveWindow(mainWindow)) return;
+		appLoadRetry.start();
 		logPhase('load-url-dispatched');
-	};
-	void clearStartupRenderingCaches(session).then(loadAppUrl);
+	});
 	webContents.on('will-navigate', (event, url) => {
 		if (!isTrustedOrigin(url)) {
 			event.preventDefault();
@@ -1067,7 +1056,11 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 				transparent: allowPopoutTransparency,
 				hasShadow: getWindowHasShadow(allowPopoutTransparency),
 				show: true,
-				webPreferences: getSharedWebPreferences(allowPopoutTransparency, getActiveUseNativeTitleBar(), appUrl),
+				webPreferences: getSharedWebPreferences(
+					allowPopoutTransparency,
+					getActiveUseNativeTitleBar(),
+					appLoadRetry.getAppUrl(),
+				),
 			};
 			return {action: 'allow', overrideBrowserWindowOptions};
 		}

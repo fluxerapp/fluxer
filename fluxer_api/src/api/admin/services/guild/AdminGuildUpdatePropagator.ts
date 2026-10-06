@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {Guild} from '@app/api/models/Guild';
+import {getGuildSearchService} from '@app/api/SearchFactory';
+import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {GuildID, UserID} from '../../../BrandedTypes';
-import {mapGuildToGuildResponse} from '../../../guild/GuildModel';
-import type {IGuildDiscoveryRepository} from '../../../guild/repositories/GuildDiscoveryRepository';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import {Logger} from '../../../Logger';
-import type {Guild} from '../../../models/Guild';
-import {getGuildSearchService} from '../../../SearchFactory';
-import type {GuildDiscoveryContext} from '../../../search/guild/GuildSearchSerializer';
 
 interface AdminGuildUpdatePropagatorDeps {
 	gatewayService: IGatewayService;

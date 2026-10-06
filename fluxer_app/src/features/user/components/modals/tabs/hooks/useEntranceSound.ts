@@ -4,6 +4,7 @@ import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {
 	ENTRANCE_SOUND_FILE_PICKER_ACCEPT,
 	type EntranceSoundFileValidationResult,
@@ -14,6 +15,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
+import {handleAccountLimitedError} from '@app/features/user/utils/AccountLimitUtils';
 import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
 import {
 	openEntranceSoundTrimmerModal,
@@ -74,14 +76,6 @@ const ENTRANCE_SOUNDS_NOT_ENABLED_DESCRIPTOR = msg({
 
 const logger = new Logger('useEntranceSound');
 
-function formatByteLimit(bytes: number): string {
-	if (bytes >= 1024 * 1024) {
-		const mb = bytes / (1024 * 1024);
-		return `${mb % 1 === 0 ? mb.toFixed(0) : mb.toFixed(1)}MB`;
-	}
-	return `${Math.floor(bytes / 1024)}KB`;
-}
-
 export interface UseEntranceSoundReturn {
 	library: Array<EntranceSoundEntry>;
 	libraryFull: boolean;
@@ -123,7 +117,7 @@ function validationErrorMessage(
 	validation: Extract<EntranceSoundFileValidationResult, {valid: false}>,
 ): string {
 	if (validation.reason === 'too_large') {
-		return i18n._(ENTRANCE_SOUND_TOO_LARGE_DESCRIPTOR, {limit: formatByteLimit(ENTRANCE_SOUND_MAX_BYTES)});
+		return i18n._(ENTRANCE_SOUND_TOO_LARGE_DESCRIPTOR, {limit: formatFileSize(i18n.locale, ENTRANCE_SOUND_MAX_BYTES)});
 	}
 	return i18n._(ENTRANCE_SOUND_INVALID_FORMAT_DESCRIPTOR);
 }
@@ -161,6 +155,7 @@ function useEntranceSoundImpl(selectedScope: EntranceSoundScope): UseEntranceSou
 				});
 			} catch (error) {
 				logger.error('Failed to set entrance sound selection', error);
+				if (handleAccountLimitedError(error)) return;
 				showUserErrorModal(
 					i18n._(
 						soundId === null ? COULDN_T_REMOVE_ENTRANCE_SOUND_DESCRIPTOR : COULDN_T_SAVE_ENTRANCE_SOUND_DESCRIPTOR,
@@ -181,7 +176,9 @@ function useEntranceSoundImpl(selectedScope: EntranceSoundScope): UseEntranceSou
 				ToastCommands.createToast({type: 'success', children: i18n._(ENTRANCE_SOUND_SAVED_DESCRIPTOR)});
 			} catch (error) {
 				logger.error('Failed to upload trimmed entrance sound', error);
-				showUserErrorModal(i18n._(COULDN_T_SAVE_ENTRANCE_SOUND_DESCRIPTOR), i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
+				if (!handleAccountLimitedError(error)) {
+					showUserErrorModal(i18n._(COULDN_T_SAVE_ENTRANCE_SOUND_DESCRIPTOR), i18n._(TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR));
+				}
 				throw error;
 			}
 		},

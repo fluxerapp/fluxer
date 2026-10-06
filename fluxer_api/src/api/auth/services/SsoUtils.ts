@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
 import {ms} from 'itty-time';
-import {Logger} from '../../Logger';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {parseJsonRecord} from '../../utils/JsonBoundaryUtils';
 
 interface DiscoveredOidcProviderMetadata {
 	issuer: string;
@@ -52,7 +53,10 @@ export function parseTokenEndpointResponse(
 }
 
 function buildDiscoveryUrl(issuer: string): URL {
-	const issuerUrl = new URL(issuer);
+	const issuerUrl = URL.parse(issuer);
+	if (!issuerUrl) {
+		throw new Error('Invalid OIDC issuer URL');
+	}
 	const normalized = issuerUrl.toString().replace(/\/$/, '');
 	return new URL(`${normalized}/.well-known/openid-configuration`);
 }
@@ -71,7 +75,10 @@ export async function tryDiscoverOidcProviderMetadata(issuer: string): Promise<D
 			timeout: ms('10 seconds'),
 			serviceName: 'sso_oidc_discovery',
 		});
-		if (resp.status < 200 || resp.status >= 300) return null;
+		if (resp.status < 200 || resp.status >= 300) {
+			FetchUtils.discardResponseBody(resp.stream, resp.status);
+			return null;
+		}
 		const rawBody = await FetchUtils.streamToStringWithLimit(resp.stream, {
 			maxBytes: EXTERNAL_RESPONSE_LIMITS.ssoDiscoveryBytes,
 			headers: resp.headers,
@@ -94,7 +101,7 @@ export async function tryDiscoverOidcProviderMetadata(issuer: string): Promise<D
 			jwks_uri: typeof json['jwks_uri'] === 'string' ? json['jwks_uri'] : undefined,
 		};
 	} catch (error) {
-		Logger.debug({issuer, error}, 'Failed to discover OIDC provider metadata');
+		Logger.debug({issuer: formatUrlForDiagnostics(issuer), error}, 'Failed to discover OIDC provider metadata');
 		return null;
 	}
 }

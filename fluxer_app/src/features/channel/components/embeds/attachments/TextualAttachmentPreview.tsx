@@ -9,6 +9,10 @@ import {CsvAttachmentTablePanel} from '@app/features/channel/components/embeds/a
 import {TextualAttachmentCodePanel} from '@app/features/channel/components/embeds/attachments/TextualAttachmentCodePanel';
 import styles from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreview.module.css';
 import {TextualAttachmentPreviewBottomSheet} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet';
+import {
+	fetchTextualPreviewText,
+	PreviewSizeLimitError,
+} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewFetch';
 import {TextualAttachmentPreviewFooter} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter';
 import {TextualAttachmentPreviewModal} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewModal';
 import {
@@ -34,6 +38,7 @@ import {
 	TEXT_PREVIEW_MAX_BYTES,
 } from '@app/features/messaging/utils/AttachmentPreviewUtils';
 import {downloadFile} from '@app/features/messaging/utils/FileDownloadUtils';
+import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {MAX_CODE_HIGHLIGHT_SOURCE_LENGTH} from '@fluxer/constants/src/LimitConstants';
@@ -42,55 +47,7 @@ import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {type MouseEvent, useCallback, useEffect, useMemo, useState} from 'react';
 
-class PreviewSizeLimitError extends Error {
-	constructor() {
-		super('Attachment preview exceeds the size limit');
-		this.name = 'PreviewSizeLimitError';
-	}
-}
-
-async function readPreviewText(response: Response): Promise<string> {
-	const contentLength = response.headers.get('content-length');
-	if (contentLength !== null) {
-		const parsedContentLength = Number(contentLength);
-		if (Number.isFinite(parsedContentLength) && parsedContentLength > TEXT_PREVIEW_MAX_BYTES) {
-			throw new PreviewSizeLimitError();
-		}
-	}
-	const body = response.body;
-	if (!body) {
-		throw new Error('Attachment preview response has no readable body');
-	}
-	const reader = body.getReader();
-	const chunks: Array<Uint8Array> = [];
-	let totalBytes = 0;
-	try {
-		while (true) {
-			const {done, value} = await reader.read();
-			if (done) {
-				break;
-			}
-			if (!value) {
-				continue;
-			}
-			totalBytes += value.byteLength;
-			if (totalBytes > TEXT_PREVIEW_MAX_BYTES) {
-				await reader.cancel().catch(() => undefined);
-				throw new PreviewSizeLimitError();
-			}
-			chunks.push(value);
-		}
-	} finally {
-		reader.releaseLock();
-	}
-	const bytes = new Uint8Array(totalBytes);
-	let offset = 0;
-	for (const chunk of chunks) {
-		bytes.set(chunk, offset);
-		offset += chunk.byteLength;
-	}
-	return new TextDecoder().decode(bytes);
-}
+const logger = new Logger('TextualAttachmentPreview');
 
 export const TextualAttachmentPreview = observer(function TextualAttachmentPreview({
 	attachment,
@@ -143,13 +100,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 		setStatus('loading');
 		setPreviewError(null);
 		const controller = new AbortController();
-		fetch(attachment.url, {signal: controller.signal})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error(response.statusText || 'Failed to load preview');
-				}
-				return readPreviewText(response);
-			})
+		fetchTextualPreviewText(attachment.url, controller.signal)
 			.then((value) => {
 				if (controller.signal.aborted) {
 					return;
@@ -168,7 +119,8 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 					return;
 				}
 				setStatus('error');
-				setPreviewError({type: 'network', message: error?.message ?? 'Failed to load preview'});
+				logger.warn({error, attachmentId: attachment.id}, 'Unable to load attachment preview');
+				setPreviewError({type: 'network'});
 			});
 		return () => controller.abort();
 	}, [attachment.id, attachment.size, attachment.url, shouldFetchPreview]);
@@ -194,7 +146,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 			},
 		);
 		return [...lines.slice(0, MAX_EXPANDED_PREVIEW_LINES), remainingLinesLabel].join('\n');
-	}, [i18n, isExpanded, textContent]);
+	}, [i18n.locale, isExpanded, textContent]);
 	const inlineCsvRows = useMemo<CsvRows | null>(() => {
 		if (!isCsvPreview || csvRows === null) {
 			return null;
@@ -211,7 +163,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 			},
 		);
 		return [...csvRows.slice(0, MAX_EXPANDED_PREVIEW_LINES), [remainingRowsLabel]];
-	}, [csvRows, i18n, isCsvPreview, isExpanded]);
+	}, [csvRows, i18n.locale, isCsvPreview, isExpanded]);
 	const inlinePreviewLineCount = useMemo(() => getLineCount(inlinePreviewTextContent), [inlinePreviewTextContent]);
 	const visibleLineCount = useMemo(() => {
 		if (status !== 'loaded' || !isExpanded) {

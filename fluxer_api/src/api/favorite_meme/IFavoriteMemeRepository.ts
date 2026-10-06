@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, MemeID, UserID} from '@app/api/BrandedTypes';
+import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
 import type {GifMediaFormat} from '@fluxer/schema/src/domains/gif/GifSchemas';
-import type {AttachmentID, MemeID, UserID} from '../BrandedTypes';
-import type {FavoriteMeme} from '../models/FavoriteMeme';
 
 export interface CreateFavoriteMemeParams {
 	user_id: UserID;

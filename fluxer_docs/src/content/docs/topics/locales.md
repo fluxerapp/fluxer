@@ -53,17 +53,13 @@ The registry below is the complete set for every Fluxer surface. Wherever Fluxer
 
 ## Negotiation
 
-Fluxer resolves the response locale once for each request. When a request resolves an authenticated user with a stored locale, Fluxer takes that locale. Every other request negotiates the `Accept-Language` header against the [supported locale registry](#supported-locales), and `en-US` is the result whenever negotiation selects no registry value.
+An authenticated user's saved locale takes precedence over `Accept-Language`. Otherwise, Fluxer negotiates that header against the [supported locales](#supported-locales), falling back to `en-US` when none matches.
 
-An account created by password registration stores the locale negotiated from its own registration request, so the `Accept-Language` header on that request sets the stored value. An account created through single sign-on stores no account locale. Its [user settings](/http-api/users/settings/) locale reads `en-US`, and its requests negotiate `Accept-Language` until the locale setting is changed.
+Set the account locale through [user settings](/http-api/users/settings/) to make the choice persistent.
 
-Fluxer splits the header on commas. It trims each member and then splits it on semicolons. The text before the first semicolon is the language range, and Fluxer reads a `q=` weight from only the first parameter after it. A member with no readable `q=` value has weight 1. Fluxer orders the members by descending weight, and members of equal weight keep their header order.
+Matching ignores case and accepts underscores in place of hyphens. Fluxer first looks for an exact supported tag, or the alias `en` or `sv`, anywhere in the header. It uses a regional fallback only when the header has none. In each of those two passes, Fluxer takes the tag with the highest quality weight, and header order breaks ties.
 
-Fluxer then runs two passes over that ordered list.
-
-The first pass takes the earliest member whose range names a registry value exactly. Fluxer trims the range, replaces every underscore with a hyphen, and lowercases it before comparing, so `EN-GB` and `en_gb` both name `en-GB`. The bare tags `en` and `sv` are registered aliases for `en-US` and `sv-SE` and match in this pass.
-
-The second pass runs only when the first selects nothing. It reduces each member in the same order to its language subtag. A language subtag with a declared preference selects that value. The declared preferences are:
+An unsupported tag such as `fr-CA` or `de-AT` matches no locale. An unsupported tag whose language subtag is in this table selects the locale beside it:
 
 | Language subtag | Selected locale |
 | --- | --- |
@@ -73,9 +69,7 @@ The second pass runs only when the first selects nothing. It reduces each member
 | `zh` | `zh-CN` |
 | `sv` | `sv-SE` |
 
-Under those preferences, `en-AU` selects `en-US` and `pt-PT` selects `pt-BR`. A language subtag without a declared preference selects the first registry value whose tag begins with that subtag and a hyphen.
-
-Every registry tag with a hyphen begins with one of those five subtags, so `de-AT` and `xx-YY` both select nothing. A weight of 0 orders a member last, and that member can still be selected. A range of `*` matches no registry value.
+For example, `en-AU` selects `en-US` and `pt-PT` selects `pt-BR`. A weight of 0 does not exclude a language, and `*` matches no locale. Send an explicit supported tag for a predictable result.
 
 The resolved locale selects the localised `message` in an [error response](/http-api/#error-response) and in each element of a validation `errors` array.
 

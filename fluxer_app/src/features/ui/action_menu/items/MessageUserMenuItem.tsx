@@ -25,6 +25,7 @@ import {useCallback} from 'react';
 
 const MESSAGE_DESCRIPTOR = msg({
 	message: 'Message',
+	context: 'message-action',
 	comment: 'Action that opens a DM conversation with the selected user.',
 });
 const logger = new Logger('MessageUserMenuItem');

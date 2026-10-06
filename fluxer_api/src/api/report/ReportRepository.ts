@@ -1,29 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ReportAlreadyResolvedError} from '@fluxer/errors/src/domains/moderation/ReportAlreadyResolvedError';
-import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
-import type {ChannelID, MessageID, ReportID, UserID} from '../BrandedTypes';
-import {createChannelID, createGuildID, createMessageID, createReportID, createUserID} from '../BrandedTypes';
-import {fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import {Db} from '../database/CassandraTypes';
+import type {ChannelID, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createMessageID, createReportID, createUserID} from '@app/api/BrandedTypes';
+import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
 import type {
 	DSAReportEmailVerificationRow,
 	DSAReportTicketRow,
 	MessageReportSubmissionByReporterRow,
-} from '../database/types/ReportTypes';
-import {
-	DSAReportEmailVerifications,
-	DSAReportTickets,
-	IARSubmissions,
-	MessageReportSubmissionsByReporter,
-} from '../Tables';
+} from '@app/api/database/types/ReportTypes';
 import type {
 	IARMessageContext,
 	IARMessageContextRow,
 	IARSubmission,
 	IARSubmissionRow,
 	IReportRepository,
-} from './IReportRepository';
+} from '@app/api/report/IReportRepository';
+import {
+	DSAReportEmailVerifications,
+	DSAReportTickets,
+	IARSubmissions,
+	MessageReportSubmissionsByReporter,
+} from '@app/api/Tables';
+import {ReportAlreadyResolvedError} from '@fluxer/errors/src/domains/moderation/ReportAlreadyResolvedError';
+import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
 
 const GET_REPORT_QUERY = IARSubmissions.select({
 	where: IARSubmissions.where.eq('report_id'),

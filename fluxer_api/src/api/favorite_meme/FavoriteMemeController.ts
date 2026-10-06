@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createMemeID, createMessageID} from '@app/api/BrandedTypes';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {ChannelIdMessageIdParam, MemeIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	CreateFavoriteMemeBodySchema,
@@ -8,13 +15,6 @@ import {
 	FavoriteMemeResponse,
 	UpdateFavoriteMemeBodySchema,
 } from '@fluxer/schema/src/domains/meme/MemeSchemas';
-import {createChannelID, createMemeID, createMessageID} from '../BrandedTypes';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function FavoriteMemeController(app: HonoApp) {
 	app.get(

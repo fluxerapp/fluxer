@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {NodeType} from './Enums';
+import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {
 	AlertNode,
 	BlockquoteNode,
@@ -15,7 +15,7 @@ import type {
 	TableNode,
 	TableRowNode,
 	TextNode,
-} from './Nodes';
+} from '@app/features/messaging/utils/markdown/parser/Nodes';
 
 const NT_TEXT = NodeType.Text;
 const NT_STRONG = NodeType.Strong;

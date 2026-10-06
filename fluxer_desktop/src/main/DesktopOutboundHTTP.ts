@@ -392,7 +392,7 @@ export async function readBoundedMessage({
 }
 
 async function lookupAllAddresses(hostname: string): Promise<ReadonlyArray<string>> {
-	const records = await dns.promises.lookup(hostname, {all: true, verbatim: true});
+	const records = await dns.promises.lookup(hostname, {all: true, order: 'verbatim'});
 	return records.map((record) => record.address);
 }
 

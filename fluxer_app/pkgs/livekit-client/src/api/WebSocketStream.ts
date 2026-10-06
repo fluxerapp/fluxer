@@ -4,6 +4,7 @@
 import {ConnectionError} from '../room/errors.ts';
 import {sleep} from '../room/utils.ts';
 import TypedPromise from '../utils/TypedPromise.ts';
+import {getErrorDescription} from './utils.ts';
 
 export interface WebSocketConnection<T extends ArrayBuffer | string = ArrayBuffer | string> {
 	readable: ReadableStream<T>;
@@ -61,7 +62,14 @@ export class WebSocketStream<T extends ArrayBuffer | string = ArrayBuffer | stri
 					readable: new ReadableStream<T>({
 						start(controller) {
 							ws.onmessage = ({data}) => controller.enqueue(data);
-							ws.onerror = (e) => controller.error(e);
+							ws.onerror = (e) => controller.error(ConnectionError.websocket(getErrorDescription(e, 'websocket')));
+							ws.onclose = (ev) => {
+								if (ev.wasClean || ev.code === 1000) {
+									controller.close();
+								} else {
+									controller.error(ConnectionError.websocket(`WS closed unexpectedly with code ${ev.code}`));
+								}
+							};
 						},
 						cancel: closeWithInfo,
 					}),
@@ -103,10 +111,10 @@ export class WebSocketStream<T extends ArrayBuffer | string = ArrayBuffer | stri
 					resolve(reason);
 				}
 			};
-			ws.onclose = ({code, reason}) => {
+			ws.addEventListener('close', ({code, reason}) => {
 				resolve({closeCode: code, reason});
 				ws.removeEventListener('error', rejectHandler);
-			};
+			});
 
 			ws.addEventListener('error', rejectHandler);
 		});

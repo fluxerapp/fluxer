@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {User} from '@app/api/models/User';
+import {checkIsPremium} from '@app/api/user/UserHelpers';
 import type {LimitMatchContext} from '@fluxer/limits/src/LimitTypes';
-import type {User} from '../models/User';
-import {checkIsPremium} from '../user/UserHelpers';
 
 export function createLimitMatchContext({
 	user,

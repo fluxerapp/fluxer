@@ -99,7 +99,8 @@ collect_found_members(UniqueIds, MembersMap) ->
     [
         M
      || Id <- UniqueIds,
-        (M = maps:get(Id, MembersMap, undefined)) =/= undefined
+        M <- [maps:get(Id, MembersMap, undefined)],
+        M =/= undefined
     ].
 
 -spec resolve_member_limit(binary(), non_neg_integer()) -> pos_integer().
@@ -130,10 +131,21 @@ filter_members_by_query([Member | Rest], NormalizedQuery, Limit, Acc) ->
     end.
 
 -spec member_matches_normalized_query(member(), binary()) -> boolean().
-member_matches_normalized_query(Member, NormalizedQuery) ->
-    DisplayName = get_display_name(Member),
-    NormalizedName = string:lowercase(DisplayName),
-    prefix_binary(NormalizedQuery, NormalizedName).
+member_matches_normalized_query(_Member, <<>>) ->
+    true;
+member_matches_normalized_query(Member, NormalizedQuery) when is_map(Member) ->
+    User = map_utils:ensure_map(maps:get(<<"user">>, Member, #{})),
+    name_matches(maps:get(<<"nick">>, Member, undefined), NormalizedQuery) orelse
+        name_matches(maps:get(<<"global_name">>, User, undefined), NormalizedQuery) orelse
+        name_matches(maps:get(<<"username">>, User, undefined), NormalizedQuery);
+member_matches_normalized_query(_Member, _NormalizedQuery) ->
+    false.
+
+-spec name_matches(term(), binary()) -> boolean().
+name_matches(Name, NormalizedQuery) when is_binary(Name) ->
+    prefix_binary(NormalizedQuery, string:lowercase(Name));
+name_matches(_Name, _NormalizedQuery) ->
+    false.
 
 -spec prefix_binary(binary(), binary()) -> boolean().
 prefix_binary(Prefix, Value) ->

@@ -218,7 +218,7 @@ extract_auth_session_id_hash(Data) ->
     case maps:get(<<"auth_session_id_hash">>, Data, undefined) of
         undefined -> <<>>;
         null -> <<>>;
-        Encoded -> base64url:decode(Encoded)
+        Encoded -> base64:decode(Encoded, #{mode => urlsafe, padding => false})
     end.
 
 -spec build_user_data(map()) -> map().

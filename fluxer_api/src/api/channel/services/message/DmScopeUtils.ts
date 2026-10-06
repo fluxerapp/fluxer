@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {Channel} from '@app/api/models/Channel';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {UserID} from '../../../BrandedTypes';
-import type {Channel} from '../../../models/Channel';
-import type {IUserRepository} from '../../../user/IUserRepository';
 
 export type DmSearchScope = 'all_dms' | 'open_dms';
 

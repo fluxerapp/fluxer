@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::cmp::Ordering;
-
 use crate::{
     acl,
     api::types::ReportEntry,
@@ -11,9 +9,10 @@ use crate::{
         components::{
             badge::{BadgeVariant, badge},
             data_field::{data_field, data_field_link_mono, data_field_mono, data_field_text},
-            form::csrf_input,
+            form::{csrf_input, opt_out_checkbox},
             media::{guild_icon_url, initials, user_avatar_url},
-            message_list::{Attachment, Message, message_deletion_script, message_list},
+            message_data::ordered_messages,
+            message_list::{message_deletion_script, message_list},
             nsfw_indicators::{
                 adult_content_badge, channel_nsfw_state_badge, content_warning_badge,
             },
@@ -23,10 +22,9 @@ use crate::{
         },
         layout::admin_layout,
     },
-    utils::timestamps::format_admin_timestamp,
+    utils::{timestamps::format_admin_timestamp, user_tag::user_tag},
 };
 use maud::{Markup, html};
-use serde_json::Value;
 
 fn status_badge(status: i32) -> Markup {
     let (label, variant) = match status {
@@ -56,7 +54,7 @@ fn reporter_label(report: &ReportEntry) -> String {
     }
     if let Some(username) = &report.reporter_username {
         let discriminator = report.reporter_discriminator.as_deref().unwrap_or("0000");
-        return format!("{username}#{discriminator}");
+        return user_tag(username, discriminator, false);
     }
     if let Some(email) = &report.reporter_email {
         return email.to_owned();
@@ -73,7 +71,7 @@ fn reported_user_label(report: &ReportEntry) -> String {
             .reported_user_discriminator
             .as_deref()
             .unwrap_or("0000");
-        return format!("{username}#{discriminator}");
+        return user_tag(username, discriminator, false);
     }
     format!(
         "User {}",
@@ -378,16 +376,7 @@ fn actions_card(config: &AdminConfig, report: &ReportEntry, csrf_token: &str) ->
         (section_card(Some("Actions"), None, None, html! {
             div class="flex flex-col gap-3" {
                 @if report.status == 0 {
-                    form method="post"
-                        action={(base) "/reports/" (&report.report_id) "/resolve"} {
-                        (csrf_input(csrf_token))
-                        button type="submit"
-                            class="inline-flex w-full items-center justify-center gap-2 \
-                                   font-medium rounded-lg bg-neutral-900 text-white \
-                                   px-4 py-2 text-sm" {
-                            "Resolve Report"
-                        }
-                    }
+                    (resolve_report_form(base, &report.report_id, csrf_token))
                 }
                 @if report.report_type == 0 || report.report_type == 1 {
                     @if let Some(ref reported_id) = report.reported_user_id {
@@ -409,6 +398,29 @@ fn actions_card(config: &AdminConfig, report: &ReportEntry, csrf_token: &str) ->
                 }
             }
         }))
+    }
+}
+
+fn resolve_report_form(base: &str, report_id: &str, csrf_token: &str) -> Markup {
+    html! {
+        form method="post" action={(base) "/reports/" (report_id) "/resolve"} class="flex flex-col gap-3" {
+            (csrf_input(csrf_token))
+            label for="resolution" class="block text-sm font-medium text-neutral-700" {
+                "Public comment to the reporter (optional)"
+            }
+            textarea id="resolution" name="resolution" rows="3" maxlength="512"
+                class="block w-full rounded-md border border-neutral-300 \
+                       px-3 py-2 text-sm shadow-sm \
+                       focus:border-brand-primary focus:outline-none \
+                       focus:ring-1 focus:ring-brand-primary" {}
+            (opt_out_checkbox("notify_reporter", "Notify the reporter by DM and email"))
+            button type="submit"
+                class="inline-flex w-full items-center justify-center gap-2 \
+                       font-medium rounded-lg bg-neutral-900 text-white \
+                       px-4 py-2 text-sm" {
+                "Resolve Report"
+            }
+        }
     }
 }
 
@@ -535,122 +547,17 @@ fn basic_info_section_fragment(config: &AdminConfig, report: &ReportEntry) -> Ma
     }
 }
 
-fn ordered_messages(values: &[Value]) -> Vec<Message> {
-    let mut messages: Vec<Message> = values.iter().map(message_from_value).collect();
-    messages.sort_by(compare_message_ids);
-    messages
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-fn message_from_value(value: &Value) -> Message {
-    let attachments = value
-        .get("attachments")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .map(attachment_from_value)
-        .collect();
-    Message {
-        id: value.get("id").and_then(value_id).unwrap_or_default(),
-        content: value
-            .get("content")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        timestamp: value
-            .get("timestamp")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        author_id: value
-            .get("author_id")
-            .and_then(value_id)
-            .unwrap_or_default(),
-        author_username: value
-            .get("author_username")
-            .and_then(Value::as_str)
-            .unwrap_or("Unknown")
-            .to_owned(),
-        author_global_name: value
-            .get("author_global_name")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        author_discriminator: value
-            .get("author_discriminator")
-            .and_then(value_id)
-            .unwrap_or_else(|| "0000".to_owned()),
-        author_avatar: value
-            .get("author_avatar")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        channel_id: value
-            .get("channel_id")
-            .and_then(value_id)
-            .unwrap_or_default(),
-        channel_nsfw: value.get("channel_nsfw").and_then(Value::as_bool),
-        channel_content_warning_level: value
-            .get("channel_content_warning_level")
-            .and_then(Value::as_i64)
-            .map(|n| n as i32),
-        channel_content_warning_text: value
-            .get("channel_content_warning_text")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        guild_nsfw: value.get("guild_nsfw").and_then(Value::as_bool),
-        attachments,
-    }
-}
-
-fn attachment_from_value(value: &Value) -> Attachment {
-    Attachment {
-        id: value.get("id").and_then(value_id).unwrap_or_default(),
-        url: value
-            .get("url")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        filename: value
-            .get("filename")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        nsfw: value.get("nsfw").and_then(Value::as_bool),
-        content_type: value
-            .get("content_type")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        width: value.get("width").and_then(Value::as_u64).map(|n| n as u32),
-        height: value
-            .get("height")
-            .and_then(Value::as_u64)
-            .map(|n| n as u32),
-        size: value.get("size").and_then(Value::as_u64),
-        ncmec_status: value
-            .get("ncmec_status")
-            .and_then(Value::as_str)
-            .unwrap_or("not_submitted")
-            .to_owned(),
-        ncmec_report_id: value
-            .get("ncmec_report_id")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        ncmec_failure_reason: value
-            .get("ncmec_failure_reason")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-    }
-}
-
-fn value_id(value: &Value) -> Option<String> {
-    match value {
-        Value::String(s) => Some(s.clone()),
-        Value::Number(n) => Some(n.to_string()),
-        _ => None,
-    }
-}
-
-fn compare_message_ids(left: &Message, right: &Message) -> Ordering {
-    match (left.id.parse::<u128>(), right.id.parse::<u128>()) {
-        (Ok(l), Ok(r)) => l.cmp(&r),
-        _ => left.id.cmp(&right.id),
+    #[test]
+    fn resolve_form_offers_a_public_comment_and_notifies_the_reporter_by_default() {
+        let markup = resolve_report_form("/admin", "1500000000000000001", "csrf").into_string();
+        assert!(markup.contains(r#"action="/admin/reports/1500000000000000001/resolve""#));
+        assert!(markup.contains(r#"name="resolution""#));
+        assert!(markup.contains(r#"maxlength="512""#));
+        assert!(markup.contains(r#"name="notify_reporter" value="true" checked"#));
+        assert!(markup.contains(r#"name="notify_reporter_present" value="1""#));
     }
 }

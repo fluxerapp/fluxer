@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import type {MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
+import {IUnfurlerService, type UnfurlOptions, type UnfurlResult} from '@app/api/infrastructure/IUnfurlerService';
+import {setInjectedUnfurlerService} from '@app/api/middleware/ServiceSingletons';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import type {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount, type TestAccount} from '../../auth/tests/AuthTestUtils';
-import type {MediaProxyNsfwMode} from '../../infrastructure/IMediaService';
-import {IUnfurlerService, type UnfurlOptions, type UnfurlResult} from '../../infrastructure/IUnfurlerService';
-import {setInjectedUnfurlerService} from '../../middleware/ServiceSingletons';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 class RecordingUnfurlerService extends IUnfurlerService {
 	readonly calls: Array<{url: string; nsfwMode?: MediaProxyNsfwMode; options: UnfurlOptions}> = [];

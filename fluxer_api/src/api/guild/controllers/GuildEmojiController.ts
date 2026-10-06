@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createEmojiID, createGuildID} from '@app/api/BrandedTypes';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {EmojiIdParam, GuildIdEmojiIdParam, GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {PurgeQuery} from '@fluxer/schema/src/domains/common/CommonQuerySchemas';
 import {
@@ -7,6 +14,7 @@ import {
 	GuildEmojiMetadataResponse,
 	GuildEmojiResponse,
 	GuildEmojiWithUserListResponse,
+	GuildExpressionSourceGuildResponse,
 } from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {
 	GuildEmojiBulkCreateRequest,
@@ -14,13 +22,6 @@ import {
 	GuildEmojiCreateRequest,
 	GuildEmojiUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import {createEmojiID, createGuildID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function GuildEmojiController(app: HonoApp) {
 	app.post(
@@ -195,6 +196,27 @@ export function GuildEmojiController(app: HonoApp) {
 		async (ctx) => {
 			const emojiId = createEmojiID(ctx.req.valid('param').emoji_id);
 			return ctx.json(await ctx.get('guildService').getEmojiMetadata(emojiId));
+		},
+	);
+
+	app.get(
+		'/emojis/:emoji_id/source',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_EMOJI_SOURCE),
+		LoginRequired,
+		Validator('param', EmojiIdParam),
+		OpenAPI({
+			operationId: 'get_emoji_source',
+			summary: 'Get emoji source guild',
+			description:
+				'Lookup the public presentation of the guild a custom emoji belongs to. Returned when the guild is discoverable or the caller is a member of it. Returns an unknown guild error when the guild is private and the caller is not a member, or when the guild is unavailable.',
+			responseSchema: GuildExpressionSourceGuildResponse,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Emojis'],
+		}),
+		async (ctx) => {
+			const emojiId = createEmojiID(ctx.req.valid('param').emoji_id);
+			return ctx.json(await ctx.get('guildService').getEmojiSource(emojiId, ctx.get('user').id));
 		},
 	);
 }

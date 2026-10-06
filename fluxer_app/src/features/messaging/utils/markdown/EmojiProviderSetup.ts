@@ -5,7 +5,7 @@ import {type EmojiProvider, setEmojiParserConfig} from '@app/features/messaging/
 import {SKIN_TONE_SURROGATES} from '@fluxer/constants/src/EmojiConstants';
 
 const emojiProvider: EmojiProvider = {
-	getSurrogateName: UnicodeEmojis.getSurrogateName,
+	matchEmojiSurrogates: UnicodeEmojis.matchEmojiSurrogates,
 	findEmojiByName: UnicodeEmojis.findEmojiByShortcodeName,
 	findEmojiWithSkinTone: UnicodeEmojis.findEmojiWithSkinTone,
 };
@@ -13,9 +13,6 @@ const emojiProvider: EmojiProvider = {
 export function initializeEmojiParser(): void {
 	setEmojiParserConfig({
 		emojiProvider,
-		get emojiRegex() {
-			return UnicodeEmojis.EMOJI_SURROGATE_RE;
-		},
 		skinToneSurrogates: SKIN_TONE_SURROGATES,
 	});
 }

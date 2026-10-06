@@ -1,18 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {getPngDataUrl, getTooLargePngDataUrl} from '../../emoji/tests/EmojiTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {grantPremium} from '../../user/tests/UserTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {getPngDataUrl, getTooLargePngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {
 	addMemberRole,
 	createRole,
@@ -21,7 +10,18 @@ import {
 	setupTestGuildWithMembers,
 	updateMember,
 	updateRolePositions,
-} from './GuildTestUtils';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {grantPremium} from '@app/api/user/tests/UserTestUtils';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Guild Member Management', () => {
 	let harness: ApiTestHarness;

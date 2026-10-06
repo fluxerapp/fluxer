@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub mod attachment_signature;
 pub mod cache;
 pub mod external;
 pub mod histogram;
@@ -15,6 +16,7 @@ pub mod transform;
 mod tests;
 
 use self::{
+    attachment_signature::AttachmentSignatureMetrics,
     cache::{CoalescerMetrics, TransformCacheMetrics},
     external::ExternalMetrics,
     http_client::HTTPClientMetrics,
@@ -58,6 +60,7 @@ pub struct Metrics {
     external: Arc<ExternalMetrics>,
     relay: Arc<RelayMetrics>,
     http_client: Arc<HTTPClientMetrics>,
+    attachment_signature: Arc<AttachmentSignatureMetrics>,
     start_ms: i64,
 }
 
@@ -74,6 +77,7 @@ impl Metrics {
             external: Arc::new(ExternalMetrics::new()),
             relay: Arc::new(RelayMetrics::new()),
             http_client: Arc::new(HTTPClientMetrics::new()),
+            attachment_signature: Arc::new(AttachmentSignatureMetrics::new()),
             start_ms: now_ms(),
         }
     }
@@ -116,6 +120,10 @@ impl Metrics {
 
     pub fn http_client(&self) -> Arc<HTTPClientMetrics> {
         Arc::clone(&self.http_client)
+    }
+
+    pub fn attachment_signature(&self) -> Arc<AttachmentSignatureMetrics> {
+        Arc::clone(&self.attachment_signature)
     }
 
     pub fn render(&self) -> String {

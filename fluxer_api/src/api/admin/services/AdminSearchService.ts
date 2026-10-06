@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {isSyntheticUserId} from '@app/api/constants/Core';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {Logger} from '@app/api/Logger';
+import {getGuildSearchService, getUserSearchService} from '@app/api/SearchFactory';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import type {UserSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
-import type {ApiContext} from '../../ApiContext';
-import {createGuildID, createUserID, type UserID} from '../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import {Logger} from '../../Logger';
-import {getGuildSearchService, getUserSearchService} from '../../SearchFactory';
-import {mapGuildToAdminResponse} from '../models/GuildTypes';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
 
 interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
 	index_type:
@@ -129,17 +131,28 @@ export class AdminSearchService {
 			throw new FeatureTemporarilyDisabledError();
 		}
 		const query = data.query?.trim() || '';
-		const isIdQuery = /^\d+$/.test(query);
+		const isBrowseAll = query === '' || query === '*';
+		const searchFilters: UserSearchFilters = isBrowseAll
+			? {sortBy: 'createdAt', sortOrder: 'asc'}
+			: {sortBy: 'relevance'};
+		const directUserId = /^\d+$/.test(query) ? createUserID(BigInt(query)) : null;
+		const canResolveDirectUser = directUserId !== null && !isSyntheticUserId(directUserId) && data.offset === 0;
 		const [searchResult, directUser] = await Promise.all([
-			userSearchService.search(query, {}, {limit: data.limit, offset: data.offset}),
-			isIdQuery && data.offset === 0
-				? userRepository.findUnique(createUserID(BigInt(query))).catch(() => null)
-				: Promise.resolve(null),
+			userSearchService.search(query, searchFilters, {limit: data.limit, offset: data.offset}),
+			canResolveDirectUser ? userRepository.findUnique(directUserId).catch(() => null) : Promise.resolve(null),
 		]);
 		const {hits, total} = searchResult;
 		const userIds = hits.map((hit) => createUserID(BigInt(hit.id)));
 		const users = await userRepository.listUsers(userIds);
-		const response = await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
+		const usersById = new Map(users.map((user) => [user.id.toString(), user]));
+		const orderedUsers = [];
+		for (const userId of userIds) {
+			const user = usersById.get(userId.toString());
+			if (user) {
+				orderedUsers.push(user);
+			}
+		}
+		const response = await Promise.all(orderedUsers.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
 		if (directUser && data.offset === 0) {
 			const directId = directUser.id.toString();
 			if (!response.some((u) => u.id === directId)) {

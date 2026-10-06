@@ -43,7 +43,7 @@ const convertDescriptorList = (
 ): Array<PublicKeyCredentialDescriptor> | undefined =>
 	list?.map((descriptor) => ({
 		id: base64UrlToBuffer(descriptor.id),
-		type: descriptor.type,
+		type: 'public-key',
 		transports: descriptor.transports,
 	}));
 const convertRequestOptions = (options: PublicKeyCredentialRequestOptionsJSON): NativeRequestOptionsWithoutOrigin => ({

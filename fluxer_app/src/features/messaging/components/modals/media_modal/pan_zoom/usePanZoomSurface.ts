@@ -1,11 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
-import {wasPointerDownInside} from '@app/lib/overlay/DismissGuard';
-import type {AnimationPlaybackControls, MotionValue} from 'framer-motion';
-import {animate, useMotionValue, useReducedMotion} from 'framer-motion';
-import type React from 'react';
-import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {
 	clampPanForScale,
 	clampScale,
@@ -22,8 +16,14 @@ import {
 	TAP_MOVE_THRESHOLD,
 	ZOOM_STATE_EPSILON,
 	ZOOM_STEP,
-} from './PanZoomMath';
-import {useLatestRef} from './useLatestRef';
+} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomMath';
+import {useLatestRef} from '@app/features/messaging/components/modals/media_modal/pan_zoom/useLatestRef';
+import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
+import {wasPointerDownInside} from '@app/lib/overlay/DismissGuard';
+import type {AnimationPlaybackControls, MotionValue} from 'framer-motion';
+import {animate, useMotionValue, useReducedMotion} from 'framer-motion';
+import type React from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 interface PointerRecord extends Point {
 	pointerId: number;

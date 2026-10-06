@@ -160,9 +160,9 @@ export const AddGuildStickerModal = observer(function AddGuildStickerModal({
 				if (error instanceof ImageCropUtils.ImageOptimizationSizeError || isStickerSizeValidationError(error)) {
 					const fileSize =
 						error instanceof ImageCropUtils.ImageOptimizationSizeError
-							? formatFileSize(error.actualSizeBytes)
-							: formatFileSize(file.size);
-					const maxSize = formatFileSize(maxStickerSize);
+							? formatFileSize(i18n.locale, error.actualSizeBytes)
+							: formatFileSize(i18n.locale, file.size);
+					const maxSize = formatFileSize(i18n.locale, maxStickerSize);
 					const message =
 						error instanceof ImageCropUtils.ImageOptimizationSizeError
 							? i18n._(

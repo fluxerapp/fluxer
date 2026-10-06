@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {Embed} from '@app/api/models/Embed';
+import type {Message} from '@app/api/models/Message';
+import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import type {SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
-import type {UserID} from '../../BrandedTypes';
-import type {Attachment} from '../../models/Attachment';
-import type {Embed} from '../../models/Embed';
-import type {Message} from '../../models/Message';
-import type {MessageSnapshot} from '../../models/MessageSnapshot';
 
 const LINK_URL_MATCHER = /https?:\/\/[^\s<>"']+/gi;
 const HAS_LINK_REGEX = /https?:\/\/[^\s/]+/i;

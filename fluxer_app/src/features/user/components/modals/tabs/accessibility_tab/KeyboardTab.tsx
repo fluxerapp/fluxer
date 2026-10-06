@@ -9,7 +9,7 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 
 const SHOW_FOCUS_RING_ON_CHAT_TEXTAREA_DESCRIPTOR = msg({
-	message: 'Show focus ring on chat textarea',
+	message: 'Show focus ring on chat text area',
 	comment: 'Label in the keyboard tab.',
 });
 const ESCAPE_KEY_EXITS_KEYBOARD_MODE_DESCRIPTOR = msg({

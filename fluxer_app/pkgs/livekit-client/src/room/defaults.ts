@@ -12,14 +12,12 @@ export const publishDefaults: TrackPublishDefaults = {
 	audioPreset: AudioPresets.music,
 	dtx: false,
 	red: true,
-	forceStereo: false,
 	simulcast: true,
 	screenShareEncoding: ScreenSharePresets.original.encoding,
 	stopMicTrackOnMute: false,
 	videoCodec: defaultVideoCodec,
 	backupCodec: {codec: 'h264'},
 	backupCodecPolicy: BackupCodecPolicy.SIMULCAST,
-	degradationPreference: 'maintain-resolution',
 	preConnectBuffer: false,
 } as const;
 

@@ -60,7 +60,7 @@ const AUTOCOMPLETE_SUGGESTION_DESCRIPTOR = msg({
 	comment: 'Screen-reader announcement for the highlighted autocomplete suggestion, without query echo.',
 });
 const SEARCHING_PEOPLE_DESCRIPTOR = msg({
-	message: 'Searching people...',
+	message: 'Searching for people...',
 	comment:
 		'Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.',
 });
@@ -73,7 +73,7 @@ const MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Screen-reader live region announcement when exactly one quick switcher result is available.',
 });
 const RESULTS_AVAILABLE_DESCRIPTOR = msg({
-	message: '{resultCount} results available',
+	message: '{resultCount, plural, one {# result available} other {# results available}}',
 	comment: 'Screen-reader live region announcement listing the quick switcher result count.',
 });
 const QUICK_SWITCHER_DESCRIPTOR = msg({
@@ -129,7 +129,6 @@ const ResultRow = observer(
 		optionId,
 		positionInSet,
 		setSize,
-		innerRef,
 	}: {
 		result: QuickSwitcherResult;
 		index: number;
@@ -139,7 +138,6 @@ const ResultRow = observer(
 		optionId: string;
 		positionInSet: number;
 		setSize: number;
-		innerRef?: React.Ref<HTMLDivElement>;
 	}) => {
 		const {i18n} = useLingui();
 		if (result.type === QuickSwitcherResultTypes.HEADER) {
@@ -195,7 +193,6 @@ const ResultRow = observer(
 					aria-posinset={positionInSet}
 					aria-setsize={setSize}
 					className={clsx(quickStyles.option, isActive && quickStyles.optionActive)}
-					ref={innerRef}
 					onMouseEnter={handleMouseEnter}
 					onMouseDown={(event) => {
 						if (event.button === 0) event.preventDefault();
@@ -288,7 +285,6 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 	const quickSwitcherId = useId();
 	const inputRef = useRef<HTMLInputElement>(null);
 	const scrollerRef = useRef<ScrollerHandle>(null);
-	const rowRefs = useRef<Array<HTMLDivElement | null>>([]);
 	const previousQueryRef = useRef(query);
 	const [isKeyboardNavigating, setIsKeyboardNavigating] = useState(true);
 	const isMobile = MobileLayout.isMobileLayout();
@@ -297,9 +293,6 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 	const statusId = `${quickSwitcherId}-status`;
 	const suggestionStatusId = `${quickSwitcherId}-suggestion-status`;
 	const hintId = `${quickSwitcherId}-hint`;
-	if (rowRefs.current.length !== results.length) {
-		rowRefs.current = Array(results.length).fill(null);
-	}
 	useQuickSwitcherKeyboardHandling(isOpen, isMobile, inputRef, query);
 	useQuickSwitcherInputFocus(isOpen, isMobile, undefined, inputRef);
 	const escapeIntentRef = useQuickSwitcherEscapeIntent(isOpen && !isMobile);
@@ -311,6 +304,12 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 			return;
 		}
 		setIsKeyboardNavigating(true);
+		if (event.ctrlKey && !event.altKey && !event.metaKey && (event.key === 'n' || event.key === 'p')) {
+			event.preventDefault();
+			event.stopPropagation();
+			QuickSwitcherCommands.moveSelection(event.key === 'n' ? 'down' : 'up');
+			return;
+		}
 		switch (event.key) {
 			case 'ArrowDown':
 			case 'ArrowUp':
@@ -360,11 +359,11 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 		if (!isKeyboardNavigating || selectedIndex < 0) {
 			return;
 		}
-		const node = rowRefs.current[selectedIndex];
+		const node = document.getElementById(getQuickSwitcherOptionId(listboxId, selectedIndex));
 		if (node) {
 			scroller.revealElement({node, padding: SELECTED_ROW_SCROLL_PADDING});
 		}
-	}, [isKeyboardNavigating, query, results, selectedIndex]);
+	}, [isKeyboardNavigating, listboxId, query, results, selectedIndex]);
 	const sections = useMemo(() => createSections(results), [results]);
 	const selectableIndices = useMemo(
 		() =>
@@ -437,7 +436,7 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 				text={i18n._(QUICK_SWITCHER_DESCRIPTOR)}
 				data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.modal-screen-reader-label"
 			/>
-			{/* biome-ignore lint/a11y/noStaticElementInteractions: pointer arbitration surface for the result rows; it carries no affordance of its own. */}
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: pointer arbitration surface for the result rows; it has no affordance of its own. */}
 			<div
 				className={quickStyles.container}
 				onMouseMove={handlePointerMove}
@@ -565,9 +564,6 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 														optionId={getQuickSwitcherOptionId(listboxId, index)}
 														positionInSet={selectableIndices.indexOf(index) + 1}
 														setSize={resultCount}
-														innerRef={(node) => {
-															rowRefs.current[index] = node;
-														}}
 														data-flx="search.quick-switcher.quick-switcher-modal.quick-switcher-modal-component.result-row"
 													/>
 												))}

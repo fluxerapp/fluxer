@@ -39,6 +39,7 @@ import {
 } from '@app/features/channel/components/channel_header/shared';
 import {useChannelHeaderData} from '@app/features/channel/components/channel_header/useChannelHeaderData';
 import {CallButtons} from '@app/features/channel/components/channel_header_components/CallButtons';
+import {ChannelFollowButton} from '@app/features/channel/components/channel_header_components/ChannelFollowButton';
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
 import {ChannelNotificationSettingsButton} from '@app/features/channel/components/channel_header_components/ChannelNotificationSettingsButton';
 import {ChannelPinsButton} from '@app/features/channel/components/channel_header_components/ChannelPinsButton';
@@ -530,7 +531,7 @@ export const ChannelHeader = observer(
 		if (hasCallableRecipients && !(isDM && isBotDMRecipient)) {
 			desktopLeadingActionCount += 2;
 		}
-		if (showPins && Boolean(channel)) {
+		if (showPins && channel) {
 			desktopLeadingActionCount += 1;
 		}
 		if (hasChannel && isFriendDM && !isGroupDM) {
@@ -860,6 +861,13 @@ export const ChannelHeader = observer(
 													{channelName}
 												</span>
 											</Tooltip>
+											{!isMobile && (
+												<ChannelFollowButton
+													channel={channel}
+													className={styles.followButton}
+													data-flx="channel.channel-header.channel-follow-button"
+												/>
+											)}
 											{channel.topic && (
 												<>
 													<span className={styles.topicDivider} data-flx="channel.channel-header.topic-divider">

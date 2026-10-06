@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {User} from '@app/api/models/User';
+import {getValidTimestamp, parseStoredTimestamp} from '@app/api/utils/TimestampUtils';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {ms, seconds} from 'itty-time';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {User} from '../../models/User';
+
+const INACTIVITY_WARNING_TTL_DAYS = 30;
+const INACTIVITY_WARNING_PREFIX = 'inactivity_warning_sent';
 
 export class UserDeletionEligibilityService {
-	private readonly INACTIVITY_WARNING_TTL_DAYS = 30;
-	private readonly INACTIVITY_WARNING_PREFIX = 'inactivity_warning_sent';
-
-	constructor(private kvClient: IKVProvider) {}
+	constructor(private readonly kvClient: IKVProvider) {}
 
 	async isEligibleForInactivityDeletion(user: User): Promise<boolean> {
 		if (user.isBot) {
@@ -30,11 +31,8 @@ export class UserDeletionEligibilityService {
 			return false;
 		}
 		const inactivityThresholdMs = this.getInactivityThresholdMs();
-		const timeSinceLastActiveMs = Date.now() - user.lastActiveAt.getTime();
-		if (timeSinceLastActiveMs < inactivityThresholdMs) {
-			return false;
-		}
-		return true;
+		const lastActiveAt = getValidTimestamp(user.lastActiveAt, `Last activity timestamp for user ${user.id}`);
+		return Date.now() - lastActiveAt >= inactivityThresholdMs;
 	}
 
 	async isEligibleForWarningEmail(user: User): Promise<boolean> {
@@ -42,16 +40,12 @@ export class UserDeletionEligibilityService {
 		if (!isEligibleForDeletion) {
 			return false;
 		}
-		const alreadySentWarning = await this.hasWarningSent(user.id);
-		if (alreadySentWarning) {
-			return false;
-		}
-		return true;
+		return !(await this.hasWarningSent(user.id));
 	}
 
 	async markWarningSent(userId: UserID): Promise<void> {
 		const key = this.getWarningKey(userId);
-		const ttlSeconds = seconds(`${this.INACTIVITY_WARNING_TTL_DAYS + 5} days`);
+		const ttlSeconds = seconds(`${INACTIVITY_WARNING_TTL_DAYS + 5} days`);
 		const timestamp = Date.now().toString();
 		await this.kvClient.setex(key, ttlSeconds, timestamp);
 	}
@@ -64,12 +58,7 @@ export class UserDeletionEligibilityService {
 
 	async getWarningSentTimestamp(userId: UserID): Promise<number | null> {
 		const key = this.getWarningKey(userId);
-		const value = await this.kvClient.get(key);
-		if (!value) {
-			return null;
-		}
-		const timestamp = parseInt(value, 10);
-		return Number.isNaN(timestamp) ? null : timestamp;
+		return parseStoredTimestamp(await this.kvClient.get(key), `Inactivity warning timestamp for user ${userId}`);
 	}
 
 	async hasWarningGracePeriodExpired(userId: UserID): Promise<boolean> {
@@ -78,7 +67,7 @@ export class UserDeletionEligibilityService {
 			return false;
 		}
 		const timeSinceWarningMs = Date.now() - timestamp;
-		const gracePeriodMs = this.INACTIVITY_WARNING_TTL_DAYS * ms('1 day');
+		const gracePeriodMs = INACTIVITY_WARNING_TTL_DAYS * ms('1 day');
 		return timeSinceWarningMs >= gracePeriodMs;
 	}
 
@@ -88,7 +77,7 @@ export class UserDeletionEligibilityService {
 	}
 
 	private getWarningKey(userId: UserID): string {
-		return `${this.INACTIVITY_WARNING_PREFIX}:${userId}`;
+		return `${INACTIVITY_WARNING_PREFIX}:${userId}`;
 	}
 
 	private isAppStoreReviewer(user: User): boolean {

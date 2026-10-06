@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
+import {createUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {setupTestGuildWithMembers} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS, TEST_IDS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 interface RpcGuildCollectionMembersResponse {
 	type: 'guild_collection';
@@ -67,6 +68,22 @@ describe('RpcService guild member collection pagination', () => {
 			afterUserId = data.next_after_user_id ?? undefined;
 		}
 		expect(seenIds.slice().sort()).toStrictEqual(expectedIds.slice().sort());
+	});
+
+	test('looks up every member user on a page in one users service request', async () => {
+		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 3);
+		const memberIds = [owner.userId, ...members.map((member) => member.userId)].sort();
+		const lookups = vi.spyOn(createUsersServiceClient(), 'getUserPartialResponses');
+		try {
+			const data = await fetchMemberPage(harness, guild.id, 1000);
+			expect(data.members.map((member) => member.user.id).sort()).toStrictEqual(memberIds);
+			const memberLookups = lookups.mock.calls
+				.map(([userIds]) => userIds.map(String).sort())
+				.filter((userIds) => userIds.some((userId) => memberIds.includes(userId)));
+			expect(memberLookups).toStrictEqual([memberIds]);
+		} finally {
+			lookups.mockRestore();
+		}
 	});
 
 	test('rejects an unknown guild on the first member page', async () => {

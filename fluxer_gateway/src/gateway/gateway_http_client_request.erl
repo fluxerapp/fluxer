@@ -12,7 +12,7 @@
 ]).
 -export_type([workload/0, method/0, request_headers/0, request_options/0, response/0]).
 
--type workload() :: rpc | push.
+-type workload() :: rpc.
 -type method() :: get | post | put | patch | delete | head | options.
 -type request_headers() :: [{binary() | string(), binary() | string()}].
 -type request_options() :: #{

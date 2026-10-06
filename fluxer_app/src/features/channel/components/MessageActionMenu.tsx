@@ -3,7 +3,6 @@
 import {
 	canReportMessage,
 	createMessageActionHandlers,
-	getCopyableMessageText,
 	getEffectiveContent,
 	isClientSystemMessage,
 	isEmbedsSuppressed,
@@ -43,6 +42,7 @@ import {
 	CopyIdIcon,
 	CopyLinkIcon,
 	CopyMessageTextIcon,
+	CrosspostIcon,
 	DebugMessageIcon,
 	DeleteIcon,
 	EditMessageIcon,
@@ -82,6 +82,11 @@ const VIEW_REACTIONS_DESCRIPTOR = msg({
 const REMOVE_ALL_REACTIONS_DESCRIPTOR = msg({
 	message: 'Remove all reactions',
 	comment: 'Destructive message context menu item for moderators that clears every reaction on a message.',
+});
+const PUBLISH_MESSAGE_DESCRIPTOR = msg({
+	message: 'Publish',
+	comment:
+		'Message context menu item in an announcement channel. Publishing sends the message to every channel that follows this channel.',
 });
 const FORWARD_DESCRIPTOR = msg({
 	message: 'Forward',
@@ -124,6 +129,7 @@ export const messageActionMenuItemIds = {
 	removeAllReactions: 'remove_all_reactions',
 	reply: 'reply',
 	forward: 'forward',
+	crosspost: 'message_crosspost',
 	edit: 'edit',
 	changePersona: 'change_persona',
 	pinMessage: 'message_pin',
@@ -184,7 +190,6 @@ export const useMessageActionMenuData = (
 	);
 	const developerMode = UserSettings.developerMode;
 	const effectiveContent = useMemo(() => getEffectiveContent(message), [message]);
-	const copyableMessageText = useMemo(() => getCopyableMessageText(message, i18n), [message, i18n.locale]);
 	const canManageMessages = useMemo(
 		() =>
 			permissions != null &&
@@ -298,6 +303,14 @@ export const useMessageActionMenuData = (
 					),
 				});
 			}
+			if (supportsInteractiveActions && permissions?.canCrosspostMessage && !message.isCrossposted) {
+				interactionActions.push({
+					id: messageActionMenuItemIds.crosspost,
+					icon: <CrosspostIcon size={20} data-flx="channel.message-action-menu.groups.crosspost-icon" />,
+					label: i18n._(PUBLISH_MESSAGE_DESCRIPTOR),
+					onClick: handlers.handleCrosspostMessage,
+				});
+			}
 			if (message.isCurrentUserAuthor() && message.isUserMessage() && !message.messageSnapshots) {
 				interactionActions.push({
 					id: messageActionMenuItemIds.edit,
@@ -377,7 +390,7 @@ export const useMessageActionMenuData = (
 					),
 				});
 			}
-			if (copyableMessageText) {
+			if (effectiveContent) {
 				utilityActions.push({
 					id: messageActionMenuItemIds.copyMessage,
 					icon: <CopyMessageTextIcon size={20} data-flx="channel.message-action-menu.groups.copy-message-text-icon" />,
@@ -471,7 +484,6 @@ export const useMessageActionMenuData = (
 		isSpeaking,
 		voiceReady,
 		effectiveContent,
-		copyableMessageText,
 		handleSpeakMessage,
 		handleReportMessage,
 		handleDebugMessage,

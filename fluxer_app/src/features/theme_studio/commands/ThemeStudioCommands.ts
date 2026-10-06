@@ -3,9 +3,9 @@
 import {Routes} from '@app/app/Routes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Theme from '@app/features/theme/state/Theme';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
-import {broadcastThemeStudioMessage} from '../state/ThemeStudioBroadcast';
-import ThemeStudioState from '../state/ThemeStudioState';
 
 const logger = new Logger('ThemeStudioCommands');
 const POPOUT_WINDOW_NAME = 'fluxer_theme_studio';

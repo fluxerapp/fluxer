@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as fs from 'node:fs';
+import {Config} from '@app/api/Config';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {resolveAssetPath} from '@app/api/utils/AssetPaths';
 import type {Hono} from 'hono';
-import {Config} from '../Config';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoEnv} from '../types/HonoEnv';
-import {resolveAssetPath} from '../utils/AssetPaths';
 
 const SPEC_PATH = resolveAssetPath('openapi', 'openapi.json');
 const SPEC_DOCUMENT = JSON.parse(fs.readFileSync(SPEC_PATH, 'utf-8')) as Record<string, unknown>;

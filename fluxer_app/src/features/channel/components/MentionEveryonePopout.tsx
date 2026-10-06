@@ -4,21 +4,15 @@ import {EVERYONE_MENTION, HERE_MENTION} from '@app/features/app/config/I18nDispl
 import styles from '@app/features/channel/components/MentionEveryonePopout.module.css';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import type {I18n} from '@lingui/core';
 import {msg, ph} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
+import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {WarningIcon} from '@phosphor-icons/react';
-import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {useCallback, useEffect} from 'react';
 
-const THIS_ROLE_DESCRIPTOR = msg({
-	message: 'this role',
-	comment: 'Fallback role name in a mass-mention warning title.',
-});
-const MENTIONED_ROLE_DESCRIPTOR = msg({
-	message: 'mentioned role',
-	comment: 'Fallback role name in a mass-mention warning description.',
+const MENTION_THIS_ROLE_DESCRIPTOR = msg({
+	message: 'Mention this role?',
+	comment: 'Mass-mention warning title when the role name is unavailable.',
 });
 const ENTER_DESCRIPTOR = msg({
 	message: 'Enter',
@@ -39,12 +33,15 @@ interface MentionEveryonePopoutProps {
 
 const isMac = () => /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 export const getMentionTitle = (
+	i18n: I18n,
 	mentionType: MentionEveryonePopoutProps['mentionType'],
 	roleName?: string,
-	i18n?: I18n,
 ) => {
 	if (mentionType === 'role') {
-		const roleLabel = roleName ?? i18n?._(THIS_ROLE_DESCRIPTOR) ?? 'this role';
+		if (roleName == null) {
+			return i18n._(MENTION_THIS_ROLE_DESCRIPTOR);
+		}
+		const roleLabel = roleName;
 		return (
 			<Trans comment="Warning dialog title before sending a message that mentions every member with a role.">
 				Mention {ph({roleLabel})}?
@@ -68,45 +65,52 @@ export const getMentionDescription = (
 	mentionType: MentionEveryonePopoutProps['mentionType'],
 	memberCount: number,
 	roleName?: string,
-	i18n?: I18n,
 ) => {
 	if (mentionType === 'role') {
-		const memberCountLabel = formatNumber(memberCount, getCurrentLocale());
-		const roleLabel = roleName ?? i18n?._(MENTIONED_ROLE_DESCRIPTOR) ?? 'mentioned role';
+		if (roleName == null) {
+			return (
+				<Trans>
+					This will notify{' '}
+					<strong data-flx="channel.mention-everyone-popout.get-mention-description.strong">
+						<Plural value={memberCount} one="# member" other="# members" />
+					</strong>{' '}
+					with this role in this channel. Are you sure you want to do this?
+				</Trans>
+			);
+		}
+		const roleLabel = roleName;
 		return (
 			<Trans comment="Warning text before notifying every member with a role in the current channel.">
 				This will notify{' '}
 				<strong data-flx="channel.mention-everyone-popout.get-mention-description.strong">
-					{ph({memberCount: memberCountLabel})}
+					<Plural value={memberCount} one="# member" other="# members" />
 				</strong>{' '}
-				members with the{' '}
+				with the{' '}
 				<span className={styles.roleName} data-flx="channel.mention-everyone-popout.get-mention-description.role-name">
 					{ph({roleLabel})}
 				</span>{' '}
-				in this channel. Are you sure you want to do this?
+				role in this channel. Are you sure you want to do this?
 			</Trans>
 		);
 	}
 	if (mentionType === '@everyone') {
-		const memberCountLabel = formatNumber(memberCount, getCurrentLocale());
 		return (
 			<Trans comment="Warning text before notifying every member in the current channel.">
 				This will notify{' '}
 				<strong data-flx="channel.mention-everyone-popout.get-mention-description.strong--2">
-					{ph({memberCount: memberCountLabel})}
+					<Plural value={memberCount} one="# member" other="# members" />
 				</strong>{' '}
-				members in this channel. Are you sure you want to do this?
+				in this channel. Are you sure you want to do this?
 			</Trans>
 		);
 	}
-	const memberCountLabel = formatNumber(memberCount, getCurrentLocale());
 	return (
 		<Trans comment="Warning text before notifying online members in the current channel with @here.">
 			This will notify up to{' '}
 			<strong data-flx="channel.mention-everyone-popout.get-mention-description.strong--3">
-				{ph({memberCount: memberCountLabel})}
+				<Plural value={memberCount} one="# online member" other="# online members" />
 			</strong>{' '}
-			online members in this channel. Are you sure you want to do this?
+			in this channel. Are you sure you want to do this?
 		</Trans>
 	);
 };
@@ -158,11 +162,11 @@ export const MentionEveryonePopout = ({
 					data-flx="channel.mention-everyone-popout.warning-icon"
 				/>
 				<span className={styles.title} data-flx="channel.mention-everyone-popout.title">
-					{getMentionTitle(mentionType, roleName, i18n)}
+					{getMentionTitle(i18n, mentionType, roleName)}
 				</span>
 			</div>
 			<p className={styles.description} data-flx="channel.mention-everyone-popout.description">
-				{getMentionDescription(mentionType, memberCount, roleName, i18n)}
+				{getMentionDescription(mentionType, memberCount, roleName)}
 			</p>
 			<div className={styles.keybinds} data-flx="channel.mention-everyone-popout.keybinds">
 				<div className={styles.keybind} data-flx="channel.mention-everyone-popout.keybind">

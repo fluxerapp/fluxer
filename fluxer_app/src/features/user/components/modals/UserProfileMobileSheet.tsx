@@ -12,7 +12,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {GifIndicator} from '@app/features/channel/components/embeds/media/GifIndicator';
 import Channels from '@app/features/channel/state/Channels';
-import {EmojiInfoBottomSheet} from '@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet';
+import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
 import {
 	BLOCKED_USER_DM_WARNING_DESCRIPTOR,
 	OPEN_DM_DESCRIPTOR,
@@ -74,6 +74,7 @@ import {
 	toProfileDisplayContext,
 } from '@app/features/user/utils/ProfileGuildMembership';
 import {createMockProfile} from '@app/features/user/utils/ProfileUtils';
+import {shouldShowDiscriminator} from '@app/features/user/utils/UserTagUtils';
 import * as CallUtils from '@app/features/voice/utils/CallUtils';
 import {hasActiveDirectCallWithUser} from '@app/features/voice/utils/PrivateCallMenuUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
@@ -343,7 +344,7 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 			);
 		};
 		const handleSendFriendRequest = () => {
-			RelationshipCommands.sendFriendRequest(user.id);
+			void RelationshipActionUtils.sendFriendRequest(i18n, user.id);
 		};
 		const handleAcceptFriendRequest = () => {
 			RelationshipActionUtils.showAcceptFriendRequestConfirmation(i18n, user);
@@ -609,7 +610,7 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 													>
 														{displayName}
 													</span>
-													{isDisplayNameUsername && (
+													{isDisplayNameUsername && shouldShowDiscriminator(user) && (
 														<span
 															className={styles.discriminator}
 															data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.discriminator"
@@ -627,7 +628,7 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 															className={styles.fullTag}
 															data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.full-tag"
 														>
-															{NicknameUtils.formatTagForStreamerMode(`${user.username}#${user.discriminator}`)}
+															{NicknameUtils.formatTagForStreamerMode(user.tag)}
 														</span>
 													)}
 													<div
@@ -709,7 +710,11 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 																className={styles.actionLabel}
 																data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.action-label"
 															>
-																{isBlocked ? i18n._(OPEN_DM_DESCRIPTOR) : <Trans>Message</Trans>}
+																{isBlocked ? (
+																	i18n._(OPEN_DM_DESCRIPTOR)
+																) : (
+																	<Trans context="message-action">Message</Trans>
+																)}
 															</span>
 														</button>
 													)}
@@ -946,11 +951,12 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 					guildMember={guildMember}
 					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.user-profile-actions-sheet"
 				/>
-				<EmojiInfoBottomSheet
+				<ExpressionInfoBottomSheet
+					kind="emoji"
 					isOpen={emojiInfoOpen}
 					onClose={() => setEmojiInfoOpen(false)}
 					emoji={selectedEmoji}
-					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.emoji-info-bottom-sheet"
+					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.expression-info-bottom-sheet"
 				/>
 				{mutualSheetView != null && (
 					<MutualItemsSheet

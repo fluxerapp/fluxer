@@ -32,7 +32,7 @@ import {useDrag, useDrop} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
 const YOU_CANNOT_EDIT_THIS_ROLE_BECAUSE_IT_IS_DESCRIPTOR = msg({
-	message: 'You cannot edit this role because it is your highest role or above you',
+	message: 'You cannot edit this role because it is at or above your highest role',
 	comment:
 		'Tooltip on a disabled role row in the community roles settings tab. Explains the role hierarchy rule: you cannot edit roles at or above your own highest role.',
 });

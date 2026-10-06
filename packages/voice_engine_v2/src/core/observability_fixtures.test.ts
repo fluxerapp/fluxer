@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import capabilitiesLifecycleFixtureJson from '../../fixtures/event_logs/capabilities_lifecycle.json';
-import deviceInventoryFixtureJson from '../../fixtures/event_logs/device_inventory.json';
-import diagnosticsLifecycleFixtureJson from '../../fixtures/event_logs/diagnostics_lifecycle.json';
-import e2eeLifecycleFixtureJson from '../../fixtures/event_logs/e2ee_lifecycle.json';
-import statsLifecycleFixtureJson from '../../fixtures/event_logs/stats_lifecycle.json';
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import {transitionVoiceEngineV2} from './reducer';
+import capabilitiesLifecycleFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/capabilities_lifecycle.json';
+import deviceInventoryFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/device_inventory.json';
+import diagnosticsLifecycleFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/diagnostics_lifecycle.json';
+import e2eeLifecycleFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/e2ee_lifecycle.json';
+import statsLifecycleFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/stats_lifecycle.json';
+import {transitionVoiceEngineV2} from '@fluxer/voice_engine_v2/src/core/reducer';
 import {
 	selectVoiceEngineV2CapabilitiesProjection,
 	selectVoiceEngineV2DeviceProjection,
 	selectVoiceEngineV2DiagnosticsProjection,
 	selectVoiceEngineV2E2eeProjection,
 	selectVoiceEngineV2StatsProjection,
-} from './selectors';
+} from '@fluxer/voice_engine_v2/src/core/selectors';
 import {
 	availableVoiceEngineV2Capabilities,
 	createVoiceEngineV2InitialSnapshot,
 	type VoiceEngineV2Snapshot,
-} from './state';
+} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import {describe, expect, it} from 'vitest';
 
 interface VoiceEngineV2EventLogFixture<Expected> {
 	name: string;

@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A note is short private text the caller stores about another account.
 
-Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`. An account with an outstanding required action is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`.
 
 :::note[A note is private to its author]
 The target account never receives the note in an HTTP response or [Gateway Dispatch](/gateway/events/). A note has no relationship requirement, so the caller can hold one for an account that is neither a friend nor blocked.
@@ -24,7 +24,7 @@ A single note the caller holds for one target account.
 | --- | --- | --- |
 | note<sup>1</sup> | string | The note text the caller stored for the target account |
 
-<sup>1</sup> Never null and never the empty string. A stored note is always 1 to 256 characters after normalisation, and every clearing form deletes the record
+<sup>1</sup> Never null and never the empty string. A stored note is always 1 to 256 characters after normalisation, and an omitted, null, or empty `note` deletes the stored note
 
 ## User notes record
 
@@ -100,10 +100,10 @@ A target with no stored note returns 404 `UNKNOWN_USER`. The same status covers 
 
 Creates, replaces, or deletes the caller's note for one target account. Returns 204 with an empty body. Emits a [User Note Update](/gateway/events/#user-note-update) Gateway event.
 
-The supplied text becomes the complete stored note. An unresolved target ID returns 404 `UNKNOWN_USER`, even when the request would only delete a note. The caller can store a note for any account that exists, including a bot account, its own account, and an account it holds no relationship with.
+The supplied text becomes the complete stored note. A target ID that names no account returns 404 `UNKNOWN_USER`, even when the request would only delete a note. The caller can store a note for any account that exists, including a bot account, its own account, and an account it holds no relationship with.
 
 :::caution[An omitted, null, or empty note deletes it]
-An empty string is [read as `null`](/http-api/#input-normalisation), so the three forms are indistinguishable. Any value that normalises to the empty string, such as one made only of whitespace, fails validation with `STRING_LENGTH_INVALID`. There is no separate delete route.
+An empty string is [read as `null`](/http-api/#input-normalisation), so the forms are indistinguishable. Any value that normalises to the empty string, such as one made only of whitespace, fails validation with `STRING_LENGTH_INVALID`. There is no separate delete route.
 :::
 
 A `note` of at least 3 characters matching the instance phrase blocklist, or with a URL matching the URL blocklist, is rejected with 403 `CONTENT_BLOCKED`. The blocklist check runs before the route's own credential and body checks, so a blocked value is refused with `CONTENT_BLOCKED` even when the request would also fail one of those checks.

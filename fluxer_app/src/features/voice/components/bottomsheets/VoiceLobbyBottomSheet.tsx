@@ -27,6 +27,10 @@ import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import styles from '@app/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.module.css';
 import {CameraPreviewModalInRoom} from '@app/features/voice/components/modals/CameraPreviewModal';
+import {
+	formatMilliseconds,
+	formatPacketLossPercent,
+} from '@app/features/voice/components/voice_connection_status/shared';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import {VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR} from '@app/features/voice/engine/media_engine_facade/shared';
 import {useCameraUserCapBlocked} from '@app/features/voice/hooks/useCameraUserCapBlocked';
@@ -59,10 +63,12 @@ const CONNECT_TO_VOICE_DESCRIPTOR = msg({
 });
 const UNMUTE_DESCRIPTOR = msg({
 	message: 'Unmute',
+	context: 'voice-control-action',
 	comment: 'Mic toggle button label in the mobile voice-channel lobby (currently muted).',
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'voice-control-action',
 	comment: 'Mic toggle button label in the mobile voice-channel lobby (currently unmuted).',
 });
 const CAMERA_OFF_DESCRIPTOR = msg({
@@ -439,7 +445,7 @@ export const VoiceLobbyBottomSheet = observer(function VoiceLobbyBottomSheet({
 											className={styles.statValuePrimary}
 											data-flx="voice.voice-lobby-bottom-sheet.stat-value-primary"
 										>
-											{currentLatency}ms
+											{formatMilliseconds(currentLatency, i18n.locale)}
 										</span>
 									}
 									data-flx="voice.voice-lobby-bottom-sheet.row"
@@ -484,7 +490,7 @@ export const VoiceLobbyBottomSheet = observer(function VoiceLobbyBottomSheet({
 											className={styles.statValuePrimary}
 											data-flx="voice.voice-lobby-bottom-sheet.stat-value-primary--2"
 										>
-											{voiceStats.audioPacketLoss.toFixed(1)}%
+											{formatPacketLossPercent(voiceStats.audioPacketLoss, i18n.locale)}
 										</span>
 									}
 									data-flx="voice.voice-lobby-bottom-sheet.row--4"
@@ -498,7 +504,7 @@ export const VoiceLobbyBottomSheet = observer(function VoiceLobbyBottomSheet({
 											className={styles.statValuePrimary}
 											data-flx="voice.voice-lobby-bottom-sheet.stat-value-primary--3"
 										>
-											{voiceStats.jitter.toFixed(1)}ms
+											{formatMilliseconds(voiceStats.jitter, i18n.locale)}
 										</span>
 									}
 									data-flx="voice.voice-lobby-bottom-sheet.row--5"

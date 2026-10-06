@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {loadFixture} from '@app/api/channel/tests/AttachmentTestUtils';
+import {createPermissionOverwrite} from '@app/api/channel/tests/ChannelTestUtils';
+import {acceptInvite, addMemberRole, createGuild, createRole} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {
+	createChannelInvite,
+	createWebhook,
+	deleteWebhook,
+	executeWebhookWithAttachments,
+} from '@app/api/webhook/tests/WebhookTestUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {loadFixture} from '../../channel/tests/AttachmentTestUtils';
-import {createPermissionOverwrite} from '../../channel/tests/ChannelTestUtils';
-import {acceptInvite, addMemberRole, createGuild, createRole} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createChannelInvite, createWebhook, deleteWebhook, executeWebhookWithAttachments} from './WebhookTestUtils';
 
 describe('Webhook multipart attachment uploads', () => {
 	let harness: ApiTestHarness;

@@ -297,3 +297,13 @@
 	line-height: 1.4;
 	color: var(--text-primary-muted);
 }
+
+.systemShortcutsCommands {
+	margin: 0;
+	overflow-x: auto;
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	line-height: 1.4;
+	color: var(--text-primary);
+	white-space: pre;
+}

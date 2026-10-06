@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {getVoiceEngineV2CommandResourceKey, type VoiceEngineV2Command} from '../../protocol/commands';
+import type {
+	VoiceEngineV2OperationState,
+	VoiceEngineV2OperationStatus,
+	VoiceEngineV2Snapshot,
+	VoiceEngineV2Transition,
+} from '@fluxer/voice_engine_v2/src/core/state';
+import {
+	getVoiceEngineV2CommandResourceKey,
+	type VoiceEngineV2Command,
+} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {
 	VoiceEngineV2DataOptions,
 	VoiceEngineV2DiagnosticEntry,
@@ -11,13 +20,7 @@ import type {
 	VoiceEngineV2ParticipantVolumeOptions,
 	VoiceEngineV2RemoteTrackSubscriptionOptions,
 	VoiceEngineV2ResourceKey,
-} from '../../protocol/types';
-import type {
-	VoiceEngineV2OperationState,
-	VoiceEngineV2OperationStatus,
-	VoiceEngineV2Snapshot,
-	VoiceEngineV2Transition,
-} from '../state';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export const VOICE_ENGINE_V2_TERMINAL_OPERATIONS_KEPT_MAX = 64;
 const VOICE_ENGINE_V2_DIAGNOSTICS_KEPT_MAX = 200;

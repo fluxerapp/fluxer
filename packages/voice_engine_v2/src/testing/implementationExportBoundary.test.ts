@@ -4,16 +4,16 @@
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import * as implementationsBarrel from '@fluxer/voice_engine_v2/src/implementations';
+import * as packageBarrel from '@fluxer/voice_engine_v2/src/index';
 import {describe, expect, it} from 'vitest';
-import * as implementationsBarrel from '../implementations';
-import * as packageBarrel from '../index';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PACKAGE_ROOT = path.resolve(__dirname, '..');
 const PUBLIC_EXPORT_FILES = ['index.ts', 'implementations/index.ts'];
 const QUARANTINED_TESTING_EXPORTS = ['VoiceEngineV2TestImplementation', 'VoiceEngineV2TestDriver'];
 const LEGACY_TESTING_EXPORTS = ['JsVoiceEngineV2Implementation', 'VoiceEngineV2JsDriver'];
-const TESTING_MODULE_REFERENCE_PATTERN = /from\s+['"][./]*testing(?:\/[^'"]*)?['"]/;
+const TESTING_MODULE_REFERENCE_PATTERN = /from\s+['"](?:[./]*|@fluxer\/voice_engine_v2\/src\/)testing(?:\/[^'"]*)?['"]/;
 
 const PUBLIC_BARRELS: ReadonlyArray<[string, Record<string, unknown>]> = [
 	['src/index.ts', packageBarrel],

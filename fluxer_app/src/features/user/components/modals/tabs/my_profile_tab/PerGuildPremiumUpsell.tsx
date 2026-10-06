@@ -14,7 +14,7 @@ export const PerGuildPremiumUpsell = observer(() => {
 			<WarningAlert data-flx="user.my-profile-tab.per-guild-premium-upsell.instance-notice">
 				<Trans>
 					Customizing your avatar, banner, accent color, and bio for individual communities is not enabled on this
-					instance. Community nickname and pronouns are available for everyone.
+					instance. Community nicknames and pronouns are available for everyone.
 				</Trans>
 			</WarningAlert>
 		);
@@ -23,7 +23,7 @@ export const PerGuildPremiumUpsell = observer(() => {
 		<PlutoniumUpsell data-flx="user.my-profile-tab.per-guild-premium-upsell.plutonium-upsell">
 			<Trans>
 				Customizing your avatar, banner, accent color, and bio for individual communities requires{' '}
-				{PREMIUM_PRODUCT_NAME}. Community nickname and pronouns are free for everyone.
+				{PREMIUM_PRODUCT_NAME}. Community nicknames and pronouns are free for everyone.
 			</Trans>
 		</PlutoniumUpsell>
 	);

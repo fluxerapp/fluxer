@@ -23,7 +23,25 @@ update_state(Event, EventData, State) ->
     StateWithUpdatedUser = StateWithUpdatedUser0#{data => Data},
     UpdatedData = update_data_for_event(Event, EventData, Data, State),
     UpdatedState = StateWithUpdatedUser#{data => UpdatedData},
-    handle_post_update(Event, EventData, StateWithUpdatedUser, UpdatedState).
+    maybe_latch_stale_engines(
+        Event, handle_post_update(Event, EventData, StateWithUpdatedUser, UpdatedState)
+    ).
+
+-spec maybe_latch_stale_engines(event(), guild_state()) -> guild_state().
+maybe_latch_stale_engines(Event, State) when
+    Event =:= guild_update;
+    Event =:= guild_role_create;
+    Event =:= guild_role_update;
+    Event =:= guild_role_update_bulk;
+    Event =:= guild_role_delete;
+    Event =:= channel_create;
+    Event =:= channel_update;
+    Event =:= channel_update_bulk;
+    Event =:= channel_delete
+->
+    guild_member_list_engine_inputs:latch_stale(State);
+maybe_latch_stale_engines(_Event, State) ->
+    State.
 
 -spec ensure_normalized(guild_data()) -> guild_data().
 ensure_normalized(Data) ->
@@ -153,24 +171,28 @@ post_update_channel(channel_update, EventData, OldState, NewState) ->
 post_update_channel(channel_update_bulk, EventData, OldState, NewState) ->
     ChanIds = guild_state_channels:extract_channel_ids_from_channel_update_bulk(EventData),
     resync_channels_after_permission_change(ChanIds, OldState, NewState);
-post_update_channel(channel_delete, _EventData, _OldState, NewState) ->
+post_update_channel(channel_delete, EventData, _OldState, NewState) ->
     maybe_sync_member_list_permission_state(NewState),
+    ChannelId = snowflake_id:parse_optional(maps:get(<<"id">>, EventData, undefined)),
+    ok = guild_voice_lifecycle:cast_disconnect_all_voice_users_in_channel(ChannelId, NewState),
     NewState.
 
 -spec resync_channels_after_permission_change([integer()], guild_state(), guild_state()) ->
     guild_state().
 resync_channels_after_permission_change(ChanIds, OldState, NewState) ->
-    Rebuilt = guild_member_list_write:rebuild_channels_for_permission_change(ChanIds, NewState),
+    Rebuilt = guild_member_list_write:rebuild_channels_for_permission_change(
+        [
+            Id
+         || Id <- ChanIds,
+            guild_member_list_engine_inputs:is_stale(integer_to_binary(Id), NewState)
+        ],
+        NewState
+    ),
     Dispatched = guild_visibility:compute_and_dispatch_visibility_changes_for_channels(
         ChanIds, OldState, Rebuilt
     ),
-    lists:foreach(
-        fun(ChanId) ->
-            guild_voice_permission_sync:sync_all_voice_permissions_for_channel(
-                ChanId, Dispatched
-            )
-        end,
-        ChanIds
+    ok = guild_voice_permission_sync:sync_all_voice_permissions_for_channels(
+        ChanIds, Dispatched
     ),
     Dispatched.
 
@@ -221,24 +243,38 @@ update_data_for_event_unknown_returns_data_unchanged_test() ->
     Data = #{<<"test">> => true},
     ?assertEqual(Data, update_data_for_event(unknown_event, #{}, Data, #{})).
 
-guild_member_remove_disconnects_voice_test() ->
+guild_member_remove_asks_the_voice_server_to_disconnect_test() ->
     Self = self(),
-    TestFun = fun(GId, ChId, UId, ConnId) ->
-        Self ! {force_disconnect, GId, ChId, UId, ConnId},
-        {ok, #{success => true}}
-    end,
-    State = build_voice_test_state(TestFun),
+    VoicePid = spawn(fun() ->
+        receive
+            Message -> Self ! {voice_server_got, Message}
+        end
+    end),
+    State = build_voice_test_state(VoicePid),
     EventData = #{<<"user">> => #{<<"id">> => <<"5">>}},
     UpdatedState = update_state(guild_member_remove, EventData, State),
-    ?assertEqual(#{}, maps:get(voice_states, UpdatedState)),
     ?assertEqual(#{}, maps:get(sessions, UpdatedState, #{})),
     receive
-        {force_disconnect, 42, 20, 5, <<"conn">>} -> ok
+        {voice_server_got, {'$gen_cast', {disconnect_voice_user, Request}}} ->
+            ?assertEqual(#{user_id => 5, connection_id => null}, Request)
     after 200 ->
+        exit(VoicePid, kill),
         ?assert(false)
     end.
 
-build_voice_test_state(TestFun) ->
+guild_member_remove_leaves_the_stale_guild_copy_alone_test() ->
+    VoicePid = spawn(fun() ->
+        receive
+            _ -> ok
+        end
+    end),
+    State = build_voice_test_state(VoicePid),
+    UpdatedState = update_state(
+        guild_member_remove, #{<<"user">> => #{<<"id">> => <<"5">>}}, State
+    ),
+    ?assertEqual(maps:get(voice_states, State), maps:get(voice_states, UpdatedState)).
+
+build_voice_test_state(VoicePid) ->
     #{
         id => 42,
         data => #{
@@ -256,7 +292,7 @@ build_voice_test_state(TestFun) ->
             }
         },
         sessions => #{<<"s1">> => #{user_id => 5, pid => self()}},
-        test_force_disconnect_fun => TestFun
+        voice_server_pid => VoicePid
     }.
 
 make_cache_test_state(GuildId) ->

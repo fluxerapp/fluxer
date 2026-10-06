@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createMessageID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
+import {SavedMessageRepository} from '@app/api/user/repositories/SavedMessageRepository';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createChannelID, createMessageID, createUserID, type UserID} from '../../BrandedTypes';
-import {setCassandraQueryExecutorForTesting} from '../../database/CassandraQueryExecution';
-import {InMemoryCassandraQueryExecutor} from '../../test/InMemoryCassandraQueryExecutor';
-import {SavedMessageRepository} from './SavedMessageRepository';
 
 const CHANNEL_ID = createChannelID(10n);
 

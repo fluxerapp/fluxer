@@ -17,6 +17,7 @@ pub mod gift_codes;
 pub mod guild_detail;
 pub mod guild_detail_tabs;
 pub mod guilds_list;
+pub mod instance_billing;
 pub mod instance_config;
 pub mod job_detail;
 pub mod jobs_list;

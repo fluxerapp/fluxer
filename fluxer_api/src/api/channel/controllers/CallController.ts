@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createUserID} from '@app/api/BrandedTypes';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {CallRingBodySchema, CallUpdateBodySchema} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import {CallEligibilityResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {ChannelIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {createChannelID, createUserID} from '../../BrandedTypes';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function CallController(app: HonoApp) {
 	app.get(

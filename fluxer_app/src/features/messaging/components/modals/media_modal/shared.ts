@@ -95,7 +95,7 @@ export const ROTATE_CLOCKWISE_DESCRIPTOR = msg({
 	comment: 'Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.',
 });
 export const ROTATE_ANTICLOCKWISE_DESCRIPTOR = msg({
-	message: 'Rotate anticlockwise',
+	message: 'Rotate counterclockwise',
 	comment: 'Tooltip on the media viewer button that rotates the current media item 90 degrees anticlockwise.',
 });
 export const FORWARD_MEDIA_DESCRIPTOR = msg({

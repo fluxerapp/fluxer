@@ -6,14 +6,15 @@ description: Cross-guild lookup of a custom emoji or sticker by its own ID.
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An expression is a custom emoji or a sticker that one guild owns. The routes here resolve an expression from its own identifier, without membership of the owning guild.
+An expression is a custom emoji or a sticker that one guild owns. The metadata routes resolve an expression from its own identifier, without membership of the owning guild. The source routes name the owning guild only to a caller who may see it.
 
 | Object | Route | Owning resource |
 | --- | --- | --- |
 | [Emoji metadata](#emoji-metadata-object) | [Get emoji metadata](#get-emoji-metadata) | [Guild emojis](/http-api/guild-emojis/) |
 | [Sticker metadata](#sticker-metadata-object) | [Get sticker metadata](#get-sticker-metadata) | [Guild stickers](/http-api/guild-stickers/) |
+| [Expression source guild](#expression-source-guild-object) | [Get emoji source guild](#get-emoji-source-guild), [Get sticker source guild](#get-sticker-source-guild) | [Guilds](/http-api/guilds/) |
 
-Both routes are read-only, and neither writes an audit entry or emits a [Gateway Dispatch](/gateway/events/). Each one returns the metadata even when the owning guild has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features).
+Every route here is read-only, and none writes an audit entry or emits a [Gateway Dispatch](/gateway/events/). The metadata routes return the metadata even when the owning guild has [UNAVAILABLE_FOR_EVERYONE](/http-api/guilds/#guild-features).
 
 When an identifier names no stored expression, Fluxer returns 404 `UNKNOWN_EMOJI` or 404 `UNKNOWN_STICKER`. A stored expression whose guild no longer exists returns 404 `UNKNOWN_GUILD`.
 
@@ -43,7 +44,7 @@ One custom emoji, readable from outside its guild. It adds the owning guild to t
 
 <sup>4</sup> Fluxer detects this from the submitted image at creation, and the value never changes
 
-<sup>5</sup> False exactly when the owning guild has [CLONE_EMOJI_DISABLED](/http-api/guilds/#guild-features)
+<sup>5</sup> True exactly when the owning guild has [CLONE_EMOJI_ENABLED](/http-api/guilds/#guild-features), and false for every other guild
 
 Every member is always present, and no member is nullable.
 
@@ -81,7 +82,7 @@ One sticker, readable from outside its guild. It adds the owning guild to the [g
 
 <sup>4</sup> Fluxer detects this from the submitted image at creation, and the value never changes
 
-<sup>5</sup> False exactly when the owning guild has [CLONE_STICKER_DISABLED](/http-api/guilds/#guild-features)
+<sup>5</sup> True exactly when the owning guild has [CLONE_STICKER_ENABLED](/http-api/guilds/#guild-features), and false for every other guild
 
 Every member is always present, and no member is nullable.
 
@@ -94,6 +95,36 @@ Every member is always present, and no member is nullable.
   "name": "shipit",
   "animated": false,
   "allow_cloning": false
+}
+```
+
+## Expression source guild object
+
+The guild that owns an expression, reduced to what is needed to name it and show its badge. It is smaller than the [partial guild object](/http-api/guilds/#partial-guild-object) and has no banner, splash, or embedded splash fields.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the guild |
+| name | string | The name of the guild |
+| icon<sup>1</sup> | ?string | Guild icon hash, or null when the guild stores none |
+| features<sup>2</sup> | array[string] | The badge [guild features](/http-api/guilds/#guild-features) the guild has |
+
+<sup>1</sup> An animated icon hash has the `a_` prefix, and that prefix is removed from the returned value while the guild lacks `ANIMATED_ICON`
+
+<sup>2</sup> Only `VERIFIED`, `PARTNERED`, and `DISCOVERABLE` can appear, each at most once and in that order, and every other feature the guild has is left out
+
+Every member is always present, and only `icon` is nullable.
+
+### Example
+
+```json
+{
+  "id": "1489002177550843904",
+  "name": "Ada's Workshop",
+  "icon": "a_9f2c1d4e",
+  "features": ["VERIFIED", "DISCOVERABLE"]
 }
 ```
 
@@ -118,8 +149,8 @@ Returns the [emoji metadata object](#emoji-metadata-object) of any guild emoji. 
 
 <sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_EMOJI` for a missing emoji and `UNKNOWN_GUILD` when the emoji record survives but its guild does not
 
-:::caution[Cloning reads the emoji's guild again]
-[Clone guild emoji](/http-api/guild-emojis/#clone-guild-emoji) resolves the source emoji and the source guild again. When the source guild disables cloning between the two calls, the clone fails with 403 `MISSING_ACCESS`.
+:::caution[Cloning permission can change]
+[Clone guild emoji](/http-api/guild-emojis/#clone-guild-emoji) returns 403 `MISSING_ACCESS` if the source guild no longer allows cloning.
 :::
 
 ### Rate limit
@@ -147,10 +178,60 @@ Returns the [sticker metadata object](#sticker-metadata-object) of any guild sti
 
 <sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_STICKER` for a missing sticker and `UNKNOWN_GUILD` when the sticker record survives but its guild does not
 
-:::caution[Cloning reads the sticker's guild again]
-[Clone guild sticker](/http-api/guild-stickers/#clone-guild-sticker) resolves the source sticker and the source guild again. When the source guild disables cloning between the two calls, the clone fails with 403 `MISSING_ACCESS`.
+:::caution[Cloning permission can change]
+[Clone guild sticker](/http-api/guild-stickers/#clone-guild-sticker) returns 403 `MISSING_ACCESS` if the source guild no longer allows cloning.
 :::
 
 ### Rate limit
 
 60 requests per 10 seconds for each authenticated user, on the `guild:sticker:metadata::user_id` bucket, and every sticker the account looks up draws on that one budget.
+
+## Get emoji source guild
+
+<RouteHeader method="GET" path="/v1/emojis/{emoji_id}/source" bot />
+
+Returns the [expression source guild object](#expression-source-guild-object) of the guild that owns a emoji. Fluxer reads the guild from the gateway, not from storage. The guild is returned when it is discoverable, or when the caller is a member of it.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| emoji_id | snowflake | The ID of the emoji |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [expression source guild](#expression-source-guild-object) object | The caller may see the owning guild |
+| 404<sup>1</sup> | [error response](/http-api/#error-response) | Emoji does not exist, or the owning guild is private to the caller or unavailable |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_EMOJI` for a missing emoji, and `UNKNOWN_GUILD` when the owning guild is not discoverable and the caller is not a member of it, or when the gateway cannot reach it.
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `guild:emoji:source::user_id` bucket, and every emoji the account looks up draws on that one budget.
+
+## Get sticker source guild
+
+<RouteHeader method="GET" path="/v1/stickers/{sticker_id}/source" bot />
+
+Returns the [expression source guild object](#expression-source-guild-object) of the guild that owns a sticker. Fluxer reads the guild from the gateway, not from storage. The guild is returned when it is discoverable, or when the caller is a member of it.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| sticker_id | snowflake | The ID of the sticker |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [expression source guild](#expression-source-guild-object) object | The caller may see the owning guild |
+| 404<sup>1</sup> | [error response](/http-api/#error-response) | Sticker does not exist, or the owning guild is private to the caller or unavailable |
+
+<sup>1</sup> The [error code](/http-api/errors/) is `UNKNOWN_STICKER` for a missing sticker, and `UNKNOWN_GUILD` when the owning guild is not discoverable and the caller is not a member of it, or when the gateway cannot reach it.
+
+### Rate limit
+
+60 requests per 10 seconds for each authenticated user, on the `guild:sticker:source::user_id` bucket, and every sticker the account looks up draws on that one budget.

@@ -87,7 +87,7 @@ voice_connection_limit_allowed(UserId, ChannelIdValue, Channel, Stats, State, Is
 
 -spec has_view_and_connect_perms(integer(), integer(), guild_state()) -> boolean().
 has_view_and_connect_perms(UserId, ChannelIdValue, State) ->
-    guild_virtual_channel_access:has_virtual_access(UserId, ChannelIdValue, State) orelse
+    guild_virtual_channel_access:has_voice_access(UserId, ChannelIdValue, State) orelse
         guild_virtual_channel_access:is_move_pending(UserId, ChannelIdValue, State) orelse
         has_resolved_view_and_connect_perms(UserId, ChannelIdValue, State).
 

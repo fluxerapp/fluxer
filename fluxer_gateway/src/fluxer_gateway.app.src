@@ -11,11 +11,9 @@
         public_key,
         ssl,
         inets,
-        jose,
         ranch,
         cowboy,
         ezstd,
-        base64url,
         enats
     ]},
     {env, []},

@@ -9,7 +9,11 @@ use crate::{
         form::{checkbox, csrf_input, form_actions, submit_button},
         page_container::{card_with_header, detail_row},
     },
-    utils::{bigint::format_discriminator, timestamps::snowflake_creation_date},
+    utils::{
+        bigint::format_discriminator,
+        timestamps::{format_admin_timestamp, snowflake_creation_date},
+        user_tag::user_tag,
+    },
 };
 use maud::{Markup, html};
 
@@ -21,10 +25,11 @@ pub fn overview_tab(
     change_log: Option<&ListUserChangeLogResponse>,
 ) -> Markup {
     render_overview_tab(
-        config, user, admin_acls, csrf_token, change_log, None, false,
+        config, user, admin_acls, csrf_token, change_log, None, false, false,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn overview_tab_with_limit_config(
     config: &AdminConfig,
     user: &AdminUser,
@@ -32,6 +37,7 @@ pub fn overview_tab_with_limit_config(
     csrf_token: &str,
     change_log: Option<&ListUserChangeLogResponse>,
     limit_config: Option<&LimitConfigResponse>,
+    username_sign_in: bool,
 ) -> Markup {
     render_overview_tab(
         config,
@@ -41,9 +47,11 @@ pub fn overview_tab_with_limit_config(
         change_log,
         limit_config,
         true,
+        username_sign_in,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_overview_tab(
     config: &AdminConfig,
     user: &AdminUser,
@@ -52,6 +60,7 @@ fn render_overview_tab(
     change_log: Option<&ListUserChangeLogResponse>,
     limit_config: Option<&LimitConfigResponse>,
     show_traits: bool,
+    username_sign_in: bool,
 ) -> Markup {
     html! {
         div class="space-y-6" {
@@ -69,6 +78,22 @@ fn render_overview_tab(
                         }
                         @if let Some(reason) = &user.deletion_public_reason {
                             div class="mt-1" { "Public reason: " (reason) }
+                        }
+                        @if let Some(reason) = &user.deletion_audit_log_reason {
+                            div class="mt-1" { "Private reason: " (reason) }
+                        }
+                        div class="mt-1" {
+                            "Scheduled by "
+                            @match user.deletion_scheduled_by.as_deref() {
+                                Some(id) if id == user.id => { "the user" }
+                                Some(id) => {
+                                    a href={(config.base_path) "/users/" (id)} class="underline" { (id) }
+                                }
+                                None => { "an unrecorded source" }
+                            }
+                            @if let Some(at) = user.deletion_scheduled_at.as_deref() {
+                                " on " (format_admin_timestamp(at))
+                            }
                         }
                     }
                 }
@@ -99,7 +124,7 @@ fn render_overview_tab(
                         (snowflake_creation_date(&user.id))
                     }))
                     (detail_row("Username", html! {
-                        (user.username) "#" (format_discriminator(&user.discriminator))
+                        (user_tag(&user.username, &format_discriminator(&user.discriminator), user.bot))
                     }))
                     (detail_row("Display Name", html! {
                         @if let Some(ref name) = user.global_name {
@@ -108,7 +133,7 @@ fn render_overview_tab(
                             span class="text-neutral-400" { "Not set" }
                         }
                     }))
-                    @if acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL) {
+                    @if acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL) && !username_sign_in {
                         (detail_row("Email", html! {
                             @if let Some(ref email) = user.email {
                                 (email)
@@ -120,13 +145,6 @@ fn render_overview_tab(
                             }
                         }))
                     }
-                    (detail_row("Phone", html! {
-                        @if user.has_verified_phone {
-                            span class="text-green-700" { "Verified" }
-                        } @else {
-                            span class="text-neutral-400" { "Not verified" }
-                        }
-                    }))
                     @if acl::has_permission(admin_acls, acl::USER_VIEW_DOB) {
                         (detail_row("Date of Birth", html! {
                             (user.date_of_birth.as_deref().unwrap_or("Not set"))
@@ -251,8 +269,6 @@ fn flags_card(
     csrf_token: &str,
 ) -> Markup {
     let can_update_flags = acl::has_permission(admin_acls, acl::USER_UPDATE_FLAGS);
-    let can_update_suspicious =
-        acl::has_permission(admin_acls, acl::USER_UPDATE_SUSPICIOUS_ACTIVITY);
     html! {
         div class="space-y-6" {
             (u64_flag_form(
@@ -279,23 +295,6 @@ fn flags_card(
                 can_update_flags,
                 Some(acl::USER_UPDATE_FLAGS),
             ))
-            (i32_flag_form(
-                config,
-                &user.id,
-                "Suspicious Activity Flags",
-                "update_suspicious_flags",
-                "suspicious_flags[]",
-                user.suspicious_activity_flags,
-                admin_flags::SUSPICIOUS_ACTIVITY_FLAGS,
-                csrf_token,
-                can_update_suspicious,
-                Some(acl::USER_UPDATE_SUSPICIOUS_ACTIVITY),
-            ))
-            @if user.phone_verification_deferred {
-                p class="text-sm text-amber-700 dark:text-amber-400" {
-                    "Phone verification is deferred: the requirement above is stored but not enforced until this user joins a discoverable or large community within the deferral window."
-                }
-            }
         }
     }
 }
@@ -436,11 +435,6 @@ fn acls_card(
                             @for item in acl::ALL_ACLS {
                                 @let checked = user.acls.iter().any(|value| value == item);
                                 (flag_checkbox("acls[]", item.to_string(), item, checked, true))
-                            }
-                        }
-                        @for item in &user.acls {
-                            @if !acl::ALL_ACLS.iter().any(|known| known == &item.as_str()) {
-                                input type="hidden" name="acls[]" value=(item);
                             }
                         }
                         (form_actions(html! {
@@ -584,4 +578,65 @@ fn custom_traits<'a>(user: &'a AdminUser, trait_definitions: &[&str]) -> Vec<&'a
         .filter(|trait_name| !trait_definitions.contains(trait_name))
         .filter(|trait_name| !DERIVED_TRAITS.contains(trait_name))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_config() -> AdminConfig {
+        AdminConfig {
+            env: crate::config::RuntimeEnv::Test,
+            host: String::new(),
+            port: 3020,
+            secret_key_base: "test-secret".to_owned(),
+            base_path: "/admin".to_owned(),
+            api_endpoint: String::new(),
+            media_endpoint: String::new(),
+            static_cdn_endpoint: String::new(),
+            admin_endpoint: String::new(),
+            web_app_endpoint: String::new(),
+            oauth_client_id: String::new(),
+            oauth_client_secret: String::new(),
+            oauth_redirect_uri: String::new(),
+            build_version: "test".to_owned(),
+            self_hosted: true,
+            proxy: crate::config::ProxyConfig {
+                trust_client_ip_header: false,
+                client_ip_header_name: String::new(),
+            },
+        }
+    }
+
+    fn render_email_row(username_sign_in: bool) -> String {
+        let user: AdminUser = serde_json::from_value(serde_json::json!({
+            "id": "1500000000000000001",
+            "username": "target",
+            "discriminator": "0001",
+            "email": "target@example.com"
+        }))
+        .expect("valid admin user");
+        let acls = vec![acl::USER_VIEW_EMAIL.to_owned()];
+        render_overview_tab(
+            &test_config(),
+            &user,
+            &acls,
+            "csrf",
+            None,
+            None,
+            false,
+            username_sign_in,
+        )
+        .into_string()
+    }
+
+    #[test]
+    fn username_mode_hides_the_email_row() {
+        assert!(!render_email_row(true).contains("target@example.com"));
+    }
+
+    #[test]
+    fn email_mode_shows_the_email_row() {
+        assert!(render_email_row(false).contains("target@example.com"));
+    }
 }

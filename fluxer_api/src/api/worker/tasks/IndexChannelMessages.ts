@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MessageID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {seconds} from 'itty-time';
 import {z} from 'zod';
-import type {MessageID, UserID} from '../../BrandedTypes';
-import {createChannelID} from '../../BrandedTypes';
-import {Logger} from '../../Logger';
-import {getMessageSearchService} from '../../SearchFactory';
-import type {IMessageSearchService} from '../../search/IMessageSearchService';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	channelId: z.string(),

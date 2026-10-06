@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageReferenceTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 import {
 	createChannel,
 	createPermissionOverwrite,
 	sendChannelMessage,
 	setupTestGuildWithMembers,
 	updateGuild,
-} from './ChannelTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {MessageReferenceTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Message forward permissions', () => {
 	let harness: ApiTestHarness;

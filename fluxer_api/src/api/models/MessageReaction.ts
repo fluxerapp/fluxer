@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, EmojiID, MessageID, UserID} from '../BrandedTypes';
-import type {MessageReactionRow} from '../database/types/MessageTypes';
+import type {ChannelID, EmojiID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {MessageReactionRow} from '@app/api/database/types/MessageTypes';
 
 export class MessageReaction {
 	readonly channelId: ChannelID;

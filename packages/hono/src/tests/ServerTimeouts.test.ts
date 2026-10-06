@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createServer} from '@fluxer/hono/src/Server';
 import {Hono} from 'hono';
 import {afterEach, describe, expect, it} from 'vitest';
-import {createServer} from '../Server';
 
 const servers: Array<{close: (cb: () => void) => void}> = [];
 

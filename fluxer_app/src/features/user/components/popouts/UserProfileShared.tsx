@@ -180,7 +180,11 @@ export const UserProfileBio: React.FC<{
 			>
 				<SafeMarkdown
 					content={bioContent}
-					options={{context: MarkdownContext.RESTRICTED_USER_BIO, guildId: profile?.guildId ?? undefined}}
+					options={{
+						context: MarkdownContext.RESTRICTED_USER_BIO,
+						guildId: profile?.guildId ?? undefined,
+						disableEmojiInfoCard: true,
+					}}
 					data-flx="user.user-profile-shared.user-profile-bio.safe-markdown"
 				/>
 			</div>
@@ -234,6 +238,7 @@ export const UserProfileTimezoneInfo: React.FC<{profile: Profile}> = observer(({
 	const localTime = getCachedDateTimeFormat(locale, {
 		hour: 'numeric',
 		minute: '2-digit',
+		hour12: DateUtils.shouldUse12HourFormat(locale),
 		timeZone: 'UTC',
 	}).format(getDateAtOffset(now, timezoneOffset));
 	const offsetDifference = timezoneOffset - getViewerOffsetMinutes();

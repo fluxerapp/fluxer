@@ -27,6 +27,7 @@ import {
 } from '@app/features/voice/components/compact_voice_call_view/shared';
 import {useCompactVoiceCallResize} from '@app/features/voice/components/compact_voice_call_view/useCompactVoiceCallResize';
 import {useConnectionLabel} from '@app/features/voice/components/compact_voice_call_view/useConnectionLabel';
+import {FocusedStreamVolumeControl} from '@app/features/voice/components/FocusedStreamVolumeControl';
 import {PoppedOutOverlay} from '@app/features/voice/components/popout/PoppedOutOverlay';
 import {
 	selectPoppedOutOverlayTransition,
@@ -523,6 +524,14 @@ export const CompactVoiceCallViewInner: React.FC<CompactVoiceCallViewProps> = ob
 					fullscreenLabel={fullscreenButtonLabel}
 					fullscreenIcon={FullscreenButtonIcon}
 					onToggleFullscreen={handleToggleVoiceCallAppFullscreen}
+					volumeControl={
+						<FocusedStreamVolumeControl
+							track={layoutMode === 'focus' ? focusMainTrack : null}
+							guildId={channel.guildId}
+							channelId={channel.id}
+							data-flx="voice.compact-voice-call-view.compact-voice-call-view-inner.focused-stream-volume-control"
+						/>
+					}
 					data-flx="voice.compact-voice-call-view.compact-voice-call-view-inner.voice-call-corner-controls"
 				/>
 				{shouldRenderPoppedOutOverlay(poppedOutTransition.snapshot) && (

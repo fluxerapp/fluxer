@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {User} from '@app/api/models/User';
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {describe, expect, it} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import {EMPTY_USER_ROW, type UserRow} from '../../database/types/UserTypes';
-import {User} from '../../models/User';
-import {MockKVProvider} from '../../test/mocks/MockKVProvider';
-import type {UserRepository} from '../../user/repositories/UserRepository';
-import {KVAccountDeletionQueueService} from '../KVAccountDeletionQueueService';
 
 function createUser(id: bigint, overrides: Partial<Pick<UserRow, 'bot' | 'flags'>> = {}): User {
 	return new User({

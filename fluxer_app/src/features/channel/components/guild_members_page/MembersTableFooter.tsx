@@ -21,7 +21,7 @@ export interface MembersTableFooterProps {
 	isSearching: boolean;
 	activeEllipsis: PaginationEllipsisSide | null;
 	pageJumpValue: string;
-	ellipsisInputRef: React.MutableRefObject<HTMLInputElement | null>;
+	ellipsisInputRef: React.RefObject<HTMLInputElement | null>;
 	onPageSelect: (page: number) => void;
 	setActiveEllipsis: React.Dispatch<React.SetStateAction<PaginationEllipsisSide | null>>;
 	setPageJumpValue: React.Dispatch<React.SetStateAction<string>>;

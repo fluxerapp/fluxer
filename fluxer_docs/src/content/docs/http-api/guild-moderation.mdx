@@ -45,16 +45,12 @@ A guild ban object names the banned account, the moderator, the reason, and any 
 ```
 
 :::note[Fluxer never returns the ban address or email]
-A ban also stores the target's last known IP address and the lower-cased address of their account email. An address on the instance exemption list is stored as null.
+A ban also stores the email address and the last active IP address of the banned account. Fluxer rejects an invite join by any account that matches either value. These values are not exposed in the ban object.
 :::
 
-Accepting an [invite](/http-api/invites/) compares the joining account against the banned account identifier, the stored address, and the stored email. The address comparison uses a normalised decision key: the exact address for IPv4, the mapped IPv4 address for an IPv4-mapped IPv6 address, and the `/64` network for every other IPv6 address. An address match refuses the join with 403 `USER_IP_BANNED_FROM_GUILD`.
+An [invite](/http-api/invites/) rejected for an IP match returns 403 `USER_IP_BANNED_FROM_GUILD`. An account or email match returns 403 `USER_BANNED_FROM_GUILD`. Fluxer skips the IP match when the joining account's address is on the operator's IP ban exemption list, or when IP lookup classifies that address as carrier-grade NAT or shared access. Adding a member through the Admin API, installing a bot through OAuth2, and the automatic join into the visionaries guild after a Stripe purchase skip every ban check. The automatic join into the single community checks the account and IP matches and skips the email match.
 
-Fluxer skips the address match when the joining address is on the instance exemption list. It also skips the match when the banned address is a single address and the joining address is reported as high mobile or carrier-grade NAT blast radius. The match runs when that report is unavailable or fails.
-
-The email comparison is exact and runs only when an invite is accepted. An email match refuses the join with 403 `USER_BANNED_FROM_GUILD`. Every other path that adds a member compares the account identifier and the address alone, and several compare nothing. [Grant OAuth2 consent](/http-api/oauth2/#grant-oauth2-consent) installing a bot, the admin membership operations, the stock community auto-join, and the premium entitlement guild join all add the member without checking the ban list.
-
-[Remove guild ban](#remove-guild-ban) releases both blocks. Permanently deleting the banned account deletes every guild ban it holds, and that releases both blocks in every guild at once.
+[Remove guild ban](#remove-guild-ban) releases the IP address block and the email block. Permanently deleting the banned account deletes every guild ban it holds, which releases both of those blocks in every guild at once.
 
 ## List guild bans
 
@@ -99,9 +95,9 @@ Creates a guild ban, or replaces an existing one, and returns 204 with an empty 
 
 - The caller cannot ban themselves, and Fluxer reports a self-target as 404 `UNKNOWN_MEMBER`.
 - Banning a target who is a member also requires role hierarchy authority over that member. The guild owner holds that authority over everyone, and no other caller holds it over the owner.
-- A target who is not a member can still be banned, and the ban pre-empts a future join.
+- A target who is not a member can still be banned, and Fluxer refuses a later join by that account.
 
-Fluxer scans every string in a JSON request body against the instance phrase and URL blocklists, and that includes `reason`. A blocked value returns 403 `CONTENT_BLOCKED` before the rate limit bucket, the credential check, and the permission check.
+A blocked `reason` returns 403 `CONTENT_BLOCKED`.
 
 ### Path parameters
 
@@ -129,12 +125,12 @@ The body is optional, and so is every field in it. Fluxer reads an omitted or wh
 
 <sup>4</sup> Zero and an omitted field both create a permanent ban. Any value outside 60 through 63072000, which is two years, fails with `INVALID_FORMAT`
 
-`delete_message_days` defaults to 0, so a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) entry always records `options.delete_member_days`. That option is `0` for a ban that supplied only `delete_message_seconds`.
+A [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) entry records `options.delete_message_seconds` when the effective interval is positive, whichever field set it. A ban that deletes nothing records no option, and the deprecated `delete_member_days` option is present only on an entry written before this field.
 
-An omitted or null `reason` falls back to the `X-Audit-Log-Reason` value, while a supplied value that normalises to the empty string is stored as null without falling back. The header remains the audit entry reason in every case.
+An omitted or null `reason` falls back to the `X-Audit-Log-Reason` value, while a supplied value that normalises to the empty string is stored as null without falling back. The audit entry reason is the header when the request sends one, and the stored ban reason otherwise.
 
 :::caution[Banning an already banned account succeeds]
-The second ban overwrites the stored reason, moderator, issue time, expiry, address, and email. Re-issuing can downgrade a permanent ban to a temporary one or extend a temporary one. There is no conditional form.
+The second ban replaces the previous ban's details. Re-issuing can turn a permanent ban into a temporary one or extend a temporary ban. There is no conditional form.
 :::
 
 ### Response
@@ -155,9 +151,9 @@ The second ban overwrites the stored reason, moderator, issue time, expiry, addr
 
 ### Side effects
 
-The operation stores the ban together with the target's last known IP address and account email. It records a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) audit entry whose change list has the stored [guild ban change fields](/http-api/guild-audit-logs/#guild-ban-change-fields), emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Ban Add](/gateway/events/#guild-ban-add) to the guild's sessions, subject to [event filtering](/gateway/event-filtering/). A positive deletion interval schedules permanent deletion of the target's newer guild messages.
+The operation records a [`MEMBER_BAN_ADD`](/http-api/guild-audit-logs/#audit-actions) audit entry with the [guild ban change fields](/http-api/guild-audit-logs/#guild-ban-change-fields). It emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Ban Add](/gateway/events/#guild-ban-add), subject to [event filtering](/gateway/event-filtering/). A positive deletion interval permanently deletes the target's guild messages within that interval.
 
-A target that is a current member also loses that membership. The guild member count decreases. The guild's sessions receive [Guild Member Remove](/gateway/events/#guild-member-remove), the banned account's sessions receive [Guild Delete](/gateway/events/#guild-delete), and the membership is dropped from the member search index of an indexed guild. Fluxer records no `MEMBER_KICK` entry alongside the ban entry.
+A current member is removed. The guild receives [Guild Member Remove](/gateway/events/#guild-member-remove) and the banned account receives [Guild Delete](/gateway/events/#guild-delete). No `MEMBER_KICK` audit entry is recorded.
 
 A ban does not preserve an active communication timeout for a later rejoin, and [Remove guild member](/http-api/guild-members/#remove-guild-member) does. The banned account loses its guild nickname, guild avatar hash, guild banner hash, biography, pronouns, accent colour, and role set. Its read states and guild settings stay in place.
 
@@ -201,7 +197,7 @@ The operation deletes the ban together with the address and email blocks it had.
 
 It does not restore the removed membership, the guild profile fields and roles that membership had, or the deleted messages. The unbanned account can rejoin through an ordinary invite.
 
-An instance-wide IP ban is a separate mechanism this operation does not touch. Every request from an address it covers is still refused with 403 `GLOBAL_IP_BANNED` for a permanent ban and 403 `GLOBAL_IP_TEMPORARILY_BANNED` for a 24 hour one.
+An instance-wide IP ban is a separate mechanism this operation does not touch. Every request from an address it covers is still refused with 403 `GLOBAL_IP_BANNED` for a permanent ban and 403 `GLOBAL_IP_TEMPORARILY_BANNED` for a temporary one.
 
 ### Rate limit
 

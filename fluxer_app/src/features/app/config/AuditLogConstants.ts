@@ -21,25 +21,24 @@ const CHANNEL_DELETED_DESCRIPTOR = msg({
 	message: 'Channel deleted',
 	comment: 'Audit log entry label. Past-tense action describing that a channel was deleted.',
 });
-const CHANNEL_OVERWRITE_ADDED_DESCRIPTOR = msg({
-	message: 'Channel overwrite added',
-	comment: 'Audit log entry label. A channel permission override was added for a role or member.',
+const PERMISSION_OVERRIDE_ADDED_DESCRIPTOR = msg({
+	message: 'Permission override added',
+	comment:
+		'Option in the activity log "Filter by action" dropdown. It shows only entries where a new permission override was added. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. It can be for a role, a member or @everyone. Use the same word for override as the channel permissions settings, such as Add override. Keep the word override so it does not read as a permission being granted. Word it as a short label like "Channel created", and keep it parallel with "Permission override updated" and "Permission override removed".',
 });
-const CHANNEL_OVERWRITE_UPDATED_DESCRIPTOR = msg({
-	message: 'Channel overwrite updated',
-	comment: 'Audit log entry label. A channel permission override was edited for a role or member.',
+const PERMISSION_OVERRIDE_UPDATED_DESCRIPTOR = msg({
+	message: 'Permission override updated',
+	comment:
+		'Option in the activity log "Filter by action" dropdown. It shows only entries where an existing permission override was changed. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. It can be for a role, a member or @everyone. Use the same word for override as the channel permissions settings, such as Add override. Keep the word override so it does not read as a permission being changed. Word it as a short label like "Channel updated", and keep it parallel with "Permission override added" and "Permission override removed".',
 });
-const CHANNEL_OVERWRITE_REMOVED_DESCRIPTOR = msg({
-	message: 'Channel overwrite removed',
-	comment: 'Audit log entry label. A channel permission override was removed for a role or member.',
+const PERMISSION_OVERRIDE_REMOVED_DESCRIPTOR = msg({
+	message: 'Permission override removed',
+	comment:
+		'Option in the activity log "Filter by action" dropdown. It shows only entries where a permission override was removed from a channel or category. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. It can be for a role, a member or @everyone. Use the same word for override as the channel permissions settings, such as Add override. Keep the word override so it does not read as a permission being taken away. Word it as a short label like "Channel deleted", and keep it parallel with "Permission override added" and "Permission override updated".',
 });
 const MEMBER_KICKED_DESCRIPTOR = msg({
 	message: 'Member kicked',
 	comment: 'Audit log entry label. A member was kicked (removed) from the community by a moderator.',
-});
-const MEMBERS_PRUNED_DESCRIPTOR = msg({
-	message: 'Members pruned',
-	comment: 'Audit log entry label. Inactive members were bulk-removed via the prune tool.',
 });
 const MEMBER_BANNED_DESCRIPTOR = msg({
 	message: 'Member banned',
@@ -84,10 +83,6 @@ const ROLE_DELETED_DESCRIPTOR = msg({
 const INVITE_CREATED_DESCRIPTOR = msg({
 	message: 'Invite created',
 	comment: 'Audit log entry label. A new invite link was created.',
-});
-const INVITE_UPDATED_DESCRIPTOR = msg({
-	message: 'Invite updated',
-	comment: 'Audit log entry label. An existing invite link was edited.',
 });
 const INVITE_DELETED_DESCRIPTOR = msg({
 	message: 'Invite deleted',
@@ -179,6 +174,7 @@ const STICKER_DESCRIPTOR = msg({
 });
 const INVITE_DESCRIPTOR = msg({
 	message: 'Invite',
+	context: 'invite-noun',
 	comment: 'Audit log target-type filter label. Filters entries that target an invite link.',
 });
 const WEBHOOK_DESCRIPTOR = msg({
@@ -234,27 +230,22 @@ export const AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
 	},
 	{
 		value: AuditLogActionType.CHANNEL_OVERWRITE_CREATE,
-		label: CHANNEL_OVERWRITE_ADDED_DESCRIPTOR,
+		label: PERMISSION_OVERRIDE_ADDED_DESCRIPTOR,
 		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
 	},
 	{
 		value: AuditLogActionType.CHANNEL_OVERWRITE_UPDATE,
-		label: CHANNEL_OVERWRITE_UPDATED_DESCRIPTOR,
+		label: PERMISSION_OVERRIDE_UPDATED_DESCRIPTOR,
 		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
 	},
 	{
 		value: AuditLogActionType.CHANNEL_OVERWRITE_DELETE,
-		label: CHANNEL_OVERWRITE_REMOVED_DESCRIPTOR,
+		label: PERMISSION_OVERRIDE_REMOVED_DESCRIPTOR,
 		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
 	},
 	{
 		value: AuditLogActionType.MEMBER_KICK,
 		label: MEMBER_KICKED_DESCRIPTOR,
-		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
-	},
-	{
-		value: AuditLogActionType.MEMBER_PRUNE,
-		label: MEMBERS_PRUNED_DESCRIPTOR,
 		targetType: AUDIT_LOG_TARGET_TYPES.MEMBER,
 	},
 	{
@@ -313,11 +304,6 @@ export const AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
 		targetType: AUDIT_LOG_TARGET_TYPES.INVITE,
 	},
 	{
-		value: AuditLogActionType.INVITE_UPDATE,
-		label: INVITE_UPDATED_DESCRIPTOR,
-		targetType: AUDIT_LOG_TARGET_TYPES.INVITE,
-	},
-	{
 		value: AuditLogActionType.INVITE_DELETE,
 		label: INVITE_DELETED_DESCRIPTOR,
 		targetType: AUDIT_LOG_TARGET_TYPES.INVITE,
@@ -370,22 +356,22 @@ export const AUDIT_LOG_ACTIONS: ReadonlyArray<AuditLogActionDefinition> = [
 	{
 		value: AuditLogActionType.MESSAGE_DELETE,
 		label: MESSAGE_DELETED_DESCRIPTOR,
-		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
 	},
 	{
 		value: AuditLogActionType.MESSAGE_BULK_DELETE,
 		label: MESSAGES_DELETED_DESCRIPTOR,
-		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
 	},
 	{
 		value: AuditLogActionType.MESSAGE_PIN,
 		label: MESSAGE_PINNED_DESCRIPTOR,
-		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
 	},
 	{
 		value: AuditLogActionType.MESSAGE_UNPIN,
 		label: MESSAGE_UNPINNED_DESCRIPTOR,
-		targetType: AUDIT_LOG_TARGET_TYPES.CHANNEL,
+		targetType: AUDIT_LOG_TARGET_TYPES.MESSAGE,
 	},
 ];
 

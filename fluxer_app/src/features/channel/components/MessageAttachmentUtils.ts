@@ -4,15 +4,12 @@ import type {MessageAttachment} from '@fluxer/schema/src/domains/message/Message
 
 export const ATTACHMENT_CARD_WIDTH = 400;
 
-const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp', 'image/avif'];
-const VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
-
 function isImageType(contentType?: string): boolean {
-	return contentType ? IMAGE_TYPES.includes(contentType) : false;
+	return contentType?.startsWith('image/') ?? false;
 }
 
 function isVideoType(contentType?: string): boolean {
-	return contentType ? VIDEO_TYPES.includes(contentType) : false;
+	return contentType?.startsWith('video/') ?? false;
 }
 
 const hasRenderableDimensions = (attachment: MessageAttachment): boolean =>

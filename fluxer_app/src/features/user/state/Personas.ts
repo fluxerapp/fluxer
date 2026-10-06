@@ -144,7 +144,6 @@ class Personas {
 	// 	}
 	// }
 
-	@action
 	handlePersonaUpdate(
 		persona: WirePersona,
 		options?: {

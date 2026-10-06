@@ -13,7 +13,7 @@
     handle_reload/2
 ]).
 
--define(MAX_RELOAD_CARRY_WARN_MEMBERS, 100000).
+-define(MAX_RELOAD_REUSE_WARN_MEMBERS, 100000).
 
 -type guild_state() :: map().
 -type user_id() :: integer().
@@ -39,6 +39,9 @@ init_base_state(GuildState) ->
         member_presence => ets:new(member_presence, [set, public]),
         connected_user_ids => sets:new(),
         user_session_counts => #{},
+        guild_session_refs => guild_sessions_connect:build_session_ref_index(
+            maps:get(sessions, TransferSafe, #{})
+        ),
         viewable_channels_cache => ets:new(viewable_channels_cache, [set, public])
     },
     guild_handoff:restore_transferred_session_state(BaseState).
@@ -127,8 +130,10 @@ handle_reload(NewData, State) ->
         NewData, ExistingVoiceStates
     ),
     NormalizedNewData0 = guild_data_index:normalize_map(ReloadData),
-    NormalizedNewData = carry_members_table(OldData, NormalizedNewData0),
-    NewState0 = State#{voice_states => ReloadVoiceStates, data => NormalizedNewData},
+    NormalizedNewData = reuse_members_table(OldData, NormalizedNewData0),
+    NewState0 = guild_member_list_engine_inputs:forget_all(
+        State#{voice_states => ReloadVoiceStates, data => NormalizedNewData}
+    ),
     NewState1 = guild_availability:handle_unavailability_transition(State, NewState0),
     NewState2 = guild_sessions:refresh_all_viewable_channels(NewState1),
     GuildId = maps:get(id, State),
@@ -144,16 +149,16 @@ handle_reload(NewData, State) ->
     ok = guild_maintenance:maybe_put_permission_cache(NewState),
     {reply, ok, NewState}.
 
--spec carry_members_table(term(), term()) -> term().
-carry_members_table(OldData, NewData) when is_map(OldData), is_map(NewData) ->
-    carry_healthy_members_table(OldData, NewData);
-carry_members_table(_OldData, NewData) ->
+-spec reuse_members_table(term(), term()) -> term().
+reuse_members_table(OldData, NewData) when is_map(OldData), is_map(NewData) ->
+    reuse_healthy_members_table(OldData, NewData);
+reuse_members_table(_OldData, NewData) ->
     NewData.
 
--spec carry_healthy_members_table(map(), map()) -> map().
-carry_healthy_members_table(OldData, NewData) ->
+-spec reuse_healthy_members_table(map(), map()) -> map().
+reuse_healthy_members_table(OldData, NewData) ->
     case members_ets_table(OldData) of
-        Tab when is_reference(Tab) -> carry_live_members_table(Tab, OldData, NewData);
+        Tab when is_reference(Tab) -> reuse_live_members_table(Tab, OldData, NewData);
         undefined -> maps:remove(members_ets, NewData)
     end.
 
@@ -163,8 +168,8 @@ members_ets_table(#{members_ets := Tab}) ->
 members_ets_table(_Data) ->
     undefined.
 
--spec carry_live_members_table(ets:tid(), map(), map()) -> map().
-carry_live_members_table(Tab, OldData, NewData) ->
+-spec reuse_live_members_table(ets:tid(), map(), map()) -> map().
+reuse_live_members_table(Tab, OldData, NewData) ->
     case guild_members_table_repair:members_table_healthy(Tab) of
         true -> apply_members_table_delta(Tab, OldData, NewData);
         false -> maps:remove(members_ets, NewData)
@@ -174,7 +179,7 @@ carry_live_members_table(Tab, OldData, NewData) ->
 apply_members_table_delta(Tab, OldData, NewData) ->
     OldMap = guild_data_index_members:member_map(OldData),
     NewMap = guild_data_index_members:member_map(NewData),
-    maybe_warn_large_carry(map_size(NewMap)),
+    maybe_warn_large_reuse(map_size(NewMap)),
     try
         ok = insert_changed_members(Tab, OldMap, NewMap),
         ok = delete_removed_members(Tab, OldMap, NewMap),
@@ -218,13 +223,13 @@ delete_member_row(Tab, UserId) ->
     true = ets:delete(Tab, UserId),
     ok.
 
--spec maybe_warn_large_carry(non_neg_integer()) -> ok.
-maybe_warn_large_carry(Size) when Size > ?MAX_RELOAD_CARRY_WARN_MEMBERS ->
+-spec maybe_warn_large_reuse(non_neg_integer()) -> ok.
+maybe_warn_large_reuse(Size) when Size > ?MAX_RELOAD_REUSE_WARN_MEMBERS ->
     logger:warning(
         "guild_reload_members_table_carry_large: members=~p threshold=~p",
-        [Size, ?MAX_RELOAD_CARRY_WARN_MEMBERS]
+        [Size, ?MAX_RELOAD_REUSE_WARN_MEMBERS]
     );
-maybe_warn_large_carry(_Size) ->
+maybe_warn_large_reuse(_Size) ->
     ok.
 
 -spec collect_active_pid(term(), map(), [pid()]) -> [pid()].
@@ -260,66 +265,66 @@ guild_id(State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-carry_members_table_carries_healthy_tid_test() ->
-    Tab = ets:new(carry_members, [set, public]),
+reuse_members_table_keeps_healthy_tid_test() ->
+    Tab = ets:new(reuse_members, [set, public]),
     try
-        OldMap = #{1 => carry_member(1), 2 => carry_member(2)},
-        NewMap = #{1 => carry_member(1), 3 => carry_member(3)},
-        seed_carry_table(Tab, OldMap),
-        OldData = carry_data(OldMap, Tab),
-        Carried = carry_members_table(OldData, carry_data(NewMap, undefined)),
-        ?assertEqual(Tab, maps:get(members_ets, Carried)),
-        ?assertEqual([1, 3], carry_table_ids(Tab))
+        OldMap = #{1 => reuse_member(1), 2 => reuse_member(2)},
+        NewMap = #{1 => reuse_member(1), 3 => reuse_member(3)},
+        seed_reuse_table(Tab, OldMap),
+        OldData = reuse_data(OldMap, Tab),
+        Reused = reuse_members_table(OldData, reuse_data(NewMap, undefined)),
+        ?assertEqual(Tab, maps:get(members_ets, Reused)),
+        ?assertEqual([1, 3], reuse_table_ids(Tab))
     after
         ets:delete(Tab)
     end.
 
-carry_members_table_skips_dead_tid_test() ->
-    Tab = ets:new(dead_carry_members, [set, public]),
+reuse_members_table_skips_dead_tid_test() ->
+    Tab = ets:new(dead_reuse_members, [set, public]),
     true = ets:delete(Tab),
-    OldData = carry_data(#{1 => carry_member(1)}, Tab),
-    NewData = carry_data(#{1 => carry_member(1)}, undefined),
-    ?assertEqual(NewData, carry_members_table(OldData, NewData)).
+    OldData = reuse_data(#{1 => reuse_member(1)}, Tab),
+    NewData = reuse_data(#{1 => reuse_member(1)}, undefined),
+    ?assertEqual(NewData, reuse_members_table(OldData, NewData)).
 
-carry_members_table_without_old_tid_leaves_new_data_test() ->
-    OldData = carry_data(#{1 => carry_member(1)}, undefined),
-    NewData = carry_data(#{2 => carry_member(2)}, undefined),
-    ?assertEqual(NewData, carry_members_table(OldData, NewData)).
+reuse_members_table_without_old_tid_leaves_new_data_test() ->
+    OldData = reuse_data(#{1 => reuse_member(1)}, undefined),
+    NewData = reuse_data(#{2 => reuse_member(2)}, undefined),
+    ?assertEqual(NewData, reuse_members_table(OldData, NewData)).
 
-carry_members_table_delta_failure_falls_back_to_new_data_test() ->
+reuse_members_table_delta_failure_falls_back_to_new_data_test() ->
     Tab = ets:new(failing_members, [set, public]),
     true = ets:delete(Tab),
-    OldData = carry_data(#{}, undefined),
-    NewData = carry_data(#{1 => carry_member(1)}, undefined),
+    OldData = reuse_data(#{}, undefined),
+    NewData = reuse_data(#{1 => reuse_member(1)}, undefined),
     ?assertEqual(NewData, apply_members_table_delta(Tab, OldData, NewData)).
 
-carry_delta_never_empties_table_test() ->
+reuse_delta_never_empties_table_test() ->
     Tab = ets:new(delta_members, [set, public]),
     try
-        OldMap = #{1 => carry_member(1), 2 => carry_member(2), 3 => carry_member(3)},
+        OldMap = #{1 => reuse_member(1), 2 => reuse_member(2), 3 => reuse_member(3)},
         NewMap = #{
-            1 => carry_member(1),
-            2 => carry_member(2, <<"changed">>),
-            4 => carry_member(4)
+            1 => reuse_member(1),
+            2 => reuse_member(2, <<"changed">>),
+            4 => reuse_member(4)
         },
-        seed_carry_table(Tab, OldMap),
+        seed_reuse_table(Tab, OldMap),
         ?assertEqual(3, ets:info(Tab, size)),
         ok = insert_changed_members(Tab, OldMap, NewMap),
         ?assertEqual(4, ets:info(Tab, size)),
-        ?assertEqual([{1, carry_member(1)}], ets:lookup(Tab, 1)),
+        ?assertEqual([{1, reuse_member(1)}], ets:lookup(Tab, 1)),
         ok = delete_removed_members(Tab, OldMap, NewMap),
         ?assertEqual(3, ets:info(Tab, size)),
-        ?assertEqual([{1, carry_member(1)}], ets:lookup(Tab, 1)),
-        ?assertEqual([1, 2, 4], carry_table_ids(Tab)),
-        ?assertEqual([{2, carry_member(2, <<"changed">>)}], ets:lookup(Tab, 2))
+        ?assertEqual([{1, reuse_member(1)}], ets:lookup(Tab, 1)),
+        ?assertEqual([1, 2, 4], reuse_table_ids(Tab)),
+        ?assertEqual([{2, reuse_member(2, <<"changed">>)}], ets:lookup(Tab, 2))
     after
         ets:delete(Tab)
     end.
 
-carry_delta_skips_unchanged_members_test() ->
+reuse_delta_skips_unchanged_members_test() ->
     Tab = ets:new(unchanged_members, [set, public]),
     try
-        MemberMap = #{1 => carry_member(1)},
+        MemberMap = #{1 => reuse_member(1)},
         true = ets:insert(Tab, {1, sentinel}),
         ok = insert_changed_members(Tab, MemberMap, MemberMap),
         ?assertEqual([{1, sentinel}], ets:tab2list(Tab))
@@ -327,21 +332,21 @@ carry_delta_skips_unchanged_members_test() ->
         ets:delete(Tab)
     end.
 
-carry_data(MemberMap, undefined) ->
+reuse_data(MemberMap, undefined) ->
     #{<<"members">> => MemberMap, members_normalized => MemberMap};
-carry_data(MemberMap, Tab) ->
+reuse_data(MemberMap, Tab) ->
     #{<<"members">> => MemberMap, members_normalized => MemberMap, members_ets => Tab}.
 
-seed_carry_table(Tab, MemberMap) ->
+seed_reuse_table(Tab, MemberMap) ->
     maps:foreach(fun(UserId, Member) -> ets:insert(Tab, {UserId, Member}) end, MemberMap).
 
-carry_member(UserId) ->
+reuse_member(UserId) ->
     #{<<"user">> => #{<<"id">> => UserId}}.
 
-carry_table_ids(Tab) ->
+reuse_table_ids(Tab) ->
     lists:sort([Id || {Id, _} <- ets:tab2list(Tab)]).
 
-carry_member(UserId, Nick) ->
+reuse_member(UserId, Nick) ->
     #{<<"user">> => #{<<"id">> => UserId}, <<"nick">> => Nick}.
 
 -endif.

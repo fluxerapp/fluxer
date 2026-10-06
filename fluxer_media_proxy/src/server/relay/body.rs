@@ -2,7 +2,8 @@
 
 use crate::{storage::RelayBodyChunks, upload_relay::RelayError};
 use axum::{body::Body, http::HeaderValue};
-use bytes::Bytes;
+use bytes::{Bytes, BytesMut};
+use futures_util::StreamExt as _;
 use http_body_util::BodyExt as _;
 use parking_lot::Mutex;
 use std::{
@@ -219,6 +220,17 @@ impl RelayBodyActiveStream {
             RelayBodyStream::terminal(self.progress),
         ))
     }
+}
+
+pub(in crate::server) async fn buffer_relay_body(
+    mut chunks: RelayBodyChunks,
+    declared_length: u64,
+) -> Result<Bytes, io::Error> {
+    let mut buffered = BytesMut::with_capacity(usize::try_from(declared_length).unwrap_or(0));
+    while let Some(chunk) = chunks.next().await {
+        buffered.extend_from_slice(&chunk?);
+    }
+    Ok(buffered.freeze())
 }
 
 pub(in crate::server) fn relay_body_chunks(stream: RelayBodyStream) -> RelayBodyChunks {

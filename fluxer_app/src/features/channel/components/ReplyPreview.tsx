@@ -71,7 +71,7 @@ export const ReplyPreview = observer(
 				});
 			}
 		}, [referenceChannelId, message.channelId, message.id, message.messageReference]);
-		if (!message.messageReference) return null;
+		if (!message.messageReference || message.isCrosspostCopy) return null;
 		if (resolution.state !== MessageReferenceState.LOADED) {
 			const isDeleted = resolution.state === MessageReferenceState.DELETED;
 			return (
@@ -256,6 +256,7 @@ export const ReplyPreview = observer(
 										context: MarkdownContext.RESTRICTED_INLINE_REPLY,
 										messageId: referencedMessage.id,
 										channelId,
+										disableInteractions: true,
 										mentionChannels: referencedMessage.mentionChannels,
 									}}
 									data-flx="channel.reply-preview.safe-markdown"

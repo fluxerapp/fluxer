@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, UserID, WebhookID, WebhookToken} from '../BrandedTypes';
+import type {ChannelID, GuildID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
 import {
 	BatchBuilder,
 	deleteOneOrMany,
 	fetchMany,
 	fetchManyInChunks,
 	fetchOne,
-} from '../database/CassandraQueryExecution';
-import {buildPatchFromData, executeVersionedUpdate} from '../database/CassandraVersionedUpdate';
-import type {WebhookRow} from '../database/types/ChannelTypes';
-import {WEBHOOK_COLUMNS} from '../database/types/ChannelTypes';
-import {Webhook} from '../models/Webhook';
-import {Webhooks, WebhooksByChannel, WebhooksByGuild} from '../Tables';
-import {IWebhookRepository} from './IWebhookRepository';
+} from '@app/api/database/CassandraQueryExecution';
+import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {WebhookRow, WebhooksBySourceChannelRow} from '@app/api/database/types/ChannelTypes';
+import {WEBHOOK_COLUMNS} from '@app/api/database/types/ChannelTypes';
+import {Webhook} from '@app/api/models/Webhook';
+import {Webhooks, WebhooksByChannel, WebhooksByGuild, WebhooksBySourceChannel} from '@app/api/Tables';
+import {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 
 const FETCH_WEBHOOK_BY_ID_CQL = Webhooks.selectCql({
 	where: Webhooks.where.eq('webhook_id'),
@@ -34,6 +34,28 @@ const FETCH_WEBHOOK_IDS_BY_CHANNEL_CQL = WebhooksByChannel.selectCql({
 const FETCH_WEBHOOKS_BY_IDS_CQL = Webhooks.selectCql({
 	where: Webhooks.where.in('webhook_id', 'webhook_ids'),
 });
+const FETCH_WEBHOOK_GUILDS_BY_SOURCE_CHANNEL_CQL = WebhooksBySourceChannel.selectCql({
+	columns: ['webhook_id', 'guild_id'],
+	where: WebhooksBySourceChannel.where.eq('source_channel_id'),
+});
+
+function createSourceChannelFirstPageQuery(limit: number) {
+	return WebhooksBySourceChannel.select({
+		columns: ['webhook_id', 'guild_id'],
+		where: WebhooksBySourceChannel.where.eq('source_channel_id'),
+		orderBy: {col: 'webhook_id', direction: 'ASC'},
+		limit,
+	});
+}
+
+function createSourceChannelPageQuery(limit: number) {
+	return WebhooksBySourceChannel.select({
+		columns: ['webhook_id', 'guild_id'],
+		where: [WebhooksBySourceChannel.where.eq('source_channel_id'), WebhooksBySourceChannel.where.gt('webhook_id')],
+		orderBy: {col: 'webhook_id', direction: 'ASC'},
+		limit,
+	});
+}
 
 export class WebhookRepository extends IWebhookRepository {
 	async findUnique(webhookId: WebhookID): Promise<Webhook | null> {
@@ -58,6 +80,8 @@ export class WebhookRepository extends IWebhookRepository {
 		creatorId: UserID | null;
 		name: string;
 		avatarHash: string | null;
+		sourceGuildId?: GuildID | null;
+		sourceChannelId?: ChannelID | null;
 	}): Promise<Webhook> {
 		const webhookData: WebhookRow = {
 			webhook_id: data.webhookId,
@@ -68,6 +92,8 @@ export class WebhookRepository extends IWebhookRepository {
 			creator_id: data.creatorId,
 			name: data.name,
 			avatar_hash: data.avatarHash,
+			source_guild_id: data.sourceGuildId ?? null,
+			source_channel_id: data.sourceChannelId ?? null,
 			version: 1,
 		};
 		const result = await executeVersionedUpdate<WebhookRow, 'webhook_id' | 'webhook_token'>(
@@ -94,6 +120,15 @@ export class WebhookRepository extends IWebhookRepository {
 				WebhooksByChannel.upsertAll({
 					channel_id: data.channelId,
 					webhook_id: data.webhookId,
+				}),
+			);
+		}
+		if (data.sourceChannelId && data.guildId) {
+			batch.addPrepared(
+				WebhooksBySourceChannel.upsertAll({
+					source_channel_id: data.sourceChannelId,
+					webhook_id: data.webhookId,
+					guild_id: data.guildId,
 				}),
 			);
 		}
@@ -125,6 +160,8 @@ export class WebhookRepository extends IWebhookRepository {
 			creator_id: data.creatorId !== undefined ? data.creatorId : existing.creatorId,
 			name: data.name ?? existing.name,
 			avatar_hash: data.avatarHash !== undefined ? data.avatarHash : existing.avatarHash,
+			source_guild_id: existing.sourceGuildId,
+			source_channel_id: existing.sourceChannelId,
 			version: existing.version,
 		};
 		const result = await executeVersionedUpdate<WebhookRow, 'webhook_id' | 'webhook_token'>(
@@ -203,7 +240,50 @@ export class WebhookRepository extends IWebhookRepository {
 				}),
 			);
 		}
+		if (webhook.sourceChannelId) {
+			batch.addPrepared(
+				WebhooksBySourceChannel.deleteByPk({
+					source_channel_id: webhook.sourceChannelId,
+					webhook_id: webhookId,
+				}),
+			);
+		}
 		await batch.execute();
+	}
+
+	async findManyByIds(webhookIds: Array<WebhookID>): Promise<Array<Webhook>> {
+		return this.fetchWebhooksByIds(webhookIds);
+	}
+
+	async listIdsBySourceChannel(
+		sourceChannelId: ChannelID,
+		options: {afterWebhookId?: WebhookID; limit: number},
+	): Promise<Array<{webhookId: WebhookID; guildId: GuildID}>> {
+		const rows =
+			options.afterWebhookId !== undefined
+				? await fetchMany<Pick<WebhooksBySourceChannelRow, 'webhook_id' | 'guild_id'>>(
+						createSourceChannelPageQuery(options.limit).bind({
+							source_channel_id: sourceChannelId,
+							webhook_id: options.afterWebhookId,
+						}),
+					)
+				: await fetchMany<Pick<WebhooksBySourceChannelRow, 'webhook_id' | 'guild_id'>>(
+						createSourceChannelFirstPageQuery(options.limit).bind({
+							source_channel_id: sourceChannelId,
+						}),
+					);
+		return rows.map((row) => ({webhookId: row.webhook_id, guildId: row.guild_id}));
+	}
+
+	async countBySourceChannel(sourceChannelId: ChannelID): Promise<{channelCount: number; guildCount: number}> {
+		const rows = await fetchMany<Pick<WebhooksBySourceChannelRow, 'webhook_id' | 'guild_id'>>(
+			FETCH_WEBHOOK_GUILDS_BY_SOURCE_CHANNEL_CQL,
+			{source_channel_id: sourceChannelId},
+		);
+		return {
+			channelCount: rows.length,
+			guildCount: new Set(rows.map((row) => row.guild_id)).size,
+		};
 	}
 
 	private async fetchWebhooksByIds(webhookIds: Array<bigint>): Promise<Array<Webhook>> {

@@ -67,6 +67,11 @@ export const HOURS_AND_MINUTES_DURATION_DESCRIPTOR = msg({
 	message: '{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {# minute} other {# minutes}}',
 	comment: 'Generic duration label for an interval that includes hours and remaining minutes.',
 });
+export const COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR = msg({
+	message: "Couldn't verify with passkey. Try again.",
+	comment:
+		'Error shown when verifying with a passkey fails, in the sudo (re-auth) modal and on the sign-in page. Keep plain.',
+});
 export const TRY_AGAIN_DESCRIPTOR = msg({
 	message: 'Try again',
 	comment: 'Generic action label for retrying a failed or interrupted operation.',
@@ -230,6 +235,11 @@ export const VOICE_CHANNEL_DESCRIPTOR = msg({
 export const TEXT_CHANNEL_DESCRIPTOR = msg({
 	message: 'Text channel',
 	comment: 'Generic label for a text channel type.',
+});
+export const ANNOUNCEMENT_CHANNEL_DESCRIPTOR = msg({
+	message: 'Announcement channel',
+	comment:
+		'Generic label for an announcement channel type. Other communities can follow an announcement channel to get its published messages in their own channels.',
 });
 export const STICKER_DESCRIPTOR = msg({
 	message: 'Sticker',
@@ -676,16 +686,21 @@ export const JOIN_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Join community',
 	comment: 'Generic action label that accepts a community invite / joins a community.',
 });
+export const DISCOVERABLE_COMMUNITY_DESCRIPTOR = msg({
+	message: 'Discoverable community',
+	comment:
+		'Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.',
+});
 export const INVITES_DESCRIPTOR = msg({
 	message: 'Invites',
 	comment: 'Generic section / tab label for the invites list.',
 });
 export const MUTE_FAVORITES_DESCRIPTOR = msg({
-	message: 'Mute favourites',
+	message: 'Mute favorites',
 	comment: 'Action label that mutes notifications for the favourites pseudo-guild.',
 });
 export const UNMUTE_FAVORITES_DESCRIPTOR = msg({
-	message: 'Unmute favourites',
+	message: 'Unmute favorites',
 	comment: 'Action label that unmutes notifications for the favourites pseudo-guild.',
 });
 export const HIDE_FAVORITES_DESCRIPTOR = msg({
@@ -797,7 +812,7 @@ export const GET_PREMIUM_DESCRIPTOR = msg({
 	comment: 'Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.',
 });
 export const MENTION_COUNT_ARIA_DESCRIPTOR = msg({
-	message: '{mentionCount} mentions',
+	message: '{mentionCount, plural, one {# mention} other {# mentions}}',
 	comment: 'Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.',
 });
 export const SENT_DESCRIPTOR = msg({

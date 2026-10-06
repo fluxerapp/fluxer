@@ -111,6 +111,7 @@ const GiftLoginPageMFA = observer(function GiftLoginPageMFA() {
 	const handleMfaSuccess = useCallback(
 		async ({token, userId}: LoginSuccessPayload) => {
 			if (isHandoff) {
+				await AccountManager.refreshStoredAccount(userId, token);
 				await handoff.start({token, userId});
 				return;
 			}

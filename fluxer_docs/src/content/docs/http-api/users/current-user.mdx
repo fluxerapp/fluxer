@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 The current user is the account that presented the credential, represented as a [user object](/http-api/users/#user-object). The routes here read that account, change it, and run its lifecycle operations.
 
-Every route except [Get current user](#get-current-user) is user-only. Those routes reject a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`. They also reject an account that has an outstanding [required action](/http-api/users/#required-actions) with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+Every route except [Get current user](#get-current-user) is user-only. Those routes reject a bot or OAuth2 bearer credential with 403 `ACCESS_DENIED`.
 
 ## Sudo verification
 
@@ -16,11 +16,12 @@ Security-sensitive fields and destructive lifecycle operations on this page requ
 
 | Account state | Accepted proof |
 | --- | --- |
-| No authenticator configured | The current `password` |
-| An authenticator configured | `mfa_method` of `totp` with `mfa_code`, or `mfa_method` of `webauthn` with `webauthn_response` and `webauthn_challenge` |
-| No password credential and no authenticator | None, the requirement is already satisfied |
+| No TOTP secret and no registered WebAuthn credential | The current `password` |
+| A TOTP secret or a registered WebAuthn credential | `mfa_method` of `totp` with `mfa_code`, or `mfa_method` of `webauthn` with `webauthn_response` and `webauthn_challenge` |
+| A registered WebAuthn credential and no TOTP secret | `mfa_method` of `webauthn` as above, or `mfa_method` of `totp` with `mfa_code` holding an unconsumed backup code |
+| No password credential and neither of those | None, the requirement is already satisfied |
 
-Once an account configures an authenticator, its `password` stops working here.
+Once an account holds a TOTP secret or a registered WebAuthn credential, its `password` stops working here. A passkey counts whether or not the account enabled passkeys as a second factor. The `methods` object on a 403 `SUDO_MODE_REQUIRED` reports `backup_codes` so a client knows whether the code input is worth offering.
 
 ## Get current user
 
@@ -31,9 +32,7 @@ Returns the current [user](/http-api/users/#user-object) object.
 ### Limitations
 
 - An OAuth2 bearer credential must hold the `identify` [scope](/http-api/oauth2/#oauth2-scopes), and one without it is rejected with 403 [`MISSING_OAUTH_SCOPE`](/http-api/errors/), whose body has `required_scope`.
-- A bearer receives the neutralised representation, and `email` only when it also holds the `email` scope.
-
-This route alone admits an account with an outstanding [required action](/http-api/users/#required-actions), so a client can read and poll the actions it has to complete.
+- A bearer receives the [user object](/http-api/users/#user-object) with the zero values that page lists for a bearer read, and `email` only when it also holds the `email` scope.
 
 ### Response
 
@@ -73,31 +72,31 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 | bio?<sup>8</sup> | ?string | Biography (1-320 characters), or null to clear |
 | pronouns?<sup>9</sup> | ?string | Pronouns (1-40 characters), or null to clear |
 | accent_color? | ?integer | Packed 24-bit RGB colour (0-16777215), or null to clear |
-| timezone?<sup>10</sup> <sup>11</sup> | ?string | Supported IANA timezone identifier (1-128 characters), or null to clear |
-| timezone_privacy_flags?<sup>10</sup> | integer | [Profile field privacy flags](/http-api/users/#profile-field-privacy-flags) applied to the profile timezone |
+| timezone?<sup>10</sup> | ?string | Supported IANA timezone identifier (1-128 characters), or null to clear |
+| timezone_privacy_flags? | integer | [Profile field privacy flags](/http-api/users/#profile-field-privacy-flags) applied to the profile timezone |
 | premium_badge_hidden? | boolean | Whether to hide the premium badge from the public profile |
 | premium_badge_masked? | boolean | Whether to present a lifetime badge as an ordinary subscription badge |
 | premium_badge_timestamp_hidden? | boolean | Whether to hide the premium activation time |
 | premium_badge_sequence_hidden? | boolean | Whether to hide the lifetime premium sequence |
-| premium_enabled_override?<sup>12</sup> | boolean | Whether a staff override grants premium entitlements |
-| has_dismissed_premium_onboarding?<sup>13</sup> | boolean | Whether the premium onboarding flow has been dismissed |
-| has_unread_gift_inventory?<sup>14</sup> | boolean | Whether the gift inventory still holds unread items |
+| premium_enabled_override?<sup>11</sup> | boolean | Whether a staff override grants premium entitlements |
+| has_dismissed_premium_onboarding?<sup>12</sup> | boolean | Whether the premium onboarding flow has been dismissed |
+| has_unread_gift_inventory?<sup>13</sup> | boolean | Whether the gift inventory still holds unread items |
 | mention_flags? | integer | [Reply mention preference](/http-api/users/#reply-mention-preferences), one of `0`, `1`, or `2` |
-| email_token?<sup>15</sup> | string | Email token (1-256 characters) issued by [verify new email](/http-api/users/email-and-password/#verify-new-email) |
+| email_token?<sup>14</sup> | string | Email token (1-256 characters) issued by [verify new email](/http-api/users/email-and-password/#verify-new-email) |
 | mfa_method? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) method, either `totp` or `webauthn` |
 | mfa_code? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) authenticator or backup code (1-32 characters) |
 | webauthn_response? | [WebAuthn assertion](/http-api/users/mfa/#webauthn-assertion-object) object | [Sudo verification](/http-api/users/mfa/#sudo-mode) WebAuthn assertion |
 | webauthn_challenge? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) WebAuthn challenge (1-256 characters) |
 
-<sup>1</sup> The value cannot be `everyone` or `here` and cannot contain `fluxer` or `system message`, on every instance including a self-hosted one
+<sup>1</sup> The value cannot be `everyone` or `here` and cannot contain `fluxer` or `system message`, on every instance including a self-hosted one. On an instance with the `none` tag style, a username another account holds in any letter case returns `USERNAME_ALREADY_TAKEN`
 
-<sup>2</sup> Supplying the field without a username requires the custom discriminator entitlement and is otherwise rejected with `CHANGING_DISCRIMINATOR_REQUIRES_PREMIUM`. A pair already assigned to another account is rejected with `TAG_ALREADY_TAKEN`
+<sup>2</sup> Supplying the field without a username requires the custom discriminator entitlement and is otherwise rejected with `CHANGING_DISCRIMINATOR_REQUIRES_PREMIUM`. A pair already assigned to another account is rejected with `TAG_ALREADY_TAKEN`. On an instance with the `none` tag style an account that is not a bot always has the discriminator `0000`. Any other value returns the field code `DISCRIMINATOR_NOT_SUPPORTED_ON_INSTANCE`, and a username change keeps `0000`
 
 <sup>3</sup> Sanitisation strips standalone surrogates, invisible characters, and variation selectors and collapses whitespace before the length is measured
 
 <sup>4</sup> Any string value returns [`EMAIL_MUST_BE_CHANGED_VIA_TOKEN`](/http-api/errors/) on the `email` path, joined by `INVALID_EMAIL_FORMAT` when the string is not an address
 
-<sup>5</sup> A claimed account also supplies `password`, and a body that omits it is rejected with `PASSWORD_NOT_SET`. A breached password is rejected with [`PASSWORD_IS_TOO_COMMON`](/http-api/errors/)
+<sup>5</sup> A claimed account also supplies `password`, and a body that omits it is rejected with `PASSWORD_NOT_SET`. When the instance checks for breached passwords, a breached one is rejected with [`PASSWORD_IS_TOO_COMMON`](/http-api/errors/)
 
 <sup>6</sup> The value may have a `data:...;base64,` prefix. The remaining payload runs 1 to 13981016 characters
 
@@ -107,29 +106,27 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 
 <sup>9</sup> The value is matched against the instance profile substring blocklist like `username`, `global_name`, and `bio`
 
-<sup>10</sup> The pair is staff-only. A request from an account without the [`STAFF`](/http-api/users/#public-user-flags) flag has both fields dropped before the update runs
+<sup>10</sup> An unrecognised identifier is rejected with `INVALID_TIMEZONE_IDENTIFIER`. Setting a first timezone without `timezone_privacy_flags` sets those flags to `EVERYONE`
 
-<sup>11</sup> An unrecognised identifier is rejected with `INVALID_TIMEZONE_IDENTIFIER`. Setting a first timezone without `timezone_privacy_flags` sets those flags to `EVERYONE`
+<sup>11</sup> The field requires the [`STAFF`](/http-api/users/#public-user-flags) flag, and a caller without it is rejected with 403 [`MISSING_ACCESS`](/http-api/errors/)
 
-<sup>12</sup> The field requires the [`STAFF`](/http-api/users/#public-user-flags) flag, and a caller without it is rejected with 403 [`MISSING_ACCESS`](/http-api/errors/)
+<sup>12</sup> Only `true` has an effect, recording the current time as the dismissal moment. `false` is accepted and does nothing
 
-<sup>13</sup> Only `true` has an effect, recording the current time as the dismissal moment. `false` is accepted and does nothing
+<sup>13</sup> Only `false` has an effect, advancing the gift inventory read cursor to the current sequence. `true` is accepted and does nothing
 
-<sup>14</sup> Only `false` has an effect, advancing the gift inventory read cursor to the current sequence. `true` is accepted and does nothing
-
-<sup>15</sup> Supplying the field applies the verified address the token stands for, and the token is deleted once the update lands
+<sup>14</sup> Supplying the field applies the verified address the token stands for, and the token is deleted once the update lands
 
 An omitted field leaves its stored value untouched, and an explicit `null` clears a nullable field. `has_dismissed_premium_onboarding` acts only on `true` and `has_unread_gift_inventory` only on `false`, so neither can be reversed through this route.
 
 To skip the body proof fields, send the sudo token in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
-A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. That check runs before the required action barrier, so it succeeds even while an action is outstanding. Supplying `password` alone is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
-
-Fluxer rejects an account with an outstanding required action. The one exemption is a body that has `email_token` and nothing beyond the sudo verification fields. Any other defined field removes the exemption.
+A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. Supplying `password` alone is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
 
 A claimed account needs a verified email before changing the username, discriminator, display name, avatar, banner, biography, pronouns, accent colour, timezone, timezone privacy, or any premium badge field. A request without one returns 403 [`PROFILE_EMAIL_VERIFICATION_REQUIRED`](/http-api/errors/).
 
-An account is unclaimed while it holds no password credential, is not a bot, and does not have the SSO trait. Such an account may set only `new_password`, `has_dismissed_premium_onboarding`, and `has_unread_gift_inventory`. Any other field is rejected with [`UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN`](/http-api/errors/) on the path of the first offending field. The allow-list covers the profile payload only, so `email_token` and the sudo fields stay available as the way such an account claims itself.
+A [limited account](/http-api/users/#account-limitation) cannot change any of those fields. A request that sets one returns 403 [`ACCOUNT_LIMITED`](/http-api/errors/).
+
+An account is unclaimed while it holds no password credential, is not a bot, and does not have the SSO trait. Such an account may set only `new_password`, `has_dismissed_premium_onboarding`, and `has_unread_gift_inventory`. Any other field is rejected with [`UNCLAIMED_ACCOUNTS_CAN_ONLY_SET_EMAIL_VIA_TOKEN`](/http-api/errors/) on the path of the first offending field. The allow-list covers the profile payload only, so `email_token` and the sudo fields stay available as the way such an account claims itself. On an instance where members sign in with a username, a body with `new_password` may also set `username`, which claims the account in one request.
 
 ### Image validation
 
@@ -141,7 +138,7 @@ An animated avatar requires the animated avatar entitlement and is otherwise rej
 
 The username, display name, biography, and pronouns are matched against the instance profile substring blocklist, and a match returns 403 [`CONTENT_BLOCKED`](/http-api/errors/). An account with the `STAFF` flag is exempt. The biography and pronouns are also scanned against the phrase and URL blocklists.
 
-The global content filter applied to every POST, PUT, and PATCH JSON body runs the same pair of blocklists over the whole body before the handler. It reads `username`, `global_name`, `email`, `timezone`, and `discriminator` when supplied as a string, alongside the biography and pronouns. It skips `avatar`, `banner`, `password`, `new_password`, `email_token`, `mfa_code`, `webauthn_response`, `webauthn_challenge`, and every field whose name ends in `_flags`, and it ignores any value shorter than 3 characters. A match returns the same 403 `CONTENT_BLOCKED`, and no flag exempts an account from it.
+The global content filter applied to every POST, PUT, and PATCH JSON body runs the phrase and URL blocklists over the whole body before the handler. It reads `username`, `global_name`, `email`, `timezone`, and `discriminator` when supplied as a string, alongside the biography and pronouns. It skips `avatar`, `banner`, `password`, `new_password`, `email_token`, `mfa_code`, `webauthn_response`, `webauthn_challenge`, and every field whose name ends in `_flags`, and it ignores any value shorter than 3 characters. A match returns the same 403 `CONTENT_BLOCKED`, and no flag exempts an account from it.
 
 ### Secondary controls
 
@@ -159,7 +156,7 @@ Each control is separate from the route bucket. A denial returns 400 `INVALID_FO
 Fluxer consumes the avatar control before it detects identical content, and clearing the avatar consumes nothing. A clearing request consumes the banner control, and so does a request whose value is unchanged.
 
 :::caution[A password change rotates the session]
-Supplying `new_password` on a claimed account deletes every other authentication session and every outstanding password reset token, then replaces the session that issued the request. The replacement arrives as [Auth Session Change](/gateway/events/#auth-session-change).
+Supplying `new_password` on a claimed account deletes every other authentication session and every outstanding password reset token, then replaces the session that issued the request. The user object in the response then also has the fields of the [password change completion object](/http-api/users/email-and-password/#password-change-completion-object), and the client sends every later request with that token. [Auth Session Change](/gateway/events/#auth-session-change) never includes it.
 :::
 
 ### Response
@@ -167,12 +164,14 @@ Supplying `new_password` on a claimed account deletes every other authentication
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [user](/http-api/users/#user-object) object | Account was returned after applying every permitted field |
+| 200 | [user](/http-api/users/#user-object) object with the [password change completion](/http-api/users/email-and-password/#password-change-completion-object) fields | Account was returned after a password change rotated the session |
 | 400 | [error response](/http-api/#error-response) | Body, image, tag, password, entitlement, secondary control, or sudo proof is invalid |
 | 403 | [error response](/http-api/#error-response) | Email verification, sudo verification, or a staff-only field is required, or content is blocked |
+| 403 | [error response](/http-api/#error-response) | The account is limited and the body changes a profile field, and the request returns `ACCOUNT_LIMITED` |
 
 ### Side effects
 
-A successful change emits [User Update](/gateway/events/#user-update) to the account. When a [partial user object](/http-api/users/#partial-user-object) field changes, other accounts observe the new value. Changing the username, discriminator, or display name also reindexes the account's guild member records in every guild whose member index exists. A body that takes the early return changes nothing and emits no Dispatch. Any other accepted body emits the Dispatch even when no stored value changed.
+A successful change emits [User Update](/gateway/events/#user-update) to the account. When a [partial user object](/http-api/users/#partial-user-object) field changes, other accounts observe the new value. Changing the username, discriminator, or display name also updates the account in guild member search for every guild whose members are indexed. A body with no `email_token` and no field beyond the sudo verification fields changes nothing and emits no Dispatch. Any other accepted body emits the Dispatch even when no stored value changed.
 
 ### Rate limit
 
@@ -248,7 +247,7 @@ Schedules deletion of the current account and deletes every authentication sessi
 The body is the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). It may be an empty object when the request presents an accepted sudo token.
 
 :::caution[Signing in before the deadline cancels the deletion]
-The request records a deletion deadline set 336 hours ahead by default and marks the account self-deleted with the reason `USER_REQUESTED`. Erasure after the deadline is irreversible.
+The deletion deadline is 14 days ahead by default. Once erasure starts, signing in cannot cancel it.
 :::
 
 :::note[Transfer guild ownership first]
@@ -261,6 +260,7 @@ Fluxer checks guild ownership before it accepts the deletion, so an owner of any
 | --- | --- | --- |
 | 204 | empty | Account deletion was scheduled |
 | 400 | [error response](/http-api/#error-response) | The caller owns at least one guild and the request returns `USER_OWNS_GUILDS` |
+| 409 | [error response](/http-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
 
 ### Side effects
 

@@ -6,6 +6,7 @@ use reqwest_middleware::Error as MiddlewareError;
 use reqwest_retry::{
     RetryDecision, RetryPolicy, Retryable, RetryableStrategy, policies::ExponentialBackoff,
 };
+use std::io::ErrorKind;
 use std::sync::Arc;
 use std::time::SystemTime;
 
@@ -87,7 +88,7 @@ fn retryable_error(error: &MiddlewareError) -> Option<Retryable> {
             #[cfg(target_arch = "wasm32")]
             let is_connect = false;
 
-            if error.is_timeout() || is_connect {
+            if error.is_timeout() || is_connect || is_dropped_connection(error) {
                 Some(Retryable::Transient)
             } else if error.is_body()
                 || error.is_decode()
@@ -103,11 +104,37 @@ fn retryable_error(error: &MiddlewareError) -> Option<Retryable> {
     }
 }
 
+pub(crate) fn is_dropped_connection(error: &(dyn std::error::Error + 'static)) -> bool {
+    let mut current = Some(error);
+    while let Some(error) = current {
+        if error
+            .downcast_ref::<hyper::Error>()
+            .is_some_and(hyper::Error::is_incomplete_message)
+        {
+            return true;
+        }
+        if error.downcast_ref::<std::io::Error>().is_some_and(|error| {
+            matches!(
+                error.kind(),
+                ErrorKind::ConnectionReset
+                    | ErrorKind::ConnectionAborted
+                    | ErrorKind::BrokenPipe
+                    | ErrorKind::UnexpectedEof
+            )
+        }) {
+            return true;
+        }
+        current = error.source();
+    }
+    false
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::metrics::Metrics;
     use std::time::Duration;
+    use tokio::io::AsyncReadExt as _;
 
     fn response_with_status(status: StatusCode) -> Result<reqwest::Response, MiddlewareError> {
         let response = http::Response::builder()
@@ -255,5 +282,51 @@ mod tests {
             counter_line(&rendered, "fluxer_media_proxy_http_retries_exhausted_total"),
             "fluxer_media_proxy_http_retries_exhausted_total 1"
         );
+    }
+
+    #[derive(Debug, thiserror::Error)]
+    #[error("request failed")]
+    struct WrappedTransportError(#[source] std::io::Error);
+
+    #[test]
+    fn a_dropped_connection_is_recognised_anywhere_in_the_error_chain() {
+        for kind in [
+            ErrorKind::ConnectionReset,
+            ErrorKind::ConnectionAborted,
+            ErrorKind::BrokenPipe,
+            ErrorKind::UnexpectedEof,
+        ] {
+            assert!(
+                is_dropped_connection(&WrappedTransportError(std::io::Error::from(kind))),
+                "{kind:?} must count as a dropped connection"
+            );
+        }
+        assert!(!is_dropped_connection(&WrappedTransportError(
+            std::io::Error::from(ErrorKind::PermissionDenied)
+        )));
+    }
+
+    #[tokio::test]
+    async fn a_connection_closed_before_the_response_arrives_is_transient() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("a loopback listener binds");
+        let address = listener
+            .local_addr()
+            .expect("the listener has a local address");
+        tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.expect("the client connects");
+            let mut request = [0u8; 4096];
+            let _ = socket.read(&mut request).await;
+        });
+        let error = crate::http_client::build_raw_default()
+            .get(format!("http://{address}/"))
+            .send()
+            .await
+            .expect_err("the server closes the connection without answering");
+        assert!(matches!(
+            retryable_error(&MiddlewareError::Reqwest(error)),
+            Some(Retryable::Transient)
+        ));
     }
 }

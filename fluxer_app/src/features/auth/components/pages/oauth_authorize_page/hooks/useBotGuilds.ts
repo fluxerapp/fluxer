@@ -15,6 +15,7 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import {useEffect, useMemo, useRef, useState} from 'react';
 
 const FAILED_TO_LOAD_YOUR_COMMUNITIES_DESCRIPTOR = msg({
@@ -103,14 +104,14 @@ export function parseBotInviteDestinationKey(value: string | null | undefined): 
 	return {kind, id};
 }
 
-function getGroupDmLabel(channel: ChannelResponse, unknownGroupDmLabel: string): string {
+function getGroupDmLabel(channel: ChannelResponse, unknownGroupDmLabel: string, locale: string): string {
 	const explicitName = channel.name?.trim();
 	if (explicitName) return explicitName;
 	const recipients = channel.recipients ?? [];
 	const names = recipients
 		.map((recipient) => recipient.global_name?.trim() || recipient.username?.trim())
 		.filter((name): name is string => Boolean(name));
-	if (names.length > 0) return names.join(', ');
+	if (names.length > 0) return formatListWithConfig(names, {locale, style: 'narrow', type: 'conjunction'});
 	return unknownGroupDmLabel;
 }
 
@@ -227,7 +228,7 @@ export function useBotInviteDestinations(enabled: boolean, requestedPermissions:
 			kind: 'group_dm',
 			id: channel.id,
 			value: createBotInviteDestinationKey('group_dm', channel.id),
-			label: getGroupDmLabel(channel, i18n._(UNKNOWN_GROUP_DM_DESCRIPTOR)),
+			label: getGroupDmLabel(channel, i18n._(UNKNOWN_GROUP_DM_DESCRIPTOR), i18n.locale),
 			icon: null,
 			iconUrl: channel.icon ? AvatarUtils.getChannelIconURL({id: channel.id, icon: channel.icon}) : null,
 			isDisabled: false,

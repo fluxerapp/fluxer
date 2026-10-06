@@ -12,44 +12,63 @@ import {
 import {parseDate} from '@fluxer/date_utils/src/DateParsing';
 import type {DateInput} from '@fluxer/date_utils/src/DateTypes';
 
-export function formatDuration(seconds: number): string {
+const UNLOCALIZED_DURATION_LOCALE = 'en-US';
+const durationSegmentFormatters = new Map<string, Intl.NumberFormat>();
+
+function formatDurationSegment(value: number, locale: string, minimumIntegerDigits: number): string {
+	const key = `${locale}|${minimumIntegerDigits}`;
+	let formatter = durationSegmentFormatters.get(key);
+	if (formatter === undefined) {
+		formatter = new Intl.NumberFormat(locale, {minimumIntegerDigits, useGrouping: false});
+		durationSegmentFormatters.set(key, formatter);
+	}
+	return formatter.format(value);
+}
+
+export function formatDuration(seconds: number, locale: string = UNLOCALIZED_DURATION_LOCALE): string {
 	if (!Number.isFinite(seconds) || seconds < 0) {
-		return '0:00';
+		return `${formatDurationSegment(0, locale, 1)}:${formatDurationSegment(0, locale, 2)}`;
 	}
 	const hours = Math.floor(seconds / SECONDS_PER_HOUR);
 	const minutes = Math.floor((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
 	const secs = Math.floor(seconds % SECONDS_PER_MINUTE);
+	const secondsLabel = formatDurationSegment(secs, locale, 2);
 	if (hours > 0) {
-		return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+		const hoursLabel = formatDurationSegment(hours, locale, 1);
+		return `${hoursLabel}:${formatDurationSegment(minutes, locale, 2)}:${secondsLabel}`;
 	}
-	return `${minutes}:${secs.toString().padStart(2, '0')}`;
+	return `${formatDurationSegment(minutes, locale, 1)}:${secondsLabel}`;
 }
 
-export function formatShortRelativeTime(timestamp: DateInput, minUnit: '1m' | 'now' = 'now'): string {
+type ShortRelativeTimeUnit = 'now' | 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year';
+
+type ShortRelativeTimeParts = {unit: ShortRelativeTimeUnit; value: number};
+
+export function getShortRelativeTimeParts(timestamp: DateInput, minUnit: '1m' | 'now' = 'now'): ShortRelativeTimeParts {
 	const date = parseDate(timestamp);
 	const now = new Date();
-	const diffMs = date.getTime() - now.getTime();
+	const diffMs = Math.abs(date.getTime() - now.getTime());
 	const diffSeconds = Math.floor(diffMs / 1000);
 	const diffMinutes = Math.floor(diffSeconds / SECONDS_PER_MINUTE);
 	const diffHours = Math.floor(diffMinutes / MINUTES_PER_HOUR);
 	const diffDays = Math.floor(diffHours / HOURS_PER_DAY);
-	if (Math.abs(diffSeconds) < SECONDS_PER_MINUTE) {
-		return minUnit === '1m' ? '1m' : 'now';
+	if (diffSeconds < SECONDS_PER_MINUTE) {
+		return minUnit === '1m' ? {unit: 'minute', value: 1} : {unit: 'now', value: 0};
 	}
-	if (Math.abs(diffMinutes) < MINUTES_PER_HOUR) {
-		return `${Math.abs(diffMinutes)}m`;
+	if (diffMinutes < MINUTES_PER_HOUR) {
+		return {unit: 'minute', value: diffMinutes};
 	}
-	if (Math.abs(diffHours) < HOURS_PER_DAY) {
-		return `${Math.abs(diffHours)}h`;
+	if (diffHours < HOURS_PER_DAY) {
+		return {unit: 'hour', value: diffHours};
 	}
-	if (Math.abs(diffDays) < DAYS_PER_WEEK) {
-		return `${Math.abs(diffDays)}d`;
+	if (diffDays < DAYS_PER_WEEK) {
+		return {unit: 'day', value: diffDays};
 	}
-	if (Math.abs(diffDays) < DAYS_PER_MONTH) {
-		return `${Math.floor(Math.abs(diffDays) / DAYS_PER_WEEK)}w`;
+	if (diffDays < DAYS_PER_MONTH) {
+		return {unit: 'week', value: Math.floor(diffDays / DAYS_PER_WEEK)};
 	}
-	if (Math.abs(diffDays) < DAYS_PER_YEAR) {
-		return `${Math.floor(Math.abs(diffDays) / DAYS_PER_MONTH)}mo`;
+	if (diffDays < DAYS_PER_YEAR) {
+		return {unit: 'month', value: Math.floor(diffDays / DAYS_PER_MONTH)};
 	}
-	return `${Math.floor(Math.abs(diffDays) / DAYS_PER_YEAR)}y`;
+	return {unit: 'year', value: Math.floor(diffDays / DAYS_PER_YEAR)};
 }

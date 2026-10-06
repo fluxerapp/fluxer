@@ -23,6 +23,7 @@
 	min-width: 0;
 	padding: 0.5rem 0.75rem;
 	border-radius: 0.75rem;
+	text-align: start;
 	background-color: var(--background-secondary);
 	border: 0.0625rem solid var(--background-modifier-accent);
 }

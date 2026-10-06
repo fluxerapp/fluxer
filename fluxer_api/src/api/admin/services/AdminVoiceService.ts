@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {createGuildIDSet, createUserIDSet, type UserID} from '@app/api/BrandedTypes';
+import {VOICE_CONFIGURATION_CHANNEL} from '@app/api/voice/VoiceConstants';
+import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import {UnknownVoiceRegionError} from '@fluxer/errors/src/domains/voice/UnknownVoiceRegionError';
 import {UnknownVoiceServerError} from '@fluxer/errors/src/domains/voice/UnknownVoiceServerError';
 import type {
@@ -16,12 +22,6 @@ import type {
 	VoiceRegionAdminResponse,
 	VoiceServerAdminResponse,
 } from '@fluxer/schema/src/domains/admin/AdminVoiceSchemas';
-import type {ApiContext} from '../../ApiContext';
-import {createGuildIDSet, createUserIDSet, type UserID} from '../../BrandedTypes';
-import {VOICE_CONFIGURATION_CHANNEL} from '../../voice/VoiceConstants';
-import type {VoiceRegionRecord, VoiceRegionWithServers, VoiceServerRecord} from '../../voice/VoiceModel';
-import type {VoiceRepository} from '../../voice/VoiceRepository';
-import type {AdminAuditService} from './AdminAuditService';
 
 interface AdminVoiceServiceDeps {
 	apiContext: ApiContext;
@@ -235,6 +235,7 @@ export class AdminVoiceService {
 			serverId: data.server_id,
 			endpoint: data.endpoint,
 			isActive: data.is_active ?? true,
+			softConnectionLimit: data.soft_connection_limit ?? null,
 			apiKey: data.api_key ?? null,
 			apiSecret: data.api_secret ?? null,
 			latitude: data.latitude ?? null,
@@ -271,6 +272,7 @@ export class AdminVoiceService {
 		if (data.latitude !== undefined) updates.latitude = data.latitude;
 		if (data.longitude !== undefined) updates.longitude = data.longitude;
 		if (data.is_active !== undefined) updates.isActive = data.is_active;
+		if (data.soft_connection_limit !== undefined) updates.softConnectionLimit = data.soft_connection_limit;
 		updates.restrictions = patchVoiceRestrictions(existing.restrictions, data);
 		updates.updatedAt = new Date();
 		await voiceRepository.upsertServer(updates);
@@ -339,6 +341,7 @@ export class AdminVoiceService {
 			latitude: server.latitude ?? null,
 			longitude: server.longitude ?? null,
 			is_active: server.isActive,
+			soft_connection_limit: server.softConnectionLimit ?? null,
 			vip_only: server.restrictions.vipOnly,
 			required_guild_features: Array.from(server.restrictions.requiredGuildFeatures),
 			allowed_guild_ids: allowedGuildIds,

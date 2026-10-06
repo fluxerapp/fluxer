@@ -6,6 +6,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {PassThrough, pipeline, Readable} from 'node:stream';
 import {promisify} from 'node:util';
+import {Config} from '@app/api/Config';
+import {
+	type IStorageService,
+	type ProcessedStorageObjectMetadata,
+	StorageObjectListingOverflowError,
+	StorageObjectRangeNotSatisfiableError,
+} from '@app/api/infrastructure/IStorageService';
+import {processMediaFile} from '@app/api/infrastructure/StorageObjectHelpers';
+import {Logger} from '@app/api/Logger';
 import {
 	AbortMultipartUploadCommand,
 	CompleteMultipartUploadCommand,
@@ -26,19 +35,10 @@ import {
 } from '@aws-sdk/client-s3';
 import {Upload} from '@aws-sdk/lib-storage';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
-import type {S3ProviderSettings} from '@fluxer/config/src/S3DownloadsProvider';
+import type {S3ProviderSettings} from '@fluxer/config/src/S3ProviderSettings';
 import {isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import {seconds} from 'itty-time';
 import {temporaryFile} from 'tempy';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {
-	type IStorageService,
-	type ProcessedStorageObjectMetadata,
-	StorageObjectListingOverflowError,
-	StorageObjectRangeNotSatisfiableError,
-} from './IStorageService';
-import {processMediaFile} from './StorageObjectHelpers';
 
 const STREAM_UPLOAD_PART_BYTES = 8 * 1024 * 1024;
 const STREAM_UPLOAD_CONCURRENCY = 4;
@@ -106,6 +106,22 @@ function extractStreamFromGet(out: GetObjectCommandOutput): Readable {
 	const wrapped = new PassThrough();
 	pipeline(body, wrapped, () => undefined);
 	return wrapped;
+}
+
+const REJECTED_SERVER_SIDE_COPY_ERRORS = new Set([
+	'NoSuchKey',
+	'NotFound',
+	'NotImplemented',
+	'AccessDenied',
+	'InvalidRequest',
+	'MethodNotAllowed',
+]);
+
+function isRejectedServerSideCopy(error: unknown): boolean {
+	return (
+		error instanceof S3ServiceException &&
+		(REJECTED_SERVER_SIDE_COPY_ERRORS.has(error.name) || error.$metadata?.httpStatusCode === 501)
+	);
 }
 
 export class StorageService implements IStorageService {
@@ -240,6 +256,12 @@ export class StorageService implements IStorageService {
 			return;
 		}
 		const stream = fs.createReadStream(filePath, {highWaterMark: 1024 * 1024});
+		const errors = new Set<unknown>();
+		const onSourceError = (error: Error) => {
+			errors.add(error);
+		};
+		stream.on('error', onSourceError);
+		const closed = new Promise<void>((resolve) => stream.once('close', resolve));
 		try {
 			const upload = new Upload({
 				client: this.client,
@@ -255,10 +277,18 @@ export class StorageService implements IStorageService {
 				leavePartsOnError: false,
 			});
 			await upload.done();
+			if (!stream.readableEnded) {
+				throw new Error('File upload completed before its source stream ended');
+			}
 		} catch (error) {
+			errors.add(error);
+		} finally {
 			stream.destroy();
-			throw error;
+			await closed;
+			stream.off('error', onSourceError);
 		}
+		if (errors.size === 1) throw errors.values().next().value;
+		if (errors.size > 1) throw new AggregateError(errors, 'File upload and source stream failed');
 	}
 
 	async getPresignedDownloadURL({
@@ -459,15 +489,76 @@ export class StorageService implements IStorageService {
 		if (isSameObject && !newContentType) {
 			return;
 		}
-		await this.client.send(
-			new CopyObjectCommand({
+		try {
+			await this.client.send(
+				new CopyObjectCommand({
+					Bucket: destinationBucket,
+					Key: destinationKey,
+					CopySource: `${encodeURIComponent(sourceBucket)}/${sourceKey.split('/').map(encodeURIComponent).join('/')}`,
+					ContentType: newContentType,
+					MetadataDirective: newContentType ? 'REPLACE' : undefined,
+				}),
+			);
+		} catch (copyError) {
+			if (sourceBucket === destinationBucket || !isRejectedServerSideCopy(copyError)) {
+				throw copyError;
+			}
+			await this.copyObjectThroughApi(
+				{sourceBucket, sourceKey, destinationBucket, destinationKey, newContentType},
+				copyError,
+			);
+		}
+	}
+
+	private async copyObjectThroughApi(
+		{
+			sourceBucket,
+			sourceKey,
+			destinationBucket,
+			destinationKey,
+			newContentType,
+		}: {
+			sourceBucket: string;
+			sourceKey: string;
+			destinationBucket: string;
+			destinationKey: string;
+			newContentType?: string;
+		},
+		copyError: unknown,
+	): Promise<void> {
+		const source = await this.streamObject({bucket: sourceBucket, key: sourceKey});
+		if (!source) {
+			throw copyError;
+		}
+		Logger.warn(
+			{sourceBucket, destinationBucket, error: copyError},
+			'Object storage rejected a cross-bucket copy, copying through the API instead',
+		);
+		const upload = new Upload({
+			client: this.client,
+			params: {
 				Bucket: destinationBucket,
 				Key: destinationKey,
-				CopySource: `${encodeURIComponent(sourceBucket)}/${sourceKey.split('/').map(encodeURIComponent).join('/')}`,
-				ContentType: newContentType,
-				MetadataDirective: newContentType ? 'REPLACE' : undefined,
-			}),
-		);
+				Body: source.body,
+				ContentType: newContentType ?? source.contentType ?? undefined,
+				...(newContentType
+					? {}
+					: {
+							CacheControl: source.cacheControl ?? undefined,
+							ContentDisposition: source.contentDisposition ?? undefined,
+							Expires: source.expires ?? undefined,
+						}),
+			},
+			partSize: STREAM_UPLOAD_PART_BYTES,
+			queueSize: STREAM_UPLOAD_CONCURRENCY,
+			leavePartsOnError: false,
+		});
+		try {
+			await upload.done();
+		} catch (error) {
+			source.body.destroy();
+			throw error;
+		}
 	}
 
 	async copyObjectWithMetadataStripping({

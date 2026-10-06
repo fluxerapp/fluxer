@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiResult};
 use super::types::{
@@ -24,11 +24,7 @@ impl AdminApiClient {
         guild_ids: &[String],
     ) -> ApiResult<ReloadAllGuildsResponse> {
         let body = generated_types::ReloadGuildsRequest {
-            guild_ids: guild_ids
-                .iter()
-                .cloned()
-                .map(generated_types::SnowflakeType::from)
-                .collect(),
+            guild_ids: guild_ids.iter().map(|id| snowflake(id)).collect(),
         };
         let response = self
             .generated()

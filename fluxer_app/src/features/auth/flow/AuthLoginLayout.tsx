@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
+import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {detectDomainMigrationInstallKind} from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {AccountSelector} from '@app/features/auth/components/accounts/AccountSelector';
@@ -17,18 +20,28 @@ import AuthLoginPasskeyActions, {
 	AuthLoginDivider,
 } from '@app/features/auth/flow/auth_login_core/AuthLoginPasskeyActions';
 import {isApprovalFlowMode, useDesktopHandoffFlow} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
+import {
+	SIGN_IN_WITH_OLD_APP_DESCRIPTOR,
+	showBrowserLoginHandoffModal,
+} from '@app/features/auth/flow/BrowserLoginHandoffModal';
 import DesktopHandoffAccountSelector from '@app/features/auth/flow/DesktopHandoffAccountSelector';
 import {ConnectedHandoffApprovalFlow} from '@app/features/auth/flow/HandoffApprovalFlow';
 import IpAuthorizationScreen from '@app/features/auth/flow/IpAuthorizationScreen';
 import {useAuthCardPresentation} from '@app/features/auth/flow/useAuthCardPresentation';
 import {useLoginFormController} from '@app/features/auth/hooks/useLoginFlow';
+import {usePasskeyBridgeReturn} from '@app/features/auth/passkey_migration/usePasskeyBridgeReturn';
 import AccountManager from '@app/features/auth/state/AccountManager';
 import {
 	type IpAuthorizationChallenge,
 	type LoginSuccessPayload,
 	startSsoLogin,
 } from '@app/features/auth/state/AuthFlow';
-import {NEED_ACCOUNT_DESCRIPTOR, SIGN_IN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {shouldOfferOldAppSignIn} from '@app/features/auth/utils/OldAppSignIn';
+import {
+	COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR,
+	NEED_ACCOUNT_DESCRIPTOR,
+	SIGN_IN_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {type Account, SessionExpiredError} from '@app/features/platform/state/AuthSession';
@@ -36,9 +49,10 @@ import {IS_DEV} from '@app/features/platform/types/Env';
 import {Button} from '@app/features/ui/button/Button';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {formatUserTag} from '@app/features/user/utils/UserTagUtils';
 import * as FormUtils from '@app/lib/forms';
 import {msg} from '@lingui/core/macro';
-import {useLingui} from '@lingui/react/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {cloneElement, type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useState} from 'react';
@@ -63,6 +77,11 @@ const WELCOME_BACK_DESCRIPTOR = msg({
 const FORGOT_PASSWORD_DESCRIPTOR = msg({
 	message: 'Forgot your password?',
 	comment: 'Authentication link label that opens password recovery.',
+});
+const OLD_APP_SIGN_IN_HINT_DESCRIPTOR = msg({
+	message: 'Approve this app from the {productName} app you already use. No password needed.',
+	comment:
+		'Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.',
 });
 const SIGN_IN_VIA_BROWSER_DESCRIPTOR = msg({
 	message: 'Sign in via browser',
@@ -96,7 +115,7 @@ interface AuthLoginLayoutProps {
 	title?: ReactNode;
 	registerLink: ReactElement<Record<string, unknown>>;
 	onLoginComplete?: (payload: LoginSuccessPayload) => Promise<void> | void;
-	initialEmail?: string;
+	initialIdentifier?: string;
 }
 
 export const AuthLoginLayout = observer(function AuthLoginLayout({
@@ -109,7 +128,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	title,
 	registerLink,
 	onLoginComplete,
-	initialEmail,
+	initialIdentifier,
 }: AuthLoginLayoutProps) {
 	const {i18n} = useLingui();
 	const location = useLocation();
@@ -129,19 +148,30 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		initialMode: desktopHandoff && hasHandoffAccounts ? 'selecting' : 'login',
 	});
 	const [ipAuthChallenge, setIpAuthChallenge] = useState<IpAuthorizationChallenge | null>(null);
-	const [showAccountSelector, setShowAccountSelector] = useState(!desktopHandoff && hasStoredAccounts && !initialEmail);
+	const [showAccountSelector, setShowAccountSelector] = useState(
+		!desktopHandoff && hasStoredAccounts && !initialIdentifier,
+	);
 	const [isSwitching, setIsSwitching] = useState(false);
 	const [switchError, setSwitchError] = useState<string | null>(null);
-	const [prefillEmail, setPrefillEmail] = useState<string | null>(() => initialEmail ?? null);
+	const [prefillIdentifier, setPrefillIdentifier] = useState<string | null>(() => initialIdentifier ?? null);
 	const ssoRedirectPath = desktopHandoff ? `${location.pathname}${location.search}` : redirectPath;
-	const showLoginFormForAccount = useCallback((account: Account, message?: string | null) => {
-		setShowAccountSelector(false);
-		setSwitchError(message ?? null);
-		setPrefillEmail(account.userData?.email ?? null);
-	}, []);
+	const usesUsernameSignIn = RuntimeConfig.usesUsernameSignIn;
+	const showExpiredLoginForm = useCallback(
+		(account: Account) => {
+			const signInIdentifier = usesUsernameSignIn
+				? account.userData && formatUserTag(account.userData)
+				: account.userData?.email;
+			const identifier = signInIdentifier ?? account.userData?.username ?? account.userId;
+			setShowAccountSelector(false);
+			setSwitchError(i18n._(SESSION_EXPIRED_SIGN_IN_AGAIN_DESCRIPTOR, {identifier}));
+			setPrefillIdentifier(signInIdentifier ?? null);
+		},
+		[i18n, usesUsernameSignIn],
+	);
 	const handleLoginSuccess = useCallback(
 		async (payload: LoginSuccessPayload) => {
 			if (desktopHandoff) {
+				await AccountManager.refreshStoredAccount(payload.userId, payload.token, payload.userData);
 				await handoff.start(payload);
 				return;
 			}
@@ -150,20 +180,58 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		},
 		[desktopHandoff, handoff, onLoginComplete],
 	);
-	const {form, isLoading, fieldErrors, handlePasskeyLogin, handlePasskeyBrowserLogin, isPasskeyLoading} =
-		useLoginFormController({
-			redirectPath,
-			inviteCode,
-			onLoginSuccess: handleLoginSuccess,
-			onRequireMfa: (challenge) => {
-				AuthenticationCommands.setMfaTicket(challenge);
-			},
-			onRequireIpAuthorization: (challenge) => {
-				setIpAuthChallenge(challenge);
-			},
-		});
+	const {
+		form,
+		identifierField,
+		isLoading,
+		fieldErrors,
+		handlePasskeyLogin,
+		handlePasskeyBrowserLogin,
+		isPasskeyLoading,
+	} = useLoginFormController({
+		redirectPath,
+		inviteCode,
+		onLoginSuccess: handleLoginSuccess,
+		onRequireMfa: (challenge) => {
+			AuthenticationCommands.setMfaTicket(challenge);
+		},
+		onRequireIpAuthorization: (challenge) => {
+			setIpAuthChallenge(challenge);
+		},
+	});
+	const isPasskeyBridgeRedeeming = usePasskeyBridgeReturn({
+		redirectPath,
+		onLoginSuccess: handleLoginSuccess,
+		onRequireMfa: AuthenticationCommands.setMfaTicket,
+		onFailure: () => {
+			setSwitchError(i18n._(COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR));
+		},
+	});
 	const showBrowserPasskey = IS_DEV || isDesktop();
-	const passkeyControlsDisabled = isLoading || Boolean(form.isSubmitting) || isPasskeyLoading;
+	const passkeyControlsDisabled =
+		isLoading || Boolean(form.isSubmitting) || isPasskeyLoading || isPasskeyBridgeRedeeming;
+	const offerOldAppSignIn = useMemo(
+		() =>
+			!desktopHandoff &&
+			shouldOfferOldAppSignIn({
+				origin: window.location.origin,
+				installKind: detectDomainMigrationInstallKind(),
+				hasStoredAccounts,
+			}),
+		[desktopHandoff, hasStoredAccounts],
+	);
+	const handleOldAppSignIn = useCallback(() => {
+		showBrowserLoginHandoffModal(
+			async (payload) => {
+				await handleLoginSuccess(payload);
+				if (redirectPath) {
+					RouterUtils.replaceWith(redirectPath);
+				}
+			},
+			undefined,
+			'old_app',
+		);
+	}, [handleLoginSuccess, redirectPath]);
 	const handleIpAuthorizationComplete = useCallback(
 		async (payload: LoginSuccessPayload) => {
 			await handleLoginSuccess(payload);
@@ -175,32 +243,38 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		[handleLoginSuccess, redirectPath],
 	);
 	useEffect(() => {
-		setPrefillEmail(initialEmail ?? null);
-		if (initialEmail) {
+		setPrefillIdentifier(initialIdentifier ?? null);
+		if (initialIdentifier) {
 			setShowAccountSelector(false);
 		}
-	}, [initialEmail]);
+	}, [initialIdentifier]);
 	useEffect(() => {
-		if (prefillEmail !== null) {
-			form.setValue('email', prefillEmail);
+		if (prefillIdentifier !== null) {
+			form.setValue(identifierField, prefillIdentifier);
 		}
-	}, [form.setValue, prefillEmail]);
+	}, [form.setValue, identifierField, prefillIdentifier]);
 	const handleSelectExistingAccount = useCallback(
 		async (account: Account) => {
-			const identifier = account.userData?.email ?? account.userData?.username ?? account.userId;
-			const expiredMessage = i18n._(SESSION_EXPIRED_SIGN_IN_AGAIN_DESCRIPTOR, {identifier});
-			if (account.isValid === false || !AccountManager.canSwitchAccounts) {
-				showLoginFormForAccount(account, expiredMessage);
+			if (account.isValid === false) {
+				showExpiredLoginForm(account);
 				return;
 			}
 			setIsSwitching(true);
 			setSwitchError(null);
 			try {
-				await AccountManager.switchToAccount(account.userId);
+				if (AccountManager.canSwitchAccounts) {
+					await AccountManager.switchToAccount(account.userId);
+				} else {
+					const {token, userId} = await AccountManager.generateTokenForAccount(account.userId);
+					await handleLoginSuccess({token, userId, userData: account.userData});
+					if (redirectPath) {
+						RouterUtils.replaceWith(redirectPath);
+					}
+				}
 			} catch (error) {
 				const updatedAccount = AccountManager.accounts.get(account.userId);
 				if (error instanceof SessionExpiredError || updatedAccount?.isValid === false) {
-					showLoginFormForAccount(updatedAccount ?? account, expiredMessage);
+					showExpiredLoginForm(updatedAccount ?? account);
 					return;
 				}
 				setSwitchError(
@@ -212,12 +286,30 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 				setIsSwitching(false);
 			}
 		},
-		[i18n, showLoginFormForAccount],
+		[handleLoginSuccess, i18n, redirectPath, showExpiredLoginForm],
 	);
+	const handleHandoffReLogin = useCallback(
+		(account: Account) => {
+			showExpiredLoginForm(account);
+			handoff.switchToLogin();
+		},
+		[handoff, showExpiredLoginForm],
+	);
+	const canChooseSavedAccount = desktopHandoff ? hasHandoffAccounts : hasStoredAccounts;
+	const handleChooseSavedAccount = useCallback(() => {
+		setSwitchError(null);
+		setPrefillIdentifier(initialIdentifier ?? null);
+		form.setValue(identifierField, initialIdentifier ?? '');
+		if (desktopHandoff) {
+			handoff.setMode('selecting');
+		} else {
+			setShowAccountSelector(true);
+		}
+	}, [desktopHandoff, form.setValue, handoff, identifierField, initialIdentifier]);
 	const handleAddAnotherAccount = useCallback(() => {
 		setShowAccountSelector(false);
 		setSwitchError(null);
-		setPrefillEmail(null);
+		setPrefillIdentifier(null);
 	}, []);
 	const handleStartSso = useCallback(async () => {
 		if (!ssoConfig?.enabled) return;
@@ -244,15 +336,23 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		});
 	}, [registerLink]);
 	const authLoginStep: AuthLoginStep = useMemo(() => {
-		if (desktopHandoff && handoff.mode === 'selecting') return 'desktop_handoff_account';
+		if (desktopHandoff && handoff.mode === 'selecting' && hasHandoffAccounts) return 'desktop_handoff_account';
 		if (desktopHandoff && isApprovalFlowMode(handoff.mode)) return 'desktop_handoff_approval';
 		if (isSsoEnforced) return 'sso';
 		if (showAccountSelector && hasStoredAccounts && !desktopHandoff) return 'account';
 		if (ipAuthChallenge) return 'ip_authorization';
 		return 'credentials';
-	}, [desktopHandoff, handoff.mode, hasStoredAccounts, ipAuthChallenge, isSsoEnforced, showAccountSelector]);
+	}, [
+		desktopHandoff,
+		handoff.mode,
+		hasHandoffAccounts,
+		hasStoredAccounts,
+		ipAuthChallenge,
+		isSsoEnforced,
+		showAccountSelector,
+	]);
 	const hasExtraTopContent = extraTopContent !== undefined && extraTopContent !== null;
-	const startedFromAccountSelector = hasStoredAccounts && !desktopHandoff && !initialEmail;
+	const startedFromAccountSelector = hasStoredAccounts && !desktopHandoff && !initialIdentifier;
 	const showSplitLogo =
 		authLoginStep === 'credentials' && !desktopHandoff && !hasExtraTopContent && !startedFromAccountSelector;
 	const cardVariant = useMemo(() => {
@@ -268,6 +368,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 				<DesktopHandoffAccountSelector
 					excludeCurrentUser={excludeCurrentUser}
 					onSelectNewAccount={handoff.switchToLogin}
+					onReLoginAccount={handleHandoffReLogin}
 					onAccountSelected={handoff.start}
 					data-flx="auth.flow.auth-login-layout.desktop-handoff-account-selector"
 				/>
@@ -327,6 +428,21 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 						{switchError}
 					</div>
 				) : null}
+				{offerOldAppSignIn ? (
+					<div className={styles.ssoBlock} data-flx="auth.flow.auth-login-layout.old-app-block">
+						<Button
+							fitContainer
+							onClick={handleOldAppSignIn}
+							type="button"
+							data-flx="auth.flow.auth-login-layout.button.old-app-sign-in"
+						>
+							{i18n._(SIGN_IN_WITH_OLD_APP_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						</Button>
+						<div className={styles.ssoSubtitle} data-flx="auth.flow.auth-login-layout.old-app-subtitle">
+							{i18n._(OLD_APP_SIGN_IN_HINT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						</div>
+					</div>
+				) : null}
 				{ssoConfig?.enabled ? (
 					<div className={styles.ssoBlock} data-flx="auth.flow.auth-login-layout.sso-block">
 						<Button
@@ -350,14 +466,23 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 					submitLabel={i18n._(SIGN_IN_DESCRIPTOR)}
 					classes={{form: styles.form}}
 					linksWrapperClassName={styles.formLinks}
+					identifierField={identifierField}
 					links={
-						RuntimeConfig.emailsEnabled ? (
+						usesUsernameSignIn ? (
+							<AuthRouterLink
+								to={Routes.RECOVER_ACCOUNT}
+								className={styles.link}
+								data-flx="auth.flow.auth-login-layout.link.recover"
+							>
+								{i18n._(FORGOT_PASSWORD_DESCRIPTOR)}
+							</AuthRouterLink>
+						) : RuntimeConfig.emailsEnabled ? (
 							<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.flow.auth-login-layout.link">
 								{i18n._(FORGOT_PASSWORD_DESCRIPTOR)}
 							</AuthRouterLink>
 						) : null
 					}
-					disableSubmit={isPasskeyLoading}
+					disableSubmit={isPasskeyLoading || isPasskeyBridgeRedeeming}
 					data-flx="auth.flow.auth-login-layout.auth-login-email-password-form"
 				/>
 				<AuthLoginDivider
@@ -380,6 +505,18 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 					data-flx="auth.flow.auth-login-layout.auth-login-passkey-actions"
 				/>
 				<div className={styles.footer} data-flx="auth.flow.auth-login-layout.footer">
+					{canChooseSavedAccount ? (
+						<div className={styles.footerText} data-flx="auth.flow.auth-login-layout.footer-text--choose-account">
+							<button
+								type="button"
+								className={styles.footerLink}
+								onClick={handleChooseSavedAccount}
+								data-flx="auth.flow.auth-login-layout.button.choose-saved-account"
+							>
+								<Trans>Choose an account</Trans>
+							</button>
+						</div>
+					) : null}
 					<div className={styles.footerText} data-flx="auth.flow.auth-login-layout.footer-text">
 						<span className={styles.footerLabel} data-flx="auth.flow.auth-login-layout.footer-label">
 							{i18n._(NEED_ACCOUNT_DESCRIPTOR)}{' '}

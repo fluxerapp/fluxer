@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {StreamPreviewService} from '@app/api/channel/services/StreamPreviewService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import {InvalidStreamKeyFormatError} from '@fluxer/errors/src/domains/channel/InvalidStreamKeyFormatError';
@@ -12,10 +16,6 @@ import type {StreamPreviewUploadUrlResponseSchema} from '@fluxer/schema/src/doma
 import {isValidBase64} from '@fluxer/schema/src/primitives/FileValidators';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
-import {type ChannelID, createChannelID, createGuildID, type GuildID, type UserID} from '../../BrandedTypes';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ChannelService} from './ChannelService';
-import type {StreamPreviewService} from './StreamPreviewService';
 
 type ParsedStreamKey = {
 	scope: 'guild' | 'dm';

@@ -33,8 +33,16 @@ handle_dispatch(Event, Data, State) ->
         should_skip_for_shard(Event, Data, State) orelse should_ignore_event(Event, Data, State)
     of
         true -> {noreply, State};
-        false -> route_dispatch(Event, Data, State)
+        false -> route_bot_guild_event(Event, Data, State)
     end.
+
+-spec route_bot_guild_event(event(), map() | list(), session_state()) ->
+    {noreply, session_state()}.
+route_bot_guild_event(Event, Data, State) when is_map(Data) ->
+    {BotData, BotState} = session_bot_guilds:guild_event(Event, Data, State),
+    route_dispatch(Event, BotData, BotState);
+route_bot_guild_event(Event, Data, State) ->
+    route_dispatch(Event, Data, State).
 
 -spec should_skip_for_shard(
     event(), map() | list() | {pre_encoded, binary()}, session_state()

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
+import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {UserID} from '../../BrandedTypes';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import type {UserAccountUpdatePropagator} from './UserAccountUpdatePropagator';
 
 interface UserAccountNotesServiceDeps {
 	userAccountRepository: IUserAccountRepository;

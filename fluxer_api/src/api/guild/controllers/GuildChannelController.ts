@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	ChannelCreateRequest,
 	ChannelPositionUpdateRequest,
 } from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
-import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {ChannelListResponse, ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {GuildIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {z} from 'zod';
-import {createChannelID, createGuildID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function GuildChannelController(app: HonoApp) {
 	app.get(
@@ -24,7 +23,7 @@ export function GuildChannelController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_guild_channels',
 			summary: 'List guild channels',
-			responseSchema: z.array(ChannelResponse),
+			responseSchema: ChannelListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Guilds'],

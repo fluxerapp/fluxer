@@ -10,7 +10,6 @@
     local_voice_states_for_channel/2,
     local_pending_joins_for_channel/2,
     parse_voice_channel_id/1,
-    repair_voice_state_from_guild_cache/2,
     voice_state_rpc_entries/1,
     pending_join_rpc_entries/1,
     fetch_guild_data/1,
@@ -116,114 +115,6 @@ parse_voice_channel_id(ChannelId) ->
         _ ->
             error
     end.
-
--spec repair_voice_state_from_guild_cache(map(), server_state()) -> {map(), server_state()}.
-repair_voice_state_from_guild_cache(Request, State) ->
-    ConnectionId = maps:get(connection_id, Request, undefined),
-    UserId = maps:get(user_id, Request, undefined),
-    ChannelId = maps:get(channel_id, Request, undefined),
-    case {ConnectionId, UserId, ChannelId} of
-        {Conn, UId, CId} when is_binary(Conn), is_integer(UId), is_integer(CId) ->
-            do_repair(Conn, UId, CId, State);
-        _ ->
-            {#{success => false, error => voice_invalid_state}, State}
-    end.
-
--spec do_repair(binary(), integer(), integer(), server_state()) -> {map(), server_state()}.
-do_repair(ConnectionId, UserId, ChannelId, State) ->
-    VoiceStates = maps:get(voice_states, State, #{}),
-    case maps:get(ConnectionId, VoiceStates, undefined) of
-        ExistingVoiceState when is_map(ExistingVoiceState) ->
-            repair_existing_voice_state(
-                ExistingVoiceState, ConnectionId, UserId, ChannelId, State
-            );
-        _ ->
-            repair_from_cached(ConnectionId, UserId, ChannelId, VoiceStates, State)
-    end.
-
--spec repair_existing_voice_state(
-    voice_state(), binary(), integer(), integer(), server_state()
-) ->
-    {map(), server_state()}.
-repair_existing_voice_state(ExistingVoiceState, ConnectionId, UserId, ChannelId, State) ->
-    case voice_state_matches(ExistingVoiceState, ConnectionId, UserId, ChannelId) of
-        true -> {#{success => true, repaired => false}, State};
-        false -> {#{success => false, error => voice_state_mismatch}, State}
-    end.
-
--spec repair_from_cached(binary(), integer(), integer(), voice_state_map(), server_state()) ->
-    {map(), server_state()}.
-repair_from_cached(ConnectionId, UserId, ChannelId, VoiceStates, State) ->
-    case fetch_cached_voice_state(ConnectionId, State) of
-        {ok, CachedVoiceState} ->
-            repair_with_cached(
-                ConnectionId, UserId, ChannelId, CachedVoiceState, VoiceStates, State
-            );
-        {error, _Reason} ->
-            {#{success => false, error => voice_connection_not_found}, State}
-    end.
-
--spec repair_with_cached(
-    binary(), integer(), integer(), voice_state(), voice_state_map(), server_state()
-) -> {map(), server_state()}.
-repair_with_cached(ConnectionId, UserId, ChannelId, CachedVoiceState, VoiceStates, State) ->
-    case voice_state_matches(CachedVoiceState, ConnectionId, UserId, ChannelId) of
-        false ->
-            {#{success => false, error => voice_state_mismatch}, State};
-        true ->
-            OldVoiceStates = maps:get(voice_states, State, #{}),
-            NewVoiceStates = VoiceStates#{ConnectionId => CachedVoiceState},
-            _ = guild_voice_server_sync:sync_replaced_voice_states(
-                OldVoiceStates, NewVoiceStates
-            ),
-            PendingConns = maps:remove(
-                ConnectionId, maps:get(pending_voice_connections, State, #{})
-            ),
-            RecentDisc = maps:remove(
-                ConnectionId,
-                maps:get(recently_disconnected_voice_states, State, #{})
-            ),
-            NewState0 = State#{
-                voice_states => NewVoiceStates,
-                pending_voice_connections => PendingConns,
-                recently_disconnected_voice_states => RecentDisc
-            },
-            GuildState = build_guild_state(NewState0),
-            ChannelIdBin = maps:get(<<"channel_id">>, CachedVoiceState, null),
-            guild_voice_broadcast:broadcast_voice_state_update(
-                CachedVoiceState, GuildState, ChannelIdBin
-            ),
-            logger:warning(
-                voice_state_repaired_log_message(),
-                [maps:get(guild_id, State), ChannelId, UserId, ConnectionId]
-            ),
-            {#{success => true, repaired => true}, NewState0}
-    end.
-
--spec voice_state_repaired_log_message() -> string().
-voice_state_repaired_log_message() ->
-    "guild_voice_state_repaired_from_guild_cache: guild_id=~p "
-    "channel_id=~p user_id=~p connection_id=~p".
-
--spec fetch_cached_voice_state(binary(), server_state()) ->
-    {ok, voice_state()} | {error, not_found}.
-fetch_cached_voice_state(ConnectionId, #{guild_pid := GuildPid}) when is_pid(GuildPid) ->
-    try gen_server:call(GuildPid, {get_cached_voice_state_by_connection, ConnectionId}, 1000) of
-        {ok, VoiceState} when is_map(VoiceState) -> {ok, VoiceState};
-        _ -> {error, not_found}
-    catch
-        throw:_ -> {error, not_found};
-        error:_ -> {error, not_found};
-        exit:_ -> {error, not_found}
-    end;
-fetch_cached_voice_state(_ConnectionId, _State) ->
-    {error, not_found}.
-
--spec voice_state_matches(voice_state(), binary(), integer(), integer()) -> boolean().
-voice_state_matches(VoiceState, ConnectionId, UserId, ChannelId) ->
-    maps:get(<<"connection_id">>, VoiceState, ConnectionId) =:= ConnectionId andalso
-        voice_state_utils:voice_state_user_id(VoiceState) =:= UserId andalso
-        voice_state_utils:voice_state_channel_id(VoiceState) =:= ChannelId.
 
 -spec voice_state_rpc_entries(term()) -> [map()].
 voice_state_rpc_entries(VoiceStates) when is_list(VoiceStates) ->

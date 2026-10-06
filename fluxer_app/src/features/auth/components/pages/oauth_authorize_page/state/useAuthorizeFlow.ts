@@ -26,8 +26,10 @@ import {
 	selectAuthorizePhase,
 	transitionAuthorizeSnapshot,
 } from '@app/features/auth/components/pages/oauth_authorize_page/state/authorizeMachine';
+import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
 import type {BotPermissionOption} from '@app/features/permissions/utils/PermissionUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -144,7 +146,7 @@ function getCurrentInviteDestinationKey(): string | null {
 	if (guildId === '@me') {
 		return channelId ? createBotInviteDestinationKey('group_dm', channelId) : null;
 	}
-	if (guildId !== '@favorites' && guildId !== '@discover') {
+	if (guildId !== '@favorites' && guildId !== '@discover' && guildId !== '@premium') {
 		return createBotInviteDestinationKey('guild', guildId);
 	}
 	return null;
@@ -305,7 +307,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		() => destinations.options.find((option) => option.value === selectedDestinationKey) ?? null,
 		[destinations.options, selectedDestinationKey],
 	);
-	const cannotSubmit = hasBotScope && !selectedDestination;
+	const cannotSubmit = scopeSelection.selected.size === 0 || (hasBotScope && !selectedDestination);
 	const needsPermissionsStep =
 		hasBotScope && selectedDestination?.kind !== 'group_dm' && permissionSelection.requestedKeys.length > 0;
 	const hasRequestedBotPermissions =
@@ -349,9 +351,9 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		setSubmitError(null);
 		setSubmitting('approve');
 		try {
-			const scopeToSend = scopeSelection.toScopeString() || params.scope;
+			const scopeToSend = scopeSelection.toScopeString();
 			const sendsBotScope = scopeToSend.split(/[\s+]+/).includes('bot');
-			if (sendsBotScope && !selectedDestination) {
+			if (!scopeToSend || (sendsBotScope && !selectedDestination)) {
 				setSubmitting(null);
 				return;
 			}
@@ -387,6 +389,12 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 			setSubmitting(null);
 			setSubmitError(i18n._(AUTHORIZATION_FAILED_DESCRIPTOR));
 		} catch (err) {
+			if (err instanceof HttpError && err.status === 401) {
+				logger.warn('OAuth consent returned 401', err);
+				setSubmitting(null);
+				dispatch({type: 'INIT_SESSION_EXPIRED'});
+				return;
+			}
 			logger.error('Authorization failed', err);
 			setSubmitting(null);
 			setSubmitError(failureMessage(err) ?? i18n._(AUTHORIZATION_FAILED_DESCRIPTOR));
@@ -425,7 +433,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 				window.location.href = url.toString();
 				return;
 			}
-			window.location.href = '/';
+			window.location.href = getDefaultLandingPath();
 		} catch (err) {
 			logger.error('Failed to redirect on cancel', err);
 			setSubmitting(null);

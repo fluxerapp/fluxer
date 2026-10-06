@@ -309,30 +309,20 @@ impl fmt::Display for CspReportUri {
     }
 }
 
-fn warn_invalid(error: InvalidAppProxyEnvironmentError) {
+fn warn_invalid(error: &InvalidAppProxyEnvironmentError) {
     tracing::warn!(%error, "ignoring invalid app proxy environment value");
 }
 
 fn parse_optional_http_url(name: &'static str, value: Option<String>) -> Option<HttpUrl> {
     let value = value?;
-    match HttpUrl::parse(name, &value) {
-        Ok(url) => Some(url),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    HttpUrl::parse(name, &value).inspect_err(warn_invalid).ok()
 }
 
 fn parse_optional_http_endpoint(name: &'static str, value: Option<String>) -> Option<HttpEndpoint> {
     let value = value?;
-    match HttpEndpoint::parse(name, &value) {
-        Ok(endpoint) => Some(endpoint),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    HttpEndpoint::parse(name, &value)
+        .inspect_err(warn_invalid)
+        .ok()
 }
 
 fn parse_env_or_warn<T: std::str::FromStr>(name: &str, raw: &str, default: T) -> T {
@@ -358,7 +348,6 @@ pub struct AppProxyConfig {
     pub discovery_upstream_url: String,
     pub discovery_refresh_interval_ms: u64,
     pub release_channel: ReleaseChannel,
-    pub time_freeze_enabled: bool,
     pub build_version: String,
     pub bootstrap_api_endpoint: String,
     pub bootstrap_api_public_endpoint: Option<String>,
@@ -367,6 +356,8 @@ pub struct AppProxyConfig {
     pub geoip_s3_config: Option<GeoipS3Config>,
     pub trust_client_ip_header: bool,
     pub client_ip_header_name: String,
+    pub same_origin_hosts: Vec<String>,
+    pub manifest_scope_extensions: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -434,53 +425,39 @@ fn read_csp_sources(name: &'static str) -> Vec<CspSource> {
         .split([',', ' ', '\t', '\n'])
         .map(str::trim)
         .filter(|source| !source.is_empty())
-        .filter_map(|source| match CspSource::parse(name, source) {
-            Ok(source) => Some(source),
-            Err(error) => {
-                warn_invalid(error);
-                None
-            }
+        .filter_map(|source| {
+            CspSource::parse(name, source)
+                .inspect_err(warn_invalid)
+                .ok()
         })
         .collect()
 }
 
 fn read_csp_report_uri(name: &'static str) -> Option<CspReportUri> {
-    let value = cfg::non_empty_env(name)?;
-    match CspReportUri::parse(name, &value) {
-        Ok(report_uri) => Some(report_uri),
-        Err(error) => {
-            warn_invalid(error);
-            None
-        }
-    }
+    let value = cfg::env_value(name)?;
+    CspReportUri::parse(name, value.trim())
+        .inspect_err(warn_invalid)
+        .ok()
 }
 
 impl AppProxyConfig {
     pub fn from_env() -> Self {
-        let release_channel = ReleaseChannel::from_env_value(&cfg::read_env_preferred(
-            &["RELEASE_CHANNEL"],
-            "stable",
-        ));
-        let time_freeze_enabled = resolve_time_freeze_enabled_from_env();
-        let geoip_source = cfg::parse_geoip_source_config(
-            &cfg::read_first_env(&["FLUXER_GEOIP_DB_PATH", "MAXMIND_DB_PATH"], ""),
-            "app_proxy",
-        );
+        let release_channel =
+            ReleaseChannel::from_env_value(&cfg::read_env("RELEASE_CHANNEL", "stable"));
+        let geoip_source =
+            cfg::parse_geoip_source_config(&cfg::read_env("FLUXER_GEOIP_DB_PATH", ""), "app_proxy");
         let geoip_s3_config = cfg::read_geoip_s3_config_from_env(&geoip_source);
 
         let s3_public_endpoint = parse_optional_http_endpoint(
             "FLUXER_S3_PUBLIC_ENDPOINT",
-            cfg::non_empty_env("FLUXER_S3_PUBLIC_ENDPOINT"),
+            cfg::env_value("FLUXER_S3_PUBLIC_ENDPOINT"),
         );
         let s3_uploads_bucket = cfg::read_env("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads");
         let s3_uploads_endpoint = s3_public_endpoint.as_ref().and_then(|endpoint| {
-            match endpoint.with_host_prefix("FLUXER_S3_BUCKET_UPLOADS", s3_uploads_bucket.trim()) {
-                Ok(endpoint) => Some(endpoint),
-                Err(error) => {
-                    warn_invalid(error);
-                    None
-                }
-            }
+            endpoint
+                .with_host_prefix("FLUXER_S3_BUCKET_UPLOADS", s3_uploads_bucket.trim())
+                .inspect_err(warn_invalid)
+                .ok()
         });
 
         Self {
@@ -493,13 +470,13 @@ impl AppProxyConfig {
             static_dir: cfg::read_env("FLUXER_STATIC_DIR", "./static"),
             index_upstream_url: parse_optional_http_url(
                 "FLUXER_APP_PROXY_INDEX_UPSTREAM_URL",
-                cfg::non_empty_env("FLUXER_APP_PROXY_INDEX_UPSTREAM_URL"),
+                cfg::env_value("FLUXER_APP_PROXY_INDEX_UPSTREAM_URL"),
             ),
             static_cdn_endpoint: parse_optional_http_endpoint(
                 "FLUXER_STATIC_CDN_ENDPOINT",
-                cfg::non_empty_env("FLUXER_STATIC_CDN_ENDPOINT"),
+                cfg::env_value("FLUXER_STATIC_CDN_ENDPOINT"),
             ),
-            s3_public_endpoint: s3_public_endpoint.clone(),
+            s3_public_endpoint,
             s3_uploads_endpoint,
             discovery_upstream_url: resolve_discovery_upstream_url_from_env(),
             discovery_refresh_interval_ms: parse_env_or_warn(
@@ -508,8 +485,7 @@ impl AppProxyConfig {
                 60_000u64,
             ),
             release_channel,
-            time_freeze_enabled,
-            build_version: cfg::read_env_preferred(
+            build_version: cfg::read_first_env(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),
             ),
@@ -518,36 +494,111 @@ impl AppProxyConfig {
             csp: CspConfig::from_env(),
             geoip_source,
             geoip_s3_config,
-            trust_client_ip_header: cfg::read_bool_env(
-                &["FLUXER_TRUST_CLIENT_IP_HEADER", "TRUST_CLIENT_IP_HEADER"],
-                false,
+            trust_client_ip_header: cfg::read_bool_env("FLUXER_TRUST_CLIENT_IP_HEADER", false),
+            client_ip_header_name: cfg::read_env("FLUXER_CLIENT_IP_HEADER_NAME", "x-forwarded-for")
+                .trim()
+                .to_ascii_lowercase(),
+            same_origin_hosts: parse_same_origin_hosts(
+                "FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS",
+                &cfg::read_env("FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS", ""),
             ),
-            client_ip_header_name: cfg::read_first_env(
-                &[
-                    "FLUXER_CLIENT_IP_HEADER_NAME",
-                    "FLUXER_CLIENT_IP_HEADER",
-                    "CLIENT_IP_HEADER_NAME",
-                    "CLIENT_IP_HEADER",
-                ],
-                "x-forwarded-for",
-            )
-            .trim()
-            .to_ascii_lowercase(),
+            manifest_scope_extensions: parse_manifest_scope_extensions(
+                "FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS",
+                &cfg::read_env("FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS", ""),
+            ),
         }
     }
 }
 
-fn resolve_discovery_upstream_url_from_env() -> String {
-    resolve_discovery_upstream_url(|name| env::var(name).ok())
+fn parse_manifest_scope_extensions(name: &'static str, raw: &str) -> Vec<String> {
+    let mut origins: Vec<String> = Vec::new();
+    for value in raw
+        .split([',', ' ', '\t', '\n'])
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        match parse_manifest_scope_extension_origin(name, value) {
+            Ok(origin) => {
+                if !origins.contains(&origin) {
+                    origins.push(origin);
+                }
+            }
+            Err(error) => warn_invalid(&error),
+        }
+    }
+    origins
 }
 
-fn resolve_time_freeze_enabled_from_env() -> bool {
-    resolve_time_freeze_enabled(|name| env::var(name).ok())
+fn parse_manifest_scope_extension_origin(
+    name: &'static str,
+    value: &str,
+) -> Result<String, InvalidAppProxyEnvironmentError> {
+    let origin = Url::parse(value).ok().filter(|url| {
+        url.scheme() == "https"
+            && url.host_str().is_some()
+            && url.username().is_empty()
+            && url.password().is_none()
+            && url.path() == "/"
+            && url.query().is_none()
+            && url.fragment().is_none()
+    });
+    match origin {
+        Some(url) => Ok(url.origin().ascii_serialization()),
+        None => Err(InvalidAppProxyEnvironmentError::new(
+            name,
+            value,
+            "an HTTPS origin without a path, query or credentials",
+        )),
+    }
+}
+
+fn parse_same_origin_hosts(name: &'static str, raw: &str) -> Vec<String> {
+    let mut hosts: Vec<String> = Vec::new();
+    for value in raw
+        .split([',', ' ', '\t', '\n'])
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        match parse_same_origin_host(name, value) {
+            Ok(host) => {
+                if !hosts.contains(&host) {
+                    hosts.push(host);
+                }
+            }
+            Err(error) => warn_invalid(&error),
+        }
+    }
+    hosts
+}
+
+fn parse_same_origin_host(
+    name: &'static str,
+    value: &str,
+) -> Result<String, InvalidAppProxyEnvironmentError> {
+    let host = value.trim_end_matches('.').to_ascii_lowercase();
+    let is_hostname = !host.is_empty()
+        && Url::parse(&format!("https://{host}/")).is_ok_and(|url| {
+            url.host_str() == Some(host.as_str())
+                && url.port().is_none()
+                && url.path() == "/"
+                && url.username().is_empty()
+        });
+    if !is_hostname {
+        return Err(InvalidAppProxyEnvironmentError::new(
+            name,
+            value,
+            "a bare hostname without a scheme, port or path",
+        ));
+    }
+    Ok(host)
+}
+
+fn resolve_discovery_upstream_url_from_env() -> String {
+    resolve_discovery_upstream_url(cfg::env_value)
 }
 
 fn resolve_bootstrap_api_public_endpoint_from_env() -> Option<String> {
-    resolve_bootstrap_api_public_endpoint(|name| env::var(name).ok())
-        .unwrap_or_else(|error| panic!("{error}"))
+    resolve_bootstrap_api_public_endpoint(cfg::env_value).unwrap_or_else(|error| panic!("{error}"))
 }
 
 fn resolve_bootstrap_api_public_endpoint<F>(mut read_var: F) -> anyhow::Result<Option<String>>
@@ -567,24 +618,6 @@ where
         &base_domain,
         public_port,
     )))
-}
-
-fn resolve_time_freeze_enabled<F>(mut read_var: F) -> bool
-where
-    F: FnMut(&str) -> Option<String>,
-{
-    if let Some(value) = read_var("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED") {
-        return parse_boolish(&value);
-    }
-
-    !read_var("FLUXER_SELF_HOSTED").is_some_and(|value| parse_boolish(&value))
-}
-
-fn parse_boolish(value: &str) -> bool {
-    matches!(
-        value.trim().to_ascii_lowercase().as_str(),
-        "1" | "true" | "yes" | "on"
-    )
 }
 
 fn resolve_discovery_upstream_url<F>(mut read_var: F) -> String
@@ -632,11 +665,6 @@ mod tests {
         resolve_discovery_upstream_url(|name| env.get(name).map(|value| value.to_string()))
     }
 
-    fn resolve_time_freeze_from_pairs(pairs: &[(&str, &str)]) -> bool {
-        let env: HashMap<&str, &str> = pairs.iter().copied().collect();
-        resolve_time_freeze_enabled(|name| env.get(name).map(|value| value.to_string()))
-    }
-
     fn resolve_bootstrap_endpoint_from_pairs(pairs: &[(&str, &str)]) -> Option<String> {
         try_resolve_bootstrap_endpoint_from_pairs(pairs).expect("the boot html endpoint resolves")
     }
@@ -679,7 +707,7 @@ mod tests {
     }
 
     #[test]
-    fn the_boot_html_api_endpoint_keeps_a_port_it_already_carries() {
+    fn the_boot_html_api_endpoint_keeps_a_port_it_already_has() {
         assert_eq!(
             resolve_bootstrap_endpoint_from_pairs(&[
                 (
@@ -746,6 +774,65 @@ mod tests {
         ])
         .expect_err("a malformed origin is refused");
         assert!(error.to_string().contains("FLUXER_PUBLIC_ORIGIN"));
+    }
+
+    #[test]
+    fn same_origin_hosts_default_to_none() {
+        assert!(parse_same_origin_hosts("TEST_SAME_ORIGIN_HOSTS", "").is_empty());
+        assert!(parse_same_origin_hosts("TEST_SAME_ORIGIN_HOSTS", " , ").is_empty());
+    }
+
+    #[test]
+    fn same_origin_hosts_are_normalised_and_deduplicated() {
+        assert_eq!(
+            parse_same_origin_hosts(
+                "TEST_SAME_ORIGIN_HOSTS",
+                " web.fluxer.app, Fluxer.COM,fluxer.com. ,fluxer.com"
+            ),
+            vec!["web.fluxer.app".to_owned(), "fluxer.com".to_owned()]
+        );
+    }
+
+    #[test]
+    fn same_origin_hosts_drop_anything_but_a_bare_hostname() {
+        assert_eq!(
+            parse_same_origin_hosts(
+                "TEST_SAME_ORIGIN_HOSTS",
+                "https://fluxer.com,fluxer.com:443,fluxer.com/api,user@fluxer.com,canary.fluxer.com"
+            ),
+            vec!["canary.fluxer.com".to_owned()]
+        );
+    }
+
+    #[test]
+    fn manifest_scope_extensions_default_to_none() {
+        assert!(parse_manifest_scope_extensions("TEST_SCOPE_EXTENSIONS", "").is_empty());
+        assert!(parse_manifest_scope_extensions("TEST_SCOPE_EXTENSIONS", " , ").is_empty());
+    }
+
+    #[test]
+    fn manifest_scope_extensions_are_normalised_and_deduplicated() {
+        assert_eq!(
+            parse_manifest_scope_extensions(
+                "TEST_SCOPE_EXTENSIONS",
+                " https://Fluxer.COM, https://fluxer.com/ ,https://canary.fluxer.com:443"
+            ),
+            vec![
+                "https://fluxer.com".to_owned(),
+                "https://canary.fluxer.com".to_owned()
+            ]
+        );
+    }
+
+    #[test]
+    fn manifest_scope_extensions_drop_anything_but_an_https_origin() {
+        assert_eq!(
+            parse_manifest_scope_extensions(
+                "TEST_SCOPE_EXTENSIONS",
+                "fluxer.com,http://fluxer.com,https://fluxer.com/app,https://fluxer.com/?a=1,https://user@fluxer.com,https://canary.fluxer.com"
+            ),
+            vec!["https://canary.fluxer.com".to_owned()]
+        );
     }
 
     #[test]
@@ -835,30 +922,5 @@ mod tests {
             resolve_discovery_from_pairs(&[("PUBLIC_BOOTSTRAP_API_ENDPOINT", "/api")]),
             DEFAULT_DISCOVERY_UPSTREAM_URL
         );
-    }
-
-    #[test]
-    fn time_freeze_enabled_by_default_for_hosted_runtime() {
-        assert!(resolve_time_freeze_from_pairs(&[]));
-    }
-
-    #[test]
-    fn time_freeze_disabled_by_default_for_self_hosted_runtime() {
-        assert!(!resolve_time_freeze_from_pairs(&[(
-            "FLUXER_SELF_HOSTED",
-            "true"
-        )]));
-    }
-
-    #[test]
-    fn explicit_time_freeze_setting_overrides_self_hosted_default() {
-        assert!(resolve_time_freeze_from_pairs(&[
-            ("FLUXER_SELF_HOSTED", "true"),
-            ("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED", "true"),
-        ]));
-        assert!(!resolve_time_freeze_from_pairs(&[
-            ("FLUXER_SELF_HOSTED", "false"),
-            ("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED", "false"),
-        ]));
     }
 }

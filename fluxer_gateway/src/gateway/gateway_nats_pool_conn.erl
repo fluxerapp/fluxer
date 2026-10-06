@@ -5,6 +5,7 @@
 
 -export([
     get_pool_conn/0,
+    connect/3,
     connect_slot/2,
     handle_conn_down/4,
     find_slot_by_conn/2,
@@ -100,7 +101,7 @@ spawn_connect_slot(Idx, Host, Port, Opts, Parent) ->
     ok.
 connect_slot_and_notify(Idx, Host, Port, Opts, Parent) ->
     _ =
-        case nats:connect(Host, Port, Opts) of
+        case connect(Host, Port, Opts) of
             {ok, Conn} ->
                 ok = nats:controlling_process(Conn, Parent),
                 Parent ! {nats_pool_connect_result, Idx, self(), {ok, Conn}};
@@ -108,6 +109,21 @@ connect_slot_and_notify(Idx, Host, Port, Opts, Parent) ->
                 Parent ! {nats_pool_connect_result, Idx, self(), {error, Reason}}
         end,
     ok.
+
+-spec connect(string(), inet:port_number(), map()) ->
+    {ok, nats:conn()} | ignore | {error, term()}.
+connect(Host, Port, Opts) ->
+    Server = #{
+        scheme => <<"nats">>, host => Host, port => Port, family => address_family(Host)
+    },
+    nats:connect(Server, Opts).
+
+-spec address_family(string()) -> inet | inet6.
+address_family(Host) ->
+    case inet:getaddr(Host, inet) of
+        {ok, _} -> inet;
+        {error, _} -> inet6
+    end.
 
 -spec handle_conn_down(non_neg_integer(), nats:conn(), pos_integer(), map()) -> map().
 handle_conn_down(
@@ -384,6 +400,13 @@ build_connect_opts_with_token_test() ->
     ?assertEqual(
         #{auth_token => <<"secret">>, buffer_size => 0}, build_connect_opts(<<"secret">>)
     ).
+
+address_family_prefers_ipv4_test() ->
+    ?assertEqual(inet, address_family("127.0.0.1")),
+    ?assertEqual(inet, address_family("localhost")).
+
+address_family_falls_back_to_ipv6_test() ->
+    ?assertEqual(inet6, address_family("::1")).
 
 build_connect_opts_empty_test() ->
     ?assertEqual(#{buffer_size => 0}, build_connect_opts(undefined)).

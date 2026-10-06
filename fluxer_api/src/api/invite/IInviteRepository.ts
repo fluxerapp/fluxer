@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
-import type {Invite} from '../models/Invite';
+import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
+import type {Invite} from '@app/api/models/Invite';
 
 export abstract class IInviteRepository {
 	abstract findUnique(code: InviteCode): Promise<Invite | null>;
@@ -23,6 +23,8 @@ export abstract class IInviteRepository {
 	}): Promise<Invite>;
 
 	abstract updateInviteUses(code: InviteCode, uses: number, invite: Invite): Promise<void>;
+
+	abstract compareAndSetInviteUses(invite: Invite, uses: number): Promise<boolean>;
 
 	abstract delete(code: InviteCode): Promise<void>;
 }

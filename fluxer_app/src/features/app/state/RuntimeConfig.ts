@@ -9,10 +9,15 @@ import {
 } from '@app/features/app/state/GifProviderConfig';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {
+	type AccountIdentityMode,
+	AccountIdentityModes,
+	type TagStyle,
+	TagStyles,
+} from '@fluxer/constants/src/AccountIdentityConstants';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
 import type {
 	InstanceAppPublic,
-	InstanceCaptcha,
 	InstanceCommunity,
 	InstanceDiscoveryResponse,
 	InstanceFeatures,
@@ -26,7 +31,8 @@ import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/Admi
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 export type {
-	InstanceCaptcha,
+	GifProvider,
+	GifProviderInfo,
 	InstanceCommunity,
 	InstanceDiscoveryResponse,
 	InstanceFeatures,
@@ -34,7 +40,6 @@ export type {
 	InstanceServices,
 	InstanceSsoConfig,
 };
-export type {GifProvider, GifProviderInfo};
 
 export interface RuntimeConfigSnapshot {
 	apiEndpoint: string;
@@ -50,9 +55,6 @@ export interface RuntimeConfigSnapshot {
 	gifProvider: GifProvider;
 	gifProviderDisplayName: string;
 	gifAttributionRequired: boolean;
-	captchaProvider: 'hcaptcha' | 'turnstile' | 'none';
-	hcaptchaSiteKey: string | null;
-	turnstileSiteKey: string | null;
 	apiCodeVersion: number;
 	features: InstanceFeatures;
 	sso: InstanceSsoConfig | null;
@@ -99,9 +101,14 @@ export function runtimeConfigSnapshotsAreSameInstance(
 const DEFAULT_INSTANCE_FEATURES: InstanceFeatures = {
 	voice_enabled: false,
 	stripe_enabled: false,
+	premium_enabled: false,
+	stripe_serviceable: false,
 	self_hosted: false,
 	presigned_attachment_uploads: false,
 	emails_enabled: false,
+	phone_verification_enabled: false,
+	account_identity: AccountIdentityModes.EMAIL,
+	tag_style: TagStyles.RANDOM,
 };
 
 export const DEFAULT_INSTANCE_REGISTRATION: InstanceRegistration = {
@@ -113,6 +120,7 @@ export const DEFAULT_INSTANCE_COMMUNITY: InstanceCommunity = {
 	single_community: false,
 	single_community_guild_id: null,
 	direct_messages_disabled: false,
+	guild_create_access: true,
 };
 
 export function normalizeInstanceCommunity(community?: InstanceCommunity | null): InstanceCommunity {
@@ -144,6 +152,10 @@ export const DEFAULT_APP_PUBLIC_CONFIG: InstanceAppPublic = {
 		wordmark_url: null,
 		favicon_url: null,
 		theme_color: null,
+		status_page_url: null,
+		status_page_incident_history_url: null,
+		premium_product_name: 'Plutonium',
+		premium_info_url: null,
 	},
 	setup: {
 		configured: false,
@@ -288,9 +300,6 @@ class RuntimeConfig {
 	gifProvider: GifProvider = DEFAULT_GIF_PROVIDER_INFO.name;
 	gifProviderDisplayName: string = DEFAULT_GIF_PROVIDER_INFO.displayName;
 	gifAttributionRequired: boolean = DEFAULT_GIF_PROVIDER_INFO.attributionRequired;
-	captchaProvider: 'hcaptcha' | 'turnstile' | 'none' = 'none';
-	hcaptchaSiteKey: string | null = null;
-	turnstileSiteKey: string | null = null;
 	apiCodeVersion: number = API_CODE_VERSION;
 	features: InstanceFeatures = {...DEFAULT_INSTANCE_FEATURES};
 	sso: InstanceSsoConfig | null = null;
@@ -335,9 +344,6 @@ class RuntimeConfig {
 			gifProvider: this.gifProvider,
 			gifProviderDisplayName: this.gifProviderDisplayName,
 			gifAttributionRequired: this.gifAttributionRequired,
-			captchaProvider: this.captchaProvider,
-			hcaptchaSiteKey: this.hcaptchaSiteKey,
-			turnstileSiteKey: this.turnstileSiteKey,
 			apiCodeVersion: this.apiCodeVersion,
 			features: {...this.features},
 			sso: this.sso ? {...this.sso} : null,
@@ -381,6 +387,17 @@ class RuntimeConfig {
 		return this.normalizeLimits(limits as LimitConfigSnapshot | undefined);
 	}
 
+	applyAccountIdentity(mode: AccountIdentityMode, tagStyle: TagStyle): void {
+		runInAction(() => {
+			this.features = {
+				...this.features,
+				account_identity: mode,
+				tag_style: tagStyle,
+				emails_enabled: mode === AccountIdentityModes.USERNAME ? false : this.features.emails_enabled,
+			};
+		});
+	}
+
 	applyAdminInstanceConfig(config: InstanceConfigResponse): void {
 		const appPublic = normalizeAppPublicConfig({
 			branding: config.app_public.branding,
@@ -395,6 +412,13 @@ class RuntimeConfig {
 			this.features = {
 				...this.features,
 				self_hosted: config.self_hosted,
+				premium_enabled: !config.self_hosted || config.policy.premium_mode === 'mirror',
+				stripe_enabled: config.billing.billing_active,
+				stripe_serviceable: config.billing.stripe_serviceable,
+				account_identity: config.account_identity.mode,
+				tag_style: config.account_identity.tag_style,
+				emails_enabled:
+					config.account_identity.mode === AccountIdentityModes.USERNAME ? false : this.features.emails_enabled,
 			};
 			this.registration = normalizeInstanceRegistration(config.registration);
 			this.community = normalizeInstanceCommunity({
@@ -403,6 +427,7 @@ class RuntimeConfig {
 					? config.policy.single_community_guild_id
 					: null,
 				direct_messages_disabled: config.policy.direct_messages_disabled,
+				guild_create_access: config.policy.guild_create_access,
 			});
 			this.services = normalizeInstanceServices({
 				gif_enabled: config.policy.services_resolved.gif_enabled,
@@ -412,6 +437,23 @@ class RuntimeConfig {
 			this.appPublic = appPublic;
 		});
 		applyDocumentBranding(appPublic);
+	}
+
+	async refreshDiscovery(): Promise<void> {
+		const response = await fetch(`${this.apiEndpoint.replace(/\/$/, '')}/.well-known/fluxer`, {
+			cache: 'no-store',
+			headers: {Accept: 'application/json'},
+		});
+		if (!response.ok) {
+			throw new Error(`Discovery refresh failed with status ${response.status}`);
+		}
+		const instance = (await response.json()) as InstanceDiscoveryResponse;
+		runInAction(() => {
+			this.features = {
+				...DEFAULT_INSTANCE_FEATURES,
+				...instance.features,
+			};
+		});
 	}
 
 	private updateFromInstance(instance: InstanceDiscoveryResponse): void {
@@ -438,9 +480,6 @@ class RuntimeConfig {
 			this.gifProvider = gifProviderInfo.name;
 			this.gifProviderDisplayName = gifProviderInfo.displayName;
 			this.gifAttributionRequired = gifProviderInfo.attributionRequired;
-			this.captchaProvider = instance.captcha.provider;
-			this.hcaptchaSiteKey = instance.captcha.hcaptcha_site_key;
-			this.turnstileSiteKey = instance.captcha.turnstile_site_key;
 			this.apiCodeVersion = instance.api_code_version;
 			this.features = {
 				...DEFAULT_INSTANCE_FEATURES,
@@ -480,12 +519,59 @@ class RuntimeConfig {
 		}
 	}
 
+	get statusPageUrl(): string {
+		return this.appPublic.branding.status_page_url ?? '';
+	}
+
+	get statusPageIncidentHistoryUrl(): string {
+		return this.appPublic.branding.status_page_incident_history_url ?? '';
+	}
+
 	isSelfHosted(): boolean {
 		return DeveloperOptions.selfHostedModeOverride || this.features.self_hosted;
 	}
 
+	get premiumEnabled(): boolean {
+		return this.features.premium_enabled;
+	}
+
+	get stripeEnabled(): boolean {
+		return this.features.stripe_enabled;
+	}
+
+	get stripeServiceable(): boolean {
+		return this.features.stripe_serviceable;
+	}
+
+	get premiumProductName(): string {
+		return (
+			this.appPublic.branding.premium_product_name?.trim() || DEFAULT_APP_PUBLIC_CONFIG.branding.premium_product_name
+		);
+	}
+
+	get premiumInfoUrl(): string | null {
+		return this.appPublic.branding.premium_info_url ?? null;
+	}
+
 	get emailsEnabled(): boolean {
 		return this.features.emails_enabled;
+	}
+
+	get accountIdentity(): AccountIdentityMode {
+		return this.features.account_identity ?? AccountIdentityModes.EMAIL;
+	}
+
+	get usesUsernameSignIn(): boolean {
+		return this.accountIdentity === AccountIdentityModes.USERNAME;
+	}
+
+	get tagStyle(): TagStyle {
+		if (this.usesUsernameSignIn) return TagStyles.NONE;
+		return this.features.tag_style ?? TagStyles.RANDOM;
+	}
+
+	get usesUniqueUsernames(): boolean {
+		return this.tagStyle === TagStyles.NONE;
 	}
 
 	get productName(): string {

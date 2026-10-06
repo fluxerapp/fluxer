@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {StatusSlate} from '@app/features/app/components/dialogs/shared/StatusSlate';
-import {EXAMPLE_FLUXER_TAG_FULL} from '@app/features/app/config/I18nDisplayConstants';
+import {EXAMPLE_FLUXER_TAG_FULL, EXAMPLE_USERNAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import styles from '@app/features/channel/components/direct_message/AddFriendForm.module.css';
 import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as RelationshipCommands from '@app/features/relationship/commands/RelationshipCommands';
 import {getSendFriendRequestErrorMessage} from '@app/features/relationship/utils/RelationshipActionUtils';
 import {OUTGOING_FRIEND_REQUEST_STATUS_DESCRIPTOR} from '@app/features/relationship/utils/RelationshipMessageDescriptors';
@@ -34,6 +35,10 @@ const PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR = msg({
 	comment:
 		'Description text in the channel and chat add friend form. Preserve {exampleFluxerTagFull}; it is inserted by code.',
 });
+const ENTER_A_VALID_USERNAME_DESCRIPTOR = msg({
+	message: 'Enter a valid username.',
+	comment: 'Error text in the add friend form on instances where people sign in with a username and have no tag.',
+});
 const SEND_REQUEST_DESCRIPTOR = msg({
 	message: 'Send request',
 	comment: 'Button or menu action label in the channel and chat add friend form. Keep it concise.',
@@ -53,7 +58,9 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 	const [isLoading, setIsLoading] = useState(false);
 	const [resultStatus, setResultStatus] = useState<'success' | 'error' | null>(null);
 	const [errorCode, setErrorCode] = useState<string | null>(null);
+	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const currentUser = Users.currentUser;
+	const usernameOnly = RuntimeConfig.usesUniqueUsernames;
 	const isClaimed = currentUser?.isClaimed() ?? true;
 	if (!isClaimed) {
 		return (
@@ -100,7 +107,8 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 	const parseInput = (input: string): [string, string] => {
 		const parts = input['split']('#');
 		if (parts.length > 1) {
-			return [parts[0], parts.slice(1).join('#')];
+			const discriminator = parts.slice(1).join('#');
+			return [parts[0], usernameOnly && /^0{1,4}$/.test(discriminator) ? '0000' : discriminator];
 		}
 		return [input, '0000'];
 	};
@@ -109,6 +117,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 		if (resultStatus) {
 			setResultStatus(null);
 			setErrorCode(null);
+			setErrorMessage(null);
 		}
 	};
 	const getErrorMessage = () => {
@@ -119,16 +128,21 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 			return i18n._(NO_USER_FOUND_WITH_THAT_USERNAME_DESCRIPTOR);
 		}
 		if (errorCode === APIErrorCodes.DISCRIMINATOR_REQUIRED) {
+			if (usernameOnly) return i18n._(ENTER_A_VALID_USERNAME_DESCRIPTOR);
 			return i18n._(PLEASE_ENTER_A_VALID_USERNAME_DESCRIPTOR, {exampleFluxerTagFull: EXAMPLE_FLUXER_TAG_FULL});
+		}
+		if (errorCode === APIErrorCodes.NEW_CONVERSATIONS_LIMITED) {
+			return getSendFriendRequestErrorMessage(i18n, errorCode, errorMessage);
 		}
 		return getSendFriendRequestErrorMessage(i18n, errorCode, null);
 	};
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const [username, discriminator] = parseInput(input['trim']());
 		if (!username || !discriminator || !/^\d{4}$/.test(discriminator)) {
 			setResultStatus('error');
 			setErrorCode(APIErrorCodes.NO_USERS_WITH_FLUXERTAG_EXIST);
+			setErrorMessage(null);
 			return;
 		}
 		setIsLoading(true);
@@ -143,6 +157,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 				setIsLoading(false);
 				setResultStatus('error');
 				setErrorCode(failureCode(error) ?? null);
+				setErrorMessage(failureMessage(error) ?? null);
 			});
 	};
 	const isDisabled = isLoading || !input['trim']();
@@ -169,7 +184,7 @@ export const AddFriendForm: React.FC<AddFriendFormProps> = observer(({onSuccess}
 					type="text"
 					value={input}
 					onChange={handleInputChange}
-					placeholder={EXAMPLE_FLUXER_TAG_FULL}
+					placeholder={usernameOnly ? EXAMPLE_USERNAME : EXAMPLE_FLUXER_TAG_FULL}
 					className={clsx(
 						styles.input,
 						!isMobile && styles.inputDesktop,

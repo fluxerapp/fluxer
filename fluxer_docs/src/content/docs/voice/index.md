@@ -8,10 +8,6 @@ Fluxer runs voice over LiveKit. The [main Gateway](/gateway/overview/) places a 
 
 [Client commands](/gateway/commands/) and [Gateway events](/gateway/events/) define the placement protocol.
 
-:::note[A voice rewrite is in progress]
-Every statement on this page is what an instance serves today, and a later release can change it. Re-read the page after an instance upgrade.
-:::
-
 ## Voice surfaces
 
 | Surface | What it is | Reference |
@@ -42,7 +38,7 @@ The grant lives for 600 seconds.
 
 One room is one voice channel, and one participant is one voice connection. A member holding several connections in the same channel is several participants in the same room, which is how one account is present from more than one device.
 
-The grant also names the track sources the connection may publish. SPEAK allows the microphone source, and STREAM allows the camera source together with the two screen share sources. A server-deafened connection may neither publish nor subscribe.
+The grant also names the track sources the connection may publish. SPEAK allows the microphone source, and STREAM allows the camera source together with the screen share sources. A server-deafened connection may neither publish nor subscribe.
 
 ## Deployment feature state
 
@@ -71,13 +67,13 @@ A grant is issued when a connection opens, when it moves to another channel, and
 
 The grant `token` is issued for the media server and consumed by the media connection alone. No route on this API accepts it.
 
-Fluxer reports a guild refusal as [Voice State Ack](/gateway/events/#voice-state-ack) with a `status` of `rejected` and an `error_code` naming the exact reason, and only a command with a `mutation_id` receives one. A refused placement without it produces no Dispatch, so a client that needs to observe a guild refusal MUST send `mutation_id`.
-
-A call never acks. A refused placement into a direct message or group direct message call produces no Dispatch whether or not the command had `mutation_id`. A client observes that refusal only as the absence of a grant.
+Fluxer reports a refusal by sending no Dispatch. A client observes a refused placement only as the absence of a grant.
 
 ## Guild voice channels
 
 A guild voice channel stores its `bitrate`, `user_limit`, `voice_connection_limit`, and `rtc_region` on the [channel object](/http-api/channels/#channel-object). It also has ordinary messages, pins, and slowmode, so its text history is read and written through the [Messages resource](/http-api/messages/).
+
+A new voice channel stores a `bitrate` of 64000. The ceiling is 96000, and the `AUDIO_BITRATE_128_KBPS`, `AUDIO_BITRATE_256_KBPS`, and `AUDIO_BITRATE_384_KBPS` [guild features](/http-api/guilds/#guild-features) raise it to 128000, 256000, and 384000. A direct message and a group direct message call have no `bitrate` and always run at 64000.
 
 ### Permissions
 
@@ -99,13 +95,13 @@ A guild voice channel stores its `bitrate`, `user_limit`, `voice_connection_limi
 
 <sup>4</sup> MUTE_MEMBERS covers the `mute` field and DEAFEN_MEMBERS the `deaf` field of the [guild member update object](/http-api/guild-members/#guild-member-update-object). `PRIORITY_SPEAKER` and `USE_VAD` are defined and assignable [permission bits](/http-api/permissions/#permissions) that no HTTP route and no Gateway command evaluates
 
-[ADMINISTRATOR](/http-api/permissions/) resolves to the complete mask before any channel overwrite is applied, so it satisfies every row of that table. Two states skip the VIEW_CHANNEL and CONNECT check. A member the guild is already moving is admitted. So is a member holding virtual access to the channel. The guild grants virtual access to a connected member that loses VIEW_CHANNEL or that a moderator moves into a channel it cannot see. Virtual access also grants SPEAK and STREAM in that channel on its own.
+[ADMINISTRATOR](/http-api/permissions/) resolves to the complete mask before any channel overwrite is applied, so it satisfies every row of that table. Two cases skip the VIEW_CHANNEL and CONNECT check. A member the guild is already moving is admitted. So is a member holding virtual access to the channel. The guild grants virtual access to a connected member that loses VIEW_CHANNEL or that a moderator moves into a channel it cannot see. Virtual access also grants SPEAK and STREAM in that channel on its own.
 
-A grant is evaluated when it is issued, and the guild re-evaluates a connection that is already open. Joining, moving, a region change, a role edit, an overwrite edit, and a member role change each recompute SPEAK and STREAM.
+Fluxer checks the permissions in the table above when it issues a grant, and the guild checks them again for a connection that is already open. Joining, moving, a region change, a role edit, an overwrite edit, and a member role change each recompute SPEAK and STREAM.
 
 The guild applies the new result to a live connection and issues no new [Voice Server Update](/gateway/events/#voice-server-update). The media server mutes a published microphone, camera, or screen share track the member may no longer publish, and drops a connection that fails the VIEW_CHANNEL and CONNECT check.
 
-Moderation is an HTTP operation on the guild membership. [Modify guild member](/http-api/guild-members/#modify-guild-member) and [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) share one request body. Each applies a moderator mute and a moderator deafen, moves a member between guild voice channels, and forces a disconnect. Both hold the caller to MUTE_MEMBERS, DEAFEN_MEMBERS, and MOVE_MEMBERS, including when the target is the caller itself. No other HTTP route and no Gateway command does any of it.
+Moderation is an HTTP operation on the guild membership. [Modify guild member](/http-api/guild-members/#modify-guild-member) and [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) share one request body. Each applies a moderator mute and a moderator deafen, moves a member between guild voice channels, and forces a disconnect. Both require the caller to hold MUTE_MEMBERS, DEAFEN_MEMBERS, and MOVE_MEMBERS for those changes, including when the target is the caller itself. No other HTTP route and no Gateway command does any of it.
 
 That mute and that deafen reach the media server without a new credential. The change applies to every connection the account holds in that channel, and no [Voice Server Update](/gateway/events/#voice-server-update) follows.
 
@@ -125,7 +121,7 @@ That mute and that deafen reach the media server without a new credential. The c
 
 A private call reads no `voice_connection_limit` and applies a fixed ceiling of 5 connections for each member.
 
-A member whose `communication_disabled_until` is still in the future is refused with `VOICE_MEMBER_TIMED_OUT` before any permission or capacity check runs. An account that has never claimed its credentials is refused with `VOICE_UNCLAIMED_ACCOUNT` for a one-on-one direct message call and for any guild voice channel whose guild it does not own. A group direct message call is not refused. A session that did not identify with `e2ee_capable` is refused with `VOICE_E2EE_REQUIRED` while the guild has voice encryption enabled and every connection already in the channel is capable. A bot is exempt from that one.
+A member whose `communication_disabled_until` is still in the future is refused with `VOICE_MEMBER_TIMED_OUT` before any permission or capacity check runs. An [unclaimed account](/http-api/authentication/#register-an-account) is refused with `VOICE_UNCLAIMED_ACCOUNT` for a one-on-one direct message call and for any guild voice channel whose guild it does not own. A group direct message call is not refused. A session that did not identify with `e2ee_capable` is refused with `VOICE_E2EE_REQUIRED` while the guild has voice encryption enabled and every connection already in the channel is capable. A bot is exempt from that one.
 
 ### Regions
 
@@ -133,9 +129,7 @@ A member whose `communication_disabled_until` is still in the future is refused 
 
 `rtc_region` is written by [Modify channel](/http-api/channels/#modify-channel) and requires UPDATE_RTC_REGION. A null value selects automatic routing, and so does a stored value the placing account cannot reach.
 
-The first placement in the channel pins one voice server for it, and every later placement inherits that pinned server whatever its own coordinates are. A placement that finds no usable pin takes the accessible server nearest to the `latitude` and `longitude` the placement command supplied. Where the command supplied no usable coordinates, the placement falls back to the deployment's default region, and then to the first accessible region.
-
-The pin drops when the channel's `rtc_region` changes, when a call changes region, when the pinned server stops being accessible, or when the media server reports the room finished. That last case also disconnects every connection in a guild voice channel.
+Automatic routing selects an available server, using the supplied `latitude` and `longitude` when possible. Participants in the same channel share a server. Always use the endpoint returned in [Voice Server Update](/gateway/events/#voice-server-update).
 
 The literal `automatic` is not a channel region. Only the `region` field of [Modify call region](/http-api/calls/#modify-call-region) accepts it, as a synonym for null.
 
@@ -149,9 +143,9 @@ The [Calls resource](/http-api/calls/) owns its HTTP surface, which reads whethe
 
 A recipient's [incoming call flags](/http-api/users/#incoming-call-flags) decide whether it is rung. The flags can admit nobody, friends only, friends of friends, guild members, or everyone, and they can admit everyone silently.
 
-[Get call eligibility](/http-api/calls/#get-call-eligibility) applies two conditions of the caller's own before it reads that policy. A caller already connected to the channel's call is reported as not ringable. So is an unclaimed account in a direct message. The operation applies no recipient policy to a group direct message, and reports one as ringable unless the caller is already connected to its call.
+[Get call eligibility](/http-api/calls/#get-call-eligibility) checks two conditions on the caller before it reads that policy. A caller already connected to the channel's call is reported as not ringable. So is an unclaimed account in a direct message. The operation applies no recipient policy to a group direct message, and reports one as ringable unless the caller is already connected to its call.
 
-[Ring call recipients](/http-api/calls/#ring-call-recipients) applies neither of those two conditions and evaluates the policy once per targeted recipient, in a group direct message as well as in a direct message. The result selects who is rung, so a recipient the policy excludes and a recipient it admits silently are both left out of the ringing set while the request still answers 204.
+[Ring call recipients](/http-api/calls/#ring-call-recipients) applies neither of those conditions and evaluates the policy once per targeted recipient, in a group direct message as well as in a direct message. The result selects who is rung, so a recipient the policy excludes and a recipient it admits silently are both left out of the ringing set while the request still answers 204.
 
 ## Go Live streams
 
@@ -171,7 +165,7 @@ The [Streams resource](/http-api/streams/) owns the operations addressed by that
 On an instance that is not self-hosted, Fluxer mutes a camera or screen share track above 1280x720 from a member without the higher video quality entitlement, and removes that source from the connection's grant. The voice connection stays up.
 :::
 
-Fluxer removes screen share audio from the grant together with screen share, and removes camera on its own. The member keeps publishing its remaining sources, and a connection whose grant has no source left may publish nothing. A track published without a `sid` is neither muted nor revoked.
+Losing screen share permission also stops its audio. Other permitted track sources remain available.
 
 ## Entrance sounds
 
@@ -187,7 +181,7 @@ Every session the account holds receives the Dispatch, including sessions that a
 
 An account chooses whether a friend is told which voice channel it is in. [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) writes the account's default and rewrites the caller's side of every existing friendship to the same value in one operation. It then holds a 24 hour cooldown, and a second attempt inside that window is refused at the `share_voice_activity` path with the validation code `VOICE_ACTIVITY_SHARING_ON_COOLDOWN` and a `retry_after` in seconds.
 
-The stored result is `share_voice_activity` on the caller's own [relationship object](/http-api/users/relationships/#relationship-object), and `friend_shares_voice_activity` reports the reciprocal record. That reciprocal is resolved by [List relationships](/http-api/users/relationships/#list-relationships) and by the two [Relationship Update](/gateway/events/#relationship-update) Dispatches this operation emits for each rewritten friendship, one to the caller and one to the friend. Every other operation that returns a relationship object reports it as true.
+The stored result is `share_voice_activity` on the caller's own [relationship object](/http-api/users/relationships/#relationship-object), and `friend_shares_voice_activity` reports the reciprocal record. [List relationships](/http-api/users/relationships/#list-relationships) reads `friend_shares_voice_activity` from that reciprocal record. So do the [Relationship Update](/gateway/events/#relationship-update) Dispatches this operation emits for each rewritten friendship, one to the caller and one to the friend. Every other operation that returns a relationship object reports `friend_shares_voice_activity` as true.
 
 :::caution[The Gateway does not enforce voice activity sharing]
 A [voice state](/gateway/events/#voice-state-object) reaches every session that can view the channel whatever `share_voice_activity` holds, so an account that shares nothing is still visible there. A client MUST NOT present the flag as concealment.

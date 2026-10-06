@@ -207,7 +207,7 @@ const EmbedDebuggerTab: React.FC = observer(() => {
 		() => (previewEmbeds ? createPreviewMessage(submittedUrl, previewEmbeds) : null),
 		[previewEmbeds, submittedUrl],
 	);
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (!trimmedUrl || isSubmitting) return;
 		setIsSubmitting(true);

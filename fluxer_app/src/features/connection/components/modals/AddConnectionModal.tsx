@@ -150,7 +150,7 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 			if (type === ConnectionTypes.BLUESKY) {
 				identifier = identifier.replace(/^https?:\/\/bsky\.app\/profile\//i, '').replace(/^@/, '');
 			}
-			if (UserConnection.hasConnectionByTypeAndName(type, identifier)) {
+			if (type === ConnectionTypes.DOMAIN && UserConnection.hasConnectionByTypeAndName(type, identifier)) {
 				initiateForm.setError('identifier', {
 					type: 'validate',
 					message: i18n._(YOU_ALREADY_HAVE_THIS_CONNECTION_DESCRIPTOR),

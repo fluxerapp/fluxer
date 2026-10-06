@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 variable "BUILD_VERSION" { default = "" }
 variable "PUBLIC_ASSET_BASE_URL" { default = "" }
-variable "FLUXER_APP_PROXY_TIME_FREEZE_ENABLED" { default = "true" }
 variable "BUNDLE_LOCAL_ASSETS" { default = "true" }
 variable "IMAGE_REPO" { default = "" }
 variable "CACHE_FROM" { default = "" }
@@ -26,7 +25,6 @@ target "app-proxy" {
 	args = {
 		BUILD_VERSION                         = BUILD_VERSION
 		PUBLIC_ASSET_BASE_URL                 = PUBLIC_ASSET_BASE_URL
-		FLUXER_APP_PROXY_TIME_FREEZE_ENABLED = FLUXER_APP_PROXY_TIME_FREEZE_ENABLED
 		BUNDLE_LOCAL_ASSETS                   = BUNDLE_LOCAL_ASSETS
 		APP_ASSETS_REF                        = APP_ASSETS_REF
 		APP_ASSETS_PLATFORM                   = APP_ASSETS_PLATFORM

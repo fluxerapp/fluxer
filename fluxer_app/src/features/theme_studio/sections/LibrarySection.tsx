@@ -5,7 +5,16 @@ import {CANCEL_DESCRIPTOR, DESCRIPTION_DESCRIPTOR} from '@app/features/i18n/util
 import {createDefaultLoadableComponent} from '@app/features/platform/components/loadable/LoadableComponent';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {upsertThemeCssHeader} from '@app/features/theme/utils/ThemeCssUtils';
+import styles from '@app/features/theme_studio/sections/LibrarySection.module.css';
+import type {QuickCssEditorProps} from '@app/features/theme_studio/sections/QuickCssEditor';
+import {broadcastThemeStudioMessage} from '@app/features/theme_studio/state/ThemeStudioBroadcast';
+import ThemeStudioState from '@app/features/theme_studio/state/ThemeStudioState';
+import {StudioButton} from '@app/features/theme_studio/ui/StudioButton';
+import {StudioEmptyState} from '@app/features/theme_studio/ui/StudioEmptyState';
+import {StudioSearchInput} from '@app/features/theme_studio/ui/StudioSearchInput';
+import {StudioSplit} from '@app/features/theme_studio/ui/StudioSplit';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
+import type {ThemeStudioBaseTheme} from '@app/features/theme_studio/utils/ThemeStudioPinnedVariables';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -27,22 +36,16 @@ import {
 	FilePlusIcon,
 	FloppyDiskIcon,
 	FolderOpenIcon,
+	LinkBreakIcon,
+	LinkSimpleIcon,
 	TrashIcon,
 	UploadSimpleIcon,
+	WarningCircleIcon,
 } from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
-import {broadcastThemeStudioMessage} from '../state/ThemeStudioBroadcast';
-import ThemeStudioState from '../state/ThemeStudioState';
-import {StudioButton} from '../ui/StudioButton';
-import {StudioEmptyState} from '../ui/StudioEmptyState';
-import {StudioSearchInput} from '../ui/StudioSearchInput';
-import {StudioSplit} from '../ui/StudioSplit';
-import type {ThemeStudioBaseTheme} from '../utils/ThemeStudioPinnedVariables';
-import styles from './LibrarySection.module.css';
-import type {QuickCssEditorProps} from './QuickCssEditor';
 
 const THEME_SAVED_DESCRIPTOR = msg({
 	message: 'Theme saved.',
@@ -134,6 +137,42 @@ const PICK_A_THEME_ON_THE_LEFT_TO_EDIT_DESCRIPTOR = msg({
 	message: 'Pick a theme on the left to edit its name, metadata, and CSS. Or import a new one.',
 	comment: 'Description text in the theme studio library section.',
 });
+const LINKED_THEME_FILES_DESCRIPTOR = msg({
+	message:
+		'Linked {length, plural, one {# theme file} other {# theme files}}. Changes you save to them apply right away.',
+	comment:
+		'Toast after importing CSS files or a folder on the desktop app. The themes stay linked to the files on disk and update when the file is saved.',
+});
+const LINKED_FILE_DESCRIPTOR = msg({
+	message: 'Linked to a file',
+	comment:
+		'Accessible label for the icon next to a theme in the Theme Studio library that is linked to a CSS file on disk and updates live.',
+});
+const LINKED_FILE_UNAVAILABLE_DESCRIPTOR = msg({
+	message: 'Linked file unavailable',
+	comment:
+		'Accessible label for the warning icon next to a linked theme in the Theme Studio library when its CSS file is missing or cannot be read.',
+});
+const LINKED_FILE_LIVE_DESCRIPTOR = msg({
+	message: 'Linked to {path}. Edit the file in any editor and saved changes apply here right away.',
+	comment:
+		'Banner above a linked theme in the Theme Studio library. {path} is the full path of the CSS file on disk. The theme cannot be edited in the studio while linked.',
+});
+const LINKED_FILE_PATH_DESCRIPTOR = msg({
+	message: 'Linked to {path}.',
+	comment:
+		'Banner above a linked theme in the Theme Studio library while the app is still checking its CSS file, or when this version of the desktop app cannot follow file changes. {path} is the full path of the CSS file on disk.',
+});
+const LINKED_FILE_MISSING_DESCRIPTOR = msg({
+	message: "Can't find {path}. Using the last loaded version.",
+	comment:
+		'Banner above a linked theme in the Theme Studio library when its CSS file was moved or deleted. {path} is the full path of the CSS file.',
+});
+const LINKED_FILE_UNREADABLE_DESCRIPTOR = msg({
+	message: "Can't read {path}. Using the last loaded version.",
+	comment:
+		'Banner above a linked theme in the Theme Studio library when its CSS file exists but cannot be read, for example because it is too large or access was removed. {path} is the full path of the CSS file.',
+});
 
 function LibraryCssEditorLoading() {
 	return (
@@ -148,7 +187,7 @@ function LibraryCssEditorLoading() {
 const LibraryCssEditor = createDefaultLoadableComponent<QuickCssEditorProps>({
 	displayName: 'LibraryCssEditor',
 	LoadingComponent: LibraryCssEditorLoading,
-	load: () => import('./QuickCssEditor'),
+	load: () => import('@app/features/theme_studio/sections/QuickCssEditor'),
 });
 
 interface LibrarySectionProps {
@@ -184,6 +223,15 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 	}, [searchQuery, themeLibraryRevision]);
 	const selectedTheme = ThemeLibrary.themes.find((theme) => theme.id === selectedThemeId) ?? null;
 	useEffect(() => {
+		ThemeLibrary.setFocusedThemeId(selectedThemeId);
+	}, [selectedThemeId]);
+	useEffect(
+		() => () => {
+			ThemeLibrary.setFocusedThemeId(null);
+		},
+		[],
+	);
+	useEffect(() => {
 		if (selectedThemeId && ThemeLibrary.themes.some((theme) => theme.id === selectedThemeId)) return;
 		setSelectedThemeId(ThemeLibrary.themes[0]?.id ?? null);
 	}, [selectedThemeId, themeLibraryRevision]);
@@ -217,7 +265,7 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 	}, [selectedTheme, draftName, draftDescription, draftAuthor, draftVersion, draftTags, draftCss]);
 	const handleSelect = useCallback((id: string) => setSelectedThemeId(id), []);
 	const handleSave = useCallback(() => {
-		if (!selectedTheme) return;
+		if (!selectedTheme || (selectedTheme.linkedPath && ThemeLibrary.canWatchLinkedFiles)) return;
 		const metadata = {
 			name: draftName.trim() || selectedTheme.name,
 			description: draftDescription,
@@ -278,14 +326,42 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 		},
 		[i18n],
 	);
+	const handleImportDesktopCss = useCallback(() => {
+		void ThemeLibrary.importDesktopCssFiles().then((themes) => {
+			if (themes.length > 0) {
+				broadcastThemeStudioMessage({type: 'themeLibrary', revision: ThemeLibrary.revision});
+				ToastCommands.success(i18n._(LINKED_THEME_FILES_DESCRIPTOR, {length: themes.length}));
+			}
+		});
+	}, [i18n]);
 	const handleImportDirectory = useCallback(() => {
 		void ThemeLibrary.importDesktopThemeDirectory().then((themes) => {
 			if (themes.length > 0) {
 				broadcastThemeStudioMessage({type: 'themeLibrary', revision: ThemeLibrary.revision});
-				ToastCommands.success(i18n._(IMPORTED_OTHER_2_DESCRIPTOR, {length: themes.length}));
+				const descriptor = themes.some((theme) => theme.linkedPath)
+					? LINKED_THEME_FILES_DESCRIPTOR
+					: IMPORTED_OTHER_2_DESCRIPTOR;
+				ToastCommands.success(i18n._(descriptor, {length: themes.length}));
 			}
 		});
 	}, [i18n]);
+	const handleLinkFile = useCallback(() => {
+		if (!selectedTheme) return;
+		void ThemeLibrary.linkThemeToDesktopFile(selectedTheme.id).then((theme) => {
+			if (!theme) return;
+			if (theme.id !== selectedTheme.id) {
+				setSelectedThemeId(theme.id);
+				return;
+			}
+			broadcastThemeStudioMessage({type: 'themeLibrary', revision: ThemeLibrary.revision});
+		});
+	}, [selectedTheme]);
+	const handleUnlink = useCallback(() => {
+		if (!selectedTheme) return;
+		void ThemeLibrary.unlinkTheme(selectedTheme.id).then(() => {
+			broadcastThemeStudioMessage({type: 'themeLibrary', revision: ThemeLibrary.revision});
+		});
+	}, [selectedTheme]);
 	const handleImportLibrary = useCallback(
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.target.files?.[0];
@@ -315,6 +391,13 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 		});
 	}, []);
 	const hasDesktopFileAccess = isDesktop() && Boolean(getElectronAPI()?.pickThemeLocalFiles);
+	const canLinkFiles = isDesktop() && Boolean(getElectronAPI()?.pickThemeLinkedFiles);
+	const selectedLinkedPath = selectedTheme?.linkedPath;
+	const isSelectedLinked = Boolean(selectedLinkedPath) && ThemeLibrary.canWatchLinkedFiles;
+	const selectedLinkedStatus =
+		selectedLinkedPath && isSelectedLinked ? ThemeLibrary.linkedFileStatus.get(selectedLinkedPath) : undefined;
+	const selectedLinkedProblem = selectedLinkedStatus !== undefined && selectedLinkedStatus !== 'live';
+	const LinkedBannerIcon = selectedLinkedProblem ? WarningCircleIcon : LinkSimpleIcon;
 	return (
 		<div className={styles.section} data-flx="theme-studio.library-section.section">
 			<div className={styles.toolbar} data-flx="theme-studio.library-section.toolbar">
@@ -331,7 +414,7 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 						variant="secondary"
 						compact
 						leadingIcon={<FileCssIcon size={13} weight="bold" data-flx="theme-studio.library-section.file-css-icon" />}
-						onClick={() => cssImportRef.current?.click()}
+						onClick={canLinkFiles ? handleImportDesktopCss : () => cssImportRef.current?.click()}
 						data-flx="theme-studio.library-section.studio-button.click"
 					>
 						<Trans>Import CSS</Trans>
@@ -427,6 +510,8 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 						) : (
 							filteredThemes.map((theme) => {
 								const enabled = ThemeLibrary.enabledThemeIds.includes(theme.id);
+								const linkedStatus = theme.linkedPath ? ThemeLibrary.linkedFileStatus.get(theme.linkedPath) : undefined;
+								const linkedProblem = linkedStatus !== undefined && linkedStatus !== 'live';
 								return (
 									<div
 										key={theme.id}
@@ -446,7 +531,33 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 														{theme.name || theme.fileName}
 													</span>
 													<span className={styles.listItemMeta} data-flx="theme-studio.library-section.list-item-meta">
-														{theme.fileName}
+														{theme.linkedPath ? (
+															<span
+																className={clsx(styles.listItemStatus, linkedProblem && styles.listItemStatusWarning)}
+																role="img"
+																aria-label={i18n._(
+																	linkedProblem ? LINKED_FILE_UNAVAILABLE_DESCRIPTOR : LINKED_FILE_DESCRIPTOR,
+																)}
+																data-flx="theme-studio.library-section.list-item-status"
+															>
+																{linkedProblem ? (
+																	<WarningCircleIcon
+																		size={11}
+																		weight="bold"
+																		aria-hidden
+																		data-flx="theme-studio.library-section.list-item-status-warning-icon"
+																	/>
+																) : (
+																	<LinkSimpleIcon
+																		size={11}
+																		weight="bold"
+																		aria-hidden
+																		data-flx="theme-studio.library-section.list-item-status-link-icon"
+																	/>
+																)}
+															</span>
+														) : null}
+														<span data-flx="theme-studio.library-section.list-item-file-name">{theme.fileName}</span>
 													</span>
 												</span>
 											</button>
@@ -478,6 +589,26 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 									{selectedTheme.name || selectedTheme.fileName}
 								</div>
 								<div className={styles.editorActions} data-flx="theme-studio.library-section.editor-actions">
+									{canLinkFiles && !selectedLinkedPath ? (
+										<StudioButton
+											variant="secondary"
+											compact
+											leadingIcon={
+												<LinkSimpleIcon
+													size={13}
+													weight="bold"
+													data-flx="theme-studio.library-section.link-simple-icon"
+												/>
+											}
+											disabled={hasDirty}
+											onClick={handleLinkFile}
+											data-flx="theme-studio.library-section.studio-button.link-file"
+										>
+											<Trans comment="Button in the Theme Studio library that links an existing theme to a CSS file on disk so saved changes to the file apply live.">
+												Link file
+											</Trans>
+										</StudioButton>
+									) : null}
 									<StudioButton
 										variant="secondary"
 										compact
@@ -515,23 +646,64 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 									</StudioButton>
 								</div>
 							</div>
+							{selectedLinkedPath ? (
+								<div
+									className={clsx(styles.linkedBanner, selectedLinkedProblem && styles.linkedBannerWarning)}
+									data-flx="theme-studio.library-section.linked-banner"
+								>
+									<LinkedBannerIcon
+										size={14}
+										weight="bold"
+										aria-hidden
+										data-flx="theme-studio.library-section.linked-banner-icon"
+									/>
+									<span className={styles.linkedBannerText} data-flx="theme-studio.library-section.linked-banner-text">
+										{i18n._(
+											selectedLinkedStatus === 'missing'
+												? LINKED_FILE_MISSING_DESCRIPTOR
+												: selectedLinkedProblem
+													? LINKED_FILE_UNREADABLE_DESCRIPTOR
+													: selectedLinkedStatus === 'live'
+														? LINKED_FILE_LIVE_DESCRIPTOR
+														: LINKED_FILE_PATH_DESCRIPTOR,
+											{path: selectedLinkedPath},
+										)}
+									</span>
+									<StudioButton
+										variant="secondary"
+										compact
+										leadingIcon={
+											<LinkBreakIcon size={13} weight="bold" data-flx="theme-studio.library-section.link-break-icon" />
+										}
+										onClick={handleUnlink}
+										data-flx="theme-studio.library-section.studio-button.unlink"
+									>
+										<Trans comment="Button in the Theme Studio library that stops a theme following its CSS file on disk and turns it back into an editable copy.">
+											Unlink
+										</Trans>
+									</StudioButton>
+								</div>
+							) : null}
 							<div className={styles.fields} data-flx="theme-studio.library-section.fields">
 								<LibraryField
 									label={i18n._(NAME_DESCRIPTOR)}
 									value={draftName}
 									onChange={setDraftName}
+									readOnly={isSelectedLinked}
 									data-flx="theme-studio.library-section.library-field.set-draft-name"
 								/>
 								<LibraryField
 									label={i18n._(AUTHOR_DESCRIPTOR)}
 									value={draftAuthor}
 									onChange={setDraftAuthor}
+									readOnly={isSelectedLinked}
 									data-flx="theme-studio.library-section.library-field.set-draft-author"
 								/>
 								<LibraryField
 									label={i18n._(VERSION_DESCRIPTOR)}
 									value={draftVersion}
 									onChange={setDraftVersion}
+									readOnly={isSelectedLinked}
 									data-flx="theme-studio.library-section.library-field.set-draft-version"
 								/>
 								<LibraryField
@@ -539,6 +711,7 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 									value={draftTags}
 									onChange={setDraftTags}
 									placeholder={i18n._(COMMA_SEPARATED_DESCRIPTOR)}
+									readOnly={isSelectedLinked}
 									data-flx="theme-studio.library-section.library-field.set-draft-tags"
 								/>
 								<LibraryField
@@ -546,6 +719,7 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 									value={draftDescription}
 									onChange={setDraftDescription}
 									fullWidth
+									readOnly={isSelectedLinked}
 									data-flx="theme-studio.library-section.library-field.set-draft-description"
 								/>
 							</div>
@@ -557,28 +731,35 @@ export const LibrarySection: React.FC<LibrarySectionProps> = observer(({baseThem
 										className={styles.cssEditor}
 										value={draftCss}
 										onChange={setDraftCss}
+										readOnly={isSelectedLinked}
 										data-flx="theme-studio.library-section.library-css-editor.set-draft-css"
 									/>
 								</div>
 							</div>
-							<div className={styles.editorFooter} data-flx="theme-studio.library-section.editor-footer">
-								<StudioButton
-									variant="primary"
-									leadingIcon={
-										<FloppyDiskIcon size={13} weight="bold" data-flx="theme-studio.library-section.floppy-disk-icon" />
-									}
-									disabled={!hasDirty}
-									onClick={handleSave}
-									data-flx="theme-studio.library-section.studio-button.save"
-								>
-									<Trans>Save theme</Trans>
-								</StudioButton>
-								{hasDirty ? (
-									<span className={styles.dirtyHint} data-flx="theme-studio.library-section.dirty-hint">
-										<Trans>Unsaved changes</Trans>
-									</span>
-								) : null}
-							</div>
+							{isSelectedLinked ? null : (
+								<div className={styles.editorFooter} data-flx="theme-studio.library-section.editor-footer">
+									<StudioButton
+										variant="primary"
+										leadingIcon={
+											<FloppyDiskIcon
+												size={13}
+												weight="bold"
+												data-flx="theme-studio.library-section.floppy-disk-icon"
+											/>
+										}
+										disabled={!hasDirty}
+										onClick={handleSave}
+										data-flx="theme-studio.library-section.studio-button.save"
+									>
+										<Trans>Save theme</Trans>
+									</StudioButton>
+									{hasDirty ? (
+										<span className={styles.dirtyHint} data-flx="theme-studio.library-section.dirty-hint">
+											<Trans>Unsaved changes</Trans>
+										</span>
+									) : null}
+								</div>
+							)}
 						</div>
 					) : (
 						<div className={styles.editorEmpty} data-flx="theme-studio.library-section.editor-empty">
@@ -605,9 +786,10 @@ interface LibraryFieldProps {
 	onChange: (value: string) => void;
 	placeholder?: string;
 	fullWidth?: boolean;
+	readOnly?: boolean;
 }
 
-const LibraryField: React.FC<LibraryFieldProps> = ({label, value, onChange, placeholder, fullWidth}) => {
+const LibraryField: React.FC<LibraryFieldProps> = ({label, value, onChange, placeholder, fullWidth, readOnly}) => {
 	const inputId = useId();
 	return (
 		<div
@@ -628,6 +810,7 @@ const LibraryField: React.FC<LibraryFieldProps> = ({label, value, onChange, plac
 					className={styles.fieldInput}
 					value={value}
 					placeholder={placeholder}
+					readOnly={readOnly}
 					onChange={(event) => onChange(event.target.value)}
 					data-flx="theme-studio.library-section.library-field.field-input.change.text"
 				/>

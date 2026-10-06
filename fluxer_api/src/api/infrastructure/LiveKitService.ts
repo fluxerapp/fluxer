@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AccessToken, RoomServiceClient, TrackSource} from 'livekit-server-sdk';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {VoiceRegionMetadata, VoiceServerRecord} from '../voice/VoiceModel';
-import type {VoiceTopology} from '../voice/VoiceTopology';
-import type {ListActiveRoomsResult, ListParticipantsResult, LiveKitServerError} from './ILiveKitService';
-import {ILiveKitService} from './ILiveKitService';
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
+import {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import {Logger} from '@app/api/Logger';
+import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
+import {AccessToken, RoomServiceClient, type TrackInfo, TrackSource} from 'livekit-server-sdk';
 
 interface CreateTokenParams {
 	userId: UserID;
@@ -47,6 +47,16 @@ interface DisconnectParticipantParams {
 	serverId: string;
 }
 
+interface MuteMicrophoneTrackParams {
+	userId: UserID;
+	guildId?: GuildID;
+	channelId: ChannelID;
+	connectionId: string;
+	regionId: string;
+	serverId: string;
+	trackSid: string;
+}
+
 interface UpdateParticipantPermissionsParams {
 	userId: UserID;
 	guildId?: GuildID;
@@ -76,6 +86,8 @@ interface LiveKitPublishPermissions {
 
 export const VOICE_TOKEN_TTL_SECONDS = 60 * 10;
 
+export const SERVER_MUTE_ATTRIBUTE = 'server_mute';
+
 export function computeLiveKitPublishSources(permissions: LiveKitPublishPermissions): Array<TrackSource> {
 	const sources: Array<TrackSource> = [];
 	if (permissions.canSpeak) {
@@ -99,7 +111,7 @@ function createRoomServiceClient(endpoint: string, apiKey: string, apiSecret: st
 	const httpUrl = toHttpUrl(endpoint);
 	const parsed = new URL(httpUrl);
 	const pathPrefix = parsed.pathname.replace(/\/+$/, '');
-	const client = new RoomServiceClient(parsed.origin, apiKey, apiSecret);
+	const client = new RoomServiceClient(parsed.origin, apiKey, apiSecret, {requestTimeout: 60});
 	if (pathPrefix) {
 		const rpc = Reflect.get(client, 'rpc');
 		if (rpc != null && typeof rpc === 'object' && 'prefix' in rpc) {
@@ -202,8 +214,10 @@ export class LiveKitService extends ILiveKitService {
 			if (!participant) {
 				return;
 			}
-			if (mute !== undefined && participant.tracks) {
-				for (const track of participant.tracks) {
+			if (mute !== undefined) {
+				const tracks =
+					(await this.setServerMuteAttribute(server, roomName, participantIdentity, mute)) ?? participant.tracks;
+				for (const track of tracks) {
 					if (track.source === TrackSource.MICROPHONE && track.sid) {
 						await server.roomServiceClient.mutePublishedTrack(roomName, participantIdentity, track.sid, mute);
 					}
@@ -277,6 +291,39 @@ export class LiveKitService extends ILiveKitService {
 		}
 	}
 
+	private async setServerMuteAttribute(
+		server: ServerClientConfig,
+		roomName: string,
+		participantIdentity: string,
+		mute: boolean,
+	): Promise<Array<TrackInfo> | null> {
+		try {
+			const updated = await server.roomServiceClient.updateParticipant(roomName, participantIdentity, {
+				attributes: {[SERVER_MUTE_ATTRIBUTE]: mute ? 'true' : ''},
+			});
+			return updated.tracks;
+		} catch (error) {
+			Logger.warn({error, participantIdentity, roomName}, 'Failed to record server mute on LiveKit participant');
+			return null;
+		}
+	}
+
+	async muteMicrophoneTrack(params: MuteMicrophoneTrackParams): Promise<void> {
+		const {userId, guildId, channelId, connectionId, regionId, serverId, trackSid} = params;
+		const roomName = this.getRoomName(guildId, channelId);
+		const participantIdentity = this.getParticipantIdentity(userId, connectionId);
+		const server = this.tryResolveServerClient(regionId, serverId);
+		if (server === null) {
+			Logger.debug({regionId, serverId, participantIdentity, roomName}, 'LiveKit track mute skipped: unknown server');
+			return;
+		}
+		try {
+			await server.roomServiceClient.mutePublishedTrack(roomName, participantIdentity, trackSid, true);
+		} catch (error) {
+			Logger.error({error, participantIdentity, roomName, trackSid}, 'Error muting LiveKit microphone track');
+		}
+	}
+
 	async disconnectParticipant(params: DisconnectParticipantParams): Promise<void> {
 		const {userId, guildId, channelId, connectionId, regionId, serverId} = params;
 		const roomName = this.getRoomName(guildId, channelId);
@@ -335,39 +382,6 @@ export class LiveKitService extends ILiveKitService {
 		}
 	}
 
-	async listActiveRooms(): Promise<ListActiveRoomsResult> {
-		const rooms: ListActiveRoomsResult['rooms'] = [];
-		const errors: Array<LiveKitServerError> = [];
-		const servers = this.getActiveServerClients();
-		for (const server of servers) {
-			try {
-				const liveRooms = await server.roomServiceClient.listRooms();
-				for (const room of liveRooms) {
-					if (typeof room.name !== 'string' || room.name.length === 0) {
-						continue;
-					}
-					rooms.push({
-						roomName: room.name,
-						regionId: server.regionId,
-						serverId: server.serverId,
-					});
-				}
-			} catch (error) {
-				Logger.warn(
-					{error, regionId: server.regionId, serverId: server.serverId},
-					'LiveKit listRooms failed during voice reconciliation',
-				);
-				errors.push(this.toServerError(server.regionId, server.serverId, error));
-			}
-		}
-		return {
-			rooms,
-			errors,
-			searchedServers: servers.length,
-			completed: errors.length === 0,
-		};
-	}
-
 	private static isHttp404(error: unknown): boolean {
 		return LiveKitService.getHttpStatus(error) === 404;
 	}
@@ -390,34 +404,6 @@ export class LiveKitService extends ILiveKitService {
 			return null;
 		}
 		return region.get(serverId) ?? null;
-	}
-
-	private getActiveServerClients(): Array<ServerClientConfig & {regionId: string; serverId: string}> {
-		const servers: Array<ServerClientConfig & {regionId: string; serverId: string}> = [];
-		for (const [regionId, region] of this.serverClients.entries()) {
-			for (const [serverId, server] of region.entries()) {
-				if (server.isActive) {
-					servers.push({...server, regionId, serverId});
-				}
-			}
-		}
-		return servers.sort((left, right) => {
-			const regionComparison = left.regionId.localeCompare(right.regionId);
-			if (regionComparison !== 0) {
-				return regionComparison;
-			}
-			return left.serverId.localeCompare(right.serverId);
-		});
-	}
-
-	private toServerError(regionId: string, serverId: string, error: unknown): LiveKitServerError {
-		const status = LiveKitService.getHttpStatus(error);
-		return {
-			regionId,
-			serverId,
-			errorCode: error instanceof Error ? error.message : 'unknown',
-			retryable: status != null && status >= 500,
-		};
 	}
 
 	getDefaultRegionId(): string | null {

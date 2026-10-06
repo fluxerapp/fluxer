@@ -9,8 +9,8 @@ export type PrepareTextareaTextChange = (nextValue: string, nextSegments: Readon
 export interface ApplyTextareaTextChangeOptions {
 	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
-	segmentManagerRef: React.MutableRefObject<TextareaSegmentManager>;
-	previousValueRef: React.MutableRefObject<string>;
+	segmentManagerRef: React.RefObject<TextareaSegmentManager>;
+	previousValueRef: React.RefObject<string>;
 	prepareTextChange: PrepareTextareaTextChange;
 	nextValue: string;
 	nextSegments?: ReadonlyArray<MentionSegment>;

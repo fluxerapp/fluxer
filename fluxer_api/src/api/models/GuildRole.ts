@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, RoleID} from '../BrandedTypes';
-import type {GuildRoleRow} from '../database/types/GuildTypes';
+import type {GuildID, RoleID} from '@app/api/BrandedTypes';
+import type {GuildRoleRow} from '@app/api/database/types/GuildTypes';
 
 export class GuildRole {
 	readonly guildId: GuildID;

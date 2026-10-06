@@ -76,7 +76,7 @@ const ENABLE_INVITES_AGAIN_DESCRIPTOR = msg({
 });
 const GUILD_MFA_REQUIREMENT_MESSAGE_DESCRIPTOR = msg({
 	message:
-		'Moderation actions in {communityName} require two-factor authentication. Enable 2FA to kick, ban, timeout, or delete messages here.',
+		'Moderation actions in {communityName} require two-factor authentication. Enable 2FA to kick, ban, time out, or delete messages here.',
 	comment:
 		'Guild nagbar body shown when moderation actions in a community require two-factor authentication. {communityName} is the community name.',
 });

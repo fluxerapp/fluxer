@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import styles from '@app/features/theme_studio/ui/StudioEmptyState.module.css';
 import type React from 'react';
 import type {ReactNode} from 'react';
-import styles from './StudioEmptyState.module.css';
 
 interface StudioEmptyStateProps {
 	icon?: ReactNode;

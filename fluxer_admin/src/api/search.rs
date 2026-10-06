@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{IndexRefreshStatusResponse, RefreshSearchIndexResponse};
@@ -11,8 +11,11 @@ impl AdminApiClient {
         index_type: &str,
         guild_id: Option<&str>,
     ) -> ApiResult<RefreshSearchIndexResponse> {
+        let index_type =
+            generated_types::CreateAdminSearchIndexRefreshIndexName::try_from(index_type)
+                .map_err(|e| ApiError::Parse(e.to_string()))?;
         let body = generated_types::RefreshSearchIndexRequest {
-            guild_id: guild_id.map(|id| generated_types::SnowflakeType::from(id.to_owned())),
+            guild_id: guild_id.map(snowflake),
             user_id: None,
         };
         let response = self

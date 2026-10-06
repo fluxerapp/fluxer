@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Routes} from '@app/app/Routes';
 import {useHashParam} from '@app/features/app/hooks/useHashParam';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/components/pages/ResetPasswordPage.module.css';
 import FormField from '@app/features/auth/flow/AuthFormField';
@@ -18,6 +20,10 @@ import {useEffect, useId, useState} from 'react';
 
 const RESET_PASSWORD_DESCRIPTOR = msg({
 	message: 'Reset password',
+	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
+});
+const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
+	message: 'Passwords do not match',
 	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
 });
 const NEW_PASSWORD_DESCRIPTOR = msg({
@@ -68,7 +74,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 				return;
 			}
 			if (values.password !== values.confirmPassword) {
-				form.setError('confirmPassword', 'Passwords do not match');
+				form.setError('confirmPassword', i18n._(PASSWORDS_DO_NOT_MATCH_DESCRIPTOR));
 				return;
 			}
 			const response = await resetPasswordFlow(token, values.password);
@@ -77,6 +83,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 					ticket: response.challenge.ticket,
 					totp: response.challenge.totp,
 					webauthn: response.challenge.webauthn,
+					backupCodes: response.challenge.backupCodes,
 				});
 				RouterUtils.replaceWith('/login');
 				return;
@@ -84,9 +91,10 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 			await AuthenticationCommands.completeLogin(response.payload);
 		},
 	});
+	const usesUsernameSignIn = RuntimeConfig.usesUsernameSignIn;
 	useEffect(() => {
 		if (!token) {
-			RouterUtils.replaceWith('/forgot');
+			RouterUtils.replaceWith(usesUsernameSignIn ? Routes.RECOVER_ACCOUNT : '/forgot');
 			return;
 		}
 		let cancelled = false;
@@ -103,7 +111,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 		return () => {
 			cancelled = true;
 		};
-	}, [token]);
+	}, [token, usesUsernameSignIn]);
 	const bannerError = resolveBannerError(error, fieldErrors);
 	if (tokenStatus === 'validating') {
 		return (
@@ -123,14 +131,35 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 				<h1 className={styles.title} data-flx="auth.reset-password-page.title--2">
 					<Trans>Reset link invalid or expired</Trans>
 				</h1>
-				<p className={styles.description} data-flx="auth.reset-password-page.description">
-					<Trans>This reset link has expired. Reset links last 1 hour. Please request a new one.</Trans>
-				</p>
-				<div className={styles.footer} data-flx="auth.reset-password-page.footer">
-					<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.reset-password-page.link">
-						<Trans>Request a new reset link</Trans>
-					</AuthRouterLink>
-				</div>
+				{usesUsernameSignIn ? (
+					<>
+						<p className={styles.description} data-flx="auth.reset-password-page.description--username">
+							<Trans>
+								This reset link has expired or was already used. Ask an admin for a new one, or use your recovery kit.
+							</Trans>
+						</p>
+						<div className={styles.footer} data-flx="auth.reset-password-page.footer--username">
+							<AuthRouterLink
+								to={Routes.RECOVER_ACCOUNT}
+								className={styles.link}
+								data-flx="auth.reset-password-page.link--recover"
+							>
+								<Trans>Use your recovery kit</Trans>
+							</AuthRouterLink>
+						</div>
+					</>
+				) : (
+					<>
+						<p className={styles.description} data-flx="auth.reset-password-page.description">
+							<Trans>This reset link has expired. Reset links last 1 hour. Please request a new one.</Trans>
+						</p>
+						<div className={styles.footer} data-flx="auth.reset-password-page.footer">
+							<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.reset-password-page.link">
+								<Trans>Request a new reset link</Trans>
+							</AuthRouterLink>
+						</div>
+					</>
+				)}
 			</>
 		);
 	}

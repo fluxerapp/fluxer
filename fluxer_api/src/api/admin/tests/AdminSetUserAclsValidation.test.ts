@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 interface AdminUserMutationResponse {
 	user: {
@@ -20,6 +20,8 @@ interface AdminUserLookupResponse {
 		acls: Array<string>;
 	}>;
 }
+
+const RETIRED_ACL = 'retired:acl';
 
 describe('Admin set user ACLs validation', () => {
 	let harness: ApiTestHarness;
@@ -68,5 +70,44 @@ describe('Admin set user ACLs validation', () => {
 			.expect(HTTP_STATUS.OK)
 			.execute();
 		expect(lookup.users[0]!.acls).toEqual([AdminACLs.USER_LOOKUP]);
+	});
+	test('lists only registry values when a retired ACL is stored', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.USER_LOOKUP,
+		]);
+		const target = await setUserACLs(harness, await createTestAccount(harness), [AdminACLs.USER_LOOKUP, RETIRED_ACL]);
+		const lookup = await createBuilder<AdminUserLookupResponse>(harness, `${admin.token}`)
+			.get(`/admin/users/${target.userId}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(lookup.users[0]!.acls).toEqual([AdminACLs.USER_LOOKUP]);
+	});
+	test('saves ACLs for an account that holds a retired ACL', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.ACL_SET_USER,
+			AdminACLs.USER_LOOKUP,
+			AdminACLs.USER_VIEW_EMAIL,
+		]);
+		const target = await setUserACLs(harness, await createTestAccount(harness), [AdminACLs.USER_LOOKUP, RETIRED_ACL]);
+		const result = await createBuilder<AdminUserMutationResponse>(harness, `${admin.token}`)
+			.put(`/admin/users/${target.userId}/acls`)
+			.body({acls: [AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_EMAIL]})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(result.user.acls.sort()).toEqual([AdminACLs.USER_LOOKUP, AdminACLs.USER_VIEW_EMAIL].sort());
+	});
+	test('returns the current admin when every registry ACL and a retired ACL are stored', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			...Object.values(AdminACLs),
+			RETIRED_ACL,
+		]);
+		const me = await createBuilder<AdminUserMutationResponse>(harness, `${admin.token}`)
+			.get('/admin/users/@me')
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(me.user.acls).toHaveLength(Object.values(AdminACLs).length);
+		expect(me.user.acls).not.toContain(RETIRED_ACL);
 	});
 });

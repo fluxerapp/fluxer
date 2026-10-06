@@ -267,7 +267,7 @@
 	font-weight: 500;
 	font-size: 0.875rem;
 	line-height: 1.25rem;
-	color: var(--text-primary);
+	color: var(--text-primary-muted);
 	overflow-wrap: anywhere;
 }
 
@@ -283,11 +283,6 @@
 
 .timestamp {
 	white-space: nowrap;
-}
-
-.channelPlain {
-	color: var(--text-primary);
-	font-weight: 600;
 }
 
 .chevron {
@@ -382,31 +377,31 @@
 	color: var(--status-danger);
 }
 
+.changeBulletNeutral {
+	background: color-mix(in srgb, var(--text-primary-muted) 12%, var(--background-modifier-hover));
+	border-color: color-mix(in srgb, var(--text-primary-muted) 40%, var(--background-modifier-accent));
+	color: var(--text-primary-muted);
+}
+
 .inlineCode {
 	font-family: var(--font-mono);
 }
 
-.userHook {
-	font-weight: 600;
-	color: var(--text-primary);
+.inlineEmoji {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	vertical-align: bottom;
 }
 
-.userName {
-	overflow: hidden;
-	text-overflow: ellipsis;
+.inlineEmojiImage {
+	width: 1.25rem;
+	height: 1.25rem;
+	object-fit: contain;
+}
+
+.colorValue {
 	white-space: nowrap;
-}
-
-.targetHook {
-	font-weight: 600;
-	color: var(--text-primary);
-}
-
-.discrim {
-	font-size: 0.75rem;
-	line-height: 1rem;
-	color: color-mix(in srgb, currentcolor 60%, transparent);
-	margin-left: 0.125rem;
 }
 
 .colorHook {

@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {promptForSecurityKeyPin} from '@app/features/auth/components/modals/PasskeyPinModal';
+import {writePasskeyLoginRoute} from '@app/features/auth/passkey_migration/PasskeyLoginRoute';
 import {parsePasskeyPinFailure} from '@app/features/auth/utils/PasskeyPinErrors';
 import {Platform} from '@app/features/platform/types/Platform';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {PASSKEY_MIGRATION_RP_ID} from '@fluxer/constants/src/PasskeyConstants';
 import {
 	type AuthenticationResponseJSON,
 	browserSupportsWebAuthn,
@@ -23,6 +25,14 @@ async function runNativeCeremonyWithPinSupport<T>(run: (requestContext?: {pin?: 
 		}
 	}
 	return promptForSecurityKeyPin((pin) => run({pin}));
+}
+
+async function rememberMigratedPasskeyUse<T>(rpId: string | undefined, ceremony: Promise<T>): Promise<T> {
+	const result = await ceremony;
+	if (rpId === PASSKEY_MIGRATION_RP_ID) {
+		writePasskeyLoginRoute('native');
+	}
+	return result;
 }
 
 export async function assertWebAuthnSupported(): Promise<void> {
@@ -51,10 +61,13 @@ export async function performRegistration(
 		const nativeSupported = electronApi && (await electronApi.passkeyIsSupported?.());
 		const passkeyRegister = electronApi?.passkeyRegister;
 		if (nativeSupported && passkeyRegister) {
-			return runNativeCeremonyWithPinSupport((requestContext) => passkeyRegister(options, requestContext));
+			return rememberMigratedPasskeyUse(
+				options.rp.id,
+				runNativeCeremonyWithPinSupport((requestContext) => passkeyRegister(options, requestContext)),
+			);
 		}
 	}
-	return await startRegistration({optionsJSON: options});
+	return rememberMigratedPasskeyUse(options.rp.id, startRegistration({optionsJSON: options}));
 }
 
 export async function performAuthentication(
@@ -66,8 +79,11 @@ export async function performAuthentication(
 		const nativeSupported = electronApi && (await electronApi.passkeyIsSupported?.());
 		const passkeyAuthenticate = electronApi?.passkeyAuthenticate;
 		if (nativeSupported && passkeyAuthenticate) {
-			return runNativeCeremonyWithPinSupport((requestContext) => passkeyAuthenticate(options, requestContext));
+			return rememberMigratedPasskeyUse(
+				options.rpId,
+				runNativeCeremonyWithPinSupport((requestContext) => passkeyAuthenticate(options, requestContext)),
+			);
 		}
 	}
-	return await startAuthentication({optionsJSON: options});
+	return rememberMigratedPasskeyUse(options.rpId, startAuthentication({optionsJSON: options}));
 }
