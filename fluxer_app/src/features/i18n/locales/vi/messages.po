@@ -1094,7 +1094,7 @@ msgid "{count, plural, one {# image} other {# images}}"
 msgstr "{count, plural, one {# ảnh} other {# ảnh}}"
 
 #. Status under the forum search box once results are in.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:355
+#: src/features/forum/utils/ForumMessageDescriptors.ts:347
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
 msgstr "{count, plural, one {# bài viết khớp} other {# bài viết khớp}}"
 
@@ -1109,7 +1109,7 @@ msgstr "{count, plural, one {# thành viên} other {# thành viên}}"
 
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:211
+#: src/features/forum/utils/ForumMessageDescriptors.ts:203
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# tin nhắn} other {# tin nhắn}}"
@@ -1124,7 +1124,7 @@ msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {# cộng đồng chung} other {# cộng đồng chung}}"
 
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:147
+#: src/features/forum/utils/ForumMessageDescriptors.ts:139
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {# tin nhắn mới} other {# tin nhắn mới}}"
 
@@ -3147,7 +3147,7 @@ msgid "Add a community"
 msgstr "Thêm cộng đồng"
 
 #. Placeholder of the message composer in the new media post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:45
+#: src/features/forum/utils/ForumMessageDescriptors.ts:37
 msgid "Add a description (optional)"
 msgstr "Thêm mô tả (tùy chọn)"
 
@@ -3290,7 +3290,7 @@ msgid "Add email"
 msgstr "Thêm email"
 
 #. Accessible label of the emoji button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:396
+#: src/features/forum/utils/ForumMessageDescriptors.ts:388
 msgid "Add emoji"
 msgstr "Thêm biểu tượng cảm xúc"
 
@@ -3322,7 +3322,7 @@ msgid "Add friends to group"
 msgstr "Thêm bạn bè vào nhóm"
 
 #. Accessible label of the attach button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:392
+#: src/features/forum/utils/ForumMessageDescriptors.ts:384
 msgid "Add images or files"
 msgstr "Thêm ảnh hoặc tệp"
 
@@ -3340,6 +3340,11 @@ msgstr "Thêm mục"
 #: src/features/theme_studio/sections/AssetsSection.tsx:150
 msgid "Add local files"
 msgstr "Thêm tệp cục bộ"
+
+#. Title of the second step of the channel create modal when the channel is private.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:63
+msgid "Add members or roles"
+msgstr "Thêm thành viên hoặc vai trò"
 
 #. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:271
@@ -3438,12 +3443,12 @@ msgid "Add stream"
 msgstr "Thêm luồng phát"
 
 #. Button in forum settings that opens the tag editor for a new tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:255
+#: src/features/forum/utils/ForumMessageDescriptors.ts:247
 msgid "Add tag"
 msgstr "Thêm thẻ"
 
 #. Button in the new post composer that opens the tag picker.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:384
+#: src/features/forum/utils/ForumMessageDescriptors.ts:376
 msgid "Add tags"
 msgstr "Thêm thẻ"
 
@@ -4068,7 +4073,7 @@ msgid "Allowed up to {count, plural, one {# connection} other {# connections}} p
 msgstr "Đã cho phép tối đa {count, plural, one {# kết nối} other {# kết nối}} mỗi thành viên"
 
 #. Description of the Create posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:319
+#: src/features/forum/utils/ForumMessageDescriptors.ts:311
 msgid "Allows members to create posts in this channel."
 msgstr "Cho phép thành viên tạo bài viết trong kênh này."
 
@@ -4078,12 +4083,12 @@ msgid "Allows members to rename, close, lock and delete threads, and to view pri
 msgstr "Cho phép thành viên đổi tên, đóng, khóa và xóa luồng, cũng như xem các luồng riêng tư."
 
 #. Description of the Manage posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:335
+#: src/features/forum/utils/ForumMessageDescriptors.ts:327
 msgid "Allows members to rename, close, lock, pin and delete posts, and to edit their tags."
 msgstr "Cho phép thành viên đổi tên, đóng, khóa, ghim và xóa bài viết, cũng như chỉnh sửa thẻ của họ."
 
 #. Description of the Send messages in posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:327
+#: src/features/forum/utils/ForumMessageDescriptors.ts:319
 msgid "Allows members to send messages in posts."
 msgstr "Cho phép thành viên gửi tin nhắn trong bài viết."
 
@@ -4487,6 +4492,8 @@ msgid "Announce new messages"
 msgstr "Thông báo tin nhắn mới"
 
 #. Channel type chip label for an announcement channel, whose messages can be published to channels that follow it.
+#. Channel type option in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:46
 #: src/features/channel/utils/ChannelUtils.tsx:63
 msgid "Announcement"
 msgstr "Thông báo"
@@ -4945,7 +4952,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "Để URL tùy chỉnh hoạt động, ít nhất một kênh phải bật quyền \"{viewChannelPermissionLabel}\" cho {EVERYONE_MENTION}. Hiện tại, không có kênh nào hiển thị với {EVERYONE_MENTION}."
 
 #. Error shown when the user sends a new media channel post without an image or video attachment.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:49
+#: src/features/forum/utils/ForumMessageDescriptors.ts:41
 msgid "Attach an image or a video to post in a media channel."
 msgstr "Đính kèm ảnh hoặc video để đăng trong kênh phương tiện."
 
@@ -5865,7 +5872,7 @@ msgid "Be heard over other members while holding the push to talk (priority) key
 msgstr "Được nghe rõ hơn các thành viên khác khi bạn giữ phím tắt \"nhấn để nói (ưu tiên)\"."
 
 #. Body of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:163
+#: src/features/forum/utils/ForumMessageDescriptors.ts:155
 msgid "Be the first to start a conversation here."
 msgstr "Hãy là người đầu tiên bắt đầu cuộc trò chuyện tại đây."
 
@@ -6785,7 +6792,7 @@ msgstr "Không thể tải tệp lên ở đây"
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:250
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
-#: src/features/forum/utils/ForumMessageDescriptors.ts:291
+#: src/features/forum/utils/ForumMessageDescriptors.ts:283
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:145
@@ -7598,11 +7605,13 @@ msgid "Channel management"
 msgstr "Quản lý kênh"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
+#. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
-#: src/features/forum/utils/ForumMessageDescriptors.ts:339
+#: src/features/forum/utils/ForumMessageDescriptors.ts:331
 msgid "Channel name"
 msgstr "Tên kênh"
 
@@ -7651,12 +7660,12 @@ msgid "Channel topic is too long."
 msgstr "Chủ đề kênh quá dài."
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:26
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:39
 msgid "Channel type"
 msgstr "Loại kênh"
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:30
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:43
 msgid "Channel type selection"
 msgstr "Chọn loại kênh"
 
@@ -7665,7 +7674,7 @@ msgstr "Chọn loại kênh"
 #: src/features/app/config/AuditLogConstants.ts:16
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
-#: src/features/forum/utils/ForumMessageDescriptors.ts:343
+#: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "Đã cập nhật kênh"
 
@@ -8287,7 +8296,7 @@ msgstr "Xử lý âm thanh micrô để giọng nói rõ ràng hơn."
 #. Inline button in the Recent searches section that wipes the search history list.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:115
+#: src/features/forum/utils/ForumMessageDescriptors.ts:107
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
 #: src/features/theme_studio/sections/QuickCssSection.tsx:64
@@ -10094,7 +10103,7 @@ msgid "Copy paused while sharing"
 msgstr "Đã tạm dừng sao chép khi đang chia sẻ"
 
 #. Accessible label of the copy link button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:417
+#: src/features/forum/utils/ForumMessageDescriptors.ts:409
 msgid "Copy post link"
 msgstr "Sao chép liên kết bài viết"
 
@@ -10373,7 +10382,7 @@ msgid "Couldn't create the PDF. Try again or print the kit instead."
 msgstr "Không thể tạo PDF. Hãy thử lại hoặc in bộ dụng cụ thay thế."
 
 #. Toast shown when creating a forum post fails. detail is the server error message.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:63
+#: src/features/forum/utils/ForumMessageDescriptors.ts:55
 msgid "Couldn't create the post: {detail}"
 msgstr "Không thể tạo bài viết: {detail}"
 
@@ -10505,7 +10514,7 @@ msgid "Couldn't load invites"
 msgstr "Không thể tải lời mời"
 
 #. Notice in a forum channel when loading posts fails.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:179
+#: src/features/forum/utils/ForumMessageDescriptors.ts:171
 msgid "Couldn't load posts. Try again later."
 msgstr "Không tải được bài viết. Thử lại sau."
 
@@ -10657,7 +10666,7 @@ msgid "Couldn't save entrance sound"
 msgstr "Không thể lưu âm thanh vào phòng"
 
 #. Toast shown when saving a forum tag fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:303
+#: src/features/forum/utils/ForumMessageDescriptors.ts:295
 msgid "Couldn't save the tag: {detail}"
 msgstr "Không thể lưu thẻ: {detail}"
 
@@ -10799,7 +10808,7 @@ msgid "Couldn't update the alt text. Please try again."
 msgstr "Không thể cập nhật văn bản thay thế. Vui lòng thử lại."
 
 #. Toast shown when a forum post action such as pinning or editing tags fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:67
+#: src/features/forum/utils/ForumMessageDescriptors.ts:59
 msgid "Couldn't update the post: {detail}"
 msgstr "Không thể cập nhật bài viết: {detail}"
 
@@ -10913,11 +10922,6 @@ msgstr "Tạo bộ phục hồi để tiếp tục."
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:50
 msgid "Create a recovery kit to reset a forgotten password"
 msgstr "Tạo bộ phục hồi để đặt lại mật khẩu đã quên"
-
-#. Description of the forum channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:9
-msgid "Create a space for organized posts on specific topics"
-msgstr "Tạo một không gian để đăng bài có tổ chức về các chủ đề cụ thể"
 
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:49
@@ -11038,7 +11042,7 @@ msgid "Create or join a community"
 msgstr "Tạo hoặc tham gia cộng đồng"
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:315
+#: src/features/forum/utils/ForumMessageDescriptors.ts:307
 msgid "Create posts"
 msgstr "Tạo bài viết"
 
@@ -11067,7 +11071,7 @@ msgid "Create role"
 msgstr "Tạo vai trò"
 
 #. Title of the tag editor for a new forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:263
+#: src/features/forum/utils/ForumMessageDescriptors.ts:255
 msgid "Create tag"
 msgstr "Tạo thẻ"
 
@@ -11735,7 +11739,7 @@ msgstr "Bộ chọn ngày"
 
 #. Forum sort option that orders posts by when they were created.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:95
+#: src/features/forum/utils/ForumMessageDescriptors.ts:87
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:147
 msgid "Date posted"
 msgstr "Ngày đăng"
@@ -11910,7 +11914,7 @@ msgid "Default hide after inactivity"
 msgstr "Ẩn mặc định sau khi không hoạt động"
 
 #. Label of the forum setting that picks the default post layout.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:235
+#: src/features/forum/utils/ForumMessageDescriptors.ts:227
 msgid "Default layout"
 msgstr "Bố cục mặc định"
 
@@ -11924,7 +11928,7 @@ msgid "Default notifications"
 msgstr "Thông báo mặc định"
 
 #. Label of the forum setting that picks the reaction button shown on every post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:215
+#: src/features/forum/utils/ForumMessageDescriptors.ts:207
 msgid "Default reaction"
 msgstr "Phản ứng mặc định"
 
@@ -11958,7 +11962,7 @@ msgid "Default shortcuts"
 msgstr "Phím tắt mặc định"
 
 #. Label of the forum setting that picks how posts are ordered by default.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:231
+#: src/features/forum/utils/ForumMessageDescriptors.ts:223
 msgid "Default sort order"
 msgstr "Thứ tự sắp xếp mặc định"
 
@@ -12236,7 +12240,7 @@ msgid "Delete sticker {stickerName}"
 msgstr "Xóa nhãn dán {stickerName}"
 
 #. Button in the forum tag editor that deletes the tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:283
+#: src/features/forum/utils/ForumMessageDescriptors.ts:275
 msgid "Delete tag"
 msgstr "Xóa thẻ"
 
@@ -12983,7 +12987,7 @@ msgid "Disabling your account will sign you out of all sessions. You can re-enab
 msgstr "Vô hiệu hóa tài khoản sẽ đăng xuất bạn khỏi tất cả các phiên. Bạn có thể kích hoạt lại tài khoản bất cứ lúc nào bằng cách đăng nhập lại."
 
 #. Accessible label of the button that closes the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:71
+#: src/features/forum/utils/ForumMessageDescriptors.ts:63
 msgid "Discard post"
 msgstr "Bỏ bài đăng"
 
@@ -13789,7 +13793,7 @@ msgstr "Khử tiếng vọng"
 #. Tooltip of the toggle that returns from the preview to editing a new forum post.
 #. Top-level native menu bar title (Edit menu, holds cut/copy/paste).
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
-#: src/features/forum/utils/ForumMessageDescriptors.ts:376
+#: src/features/forum/utils/ForumMessageDescriptors.ts:368
 #: src/features/platform/utils/DesktopLocaleBridge.ts:48
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
@@ -13989,12 +13993,12 @@ msgid "Edit sticker {stickerName}"
 msgstr "Chỉnh sửa nhãn dán {stickerName}"
 
 #. Title of the tag editor for an existing forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:259
+#: src/features/forum/utils/ForumMessageDescriptors.ts:251
 msgid "Edit tag"
 msgstr "Chỉnh sửa thẻ"
 
 #. Post menu action that opens the tag picker for an existing forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:119
+#: src/features/forum/utils/ForumMessageDescriptors.ts:111
 msgid "Edit tags"
 msgstr "Chỉnh sửa thẻ"
 
@@ -14213,7 +14217,7 @@ msgstr "Đã hiện lại nội dung nhúng"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
-#: src/features/forum/utils/ForumMessageDescriptors.ts:271
+#: src/features/forum/utils/ForumMessageDescriptors.ts:263
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Emoji"
@@ -14729,7 +14733,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "Nhập mã quà tặng để đổi {premiumProductName} cho tài khoản của bạn."
 
 #. Placeholder of the message composer in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:41
+#: src/features/forum/utils/ForumMessageDescriptors.ts:33
 msgid "Enter a message"
 msgstr "Nhập tin nhắn"
 
@@ -16157,7 +16161,7 @@ msgstr "Cài đặt thư mục"
 #. Button label that follows an announcement channel, so its published messages are copied into a channel the user picks.
 #. Button under the first message of a forum post. Following a post adds it to the channel list and sends notifications.
 #: src/features/channel/utils/ChannelFollowUtils.ts:16
-#: src/features/forum/utils/ForumMessageDescriptors.ts:408
+#: src/features/forum/utils/ForumMessageDescriptors.ts:400
 msgid "Follow"
 msgstr "Theo dõi"
 
@@ -16194,7 +16198,7 @@ msgid "Followed channels"
 msgstr "Kênh đã theo dõi"
 
 #. Pressed state of the follow button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:413
+#: src/features/forum/utils/ForumMessageDescriptors.ts:405
 msgid "Following"
 msgstr "Đang theo dõi"
 
@@ -16434,14 +16438,9 @@ msgid "Forms"
 msgstr "Biểu mẫu"
 
 #. Channel type chip label for a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:21
+#: src/features/forum/utils/ForumMessageDescriptors.ts:13
 msgid "Forum"
 msgstr "Diễn đàn"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:5
-msgid "Forum channel"
-msgstr "Kênh diễn đàn"
 
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
@@ -16738,7 +16737,7 @@ msgstr "Điều chỉnh độ khuếch đại"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as tiles.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:107
+#: src/features/forum/utils/ForumMessageDescriptors.ts:99
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:155
 msgid "Gallery"
 msgstr "Thư viện ảnh"
@@ -17205,7 +17204,7 @@ msgid "Give everyone on this instance the highest premium limits."
 msgstr "Cấp cho mọi người trên máy chủ này mức giới hạn cao nhất của gói cao cấp."
 
 #. Error shown when the user sends a new forum post without a title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:37
+#: src/features/forum/utils/ForumMessageDescriptors.ts:29
 msgid "Give the post a title before you send."
 msgstr "Đặt tiêu đề cho bài viết trước khi gửi."
 
@@ -17220,7 +17219,7 @@ msgid "Give the thread a name before you send."
 msgstr "Đặt tên cho luồng trước khi gửi."
 
 #. Placeholder of the title field in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:400
+#: src/features/forum/utils/ForumMessageDescriptors.ts:392
 msgid "Give your post a title"
 msgstr "Đặt tiêu đề cho bài viết của bạn"
 
@@ -17603,6 +17602,11 @@ msgstr "H.265 (yêu cầu bật tùy chọn)"
 msgid "Handle"
 msgstr "Tên người dùng"
 
+#. One-line description of the voice channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:58
+msgid "Hang out with voice, video and screen share"
+msgstr "Trò chuyện bằng giọng nói, video và chia sẻ màn hình"
+
 #. Report category label, community variant. Keep tone plain.
 #: src/features/moderation/components/report/OptionDescriptors.ts:86
 msgid "Harassment"
@@ -17935,7 +17939,7 @@ msgid "Hide favorites"
 msgstr "Ẩn mục yêu thích"
 
 #. Button in the forum header that collapses the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:207
+#: src/features/forum/utils/ForumMessageDescriptors.ts:199
 msgid "Hide guidelines"
 msgstr "Ẩn hướng dẫn"
 
@@ -17954,7 +17958,7 @@ msgid "Hide keyboard hints"
 msgstr "Ẩn các gợi ý bàn phím"
 
 #. Label of the media channel setting that hides download, open and copy actions on images and videos.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:247
+#: src/features/forum/utils/ForumMessageDescriptors.ts:239
 msgid "Hide media download options"
 msgstr "Ẩn tùy chọn tải xuống phương tiện"
 
@@ -18045,7 +18049,7 @@ msgid "Hide your own screen share?"
 msgstr "Ẩn chia sẻ màn hình của bạn?"
 
 #. Help text of the media channel setting that hides media download options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:251
+#: src/features/forum/utils/ForumMessageDescriptors.ts:243
 msgid "Hides the download, open in browser and copy buttons on images and videos in this channel."
 msgstr "Ẩn các nút tải xuống, mở trong trình duyệt và sao chép trên ảnh và video trong kênh này."
 
@@ -20295,7 +20299,7 @@ msgid "Let others clone your stickers"
 msgstr "Cho phép người khác sao chép nhãn dán của bạn"
 
 #. Placeholder of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:199
+#: src/features/forum/utils/ForumMessageDescriptors.ts:191
 msgid "Let people know how to post in this forum"
 msgstr "Cho mọi người biết cách đăng bài trong diễn đàn này"
 
@@ -20434,7 +20438,9 @@ msgid "link"
 msgstr "liên kết"
 
 #. Channel type chip label for a linked external channel.
+#. Channel type option in the create channel modal.
 #. Label for the has:link option in the mobile content-type filter sheet.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:62
 #: src/features/channel/utils/ChannelUtils.tsx:54
 #: src/features/search/components/search/HasFilterSheet.tsx:57
 msgid "Link"
@@ -20612,7 +20618,7 @@ msgstr "Gói Linux"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as rows.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:103
+#: src/features/forum/utils/ForumMessageDescriptors.ts:95
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:151
 msgid "List"
 msgstr "Danh sách"
@@ -20659,7 +20665,7 @@ msgid "Load more"
 msgstr "Tải thêm"
 
 #. Button at the bottom of a forum channel that loads archived posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:191
+#: src/features/forum/utils/ForumMessageDescriptors.ts:183
 msgid "Load older posts"
 msgstr "Tải bài viết cũ hơn"
 
@@ -21034,7 +21040,7 @@ msgid "Manage permissions"
 msgstr "Quản lý quyền"
 
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:331
+#: src/features/forum/utils/ForumMessageDescriptors.ts:323
 msgid "Manage posts"
 msgstr "Quản lý bài viết"
 
@@ -21424,7 +21430,7 @@ msgstr "Đang đo…"
 #. Collapsible group heading in the Theme Studio tokens list, for image and video tokens.
 #. Generic tab / section / category label for media content.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:25
+#: src/features/forum/utils/ForumMessageDescriptors.ts:17
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:264
 #: src/features/theme_studio/sections/TokenGroups.ts:110
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:16
@@ -21452,11 +21458,6 @@ msgstr "Nút phương tiện"
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:83
 msgid "Media buttons"
 msgstr "Nút phương tiện"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:13
-msgid "Media channel"
-msgstr "Kênh phương tiện"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
@@ -21650,7 +21651,7 @@ msgid "Members are removed when offline unless given a role."
 msgstr "Thành viên sẽ bị xóa khỏi cộng đồng khi ngoại tuyến trừ khi được cấp vai trò."
 
 #. Help text of the moderated switch in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:279
+#: src/features/forum/utils/ForumMessageDescriptors.ts:271
 msgid "Members who can manage posts can add or remove it."
 msgstr "Các thành viên có thể quản lý bài viết có thể thêm hoặc xóa thẻ này."
 
@@ -23063,11 +23064,9 @@ msgstr "Ghi đè thanh thông báo"
 #. Short label in the add custom search engine modal. Keep it concise.
 #. Short label in the branding section. Keep it concise.
 #. Short label in the category create modal. Keep it concise.
-#. Short label in the channel create modal. Keep it concise.
 #. Short label in the theme studio library section. Keep it concise.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:74
 #: src/features/channel/components/modals/CategoryCreateModal.tsx:17
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:34
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:340
 #: src/features/expressions/components/modals/meme_form/MemeFormFields.tsx:24
 #: src/features/expressions/components/modals/sticker_form/StickerFormFields.tsx:28
@@ -23272,7 +23271,7 @@ msgstr "Không bao giờ tự động"
 #: src/features/channel/components/ChannelDivider.tsx:37
 #: src/features/channel/components/ChannelDivider.tsx:52
 #: src/features/channel/components/UnreadDividerSlot.tsx:30
-#: src/features/forum/utils/ForumMessageDescriptors.ts:143
+#: src/features/forum/utils/ForumMessageDescriptors.ts:135
 msgid "New"
 msgstr "Mới"
 
@@ -23368,7 +23367,7 @@ msgstr "Tin nhắn mới"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
 #: src/features/app/components/layout/ChannelListContent.tsx:98
-#: src/features/forum/utils/ForumMessageDescriptors.ts:151
+#: src/features/forum/utils/ForumMessageDescriptors.ts:143
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "Tin nhắn mới"
@@ -23396,12 +23395,12 @@ msgid "New password"
 msgstr "Mật khẩu mới"
 
 #. Button in a forum channel that opens the composer for a new post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:29
+#: src/features/forum/utils/ForumMessageDescriptors.ts:21
 msgid "New post"
 msgstr "Bài viết mới"
 
 #. Title suffix of the desktop notification for a new forum post. forumName is the forum channel name.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:311
+#: src/features/forum/utils/ForumMessageDescriptors.ts:303
 msgid "New post in #{forumName}"
 msgstr "Bài viết mới trong #{forumName}"
 
@@ -23831,8 +23830,13 @@ msgstr "Không có kết quả phù hợp"
 msgid "No matches found"
 msgstr "Không tìm thấy kết quả nào"
 
+#. Empty state in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:33
+msgid "No matching members or roles"
+msgstr "Không tìm thấy thành viên hoặc vai trò nào khớp"
+
 #. Status under the forum search box when nothing matches.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:359
+#: src/features/forum/utils/ForumMessageDescriptors.ts:351
 msgid "No matching posts"
 msgstr "Không có bài viết nào khớp"
 
@@ -23897,7 +23901,7 @@ msgid "No pinned messages"
 msgstr "Không có tin nhắn đã ghim"
 
 #. Title of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:167
+#: src/features/forum/utils/ForumMessageDescriptors.ts:159
 msgid "No posts match your search"
 msgstr "Không có bài đăng nào khớp với tìm kiếm của bạn"
 
@@ -24344,7 +24348,7 @@ msgid "Nothing to explore yet"
 msgstr "Chưa có gì để khám phá"
 
 #. Shown in the post preview when the message is empty.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:380
+#: src/features/forum/utils/ForumMessageDescriptors.ts:372
 msgid "Nothing to preview yet."
 msgstr "Chưa có gì để xem trước."
 
@@ -24525,7 +24529,7 @@ msgid "Oklahoma"
 msgstr "Oklahoma"
 
 #. Section title above archived posts in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:187
+#: src/features/forum/utils/ForumMessageDescriptors.ts:179
 msgid "Older posts"
 msgstr "Bài viết cũ hơn"
 
@@ -24665,12 +24669,12 @@ msgid "Only mentions"
 msgstr "Chỉ nhắc đến"
 
 #. Tooltip on a forum tag that only moderators can add or remove.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:127
+#: src/features/forum/utils/ForumMessageDescriptors.ts:119
 msgid "Only moderators can apply this tag."
 msgstr "Chỉ người kiểm duyệt mới có thể áp dụng thẻ này."
 
 #. Label of the switch in the forum tag editor that restricts a tag to moderators.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:275
+#: src/features/forum/utils/ForumMessageDescriptors.ts:267
 msgid "Only moderators can use this tag"
 msgstr "Chỉ người kiểm duyệt mới có thể dùng thẻ này"
 
@@ -24688,6 +24692,11 @@ msgstr "Chỉ những nơi tôi không còn quyền truy cập"
 #: src/features/devtools/utils/SelfXssNotice.ts:24
 msgid "Only run code here if you understand exactly what it does."
 msgstr "Chỉ chạy mã ở đây nếu bạn hiểu chính xác mã đó làm gì."
+
+#. Description under the private channel switch in the channel create modal.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:59
+msgid "Only selected members and roles will be able to view this channel."
+msgstr "Chỉ những thành viên và vai trò được chọn mới có thể xem kênh này."
 
 #. Label in the visual tab.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:33
@@ -24715,6 +24724,11 @@ msgstr "Chỉ văn bản CSS được đồng bộ. Tài nguyên đã tải lên
 #: src/features/channel/components/modals/GroupInvitesModal.tsx:113
 msgid "Only the group owner can manage invites."
 msgstr "Chỉ chủ nhóm mới có thể quản lý lời mời."
+
+#. Hint under the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:29
+msgid "Only the members and roles you pick, plus admins, can view this channel."
+msgstr "Chỉ những thành viên và vai trò bạn chọn, cùng với quản trị viên, mới có thể xem kênh này."
 
 #. Dropdown option that switches the community filter into include-only mode.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:173
@@ -25384,7 +25398,7 @@ msgstr "Không tải được tin nhắn gốc"
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
 #. Preview on a forum post card whose first message was deleted.
 #: src/features/channel/components/ReplyPreview.tsx:25
-#: src/features/forum/utils/ForumMessageDescriptors.ts:155
+#: src/features/forum/utils/ForumMessageDescriptors.ts:147
 msgid "Original message was deleted"
 msgstr "Tin nhắn gốc đã bị xóa"
 
@@ -26076,7 +26090,7 @@ msgid "Pick a web search provider"
 msgstr "Chọn nhà cung cấp tìm kiếm web"
 
 #. Button that opens the emoji picker in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:223
+#: src/features/forum/utils/ForumMessageDescriptors.ts:215
 msgid "Pick an emoji"
 msgstr "Chọn một biểu tượng cảm xúc"
 
@@ -26091,7 +26105,7 @@ msgid "Pick at least one kind of conversation to include."
 msgstr "Chọn ít nhất một loại cuộc trò chuyện để đưa vào."
 
 #. Error shown when the forum requires a tag and the new post has none.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:59
+#: src/features/forum/utils/ForumMessageDescriptors.ts:51
 msgid "Pick at least one tag for this post."
 msgstr "Chọn ít nhất một thẻ cho bài đăng này."
 
@@ -26187,7 +26201,7 @@ msgid "Pin or unpin any message."
 msgstr "Ghim hoặc bỏ ghim bất kỳ tin nhắn nào."
 
 #. Post menu action that pins a forum post to the top of the forum.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:131
+#: src/features/forum/utils/ForumMessageDescriptors.ts:123
 msgid "Pin post"
 msgstr "Ghim bài viết"
 
@@ -26226,7 +26240,7 @@ msgid "pinned"
 msgstr "đã ghim"
 
 #. Label on a pinned forum post card.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:139
+#: src/features/forum/utils/ForumMessageDescriptors.ts:131
 msgid "Pinned"
 msgstr "Đã ghim"
 
@@ -26454,22 +26468,22 @@ msgid "Position"
 msgstr "Vị trí"
 
 #. Primary button that publishes a new forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:368
+#: src/features/forum/utils/ForumMessageDescriptors.ts:360
 msgid "Post"
 msgstr "Đăng"
 
 #. Title of the forum guidelines banner and label of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:195
+#: src/features/forum/utils/ForumMessageDescriptors.ts:187
 msgid "Post guidelines"
 msgstr "Đăng quy tắc"
 
 #. Toast after the forum post link was copied.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:421
+#: src/features/forum/utils/ForumMessageDescriptors.ts:413
 msgid "Post link copied"
 msgstr "Đã sao chép liên kết bài viết"
 
 #. Label and placeholder of the title input in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:33
+#: src/features/forum/utils/ForumMessageDescriptors.ts:25
 msgid "Post title"
 msgstr "Tiêu đề bài đăng"
 
@@ -26477,6 +26491,21 @@ msgstr "Tiêu đề bài đăng"
 #: src/features/webhook/components/FollowedChannelListItem.tsx:37
 msgid "Post to"
 msgstr "Đăng lên"
+
+#. One-line description of the announcement channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:50
+msgid "Post updates other communities can follow"
+msgstr "Đăng các cập nhật mà cộng đồng khác có thể theo dõi"
+
+#. Description of the media channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:9
+msgid "Posts built around images and videos"
+msgstr "Bài viết xoay quanh hình ảnh và video"
+
+#. Description of the forum channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:5
+msgid "Posts organized by topic and tags"
+msgstr "Bài viết được sắp xếp theo chủ đề và thẻ tag"
 
 #: src/features/input/utils/KeybindUtils.ts:105
 msgctxt "keyboard-key-name"
@@ -26662,7 +26691,7 @@ msgstr "Ngăn thành viên gửi tin nhắn, bày tỏ cảm xúc và tham gia k
 
 #. Tooltip and label of the toggle that previews a new forum post.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:21
-#: src/features/forum/utils/ForumMessageDescriptors.ts:372
+#: src/features/forum/utils/ForumMessageDescriptors.ts:364
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
@@ -26882,6 +26911,11 @@ msgstr "Vi phạm quyền riêng tư hoặc doxxing"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:294
 msgid "Privacy violation or stalking"
 msgstr "Vi phạm quyền riêng tư hoặc rình rập"
+
+#. Switch in the channel create modal that limits who can view the new channel.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:55
+msgid "Private channel"
+msgstr "Kênh riêng tư"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:222
@@ -27495,7 +27529,7 @@ msgid "React"
 msgstr "Thả cảm xúc"
 
 #. Button under the first message of a forum post that adds a reaction to it.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:404
+#: src/features/forum/utils/ForumMessageDescriptors.ts:396
 msgid "React to post"
 msgstr "Phản hồi bài viết"
 
@@ -27646,7 +27680,7 @@ msgstr "Tìm kiếm gần đây"
 
 #. Forum sort option that orders posts by their latest message.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:91
+#: src/features/forum/utils/ForumMessageDescriptors.ts:83
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:143
 msgid "Recently active"
 msgstr "Gần đây hoạt động"
@@ -28037,7 +28071,7 @@ msgstr "Ghi nhớ kích thước và vị trí cửa sổ"
 #: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
-#: src/features/forum/utils/ForumMessageDescriptors.ts:227
+#: src/features/forum/utils/ForumMessageDescriptors.ts:219
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:125
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:140
@@ -28774,7 +28808,7 @@ msgid "Require passkey"
 msgstr "Yêu cầu khóa truy cập"
 
 #. Label of the forum setting that makes at least one tag mandatory on new posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:243
+#: src/features/forum/utils/ForumMessageDescriptors.ts:235
 msgid "Require people to select tags when posting"
 msgstr "Yêu cầu người dùng chọn thẻ khi đăng bài"
 
@@ -28785,7 +28819,7 @@ msgstr "Yêu cầu xác thực hai yếu tố cho người kiểm duyệt trư�
 #. Marker next to the tag picker when the forum requires at least one tag.
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:388
+#: src/features/forum/utils/ForumMessageDescriptors.ts:380
 msgid "Required"
 msgstr "Bắt buộc"
 
@@ -29284,7 +29318,7 @@ msgstr "Đã bật lại lời mời"
 
 #. Button that retries a failed thread search.
 #. Button that retries loading forum posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:183
+#: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Retry"
 msgstr "Thử lại"
@@ -29707,7 +29741,7 @@ msgstr "Độ bão hòa"
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:118
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:94
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:123
-#: src/features/forum/utils/ForumMessageDescriptors.ts:287
+#: src/features/forum/utils/ForumMessageDescriptors.ts:279
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
@@ -29819,7 +29853,7 @@ msgid "Saved media autocomplete"
 msgstr "Tự động hoàn tất media đã lưu"
 
 #. Error shown when the user picks a saved favourite media item while writing a new forum or media channel post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:53
+#: src/features/forum/utils/ForumMessageDescriptors.ts:45
 msgid "Saved media cannot start a post. Upload the file instead."
 msgstr "Không thể dùng phương tiện đã lưu để bắt đầu bài đăng. Hãy tải tệp lên."
 
@@ -30241,7 +30275,7 @@ msgstr "Tìm kiếm trong"
 
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:175
+#: src/features/forum/utils/ForumMessageDescriptors.ts:167
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "Tìm kiếm đang chuẩn bị cho cộng đồng này. Thử lại sau..."
@@ -30255,6 +30289,11 @@ msgstr "Tìm mã ngôn ngữ…"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:74
 msgid "Search languages…"
 msgstr "Tìm ngôn ngữ…"
+
+#. Placeholder of the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:25
+msgid "Search members or roles"
+msgstr "Tìm kiếm thành viên hoặc vai trò"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Placeholder shown inside the message search input. Sentence case.
@@ -30282,7 +30321,7 @@ msgid "Search only in the current DM"
 msgstr "Chỉ tìm trong tin nhắn trực tiếp hiện tại"
 
 #. Placeholder of the search input at the top of a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:79
+#: src/features/forum/utils/ForumMessageDescriptors.ts:71
 msgid "Search or create a post..."
 msgstr "Tìm kiếm hoặc tạo bài viết..."
 
@@ -30302,7 +30341,7 @@ msgid "Search permissions…"
 msgstr "Tìm quyền…"
 
 #. Placeholder and accessible label of the search input in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:75
+#: src/features/forum/utils/ForumMessageDescriptors.ts:67
 msgid "Search posts"
 msgstr "Tìm kiếm bài viết"
 
@@ -30459,7 +30498,7 @@ msgid "Searching voice channels"
 msgstr "Đang tìm kiếm kênh thoại"
 
 #. Status under the forum search box while results load.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:351
+#: src/features/forum/utils/ForumMessageDescriptors.ts:343
 msgid "Searching..."
 msgstr "Searching..."
 
@@ -30834,7 +30873,7 @@ msgid "Send a friend request to {userName}, or use the staff override to add the
 msgstr "Gửi lời mời kết bạn đến {userName} hoặc dùng quyền ghi đè của nhân viên để thêm họ ngay lập tức."
 
 #. Placeholder of the message box inside a forum post. name is the post title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:347
+#: src/features/forum/utils/ForumMessageDescriptors.ts:339
 msgid "Send a message in \"{name}\""
 msgstr "Gửi tin nhắn trong \"{name}\""
 
@@ -30948,7 +30987,7 @@ msgid "Send messages in channels."
 msgstr "Gửi tin nhắn trong các kênh."
 
 #. Permission name in forum and media channel permissions. Lets members reply in posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:323
+#: src/features/forum/utils/ForumMessageDescriptors.ts:315
 msgid "Send messages in posts"
 msgstr "Gửi tin nhắn trong bài viết"
 
@@ -30961,6 +31000,11 @@ msgstr "Gửi tin nhắn trong kênh này."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
 msgid "Send messages in threads"
 msgstr "Gửi tin nhắn trong luồng"
+
+#. One-line description of the text channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:42
+msgid "Send messages, images, GIFs and emoji"
+msgstr "Gửi tin nhắn, ảnh, GIF và biểu tượng cảm xúc"
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
 #: src/features/moderation/components/report_modal/IARModal.tsx:90
@@ -31408,11 +31452,6 @@ msgstr "Chia sẻ video dài và tệp lớn mà không cần nén. Tài khoản
 msgid "Share gift"
 msgstr "Chia sẻ quà"
 
-#. Description of the media channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:17
-msgid "Share images and videos as posts with their own discussions"
-msgstr "Chia sẻ hình ảnh và video dưới dạng bài đăng với các cuộc thảo luận riêng"
-
 #. Hover action on an application or display card that starts sharing that source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:197
 msgid "Share screen"
@@ -31584,6 +31623,11 @@ msgstr "Huy hiệu phím tắt"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:122
 msgid "Shortcut conflicts"
 msgstr "Xung đột phím tắt"
+
+#. One-line description of the link channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:66
+msgid "Shortcut to an external website"
+msgstr "Lối tắt đến một trang web bên ngoài"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -31808,7 +31852,7 @@ msgid "Show GIFs button"
 msgstr "Hiện nút GIF"
 
 #. Button in the forum header that expands the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:203
+#: src/features/forum/utils/ForumMessageDescriptors.ts:195
 msgid "Show guidelines"
 msgstr "Hiển thị hướng dẫn"
 
@@ -31958,7 +32002,7 @@ msgid "Show new device modal"
 msgstr "Hiện cửa sổ bật lên thiết bị mới"
 
 #. Forum notification option that marks the forum unread when someone creates a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:307
+#: src/features/forum/utils/ForumMessageDescriptors.ts:299
 msgid "Show new posts as unread"
 msgstr "Hiển thị bài viết mới dưới dạng chưa đọc"
 
@@ -32116,7 +32160,7 @@ msgid "Shown in invite embeds in chat."
 msgstr "Hiển thị trong nội dung nhúng lời mời ở cuộc trò chuyện."
 
 #. Help text of the default reaction setting in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:219
+#: src/features/forum/utils/ForumMessageDescriptors.ts:211
 msgid "Shown on every post so people can react with one click."
 msgstr "Hiển thị trên mỗi bài đăng để mọi người có thể phản hồi chỉ bằng một cú nhấp chuột."
 
@@ -32357,7 +32401,9 @@ msgstr "Kích thước"
 msgid "Size selection"
 msgstr "Chọn kích thước"
 
+#. Creates the private channel without adding anyone in the channel create modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:67
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Skip"
 msgstr "Bỏ qua"
@@ -32507,7 +32553,7 @@ msgid "Slowmode active"
 msgstr "Chế độ chậm đang bật"
 
 #. Label of the forum setting for how often a member can create a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:239
+#: src/features/forum/utils/ForumMessageDescriptors.ts:231
 msgid "Slowmode for creating posts"
 msgstr "Chế độ chậm khi tạo bài viết"
 
@@ -32864,12 +32910,12 @@ msgid "Sort"
 msgstr "Sắp xếp"
 
 #. Button in a forum channel that opens the sort order and layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:83
+#: src/features/forum/utils/ForumMessageDescriptors.ts:75
 msgid "Sort & view"
 msgstr "Sắp xếp & xem"
 
 #. Section title for the forum post sort order options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:87
+#: src/features/forum/utils/ForumMessageDescriptors.ts:79
 msgid "Sort by"
 msgstr "Sắp xếp theo"
 
@@ -34370,13 +34416,13 @@ msgid "Tag"
 msgstr "Thẻ"
 
 #. Label of the name input in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:267
+#: src/features/forum/utils/ForumMessageDescriptors.ts:259
 msgid "Tag name"
 msgstr "Tên thẻ"
 
 #. Label of the tag filter in a forum channel and of the tags section in forum settings.
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:111
+#: src/features/forum/utils/ForumMessageDescriptors.ts:103
 #: src/features/theme_studio/sections/LibrarySection.tsx:120
 msgid "Tags"
 msgstr "Thẻ"
@@ -34389,7 +34435,7 @@ msgid "Tags ({tagCount}/{tagLimit})"
 msgstr "Thẻ ({tagCount}/{tagLimit})"
 
 #. Help text of the tags section in forum settings. count is the maximum number of tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:295
+#: src/features/forum/utils/ForumMessageDescriptors.ts:287
 msgid "Tags help people find posts. You can add up to {count} tags."
 msgstr "Thẻ giúp mọi người tìm bài viết. Bạn có thể thêm tối đa {count} thẻ."
 
@@ -34556,9 +34602,11 @@ msgid "Texas"
 msgstr "Texas"
 
 #. Channel type chip label for a text channel.
+#. Channel type option in the create channel modal.
 #. Collapsible group heading in the Theme Studio tokens list, for text color tokens.
 #. Option label for a WebRTC content hint select.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes free text.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:38
 #: src/features/channel/utils/ChannelUtils.tsx:72
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:23
 #: src/features/theme_studio/sections/TokenGroups.ts:50
@@ -35088,7 +35136,7 @@ msgid "There are no channels available to create an invite for."
 msgstr "Không có kênh nào khả dụng để tạo lời mời."
 
 #. Title of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:159
+#: src/features/forum/utils/ForumMessageDescriptors.ts:151
 msgid "There are no posts yet"
 msgstr "Chưa có bài đăng nào"
 
@@ -35482,7 +35530,7 @@ msgid "This file is {fileSize}, over the {maxSize} limit. Animated stickers and 
 msgstr "Tệp này có dung lượng {fileSize}, vượt quá giới hạn {maxSize}. Nhãn dán động và SVG phải đủ nhỏ để tải lên. Hãy chọn tệp nhỏ hơn hoặc rút ngắn ảnh động."
 
 #. Shown in forum settings when the forum has no tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:299
+#: src/features/forum/utils/ForumMessageDescriptors.ts:291
 msgid "This forum has no tags yet."
 msgstr "Diễn đàn này chưa có thẻ nào."
 
@@ -36225,7 +36273,7 @@ msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "Để thay đổi các phím, hãy mở phần cài đặt phím tắt bàn phím của môi trường máy tính để bàn."
 
 #. Follows a Shift + Enter key hint under the forum search box. Starts lowercase because it continues the key hint.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:363
+#: src/features/forum/utils/ForumMessageDescriptors.ts:355
 msgid "to create a post"
 msgstr "để tạo bài viết"
 
@@ -36703,7 +36751,7 @@ msgid "Try different filters or search terms."
 msgstr "Thử các bộ lọc hoặc cụm từ tìm kiếm khác."
 
 #. Body of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:171
+#: src/features/forum/utils/ForumMessageDescriptors.ts:163
 msgid "Try different words or clear the tag filter."
 msgstr "Thử dùng từ khác hoặc xóa bộ lọc thẻ."
 
@@ -37694,7 +37742,7 @@ msgid "Unpin message"
 msgstr "Bỏ ghim tin nhắn"
 
 #. Post menu action that unpins a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:135
+#: src/features/forum/utils/ForumMessageDescriptors.ts:127
 msgid "Unpin post"
 msgstr "Bỏ ghim bài viết"
 
@@ -38184,7 +38232,7 @@ msgstr "Đang tải biểu tượng cảm xúc lên"
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:38
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
 msgid "URL"
@@ -39266,7 +39314,7 @@ msgid "View and regenerate client secrets and bot tokens"
 msgstr "Xem và tạo lại mã bí mật của máy khách và token bot"
 
 #. Section title for the forum layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:99
+#: src/features/forum/utils/ForumMessageDescriptors.ts:91
 msgid "View as"
 msgstr "Xem dưới dạng"
 
@@ -39529,8 +39577,10 @@ msgstr "Các chỉ báo trực quan hiển thị trạng thái người dùng, �
 
 #. Advanced settings category tag.
 #. Channel type chip label for a voice channel.
+#. Channel type option in the create channel modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:54
 #: src/features/channel/utils/ChannelUtils.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
@@ -40814,7 +40864,7 @@ msgid "You can only pick a tag that nobody else with the same username already h
 msgstr "Bạn chỉ có thể chọn một thẻ tag mà không ai có cùng tên người dùng đã có. Tên người dùng không phân biệt chữ hoa chữ thường, vì vậy Mina#4821 và mina#4821 được tính là giống nhau. Thẻ #0000 được dành riêng cho các thành viên Visionary của {productName}. {visionaryLink}."
 
 #. Hint in the forum tag picker. count is the maximum number of tags per post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:123
+#: src/features/forum/utils/ForumMessageDescriptors.ts:115
 msgid "You can pick up to {count} tags."
 msgstr "Bạn có thể chọn tối đa {count} thẻ."
 

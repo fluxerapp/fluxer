@@ -2,20 +2,12 @@
 
 import {msg} from '@lingui/core/macro';
 
-export const FORUM_CHANNEL_DESCRIPTOR = msg({
-	message: 'Forum channel',
-	comment: 'Channel type option name in the channel create modal.',
-});
 export const FORUM_CHANNEL_DESC_DESCRIPTOR = msg({
-	message: 'Create a space for organized posts on specific topics',
+	message: 'Posts organized by topic and tags',
 	comment: 'Description of the forum channel type option in the channel create modal.',
 });
-export const MEDIA_CHANNEL_DESCRIPTOR = msg({
-	message: 'Media channel',
-	comment: 'Channel type option name in the channel create modal.',
-});
 export const MEDIA_CHANNEL_DESC_DESCRIPTOR = msg({
-	message: 'Share images and videos as posts with their own discussions',
+	message: 'Posts built around images and videos',
 	comment: 'Description of the media channel type option in the channel create modal.',
 });
 export const FORUM_DESCRIPTOR = msg({

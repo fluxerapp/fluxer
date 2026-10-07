@@ -1094,7 +1094,7 @@ msgid "{count, plural, one {# image} other {# images}}"
 msgstr "{count, plural, one {#개의 이미지} other {#개의 이미지}}"
 
 #. Status under the forum search box once results are in.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:355
+#: src/features/forum/utils/ForumMessageDescriptors.ts:347
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
 msgstr "{count, plural, one {#개의 일치하는 게시물} other {#개의 일치하는 게시물}}"
 
@@ -1109,7 +1109,7 @@ msgstr "{count, plural, one {#명} other {#명}}"
 
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:211
+#: src/features/forum/utils/ForumMessageDescriptors.ts:203
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {#개의 메시지} other {#개의 메시지}}"
@@ -1124,7 +1124,7 @@ msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {#개의 공통 커뮤니티} other {#개의 공통 커뮤니티}}"
 
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:147
+#: src/features/forum/utils/ForumMessageDescriptors.ts:139
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {#개의 새 메시지} other {#개의 새 메시지}}"
 
@@ -3147,7 +3147,7 @@ msgid "Add a community"
 msgstr "커뮤니티 추가"
 
 #. Placeholder of the message composer in the new media post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:45
+#: src/features/forum/utils/ForumMessageDescriptors.ts:37
 msgid "Add a description (optional)"
 msgstr "설명 추가 (선택 사항)"
 
@@ -3290,7 +3290,7 @@ msgid "Add email"
 msgstr "이메일 추가"
 
 #. Accessible label of the emoji button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:396
+#: src/features/forum/utils/ForumMessageDescriptors.ts:388
 msgid "Add emoji"
 msgstr "이모지 추가"
 
@@ -3322,7 +3322,7 @@ msgid "Add friends to group"
 msgstr "그룹에 친구 추가"
 
 #. Accessible label of the attach button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:392
+#: src/features/forum/utils/ForumMessageDescriptors.ts:384
 msgid "Add images or files"
 msgstr "이미지 또는 파일 추가"
 
@@ -3340,6 +3340,11 @@ msgstr "항목 추가"
 #: src/features/theme_studio/sections/AssetsSection.tsx:150
 msgid "Add local files"
 msgstr "로컬 파일 추가"
+
+#. Title of the second step of the channel create modal when the channel is private.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:63
+msgid "Add members or roles"
+msgstr "멤버 또는 역할을 추가하세요"
 
 #. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:271
@@ -3438,12 +3443,12 @@ msgid "Add stream"
 msgstr "스트림 추가"
 
 #. Button in forum settings that opens the tag editor for a new tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:255
+#: src/features/forum/utils/ForumMessageDescriptors.ts:247
 msgid "Add tag"
 msgstr "태그 추가"
 
 #. Button in the new post composer that opens the tag picker.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:384
+#: src/features/forum/utils/ForumMessageDescriptors.ts:376
 msgid "Add tags"
 msgstr "태그 추가"
 
@@ -4068,7 +4073,7 @@ msgid "Allowed up to {count, plural, one {# connection} other {# connections}} p
 msgstr "멤버당 최대 {count, plural, one {#개의 연결} other {#개의 연결}}까지 허용했습니다"
 
 #. Description of the Create posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:319
+#: src/features/forum/utils/ForumMessageDescriptors.ts:311
 msgid "Allows members to create posts in this channel."
 msgstr "이 채널에서 멤버들이 게시물을 작성하도록 허용합니다."
 
@@ -4078,12 +4083,12 @@ msgid "Allows members to rename, close, lock and delete threads, and to view pri
 msgstr "스레드 이름을 변경하고, 닫고, 잠그고, 삭제할 수 있으며, 비공개 스레드를 볼 수 있습니다."
 
 #. Description of the Manage posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:335
+#: src/features/forum/utils/ForumMessageDescriptors.ts:327
 msgid "Allows members to rename, close, lock, pin and delete posts, and to edit their tags."
 msgstr "게시물 이름을 변경하고, 닫고, 잠그고, 고정하고, 삭제할 수 있으며, 태그를 수정할 수 있습니다."
 
 #. Description of the Send messages in posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:327
+#: src/features/forum/utils/ForumMessageDescriptors.ts:319
 msgid "Allows members to send messages in posts."
 msgstr "멤버가 게시물에 메시지를 보낼 수 있습니다."
 
@@ -4487,6 +4492,8 @@ msgid "Announce new messages"
 msgstr "새 메시지 읽어주기"
 
 #. Channel type chip label for an announcement channel, whose messages can be published to channels that follow it.
+#. Channel type option in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:46
 #: src/features/channel/utils/ChannelUtils.tsx:63
 msgid "Announcement"
 msgstr "공지"
@@ -4945,7 +4952,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "맞춤 URL이 작동하려면 하나 이상의 채널에서 {EVERYONE_MENTION}에 대해 \"{viewChannelPermissionLabel}\" 권한이 활성화되어 있어야 합니다. 현재 {EVERYONE_MENTION}에게 표시되는 채널이 없습니다."
 
 #. Error shown when the user sends a new media channel post without an image or video attachment.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:49
+#: src/features/forum/utils/ForumMessageDescriptors.ts:41
 msgid "Attach an image or a video to post in a media channel."
 msgstr "미디어 채널에 게시하려면 이미지나 동영상을 첨부하세요."
 
@@ -5865,7 +5872,7 @@ msgid "Be heard over other members while holding the push to talk (priority) key
 msgstr "눌러서 말하기 (우선순위) 키를 누르고 있는 동안 다른 멤버보다 더 잘 들립니다."
 
 #. Body of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:163
+#: src/features/forum/utils/ForumMessageDescriptors.ts:155
 msgid "Be the first to start a conversation here."
 msgstr "여기에 첫 번째 대화를 시작해 보세요."
 
@@ -6785,7 +6792,7 @@ msgstr "여기에 파일을 올릴 수 없습니다"
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:250
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
-#: src/features/forum/utils/ForumMessageDescriptors.ts:291
+#: src/features/forum/utils/ForumMessageDescriptors.ts:283
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:145
@@ -7598,11 +7605,13 @@ msgid "Channel management"
 msgstr "채널 관리"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
+#. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
-#: src/features/forum/utils/ForumMessageDescriptors.ts:339
+#: src/features/forum/utils/ForumMessageDescriptors.ts:331
 msgid "Channel name"
 msgstr "채널 이름"
 
@@ -7651,12 +7660,12 @@ msgid "Channel topic is too long."
 msgstr "채널 주제가 너무 깁니다."
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:26
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:39
 msgid "Channel type"
 msgstr "채널 유형"
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:30
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:43
 msgid "Channel type selection"
 msgstr "채널 유형 선택"
 
@@ -7665,7 +7674,7 @@ msgstr "채널 유형 선택"
 #: src/features/app/config/AuditLogConstants.ts:16
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
-#: src/features/forum/utils/ForumMessageDescriptors.ts:343
+#: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "채널 업데이트됨"
 
@@ -8287,7 +8296,7 @@ msgstr "마이크 소리를 다듬어 음성을 선명하게 만듭니다."
 #. Inline button in the Recent searches section that wipes the search history list.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:115
+#: src/features/forum/utils/ForumMessageDescriptors.ts:107
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
 #: src/features/theme_studio/sections/QuickCssSection.tsx:64
@@ -10094,7 +10103,7 @@ msgid "Copy paused while sharing"
 msgstr "공유 중에는 복사가 일시 중지됩니다"
 
 #. Accessible label of the copy link button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:417
+#: src/features/forum/utils/ForumMessageDescriptors.ts:409
 msgid "Copy post link"
 msgstr "게시물 링크 복사"
 
@@ -10373,7 +10382,7 @@ msgid "Couldn't create the PDF. Try again or print the kit instead."
 msgstr "PDF를 만들 수 없습니다. 다시 시도하거나 대신 키트를 인쇄하세요."
 
 #. Toast shown when creating a forum post fails. detail is the server error message.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:63
+#: src/features/forum/utils/ForumMessageDescriptors.ts:55
 msgid "Couldn't create the post: {detail}"
 msgstr "게시물을 만들 수 없습니다: {detail}"
 
@@ -10505,7 +10514,7 @@ msgid "Couldn't load invites"
 msgstr "초대를 불러올 수 없습니다"
 
 #. Notice in a forum channel when loading posts fails.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:179
+#: src/features/forum/utils/ForumMessageDescriptors.ts:171
 msgid "Couldn't load posts. Try again later."
 msgstr "게시물을 불러올 수 없습니다. 나중에 다시 시도하세요."
 
@@ -10657,7 +10666,7 @@ msgid "Couldn't save entrance sound"
 msgstr "입장음을 저장할 수 없습니다"
 
 #. Toast shown when saving a forum tag fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:303
+#: src/features/forum/utils/ForumMessageDescriptors.ts:295
 msgid "Couldn't save the tag: {detail}"
 msgstr "태그를 저장할 수 없습니다: {detail}"
 
@@ -10799,7 +10808,7 @@ msgid "Couldn't update the alt text. Please try again."
 msgstr "대체 텍스트를 업데이트할 수 없습니다. 다시 시도해 주세요."
 
 #. Toast shown when a forum post action such as pinning or editing tags fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:67
+#: src/features/forum/utils/ForumMessageDescriptors.ts:59
 msgid "Couldn't update the post: {detail}"
 msgstr "게시물을 업데이트할 수 없습니다: {detail}"
 
@@ -10913,11 +10922,6 @@ msgstr "복구 키트를 만들어 계속 진행하세요."
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:50
 msgid "Create a recovery kit to reset a forgotten password"
 msgstr "비밀번호를 잊어버렸을 때 재설정할 수 있는 복구 키트를 만드세요"
-
-#. Description of the forum channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:9
-msgid "Create a space for organized posts on specific topics"
-msgstr "주제별로 정리된 게시물을 위한 공간 만들기"
 
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:49
@@ -11038,7 +11042,7 @@ msgid "Create or join a community"
 msgstr "커뮤니티 만들기 또는 참여하기"
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:315
+#: src/features/forum/utils/ForumMessageDescriptors.ts:307
 msgid "Create posts"
 msgstr "게시물 만들기"
 
@@ -11067,7 +11071,7 @@ msgid "Create role"
 msgstr "역할 만들기"
 
 #. Title of the tag editor for a new forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:263
+#: src/features/forum/utils/ForumMessageDescriptors.ts:255
 msgid "Create tag"
 msgstr "태그 만들기"
 
@@ -11735,7 +11739,7 @@ msgstr "날짜 선택"
 
 #. Forum sort option that orders posts by when they were created.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:95
+#: src/features/forum/utils/ForumMessageDescriptors.ts:87
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:147
 msgid "Date posted"
 msgstr "게시 날짜"
@@ -11910,7 +11914,7 @@ msgid "Default hide after inactivity"
 msgstr "비활성 시 기본 숨김"
 
 #. Label of the forum setting that picks the default post layout.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:235
+#: src/features/forum/utils/ForumMessageDescriptors.ts:227
 msgid "Default layout"
 msgstr "기본 레이아웃"
 
@@ -11924,7 +11928,7 @@ msgid "Default notifications"
 msgstr "기본 알림"
 
 #. Label of the forum setting that picks the reaction button shown on every post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:215
+#: src/features/forum/utils/ForumMessageDescriptors.ts:207
 msgid "Default reaction"
 msgstr "기본 반응"
 
@@ -11958,7 +11962,7 @@ msgid "Default shortcuts"
 msgstr "기본 단축키"
 
 #. Label of the forum setting that picks how posts are ordered by default.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:231
+#: src/features/forum/utils/ForumMessageDescriptors.ts:223
 msgid "Default sort order"
 msgstr "기본 정렬 순서"
 
@@ -12236,7 +12240,7 @@ msgid "Delete sticker {stickerName}"
 msgstr "스티커 삭제: {stickerName}"
 
 #. Button in the forum tag editor that deletes the tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:283
+#: src/features/forum/utils/ForumMessageDescriptors.ts:275
 msgid "Delete tag"
 msgstr "태그 삭제"
 
@@ -12983,7 +12987,7 @@ msgid "Disabling your account will sign you out of all sessions. You can re-enab
 msgstr "계정을 비활성화하면 모든 세션에서 로그아웃됩니다. 언제든지 다시 로그인하여 계정을 재활성화할 수 있습니다."
 
 #. Accessible label of the button that closes the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:71
+#: src/features/forum/utils/ForumMessageDescriptors.ts:63
 msgid "Discard post"
 msgstr "게시물 삭제"
 
@@ -13789,7 +13793,7 @@ msgstr "에코 제거"
 #. Tooltip of the toggle that returns from the preview to editing a new forum post.
 #. Top-level native menu bar title (Edit menu, holds cut/copy/paste).
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
-#: src/features/forum/utils/ForumMessageDescriptors.ts:376
+#: src/features/forum/utils/ForumMessageDescriptors.ts:368
 #: src/features/platform/utils/DesktopLocaleBridge.ts:48
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
@@ -13989,12 +13993,12 @@ msgid "Edit sticker {stickerName}"
 msgstr "{stickerName} 스티커 편집"
 
 #. Title of the tag editor for an existing forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:259
+#: src/features/forum/utils/ForumMessageDescriptors.ts:251
 msgid "Edit tag"
 msgstr "태그 수정"
 
 #. Post menu action that opens the tag picker for an existing forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:119
+#: src/features/forum/utils/ForumMessageDescriptors.ts:111
 msgid "Edit tags"
 msgstr "태그 수정"
 
@@ -14213,7 +14217,7 @@ msgstr "임베드를 다시 표시했습니다"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
-#: src/features/forum/utils/ForumMessageDescriptors.ts:271
+#: src/features/forum/utils/ForumMessageDescriptors.ts:263
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Emoji"
@@ -14729,7 +14733,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "선물 코드를 입력하여 계정으로 {premiumProductName}을(를) 받으세요."
 
 #. Placeholder of the message composer in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:41
+#: src/features/forum/utils/ForumMessageDescriptors.ts:33
 msgid "Enter a message"
 msgstr "메시지를 입력하세요"
 
@@ -16157,7 +16161,7 @@ msgstr "폴더 설정"
 #. Button label that follows an announcement channel, so its published messages are copied into a channel the user picks.
 #. Button under the first message of a forum post. Following a post adds it to the channel list and sends notifications.
 #: src/features/channel/utils/ChannelFollowUtils.ts:16
-#: src/features/forum/utils/ForumMessageDescriptors.ts:408
+#: src/features/forum/utils/ForumMessageDescriptors.ts:400
 msgid "Follow"
 msgstr "팔로우"
 
@@ -16194,7 +16198,7 @@ msgid "Followed channels"
 msgstr "팔로우하는 채널"
 
 #. Pressed state of the follow button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:413
+#: src/features/forum/utils/ForumMessageDescriptors.ts:405
 msgid "Following"
 msgstr "팔로우 중"
 
@@ -16434,14 +16438,9 @@ msgid "Forms"
 msgstr "양식"
 
 #. Channel type chip label for a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:21
+#: src/features/forum/utils/ForumMessageDescriptors.ts:13
 msgid "Forum"
 msgstr "포럼"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:5
-msgid "Forum channel"
-msgstr "포럼 채널"
 
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
@@ -16738,7 +16737,7 @@ msgstr "게인 제어"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as tiles.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:107
+#: src/features/forum/utils/ForumMessageDescriptors.ts:99
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:155
 msgid "Gallery"
 msgstr "갤러리"
@@ -17205,7 +17204,7 @@ msgid "Give everyone on this instance the highest premium limits."
 msgstr "이 인스턴스의 모든 사용자에게 프리미엄 최고 한도를 적용합니다."
 
 #. Error shown when the user sends a new forum post without a title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:37
+#: src/features/forum/utils/ForumMessageDescriptors.ts:29
 msgid "Give the post a title before you send."
 msgstr "게시물을 보내기 전에 제목을 입력하세요."
 
@@ -17220,7 +17219,7 @@ msgid "Give the thread a name before you send."
 msgstr "스레드에 이름을 지정한 후 메시지를 보내세요."
 
 #. Placeholder of the title field in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:400
+#: src/features/forum/utils/ForumMessageDescriptors.ts:392
 msgid "Give your post a title"
 msgstr "게시물 제목을 입력하세요"
 
@@ -17603,6 +17602,11 @@ msgstr "H.265(옵트인 필요)"
 msgid "Handle"
 msgstr "핸들"
 
+#. One-line description of the voice channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:58
+msgid "Hang out with voice, video and screen share"
+msgstr "음성, 영상, 화면 공유로 함께 시간을 보내세요"
+
 #. Report category label, community variant. Keep tone plain.
 #: src/features/moderation/components/report/OptionDescriptors.ts:86
 msgid "Harassment"
@@ -17935,7 +17939,7 @@ msgid "Hide favorites"
 msgstr "즐겨찾기 숨기기"
 
 #. Button in the forum header that collapses the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:207
+#: src/features/forum/utils/ForumMessageDescriptors.ts:199
 msgid "Hide guidelines"
 msgstr "가이드라인 숨기기"
 
@@ -17954,7 +17958,7 @@ msgid "Hide keyboard hints"
 msgstr "키보드 안내 숨기기"
 
 #. Label of the media channel setting that hides download, open and copy actions on images and videos.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:247
+#: src/features/forum/utils/ForumMessageDescriptors.ts:239
 msgid "Hide media download options"
 msgstr "미디어 다운로드 옵션 숨기기"
 
@@ -18045,7 +18049,7 @@ msgid "Hide your own screen share?"
 msgstr "내 화면 공유를 숨길까요?"
 
 #. Help text of the media channel setting that hides media download options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:251
+#: src/features/forum/utils/ForumMessageDescriptors.ts:243
 msgid "Hides the download, open in browser and copy buttons on images and videos in this channel."
 msgstr "이 채널의 이미지 및 동영상에 대한 다운로드, 브라우저에서 열기, 복사 버튼을 숨깁니다."
 
@@ -20295,7 +20299,7 @@ msgid "Let others clone your stickers"
 msgstr "다른 사람이 내 스티커를 복제하도록 허용"
 
 #. Placeholder of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:199
+#: src/features/forum/utils/ForumMessageDescriptors.ts:191
 msgid "Let people know how to post in this forum"
 msgstr "이 포럼에 게시하는 방법을 알려주세요"
 
@@ -20434,7 +20438,9 @@ msgid "link"
 msgstr "링크"
 
 #. Channel type chip label for a linked external channel.
+#. Channel type option in the create channel modal.
 #. Label for the has:link option in the mobile content-type filter sheet.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:62
 #: src/features/channel/utils/ChannelUtils.tsx:54
 #: src/features/search/components/search/HasFilterSheet.tsx:57
 msgid "Link"
@@ -20612,7 +20618,7 @@ msgstr "Linux 패키지"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as rows.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:103
+#: src/features/forum/utils/ForumMessageDescriptors.ts:95
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:151
 msgid "List"
 msgstr "목록"
@@ -20659,7 +20665,7 @@ msgid "Load more"
 msgstr "더 불러오기"
 
 #. Button at the bottom of a forum channel that loads archived posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:191
+#: src/features/forum/utils/ForumMessageDescriptors.ts:183
 msgid "Load older posts"
 msgstr "이전 게시물 불러오기"
 
@@ -21034,7 +21040,7 @@ msgid "Manage permissions"
 msgstr "권한 관리"
 
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:331
+#: src/features/forum/utils/ForumMessageDescriptors.ts:323
 msgid "Manage posts"
 msgstr "게시물 관리"
 
@@ -21424,7 +21430,7 @@ msgstr "측정 중…"
 #. Collapsible group heading in the Theme Studio tokens list, for image and video tokens.
 #. Generic tab / section / category label for media content.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:25
+#: src/features/forum/utils/ForumMessageDescriptors.ts:17
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:264
 #: src/features/theme_studio/sections/TokenGroups.ts:110
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:16
@@ -21452,11 +21458,6 @@ msgstr "미디어 버튼"
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:83
 msgid "Media buttons"
 msgstr "미디어 버튼"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:13
-msgid "Media channel"
-msgstr "미디어 채널"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
@@ -21650,7 +21651,7 @@ msgid "Members are removed when offline unless given a role."
 msgstr "역할이 부여되지 않으면 오프라인 시 멤버가 제거됩니다."
 
 #. Help text of the moderated switch in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:279
+#: src/features/forum/utils/ForumMessageDescriptors.ts:271
 msgid "Members who can manage posts can add or remove it."
 msgstr "게시물을 관리할 수 있는 멤버가 추가하거나 삭제할 수 있습니다."
 
@@ -23063,11 +23064,9 @@ msgstr "알림 표시줄 재정의"
 #. Short label in the add custom search engine modal. Keep it concise.
 #. Short label in the branding section. Keep it concise.
 #. Short label in the category create modal. Keep it concise.
-#. Short label in the channel create modal. Keep it concise.
 #. Short label in the theme studio library section. Keep it concise.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:74
 #: src/features/channel/components/modals/CategoryCreateModal.tsx:17
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:34
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:340
 #: src/features/expressions/components/modals/meme_form/MemeFormFields.tsx:24
 #: src/features/expressions/components/modals/sticker_form/StickerFormFields.tsx:28
@@ -23272,7 +23271,7 @@ msgstr "자동으로 안 함"
 #: src/features/channel/components/ChannelDivider.tsx:37
 #: src/features/channel/components/ChannelDivider.tsx:52
 #: src/features/channel/components/UnreadDividerSlot.tsx:30
-#: src/features/forum/utils/ForumMessageDescriptors.ts:143
+#: src/features/forum/utils/ForumMessageDescriptors.ts:135
 msgid "New"
 msgstr "새 메시지"
 
@@ -23368,7 +23367,7 @@ msgstr "새 메시지"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
 #: src/features/app/components/layout/ChannelListContent.tsx:98
-#: src/features/forum/utils/ForumMessageDescriptors.ts:151
+#: src/features/forum/utils/ForumMessageDescriptors.ts:143
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "새 메시지"
@@ -23396,12 +23395,12 @@ msgid "New password"
 msgstr "새 비밀번호"
 
 #. Button in a forum channel that opens the composer for a new post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:29
+#: src/features/forum/utils/ForumMessageDescriptors.ts:21
 msgid "New post"
 msgstr "새 글"
 
 #. Title suffix of the desktop notification for a new forum post. forumName is the forum channel name.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:311
+#: src/features/forum/utils/ForumMessageDescriptors.ts:303
 msgid "New post in #{forumName}"
 msgstr "새 글 #{forumName}"
 
@@ -23831,8 +23830,13 @@ msgstr "일치하는 항목 없음"
 msgid "No matches found"
 msgstr "일치하는 항목 없음"
 
+#. Empty state in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:33
+msgid "No matching members or roles"
+msgstr "일치하는 멤버나 역할이 없습니다"
+
 #. Status under the forum search box when nothing matches.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:359
+#: src/features/forum/utils/ForumMessageDescriptors.ts:351
 msgid "No matching posts"
 msgstr "일치하는 게시물이 없습니다"
 
@@ -23897,7 +23901,7 @@ msgid "No pinned messages"
 msgstr "고정된 메시지 없음"
 
 #. Title of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:167
+#: src/features/forum/utils/ForumMessageDescriptors.ts:159
 msgid "No posts match your search"
 msgstr "게시물이 검색 결과와 일치하지 않습니다."
 
@@ -24344,7 +24348,7 @@ msgid "Nothing to explore yet"
 msgstr "아직 둘러볼 항목이 없어요"
 
 #. Shown in the post preview when the message is empty.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:380
+#: src/features/forum/utils/ForumMessageDescriptors.ts:372
 msgid "Nothing to preview yet."
 msgstr "아직 미리 볼 내용이 없습니다."
 
@@ -24525,7 +24529,7 @@ msgid "Oklahoma"
 msgstr "오클라호마"
 
 #. Section title above archived posts in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:187
+#: src/features/forum/utils/ForumMessageDescriptors.ts:179
 msgid "Older posts"
 msgstr "이전 게시물"
 
@@ -24665,12 +24669,12 @@ msgid "Only mentions"
 msgstr "멘션만"
 
 #. Tooltip on a forum tag that only moderators can add or remove.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:127
+#: src/features/forum/utils/ForumMessageDescriptors.ts:119
 msgid "Only moderators can apply this tag."
 msgstr "이 태그는 운영자만 적용할 수 있습니다."
 
 #. Label of the switch in the forum tag editor that restricts a tag to moderators.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:275
+#: src/features/forum/utils/ForumMessageDescriptors.ts:267
 msgid "Only moderators can use this tag"
 msgstr "이 태그는 관리자만 사용할 수 있습니다."
 
@@ -24688,6 +24692,11 @@ msgstr "더 이상 액세스할 수 없는 곳만"
 #: src/features/devtools/utils/SelfXssNotice.ts:24
 msgid "Only run code here if you understand exactly what it does."
 msgstr "여기에서 실행하는 코드가 어떤 동작을 하는지 정확히 이해하는 경우에만 실행하세요."
+
+#. Description under the private channel switch in the channel create modal.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:59
+msgid "Only selected members and roles will be able to view this channel."
+msgstr "선택한 멤버와 역할만 이 채널을 볼 수 있습니다."
 
 #. Label in the visual tab.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:33
@@ -24715,6 +24724,11 @@ msgstr "CSS 텍스트만 동기화됩니다. 업로드된 에셋과 로컬 파�
 #: src/features/channel/components/modals/GroupInvitesModal.tsx:113
 msgid "Only the group owner can manage invites."
 msgstr "그룹 소유자만 초대를 관리할 수 있습니다."
+
+#. Hint under the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:29
+msgid "Only the members and roles you pick, plus admins, can view this channel."
+msgstr "선택한 멤버와 역할, 그리고 관리자만 이 채널을 볼 수 있습니다."
 
 #. Dropdown option that switches the community filter into include-only mode.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:173
@@ -25384,7 +25398,7 @@ msgstr "원래 메시지를 불러오지 못했습니다"
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
 #. Preview on a forum post card whose first message was deleted.
 #: src/features/channel/components/ReplyPreview.tsx:25
-#: src/features/forum/utils/ForumMessageDescriptors.ts:155
+#: src/features/forum/utils/ForumMessageDescriptors.ts:147
 msgid "Original message was deleted"
 msgstr "원래 메시지가 삭제되었습니다"
 
@@ -26076,7 +26090,7 @@ msgid "Pick a web search provider"
 msgstr "웹 검색 공급자 선택"
 
 #. Button that opens the emoji picker in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:223
+#: src/features/forum/utils/ForumMessageDescriptors.ts:215
 msgid "Pick an emoji"
 msgstr "이모티콘 선택"
 
@@ -26091,7 +26105,7 @@ msgid "Pick at least one kind of conversation to include."
 msgstr "포함할 대화 유형을 하나 이상 선택하세요."
 
 #. Error shown when the forum requires a tag and the new post has none.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:59
+#: src/features/forum/utils/ForumMessageDescriptors.ts:51
 msgid "Pick at least one tag for this post."
 msgstr "이 게시물에 태그를 하나 이상 선택해주세요."
 
@@ -26187,7 +26201,7 @@ msgid "Pin or unpin any message."
 msgstr "모든 메시지를 고정하거나 고정 해제합니다."
 
 #. Post menu action that pins a forum post to the top of the forum.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:131
+#: src/features/forum/utils/ForumMessageDescriptors.ts:123
 msgid "Pin post"
 msgstr "게시물 고정"
 
@@ -26226,7 +26240,7 @@ msgid "pinned"
 msgstr "고정됨"
 
 #. Label on a pinned forum post card.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:139
+#: src/features/forum/utils/ForumMessageDescriptors.ts:131
 msgid "Pinned"
 msgstr "고정됨"
 
@@ -26454,22 +26468,22 @@ msgid "Position"
 msgstr "위치"
 
 #. Primary button that publishes a new forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:368
+#: src/features/forum/utils/ForumMessageDescriptors.ts:360
 msgid "Post"
 msgstr "게시"
 
 #. Title of the forum guidelines banner and label of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:195
+#: src/features/forum/utils/ForumMessageDescriptors.ts:187
 msgid "Post guidelines"
 msgstr "게시물 가이드라인"
 
 #. Toast after the forum post link was copied.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:421
+#: src/features/forum/utils/ForumMessageDescriptors.ts:413
 msgid "Post link copied"
 msgstr "게시물 링크가 복사되었습니다."
 
 #. Label and placeholder of the title input in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:33
+#: src/features/forum/utils/ForumMessageDescriptors.ts:25
 msgid "Post title"
 msgstr "게시물 제목"
 
@@ -26477,6 +26491,21 @@ msgstr "게시물 제목"
 #: src/features/webhook/components/FollowedChannelListItem.tsx:37
 msgid "Post to"
 msgstr "게시"
+
+#. One-line description of the announcement channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:50
+msgid "Post updates other communities can follow"
+msgstr "다른 커뮤니티에서 팔로우할 수 있는 업데이트를 게시하세요"
+
+#. Description of the media channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:9
+msgid "Posts built around images and videos"
+msgstr "이미지와 동영상을 중심으로 한 게시물"
+
+#. Description of the forum channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:5
+msgid "Posts organized by topic and tags"
+msgstr "주제 및 태그별로 정리된 게시물"
 
 #: src/features/input/utils/KeybindUtils.ts:105
 msgctxt "keyboard-key-name"
@@ -26662,7 +26691,7 @@ msgstr "일정 기간 동안 멤버가 메시지를 보내거나, 반응하거�
 
 #. Tooltip and label of the toggle that previews a new forum post.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:21
-#: src/features/forum/utils/ForumMessageDescriptors.ts:372
+#: src/features/forum/utils/ForumMessageDescriptors.ts:364
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
@@ -26882,6 +26911,11 @@ msgstr "개인정보 침해 또는 신상 털기"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:294
 msgid "Privacy violation or stalking"
 msgstr "개인정보 침해 또는 스토킹"
+
+#. Switch in the channel create modal that limits who can view the new channel.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:55
+msgid "Private channel"
+msgstr "비공개 채널"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:222
@@ -27495,7 +27529,7 @@ msgid "React"
 msgstr "반응하기"
 
 #. Button under the first message of a forum post that adds a reaction to it.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:404
+#: src/features/forum/utils/ForumMessageDescriptors.ts:396
 msgid "React to post"
 msgstr "게시물에 반응하기"
 
@@ -27646,7 +27680,7 @@ msgstr "최근 검색"
 
 #. Forum sort option that orders posts by their latest message.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:91
+#: src/features/forum/utils/ForumMessageDescriptors.ts:83
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:143
 msgid "Recently active"
 msgstr "최근 활동"
@@ -28037,7 +28071,7 @@ msgstr "창 크기 및 위치 기억"
 #: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
-#: src/features/forum/utils/ForumMessageDescriptors.ts:227
+#: src/features/forum/utils/ForumMessageDescriptors.ts:219
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:125
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:140
@@ -28774,7 +28808,7 @@ msgid "Require passkey"
 msgstr "패스키 필수"
 
 #. Label of the forum setting that makes at least one tag mandatory on new posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:243
+#: src/features/forum/utils/ForumMessageDescriptors.ts:235
 msgid "Require people to select tags when posting"
 msgstr "태그를 선택해야 글을 작성할 수 있습니다."
 
@@ -28785,7 +28819,7 @@ msgstr "모더레이터가 멤버를 차단, 추방, 타임아웃하거나 메�
 #. Marker next to the tag picker when the forum requires at least one tag.
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:388
+#: src/features/forum/utils/ForumMessageDescriptors.ts:380
 msgid "Required"
 msgstr "필수"
 
@@ -29284,7 +29318,7 @@ msgstr "초대를 다시 시작했습니다"
 
 #. Button that retries a failed thread search.
 #. Button that retries loading forum posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:183
+#: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Retry"
 msgstr "다시 시도"
@@ -29707,7 +29741,7 @@ msgstr "채도"
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:118
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:94
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:123
-#: src/features/forum/utils/ForumMessageDescriptors.ts:287
+#: src/features/forum/utils/ForumMessageDescriptors.ts:279
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
@@ -29819,7 +29853,7 @@ msgid "Saved media autocomplete"
 msgstr "저장된 미디어 자동 완성"
 
 #. Error shown when the user picks a saved favourite media item while writing a new forum or media channel post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:53
+#: src/features/forum/utils/ForumMessageDescriptors.ts:45
 msgid "Saved media cannot start a post. Upload the file instead."
 msgstr "저장된 미디어로는 게시물을 시작할 수 없습니다. 대신 파일을 업로드하세요."
 
@@ -30241,7 +30275,7 @@ msgstr "검색 범위"
 
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:175
+#: src/features/forum/utils/ForumMessageDescriptors.ts:167
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "커뮤니티 검색 준비 중입니다. 곧 다시 시도합니다..."
@@ -30255,6 +30289,11 @@ msgstr "언어 코드 검색…"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:74
 msgid "Search languages…"
 msgstr "언어 검색…"
+
+#. Placeholder of the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:25
+msgid "Search members or roles"
+msgstr "멤버 또는 역할을 검색하세요"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Placeholder shown inside the message search input. Sentence case.
@@ -30282,7 +30321,7 @@ msgid "Search only in the current DM"
 msgstr "현재 DM에서만 검색"
 
 #. Placeholder of the search input at the top of a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:79
+#: src/features/forum/utils/ForumMessageDescriptors.ts:71
 msgid "Search or create a post..."
 msgstr "검색하거나 게시물 만들기..."
 
@@ -30302,7 +30341,7 @@ msgid "Search permissions…"
 msgstr "권한 검색…"
 
 #. Placeholder and accessible label of the search input in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:75
+#: src/features/forum/utils/ForumMessageDescriptors.ts:67
 msgid "Search posts"
 msgstr "게시물 검색"
 
@@ -30459,7 +30498,7 @@ msgid "Searching voice channels"
 msgstr "음성 채널 검색 중"
 
 #. Status under the forum search box while results load.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:351
+#: src/features/forum/utils/ForumMessageDescriptors.ts:343
 msgid "Searching..."
 msgstr "Searching..."
 
@@ -30834,7 +30873,7 @@ msgid "Send a friend request to {userName}, or use the staff override to add the
 msgstr "{userName}님에게 친구 요청을 보내거나, 직원 권한으로 즉시 친구를 추가할 수 있습니다."
 
 #. Placeholder of the message box inside a forum post. name is the post title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:347
+#: src/features/forum/utils/ForumMessageDescriptors.ts:339
 msgid "Send a message in \"{name}\""
 msgstr "{name}에 메시지 보내기"
 
@@ -30948,7 +30987,7 @@ msgid "Send messages in channels."
 msgstr "채널에서 메시지를 보낼 수 있습니다."
 
 #. Permission name in forum and media channel permissions. Lets members reply in posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:323
+#: src/features/forum/utils/ForumMessageDescriptors.ts:315
 msgid "Send messages in posts"
 msgstr "게시물에 메시지 보내기"
 
@@ -30961,6 +31000,11 @@ msgstr "이 채널에서 메시지를 보낼 수 있습니다."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
 msgid "Send messages in threads"
 msgstr "스레드에서 메시지 보내기"
+
+#. One-line description of the text channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:42
+msgid "Send messages, images, GIFs and emoji"
+msgstr "메시지, 이미지, GIF, 이모티콘을 보내세요"
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
 #: src/features/moderation/components/report_modal/IARModal.tsx:90
@@ -31408,11 +31452,6 @@ msgstr "동영상이나 큰 파일을 줄이지 않고 그대로 공유하세요
 msgid "Share gift"
 msgstr "선물 공유"
 
-#. Description of the media channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:17
-msgid "Share images and videos as posts with their own discussions"
-msgstr "이미지와 동영상을 자체 토론이 있는 게시물로 공유하세요"
-
 #. Hover action on an application or display card that starts sharing that source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:197
 msgid "Share screen"
@@ -31584,6 +31623,11 @@ msgstr "단축키 배지"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:122
 msgid "Shortcut conflicts"
 msgstr "단축키 충돌"
+
+#. One-line description of the link channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:66
+msgid "Shortcut to an external website"
+msgstr "외부 웹사이트 바로가기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -31808,7 +31852,7 @@ msgid "Show GIFs button"
 msgstr "GIF 버튼 표시"
 
 #. Button in the forum header that expands the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:203
+#: src/features/forum/utils/ForumMessageDescriptors.ts:195
 msgid "Show guidelines"
 msgstr "가이드라인 보기"
 
@@ -31958,7 +32002,7 @@ msgid "Show new device modal"
 msgstr "새 기기 모달 표시"
 
 #. Forum notification option that marks the forum unread when someone creates a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:307
+#: src/features/forum/utils/ForumMessageDescriptors.ts:299
 msgid "Show new posts as unread"
 msgstr "새 글을 읽지 않음으로 표시"
 
@@ -32116,7 +32160,7 @@ msgid "Shown in invite embeds in chat."
 msgstr "채팅 초대 임베드에 표시됩니다."
 
 #. Help text of the default reaction setting in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:219
+#: src/features/forum/utils/ForumMessageDescriptors.ts:211
 msgid "Shown on every post so people can react with one click."
 msgstr "모든 게시물에 표시되어 한 번의 클릭으로 반응할 수 있습니다."
 
@@ -32357,7 +32401,9 @@ msgstr "크기"
 msgid "Size selection"
 msgstr "크기 선택"
 
+#. Creates the private channel without adding anyone in the channel create modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:67
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Skip"
 msgstr "건너뛰기"
@@ -32507,7 +32553,7 @@ msgid "Slowmode active"
 msgstr "슬로우 모드 활성화됨"
 
 #. Label of the forum setting for how often a member can create a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:239
+#: src/features/forum/utils/ForumMessageDescriptors.ts:231
 msgid "Slowmode for creating posts"
 msgstr "게시물 작성 시 느린 모드"
 
@@ -32864,12 +32910,12 @@ msgid "Sort"
 msgstr "정렬"
 
 #. Button in a forum channel that opens the sort order and layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:83
+#: src/features/forum/utils/ForumMessageDescriptors.ts:75
 msgid "Sort & view"
 msgstr "정렬 및 보기"
 
 #. Section title for the forum post sort order options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:87
+#: src/features/forum/utils/ForumMessageDescriptors.ts:79
 msgid "Sort by"
 msgstr "정렬 기준"
 
@@ -34370,13 +34416,13 @@ msgid "Tag"
 msgstr "태그"
 
 #. Label of the name input in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:267
+#: src/features/forum/utils/ForumMessageDescriptors.ts:259
 msgid "Tag name"
 msgstr "태그 이름"
 
 #. Label of the tag filter in a forum channel and of the tags section in forum settings.
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:111
+#: src/features/forum/utils/ForumMessageDescriptors.ts:103
 #: src/features/theme_studio/sections/LibrarySection.tsx:120
 msgid "Tags"
 msgstr "태그"
@@ -34389,7 +34435,7 @@ msgid "Tags ({tagCount}/{tagLimit})"
 msgstr "태그({tagCount}/{tagLimit})"
 
 #. Help text of the tags section in forum settings. count is the maximum number of tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:295
+#: src/features/forum/utils/ForumMessageDescriptors.ts:287
 msgid "Tags help people find posts. You can add up to {count} tags."
 msgstr "태그는 사람들이 게시물을 찾는 데 도움이 됩니다. 최대 {count}개의 태그를 추가할 수 있습니다."
 
@@ -34556,9 +34602,11 @@ msgid "Texas"
 msgstr "텍사스"
 
 #. Channel type chip label for a text channel.
+#. Channel type option in the create channel modal.
 #. Collapsible group heading in the Theme Studio tokens list, for text color tokens.
 #. Option label for a WebRTC content hint select.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes free text.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:38
 #: src/features/channel/utils/ChannelUtils.tsx:72
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:23
 #: src/features/theme_studio/sections/TokenGroups.ts:50
@@ -35088,7 +35136,7 @@ msgid "There are no channels available to create an invite for."
 msgstr "초대를 만들 수 있는 채널이 없습니다."
 
 #. Title of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:159
+#: src/features/forum/utils/ForumMessageDescriptors.ts:151
 msgid "There are no posts yet"
 msgstr "아직 게시물이 없습니다"
 
@@ -35482,7 +35530,7 @@ msgid "This file is {fileSize}, over the {maxSize} limit. Animated stickers and 
 msgstr "이 파일은 {fileSize}이며, 제한 크기인 {maxSize}를 초과합니다. 움직이는 스티커와 SVG는 업로드할 수 있을 만큼 작아야 합니다. 더 작은 파일을 선택하거나 애니메이션 길이를 줄여주세요."
 
 #. Shown in forum settings when the forum has no tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:299
+#: src/features/forum/utils/ForumMessageDescriptors.ts:291
 msgid "This forum has no tags yet."
 msgstr "이 포럼에는 아직 태그가 없습니다."
 
@@ -36225,7 +36273,7 @@ msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "키를 변경하려면 데스크톱의 키보드 단축키 설정을 여세요."
 
 #. Follows a Shift + Enter key hint under the forum search box. Starts lowercase because it continues the key hint.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:363
+#: src/features/forum/utils/ForumMessageDescriptors.ts:355
 msgid "to create a post"
 msgstr "게시물을 만들려면"
 
@@ -36703,7 +36751,7 @@ msgid "Try different filters or search terms."
 msgstr "다른 필터나 검색어를 사용해 보세요."
 
 #. Body of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:171
+#: src/features/forum/utils/ForumMessageDescriptors.ts:163
 msgid "Try different words or clear the tag filter."
 msgstr "다른 단어를 사용하거나 태그 필터를 지우세요."
 
@@ -37694,7 +37742,7 @@ msgid "Unpin message"
 msgstr "메시지 고정 해제"
 
 #. Post menu action that unpins a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:135
+#: src/features/forum/utils/ForumMessageDescriptors.ts:127
 msgid "Unpin post"
 msgstr "게시물 고정 해제"
 
@@ -38184,7 +38232,7 @@ msgstr "이모티콘 업로드 중"
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:38
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
 msgid "URL"
@@ -39266,7 +39314,7 @@ msgid "View and regenerate client secrets and bot tokens"
 msgstr "클라이언트 보안 비밀 및 봇 토큰 보기 및 재생성"
 
 #. Section title for the forum layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:99
+#: src/features/forum/utils/ForumMessageDescriptors.ts:91
 msgid "View as"
 msgstr "보기"
 
@@ -39529,8 +39577,10 @@ msgstr "사용자 상태를 나타내는 시각적 표시입니다. 아바타와
 
 #. Advanced settings category tag.
 #. Channel type chip label for a voice channel.
+#. Channel type option in the create channel modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:54
 #: src/features/channel/utils/ChannelUtils.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
@@ -40814,7 +40864,7 @@ msgid "You can only pick a tag that nobody else with the same username already h
 msgstr "동일한 사용자 이름을 가진 다른 사람이 이미 가지고 있지 않은 태그만 선택할 수 있습니다. 사용자 이름은 대소문자를 구분하지 않으므로 Mina#4821과 mina#4821은 동일하게 간주됩니다. #0000 태그는 {productName} Visionary 회원을 위해 예약되어 있습니다. {visionaryLink}."
 
 #. Hint in the forum tag picker. count is the maximum number of tags per post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:123
+#: src/features/forum/utils/ForumMessageDescriptors.ts:115
 msgid "You can pick up to {count} tags."
 msgstr "최대 {count}개의 태그를 선택할 수 있습니다."
 

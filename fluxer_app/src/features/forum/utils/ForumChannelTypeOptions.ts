@@ -9,12 +9,12 @@ export function getForumChannelTypeOptions(i18n: I18n): Array<ChannelTypeOption>
 	return [
 		{
 			value: ChannelTypes.GUILD_FORUM,
-			name: i18n._(D.FORUM_CHANNEL_DESCRIPTOR),
+			name: i18n._(D.FORUM_DESCRIPTOR),
 			desc: i18n._(D.FORUM_CHANNEL_DESC_DESCRIPTOR),
 		},
 		{
 			value: ChannelTypes.GUILD_MEDIA,
-			name: i18n._(D.MEDIA_CHANNEL_DESCRIPTOR),
+			name: i18n._(D.MEDIA_DESCRIPTOR),
 			desc: i18n._(D.MEDIA_CHANNEL_DESC_DESCRIPTOR),
 		},
 	];

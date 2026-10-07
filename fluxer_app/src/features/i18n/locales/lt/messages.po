@@ -1094,7 +1094,7 @@ msgid "{count, plural, one {# image} other {# images}}"
 msgstr "{count, plural, one {# vaizdas} few {# vaizdai} many {# vaizdo} other {# vaizdų}}"
 
 #. Status under the forum search box once results are in.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:355
+#: src/features/forum/utils/ForumMessageDescriptors.ts:347
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
 msgstr "{count, plural, one {# atitinkantis įrašas} other {# atitinkantys įrašai}}"
 
@@ -1109,7 +1109,7 @@ msgstr "{count, plural, one {# narys} few {# nariai} other {# narių}}"
 
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:211
+#: src/features/forum/utils/ForumMessageDescriptors.ts:203
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# pranešimas} other {# pranešimai}}"
@@ -1124,7 +1124,7 @@ msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {# bendra bendruomenė} few {# bendros bendruomenės} other {# bendrų bendruomenių}}"
 
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:147
+#: src/features/forum/utils/ForumMessageDescriptors.ts:139
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {# nauja žinutė} other {# naujos žinutės}}"
 
@@ -3147,7 +3147,7 @@ msgid "Add a community"
 msgstr "Pridėti bendruomenę"
 
 #. Placeholder of the message composer in the new media post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:45
+#: src/features/forum/utils/ForumMessageDescriptors.ts:37
 msgid "Add a description (optional)"
 msgstr "Pridėkite aprašymą (nebūtina)"
 
@@ -3290,7 +3290,7 @@ msgid "Add email"
 msgstr "Pridėti el. paštą"
 
 #. Accessible label of the emoji button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:396
+#: src/features/forum/utils/ForumMessageDescriptors.ts:388
 msgid "Add emoji"
 msgstr "Pridėti jaustuką"
 
@@ -3322,7 +3322,7 @@ msgid "Add friends to group"
 msgstr "Pridėti draugų į grupę"
 
 #. Accessible label of the attach button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:392
+#: src/features/forum/utils/ForumMessageDescriptors.ts:384
 msgid "Add images or files"
 msgstr "Pridėkite vaizdų ar failų"
 
@@ -3340,6 +3340,11 @@ msgstr "Pridėti elementą"
 #: src/features/theme_studio/sections/AssetsSection.tsx:150
 msgid "Add local files"
 msgstr "Pridėti vietinius failus"
+
+#. Title of the second step of the channel create modal when the channel is private.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:63
+msgid "Add members or roles"
+msgstr "Pridėkite narius arba vaidmenis"
 
 #. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:271
@@ -3438,12 +3443,12 @@ msgid "Add stream"
 msgstr "Pridėti srautą"
 
 #. Button in forum settings that opens the tag editor for a new tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:255
+#: src/features/forum/utils/ForumMessageDescriptors.ts:247
 msgid "Add tag"
 msgstr "Pridėti žymą"
 
 #. Button in the new post composer that opens the tag picker.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:384
+#: src/features/forum/utils/ForumMessageDescriptors.ts:376
 msgid "Add tags"
 msgstr "Pridėti žymas"
 
@@ -4068,7 +4073,7 @@ msgid "Allowed up to {count, plural, one {# connection} other {# connections}} p
 msgstr "Leidžiama iki {count, plural, one {# ryšio} few {# ryšių} other {# ryšių}} vienam nariui"
 
 #. Description of the Create posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:319
+#: src/features/forum/utils/ForumMessageDescriptors.ts:311
 msgid "Allows members to create posts in this channel."
 msgstr "Leidžia nariams kurti įrašus šiame kanale."
 
@@ -4078,12 +4083,12 @@ msgid "Allows members to rename, close, lock and delete threads, and to view pri
 msgstr "Leidžia nariams pervadinti, uždaryti, užrakinti ir ištrinti gijas, taip pat peržiūrėti privačias gijas."
 
 #. Description of the Manage posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:335
+#: src/features/forum/utils/ForumMessageDescriptors.ts:327
 msgid "Allows members to rename, close, lock, pin and delete posts, and to edit their tags."
 msgstr "Leidžia nariams pervadinti, uždaryti, užrakinti, prisegti ir ištrinti įrašus, taip pat redaguoti jų žymas."
 
 #. Description of the Send messages in posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:327
+#: src/features/forum/utils/ForumMessageDescriptors.ts:319
 msgid "Allows members to send messages in posts."
 msgstr "Leidžia nariams siųsti žinutes įrašuose."
 
@@ -4487,6 +4492,8 @@ msgid "Announce new messages"
 msgstr "Skelbti naujas žinutes"
 
 #. Channel type chip label for an announcement channel, whose messages can be published to channels that follow it.
+#. Channel type option in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:46
 #: src/features/channel/utils/ChannelUtils.tsx:63
 msgid "Announcement"
 msgstr "Skelbimas"
@@ -4945,7 +4952,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "Kad pasirinktinis URL veiktų, bent vienas kanalas turi turėti įjungtą „{viewChannelPermissionLabel}“ leidimą, skirtą {EVERYONE_MENTION}. Šiuo metu {EVERYONE_MENTION} negali matyti jokių kanalų."
 
 #. Error shown when the user sends a new media channel post without an image or video attachment.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:49
+#: src/features/forum/utils/ForumMessageDescriptors.ts:41
 msgid "Attach an image or a video to post in a media channel."
 msgstr "Pridėkite vaizdą arba vaizdo įrašą, kad galėtumėte skelbti medijos kanale."
 
@@ -5865,7 +5872,7 @@ msgid "Be heard over other members while holding the push to talk (priority) key
 msgstr "Būkite girdimi geriau nei kiti nariai, kai laikote nuspaustą klavišą „Kalbėti paspaudus (prioritetinis)“."
 
 #. Body of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:163
+#: src/features/forum/utils/ForumMessageDescriptors.ts:155
 msgid "Be the first to start a conversation here."
 msgstr "Būkite pirmas, kuris pradės pokalbį čia."
 
@@ -6785,7 +6792,7 @@ msgstr "Čia negalima įkelti failų"
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:250
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
-#: src/features/forum/utils/ForumMessageDescriptors.ts:291
+#: src/features/forum/utils/ForumMessageDescriptors.ts:283
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:145
@@ -7598,11 +7605,13 @@ msgid "Channel management"
 msgstr "Kanalų valdymas"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
+#. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
-#: src/features/forum/utils/ForumMessageDescriptors.ts:339
+#: src/features/forum/utils/ForumMessageDescriptors.ts:331
 msgid "Channel name"
 msgstr "Kanalo pavadinimas"
 
@@ -7651,12 +7660,12 @@ msgid "Channel topic is too long."
 msgstr "Kanalo tema per ilga."
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:26
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:39
 msgid "Channel type"
 msgstr "Kanalo tipas"
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:30
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:43
 msgid "Channel type selection"
 msgstr "Kanalo tipo pasirinkimas"
 
@@ -7665,7 +7674,7 @@ msgstr "Kanalo tipo pasirinkimas"
 #: src/features/app/config/AuditLogConstants.ts:16
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
-#: src/features/forum/utils/ForumMessageDescriptors.ts:343
+#: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "Kanalas atnaujintas"
 
@@ -8287,7 +8296,7 @@ msgstr "Išvalo mikrofono garsą, kad kalba būtų aiški."
 #. Inline button in the Recent searches section that wipes the search history list.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:115
+#: src/features/forum/utils/ForumMessageDescriptors.ts:107
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
 #: src/features/theme_studio/sections/QuickCssSection.tsx:64
@@ -10094,7 +10103,7 @@ msgid "Copy paused while sharing"
 msgstr "Kopijavimas pristabdytas, kol bendrinama"
 
 #. Accessible label of the copy link button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:417
+#: src/features/forum/utils/ForumMessageDescriptors.ts:409
 msgid "Copy post link"
 msgstr "Nukopijuoti įrašo nuorodą"
 
@@ -10373,7 +10382,7 @@ msgid "Couldn't create the PDF. Try again or print the kit instead."
 msgstr "Nepavyko sukurti PDF. Pabandykite dar kartą arba vietoj to atsispausdinkite rinkinį."
 
 #. Toast shown when creating a forum post fails. detail is the server error message.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:63
+#: src/features/forum/utils/ForumMessageDescriptors.ts:55
 msgid "Couldn't create the post: {detail}"
 msgstr "Nepavyko sukurti įrašo: {detail}"
 
@@ -10505,7 +10514,7 @@ msgid "Couldn't load invites"
 msgstr "Nepavyko įkelti kvietimų"
 
 #. Notice in a forum channel when loading posts fails.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:179
+#: src/features/forum/utils/ForumMessageDescriptors.ts:171
 msgid "Couldn't load posts. Try again later."
 msgstr "Nepavyko įkelti įrašų. Pabandykite vėliau."
 
@@ -10657,7 +10666,7 @@ msgid "Couldn't save entrance sound"
 msgstr "Nepavyko išsaugoti įėjimo garso"
 
 #. Toast shown when saving a forum tag fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:303
+#: src/features/forum/utils/ForumMessageDescriptors.ts:295
 msgid "Couldn't save the tag: {detail}"
 msgstr "Nepavyko išsaugoti žymos: {detail}"
 
@@ -10799,7 +10808,7 @@ msgid "Couldn't update the alt text. Please try again."
 msgstr "Nepavyko atnaujinti alternatyviojo teksto. Bandykite dar kartą."
 
 #. Toast shown when a forum post action such as pinning or editing tags fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:67
+#: src/features/forum/utils/ForumMessageDescriptors.ts:59
 msgid "Couldn't update the post: {detail}"
 msgstr "Nepavyko atnaujinti įrašo: {detail}"
 
@@ -10913,11 +10922,6 @@ msgstr "Sukurkite atkūrimo rinkinį, kad galėtumėte tęsti."
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:50
 msgid "Create a recovery kit to reset a forgotten password"
 msgstr "Sukurkite atkūrimo rinkinį, kad galėtumėte iš naujo nustatyti pamirštą slaptažodį"
-
-#. Description of the forum channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:9
-msgid "Create a space for organized posts on specific topics"
-msgstr "Sukurkite erdvę tvarkingiems įrašams konkrečiomis temomis"
 
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:49
@@ -11038,7 +11042,7 @@ msgid "Create or join a community"
 msgstr "Sukurti bendruomenę arba prie jos prisijungti"
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:315
+#: src/features/forum/utils/ForumMessageDescriptors.ts:307
 msgid "Create posts"
 msgstr "Kurti įrašus"
 
@@ -11067,7 +11071,7 @@ msgid "Create role"
 msgstr "Kurti vaidmenį"
 
 #. Title of the tag editor for a new forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:263
+#: src/features/forum/utils/ForumMessageDescriptors.ts:255
 msgid "Create tag"
 msgstr "Sukurti žymą"
 
@@ -11735,7 +11739,7 @@ msgstr "Datos parinkiklis"
 
 #. Forum sort option that orders posts by when they were created.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:95
+#: src/features/forum/utils/ForumMessageDescriptors.ts:87
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:147
 msgid "Date posted"
 msgstr "Data paskelbimo"
@@ -11910,7 +11914,7 @@ msgid "Default hide after inactivity"
 msgstr "Numatytasis slėpti po neaktyvumo"
 
 #. Label of the forum setting that picks the default post layout.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:235
+#: src/features/forum/utils/ForumMessageDescriptors.ts:227
 msgid "Default layout"
 msgstr "Numatytasis išdėstymas"
 
@@ -11924,7 +11928,7 @@ msgid "Default notifications"
 msgstr "Numatytieji pranešimai"
 
 #. Label of the forum setting that picks the reaction button shown on every post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:215
+#: src/features/forum/utils/ForumMessageDescriptors.ts:207
 msgid "Default reaction"
 msgstr "Numetoji reakcija"
 
@@ -11958,7 +11962,7 @@ msgid "Default shortcuts"
 msgstr "Numatytieji spartieji klavišai"
 
 #. Label of the forum setting that picks how posts are ordered by default.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:231
+#: src/features/forum/utils/ForumMessageDescriptors.ts:223
 msgid "Default sort order"
 msgstr "Numatytasis rikiavimo tvarka"
 
@@ -12236,7 +12240,7 @@ msgid "Delete sticker {stickerName}"
 msgstr "Ištrinti lipduką „{stickerName}“"
 
 #. Button in the forum tag editor that deletes the tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:283
+#: src/features/forum/utils/ForumMessageDescriptors.ts:275
 msgid "Delete tag"
 msgstr "Panaikinti žymą"
 
@@ -12983,7 +12987,7 @@ msgid "Disabling your account will sign you out of all sessions. You can re-enab
 msgstr "Išjungus paskyrą, būsite atjungti nuo visų seansų. Paskyrą galite vėl įjungti bet kada, tiesiog prisijungę iš naujo."
 
 #. Accessible label of the button that closes the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:71
+#: src/features/forum/utils/ForumMessageDescriptors.ts:63
 msgid "Discard post"
 msgstr "Atmesti įrašą"
 
@@ -13789,7 +13793,7 @@ msgstr "Aido slopinimas"
 #. Tooltip of the toggle that returns from the preview to editing a new forum post.
 #. Top-level native menu bar title (Edit menu, holds cut/copy/paste).
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
-#: src/features/forum/utils/ForumMessageDescriptors.ts:376
+#: src/features/forum/utils/ForumMessageDescriptors.ts:368
 #: src/features/platform/utils/DesktopLocaleBridge.ts:48
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
@@ -13989,12 +13993,12 @@ msgid "Edit sticker {stickerName}"
 msgstr "Redaguoti lipduką „{stickerName}“"
 
 #. Title of the tag editor for an existing forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:259
+#: src/features/forum/utils/ForumMessageDescriptors.ts:251
 msgid "Edit tag"
 msgstr "Redaguoti žymą"
 
 #. Post menu action that opens the tag picker for an existing forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:119
+#: src/features/forum/utils/ForumMessageDescriptors.ts:111
 msgid "Edit tags"
 msgstr "Redaguoti žymas"
 
@@ -14213,7 +14217,7 @@ msgstr "Įterptieji elementai vėl rodomi"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
-#: src/features/forum/utils/ForumMessageDescriptors.ts:271
+#: src/features/forum/utils/ForumMessageDescriptors.ts:263
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Emoji"
@@ -14729,7 +14733,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "Įveskite dovanos kodą, kad išpirktumėte „{premiumProductName}“ savo paskyrai."
 
 #. Placeholder of the message composer in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:41
+#: src/features/forum/utils/ForumMessageDescriptors.ts:33
 msgid "Enter a message"
 msgstr "Įveskite žinutę"
 
@@ -16157,7 +16161,7 @@ msgstr "Aplanko nustatymai"
 #. Button label that follows an announcement channel, so its published messages are copied into a channel the user picks.
 #. Button under the first message of a forum post. Following a post adds it to the channel list and sends notifications.
 #: src/features/channel/utils/ChannelFollowUtils.ts:16
-#: src/features/forum/utils/ForumMessageDescriptors.ts:408
+#: src/features/forum/utils/ForumMessageDescriptors.ts:400
 msgid "Follow"
 msgstr "Sekti"
 
@@ -16194,7 +16198,7 @@ msgid "Followed channels"
 msgstr "Stebimi kanalai"
 
 #. Pressed state of the follow button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:413
+#: src/features/forum/utils/ForumMessageDescriptors.ts:405
 msgid "Following"
 msgstr "Seku"
 
@@ -16434,14 +16438,9 @@ msgid "Forms"
 msgstr "Formos"
 
 #. Channel type chip label for a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:21
+#: src/features/forum/utils/ForumMessageDescriptors.ts:13
 msgid "Forum"
 msgstr "Forumas"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:5
-msgid "Forum channel"
-msgstr "Forumo kanalas"
 
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
@@ -16738,7 +16737,7 @@ msgstr "Stiprinimo valdymas"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as tiles.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:107
+#: src/features/forum/utils/ForumMessageDescriptors.ts:99
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:155
 msgid "Gallery"
 msgstr "Galerija"
@@ -17205,7 +17204,7 @@ msgid "Give everyone on this instance the highest premium limits."
 msgstr "Suteikite visiems šioje instancijoje aukščiausius premium limitus."
 
 #. Error shown when the user sends a new forum post without a title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:37
+#: src/features/forum/utils/ForumMessageDescriptors.ts:29
 msgid "Give the post a title before you send."
 msgstr "Prieš siųsdami suteikite įrašui pavadinimą."
 
@@ -17220,7 +17219,7 @@ msgid "Give the thread a name before you send."
 msgstr "Pavadink temą prieš siųsdamas."
 
 #. Placeholder of the title field in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:400
+#: src/features/forum/utils/ForumMessageDescriptors.ts:392
 msgid "Give your post a title"
 msgstr "Suteikite savo įrašui pavadinimą"
 
@@ -17603,6 +17602,11 @@ msgstr "H.265 (reikia įjungti atskirai)"
 msgid "Handle"
 msgstr "Pseudonimas"
 
+#. One-line description of the voice channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:58
+msgid "Hang out with voice, video and screen share"
+msgstr "Bendraukite balsu, vaizdo įrašais ir dalindamiesi ekranu"
+
 #. Report category label, community variant. Keep tone plain.
 #: src/features/moderation/components/report/OptionDescriptors.ts:86
 msgid "Harassment"
@@ -17936,7 +17940,7 @@ msgid "Hide favorites"
 msgstr "Slėpti mėgstamiausius"
 
 #. Button in the forum header that collapses the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:207
+#: src/features/forum/utils/ForumMessageDescriptors.ts:199
 msgid "Hide guidelines"
 msgstr "Sutrumpinti gaires"
 
@@ -17955,7 +17959,7 @@ msgid "Hide keyboard hints"
 msgstr "Slėpti klaviatūros patarimus"
 
 #. Label of the media channel setting that hides download, open and copy actions on images and videos.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:247
+#: src/features/forum/utils/ForumMessageDescriptors.ts:239
 msgid "Hide media download options"
 msgstr "Slėpti medijos atsisiuntimo parinktis"
 
@@ -18046,7 +18050,7 @@ msgid "Hide your own screen share?"
 msgstr "Slėpti savo ekrano bendrinimą?"
 
 #. Help text of the media channel setting that hides media download options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:251
+#: src/features/forum/utils/ForumMessageDescriptors.ts:243
 msgid "Hides the download, open in browser and copy buttons on images and videos in this channel."
 msgstr "Slepia atsisiuntimo, atidarymo naršyklėje ir kopijavimo mygtukus vaizdeliams ir vaizdo įrašams šiame kanale."
 
@@ -20296,7 +20300,7 @@ msgid "Let others clone your stickers"
 msgstr "Leisti kitiems klonuoti jūsų lipdukus"
 
 #. Placeholder of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:199
+#: src/features/forum/utils/ForumMessageDescriptors.ts:191
 msgid "Let people know how to post in this forum"
 msgstr "Leiskite žmonėms žinoti, kaip skelbti šiame forume"
 
@@ -20435,7 +20439,9 @@ msgid "link"
 msgstr "nuoroda"
 
 #. Channel type chip label for a linked external channel.
+#. Channel type option in the create channel modal.
 #. Label for the has:link option in the mobile content-type filter sheet.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:62
 #: src/features/channel/utils/ChannelUtils.tsx:54
 #: src/features/search/components/search/HasFilterSheet.tsx:57
 msgid "Link"
@@ -20613,7 +20619,7 @@ msgstr "„Linux“ paketas"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as rows.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:103
+#: src/features/forum/utils/ForumMessageDescriptors.ts:95
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:151
 msgid "List"
 msgstr "Sąrašas"
@@ -20660,7 +20666,7 @@ msgid "Load more"
 msgstr "Įkelti daugiau"
 
 #. Button at the bottom of a forum channel that loads archived posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:191
+#: src/features/forum/utils/ForumMessageDescriptors.ts:183
 msgid "Load older posts"
 msgstr "Įkelti senesnius įrašus"
 
@@ -21035,7 +21041,7 @@ msgid "Manage permissions"
 msgstr "Tvarkyti leidimus"
 
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:331
+#: src/features/forum/utils/ForumMessageDescriptors.ts:323
 msgid "Manage posts"
 msgstr "Tvarkyti įrašus"
 
@@ -21425,7 +21431,7 @@ msgstr "Matuojama…"
 #. Collapsible group heading in the Theme Studio tokens list, for image and video tokens.
 #. Generic tab / section / category label for media content.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:25
+#: src/features/forum/utils/ForumMessageDescriptors.ts:17
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:264
 #: src/features/theme_studio/sections/TokenGroups.ts:110
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:16
@@ -21453,11 +21459,6 @@ msgstr "Medijos mygtukas"
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:83
 msgid "Media buttons"
 msgstr "Medijos mygtukai"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:13
-msgid "Media channel"
-msgstr "Medijos kanalas"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
@@ -21651,7 +21652,7 @@ msgid "Members are removed when offline unless given a role."
 msgstr "Nariai pašalinami, kai yra neprisijungę, nebent jiems priskirtas vaidmuo."
 
 #. Help text of the moderated switch in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:279
+#: src/features/forum/utils/ForumMessageDescriptors.ts:271
 msgid "Members who can manage posts can add or remove it."
 msgstr "Nariai, galintys tvarkyti įrašus, gali jį pridėti arba pašalinti."
 
@@ -23064,11 +23065,9 @@ msgstr "Nagbaro perrašymai"
 #. Short label in the add custom search engine modal. Keep it concise.
 #. Short label in the branding section. Keep it concise.
 #. Short label in the category create modal. Keep it concise.
-#. Short label in the channel create modal. Keep it concise.
 #. Short label in the theme studio library section. Keep it concise.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:74
 #: src/features/channel/components/modals/CategoryCreateModal.tsx:17
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:34
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:340
 #: src/features/expressions/components/modals/meme_form/MemeFormFields.tsx:24
 #: src/features/expressions/components/modals/sticker_form/StickerFormFields.tsx:28
@@ -23273,7 +23272,7 @@ msgstr "Niekada automatiškai"
 #: src/features/channel/components/ChannelDivider.tsx:37
 #: src/features/channel/components/ChannelDivider.tsx:52
 #: src/features/channel/components/UnreadDividerSlot.tsx:30
-#: src/features/forum/utils/ForumMessageDescriptors.ts:143
+#: src/features/forum/utils/ForumMessageDescriptors.ts:135
 msgid "New"
 msgstr "Nauja"
 
@@ -23369,7 +23368,7 @@ msgstr "Nauja žinutė"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
 #: src/features/app/components/layout/ChannelListContent.tsx:98
-#: src/features/forum/utils/ForumMessageDescriptors.ts:151
+#: src/features/forum/utils/ForumMessageDescriptors.ts:143
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "Naujos žinutės"
@@ -23397,12 +23396,12 @@ msgid "New password"
 msgstr "Naujas slaptažodis"
 
 #. Button in a forum channel that opens the composer for a new post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:29
+#: src/features/forum/utils/ForumMessageDescriptors.ts:21
 msgid "New post"
 msgstr "Naujas įrašas"
 
 #. Title suffix of the desktop notification for a new forum post. forumName is the forum channel name.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:311
+#: src/features/forum/utils/ForumMessageDescriptors.ts:303
 msgid "New post in #{forumName}"
 msgstr "Naujas įrašas #{forumName} forume"
 
@@ -23832,8 +23831,13 @@ msgstr "Nėra atitikmenų"
 msgid "No matches found"
 msgstr "Nieko nerasta"
 
+#. Empty state in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:33
+msgid "No matching members or roles"
+msgstr "Nėra atitinkančių narių ar vaidmenų"
+
 #. Status under the forum search box when nothing matches.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:359
+#: src/features/forum/utils/ForumMessageDescriptors.ts:351
 msgid "No matching posts"
 msgstr "Nėra atitinkančių įrašų"
 
@@ -23898,7 +23902,7 @@ msgid "No pinned messages"
 msgstr "Nėra prisegtų žinučių"
 
 #. Title of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:167
+#: src/features/forum/utils/ForumMessageDescriptors.ts:159
 msgid "No posts match your search"
 msgstr "Nėra įrašų, atitinkančių jūsų paiešką"
 
@@ -24345,7 +24349,7 @@ msgid "Nothing to explore yet"
 msgstr "Kol kas nėra ką tyrinėti"
 
 #. Shown in the post preview when the message is empty.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:380
+#: src/features/forum/utils/ForumMessageDescriptors.ts:372
 msgid "Nothing to preview yet."
 msgstr "Dar nieko nėra peržiūrėti."
 
@@ -24526,7 +24530,7 @@ msgid "Oklahoma"
 msgstr "Oklahoma"
 
 #. Section title above archived posts in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:187
+#: src/features/forum/utils/ForumMessageDescriptors.ts:179
 msgid "Older posts"
 msgstr "Senesni pranešimai"
 
@@ -24666,12 +24670,12 @@ msgid "Only mentions"
 msgstr "Tik paminėjimai"
 
 #. Tooltip on a forum tag that only moderators can add or remove.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:127
+#: src/features/forum/utils/ForumMessageDescriptors.ts:119
 msgid "Only moderators can apply this tag."
 msgstr "Šią etiketę gali pridėti arba pašalinti tik moderatoriai."
 
 #. Label of the switch in the forum tag editor that restricts a tag to moderators.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:275
+#: src/features/forum/utils/ForumMessageDescriptors.ts:267
 msgid "Only moderators can use this tag"
 msgstr "Šią etiketę gali naudoti tik moderatoriai"
 
@@ -24689,6 +24693,11 @@ msgstr "Tik vietos, kurių nebegaliu pasiekti"
 #: src/features/devtools/utils/SelfXssNotice.ts:24
 msgid "Only run code here if you understand exactly what it does."
 msgstr "Vykdykite kodą tik tuo atveju, jei tiksliai suprantate, ką jis daro."
+
+#. Description under the private channel switch in the channel create modal.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:59
+msgid "Only selected members and roles will be able to view this channel."
+msgstr "Šį kanalą matys tik pasirinkti nariai ir vaidmenys."
 
 #. Label in the visual tab.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:33
@@ -24716,6 +24725,11 @@ msgstr "Sinchronizuojamas tik CSS tekstas. Įkelti ištekliai ir vietinių fail�
 #: src/features/channel/components/modals/GroupInvitesModal.tsx:113
 msgid "Only the group owner can manage invites."
 msgstr "Tik grupės savininkas gali tvarkyti kvietimus."
+
+#. Hint under the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:29
+msgid "Only the members and roles you pick, plus admins, can view this channel."
+msgstr "Šį kanalą galės matyti tik jūsų pasirinkti nariai ir vaidmenys bei administratoriai."
 
 #. Dropdown option that switches the community filter into include-only mode.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:173
@@ -25385,7 +25399,7 @@ msgstr "Nepavyko įkelti originalios žinutės"
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
 #. Preview on a forum post card whose first message was deleted.
 #: src/features/channel/components/ReplyPreview.tsx:25
-#: src/features/forum/utils/ForumMessageDescriptors.ts:155
+#: src/features/forum/utils/ForumMessageDescriptors.ts:147
 msgid "Original message was deleted"
 msgstr "Originali žinutė buvo ištrinta"
 
@@ -26077,7 +26091,7 @@ msgid "Pick a web search provider"
 msgstr "Pasirinkite žiniatinklio paieškos teikėją"
 
 #. Button that opens the emoji picker in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:223
+#: src/features/forum/utils/ForumMessageDescriptors.ts:215
 msgid "Pick an emoji"
 msgstr "Pasirinkite jaustuką"
 
@@ -26092,7 +26106,7 @@ msgid "Pick at least one kind of conversation to include."
 msgstr "Pasirinkite bent vieną pokalbių tipą, kurį norite įtraukti."
 
 #. Error shown when the forum requires a tag and the new post has none.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:59
+#: src/features/forum/utils/ForumMessageDescriptors.ts:51
 msgid "Pick at least one tag for this post."
 msgstr "Pasirinkite bent vieną žymą šiam įrašui."
 
@@ -26188,7 +26202,7 @@ msgid "Pin or unpin any message."
 msgstr "Prisegti arba atsegti bet kurią žinutę."
 
 #. Post menu action that pins a forum post to the top of the forum.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:131
+#: src/features/forum/utils/ForumMessageDescriptors.ts:123
 msgid "Pin post"
 msgstr "Smeigti įrašą"
 
@@ -26227,7 +26241,7 @@ msgid "pinned"
 msgstr "prisegta"
 
 #. Label on a pinned forum post card.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:139
+#: src/features/forum/utils/ForumMessageDescriptors.ts:131
 msgid "Pinned"
 msgstr "Prikabinta"
 
@@ -26455,22 +26469,22 @@ msgid "Position"
 msgstr "Padėtis"
 
 #. Primary button that publishes a new forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:368
+#: src/features/forum/utils/ForumMessageDescriptors.ts:360
 msgid "Post"
 msgstr "Paskelbti"
 
 #. Title of the forum guidelines banner and label of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:195
+#: src/features/forum/utils/ForumMessageDescriptors.ts:187
 msgid "Post guidelines"
 msgstr "Paskelbti gaires"
 
 #. Toast after the forum post link was copied.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:421
+#: src/features/forum/utils/ForumMessageDescriptors.ts:413
 msgid "Post link copied"
 msgstr "Nuoroda į įrašą nukopijuota"
 
 #. Label and placeholder of the title input in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:33
+#: src/features/forum/utils/ForumMessageDescriptors.ts:25
 msgid "Post title"
 msgstr "Forumo pavadinimas"
 
@@ -26478,6 +26492,21 @@ msgstr "Forumo pavadinimas"
 #: src/features/webhook/components/FollowedChannelListItem.tsx:37
 msgid "Post to"
 msgstr "Paskelbti į"
+
+#. One-line description of the announcement channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:50
+msgid "Post updates other communities can follow"
+msgstr "Skelbk naujienas, kurias gali sekti kiti bendruomenės nariai"
+
+#. Description of the media channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:9
+msgid "Posts built around images and videos"
+msgstr "Paskelbta, paremta vaizdais ir vaizdo įrašais"
+
+#. Description of the forum channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:5
+msgid "Posts organized by topic and tags"
+msgstr "Įrašai, organizuoti pagal temą ir žymas"
 
 #: src/features/input/utils/KeybindUtils.ts:105
 msgctxt "keyboard-key-name"
@@ -26663,7 +26692,7 @@ msgstr "Neleisti nariams siųsti žinučių, reaguoti ir prisijungti prie balso 
 
 #. Tooltip and label of the toggle that previews a new forum post.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:21
-#: src/features/forum/utils/ForumMessageDescriptors.ts:372
+#: src/features/forum/utils/ForumMessageDescriptors.ts:364
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
@@ -26883,6 +26912,11 @@ msgstr "Privatumo pažeidimas arba asmens duomenų atskleidimas"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:294
 msgid "Privacy violation or stalking"
 msgstr "Privatumo pažeidimas arba persekiojimas"
+
+#. Switch in the channel create modal that limits who can view the new channel.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:55
+msgid "Private channel"
+msgstr "Privatus kanalas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:222
@@ -27496,7 +27530,7 @@ msgid "React"
 msgstr "Reaguoti"
 
 #. Button under the first message of a forum post that adds a reaction to it.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:404
+#: src/features/forum/utils/ForumMessageDescriptors.ts:396
 msgid "React to post"
 msgstr "Reaguoti į įrašą"
 
@@ -27647,7 +27681,7 @@ msgstr "Naujausios paieškos"
 
 #. Forum sort option that orders posts by their latest message.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:91
+#: src/features/forum/utils/ForumMessageDescriptors.ts:83
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:143
 msgid "Recently active"
 msgstr "Neseniai aktyvūs"
@@ -28038,7 +28072,7 @@ msgstr "Prisiminti lango dydį ir padėtį"
 #: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
-#: src/features/forum/utils/ForumMessageDescriptors.ts:227
+#: src/features/forum/utils/ForumMessageDescriptors.ts:219
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:125
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:140
@@ -28775,7 +28809,7 @@ msgid "Require passkey"
 msgstr "Reikalauti prieigos rakto"
 
 #. Label of the forum setting that makes at least one tag mandatory on new posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:243
+#: src/features/forum/utils/ForumMessageDescriptors.ts:235
 msgid "Require people to select tags when posting"
 msgstr "Reikalauti, kad žmonės pasirinktų žymas skelbiant įrašus"
 
@@ -28786,7 +28820,7 @@ msgstr "Reikalauti iš moderatorių dviejų veiksnių autentifikavimo, kad jie g
 #. Marker next to the tag picker when the forum requires at least one tag.
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:388
+#: src/features/forum/utils/ForumMessageDescriptors.ts:380
 msgid "Required"
 msgstr "Būtina"
 
@@ -29285,7 +29319,7 @@ msgstr "Atnaujinti kvietimai"
 
 #. Button that retries a failed thread search.
 #. Button that retries loading forum posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:183
+#: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Retry"
 msgstr "Bandyti iš naujo"
@@ -29708,7 +29742,7 @@ msgstr "Sodrumas"
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:118
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:94
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:123
-#: src/features/forum/utils/ForumMessageDescriptors.ts:287
+#: src/features/forum/utils/ForumMessageDescriptors.ts:279
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
@@ -29820,7 +29854,7 @@ msgid "Saved media autocomplete"
 msgstr "Išsaugotos medijos automatinis užbaigimas"
 
 #. Error shown when the user picks a saved favourite media item while writing a new forum or media channel post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:53
+#: src/features/forum/utils/ForumMessageDescriptors.ts:45
 msgid "Saved media cannot start a post. Upload the file instead."
 msgstr "Išsaugotos medijos negali pradėti įrašo. Įkelkite failą."
 
@@ -30242,7 +30276,7 @@ msgstr "Kur ieškoti"
 
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:175
+#: src/features/forum/utils/ForumMessageDescriptors.ts:167
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "Ieškoma bendruomenėje. Bandysime dar kartą netrukus..."
@@ -30256,6 +30290,11 @@ msgstr "Ieškoti kalbos kodo…"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:74
 msgid "Search languages…"
 msgstr "Ieškoti kalbų…"
+
+#. Placeholder of the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:25
+msgid "Search members or roles"
+msgstr "Ieškoti narių arba vaidmenų"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Placeholder shown inside the message search input. Sentence case.
@@ -30283,7 +30322,7 @@ msgid "Search only in the current DM"
 msgstr "Ieškoti tik šiame DM pokalbyje"
 
 #. Placeholder of the search input at the top of a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:79
+#: src/features/forum/utils/ForumMessageDescriptors.ts:71
 msgid "Search or create a post..."
 msgstr "Ieškokite arba kurkite įrašą..."
 
@@ -30303,7 +30342,7 @@ msgid "Search permissions…"
 msgstr "Ieškoti leidimų…"
 
 #. Placeholder and accessible label of the search input in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:75
+#: src/features/forum/utils/ForumMessageDescriptors.ts:67
 msgid "Search posts"
 msgstr "Ieškoti įrašų"
 
@@ -30460,7 +30499,7 @@ msgid "Searching voice channels"
 msgstr "Ieškoma balsinių kanalų"
 
 #. Status under the forum search box while results load.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:351
+#: src/features/forum/utils/ForumMessageDescriptors.ts:343
 msgid "Searching..."
 msgstr "Searching..."
 
@@ -30835,7 +30874,7 @@ msgid "Send a friend request to {userName}, or use the staff override to add the
 msgstr "Siųsti draugystės užklausą naudotojui {userName} arba naudoti darbuotojo prieigos teises ir pridėti jį iškart."
 
 #. Placeholder of the message box inside a forum post. name is the post title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:347
+#: src/features/forum/utils/ForumMessageDescriptors.ts:339
 msgid "Send a message in \"{name}\""
 msgstr "Siųsti žinutę „{name}“"
 
@@ -30949,7 +30988,7 @@ msgid "Send messages in channels."
 msgstr "Siųsti žinutes kanaluose."
 
 #. Permission name in forum and media channel permissions. Lets members reply in posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:323
+#: src/features/forum/utils/ForumMessageDescriptors.ts:315
 msgid "Send messages in posts"
 msgstr "Siųsti žinutes įrašuose"
 
@@ -30962,6 +31001,11 @@ msgstr "Siųsti žinutes šiame kanale."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
 msgid "Send messages in threads"
 msgstr "Siųsti žinutes gijose"
+
+#. One-line description of the text channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:42
+msgid "Send messages, images, GIFs and emoji"
+msgstr "Siųskite žinutes, vaizdus, GIF ir jaustukus"
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
 #: src/features/moderation/components/report_modal/IARModal.tsx:90
@@ -31409,11 +31453,6 @@ msgstr "Bendrinkite visus vaizdo įrašus ir didelius failus jų nesumažinę. N
 msgid "Share gift"
 msgstr "Bendrinti dovaną"
 
-#. Description of the media channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:17
-msgid "Share images and videos as posts with their own discussions"
-msgstr "Bendrinkite vaizdo įrašus ir nuotraukas kaip įrašus su atskiromis diskusijomis"
-
 #. Hover action on an application or display card that starts sharing that source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:197
 msgid "Share screen"
@@ -31585,6 +31624,11 @@ msgstr "Sparčiųjų klavišų ženkleliai"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:122
 msgid "Shortcut conflicts"
 msgstr "Sparčiųjų klavišų konfliktai"
+
+#. One-line description of the link channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:66
+msgid "Shortcut to an external website"
+msgstr "Nuoroda į išorinę svetainę"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -31809,7 +31853,7 @@ msgid "Show GIFs button"
 msgstr "Rodyti GIF mygtuką"
 
 #. Button in the forum header that expands the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:203
+#: src/features/forum/utils/ForumMessageDescriptors.ts:195
 msgid "Show guidelines"
 msgstr "Rodyti gaires"
 
@@ -31959,7 +32003,7 @@ msgid "Show new device modal"
 msgstr "Rodyti naujo įrenginio modalinį langą"
 
 #. Forum notification option that marks the forum unread when someone creates a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:307
+#: src/features/forum/utils/ForumMessageDescriptors.ts:299
 msgid "Show new posts as unread"
 msgstr "Rodyti naujus įrašus kaip neskaitytus"
 
@@ -32117,7 +32161,7 @@ msgid "Shown in invite embeds in chat."
 msgstr "Rodoma kvietimų įterptuosiuose elementuose pokalbiuose."
 
 #. Help text of the default reaction setting in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:219
+#: src/features/forum/utils/ForumMessageDescriptors.ts:211
 msgid "Shown on every post so people can react with one click."
 msgstr "Rodyti prie kiekvieno įrašo, kad žmonės galėtų reaguoti vienu paspaudimu."
 
@@ -32358,7 +32402,9 @@ msgstr "Dydis"
 msgid "Size selection"
 msgstr "Dydžio pasirinkimas"
 
+#. Creates the private channel without adding anyone in the channel create modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:67
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Skip"
 msgstr "Praleisti"
@@ -32508,7 +32554,7 @@ msgid "Slowmode active"
 msgstr "Lėtasis režimas aktyvus"
 
 #. Label of the forum setting for how often a member can create a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:239
+#: src/features/forum/utils/ForumMessageDescriptors.ts:231
 msgid "Slowmode for creating posts"
 msgstr "Lėtas naujų įrašų kūrimas"
 
@@ -32865,12 +32911,12 @@ msgid "Sort"
 msgstr "Rūšiuoti"
 
 #. Button in a forum channel that opens the sort order and layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:83
+#: src/features/forum/utils/ForumMessageDescriptors.ts:75
 msgid "Sort & view"
 msgstr "Rikiuoti ir peržiūrėti"
 
 #. Section title for the forum post sort order options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:87
+#: src/features/forum/utils/ForumMessageDescriptors.ts:79
 msgid "Sort by"
 msgstr "Rikiuoti pagal"
 
@@ -34371,13 +34417,13 @@ msgid "Tag"
 msgstr "Žyma"
 
 #. Label of the name input in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:267
+#: src/features/forum/utils/ForumMessageDescriptors.ts:259
 msgid "Tag name"
 msgstr "Žymės pavadinimas"
 
 #. Label of the tag filter in a forum channel and of the tags section in forum settings.
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:111
+#: src/features/forum/utils/ForumMessageDescriptors.ts:103
 #: src/features/theme_studio/sections/LibrarySection.tsx:120
 msgid "Tags"
 msgstr "Žymos"
@@ -34390,7 +34436,7 @@ msgid "Tags ({tagCount}/{tagLimit})"
 msgstr "Žymos ({tagCount}/{tagLimit})"
 
 #. Help text of the tags section in forum settings. count is the maximum number of tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:295
+#: src/features/forum/utils/ForumMessageDescriptors.ts:287
 msgid "Tags help people find posts. You can add up to {count} tags."
 msgstr "Žymos padeda žmonėms rasti įrašus. Galite pridėti iki {count} žymų."
 
@@ -34557,9 +34603,11 @@ msgid "Texas"
 msgstr "Teksasas"
 
 #. Channel type chip label for a text channel.
+#. Channel type option in the create channel modal.
 #. Collapsible group heading in the Theme Studio tokens list, for text color tokens.
 #. Option label for a WebRTC content hint select.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes free text.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:38
 #: src/features/channel/utils/ChannelUtils.tsx:72
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:23
 #: src/features/theme_studio/sections/TokenGroups.ts:50
@@ -35089,7 +35137,7 @@ msgid "There are no channels available to create an invite for."
 msgstr "Nėra kanalų, kuriems būtų galima sukurti kvietimą."
 
 #. Title of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:159
+#: src/features/forum/utils/ForumMessageDescriptors.ts:151
 msgid "There are no posts yet"
 msgstr "Dar nėra įrašų"
 
@@ -35483,7 +35531,7 @@ msgid "This file is {fileSize}, over the {maxSize} limit. Animated stickers and 
 msgstr "Šis failas yra {fileSize}, viršijantis {maxSize} limitą. Animuoti lipdukai ir SVG failai turi būti pakankamai maži, kad juos būtų galima įkelti. Pasirinkite mažesnį failą arba sutrumpinkite animaciją."
 
 #. Shown in forum settings when the forum has no tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:299
+#: src/features/forum/utils/ForumMessageDescriptors.ts:291
 msgid "This forum has no tags yet."
 msgstr "Šiame forume dar nėra jokių žymų."
 
@@ -36226,7 +36274,7 @@ msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "Norėdami pakeisti klavišus, atidarykite savo darbalaukio klaviatūros sparčiųjų klavišų nustatymus."
 
 #. Follows a Shift + Enter key hint under the forum search box. Starts lowercase because it continues the key hint.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:363
+#: src/features/forum/utils/ForumMessageDescriptors.ts:355
 msgid "to create a post"
 msgstr "norint sukurti įrašą"
 
@@ -36704,7 +36752,7 @@ msgid "Try different filters or search terms."
 msgstr "Pabandykite kitus filtrus arba paieškos terminus."
 
 #. Body of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:171
+#: src/features/forum/utils/ForumMessageDescriptors.ts:163
 msgid "Try different words or clear the tag filter."
 msgstr "Pabandykite kitų žodžių arba išvalykite žymės filtrą."
 
@@ -37695,7 +37743,7 @@ msgid "Unpin message"
 msgstr "Atsegti žinutę"
 
 #. Post menu action that unpins a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:135
+#: src/features/forum/utils/ForumMessageDescriptors.ts:127
 msgid "Unpin post"
 msgstr "Atsegti įrašą"
 
@@ -38185,7 +38233,7 @@ msgstr "Įkeliami jaustukai"
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:38
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
 msgid "URL"
@@ -39267,7 +39315,7 @@ msgid "View and regenerate client secrets and bot tokens"
 msgstr "Peržiūrėti ir iš naujo sugeneruoti kliento paslaptis ir boto prieigos raktus"
 
 #. Section title for the forum layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:99
+#: src/features/forum/utils/ForumMessageDescriptors.ts:91
 msgid "View as"
 msgstr "Peržiūrėti kaip"
 
@@ -39530,8 +39578,10 @@ msgstr "Vaizdiniai indikatoriai, rodantys naudotojo būseną, atvaizduojami naud
 
 #. Advanced settings category tag.
 #. Channel type chip label for a voice channel.
+#. Channel type option in the create channel modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:54
 #: src/features/channel/utils/ChannelUtils.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
@@ -40815,7 +40865,7 @@ msgid "You can only pick a tag that nobody else with the same username already h
 msgstr "Galite pasirinkti tik tokį žymeklį, kurio dar niekas kitas neturi su tokiu pat vardu. Vardai nėra jautrūs raidžių atskyrimui, todėl Mina#4821 ir mina#4821 laikomi tais pačiais. Žymeklis #0000 yra rezervuotas {productName} Visionary nariams. {visionaryLink}."
 
 #. Hint in the forum tag picker. count is the maximum number of tags per post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:123
+#: src/features/forum/utils/ForumMessageDescriptors.ts:115
 msgid "You can pick up to {count} tags."
 msgstr "Galite pasirinkti iki {count} žymų."
 

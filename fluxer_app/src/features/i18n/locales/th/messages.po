@@ -1094,7 +1094,7 @@ msgid "{count, plural, one {# image} other {# images}}"
 msgstr "{count, plural, one {# รูปภาพ} other {# รูปภาพ}}"
 
 #. Status under the forum search box once results are in.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:355
+#: src/features/forum/utils/ForumMessageDescriptors.ts:347
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
 msgstr "{count, plural, one {# โพสต์ที่ตรงกัน} other {# โพสต์ที่ตรงกัน}}"
 
@@ -1109,7 +1109,7 @@ msgstr "{count, plural, one {สมาชิก # คน} other {สมาชิ
 
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:211
+#: src/features/forum/utils/ForumMessageDescriptors.ts:203
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# ข้อความ} other {# ข้อความ}}"
@@ -1124,7 +1124,7 @@ msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {# คอมมูนิตี้ร่วมกัน} other {# คอมมูนิตี้ร่วมกัน}}"
 
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:147
+#: src/features/forum/utils/ForumMessageDescriptors.ts:139
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {# ข้อความใหม่} other {# ข้อความใหม่}}"
 
@@ -3147,7 +3147,7 @@ msgid "Add a community"
 msgstr "เพิ่มคอมมูนิตี้"
 
 #. Placeholder of the message composer in the new media post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:45
+#: src/features/forum/utils/ForumMessageDescriptors.ts:37
 msgid "Add a description (optional)"
 msgstr "เพิ่มคำอธิบาย (ไม่บังคับ)"
 
@@ -3290,7 +3290,7 @@ msgid "Add email"
 msgstr "เพิ่มอีเมล"
 
 #. Accessible label of the emoji button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:396
+#: src/features/forum/utils/ForumMessageDescriptors.ts:388
 msgid "Add emoji"
 msgstr "เพิ่มอิโมจิ"
 
@@ -3322,7 +3322,7 @@ msgid "Add friends to group"
 msgstr "เพิ่มเพื่อนเข้ากลุ่ม"
 
 #. Accessible label of the attach button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:392
+#: src/features/forum/utils/ForumMessageDescriptors.ts:384
 msgid "Add images or files"
 msgstr "เพิ่มรูปภาพหรือไฟล์"
 
@@ -3340,6 +3340,11 @@ msgstr "เพิ่มรายการ"
 #: src/features/theme_studio/sections/AssetsSection.tsx:150
 msgid "Add local files"
 msgstr "เพิ่มไฟล์ในเครื่อง"
+
+#. Title of the second step of the channel create modal when the channel is private.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:63
+msgid "Add members or roles"
+msgstr "เพิ่มสมาชิกหรือบทบาท"
 
 #. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:271
@@ -3438,12 +3443,12 @@ msgid "Add stream"
 msgstr "เพิ่มสตรีม"
 
 #. Button in forum settings that opens the tag editor for a new tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:255
+#: src/features/forum/utils/ForumMessageDescriptors.ts:247
 msgid "Add tag"
 msgstr "เพิ่มแท็ก"
 
 #. Button in the new post composer that opens the tag picker.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:384
+#: src/features/forum/utils/ForumMessageDescriptors.ts:376
 msgid "Add tags"
 msgstr "เพิ่มแท็ก"
 
@@ -4068,7 +4073,7 @@ msgid "Allowed up to {count, plural, one {# connection} other {# connections}} p
 msgstr "อนุญาตสูงสุด {count, plural, one {# การเชื่อมต่อ} other {# การเชื่อมต่อ}} ต่อสมาชิก"
 
 #. Description of the Create posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:319
+#: src/features/forum/utils/ForumMessageDescriptors.ts:311
 msgid "Allows members to create posts in this channel."
 msgstr "อนุญาตให้สมาชิกสร้างโพสต์ในช่องนี้ได้"
 
@@ -4078,12 +4083,12 @@ msgid "Allows members to rename, close, lock and delete threads, and to view pri
 msgstr "อนุญาตให้สมาชิกเปลี่ยนชื่อ ปิด ล็อก และลบกระทู้ รวมถึงดูหัวข้อส่วนตัวได้"
 
 #. Description of the Manage posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:335
+#: src/features/forum/utils/ForumMessageDescriptors.ts:327
 msgid "Allows members to rename, close, lock, pin and delete posts, and to edit their tags."
 msgstr "อนุญาตให้สมาชิกเปลี่ยนชื่อ ปิด ล็อก ปักหมุด และลบโพสต์ รวมถึงแก้ไขแท็กได้"
 
 #. Description of the Send messages in posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:327
+#: src/features/forum/utils/ForumMessageDescriptors.ts:319
 msgid "Allows members to send messages in posts."
 msgstr "อนุญาตให้สมาชิกส่งข้อความในโพสต์ได้"
 
@@ -4487,6 +4492,8 @@ msgid "Announce new messages"
 msgstr "ประกาศข้อความใหม่"
 
 #. Channel type chip label for an announcement channel, whose messages can be published to channels that follow it.
+#. Channel type option in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:46
 #: src/features/channel/utils/ChannelUtils.tsx:63
 msgid "Announcement"
 msgstr "ประกาศ"
@@ -4945,7 +4952,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "ต้องมีอย่างน้อยหนึ่งช่องที่เปิดใช้งานสิทธิ์ \"{viewChannelPermissionLabel}\" สำหรับ {EVERYONE_MENTION} เพื่อให้ URL ที่กำหนดเองทำงานได้ ขณะนี้ยังไม่มีช่องใดที่ {EVERYONE_MENTION} สามารถดูได้"
 
 #. Error shown when the user sends a new media channel post without an image or video attachment.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:49
+#: src/features/forum/utils/ForumMessageDescriptors.ts:41
 msgid "Attach an image or a video to post in a media channel."
 msgstr "แนบรูปภาพหรือวิดีโอเพื่อโพสต์ในช่องสื่อ"
 
@@ -5865,7 +5872,7 @@ msgid "Be heard over other members while holding the push to talk (priority) key
 msgstr "ให้เสียงของคุณดังกว่าสมาชิกคนอื่นขณะกดปุ่มลัด \"กดเพื่อพูด (สำคัญ)\" ค้างไว้"
 
 #. Body of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:163
+#: src/features/forum/utils/ForumMessageDescriptors.ts:155
 msgid "Be the first to start a conversation here."
 msgstr "เป็นคนแรกที่เริ่มบทสนทนาที่นี่"
 
@@ -6785,7 +6792,7 @@ msgstr "อัปโหลดไฟล์ที่นี่ไม่ได้"
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:250
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
-#: src/features/forum/utils/ForumMessageDescriptors.ts:291
+#: src/features/forum/utils/ForumMessageDescriptors.ts:283
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:145
@@ -7598,11 +7605,13 @@ msgid "Channel management"
 msgstr "การจัดการช่อง"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
+#. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
-#: src/features/forum/utils/ForumMessageDescriptors.ts:339
+#: src/features/forum/utils/ForumMessageDescriptors.ts:331
 msgid "Channel name"
 msgstr "ชื่อช่อง"
 
@@ -7651,12 +7660,12 @@ msgid "Channel topic is too long."
 msgstr "หัวข้อช่องยาวเกินไป"
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:26
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:39
 msgid "Channel type"
 msgstr "ประเภทช่อง"
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:30
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:43
 msgid "Channel type selection"
 msgstr "เลือกประเภทช่อง"
 
@@ -7665,7 +7674,7 @@ msgstr "เลือกประเภทช่อง"
 #: src/features/app/config/AuditLogConstants.ts:16
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
-#: src/features/forum/utils/ForumMessageDescriptors.ts:343
+#: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "อัปเดตช่องแล้ว"
 
@@ -8287,7 +8296,7 @@ msgstr "ปรับปรุงไมโครโฟนของคุณเพ
 #. Inline button in the Recent searches section that wipes the search history list.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:115
+#: src/features/forum/utils/ForumMessageDescriptors.ts:107
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
 #: src/features/theme_studio/sections/QuickCssSection.tsx:64
@@ -10094,7 +10103,7 @@ msgid "Copy paused while sharing"
 msgstr "หยุดคัดลอกชั่วคราวขณะแชร์"
 
 #. Accessible label of the copy link button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:417
+#: src/features/forum/utils/ForumMessageDescriptors.ts:409
 msgid "Copy post link"
 msgstr "คัดลอกลิงก์โพสต์"
 
@@ -10373,7 +10382,7 @@ msgid "Couldn't create the PDF. Try again or print the kit instead."
 msgstr "ไม่สามารถสร้าง PDF ได้ ลองอีกครั้ง หรือพิมพ์ชุดข้อมูลแทน"
 
 #. Toast shown when creating a forum post fails. detail is the server error message.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:63
+#: src/features/forum/utils/ForumMessageDescriptors.ts:55
 msgid "Couldn't create the post: {detail}"
 msgstr "สร้างโพสต์ไม่สำเร็จ: {detail}"
 
@@ -10505,7 +10514,7 @@ msgid "Couldn't load invites"
 msgstr "ไม่สามารถโหลดคำเชิญได้"
 
 #. Notice in a forum channel when loading posts fails.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:179
+#: src/features/forum/utils/ForumMessageDescriptors.ts:171
 msgid "Couldn't load posts. Try again later."
 msgstr "ไม่สามารถโหลดโพสต์ได้ ลองอีกครั้งในภายหลัง"
 
@@ -10657,7 +10666,7 @@ msgid "Couldn't save entrance sound"
 msgstr "บันทึกเสียงเข้าไม่ได้"
 
 #. Toast shown when saving a forum tag fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:303
+#: src/features/forum/utils/ForumMessageDescriptors.ts:295
 msgid "Couldn't save the tag: {detail}"
 msgstr "ไม่สามารถบันทึกแท็กได้: {detail}"
 
@@ -10799,7 +10808,7 @@ msgid "Couldn't update the alt text. Please try again."
 msgstr "ไม่สามารถอัปเดตข้อความอธิบายรูปภาพได้ โปรดลองอีกครั้ง"
 
 #. Toast shown when a forum post action such as pinning or editing tags fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:67
+#: src/features/forum/utils/ForumMessageDescriptors.ts:59
 msgid "Couldn't update the post: {detail}"
 msgstr "ไม่สามารถอัปเดตโพสต์ได้: {detail}"
 
@@ -10913,11 +10922,6 @@ msgstr "สร้างชุดกู้คืนเพื่อดำเนิ
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:50
 msgid "Create a recovery kit to reset a forgotten password"
 msgstr "สร้างชุดกู้คืนเพื่อรีเซ็ตรหัสผ่านที่ลืม"
-
-#. Description of the forum channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:9
-msgid "Create a space for organized posts on specific topics"
-msgstr "สร้างพื้นที่สำหรับโพสต์ที่เป็นระเบียบในหัวข้อเฉพาะ"
 
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:49
@@ -11038,7 +11042,7 @@ msgid "Create or join a community"
 msgstr "สร้างหรือเข้าร่วมคอมมูนิตี้"
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:315
+#: src/features/forum/utils/ForumMessageDescriptors.ts:307
 msgid "Create posts"
 msgstr "สร้างโพสต์"
 
@@ -11067,7 +11071,7 @@ msgid "Create role"
 msgstr "สร้างบทบาท"
 
 #. Title of the tag editor for a new forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:263
+#: src/features/forum/utils/ForumMessageDescriptors.ts:255
 msgid "Create tag"
 msgstr "สร้างแท็ก"
 
@@ -11735,7 +11739,7 @@ msgstr "เครื่องมือเลือกวันที่"
 
 #. Forum sort option that orders posts by when they were created.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:95
+#: src/features/forum/utils/ForumMessageDescriptors.ts:87
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:147
 msgid "Date posted"
 msgstr "วันที่โพสต์"
@@ -11910,7 +11914,7 @@ msgid "Default hide after inactivity"
 msgstr "ซ่อนอัตโนมัติเมื่อไม่มีการใช้งาน"
 
 #. Label of the forum setting that picks the default post layout.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:235
+#: src/features/forum/utils/ForumMessageDescriptors.ts:227
 msgid "Default layout"
 msgstr "เค้าโครงเริ่มต้น"
 
@@ -11924,7 +11928,7 @@ msgid "Default notifications"
 msgstr "การแจ้งเตือนเริ่มต้น"
 
 #. Label of the forum setting that picks the reaction button shown on every post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:215
+#: src/features/forum/utils/ForumMessageDescriptors.ts:207
 msgid "Default reaction"
 msgstr "ปฏิกิริยาเริ่มต้น"
 
@@ -11958,7 +11962,7 @@ msgid "Default shortcuts"
 msgstr "ปุ่มลัดเริ่มต้น"
 
 #. Label of the forum setting that picks how posts are ordered by default.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:231
+#: src/features/forum/utils/ForumMessageDescriptors.ts:223
 msgid "Default sort order"
 msgstr "ลำดับการเรียงเริ่มต้น"
 
@@ -12236,7 +12240,7 @@ msgid "Delete sticker {stickerName}"
 msgstr "ลบสติกเกอร์ {stickerName}"
 
 #. Button in the forum tag editor that deletes the tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:283
+#: src/features/forum/utils/ForumMessageDescriptors.ts:275
 msgid "Delete tag"
 msgstr "ลบแท็ก"
 
@@ -12983,7 +12987,7 @@ msgid "Disabling your account will sign you out of all sessions. You can re-enab
 msgstr "การปิดใช้งานบัญชีของคุณจะนำคุณออกจากระบบในทุกเซสชัน คุณสามารถเปิดใช้งานบัญชีของคุณอีกครั้งได้ทุกเมื่อโดยการลงชื่อเข้าใช้ใหม่"
 
 #. Accessible label of the button that closes the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:71
+#: src/features/forum/utils/ForumMessageDescriptors.ts:63
 msgid "Discard post"
 msgstr "ยกเลิกโพสต์"
 
@@ -13789,7 +13793,7 @@ msgstr "การตัดเสียงสะท้อน"
 #. Tooltip of the toggle that returns from the preview to editing a new forum post.
 #. Top-level native menu bar title (Edit menu, holds cut/copy/paste).
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
-#: src/features/forum/utils/ForumMessageDescriptors.ts:376
+#: src/features/forum/utils/ForumMessageDescriptors.ts:368
 #: src/features/platform/utils/DesktopLocaleBridge.ts:48
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
@@ -13989,12 +13993,12 @@ msgid "Edit sticker {stickerName}"
 msgstr "แก้ไขสติกเกอร์ {stickerName}"
 
 #. Title of the tag editor for an existing forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:259
+#: src/features/forum/utils/ForumMessageDescriptors.ts:251
 msgid "Edit tag"
 msgstr "แก้ไขแท็ก"
 
 #. Post menu action that opens the tag picker for an existing forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:119
+#: src/features/forum/utils/ForumMessageDescriptors.ts:111
 msgid "Edit tags"
 msgstr "แก้ไขแท็ก"
 
@@ -14213,7 +14217,7 @@ msgstr "เปิดการแสดงตัวอย่างแล้ว"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
-#: src/features/forum/utils/ForumMessageDescriptors.ts:271
+#: src/features/forum/utils/ForumMessageDescriptors.ts:263
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Emoji"
@@ -14729,7 +14733,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "ป้อนรหัสของขวัญเพื่อแลก {premiumProductName} สำหรับบัญชีของคุณ"
 
 #. Placeholder of the message composer in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:41
+#: src/features/forum/utils/ForumMessageDescriptors.ts:33
 msgid "Enter a message"
 msgstr "พิมพ์ข้อความ"
 
@@ -16157,7 +16161,7 @@ msgstr "การตั้งค่าโฟลเดอร์"
 #. Button label that follows an announcement channel, so its published messages are copied into a channel the user picks.
 #. Button under the first message of a forum post. Following a post adds it to the channel list and sends notifications.
 #: src/features/channel/utils/ChannelFollowUtils.ts:16
-#: src/features/forum/utils/ForumMessageDescriptors.ts:408
+#: src/features/forum/utils/ForumMessageDescriptors.ts:400
 msgid "Follow"
 msgstr "ติดตาม"
 
@@ -16194,7 +16198,7 @@ msgid "Followed channels"
 msgstr "ช่องที่ติดตาม"
 
 #. Pressed state of the follow button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:413
+#: src/features/forum/utils/ForumMessageDescriptors.ts:405
 msgid "Following"
 msgstr "กำลังติดตาม"
 
@@ -16434,13 +16438,8 @@ msgid "Forms"
 msgstr "ฟอร์ม"
 
 #. Channel type chip label for a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:21
+#: src/features/forum/utils/ForumMessageDescriptors.ts:13
 msgid "Forum"
-msgstr "ฟอรัม"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:5
-msgid "Forum channel"
 msgstr "ฟอรัม"
 
 #. Message action label for forwarding the selected message to another channel or DM.
@@ -16738,7 +16737,7 @@ msgstr "ควบคุมเกน"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as tiles.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:107
+#: src/features/forum/utils/ForumMessageDescriptors.ts:99
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:155
 msgid "Gallery"
 msgstr "แกลเลอรี"
@@ -17205,7 +17204,7 @@ msgid "Give everyone on this instance the highest premium limits."
 msgstr "ให้ทุกคนในอินสแตนซ์นี้ได้รับขีดจำกัดพรีเมียมสูงสุด"
 
 #. Error shown when the user sends a new forum post without a title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:37
+#: src/features/forum/utils/ForumMessageDescriptors.ts:29
 msgid "Give the post a title before you send."
 msgstr "ตั้งชื่อโพสต์ก่อนส่ง"
 
@@ -17220,7 +17219,7 @@ msgid "Give the thread a name before you send."
 msgstr "ตั้งชื่อเธรดก่อนส่งข้อความ"
 
 #. Placeholder of the title field in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:400
+#: src/features/forum/utils/ForumMessageDescriptors.ts:392
 msgid "Give your post a title"
 msgstr "ตั้งชื่อโพสต์ของคุณ"
 
@@ -17603,6 +17602,11 @@ msgstr "H.265 (ต้องเปิดใช้งานก่อน)"
 msgid "Handle"
 msgstr "ชื่อผู้ใช้"
 
+#. One-line description of the voice channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:58
+msgid "Hang out with voice, video and screen share"
+msgstr "พูดคุยด้วยเสียง วิดีโอ และแชร์หน้าจอ"
+
 #. Report category label, community variant. Keep tone plain.
 #: src/features/moderation/components/report/OptionDescriptors.ts:86
 msgid "Harassment"
@@ -17935,7 +17939,7 @@ msgid "Hide favorites"
 msgstr "ซ่อนรายการโปรด"
 
 #. Button in the forum header that collapses the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:207
+#: src/features/forum/utils/ForumMessageDescriptors.ts:199
 msgid "Hide guidelines"
 msgstr "ซ่อนแนวทาง"
 
@@ -17954,7 +17958,7 @@ msgid "Hide keyboard hints"
 msgstr "ซ่อนคำแนะนำแป้นพิมพ์"
 
 #. Label of the media channel setting that hides download, open and copy actions on images and videos.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:247
+#: src/features/forum/utils/ForumMessageDescriptors.ts:239
 msgid "Hide media download options"
 msgstr "ซ่อนตัวเลือกดาวน์โหลดสื่อ"
 
@@ -18045,7 +18049,7 @@ msgid "Hide your own screen share?"
 msgstr "ซ่อนการแชร์หน้าจอของคุณหรือไม่"
 
 #. Help text of the media channel setting that hides media download options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:251
+#: src/features/forum/utils/ForumMessageDescriptors.ts:243
 msgid "Hides the download, open in browser and copy buttons on images and videos in this channel."
 msgstr "ซ่อนปุ่มดาวน์โหลด เปิดในเบราว์เซอร์ และคัดลอก สำหรับรูปภาพและวิดีโอในช่องนี้"
 
@@ -20295,7 +20299,7 @@ msgid "Let others clone your stickers"
 msgstr "ให้ผู้อื่นคัดลอกสติกเกอร์ของคุณได้"
 
 #. Placeholder of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:199
+#: src/features/forum/utils/ForumMessageDescriptors.ts:191
 msgid "Let people know how to post in this forum"
 msgstr "แจ้งให้ผู้คนทราบวิธีโพสต์ในฟอรัมนี้"
 
@@ -20434,7 +20438,9 @@ msgid "link"
 msgstr "ลิงก์"
 
 #. Channel type chip label for a linked external channel.
+#. Channel type option in the create channel modal.
 #. Label for the has:link option in the mobile content-type filter sheet.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:62
 #: src/features/channel/utils/ChannelUtils.tsx:54
 #: src/features/search/components/search/HasFilterSheet.tsx:57
 msgid "Link"
@@ -20612,7 +20618,7 @@ msgstr "แพ็กเกจ Linux"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as rows.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:103
+#: src/features/forum/utils/ForumMessageDescriptors.ts:95
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:151
 msgid "List"
 msgstr "รายการ"
@@ -20659,7 +20665,7 @@ msgid "Load more"
 msgstr "โหลดเพิ่มเติม"
 
 #. Button at the bottom of a forum channel that loads archived posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:191
+#: src/features/forum/utils/ForumMessageDescriptors.ts:183
 msgid "Load older posts"
 msgstr "โหลดโพสต์เก่ากว่า"
 
@@ -21034,7 +21040,7 @@ msgid "Manage permissions"
 msgstr "จัดการสิทธิ์"
 
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:331
+#: src/features/forum/utils/ForumMessageDescriptors.ts:323
 msgid "Manage posts"
 msgstr "จัดการโพสต์"
 
@@ -21424,7 +21430,7 @@ msgstr "กำลังวัด…"
 #. Collapsible group heading in the Theme Studio tokens list, for image and video tokens.
 #. Generic tab / section / category label for media content.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:25
+#: src/features/forum/utils/ForumMessageDescriptors.ts:17
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:264
 #: src/features/theme_studio/sections/TokenGroups.ts:110
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:16
@@ -21452,11 +21458,6 @@ msgstr "ปุ่มมีเดีย"
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:83
 msgid "Media buttons"
 msgstr "ปุ่มสื่อ"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:13
-msgid "Media channel"
-msgstr "ช่องมีเดีย"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
@@ -21650,7 +21651,7 @@ msgid "Members are removed when offline unless given a role."
 msgstr "สมาชิกจะถูกนำออกเมื่อออฟไลน์ เว้นแต่จะได้รับบทบาท"
 
 #. Help text of the moderated switch in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:279
+#: src/features/forum/utils/ForumMessageDescriptors.ts:271
 msgid "Members who can manage posts can add or remove it."
 msgstr "สมาชิกที่สามารถจัดการโพสต์สามารถเพิ่มหรือลบได้"
 
@@ -23063,11 +23064,9 @@ msgstr "การแทนที่ค่า Nagbar"
 #. Short label in the add custom search engine modal. Keep it concise.
 #. Short label in the branding section. Keep it concise.
 #. Short label in the category create modal. Keep it concise.
-#. Short label in the channel create modal. Keep it concise.
 #. Short label in the theme studio library section. Keep it concise.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:74
 #: src/features/channel/components/modals/CategoryCreateModal.tsx:17
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:34
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:340
 #: src/features/expressions/components/modals/meme_form/MemeFormFields.tsx:24
 #: src/features/expressions/components/modals/sticker_form/StickerFormFields.tsx:28
@@ -23272,7 +23271,7 @@ msgstr "ไม่อ่านอัตโนมัติ"
 #: src/features/channel/components/ChannelDivider.tsx:37
 #: src/features/channel/components/ChannelDivider.tsx:52
 #: src/features/channel/components/UnreadDividerSlot.tsx:30
-#: src/features/forum/utils/ForumMessageDescriptors.ts:143
+#: src/features/forum/utils/ForumMessageDescriptors.ts:135
 msgid "New"
 msgstr "ใหม่"
 
@@ -23368,7 +23367,7 @@ msgstr "ข้อความใหม่"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
 #: src/features/app/components/layout/ChannelListContent.tsx:98
-#: src/features/forum/utils/ForumMessageDescriptors.ts:151
+#: src/features/forum/utils/ForumMessageDescriptors.ts:143
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "ข้อความใหม่"
@@ -23396,12 +23395,12 @@ msgid "New password"
 msgstr "รหัสผ่านใหม่"
 
 #. Button in a forum channel that opens the composer for a new post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:29
+#: src/features/forum/utils/ForumMessageDescriptors.ts:21
 msgid "New post"
 msgstr "โพสต์ใหม่"
 
 #. Title suffix of the desktop notification for a new forum post. forumName is the forum channel name.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:311
+#: src/features/forum/utils/ForumMessageDescriptors.ts:303
 msgid "New post in #{forumName}"
 msgstr "โพสต์ใหม่ใน #{forumName}"
 
@@ -23831,8 +23830,13 @@ msgstr "ไม่พบรายการที่ตรงกัน"
 msgid "No matches found"
 msgstr "ไม่พบผลลัพธ์"
 
+#. Empty state in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:33
+msgid "No matching members or roles"
+msgstr "ไม่พบสมาชิกหรือบทบาทที่ตรงกัน"
+
 #. Status under the forum search box when nothing matches.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:359
+#: src/features/forum/utils/ForumMessageDescriptors.ts:351
 msgid "No matching posts"
 msgstr "ไม่พบโพสต์ที่ตรงกัน"
 
@@ -23897,7 +23901,7 @@ msgid "No pinned messages"
 msgstr "ไม่มีข้อความปักหมุด"
 
 #. Title of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:167
+#: src/features/forum/utils/ForumMessageDescriptors.ts:159
 msgid "No posts match your search"
 msgstr "ไม่พบโพสต์ที่ตรงกับการค้นหาของคุณ"
 
@@ -24344,7 +24348,7 @@ msgid "Nothing to explore yet"
 msgstr "ยังไม่มีอะไรให้สำรวจ"
 
 #. Shown in the post preview when the message is empty.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:380
+#: src/features/forum/utils/ForumMessageDescriptors.ts:372
 msgid "Nothing to preview yet."
 msgstr "ยังไม่มีอะไรให้ดูตัวอย่าง"
 
@@ -24525,7 +24529,7 @@ msgid "Oklahoma"
 msgstr "โอคลาโฮมา"
 
 #. Section title above archived posts in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:187
+#: src/features/forum/utils/ForumMessageDescriptors.ts:179
 msgid "Older posts"
 msgstr "โพสต์เก่ากว่า"
 
@@ -24665,12 +24669,12 @@ msgid "Only mentions"
 msgstr "เฉพาะการกล่าวถึง"
 
 #. Tooltip on a forum tag that only moderators can add or remove.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:127
+#: src/features/forum/utils/ForumMessageDescriptors.ts:119
 msgid "Only moderators can apply this tag."
 msgstr "เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถติดแท็กนี้ได้"
 
 #. Label of the switch in the forum tag editor that restricts a tag to moderators.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:275
+#: src/features/forum/utils/ForumMessageDescriptors.ts:267
 msgid "Only moderators can use this tag"
 msgstr "เฉพาะผู้ดูแลเท่านั้นที่สามารถใช้แท็กนี้ได้"
 
@@ -24688,6 +24692,11 @@ msgstr "เฉพาะที่ที่ฉันเข้าถึงไม่
 #: src/features/devtools/utils/SelfXssNotice.ts:24
 msgid "Only run code here if you understand exactly what it does."
 msgstr "เรียกใช้โค้ดที่นี่เฉพาะเมื่อคุณเข้าใจการทำงานของโค้ดอย่างถ่องแท้เท่านั้น"
+
+#. Description under the private channel switch in the channel create modal.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:59
+msgid "Only selected members and roles will be able to view this channel."
+msgstr "เฉพาะสมาชิกและบทบาทที่เลือกเท่านั้นที่จะดูช่องนี้ได้"
 
 #. Label in the visual tab.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:33
@@ -24715,6 +24724,11 @@ msgstr "เฉพาะข้อความ CSS เท่านั้นที�
 #: src/features/channel/components/modals/GroupInvitesModal.tsx:113
 msgid "Only the group owner can manage invites."
 msgstr "เฉพาะเจ้าของกลุ่มเท่านั้นที่จัดการคำเชิญได้"
+
+#. Hint under the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:29
+msgid "Only the members and roles you pick, plus admins, can view this channel."
+msgstr "เฉพาะสมาชิกและบทบาทที่คุณเลือกเท่านั้น รวมถึงผู้ดูแลระบบที่จะสามารถดูช่องนี้ได้"
 
 #. Dropdown option that switches the community filter into include-only mode.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:173
@@ -25384,7 +25398,7 @@ msgstr "ไม่สามารถโหลดข้อความต้นฉ
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
 #. Preview on a forum post card whose first message was deleted.
 #: src/features/channel/components/ReplyPreview.tsx:25
-#: src/features/forum/utils/ForumMessageDescriptors.ts:155
+#: src/features/forum/utils/ForumMessageDescriptors.ts:147
 msgid "Original message was deleted"
 msgstr "ข้อความต้นฉบับถูกลบแล้ว"
 
@@ -26076,7 +26090,7 @@ msgid "Pick a web search provider"
 msgstr "เลือกผู้ให้บริการค้นหาเว็บ"
 
 #. Button that opens the emoji picker in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:223
+#: src/features/forum/utils/ForumMessageDescriptors.ts:215
 msgid "Pick an emoji"
 msgstr "เลือกอิโมจิ"
 
@@ -26091,7 +26105,7 @@ msgid "Pick at least one kind of conversation to include."
 msgstr "เลือกประเภทการสนทนาที่จะรวมอย่างน้อยหนึ่งประเภท"
 
 #. Error shown when the forum requires a tag and the new post has none.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:59
+#: src/features/forum/utils/ForumMessageDescriptors.ts:51
 msgid "Pick at least one tag for this post."
 msgstr "เลือกแท็กอย่างน้อยหนึ่งแท็กสำหรับโพสต์นี้"
 
@@ -26187,7 +26201,7 @@ msgid "Pin or unpin any message."
 msgstr "ปักหมุดหรือยกเลิกการปักหมุดข้อความใดๆ"
 
 #. Post menu action that pins a forum post to the top of the forum.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:131
+#: src/features/forum/utils/ForumMessageDescriptors.ts:123
 msgid "Pin post"
 msgstr "ปักหมุดโพสต์"
 
@@ -26226,7 +26240,7 @@ msgid "pinned"
 msgstr "ปักหมุดแล้ว"
 
 #. Label on a pinned forum post card.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:139
+#: src/features/forum/utils/ForumMessageDescriptors.ts:131
 msgid "Pinned"
 msgstr "ปักหมุด"
 
@@ -26454,22 +26468,22 @@ msgid "Position"
 msgstr "ตำแหน่ง"
 
 #. Primary button that publishes a new forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:368
+#: src/features/forum/utils/ForumMessageDescriptors.ts:360
 msgid "Post"
 msgstr "โพสต์"
 
 #. Title of the forum guidelines banner and label of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:195
+#: src/features/forum/utils/ForumMessageDescriptors.ts:187
 msgid "Post guidelines"
 msgstr "โพสต์แนวทาง"
 
 #. Toast after the forum post link was copied.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:421
+#: src/features/forum/utils/ForumMessageDescriptors.ts:413
 msgid "Post link copied"
 msgstr "คัดลอกลิงก์โพสต์แล้ว"
 
 #. Label and placeholder of the title input in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:33
+#: src/features/forum/utils/ForumMessageDescriptors.ts:25
 msgid "Post title"
 msgstr "หัวข้อโพสต์"
 
@@ -26477,6 +26491,21 @@ msgstr "หัวข้อโพสต์"
 #: src/features/webhook/components/FollowedChannelListItem.tsx:37
 msgid "Post to"
 msgstr "โพสต์ไปยัง"
+
+#. One-line description of the announcement channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:50
+msgid "Post updates other communities can follow"
+msgstr "โพสต์อัปเดตให้ชุมชนอื่นติดตามได้"
+
+#. Description of the media channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:9
+msgid "Posts built around images and videos"
+msgstr "โพสต์ที่สร้างจากรูปภาพและวิดีโอ"
+
+#. Description of the forum channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:5
+msgid "Posts organized by topic and tags"
+msgstr "โพสต์จัดระเบียบตามหัวข้อและแท็ก"
 
 #: src/features/input/utils/KeybindUtils.ts:105
 msgctxt "keyboard-key-name"
@@ -26662,7 +26691,7 @@ msgstr "ระงับไม่ให้สมาชิกส่งข้อค
 
 #. Tooltip and label of the toggle that previews a new forum post.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:21
-#: src/features/forum/utils/ForumMessageDescriptors.ts:372
+#: src/features/forum/utils/ForumMessageDescriptors.ts:364
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
@@ -26882,6 +26911,11 @@ msgstr "การละเมิดความเป็นส่วนตัว
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:294
 msgid "Privacy violation or stalking"
 msgstr "การละเมิดความเป็นส่วนตัวหรือการสะกดรอยตาม"
+
+#. Switch in the channel create modal that limits who can view the new channel.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:55
+msgid "Private channel"
+msgstr "ช่องส่วนตัว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:222
@@ -27495,7 +27529,7 @@ msgid "React"
 msgstr "โต้ตอบ"
 
 #. Button under the first message of a forum post that adds a reaction to it.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:404
+#: src/features/forum/utils/ForumMessageDescriptors.ts:396
 msgid "React to post"
 msgstr "แสดงความรู้สึกต่อโพสต์"
 
@@ -27646,7 +27680,7 @@ msgstr "การค้นหาล่าสุด"
 
 #. Forum sort option that orders posts by their latest message.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:91
+#: src/features/forum/utils/ForumMessageDescriptors.ts:83
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:143
 msgid "Recently active"
 msgstr "ล่าสุด"
@@ -28037,7 +28071,7 @@ msgstr "จำขนาดและตำแหน่งหน้าต่าง
 #: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
-#: src/features/forum/utils/ForumMessageDescriptors.ts:227
+#: src/features/forum/utils/ForumMessageDescriptors.ts:219
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:125
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:140
@@ -28774,7 +28808,7 @@ msgid "Require passkey"
 msgstr "กำหนดให้ใช้พาสคีย์"
 
 #. Label of the forum setting that makes at least one tag mandatory on new posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:243
+#: src/features/forum/utils/ForumMessageDescriptors.ts:235
 msgid "Require people to select tags when posting"
 msgstr "กำหนดให้ผู้คนเลือกแท็กเมื่อโพสต์"
 
@@ -28785,7 +28819,7 @@ msgstr "กำหนดให้ผู้ดูแลต้องใช้กา
 #. Marker next to the tag picker when the forum requires at least one tag.
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:388
+#: src/features/forum/utils/ForumMessageDescriptors.ts:380
 msgid "Required"
 msgstr "จำเป็น"
 
@@ -29284,7 +29318,7 @@ msgstr "เปิดใช้งานคำเชิญอีกครั้ง
 
 #. Button that retries a failed thread search.
 #. Button that retries loading forum posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:183
+#: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Retry"
 msgstr "ลองใหม่"
@@ -29707,7 +29741,7 @@ msgstr "ความอิ่มตัวของสี"
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:118
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:94
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:123
-#: src/features/forum/utils/ForumMessageDescriptors.ts:287
+#: src/features/forum/utils/ForumMessageDescriptors.ts:279
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
@@ -29819,7 +29853,7 @@ msgid "Saved media autocomplete"
 msgstr "เติมคำอัตโนมัติสำหรับสื่อที่บันทึกไว้"
 
 #. Error shown when the user picks a saved favourite media item while writing a new forum or media channel post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:53
+#: src/features/forum/utils/ForumMessageDescriptors.ts:45
 msgid "Saved media cannot start a post. Upload the file instead."
 msgstr "ไม่สามารถใช้สื่อที่บันทึกไว้เพื่อเริ่มโพสต์ได้ โปรดอัปโหลดไฟล์แทน"
 
@@ -30241,7 +30275,7 @@ msgstr "ค้นหาใน"
 
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:175
+#: src/features/forum/utils/ForumMessageDescriptors.ts:167
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "กำลังเตรียมการค้นหาสำหรับชุมชนนี้ ลองอีกครั้งในไม่ช้า..."
@@ -30255,6 +30289,11 @@ msgstr "ค้นหารหัสภาษา…"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:74
 msgid "Search languages…"
 msgstr "ค้นหาภาษา…"
+
+#. Placeholder of the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:25
+msgid "Search members or roles"
+msgstr "ค้นหาสมาชิกหรือบทบาท"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Placeholder shown inside the message search input. Sentence case.
@@ -30282,7 +30321,7 @@ msgid "Search only in the current DM"
 msgstr "ค้นหาเฉพาะในข้อความส่วนตัวปัจจุบัน"
 
 #. Placeholder of the search input at the top of a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:79
+#: src/features/forum/utils/ForumMessageDescriptors.ts:71
 msgid "Search or create a post..."
 msgstr "ค้นหาหรือสร้างโพสต์..."
 
@@ -30302,7 +30341,7 @@ msgid "Search permissions…"
 msgstr "ค้นหาสิทธิ์…"
 
 #. Placeholder and accessible label of the search input in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:75
+#: src/features/forum/utils/ForumMessageDescriptors.ts:67
 msgid "Search posts"
 msgstr "ค้นหาโพสต์"
 
@@ -30459,7 +30498,7 @@ msgid "Searching voice channels"
 msgstr "กำลังค้นหาช่องเสียง"
 
 #. Status under the forum search box while results load.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:351
+#: src/features/forum/utils/ForumMessageDescriptors.ts:343
 msgid "Searching..."
 msgstr "Searching..."
 
@@ -30834,7 +30873,7 @@ msgid "Send a friend request to {userName}, or use the staff override to add the
 msgstr "ส่งคำขอเป็นเพื่อนถึง {userName} หรือใช้สิทธิ์ของเจ้าหน้าที่เพื่อเพิ่มเป็นเพื่อนทันที"
 
 #. Placeholder of the message box inside a forum post. name is the post title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:347
+#: src/features/forum/utils/ForumMessageDescriptors.ts:339
 msgid "Send a message in \"{name}\""
 msgstr "ส่งข้อความใน \"{name}\""
 
@@ -30948,7 +30987,7 @@ msgid "Send messages in channels."
 msgstr "ส่งข้อความในช่อง"
 
 #. Permission name in forum and media channel permissions. Lets members reply in posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:323
+#: src/features/forum/utils/ForumMessageDescriptors.ts:315
 msgid "Send messages in posts"
 msgstr "ส่งข้อความในโพสต์"
 
@@ -30961,6 +31000,11 @@ msgstr "ส่งข้อความในช่องนี้"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
 msgid "Send messages in threads"
 msgstr "ส่งข้อความในกระทู้"
+
+#. One-line description of the text channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:42
+msgid "Send messages, images, GIFs and emoji"
+msgstr "ส่งข้อความ รูปภาพ GIF และอิโมจิ"
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
 #: src/features/moderation/components/report_modal/IARModal.tsx:90
@@ -31408,11 +31452,6 @@ msgstr "แชร์วิดีโอความยาวเต็มและ
 msgid "Share gift"
 msgstr "แชร์ของขวัญ"
 
-#. Description of the media channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:17
-msgid "Share images and videos as posts with their own discussions"
-msgstr "แชร์รูปภาพและวิดีโอเป็นโพสต์พร้อมการสนทนาของตัวเอง"
-
 #. Hover action on an application or display card that starts sharing that source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:197
 msgid "Share screen"
@@ -31584,6 +31623,11 @@ msgstr "ป้ายปุ่มลัด"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:122
 msgid "Shortcut conflicts"
 msgstr "ปุ่มลัดขัดแย้งกัน"
+
+#. One-line description of the link channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:66
+msgid "Shortcut to an external website"
+msgstr "ทางลัดไปยังเว็บไซต์ภายนอก"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -31808,7 +31852,7 @@ msgid "Show GIFs button"
 msgstr "แสดงปุ่ม GIF"
 
 #. Button in the forum header that expands the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:203
+#: src/features/forum/utils/ForumMessageDescriptors.ts:195
 msgid "Show guidelines"
 msgstr "แสดงหลักเกณฑ์"
 
@@ -31958,7 +32002,7 @@ msgid "Show new device modal"
 msgstr "แสดงโมดัลอุปกรณ์ใหม่"
 
 #. Forum notification option that marks the forum unread when someone creates a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:307
+#: src/features/forum/utils/ForumMessageDescriptors.ts:299
 msgid "Show new posts as unread"
 msgstr "แสดงโพสต์ใหม่เป็นยังไม่อ่าน"
 
@@ -32116,7 +32160,7 @@ msgid "Shown in invite embeds in chat."
 msgstr "แสดงในเนื้อหาคำเชิญที่ฝังในแชท"
 
 #. Help text of the default reaction setting in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:219
+#: src/features/forum/utils/ForumMessageDescriptors.ts:211
 msgid "Shown on every post so people can react with one click."
 msgstr "แสดงในทุกโพสต์เพื่อให้ผู้คนสามารถแสดงความคิดเห็นได้ในคลิกเดียว"
 
@@ -32357,7 +32401,9 @@ msgstr "ขนาด"
 msgid "Size selection"
 msgstr "เลือกขนาด"
 
+#. Creates the private channel without adding anyone in the channel create modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:67
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Skip"
 msgstr "ข้าม"
@@ -32507,7 +32553,7 @@ msgid "Slowmode active"
 msgstr "โหมดจำกัดเวลาทำงานอยู่"
 
 #. Label of the forum setting for how often a member can create a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:239
+#: src/features/forum/utils/ForumMessageDescriptors.ts:231
 msgid "Slowmode for creating posts"
 msgstr "โหมดหน่วงเวลาในการสร้างโพสต์"
 
@@ -32864,12 +32910,12 @@ msgid "Sort"
 msgstr "จัดเรียง"
 
 #. Button in a forum channel that opens the sort order and layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:83
+#: src/features/forum/utils/ForumMessageDescriptors.ts:75
 msgid "Sort & view"
 msgstr "จัดเรียงและดู"
 
 #. Section title for the forum post sort order options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:87
+#: src/features/forum/utils/ForumMessageDescriptors.ts:79
 msgid "Sort by"
 msgstr "เรียงตาม"
 
@@ -34370,13 +34416,13 @@ msgid "Tag"
 msgstr "แท็ก"
 
 #. Label of the name input in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:267
+#: src/features/forum/utils/ForumMessageDescriptors.ts:259
 msgid "Tag name"
 msgstr "ชื่อแท็ก"
 
 #. Label of the tag filter in a forum channel and of the tags section in forum settings.
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:111
+#: src/features/forum/utils/ForumMessageDescriptors.ts:103
 #: src/features/theme_studio/sections/LibrarySection.tsx:120
 msgid "Tags"
 msgstr "แท็ก"
@@ -34389,7 +34435,7 @@ msgid "Tags ({tagCount}/{tagLimit})"
 msgstr "แท็ก ({tagCount}/{tagLimit})"
 
 #. Help text of the tags section in forum settings. count is the maximum number of tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:295
+#: src/features/forum/utils/ForumMessageDescriptors.ts:287
 msgid "Tags help people find posts. You can add up to {count} tags."
 msgstr "แท็กช่วยให้ผู้คนค้นหาโพสต์ได้ คุณสามารถเพิ่มแท็กได้สูงสุด {count} แท็ก"
 
@@ -34556,9 +34602,11 @@ msgid "Texas"
 msgstr "เท็กซัส"
 
 #. Channel type chip label for a text channel.
+#. Channel type option in the create channel modal.
 #. Collapsible group heading in the Theme Studio tokens list, for text color tokens.
 #. Option label for a WebRTC content hint select.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes free text.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:38
 #: src/features/channel/utils/ChannelUtils.tsx:72
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:23
 #: src/features/theme_studio/sections/TokenGroups.ts:50
@@ -35088,7 +35136,7 @@ msgid "There are no channels available to create an invite for."
 msgstr "ไม่มีช่องที่สามารถสร้างคำเชิญได้"
 
 #. Title of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:159
+#: src/features/forum/utils/ForumMessageDescriptors.ts:151
 msgid "There are no posts yet"
 msgstr "ยังไม่มีโพสต์ใดๆ"
 
@@ -35482,7 +35530,7 @@ msgid "This file is {fileSize}, over the {maxSize} limit. Animated stickers and 
 msgstr "ไฟล์นี้มีขนาด {fileSize} ซึ่งเกินขีดจำกัดที่ {maxSize} สติกเกอร์เคลื่อนไหวและ SVG จะต้องมีขนาดเล็กพอที่จะอัปโหลดได้อยู่แล้ว โปรดเลือกไฟล์ที่เล็กลงหรือทำให้แอนิเมชันสั้นลง"
 
 #. Shown in forum settings when the forum has no tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:299
+#: src/features/forum/utils/ForumMessageDescriptors.ts:291
 msgid "This forum has no tags yet."
 msgstr "ฟอรัมนี้ยังไม่มีแท็ก"
 
@@ -36225,7 +36273,7 @@ msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "หากต้องการเปลี่ยนปุ่ม ให้เปิดการตั้งค่าปุ่มลัดคีย์บอร์ดของเดสก์ท็อปของคุณ"
 
 #. Follows a Shift + Enter key hint under the forum search box. Starts lowercase because it continues the key hint.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:363
+#: src/features/forum/utils/ForumMessageDescriptors.ts:355
 msgid "to create a post"
 msgstr "เพื่อสร้างโพสต์"
 
@@ -36703,7 +36751,7 @@ msgid "Try different filters or search terms."
 msgstr "ลองใช้ตัวกรองหรือคำค้นหาอื่น"
 
 #. Body of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:171
+#: src/features/forum/utils/ForumMessageDescriptors.ts:163
 msgid "Try different words or clear the tag filter."
 msgstr "ลองใช้คำอื่น หรือล้างตัวกรองแท็ก"
 
@@ -37694,7 +37742,7 @@ msgid "Unpin message"
 msgstr "เลิกปักหมุดข้อความ"
 
 #. Post menu action that unpins a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:135
+#: src/features/forum/utils/ForumMessageDescriptors.ts:127
 msgid "Unpin post"
 msgstr "เลิกปักหมุดโพสต์"
 
@@ -38184,7 +38232,7 @@ msgstr "กำลังอัปโหลดอิโมจิ"
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:38
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
 msgid "URL"
@@ -39266,7 +39314,7 @@ msgid "View and regenerate client secrets and bot tokens"
 msgstr "ดูและสร้าง client secret และโทเค็นบอทใหม่"
 
 #. Section title for the forum layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:99
+#: src/features/forum/utils/ForumMessageDescriptors.ts:91
 msgid "View as"
 msgstr "ดูในรูปแบบ"
 
@@ -39529,8 +39577,10 @@ msgstr "ตัวบ่งชี้ภาพที่แสดงสถานะ
 
 #. Advanced settings category tag.
 #. Channel type chip label for a voice channel.
+#. Channel type option in the create channel modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:54
 #: src/features/channel/utils/ChannelUtils.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
@@ -40814,7 +40864,7 @@ msgid "You can only pick a tag that nobody else with the same username already h
 msgstr "คุณสามารถเลือกแท็กที่ไม่มีใครใช้ชื่อผู้ใช้เดียวกันแล้วเท่านั้น ชื่อผู้ใช้ไม่คำนึงถึงตัวพิมพ์เล็ก/ใหญ่ ดังนั้น Mina#4821 และ mina#4821 จึงนับว่าเป็นชื่อเดียวกัน แท็ก #0000 สงวนไว้สำหรับสมาชิก Visionary ของ {productName} {visionaryLink}"
 
 #. Hint in the forum tag picker. count is the maximum number of tags per post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:123
+#: src/features/forum/utils/ForumMessageDescriptors.ts:115
 msgid "You can pick up to {count} tags."
 msgstr "คุณสามารถเลือกแท็กได้สูงสุด {count} แท็ก"
 

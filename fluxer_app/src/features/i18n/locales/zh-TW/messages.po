@@ -1094,7 +1094,7 @@ msgid "{count, plural, one {# image} other {# images}}"
 msgstr "{count, plural, one {# 張圖片} other {# 張圖片}}"
 
 #. Status under the forum search box once results are in.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:355
+#: src/features/forum/utils/ForumMessageDescriptors.ts:347
 msgid "{count, plural, one {# matching post} other {# matching posts}}"
 msgstr "{count, plural, one {# 則相符貼文} other {# 則相符貼文}}"
 
@@ -1109,7 +1109,7 @@ msgstr "{count, plural, one {# 位成員} other {# 位成員}}"
 
 #. Message count on a forum post card. count is the number of replies.
 #. Message count on a thread chip and in the thread browser. count is the number of messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:211
+#: src/features/forum/utils/ForumMessageDescriptors.ts:203
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:153
 msgid "{count, plural, one {# message} other {# messages}}"
 msgstr "{count, plural, one {# 則訊息} other {# 則訊息}}"
@@ -1124,7 +1124,7 @@ msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
 msgstr "{count, plural, one {# 個共同社群} other {# 個共同社群}}"
 
 #. Label on a joined forum post card with unread messages. count is the number of unread messages.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:147
+#: src/features/forum/utils/ForumMessageDescriptors.ts:139
 msgid "{count, plural, one {# new message} other {# new messages}}"
 msgstr "{count, plural, one {# 則新訊息} other {# 則新訊息}}"
 
@@ -3147,7 +3147,7 @@ msgid "Add a community"
 msgstr "新增社群"
 
 #. Placeholder of the message composer in the new media post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:45
+#: src/features/forum/utils/ForumMessageDescriptors.ts:37
 msgid "Add a description (optional)"
 msgstr "新增說明（選填）"
 
@@ -3290,7 +3290,7 @@ msgid "Add email"
 msgstr "新增電子郵件"
 
 #. Accessible label of the emoji button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:396
+#: src/features/forum/utils/ForumMessageDescriptors.ts:388
 msgid "Add emoji"
 msgstr "加入表情符號"
 
@@ -3322,7 +3322,7 @@ msgid "Add friends to group"
 msgstr "新增好友至群組"
 
 #. Accessible label of the attach button in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:392
+#: src/features/forum/utils/ForumMessageDescriptors.ts:384
 msgid "Add images or files"
 msgstr "新增圖片或檔案"
 
@@ -3340,6 +3340,11 @@ msgstr "新增項目"
 #: src/features/theme_studio/sections/AssetsSection.tsx:150
 msgid "Add local files"
 msgstr "新增本機檔案"
+
+#. Title of the second step of the channel create modal when the channel is private.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:63
+msgid "Add members or roles"
+msgstr "新增成員或角色"
 
 #. Permission description in the channel-scoped permissions editor for the Add Reactions permission. "New" reaction means starting a new reaction emoji on a message (not stacking onto an existing one).
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:271
@@ -3438,12 +3443,12 @@ msgid "Add stream"
 msgstr "新增直播"
 
 #. Button in forum settings that opens the tag editor for a new tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:255
+#: src/features/forum/utils/ForumMessageDescriptors.ts:247
 msgid "Add tag"
 msgstr "新增標籤"
 
 #. Button in the new post composer that opens the tag picker.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:384
+#: src/features/forum/utils/ForumMessageDescriptors.ts:376
 msgid "Add tags"
 msgstr "新增標籤"
 
@@ -4068,7 +4073,7 @@ msgid "Allowed up to {count, plural, one {# connection} other {# connections}} p
 msgstr "允許每位成員最多 {count, plural, one {# 個連線} other {# 個連線}}"
 
 #. Description of the Create posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:319
+#: src/features/forum/utils/ForumMessageDescriptors.ts:311
 msgid "Allows members to create posts in this channel."
 msgstr "允許成員在此頻道建立貼文。"
 
@@ -4078,12 +4083,12 @@ msgid "Allows members to rename, close, lock and delete threads, and to view pri
 msgstr "允許成員重新命名、關閉、鎖定和刪除討論串，以及檢視私人討論串。"
 
 #. Description of the Manage posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:335
+#: src/features/forum/utils/ForumMessageDescriptors.ts:327
 msgid "Allows members to rename, close, lock, pin and delete posts, and to edit their tags."
 msgstr "允許成員重新命名、關閉、鎖定、釘選和刪除貼文，以及編輯其標籤。"
 
 #. Description of the Send messages in posts permission in forum and media channel permissions.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:327
+#: src/features/forum/utils/ForumMessageDescriptors.ts:319
 msgid "Allows members to send messages in posts."
 msgstr "允許成員在貼文中傳送訊息。"
 
@@ -4487,6 +4492,8 @@ msgid "Announce new messages"
 msgstr "播報新訊息"
 
 #. Channel type chip label for an announcement channel, whose messages can be published to channels that follow it.
+#. Channel type option in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:46
 #: src/features/channel/utils/ChannelUtils.tsx:63
 msgid "Announcement"
 msgstr "公告"
@@ -4945,7 +4952,7 @@ msgid "At least one channel must have \"{viewChannelPermissionLabel}\" permissio
 msgstr "至少要有一個頻道對{EVERYONE_MENTION}啟用「{viewChannelPermissionLabel}」權限，自訂網址才能運作。目前沒有任何頻道可供{EVERYONE_MENTION}查看。"
 
 #. Error shown when the user sends a new media channel post without an image or video attachment.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:49
+#: src/features/forum/utils/ForumMessageDescriptors.ts:41
 msgid "Attach an image or a video to post in a media channel."
 msgstr "請附加圖片或影片才能在媒體頻道發文。"
 
@@ -5865,7 +5872,7 @@ msgid "Be heard over other members while holding the push to talk (priority) key
 msgstr "按住「按住說話（優先）」快速鍵時，您的聲音會蓋過其他成員。"
 
 #. Body of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:163
+#: src/features/forum/utils/ForumMessageDescriptors.ts:155
 msgid "Be the first to start a conversation here."
 msgstr "成為第一個在這裡開始對話的人。"
 
@@ -6785,7 +6792,7 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:250
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
-#: src/features/forum/utils/ForumMessageDescriptors.ts:291
+#: src/features/forum/utils/ForumMessageDescriptors.ts:283
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:145
@@ -7598,11 +7605,13 @@ msgid "Channel management"
 msgstr "頻道管理"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
+#. Label of the name field in the channel create modal.
 #. Label of the name input in forum channel settings.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:82
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:47
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
-#: src/features/forum/utils/ForumMessageDescriptors.ts:339
+#: src/features/forum/utils/ForumMessageDescriptors.ts:331
 msgid "Channel name"
 msgstr "頻道名稱"
 
@@ -7651,12 +7660,12 @@ msgid "Channel topic is too long."
 msgstr "頻道主題過長。"
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:26
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:39
 msgid "Channel type"
 msgstr "頻道類型"
 
 #. Short label in the channel create modal. Keep it concise.
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:30
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:43
 msgid "Channel type selection"
 msgstr "選擇頻道類型"
 
@@ -7665,7 +7674,7 @@ msgstr "選擇頻道類型"
 #: src/features/app/config/AuditLogConstants.ts:16
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:287
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:329
-#: src/features/forum/utils/ForumMessageDescriptors.ts:343
+#: src/features/forum/utils/ForumMessageDescriptors.ts:335
 msgid "Channel updated"
 msgstr "頻道已更新"
 
@@ -8287,7 +8296,7 @@ msgstr "讓您的麥克風更清晰地收音。"
 #. Inline button in the Recent searches section that wipes the search history list.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:214
 #: src/features/channel/components/message_search_bar/HistorySection.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:115
+#: src/features/forum/utils/ForumMessageDescriptors.ts:107
 #: src/features/guild/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:74
 #: src/features/input/components/KeybindRecorder.tsx:482
 #: src/features/theme_studio/sections/QuickCssSection.tsx:64
@@ -10094,7 +10103,7 @@ msgid "Copy paused while sharing"
 msgstr "分享時暫停複製"
 
 #. Accessible label of the copy link button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:417
+#: src/features/forum/utils/ForumMessageDescriptors.ts:409
 msgid "Copy post link"
 msgstr "複製貼文連結"
 
@@ -10373,7 +10382,7 @@ msgid "Couldn't create the PDF. Try again or print the kit instead."
 msgstr "無法建立 PDF。請再試一次，或改為列印套件。"
 
 #. Toast shown when creating a forum post fails. detail is the server error message.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:63
+#: src/features/forum/utils/ForumMessageDescriptors.ts:55
 msgid "Couldn't create the post: {detail}"
 msgstr "無法建立貼文：{detail}"
 
@@ -10505,7 +10514,7 @@ msgid "Couldn't load invites"
 msgstr "無法載入邀請"
 
 #. Notice in a forum channel when loading posts fails.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:179
+#: src/features/forum/utils/ForumMessageDescriptors.ts:171
 msgid "Couldn't load posts. Try again later."
 msgstr "無法載入貼文。請稍後再試。"
 
@@ -10657,7 +10666,7 @@ msgid "Couldn't save entrance sound"
 msgstr "無法儲存進場音效"
 
 #. Toast shown when saving a forum tag fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:303
+#: src/features/forum/utils/ForumMessageDescriptors.ts:295
 msgid "Couldn't save the tag: {detail}"
 msgstr "無法儲存標籤：{detail}"
 
@@ -10799,7 +10808,7 @@ msgid "Couldn't update the alt text. Please try again."
 msgstr "無法更新替代文字。請再試一次。"
 
 #. Toast shown when a forum post action such as pinning or editing tags fails. detail is the server error.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:67
+#: src/features/forum/utils/ForumMessageDescriptors.ts:59
 msgid "Couldn't update the post: {detail}"
 msgstr "無法更新貼文：{detail}"
 
@@ -10913,11 +10922,6 @@ msgstr "建立復原套件以繼續。"
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:50
 msgid "Create a recovery kit to reset a forgotten password"
 msgstr "建立復原套件以重設忘記的密碼"
-
-#. Description of the forum channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:9
-msgid "Create a space for organized posts on specific topics"
-msgstr "建立一個空間，用於針對特定主題的結構化貼文"
 
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:49
@@ -11038,7 +11042,7 @@ msgid "Create or join a community"
 msgstr "建立或加入社群"
 
 #. Permission name in forum and media channel permissions. Lets members create posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:315
+#: src/features/forum/utils/ForumMessageDescriptors.ts:307
 msgid "Create posts"
 msgstr "建立貼文"
 
@@ -11067,7 +11071,7 @@ msgid "Create role"
 msgstr "建立身分組"
 
 #. Title of the tag editor for a new forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:263
+#: src/features/forum/utils/ForumMessageDescriptors.ts:255
 msgid "Create tag"
 msgstr "建立標籤"
 
@@ -11735,7 +11739,7 @@ msgstr "日期選擇器"
 
 #. Forum sort option that orders posts by when they were created.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:95
+#: src/features/forum/utils/ForumMessageDescriptors.ts:87
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:147
 msgid "Date posted"
 msgstr "發布日期"
@@ -11910,7 +11914,7 @@ msgid "Default hide after inactivity"
 msgstr "預設閒置後隱藏"
 
 #. Label of the forum setting that picks the default post layout.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:235
+#: src/features/forum/utils/ForumMessageDescriptors.ts:227
 msgid "Default layout"
 msgstr "預設版面"
 
@@ -11924,7 +11928,7 @@ msgid "Default notifications"
 msgstr "預設通知"
 
 #. Label of the forum setting that picks the reaction button shown on every post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:215
+#: src/features/forum/utils/ForumMessageDescriptors.ts:207
 msgid "Default reaction"
 msgstr "預設回應"
 
@@ -11958,7 +11962,7 @@ msgid "Default shortcuts"
 msgstr "預設快速鍵"
 
 #. Label of the forum setting that picks how posts are ordered by default.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:231
+#: src/features/forum/utils/ForumMessageDescriptors.ts:223
 msgid "Default sort order"
 msgstr "預設排序方式"
 
@@ -12236,7 +12240,7 @@ msgid "Delete sticker {stickerName}"
 msgstr "刪除貼圖「{stickerName}」"
 
 #. Button in the forum tag editor that deletes the tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:283
+#: src/features/forum/utils/ForumMessageDescriptors.ts:275
 msgid "Delete tag"
 msgstr "刪除標籤"
 
@@ -12983,7 +12987,7 @@ msgid "Disabling your account will sign you out of all sessions. You can re-enab
 msgstr "停用帳號會將您從所有工作階段登出。您可以隨時重新登入來重新啟用帳號。"
 
 #. Accessible label of the button that closes the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:71
+#: src/features/forum/utils/ForumMessageDescriptors.ts:63
 msgid "Discard post"
 msgstr "捨棄貼文"
 
@@ -13789,7 +13793,7 @@ msgstr "回音消除"
 #. Tooltip of the toggle that returns from the preview to editing a new forum post.
 #. Top-level native menu bar title (Edit menu, holds cut/copy/paste).
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
-#: src/features/forum/utils/ForumMessageDescriptors.ts:376
+#: src/features/forum/utils/ForumMessageDescriptors.ts:368
 #: src/features/platform/utils/DesktopLocaleBridge.ts:48
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
@@ -13989,12 +13993,12 @@ msgid "Edit sticker {stickerName}"
 msgstr "編輯貼圖「{stickerName}」"
 
 #. Title of the tag editor for an existing forum tag.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:259
+#: src/features/forum/utils/ForumMessageDescriptors.ts:251
 msgid "Edit tag"
 msgstr "編輯標籤"
 
 #. Post menu action that opens the tag picker for an existing forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:119
+#: src/features/forum/utils/ForumMessageDescriptors.ts:111
 msgid "Edit tags"
 msgstr "編輯標籤"
 
@@ -14213,7 +14217,7 @@ msgstr "已取消隱藏嵌入內容"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
-#: src/features/forum/utils/ForumMessageDescriptors.ts:271
+#: src/features/forum/utils/ForumMessageDescriptors.ts:263
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Emoji"
@@ -14729,7 +14733,7 @@ msgid "Enter a gift code to redeem {premiumProductName} for your account."
 msgstr "輸入禮物代碼，為您的帳號兌換 {premiumProductName}。"
 
 #. Placeholder of the message composer in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:41
+#: src/features/forum/utils/ForumMessageDescriptors.ts:33
 msgid "Enter a message"
 msgstr "輸入訊息"
 
@@ -16157,7 +16161,7 @@ msgstr "資料夾設定"
 #. Button label that follows an announcement channel, so its published messages are copied into a channel the user picks.
 #. Button under the first message of a forum post. Following a post adds it to the channel list and sends notifications.
 #: src/features/channel/utils/ChannelFollowUtils.ts:16
-#: src/features/forum/utils/ForumMessageDescriptors.ts:408
+#: src/features/forum/utils/ForumMessageDescriptors.ts:400
 msgid "Follow"
 msgstr "追蹤"
 
@@ -16194,7 +16198,7 @@ msgid "Followed channels"
 msgstr "追蹤的頻道"
 
 #. Pressed state of the follow button under the first message of a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:413
+#: src/features/forum/utils/ForumMessageDescriptors.ts:405
 msgid "Following"
 msgstr "正在追蹤"
 
@@ -16434,14 +16438,9 @@ msgid "Forms"
 msgstr "表單"
 
 #. Channel type chip label for a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:21
+#: src/features/forum/utils/ForumMessageDescriptors.ts:13
 msgid "Forum"
 msgstr "論壇"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:5
-msgid "Forum channel"
-msgstr "論壇頻道"
 
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
@@ -16738,7 +16737,7 @@ msgstr "增益控制"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as tiles.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:107
+#: src/features/forum/utils/ForumMessageDescriptors.ts:99
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:155
 msgid "Gallery"
 msgstr "圖庫"
@@ -17205,7 +17204,7 @@ msgid "Give everyone on this instance the highest premium limits."
 msgstr "讓此實例上的所有人都享有最高的進階方案上限。"
 
 #. Error shown when the user sends a new forum post without a title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:37
+#: src/features/forum/utils/ForumMessageDescriptors.ts:29
 msgid "Give the post a title before you send."
 msgstr "請先為貼文加上標題再傳送。"
 
@@ -17220,7 +17219,7 @@ msgid "Give the thread a name before you send."
 msgstr "請先為討論串命名再傳送。"
 
 #. Placeholder of the title field in the new post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:400
+#: src/features/forum/utils/ForumMessageDescriptors.ts:392
 msgid "Give your post a title"
 msgstr "為你的貼文加上標題"
 
@@ -17603,6 +17602,11 @@ msgstr "H.265（需要選擇加入）"
 msgid "Handle"
 msgstr "帳號"
 
+#. One-line description of the voice channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:58
+msgid "Hang out with voice, video and screen share"
+msgstr "與好友語音、視訊和螢幕共享"
+
 #. Report category label, community variant. Keep tone plain.
 #: src/features/moderation/components/report/OptionDescriptors.ts:86
 msgid "Harassment"
@@ -17935,7 +17939,7 @@ msgid "Hide favorites"
 msgstr "隱藏我的最愛"
 
 #. Button in the forum header that collapses the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:207
+#: src/features/forum/utils/ForumMessageDescriptors.ts:199
 msgid "Hide guidelines"
 msgstr "隱藏指南"
 
@@ -17954,7 +17958,7 @@ msgid "Hide keyboard hints"
 msgstr "隱藏鍵盤提示"
 
 #. Label of the media channel setting that hides download, open and copy actions on images and videos.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:247
+#: src/features/forum/utils/ForumMessageDescriptors.ts:239
 msgid "Hide media download options"
 msgstr "隱藏媒體下載選項"
 
@@ -18045,7 +18049,7 @@ msgid "Hide your own screen share?"
 msgstr "要隱藏自己的螢幕分享嗎？"
 
 #. Help text of the media channel setting that hides media download options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:251
+#: src/features/forum/utils/ForumMessageDescriptors.ts:243
 msgid "Hides the download, open in browser and copy buttons on images and videos in this channel."
 msgstr "隱藏此頻道中圖片和影片的下載、在瀏覽器中開啟及複製按鈕。"
 
@@ -20295,7 +20299,7 @@ msgid "Let others clone your stickers"
 msgstr "允許其他人複製您的貼圖"
 
 #. Placeholder of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:199
+#: src/features/forum/utils/ForumMessageDescriptors.ts:191
 msgid "Let people know how to post in this forum"
 msgstr "讓大家知道如何在此論壇發文"
 
@@ -20434,7 +20438,9 @@ msgid "link"
 msgstr "連結"
 
 #. Channel type chip label for a linked external channel.
+#. Channel type option in the create channel modal.
 #. Label for the has:link option in the mobile content-type filter sheet.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:62
 #: src/features/channel/utils/ChannelUtils.tsx:54
 #: src/features/search/components/search/HasFilterSheet.tsx:57
 msgid "Link"
@@ -20612,7 +20618,7 @@ msgstr "Linux 套件"
 
 #. Forum layout name shown inside an activity log row.
 #. Forum layout option that shows posts as rows.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:103
+#: src/features/forum/utils/ForumMessageDescriptors.ts:95
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:151
 msgid "List"
 msgstr "列表"
@@ -20659,7 +20665,7 @@ msgid "Load more"
 msgstr "載入更多"
 
 #. Button at the bottom of a forum channel that loads archived posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:191
+#: src/features/forum/utils/ForumMessageDescriptors.ts:183
 msgid "Load older posts"
 msgstr "載入較舊的貼文"
 
@@ -21034,7 +21040,7 @@ msgid "Manage permissions"
 msgstr "管理權限"
 
 #. Permission name in forum and media channel permissions. Lets members moderate posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:331
+#: src/features/forum/utils/ForumMessageDescriptors.ts:323
 msgid "Manage posts"
 msgstr "管理貼文"
 
@@ -21424,7 +21430,7 @@ msgstr "正在測量…"
 #. Collapsible group heading in the Theme Studio tokens list, for image and video tokens.
 #. Generic tab / section / category label for media content.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:25
+#: src/features/forum/utils/ForumMessageDescriptors.ts:17
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:264
 #: src/features/theme_studio/sections/TokenGroups.ts:110
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:16
@@ -21452,11 +21458,6 @@ msgstr "媒體按鈕"
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:83
 msgid "Media buttons"
 msgstr "媒體按鈕"
-
-#. Channel type option name in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:13
-msgid "Media channel"
-msgstr "媒體頻道"
 
 #. Accessible label for the floating media controls toolbar in the media viewer modal.
 #: src/features/messaging/components/modals/media_modal/shared.ts:69
@@ -21650,7 +21651,7 @@ msgid "Members are removed when offline unless given a role."
 msgstr "除非獲得身分組，否則成員離線時就會被移除。"
 
 #. Help text of the moderated switch in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:279
+#: src/features/forum/utils/ForumMessageDescriptors.ts:271
 msgid "Members who can manage posts can add or remove it."
 msgstr "可管理貼文的成員可以新增或移除它。"
 
@@ -23063,11 +23064,9 @@ msgstr "Nagbar 覆寫"
 #. Short label in the add custom search engine modal. Keep it concise.
 #. Short label in the branding section. Keep it concise.
 #. Short label in the category create modal. Keep it concise.
-#. Short label in the channel create modal. Keep it concise.
 #. Short label in the theme studio library section. Keep it concise.
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:74
 #: src/features/channel/components/modals/CategoryCreateModal.tsx:17
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:34
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:340
 #: src/features/expressions/components/modals/meme_form/MemeFormFields.tsx:24
 #: src/features/expressions/components/modals/sticker_form/StickerFormFields.tsx:28
@@ -23272,7 +23271,7 @@ msgstr "永不自動朗讀"
 #: src/features/channel/components/ChannelDivider.tsx:37
 #: src/features/channel/components/ChannelDivider.tsx:52
 #: src/features/channel/components/UnreadDividerSlot.tsx:30
-#: src/features/forum/utils/ForumMessageDescriptors.ts:143
+#: src/features/forum/utils/ForumMessageDescriptors.ts:135
 msgid "New"
 msgstr "新訊息"
 
@@ -23368,7 +23367,7 @@ msgstr "新訊息"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the app layout channel list content.
 #: src/features/app/components/layout/ChannelListContent.tsx:98
-#: src/features/forum/utils/ForumMessageDescriptors.ts:151
+#: src/features/forum/utils/ForumMessageDescriptors.ts:143
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:147
 msgid "New messages"
 msgstr "新訊息"
@@ -23396,12 +23395,12 @@ msgid "New password"
 msgstr "新密碼"
 
 #. Button in a forum channel that opens the composer for a new post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:29
+#: src/features/forum/utils/ForumMessageDescriptors.ts:21
 msgid "New post"
 msgstr "新貼文"
 
 #. Title suffix of the desktop notification for a new forum post. forumName is the forum channel name.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:311
+#: src/features/forum/utils/ForumMessageDescriptors.ts:303
 msgid "New post in #{forumName}"
 msgstr "新貼文於 #{forumName}"
 
@@ -23831,8 +23830,13 @@ msgstr "沒有符合的項目"
 msgid "No matches found"
 msgstr "沒有找到符合的項目"
 
+#. Empty state in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:33
+msgid "No matching members or roles"
+msgstr "找不到相符的成員或角色"
+
 #. Status under the forum search box when nothing matches.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:359
+#: src/features/forum/utils/ForumMessageDescriptors.ts:351
 msgid "No matching posts"
 msgstr "沒有符合的貼文"
 
@@ -23897,7 +23901,7 @@ msgid "No pinned messages"
 msgstr "沒有釘選的訊息"
 
 #. Title of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:167
+#: src/features/forum/utils/ForumMessageDescriptors.ts:159
 msgid "No posts match your search"
 msgstr "沒有貼文符合您的搜尋條件"
 
@@ -24344,7 +24348,7 @@ msgid "Nothing to explore yet"
 msgstr "目前沒有可探索的內容"
 
 #. Shown in the post preview when the message is empty.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:380
+#: src/features/forum/utils/ForumMessageDescriptors.ts:372
 msgid "Nothing to preview yet."
 msgstr "還沒有預覽內容。"
 
@@ -24525,7 +24529,7 @@ msgid "Oklahoma"
 msgstr "奧克拉荷馬州"
 
 #. Section title above archived posts in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:187
+#: src/features/forum/utils/ForumMessageDescriptors.ts:179
 msgid "Older posts"
 msgstr "較舊的貼文"
 
@@ -24665,12 +24669,12 @@ msgid "Only mentions"
 msgstr "僅提及"
 
 #. Tooltip on a forum tag that only moderators can add or remove.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:127
+#: src/features/forum/utils/ForumMessageDescriptors.ts:119
 msgid "Only moderators can apply this tag."
 msgstr "只有版主才能套用這個標籤。"
 
 #. Label of the switch in the forum tag editor that restricts a tag to moderators.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:275
+#: src/features/forum/utils/ForumMessageDescriptors.ts:267
 msgid "Only moderators can use this tag"
 msgstr "僅限版主使用此標籤"
 
@@ -24688,6 +24692,11 @@ msgstr "僅限我無法再存取的地方"
 #: src/features/devtools/utils/SelfXssNotice.ts:24
 msgid "Only run code here if you understand exactly what it does."
 msgstr "請僅在您完全了解其作用時，才在此處執行程式碼。"
+
+#. Description under the private channel switch in the channel create modal.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:59
+msgid "Only selected members and roles will be able to view this channel."
+msgstr "只有選定的成員和角色才能檢視此頻道。"
 
 #. Label in the visual tab.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:33
@@ -24715,6 +24724,11 @@ msgstr "只會同步 CSS 文字。上傳的素材和本機檔案參考會保留�
 #: src/features/channel/components/modals/GroupInvitesModal.tsx:113
 msgid "Only the group owner can manage invites."
 msgstr "只有群組擁有者可以管理邀請。"
+
+#. Hint under the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:29
+msgid "Only the members and roles you pick, plus admins, can view this channel."
+msgstr "只有你選擇的成員和角色，以及管理員，才能檢視此頻道。"
 
 #. Dropdown option that switches the community filter into include-only mode.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:173
@@ -25384,7 +25398,7 @@ msgstr "載入原始訊息失敗"
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
 #. Preview on a forum post card whose first message was deleted.
 #: src/features/channel/components/ReplyPreview.tsx:25
-#: src/features/forum/utils/ForumMessageDescriptors.ts:155
+#: src/features/forum/utils/ForumMessageDescriptors.ts:147
 msgid "Original message was deleted"
 msgstr "原始訊息已刪除"
 
@@ -26076,7 +26090,7 @@ msgid "Pick a web search provider"
 msgstr "選擇網路搜尋服務供應商"
 
 #. Button that opens the emoji picker in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:223
+#: src/features/forum/utils/ForumMessageDescriptors.ts:215
 msgid "Pick an emoji"
 msgstr "選擇表情符號"
 
@@ -26091,7 +26105,7 @@ msgid "Pick at least one kind of conversation to include."
 msgstr "請至少選擇一種要包含的對話類型。"
 
 #. Error shown when the forum requires a tag and the new post has none.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:59
+#: src/features/forum/utils/ForumMessageDescriptors.ts:51
 msgid "Pick at least one tag for this post."
 msgstr "請為此貼文選擇至少一個標籤。"
 
@@ -26187,7 +26201,7 @@ msgid "Pin or unpin any message."
 msgstr "釘選或取消釘選任何訊息。"
 
 #. Post menu action that pins a forum post to the top of the forum.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:131
+#: src/features/forum/utils/ForumMessageDescriptors.ts:123
 msgid "Pin post"
 msgstr "釘選貼文"
 
@@ -26226,7 +26240,7 @@ msgid "pinned"
 msgstr "已釘選"
 
 #. Label on a pinned forum post card.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:139
+#: src/features/forum/utils/ForumMessageDescriptors.ts:131
 msgid "Pinned"
 msgstr "已釘選"
 
@@ -26454,22 +26468,22 @@ msgid "Position"
 msgstr "位置"
 
 #. Primary button that publishes a new forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:368
+#: src/features/forum/utils/ForumMessageDescriptors.ts:360
 msgid "Post"
 msgstr "發佈"
 
 #. Title of the forum guidelines banner and label of the guidelines field in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:195
+#: src/features/forum/utils/ForumMessageDescriptors.ts:187
 msgid "Post guidelines"
 msgstr "張貼指南"
 
 #. Toast after the forum post link was copied.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:421
+#: src/features/forum/utils/ForumMessageDescriptors.ts:413
 msgid "Post link copied"
 msgstr "貼文連結已複製"
 
 #. Label and placeholder of the title input in the new forum post composer.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:33
+#: src/features/forum/utils/ForumMessageDescriptors.ts:25
 msgid "Post title"
 msgstr "貼文標題"
 
@@ -26477,6 +26491,21 @@ msgstr "貼文標題"
 #: src/features/webhook/components/FollowedChannelListItem.tsx:37
 msgid "Post to"
 msgstr "張貼到"
+
+#. One-line description of the announcement channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:50
+msgid "Post updates other communities can follow"
+msgstr "發布其他社群可以追蹤的動態消息"
+
+#. Description of the media channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:9
+msgid "Posts built around images and videos"
+msgstr "以圖片和影片為主的貼文"
+
+#. Description of the forum channel type option in the channel create modal.
+#: src/features/forum/utils/ForumMessageDescriptors.ts:5
+msgid "Posts organized by topic and tags"
+msgstr "依主題和標籤整理貼文"
 
 #: src/features/input/utils/KeybindUtils.ts:105
 msgctxt "keyboard-key-name"
@@ -26662,7 +26691,7 @@ msgstr "在一段時間內禁止成員傳送訊息、新增反應和加入語音
 
 #. Tooltip and label of the toggle that previews a new forum post.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:21
-#: src/features/forum/utils/ForumMessageDescriptors.ts:372
+#: src/features/forum/utils/ForumMessageDescriptors.ts:364
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashSettingsField.tsx:45
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:276
 msgid "Preview"
@@ -26882,6 +26911,11 @@ msgstr "侵犯隱私或人肉搜索"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:294
 msgid "Privacy violation or stalking"
 msgstr "侵犯隱私或跟蹤騷擾"
+
+#. Switch in the channel create modal that limits who can view the new channel.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:55
+msgid "Private channel"
+msgstr "私人頻道"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:222
@@ -27495,7 +27529,7 @@ msgid "React"
 msgstr "反應"
 
 #. Button under the first message of a forum post that adds a reaction to it.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:404
+#: src/features/forum/utils/ForumMessageDescriptors.ts:396
 msgid "React to post"
 msgstr "回應貼文"
 
@@ -27646,7 +27680,7 @@ msgstr "最近的搜尋"
 
 #. Forum sort option that orders posts by their latest message.
 #. Forum sort order name shown inside an activity log row.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:91
+#: src/features/forum/utils/ForumMessageDescriptors.ts:83
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogForumPresentation.ts:143
 msgid "Recently active"
 msgstr "最近活躍"
@@ -28037,7 +28071,7 @@ msgstr "記住視窗大小和位置"
 #: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
-#: src/features/forum/utils/ForumMessageDescriptors.ts:227
+#: src/features/forum/utils/ForumMessageDescriptors.ts:219
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:125
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:140
@@ -28774,7 +28808,7 @@ msgid "Require passkey"
 msgstr "要求通行金鑰"
 
 #. Label of the forum setting that makes at least one tag mandatory on new posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:243
+#: src/features/forum/utils/ForumMessageDescriptors.ts:235
 msgid "Require people to select tags when posting"
 msgstr "發文時必須選取標籤"
 
@@ -28785,7 +28819,7 @@ msgstr "管理員必須啟用雙重驗證，才能執行停權、踢出、禁言
 #. Marker next to the tag picker when the forum requires at least one tag.
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:24
-#: src/features/forum/utils/ForumMessageDescriptors.ts:388
+#: src/features/forum/utils/ForumMessageDescriptors.ts:380
 msgid "Required"
 msgstr "必要"
 
@@ -29284,7 +29318,7 @@ msgstr "已恢復邀請"
 
 #. Button that retries a failed thread search.
 #. Button that retries loading forum posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:183
+#: src/features/forum/utils/ForumMessageDescriptors.ts:175
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:286
 msgid "Retry"
 msgstr "重試"
@@ -29707,7 +29741,7 @@ msgstr "飽和度"
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:118
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:94
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:123
-#: src/features/forum/utils/ForumMessageDescriptors.ts:287
+#: src/features/forum/utils/ForumMessageDescriptors.ts:279
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:279
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:91
@@ -29819,7 +29853,7 @@ msgid "Saved media autocomplete"
 msgstr "已儲存的媒體自動完成"
 
 #. Error shown when the user picks a saved favourite media item while writing a new forum or media channel post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:53
+#: src/features/forum/utils/ForumMessageDescriptors.ts:45
 msgid "Saved media cannot start a post. Upload the file instead."
 msgstr "儲存的媒體無法用來發文。請改為上傳檔案。"
 
@@ -30241,7 +30275,7 @@ msgstr "搜尋範圍"
 
 #. Notice in a forum channel while the server is still building the post search index.
 #. Shown in the thread browser while the search index is being built.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:175
+#: src/features/forum/utils/ForumMessageDescriptors.ts:167
 #: src/features/threads/utils/ThreadMessageDescriptors.ts:282
 msgid "Search is getting ready for this community. Trying again shortly..."
 msgstr "搜尋功能正在為這個社群準備中。請稍後再試..."
@@ -30255,6 +30289,11 @@ msgstr "搜尋語言代碼…"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:74
 msgid "Search languages…"
 msgstr "搜尋語言…"
+
+#. Placeholder of the search box in the add members or roles step of the create channel modal.
+#: src/features/channel/components/modals/ChannelCreateAccessStep.tsx:25
+msgid "Search members or roles"
+msgstr "搜尋成員或角色"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Placeholder shown inside the message search input. Sentence case.
@@ -30282,7 +30321,7 @@ msgid "Search only in the current DM"
 msgstr "僅搜尋此私訊"
 
 #. Placeholder of the search input at the top of a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:79
+#: src/features/forum/utils/ForumMessageDescriptors.ts:71
 msgid "Search or create a post..."
 msgstr "搜尋或建立貼文..."
 
@@ -30302,7 +30341,7 @@ msgid "Search permissions…"
 msgstr "搜尋權限…"
 
 #. Placeholder and accessible label of the search input in a forum channel.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:75
+#: src/features/forum/utils/ForumMessageDescriptors.ts:67
 msgid "Search posts"
 msgstr "搜尋貼文"
 
@@ -30459,7 +30498,7 @@ msgid "Searching voice channels"
 msgstr "正在搜尋語音頻道"
 
 #. Status under the forum search box while results load.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:351
+#: src/features/forum/utils/ForumMessageDescriptors.ts:343
 msgid "Searching..."
 msgstr "Searching..."
 
@@ -30834,7 +30873,7 @@ msgid "Send a friend request to {userName}, or use the staff override to add the
 msgstr "傳送好友邀請給 {userName}，或使用員工覆寫功能立即將對方加為好友。"
 
 #. Placeholder of the message box inside a forum post. name is the post title.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:347
+#: src/features/forum/utils/ForumMessageDescriptors.ts:339
 msgid "Send a message in \"{name}\""
 msgstr "在「{name}」中傳送訊息"
 
@@ -30948,7 +30987,7 @@ msgid "Send messages in channels."
 msgstr "在頻道中傳送訊息。"
 
 #. Permission name in forum and media channel permissions. Lets members reply in posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:323
+#: src/features/forum/utils/ForumMessageDescriptors.ts:315
 msgid "Send messages in posts"
 msgstr "在貼文中傳送訊息"
 
@@ -30961,6 +31000,11 @@ msgstr "在此頻道中傳送訊息。"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:534
 msgid "Send messages in threads"
 msgstr "在討論串中傳送訊息"
+
+#. One-line description of the text channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:42
+msgid "Send messages, images, GIFs and emoji"
+msgstr "傳送訊息、圖片、GIF 和表情符號"
 
 #. Footer submit button in the IAR modal. Sends the report to the safety team.
 #: src/features/moderation/components/report_modal/IARModal.tsx:90
@@ -31408,11 +31452,6 @@ msgstr "分享長影片和大型檔案，無需事先壓縮。免費帳戶最多
 msgid "Share gift"
 msgstr "分享禮物"
 
-#. Description of the media channel type option in the channel create modal.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:17
-msgid "Share images and videos as posts with their own discussions"
-msgstr "將圖片和影片分享為貼文，並附帶專屬討論區"
-
 #. Hover action on an application or display card that starts sharing that source.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:197
 msgid "Share screen"
@@ -31584,6 +31623,11 @@ msgstr "快速鍵徽章"
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:122
 msgid "Shortcut conflicts"
 msgstr "快速鍵衝突"
+
+#. One-line description of the link channel type in the create channel modal.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:66
+msgid "Shortcut to an external website"
+msgstr "捷徑連結到外部網站"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -31808,7 +31852,7 @@ msgid "Show GIFs button"
 msgstr "顯示 GIF 按鈕"
 
 #. Button in the forum header that expands the post guidelines.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:203
+#: src/features/forum/utils/ForumMessageDescriptors.ts:195
 msgid "Show guidelines"
 msgstr "顯示指南"
 
@@ -31958,7 +32002,7 @@ msgid "Show new device modal"
 msgstr "顯示新裝置彈出視窗"
 
 #. Forum notification option that marks the forum unread when someone creates a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:307
+#: src/features/forum/utils/ForumMessageDescriptors.ts:299
 msgid "Show new posts as unread"
 msgstr "將新貼文顯示為未讀"
 
@@ -32116,7 +32160,7 @@ msgid "Shown in invite embeds in chat."
 msgstr "會顯示在聊天的邀請嵌入內容中。"
 
 #. Help text of the default reaction setting in forum settings.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:219
+#: src/features/forum/utils/ForumMessageDescriptors.ts:211
 msgid "Shown on every post so people can react with one click."
 msgstr "顯示在每則貼文中，方便使用者一鍵回應。"
 
@@ -32357,7 +32401,9 @@ msgstr "大小"
 msgid "Size selection"
 msgstr "選擇尺寸"
 
+#. Creates the private channel without adding anyone in the channel create modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:67
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Skip"
 msgstr "略過"
@@ -32507,7 +32553,7 @@ msgid "Slowmode active"
 msgstr "慢速模式進行中"
 
 #. Label of the forum setting for how often a member can create a post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:239
+#: src/features/forum/utils/ForumMessageDescriptors.ts:231
 msgid "Slowmode for creating posts"
 msgstr "發文慢速模式"
 
@@ -32864,12 +32910,12 @@ msgid "Sort"
 msgstr "排序"
 
 #. Button in a forum channel that opens the sort order and layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:83
+#: src/features/forum/utils/ForumMessageDescriptors.ts:75
 msgid "Sort & view"
 msgstr "排序與檢視"
 
 #. Section title for the forum post sort order options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:87
+#: src/features/forum/utils/ForumMessageDescriptors.ts:79
 msgid "Sort by"
 msgstr "排序方式"
 
@@ -34370,13 +34416,13 @@ msgid "Tag"
 msgstr "標籤"
 
 #. Label of the name input in the forum tag editor.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:267
+#: src/features/forum/utils/ForumMessageDescriptors.ts:259
 msgid "Tag name"
 msgstr "標籤名稱"
 
 #. Label of the tag filter in a forum channel and of the tags section in forum settings.
 #. Short label in the theme studio library section. Keep it concise.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:111
+#: src/features/forum/utils/ForumMessageDescriptors.ts:103
 #: src/features/theme_studio/sections/LibrarySection.tsx:120
 msgid "Tags"
 msgstr "標籤"
@@ -34389,7 +34435,7 @@ msgid "Tags ({tagCount}/{tagLimit})"
 msgstr "標籤 ({tagCount}/{tagLimit})"
 
 #. Help text of the tags section in forum settings. count is the maximum number of tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:295
+#: src/features/forum/utils/ForumMessageDescriptors.ts:287
 msgid "Tags help people find posts. You can add up to {count} tags."
 msgstr "標籤可協助使用者尋找貼文。您最多可以新增 {count} 個標籤。"
 
@@ -34556,9 +34602,11 @@ msgid "Texas"
 msgstr "德克薩斯州"
 
 #. Channel type chip label for a text channel.
+#. Channel type option in the create channel modal.
 #. Collapsible group heading in the Theme Studio tokens list, for text color tokens.
 #. Option label for a WebRTC content hint select.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes free text.
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:38
 #: src/features/channel/utils/ChannelUtils.tsx:72
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:23
 #: src/features/theme_studio/sections/TokenGroups.ts:50
@@ -35088,7 +35136,7 @@ msgid "There are no channels available to create an invite for."
 msgstr "沒有可建立邀請的頻道。"
 
 #. Title of the empty state in a forum channel without posts.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:159
+#: src/features/forum/utils/ForumMessageDescriptors.ts:151
 msgid "There are no posts yet"
 msgstr "目前還沒有貼文"
 
@@ -35482,7 +35530,7 @@ msgid "This file is {fileSize}, over the {maxSize} limit. Animated stickers and 
 msgstr "此檔案為 {fileSize}，超過 {maxSize} 的限制。動畫貼圖和 SVG 必須已夠小才能上傳。請選擇較小的檔案或縮短動畫。"
 
 #. Shown in forum settings when the forum has no tags.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:299
+#: src/features/forum/utils/ForumMessageDescriptors.ts:291
 msgid "This forum has no tags yet."
 msgstr "這個論壇目前沒有任何標籤。"
 
@@ -36225,7 +36273,7 @@ msgid "To change the keys, open your desktop's keyboard shortcut settings."
 msgstr "若要變更按鍵，請開啟桌面環境的鍵盤快速鍵設定。"
 
 #. Follows a Shift + Enter key hint under the forum search box. Starts lowercase because it continues the key hint.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:363
+#: src/features/forum/utils/ForumMessageDescriptors.ts:355
 msgid "to create a post"
 msgstr "以建立貼文"
 
@@ -36703,7 +36751,7 @@ msgid "Try different filters or search terms."
 msgstr "試試不同的篩選條件或搜尋字詞。"
 
 #. Body of the empty state in a forum channel when the search or tag filter finds nothing.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:171
+#: src/features/forum/utils/ForumMessageDescriptors.ts:163
 msgid "Try different words or clear the tag filter."
 msgstr "試試其他關鍵字，或清除標籤篩選器。"
 
@@ -37694,7 +37742,7 @@ msgid "Unpin message"
 msgstr "取消釘選訊息"
 
 #. Post menu action that unpins a forum post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:135
+#: src/features/forum/utils/ForumMessageDescriptors.ts:127
 msgid "Unpin post"
 msgstr "取消釘選貼文"
 
@@ -38184,7 +38232,7 @@ msgstr "正在上傳表情符號"
 #. Short label for the URL input in the embed debugger.
 #. Short label in the channel create modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:92
-#: src/features/channel/components/modals/ChannelCreateModal.tsx:38
+#: src/features/channel/components/modals/ChannelCreateModal.tsx:51
 #: src/features/user/components/modals/tabs/EmbedDebuggerTab.tsx:34
 #: src/features/user/components/settings_utils/search_index/EmbedDebuggerIndex.ts:19
 msgid "URL"
@@ -39266,7 +39314,7 @@ msgid "View and regenerate client secrets and bot tokens"
 msgstr "檢視並重新產生用戶端密鑰和機器人權杖"
 
 #. Section title for the forum layout options.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:99
+#: src/features/forum/utils/ForumMessageDescriptors.ts:91
 msgid "View as"
 msgstr "檢視為"
 
@@ -39529,8 +39577,10 @@ msgstr "顯示使用者狀態的視覺指示器，使用與頭像相同的遮罩
 
 #. Advanced settings category tag.
 #. Channel type chip label for a voice channel.
+#. Channel type option in the create channel modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
+#: src/features/channel/utils/ChannelCreateModalUtils.ts:54
 #: src/features/channel/utils/ChannelUtils.tsx:42
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
@@ -40814,7 +40864,7 @@ msgid "You can only pick a tag that nobody else with the same username already h
 msgstr "你只能選擇一個沒有其他相同使用者名稱的人已經擁有的標籤。使用者名稱不區分大小寫，所以 Mina#4821 和 mina#4821 算作相同。#0000 標籤保留給 {productName} Visionary 成員。{visionaryLink}。"
 
 #. Hint in the forum tag picker. count is the maximum number of tags per post.
-#: src/features/forum/utils/ForumMessageDescriptors.ts:123
+#: src/features/forum/utils/ForumMessageDescriptors.ts:115
 msgid "You can pick up to {count} tags."
 msgstr "最多可以選擇 {count} 個標籤。"
 
