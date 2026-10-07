@@ -8,6 +8,17 @@ import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
 
 vi.mock('@lingui/core/macro', () => ({msg: (descriptor: MessageDescriptor) => descriptor}));
 
+const desktopDocument = vi.hoisted(() => ({active: false}));
+
+vi.mock('@app/features/platform/DesktopLocalAppRuntime', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('@app/features/platform/DesktopLocalAppRuntime')>();
+	return {...actual, isDesktopLocalAppDocument: () => desktopDocument.active};
+});
+
+vi.mock('@app/features/ui/utils/NativeUtils', () => ({
+	getElectronAPI: () => (desktopDocument.active ? {localAppUpload: {subscribe: () => () => {}}} : undefined),
+}));
+
 interface SentRequest {
 	method: string;
 	url: string;
@@ -95,6 +106,31 @@ beforeEach(() => {
 
 afterEach(() => {
 	vi.unstubAllGlobals();
+	desktopDocument.active = false;
+});
+
+describe('RestClient desktop local upload tagging', () => {
+	const uploadIdHeader = 'x-fluxer-local-upload-id';
+
+	test('a remote upload from the desktop app never carries the local upload id', async () => {
+		desktopDocument.active = true;
+		await createClient().put('https://uploads.fluxer.app/v1/relay/abc?t=token', {
+			body: new Blob(['x']),
+			auth: 'none',
+			onProgress: () => {},
+		});
+		expect(sent[0].headers[uploadIdHeader]).toBeUndefined();
+	});
+
+	test('an upload through the desktop local proxy is tagged for progress', async () => {
+		desktopDocument.active = true;
+		await createClient().put('fluxer-app://app/_remote/key?url=https%3A%2F%2Fuploads.test%2Fv1%2Frelay%2Fabc', {
+			body: new Blob(['x']),
+			auth: 'none',
+			onProgress: () => {},
+		});
+		expect(sent[0].headers[uploadIdHeader]).toMatch(/^[0-9a-f]{32}$/u);
+	});
 });
 
 describe('RestClient interceptor selection', () => {

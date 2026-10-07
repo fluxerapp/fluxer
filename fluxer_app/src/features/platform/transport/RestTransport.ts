@@ -715,8 +715,23 @@ function newLocalUploadId(): string {
 	return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-function attachLocalUploadProgress(xhr: XMLHttpRequest, onProgress: (event: ProgressEvent) => void): boolean {
-	if (!isDesktopLocalAppDocument()) {
+function isDesktopLocalAppRequest(url: string): boolean {
+	if (!isDesktopLocalAppDocument()) return false;
+	let parsedUrl: URL;
+	try {
+		parsedUrl = resolveDocumentURLFromRoot(url);
+	} catch {
+		return false;
+	}
+	return isDesktopLocalAppOrigin(parsedUrl.protocol, parsedUrl.hostname);
+}
+
+function attachLocalUploadProgress(
+	xhr: XMLHttpRequest,
+	url: string,
+	onProgress: (event: ProgressEvent) => void,
+): boolean {
+	if (!isDesktopLocalAppRequest(url)) {
 		return false;
 	}
 	const subscribe = getElectronAPI()?.localAppUpload?.subscribe;
@@ -768,7 +783,7 @@ function performTransport(plan: Plan, handle: RestRequestHandle): Promise<Transp
 			externalSignal.removeEventListener('abort', onExternalAbort);
 		});
 		if (plan.onProgress) {
-			if (!attachLocalUploadProgress(xhr, plan.onProgress)) {
+			if (!attachLocalUploadProgress(xhr, plan.url, plan.onProgress)) {
 				xhr.upload.addEventListener('progress', plan.onProgress);
 			}
 		}
